@@ -32,6 +32,11 @@ public class EnterWorldAction extends Action {
     }
 
     @Override
+    public boolean hasRawValue() {
+        return true;
+    }
+
+    @Override
     public void execute(@Nullable String value) {
         if (Minecraft.getInstance().level != null) {
             long now = System.currentTimeMillis();
