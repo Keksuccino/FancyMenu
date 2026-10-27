@@ -5,6 +5,7 @@ import com.mojang.blaze3d.buffers.Std140Builder;
 import com.mojang.blaze3d.resource.GraphicsResourceAllocator;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGameRenderer;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphics;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinPostChain;
@@ -299,6 +300,8 @@ public final class GuiBlurRenderer {
     }
 
     private static PostChain getOrCreatePostChain(Minecraft minecraft) {
+        // The shader manager has no post chains before the initial resource reload applied it, and requesting one that early makes it trigger its resource pack recovery.
+        if (ScreenCustomizationLayerHandler.isBeforeFinishInitialMinecraftReload()) return null;
         PostChain postChain = minecraft.getShaderManager().getPostChain(GUI_BLUR_POST_CHAIN, LevelTargetBundle.MAIN_TARGETS);
         if (postChain == null) {
             if (!blurPostChainFailed) {
