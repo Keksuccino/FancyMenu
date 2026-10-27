@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
@@ -20,6 +21,7 @@ import net.minecraft.client.gui.render.TextureSetup;
 import net.minecraft.client.gui.render.state.GuiElementRenderState;
 import net.minecraft.client.gui.render.state.GuiRenderState;
 import net.minecraft.client.renderer.CachedOrthoProjectionMatrixBuffer;
+import net.minecraft.client.renderer.GameRenderer;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -44,6 +46,8 @@ public class MixinGuiRenderer {
 
     @Unique private final GuiRenderPhaseQueue<GuiRenderState.TraverseRange, GuiRenderPhaseAction> renderPhaseActions_FancyMenu = new GuiRenderPhaseQueue<>();
     @Unique private GuiRenderState.TraverseRange activeTraverseRange_FancyMenu = GuiRenderState.TraverseRange.ALL;
+    // Other mods create their own GuiRenderers (e.g. for offscreen item atlases) with their own target sizes and scissor mapping, so FancyMenu's precise GUI scale must only touch the main one
+    @Unique private boolean mainGuiRenderer_FancyMenu;
 
     @Shadow
     private void recordMesh(BufferBuilder bufferBuilder, RenderPipeline pipeline, TextureSetup textureSetup, ScreenRectangle scissorArea) {
@@ -52,6 +56,7 @@ public class MixinGuiRenderer {
 
     @Inject(method = "render", at = @At("HEAD"))
     private void before_render_FancyMenu(GpuBufferSlice bufferSlice, CallbackInfo info) {
+        this.mainGuiRenderer_FancyMenu = this.isMainGuiRenderer_FancyMenu();
         this.clearRenderPhaseActions_FancyMenu();
     }
 
@@ -125,8 +130,12 @@ public class MixinGuiRenderer {
         this.executeActions_FancyMenu(this.renderPhaseActions_FancyMenu.drainAll());
     }
 
+    /** @reason Render the main GUI with FancyMenu's precise (possibly fractional) GUI scale instead of vanilla's integer scale. */
     @WrapOperation(method = "draw", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/CachedOrthoProjectionMatrixBuffer;getBuffer(FF)Lcom/mojang/blaze3d/buffers/GpuBufferSlice;"))
     private GpuBufferSlice wrap_getBuffer_FancyMenu(CachedOrthoProjectionMatrixBuffer instance, float f1, float f2, Operation<GpuBufferSlice> original) {
+        if (!this.mainGuiRenderer_FancyMenu) {
+            return original.call(instance, f1, f2);
+        }
         Window w = Minecraft.getInstance().getWindow();
         FancyWindow fancyWindow = ((FancyWindow)(Object)w);
         double precise = fancyWindow.getPreciseGuiScale_FancyMenu();
@@ -136,25 +145,41 @@ public class MixinGuiRenderer {
         return original.call(instance, f1, f2);
     }
 
-    @Inject(method = "enableScissor", at = @At("HEAD"), cancellable = true)
-    private void before_enableScissor_FancyMenu(ScreenRectangle screenRectangle, RenderPass renderPass, CallbackInfo info) {
+    /**
+     * @reason Convert main GUI scissors with FancyMenu's precise GUI scale.
+     * Wrapping the RenderPass call instead of cancelling enableScissor keeps other mods' hooks in this method working, and every other GuiRenderer gets vanilla's values unchanged.
+     */
+    @WrapOperation(method = "enableScissor", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderPass;enableScissor(IIII)V"))
+    private void wrap_enableScissor_FancyMenu(RenderPass renderPass, int x, int y, int width, int height, Operation<Void> original, @Local(argsOnly = true) ScreenRectangle screenRectangle) {
+        if (!this.mainGuiRenderer_FancyMenu) {
+            original.call(renderPass, x, y, width, height);
+            return;
+        }
         Window w = Minecraft.getInstance().getWindow();
         FancyWindow fancyWindow = ((FancyWindow)(Object)w);
         double precise = fancyWindow.getPreciseGuiScale_FancyMenu();
-        if (precise > 0) {
-            info.cancel();
-            int h = w.getHeight();
-            double d1 = ((double)screenRectangle.left() * precise);
-            double d2 = ((double)h - screenRectangle.bottom() * precise);
-            double d3 = ((double)screenRectangle.width() * precise);
-            double d4 = ((double)screenRectangle.height() * precise);
-            renderPass.enableScissor((int)d1, (int)d2, Math.max(0, (int)d3), Math.max(0, (int)d4));
+        if (precise <= 0) {
+            original.call(renderPass, x, y, width, height);
+            return;
         }
+        int h = w.getHeight();
+        double d1 = ((double)screenRectangle.left() * precise);
+        double d2 = ((double)h - screenRectangle.bottom() * precise);
+        double d3 = ((double)screenRectangle.width() * precise);
+        double d4 = ((double)screenRectangle.height() * precise);
+        original.call(renderPass, (int)d1, (int)d2, Math.max(0, (int)d3), Math.max(0, (int)d4));
     }
 
     @Unique
     private void executeActions_FancyMenu(List<GuiRenderPhaseQueue.Entry<GuiRenderState.TraverseRange, GuiRenderPhaseAction>> actions) {
         actions.forEach(action -> action.action().executeRender_FancyMenu());
+    }
+
+    @Unique
+    private boolean isMainGuiRenderer_FancyMenu() {
+        // The GameRenderer is still null while it constructs its own GuiRenderer
+        GameRenderer gameRenderer = Minecraft.getInstance().gameRenderer;
+        return (gameRenderer != null) && (((IMixinGameRenderer)gameRenderer).get_guiRenderer_FancyMenu() == (Object)this);
     }
 
     @Unique
