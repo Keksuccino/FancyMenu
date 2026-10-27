@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.util.rendering.gui.Axis;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.rinku.BrowserHandler;
 import de.keksuccino.fancymenu.util.rinku.RinkuUtil;
 import de.keksuccino.fancymenu.util.rinku.WrappedRinkuBrowser;
@@ -325,11 +326,7 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
             wrappedBrowser = null;
         }
         if (wrappedBrowser == null) {
-            String resolvedUrl = this.url.getString();
-            if (resolvedUrl == null || resolvedUrl.isBlank()) {
-                resolvedUrl = FALLBACK_URL;
-            }
-            wrappedBrowser = WrappedRinkuBrowser.build(resolvedUrl, true, false, this.muteMedia.tryGetNonNullElse(false), null);
+            wrappedBrowser = WrappedRinkuBrowser.build(resolveUrl(this.url.get()), true, false, this.muteMedia.tryGetNonNullElse(false), null);
         }
         this.browser = wrappedBrowser;
         BrowserHandler.notifyHandler(instanceIdentifier, wrappedBrowser);
@@ -337,6 +334,16 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
         this.lastTickWidth = -1;
         this.lastTickHeight = -1;
         this.autoFocusPending = true;
+    }
+
+    /**
+     * Replaces placeholders in a browser URL without converting "&" formatting codes, because URLs are not formatted text.
+     * This parse bypasses the placeholder cache, so only call it when the URL actually needs to get loaded.
+     */
+    @NotNull
+    static String resolveUrl(@Nullable String url) {
+        String resolvedUrl = PlaceholderParser.replacePlaceholdersPreservingFormattingCodes(url);
+        return resolvedUrl.isBlank() ? FALLBACK_URL : resolvedUrl;
     }
 
     private void destroyBrowser() {
@@ -371,13 +378,15 @@ public class BrowserMenuBackground extends MenuBackground<BrowserMenuBackground>
         this.lastTickWidth = width;
         this.lastTickHeight = height;
 
-        String finalUrl = this.url.getString();
-        if (finalUrl == null || finalUrl.isBlank()) {
-            finalUrl = FALLBACK_URL;
+        // The cached default parse is only a cheap per-frame change check. Its formatting-code conversion would
+        // turn URL parameters like "&embed" into "§embed", so the URL that gets loaded is resolved separately.
+        String parsedUrl = this.url.getString();
+        if (parsedUrl == null || parsedUrl.isBlank()) {
+            parsedUrl = FALLBACK_URL;
         }
-        if (!Objects.equals(finalUrl, this.lastTickUrl)) {
-            wrappedBrowser.setUrl(finalUrl);
-            this.lastTickUrl = finalUrl;
+        if (!Objects.equals(parsedUrl, this.lastTickUrl)) {
+            wrappedBrowser.setUrl(resolveUrl(this.url.get()));
+            this.lastTickUrl = parsedUrl;
         }
 
         boolean hideControls = this.hideVideoControls.tryGetNonNullElse(false);

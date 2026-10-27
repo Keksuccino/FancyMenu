@@ -63,7 +63,7 @@ public class BrowserElement extends AbstractElement {
     private WrappedRinkuBrowser createBrowser() {
         WrappedRinkuBrowser wrappedBrowser = BrowserHandler.get(this.getInstanceIdentifier());
         if (wrappedBrowser == null || wrappedBrowser.isClosed()) {
-            wrappedBrowser = WrappedRinkuBrowser.build(PlaceholderParser.replacePlaceholders(this.url), true, false, this.muteMedia, null);
+            wrappedBrowser = WrappedRinkuBrowser.build(resolveUrl(this.url), true, false, this.muteMedia, null);
         } else if (wrappedBrowser.isMuted() != this.muteMedia) {
             wrappedBrowser.setMuted(this.muteMedia);
         }
@@ -160,10 +160,12 @@ public class BrowserElement extends AbstractElement {
                 this.lastTickWidth = w;
                 this.lastTickHeight = h;
 
-                String finalUrl = PlaceholderParser.replacePlaceholders(this.url);
-                if (!finalUrl.equals(this.getLastTickUrl())) {
-                    this.browser.setUrl(finalUrl);
-                    this.setLastTickUrl(finalUrl);
+                // The cached default parse is only a cheap per-frame change check. Its formatting-code conversion would
+                // turn URL parameters like "&embed" into "§embed", so the URL that gets loaded is resolved separately.
+                String parsedUrl = PlaceholderParser.replacePlaceholders(this.url);
+                if (!parsedUrl.equals(this.getLastTickUrl())) {
+                    this.browser.setUrl(resolveUrl(this.url));
+                    this.setLastTickUrl(parsedUrl);
                 }
 
                 RenderSystem.enableBlend();
@@ -207,6 +209,15 @@ public class BrowserElement extends AbstractElement {
 
     public void setLastTickUrl(@Nullable String url) {
         this.getMemory().putProperty("last_tick_url", url);
+    }
+
+    /**
+     * Replaces placeholders in a browser URL without converting "&" formatting codes, because URLs are not formatted text.
+     * This parse bypasses the placeholder cache, so only call it when the URL actually needs to get loaded.
+     */
+    @NotNull
+    static String resolveUrl(@NotNull String url) {
+        return PlaceholderParser.replacePlaceholdersPreservingFormattingCodes(url);
     }
 
     static String getBrowserStatusKey(boolean rinkuLoaded, boolean failed) {
