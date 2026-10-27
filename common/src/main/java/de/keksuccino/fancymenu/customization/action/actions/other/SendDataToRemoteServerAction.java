@@ -21,6 +21,11 @@ public class SendDataToRemoteServerAction extends Action {
     }
 
     @Override
+    public boolean hasRawValue() {
+        return true;
+    }
+
+    @Override
     public void execute(@Nullable String value) {
         if (value == null || !value.contains("||")) {
             return;
