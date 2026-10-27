@@ -4,6 +4,11 @@ CHANGELOG | FANCYMENU v3.9.15 [ W I P !! Not public yet !! ]
 - Added Ukrainian translation (#1817)
 - Added the newest texts (browser loading/error messages and the "select an action first" warning) to all other translations
 - Improved the description of the "Negate Number" placeholder in all languages
+- Improved performance of video elements and video menu backgrounds that play local files with Rinku (the file is no longer re-checked on disk every frame)
+- Fixed Browser element, Browser menu background and Browser decoration overlay URLs breaking when they contain placeholders, because `&` parameters like `&embed` or `&f` were treated as Minecraft formatting codes (#1818)
+- Fixed image, audio, video and text sources, video elements and backgrounds, player skin and cape sources and the game intro breaking when their source contains placeholders and an `&` followed by a letter or number, like `&embed` (#1818)
+- Fixed file actions, the Send HTTP Request action, remote server actions, the Play Audio action and the Enter World action breaking when their value contains placeholders and an `&` followed by a letter or number (#1818)
+- Fixed the Open Link action turning `§` characters in links into `&` (#1818)
 - Fixed `/fmlayout` error messages showing "%s" instead of the layout name
 - Fixed typos in several English texts (boss name and boss health placeholders, experience progress placeholder, async requirement error, welcome screen title)
 - Fixed the "Video Background Paused State" placeholder description talking about an element instead of a background
