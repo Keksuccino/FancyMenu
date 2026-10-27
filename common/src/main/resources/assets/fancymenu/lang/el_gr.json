@@ -2615,7 +2615,7 @@
   "fancymenu.placeholders.nbt_data_get.server": "Λήψη δεδομένων NBT (server-side)",
   "fancymenu.placeholders.nbt_data_get.server.desc": "§xΑπαιτεί το FancyMenu στον διακομιστή.§r\n\nΦέρνει ζωντανά δεδομένα NBT από τον διακομιστή, αντιγράφοντας κάθε στόχο που υποστηρίζει η '/data get'.\nΕπιστρέφει κενή τιμή μέχρι να φτάσει η απάντηση από τον διακομιστή.\n\nΤο placeholder λειτουργεί ακριβώς όπως η εντολή '/data get', οπότε ό,τι θα έπρεπε να είναι δυνατό με την εντολή θα πρέπει να είναι δυνατό και με το placeholder.\n\nΥποστηριζόμενες τιμές source_type:\n- entity: Πλήρης σύνταξη selector (scores, advancements, predicates, rotation, gamemode κλπ.)\n- block: Απόλυτες, σχετικές (~) ή τοπικές (^) συντεταγμένες όπως στην vanilla εντολή\n- storage: Αναγνωριστικά command storage (namespace:key)\n\nΠροαιρετικές παράμετροι:\n- nbt_path: Οι ίδιες τιμές διαδρομής όπως στο '/data get'\n- scale: Πολλαπλασιάζει αριθμητικά αποτελέσματα (προεπιλογή 1.0)\n- return_type: 'value', 'string', 'snbt' ή 'json'\n\nΟι απαντήσεις αποθηκεύονται σε cache για 100ms ώστε να μην spamάρεται ο διακομιστής.",
   "fancymenu.placeholders.negate_number": "Αρνητοποίηση αριθμού",
-  "fancymenu.placeholders.negate_number.desc": "Επιστρέφει το αρνητικό του δοσμένου αριθμού.\nΑν ο δοσμένος αριθμός είναι αρνητικός, επιστρέφεται ο ίδιος.",
+  "fancymenu.placeholders.negate_number.desc": "Επιστρέφει τον δοσμένο αριθμό ως αρνητικό.\nΑν ο αριθμός είναι ήδη αρνητικός ή μηδέν, επιστρέφεται αμετάβλητος.",
   "fancymenu.placeholders.number_base_convert": "Μετατροπέας βάσης αριθμών",
   "fancymenu.placeholders.number_base_convert.desc": "Μετατρέπει έναν αριθμό μεταξύ βάσεων (υποστηρίζει δεκαδικά).\nΤιμές: input, from_base (2-36), to_base (2-36).\nΠαράγονται μέχρι 16 κλασματικά ψηφία στη βάση προορισμού.\nΠαράδειγμα: input=67, from_base=10, to_base=2 -> 1000011.",
   "fancymenu.placeholders.opengl_version": "Έκδοση OpenGL",
@@ -2698,7 +2698,7 @@
   "fancymenu.placeholders.video_background_duration": "Διάρκεια φόντου βίντεο",
   "fancymenu.placeholders.video_background_duration.desc": "Επιστρέφει τη συνολική διάρκεια ενός φόντου βίντεο μενού σε μορφή MM:SS (π.χ. '03:45') ή σε χιλιοστά του δευτερολέπτου, βάσει του αναγνωριστικού του.\nΕπιστρέφει '00:00' ή '0' αν το φόντο δεν είναι ακόμα έτοιμο ή δεν έχει οριστεί βίντεο.\n\nΑπαιτούμενες τιμές:\n- background_identifier: Το ID του φόντου Video\n- output_as_timestamp: Ορίστε σε 'true' για να εμφανίζονται χιλιοστά του δευτερολέπτου αντί για MM:SS\n\nΓια να πάρεις το αναγνωριστικό ενός φόντου, κάνε δεξί κλικ στο\nφόντο του editor και πάτησε 'Copy Background Identifier'.",
   "fancymenu.placeholders.video_background_paused_state": "Κατάσταση παύσης φόντου βίντεο",
-  "fancymenu.placeholders.video_background_paused_state.desc": "Επιστρέφει την κατάσταση παύσης ενός φόντου βίντεο μενού βάσει του αναγνωριστικού του.\nΕπιστρέφει 'true' όταν το στοιχείο είναι σε παύση, αλλιώς επιστρέφει 'false'.\n\nΓια να πάρεις το αναγνωριστικό ενός φόντου, κάνε δεξί κλικ στο\nφόντο του editor και πάτησε 'Copy Background Identifier'.",
+  "fancymenu.placeholders.video_background_paused_state.desc": "Επιστρέφει την κατάσταση παύσης ενός φόντου βίντεο μενού βάσει του αναγνωριστικού του.\nΕπιστρέφει 'true' όταν το φόντο είναι σε παύση, αλλιώς επιστρέφει 'false'.\n\nΓια να πάρεις το αναγνωριστικό ενός φόντου, κάνε δεξί κλικ στο\nφόντο του editor και πάτησε 'Copy Background Identifier'.",
   "fancymenu.placeholders.video_background_playtime": "Χρόνος αναπαραγωγής φόντου βίντεο",
   "fancymenu.placeholders.video_background_playtime.desc": "Επιστρέφει είτε τον τρέχοντα χρόνο αναπαραγωγής ενός φόντου βίντεο\n(μορφή MM:SS), το ποσοστό προόδου αναπαραγωγής (0-100) ή τον τρέχοντα χρόνο αναπαραγωγής σε χιλιοστά του δευτερολέπτου.\nΕπιστρέφει '00:00' ή '0' αν το στοιχείο δεν είναι ακόμα έτοιμο ή δεν έχει οριστεί βίντεο.\n\nΑπαιτούμενες τιμές:\n- background_identifier: Το ID του φόντου Video\n- show_percentage: Ορίστε σε 'true' για να εμφανίζεται ποσοστό αντί για χρόνο\n- output_as_timestamp: Ορίστε σε 'true' για να εμφανίζονται χιλιοστά του δευτερολέπτου αντί για MM:SS\n\nΠροτεραιότητα:\n- show_percentage (υψηλότερη)\n- output_as_timestamp\n- προεπιλεγμένη έξοδος MM:SS\n\nΓια να πάρεις το αναγνωριστικό ενός φόντου, κάνε δεξί κλικ στο\nφόντο του editor και πάτησε 'Copy Background Identifier'.",
   "fancymenu.placeholders.video_background_volume": "Ένταση φόντου βίντεο",
@@ -3356,7 +3356,7 @@
   "fancymenu.welcome.screen.open_docs": "Άνοιγμα Τεκμηρίωσης",
   "fancymenu.welcome.screen.open_docs.tooltip": "Η οθόνη Καλωσορίσματος δεν θα εμφανιστεί ξανά\nμετά το πάτημα αυτού του κουμπιού.\nΔεν χρειάζεται να επεξεργαστείς χειροκίνητα κανένα αρχείο ρυθμίσεων.",
   "fancymenu.welcome.screen.text": "Πριν ξεκινήσεις να κάνεις custom με το FancyMenu, βεβαιώσου ότι θα **διαβάσεις προσεκτικά την τεκμηρίωση**. Παρότι το FancyMenu μπορεί αρχικά να φαίνεται βαρύ, η τεκμηρίωση θα σε καθοδηγήσει βήμα-βήμα.\n\nΞεκίνα από τη σελίδα [Getting Started](https://docs.fancymenu.net) για τα βασικά της προσαρμογής μενού. Μην ξεχάσεις να τσεκάρεις και τις άλλες ενότητες, γιατί έχουν πολύ χρήσιμες πληροφορίες και tips!\n\nΜπορείς επίσης να μπεις στο επίσημο [Discord](https://discord.gg/rhayah27GC) αν έχεις απορίες!\n\n**Ελπίζω να περάσεις τέλεια με το FancyMenu!**",
-  "fancymenu.welcome.screen.title": "Καλωσόρισες στο Fancymenu!",
+  "fancymenu.welcome.screen.title": "Καλωσόρισες στο FancyMenu!",
   "fancymenu.widgetified_screens.title_screen.branding": "Branding",
   "fancymenu.widgetified_screens.title_screen.forge.copyright": "Ειδοποίηση Πνευματικών Δικαιωμάτων του Forge",
   "fancymenu.widgetified_screens.title_screen.forge.copyright.example.line1": "< Παράδειγμα Κειμένου Ειδοποίησης Πνευματικών Δικαιωμάτων του Forge >",
@@ -3365,5 +3365,10 @@
   "fancymenu.widgetified_screens.title_screen.forge.top.example.line2": "Χρησιμοποιείται για την εμφάνιση προειδοποιήσεων Beta build και άλλων πραγμάτων.",
   "fancymenu.widgetified_screens.title_screen.logo": "Λογότυπο Minecraft",
   "fancymenu.widgetified_screens.title_screen.realmsnotification": "Εικονίδια Ειδοποίησης Realms",
-  "fancymenu.widgetified_screens.title_screen.splash": "Vanilla Κείμενο Splash"
+  "fancymenu.widgetified_screens.title_screen.splash": "Vanilla Κείμενο Splash",
+  "fancymenu.actions.screens.finish.no_action_selected": "§xΠρέπει πρώτα να επιλέξεις μια ενέργεια!",
+  "fancymenu.elements.browser.rinku_initializing.line_1": "Ο browser ξεκινάει...",
+  "fancymenu.elements.browser.rinku_initializing.line_2": "Αναμονή μέχρι το Rinku να ολοκληρώσει την αρχικοποίηση.",
+  "fancymenu.elements.browser.rinku_failed.line_1": "Η αρχικοποίηση του browser απέτυχε!",
+  "fancymenu.elements.browser.rinku_failed.line_2": "Δες το log του παιχνιδιού για λεπτομέρειες."
 }

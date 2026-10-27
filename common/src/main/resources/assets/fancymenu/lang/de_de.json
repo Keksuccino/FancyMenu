@@ -2615,7 +2615,7 @@
   "fancymenu.placeholders.nbt_data_get.server": "NBT-Daten abrufen (serverseitig)",
   "fancymenu.placeholders.nbt_data_get.server.desc": "§xErfordert FancyMenu auf dem Server.§r\n\nRuft Live-NBT-Daten vom Server ab und spiegelt dabei jedes Ziel, das auch von '/data get' unterstützt wird.\nGibt einen leeren Wert zurück, bis die Serverantwort ankommt.\n\nDer Placeholder funktioniert genau wie der Befehl '/data get', also sollte alles, was mit dem Befehl möglich ist, auch mit dem Placeholder möglich sein.\n\nUnterstützte source_type-Werte:\n- entity: Vollständige Selektor-Syntax (Scores, Advancements, Predicates, Rotation, Gamemode usw.)\n- block: Absolute, relative (~) oder lokale (^) Koordinaten wie beim Vanilla-Befehl\n- storage: Befehls-Speicher-Identifikatoren (namespace:key)\n\nOptionale Argumente:\n- nbt_path: Dieselben Pfadregeln wie bei '/data get'\n- scale: Multipliziert numerische Ergebnisse (Standard 1.0)\n- return_type: 'value', 'string', 'snbt' oder 'json'\n\nAntworten werden 100 ms lang gecacht, damit der Server nicht zugespammt wird.",
   "fancymenu.placeholders.negate_number": "Zahl negieren",
-  "fancymenu.placeholders.negate_number.desc": "Gibt die Negation der angegebenen Zahl zurück.\nWenn die angegebene Zahl negativ ist, wird sie unverändert zurückgegeben.",
+  "fancymenu.placeholders.negate_number.desc": "Gibt die angegebene Zahl als negative Zahl zurück.\nIst die Zahl bereits negativ oder null, wird sie unverändert zurückgegeben.",
   "fancymenu.placeholders.number_base_convert": "Zahlensystem-Konverter",
   "fancymenu.placeholders.number_base_convert.desc": "Konvertiert eine Zahl zwischen Zahlensystemen (unterstützt Dezimalzahlen).\nWerte: input, from_base (2-36), to_base (2-36).\nBis zu 16 Nachkommastellen werden im Zielsystem erzeugt.\nBeispiel: input=67, from_base=10, to_base=2 -> 1000011.",
   "fancymenu.placeholders.opengl_version": "OpenGL-Version",
@@ -2698,7 +2698,7 @@
   "fancymenu.placeholders.video_background_duration": "Videohintergrund-Dauer",
   "fancymenu.placeholders.video_background_duration.desc": "Gibt die Gesamtdauer eines Video-Menühintergrunds im Format MM:SS (z. B. '03:45') oder in Millisekunden anhand seiner Identifikator zurück.\nGibt '00:00' oder '0' zurück, wenn der Hintergrund noch nicht bereit ist oder kein Video gesetzt ist.\n\nErforderliche Werte:\n- background_identifier: Die ID des Video-Hintergrunds\n- output_as_timestamp: Auf 'true' setzen, um Millisekunden statt MM:SS anzuzeigen\n\nUm die Identifikator eines Hintergrunds zu bekommen, rechtsklicke auf den\nEditor-Hintergrund und klicke auf 'Kopiere Hintergrund-Identifikator'.",
   "fancymenu.placeholders.video_background_paused_state": "Pausierter Zustand des Videohintergrunds",
-  "fancymenu.placeholders.video_background_paused_state.desc": "Gibt den pausierten Zustand eines Video-Menühintergrunds anhand seiner Identifikator zurück.\nGibt 'true' zurück, wenn das Element pausiert ist, ansonsten 'false'.\n\nUm die Identifikator eines Hintergrunds zu bekommen, rechtsklicke auf den\nEditor-Hintergrund und klicke auf 'Kopiere Hintergrund-Identifikator'.",
+  "fancymenu.placeholders.video_background_paused_state.desc": "Gibt den pausierten Zustand eines Video-Menühintergrunds anhand seiner Identifikator zurück.\nGibt 'true' zurück, wenn der Hintergrund pausiert ist, ansonsten 'false'.\n\nUm die Identifikator eines Hintergrunds zu bekommen, rechtsklicke auf den\nEditor-Hintergrund und klicke auf 'Kopiere Hintergrund-Identifikator'.",
   "fancymenu.placeholders.video_background_playtime": "Abspielzeit des Videohintergrunds",
   "fancymenu.placeholders.video_background_playtime.desc": "Gibt entweder die aktuelle Abspielzeit eines Video-Menühintergrunds\n(im Format MM:SS), den Wiedergabefortschritt in Prozent (0-100) oder die aktuelle Abspielzeit in Millisekunden zurück.\nGibt '00:00' oder '0' zurück, wenn das Element noch nicht bereit ist oder kein Video gesetzt ist.\n\nErforderliche Werte:\n- background_identifier: Die ID des Video-Hintergrunds\n- show_percentage: Auf 'true' setzen, um Prozent statt Zeit anzuzeigen\n- output_as_timestamp: Auf 'true' setzen, um Millisekunden statt MM:SS anzuzeigen\n\nPriorität:\n- show_percentage (höchste)\n- output_as_timestamp\n- Standardausgabe MM:SS\n\nUm die Identifikator eines Hintergrunds zu bekommen, rechtsklicke auf den\nEditor-Hintergrund und klicke auf 'Kopiere Hintergrund-Identifikator'.",
   "fancymenu.placeholders.video_background_volume": "Videohintergrund-Lautstärke",
@@ -3365,5 +3365,10 @@
   "fancymenu.widgetified_screens.title_screen.forge.top.example.line2": "Wird verwendet, um Beta-Build-Warnungen und andere Dinge anzuzeigen.",
   "fancymenu.widgetified_screens.title_screen.logo": "Minecraft-Logo",
   "fancymenu.widgetified_screens.title_screen.realmsnotification": "Realms-Benachrichtigungssymbole",
-  "fancymenu.widgetified_screens.title_screen.splash": "Vanilla-Splash-Text"
+  "fancymenu.widgetified_screens.title_screen.splash": "Vanilla-Splash-Text",
+  "fancymenu.actions.screens.finish.no_action_selected": "§xDu musst zuerst eine Aktion auswählen!",
+  "fancymenu.elements.browser.rinku_initializing.line_1": "Browser wird gestartet...",
+  "fancymenu.elements.browser.rinku_initializing.line_2": "Warte, bis Rinku mit der Initialisierung fertig ist.",
+  "fancymenu.elements.browser.rinku_failed.line_1": "Initialisierung des Browsers fehlgeschlagen!",
+  "fancymenu.elements.browser.rinku_failed.line_2": "Details findest Du im Spiel-Log."
 }
