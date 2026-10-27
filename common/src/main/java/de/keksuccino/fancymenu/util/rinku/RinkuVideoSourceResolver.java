@@ -9,11 +9,61 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
+import java.util.function.LongSupplier;
 
-/** Resolves placeholder-expanded Rinku sources immediately before handing them to Chromium. */
+/**
+ * Resolves placeholder-expanded Rinku sources immediately before handing them to Chromium.
+ *
+ * <p>Checking a local source touches the file system several times, so an instance remembers the last local check of one
+ * video and only checks again when the source changes or {@link #LOCAL_RECHECK_INTERVAL_NANOS} passed. Files that appear,
+ * vanish or get swapped later are still noticed that way.</p>
+ *
+ * <p>Callers only hand a URL to Chromium when the resolved value changes, and a cached value never differs from the one
+ * returned before, so every handed-over URL still comes from a fresh check. Callers that forget the URL they handed over
+ * must call {@link #reset()}, otherwise a cached URL would look new to them.</p>
+ */
 public final class RinkuVideoSourceResolver {
 
-    private RinkuVideoSourceResolver() {
+    static final long LOCAL_RECHECK_INTERVAL_NANOS = TimeUnit.SECONDS.toNanos(1);
+
+    private final LongSupplier nanoClock;
+    private final BiFunction<ResourceSource, String, String> uncachedResolver;
+    @Nullable
+    private LocalCheck lastLocalCheck;
+
+    public RinkuVideoSourceResolver() {
+        this(System::nanoTime, RinkuVideoSourceResolver::resolve);
+    }
+
+    RinkuVideoSourceResolver(@NotNull LongSupplier nanoClock, @NotNull BiFunction<ResourceSource, String, String> uncachedResolver) {
+        this.nanoClock = Objects.requireNonNull(nanoClock);
+        this.uncachedResolver = Objects.requireNonNull(uncachedResolver);
+    }
+
+    /**
+     * Like {@link #resolve(ResourceSource, String)}, but reuses the last local check of this video while it is recent, so
+     * it is cheap enough to call every frame.
+     */
+    @Nullable
+    public String resolveCached(@NotNull ResourceSource rawSource, @NotNull String placeholderExpandedSource) {
+        if (rawSource.getSourceType() != ResourceSourceType.LOCAL) {
+            this.lastLocalCheck = null;
+            return placeholderExpandedSource;
+        }
+        long now = this.nanoClock.getAsLong();
+        LocalCheck last = this.lastLocalCheck;
+        if ((last != null) && last.placeholderExpandedSource().equals(placeholderExpandedSource) && ((now - last.checkedAtNanos()) < LOCAL_RECHECK_INTERVAL_NANOS)) return last.resolvedSource();
+        String resolvedSource = this.uncachedResolver.apply(rawSource, placeholderExpandedSource);
+        this.lastLocalCheck = new LocalCheck(placeholderExpandedSource, resolvedSource, now);
+        return resolvedSource;
+    }
+
+    /** Forgets the last local check, so the next {@link #resolveCached(ResourceSource, String)} call checks the file system again. */
+    public void reset() {
+        this.lastLocalCheck = null;
     }
 
     @Nullable
@@ -44,5 +94,8 @@ public final class RinkuVideoSourceResolver {
         } catch (IOException | RuntimeException ignored) {
             return null;
         }
+    }
+
+    private record LocalCheck(@NotNull String placeholderExpandedSource, @Nullable String resolvedSource, long checkedAtNanos) {
     }
 }
