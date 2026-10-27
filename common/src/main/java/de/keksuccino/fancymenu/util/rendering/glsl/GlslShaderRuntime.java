@@ -16,6 +16,7 @@ import de.keksuccino.fancymenu.util.rendering.GuiRenderPhaseAction;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
@@ -223,7 +224,8 @@ public class GlslShaderRuntime {
             return false;
         }
 
-        double guiScale = window.getGuiScale();
+        // GLSL areas are in the same logical space as FancyMenu's precise GUI projection, and Window#getGuiScale() only exposes its floored integer part while a fractional scale is active
+        double guiScale = WindowHandler.getGuiScale();
         int screenWidthPx = mainTarget.width;
         int screenHeightPx = mainTarget.height;
         int areaXPx = Mth.floor(areaX * guiScale);
@@ -274,7 +276,7 @@ public class GlslShaderRuntime {
             imageProgram.passFrames.activate(buildPassHistoryIdentity(imageProgram, settings.routingForPass(IMAGE_PASS_INDEX)), false);
             ChannelTextureState fallback = this.resolveFallbackTextureState();
             ChannelTextureState[] externalChannels = this.resolveExternalChannelTextureStates(minecraft, settings, fallback);
-            GlslFrameUniformState.FrameSnapshot frameSnapshot = this.frameUniformState_FancyMenu.capture(minecraft, window, settings, partialTick, areaX, areaY, areaWidth, areaHeight, areaWidthPx, areaHeightPx, screenWidthPx, screenHeightPx);
+            GlslFrameUniformState.FrameSnapshot frameSnapshot = this.frameUniformState_FancyMenu.capture(minecraft, window, settings, partialTick, guiScale, areaX, areaY, areaWidth, areaHeight, areaWidthPx, areaHeightPx, screenWidthPx, screenHeightPx);
             List<PreparedPass> preparedPasses = this.preparePasses(settings, activeBufferPasses, externalChannels, fallback, frameSnapshot, mainColorView, areaXPx, areaYPxTop, areaYPxBottom, areaWidthPx, areaHeightPx, viewportX, viewportYBottom, viewportWidth, viewportHeight, screenWidthPx, screenHeightPx);
             this.executePasses(preparedPasses, activeBufferPasses);
             this.lastCompileError = null;
