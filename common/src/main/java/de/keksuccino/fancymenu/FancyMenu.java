@@ -34,8 +34,11 @@ public class FancyMenu {
 	public static final String MOD_LOADER = Services.PLATFORM.getPlatformName();
 	public static final String MOD_ID = "fancymenu";
 
-	public static final File MOD_DIR = createDirectory(new File(GameDirectoryUtils.getGameDirectory(), "/config/fancymenu"));
-	public static final File INSTANCE_DATA_DIR = createDirectory(new File(GameDirectoryUtils.getGameDirectory(), "/fancymenu_data"));
+	// Paths relative to the game directory. They must stay compile-time constants, so path confinement can use them without initializing this class.
+	public static final String MOD_DIR_PATH = "config/fancymenu";
+	public static final String INSTANCE_DATA_DIR_PATH = "fancymenu_data";
+	public static final File MOD_DIR = createDirectory(new File(GameDirectoryUtils.getGameDirectory(), MOD_DIR_PATH));
+	public static final File INSTANCE_DATA_DIR = createDirectory(new File(GameDirectoryUtils.getGameDirectory(), INSTANCE_DATA_DIR_PATH));
 	public static final File TEMP_DATA_DIR = ObjectUtils.build(() -> {
 		File f = new File(INSTANCE_DATA_DIR, "/fancymenu_temp");
 		if (f.isDirectory()) org.apache.commons.io.FileUtils.deleteQuietly(f);

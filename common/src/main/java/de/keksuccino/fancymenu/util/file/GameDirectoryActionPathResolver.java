@@ -13,7 +13,9 @@ import java.util.regex.Pattern;
  * path is captured at construction time, so a configured root may itself be a symlink, but replacing that symlink with
  * one pointing somewhere else does not silently move the allowed boundary. Every resolved path is also checked through
  * its final entry or nearest existing ancestor, which rejects descendants that escape through symlinks while still
- * allowing safe descendants that do not exist yet.</p>
+ * allowing safe descendants that do not exist yet. FancyMenu's own directories inside each root are relocatable as
+ * described by {@link ConfinedPathResolver}, so moving them elsewhere behind a symbolic link or junction keeps them
+ * usable. See {@link GameDirectoryUtils#RELOCATABLE_FANCYMENU_DIRECTORIES}.</p>
  *
  * <p>These checks minimize path-swap windows, but callers must still invoke {@link ResolvedPath#revalidate()} immediately
  * before each filesystem mutation. Java's portable path APIs cannot make an ancestor check and a later mutation one
@@ -176,7 +178,7 @@ public final class GameDirectoryActionPathResolver {
     private record RootBoundary(AllowedRoot allowedRoot, ConfinedPathResolver resolver) {
 
         private static RootBoundary capture(AllowedRoot allowedRoot, Path path) throws IOException {
-            return new RootBoundary(allowedRoot, ConfinedPathResolver.create(path));
+            return new RootBoundary(allowedRoot, ConfinedPathResolver.create(path, GameDirectoryUtils.RELOCATABLE_FANCYMENU_DIRECTORIES));
         }
     }
 }
