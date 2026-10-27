@@ -47,6 +47,14 @@ public class SmoothFonts {
         return NOTO_SANS_PROVIDER.shouldUseFallback(preferMinecraftFont);
     }
 
+    /**
+     * Non-loading variant of {@link #shouldUseMinecraftFont(boolean)}. It only reports a fallback after a failed load attempt,
+     * so cheap layout queries never pay for reading and parsing the whole Noto Sans family on the calling thread.
+     */
+    public static boolean peekShouldUseMinecraftFont(boolean preferMinecraftFont) {
+        return NOTO_SANS_PROVIDER.peekShouldUseFallback(preferMinecraftFont);
+    }
+
     public static void clearCache() {
         NOTO_SANS_PROVIDER.clear();
     }
