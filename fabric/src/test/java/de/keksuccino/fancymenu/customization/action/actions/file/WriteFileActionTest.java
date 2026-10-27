@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.action.actions.file;
 
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.file.GameDirectoryActionPathResolver;
 import de.keksuccino.fancymenu.util.file.GameDirectoryActionPathResolverFixture;
 import org.junit.jupiter.api.BeforeAll;
@@ -112,6 +113,23 @@ class WriteFileActionTest {
         assertAll(
                 () -> assertTrue(Files.isSymbolicLink(escapingLink)),
                 () -> assertArrayEquals(originalBytes, Files.readAllBytes(outsideFile)));
+    }
+
+    @Test
+    void writesThroughARelocatedFancyMenuDirectoryButNotThroughEscapingLinksInsideIt() throws Exception {
+        Path sharedModDirectory = Files.createDirectories(this.temporaryDirectory.resolve("shared/fancymenu"));
+        Files.createDirectories(this.gameRoot.resolve(FancyMenu.MOD_DIR_PATH).getParent());
+        createSymbolicLinkOrSkip(this.gameRoot.resolve(FancyMenu.MOD_DIR_PATH), sharedModDirectory);
+        createSymbolicLinkOrSkip(sharedModDirectory.resolve("escaping"), this.outsideRoot);
+        GameDirectoryActionPathResolver relocatedResolver = GameDirectoryActionPathResolverFixture.create(this.gameRoot, this.minecraftRoot);
+        WriteFileAction action = new WriteFileAction();
+
+        action.executeWithResolver(FancyMenu.MOD_DIR_PATH + "/data/output.txt|||é😀|||false", relocatedResolver);
+
+        assertAll(
+                () -> assertArrayEquals("é😀".getBytes(StandardCharsets.UTF_8), Files.readAllBytes(sharedModDirectory.resolve("data/output.txt"))),
+                () -> assertThrows(SecurityException.class, () -> action.executeWithResolver(FancyMenu.MOD_DIR_PATH + "/escaping/output.txt|||changed|||false", relocatedResolver)),
+                () -> assertTrue(Files.notExists(this.outsideRoot.resolve("output.txt"))));
     }
 
     private static void createSymbolicLinkOrSkip(Path link, Path target) {

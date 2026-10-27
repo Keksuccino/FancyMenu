@@ -8,6 +8,7 @@ import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -20,6 +21,11 @@ import java.util.regex.Pattern;
  * symbolic link to redirect them outside the boundary. A root may itself be a symbolic link, but retargeting it after
  * capture invalidates every resolved path.</p>
  *
+ * <p>Relocatable directories are descendants that users may move elsewhere and replace with a symbolic link or
+ * junction. The real target each one has at capture time joins the boundary, so candidates may reach it through that
+ * link, while links inside the target that lead anywhere else are still rejected. A relocatable directory retargeted
+ * after capture is not followed; paths through its new target stay rejected until a new resolver is created.</p>
+ *
  * <p>Callers must invoke {@link ResolvedPath#revalidate()} immediately before each filesystem operation. Portable Java
  * filesystem APIs cannot make this validation and a later operation atomic on every supported filesystem.</p>
  */
@@ -29,15 +35,27 @@ public final class ConfinedPathResolver {
 
     private final Path lexicalRoot;
     private final Path realRoot;
+    private final List<Path> relocatedRealRoots;
 
-    private ConfinedPathResolver(@NotNull Path root) throws IOException {
+    private ConfinedPathResolver(@NotNull Path root, @NotNull Collection<String> relocatableDirectories) throws IOException {
         this.lexicalRoot = Objects.requireNonNull(root, "root").toAbsolutePath().normalize();
         this.realRoot = projectRealPath(this.lexicalRoot);
+        this.relocatedRealRoots = this.projectRelocatedRealRoots(Objects.requireNonNull(relocatableDirectories, "relocatableDirectories"));
     }
 
     @NotNull
     public static ConfinedPathResolver create(@NotNull Path root) throws IOException {
-        return new ConfinedPathResolver(root);
+        return new ConfinedPathResolver(root, List.of());
+    }
+
+    /**
+     * Creates a resolver whose boundary also covers the current real targets of the given relocatable directories.
+     *
+     * @param relocatableDirectories descendant directories of the root, as paths relative to it
+     */
+    @NotNull
+    public static ConfinedPathResolver create(@NotNull Path root, @NotNull Collection<String> relocatableDirectories) throws IOException {
+        return new ConfinedPathResolver(root, relocatableDirectories);
     }
 
     @NotNull
@@ -54,6 +72,32 @@ public final class ConfinedPathResolver {
         ResolvedPath resolvedPath = new ResolvedPath(normalizedCandidate);
         resolvedPath.revalidate();
         return resolvedPath;
+    }
+
+    private List<Path> projectRelocatedRealRoots(Collection<String> relocatableDirectories) {
+        List<Path> relocatedRealRoots = new ArrayList<>();
+        for (String relocatableDirectory : relocatableDirectories) {
+            Path directory = this.lexicalRoot.resolve(relocatableDirectory).normalize();
+            if (directory.equals(this.lexicalRoot) || !directory.startsWith(this.lexicalRoot)) {
+                throw new IllegalArgumentException("Relocatable directory must be a descendant of its root: " + relocatableDirectory);
+            }
+            try {
+                Path realDirectory = projectRealPath(directory);
+                // Directories whose real target is still inside the real root are already covered by it.
+                if (!realDirectory.startsWith(this.realRoot)) relocatedRealRoots.add(realDirectory);
+            } catch (IOException ignored) {
+                // An unresolvable directory, such as a dangling link, adds nothing; paths through it fail their own validation.
+            }
+        }
+        return List.copyOf(relocatedRealRoots);
+    }
+
+    private boolean isInsideRealBoundary(Path projectedPath) {
+        if (projectedPath.startsWith(this.realRoot)) return true;
+        for (Path relocatedRealRoot : this.relocatedRealRoots) {
+            if (projectedPath.startsWith(relocatedRealRoot)) return true;
+        }
+        return false;
     }
 
     private static Path projectRealPath(Path path) throws IOException {
@@ -158,7 +202,7 @@ public final class ConfinedPathResolver {
                 throw new SecurityException("Allowed root changed after path resolution: " + ConfinedPathResolver.this.lexicalRoot);
             }
             Path projectedPath = projectRealPath(this.path);
-            if (!projectedPath.startsWith(ConfinedPathResolver.this.realRoot)) {
+            if (!ConfinedPathResolver.this.isInsideRealBoundary(projectedPath)) {
                 throw new SecurityException("Path escapes its allowed root through a symbolic link: " + this.path);
             }
             return this.path;

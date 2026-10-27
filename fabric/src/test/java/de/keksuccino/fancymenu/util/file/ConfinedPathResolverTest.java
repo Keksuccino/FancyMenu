@@ -6,6 +6,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -88,6 +89,75 @@ class ConfinedPathResolverTest {
         Files.createSymbolicLink(rootLink, secondRoot);
 
         assertThrows(SecurityException.class, resolved::revalidate);
+    }
+
+    @Test
+    void relocatedDirectoriesExtendTheBoundaryOnlyToTheirCapturedTargets() throws Exception {
+        Path root = Files.createDirectory(this.temporaryDirectory.resolve("root"));
+        Path outside = Files.createDirectory(this.temporaryDirectory.resolve("outside"));
+        Path relocated = Files.createDirectories(this.temporaryDirectory.resolve("shared/relocated"));
+        Path relocatedFile = Files.writeString(Files.createDirectory(relocated.resolve("assets")).resolve("value.txt"), "relocated");
+        Files.createDirectory(root.resolve("config"));
+        createSymbolicLinkOrSkip(root.resolve("config/relocated"), relocated);
+        createSymbolicLinkOrSkip(relocated.resolve("escaping"), outside);
+        createSymbolicLinkOrSkip(root.resolve("escaping"), outside);
+        ConfinedPathResolver resolver = ConfinedPathResolver.create(root, List.of("config/relocated"));
+        ConfinedPathResolver withoutRelocation = ConfinedPathResolver.create(root);
+
+        assertAll(
+                () -> assertEquals(root.resolve("config/relocated/assets/value.txt"), resolver.resolve(root.resolve("config/relocated/assets/value.txt")).revalidate()),
+                () -> assertEquals(root.resolve("config/relocated/future/value.txt"), resolver.resolve(root.resolve("config/relocated/future/value.txt")).revalidate()),
+                () -> assertThrows(SecurityException.class, () -> resolver.resolve(root.resolve("config/relocated/escaping/secret.txt"))),
+                () -> assertThrows(SecurityException.class, () -> resolver.resolve(root.resolve("escaping/secret.txt"))),
+                () -> assertThrows(SecurityException.class, () -> resolver.resolve(relocatedFile)),
+                () -> assertThrows(SecurityException.class, () -> withoutRelocation.resolve(root.resolve("config/relocated/assets/value.txt"))));
+    }
+
+    @Test
+    void relocatedAncestorsOnlyExposeTheRelocatableDirectory() throws Exception {
+        Path root = Files.createDirectory(this.temporaryDirectory.resolve("root"));
+        Path sharedConfig = Files.createDirectories(this.temporaryDirectory.resolve("shared-config/relocated")).getParent();
+        Files.writeString(sharedConfig.resolve("other.txt"), "other");
+        createSymbolicLinkOrSkip(root.resolve("config"), sharedConfig);
+        ConfinedPathResolver resolver = ConfinedPathResolver.create(root, List.of("config/relocated"));
+
+        assertAll(
+                () -> assertEquals(root.resolve("config/relocated/value.txt"), resolver.resolve(root.resolve("config/relocated/value.txt")).revalidate()),
+                () -> assertThrows(SecurityException.class, () -> resolver.resolve(root.resolve("config/other.txt"))));
+    }
+
+    @Test
+    void doesNotFollowRelocatableDirectoriesRetargetedOrLinkedAfterCapture() throws Exception {
+        Path root = Files.createDirectory(this.temporaryDirectory.resolve("root"));
+        Path firstTarget = Files.createDirectory(this.temporaryDirectory.resolve("first-target"));
+        Path secondTarget = Files.createDirectory(this.temporaryDirectory.resolve("second-target"));
+        Path relocatedLink = root.resolve("relocated");
+        createSymbolicLinkOrSkip(relocatedLink, firstTarget);
+        ConfinedPathResolver resolver = ConfinedPathResolver.create(root, List.of("relocated", "late"));
+        ConfinedPathResolver.ResolvedPath resolved = resolver.resolve(relocatedLink.resolve("value.txt"));
+
+        Files.delete(relocatedLink);
+        Files.createSymbolicLink(relocatedLink, secondTarget);
+        Files.createSymbolicLink(root.resolve("late"), secondTarget);
+
+        assertAll(
+                () -> assertThrows(SecurityException.class, resolved::revalidate),
+                () -> assertThrows(SecurityException.class, () -> resolver.resolve(root.resolve("late/value.txt"))));
+    }
+
+    @Test
+    void rejectsRelocatableDirectoriesOutsideTheRootAndIgnoresDanglingOnes() throws Exception {
+        Path root = Files.createDirectory(this.temporaryDirectory.resolve("root"));
+        Path outside = Files.createDirectory(this.temporaryDirectory.resolve("outside"));
+        createSymbolicLinkOrSkip(root.resolve("dangling"), outside.resolve("missing"));
+        ConfinedPathResolver resolver = ConfinedPathResolver.create(root, List.of("dangling"));
+
+        assertAll(
+                () -> assertThrows(IllegalArgumentException.class, () -> ConfinedPathResolver.create(root, List.of(""))),
+                () -> assertThrows(IllegalArgumentException.class, () -> ConfinedPathResolver.create(root, List.of("../outside"))),
+                () -> assertThrows(IllegalArgumentException.class, () -> ConfinedPathResolver.create(root, List.of(outside.toString()))),
+                () -> assertEquals(root.resolve("value.txt"), resolver.resolve(root.resolve("value.txt")).revalidate()),
+                () -> assertThrows(IOException.class, () -> resolver.resolve(root.resolve("dangling/value.txt"))));
     }
 
     private static void createSymbolicLinkOrSkip(Path link, Path target) {

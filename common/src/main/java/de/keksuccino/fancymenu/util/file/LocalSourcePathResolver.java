@@ -14,6 +14,10 @@ import java.util.regex.Pattern;
  * long-standing instance-root spelling, while absolute paths already inside an allowed root retain their host-absolute
  * meaning. The default Minecraft directory is available only to consumers that explicitly opt into the documented
  * {@code .minecraft/...} shorthand.</p>
+ *
+ * <p>FancyMenu's own directories inside each root are relocatable as described by {@link ConfinedPathResolver}, so
+ * moving them elsewhere behind a symbolic link or junction keeps their files loadable. See
+ * {@link GameDirectoryUtils#RELOCATABLE_FANCYMENU_DIRECTORIES}.</p>
  */
 public final class LocalSourcePathResolver {
 
@@ -191,7 +195,7 @@ public final class LocalSourcePathResolver {
     private record RootBoundary(AllowedRoot allowedRoot, ConfinedPathResolver resolver) {
 
         private static RootBoundary capture(AllowedRoot allowedRoot, Path path) throws IOException {
-            return new RootBoundary(allowedRoot, ConfinedPathResolver.create(path));
+            return new RootBoundary(allowedRoot, ConfinedPathResolver.create(path, GameDirectoryUtils.RELOCATABLE_FANCYMENU_DIRECTORIES));
         }
     }
 
