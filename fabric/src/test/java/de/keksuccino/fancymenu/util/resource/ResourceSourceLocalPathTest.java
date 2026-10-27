@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.resource;
 
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.file.LocalSourcePathResolver;
 import de.keksuccino.fancymenu.util.file.type.FileCodec;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
@@ -133,6 +134,26 @@ class ResourceSourceLocalPathTest {
                 () -> assertNull(source.getValidatedLocalFile()),
                 () -> assertFalse(FileTypes.TXT_TEXT.isFileType(source, false)),
                 () -> assertNull(codec.read(source)));
+    }
+
+    @Test
+    void loadsLocalSourcesFromASymbolicallyLinkedFancyMenuDirectory() throws Exception {
+        Path gameRoot = Files.createDirectory(this.temporaryDirectory.resolve("game"));
+        Path minecraftRoot = Files.createDirectory(this.temporaryDirectory.resolve("minecraft"));
+        Path sharedModDirectory = Files.createDirectories(this.temporaryDirectory.resolve("shared/fancymenu"));
+        Files.writeString(Files.createDirectory(sharedModDirectory.resolve("assets")).resolve("value.txt"), "shared-value");
+        Files.createDirectories(gameRoot.resolve(FancyMenu.MOD_DIR_PATH).getParent());
+        createSymbolicLinkOrSkip(gameRoot.resolve(FancyMenu.MOD_DIR_PATH), sharedModDirectory);
+        LocalSourcePathResolver resolver = LocalSourcePathResolver.createForGameAndMinecraftDirectories(gameRoot, minecraftRoot);
+        String sourcePath = FancyMenu.MOD_DIR_PATH + "/assets/value.txt";
+        ResourceSource source = ResourceSource.of("[source:local]" + sourcePath, null, resolver);
+        FileCodec<String> codec = FileCodec.basicWithLocal(String.class, stream -> "stream", location -> "location", ResourceSourceLocalPathTest::readFile);
+
+        assertAll(
+                () -> assertEquals(gameRoot.resolve(sourcePath).toFile(), source.getValidatedLocalFile()),
+                () -> assertEquals("[source:local]" + sourcePath, source.getSerializationSource()),
+                () -> assertTrue(FileTypes.TXT_TEXT.isFileType(source, false)),
+                () -> assertEquals("shared-value", codec.read(source)));
     }
 
     @Test
