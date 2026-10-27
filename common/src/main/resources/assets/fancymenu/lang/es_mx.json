@@ -2615,7 +2615,7 @@
   "fancymenu.placeholders.nbt_data_get.server": "Obtener datos NBT (del servidor)",
   "fancymenu.placeholders.nbt_data_get.server.desc": "§xRequiere FancyMenu en el servidor.§r\n\nObtiene datos NBT en vivo desde el servidor, reflejando todos los destinos compatibles con '/data get'.\nDevuelve un valor vacío hasta que llegue la respuesta del servidor.\n\nEl placeholder funciona exactamente igual que el comando '/data get', así que todo lo que se pueda hacer con el comando también debería poder hacerse con el placeholder.\n\nValores compatibles de source_type:\n- entity: Sintaxis completa de selector (puntuaciones, avances, predicados, rotación, modo de juego, etc.)\n- block: Coordenadas absolutas, relativas (~) o locales (^) como en el comando vanilla\n- storage: Identificadores de almacenamiento de comandos (namespace:key)\n\nArgumentos opcionales:\n- nbt_path: Las mismas reglas de ruta que '/data get'\n- scale: Multiplica los resultados numéricos (predeterminado 1.0)\n- return_type: 'value', 'string', 'snbt' o 'json'\n\nLas respuestas se almacenan en caché por 100 ms para no saturar el servidor.",
   "fancymenu.placeholders.negate_number": "Negar número",
-  "fancymenu.placeholders.negate_number.desc": "Devuelve la negación del número dado.\nSi el número dado es negativo, se devuelve tal cual.",
+  "fancymenu.placeholders.negate_number.desc": "Devuelve el número dado como número negativo.\nSi el número ya es negativo o cero, se devuelve sin cambios.",
   "fancymenu.placeholders.number_base_convert": "Convertidor de base numérica",
   "fancymenu.placeholders.number_base_convert.desc": "Convierte un número entre bases (soporta decimales).\nValores: input, from_base (2-36), to_base (2-36).\nSe generan hasta 16 dígitos fraccionarios en la base objetivo.\nEjemplo: input=67, from_base=10, to_base=2 -> 1000011.",
   "fancymenu.placeholders.opengl_version": "Versión de OpenGL",
@@ -2698,7 +2698,7 @@
   "fancymenu.placeholders.video_background_duration": "Duración del fondo de video",
   "fancymenu.placeholders.video_background_duration.desc": "Devuelve la duración total de un fondo de menú de video en formato MM:SS (por ejemplo, '03:45') o en milisegundos por su identificador.\nDevuelve '00:00' o '0' si el fondo aún no está listo o no hay ningún video configurado.\n\nValores requeridos:\n- background_identifier: El ID del fondo de video\n- output_as_timestamp: Ponlo en 'true' para mostrar milisegundos en vez de MM:SS\n\nPara obtener el identificador de un fondo, haz clic derecho en\nel fondo del editor y haz clic en 'Copy Background Identifier'.",
   "fancymenu.placeholders.video_background_paused_state": "Estado en pausa del fondo de video",
-  "fancymenu.placeholders.video_background_paused_state.desc": "Devuelve el estado de pausa de un fondo de menú de video por su identificador.\nDevuelve 'true' cuando el elemento está en pausa; de lo contrario devuelve 'false'.\n\nPara obtener el identificador de un fondo, haz clic derecho en\nel fondo del editor y haz clic en 'Copy Background Identifier'.",
+  "fancymenu.placeholders.video_background_paused_state.desc": "Devuelve el estado de pausa de un fondo de menú de video por su identificador.\nDevuelve 'true' cuando el fondo está en pausa; de lo contrario devuelve 'false'.\n\nPara obtener el identificador de un fondo, haz clic derecho en\nel fondo del editor y haz clic en 'Copy Background Identifier'.",
   "fancymenu.placeholders.video_background_playtime": "Tiempo de reproducción del fondo de video",
   "fancymenu.placeholders.video_background_playtime.desc": "Devuelve el tiempo de reproducción actual de un fondo de menú de video\n(formato MM:SS), el porcentaje de progreso de reproducción (0-100) o el tiempo actual de reproducción en milisegundos.\nDevuelve '00:00' o '0' si el elemento aún no está listo o no hay ningún video configurado.\n\nValores requeridos:\n- background_identifier: El ID del fondo de video\n- show_percentage: Ponlo en 'true' para mostrar porcentaje en vez de tiempo\n- output_as_timestamp: Ponlo en 'true' para mostrar milisegundos en vez de MM:SS\n\nPrioridad:\n- show_percentage (más alta)\n- output_as_timestamp\n- salida predeterminada MM:SS\n\nPara obtener el identificador de un fondo, haz clic derecho en\nel fondo del editor y haz clic en 'Copy Background Identifier'.",
   "fancymenu.placeholders.video_background_volume": "Volumen del fondo de video",
@@ -3365,5 +3365,10 @@
   "fancymenu.widgetified_screens.title_screen.forge.top.example.line2": "Se usa para mostrar advertencias de compilaciones beta y otras cosas.",
   "fancymenu.widgetified_screens.title_screen.logo": "Logo de Minecraft",
   "fancymenu.widgetified_screens.title_screen.realmsnotification": "Íconos de notificación de Realms",
-  "fancymenu.widgetified_screens.title_screen.splash": "Texto tipo splash de Vanilla"
+  "fancymenu.widgetified_screens.title_screen.splash": "Texto tipo splash de Vanilla",
+  "fancymenu.actions.screens.finish.no_action_selected": "§x¡Primero necesitas seleccionar una acción!",
+  "fancymenu.elements.browser.rinku_initializing.line_1": "El navegador se está iniciando...",
+  "fancymenu.elements.browser.rinku_initializing.line_2": "Esperando a que Rinku termine de inicializarse.",
+  "fancymenu.elements.browser.rinku_failed.line_1": "¡Falló la inicialización del navegador!",
+  "fancymenu.elements.browser.rinku_failed.line_2": "Revisa el log del juego para ver los detalles."
 }

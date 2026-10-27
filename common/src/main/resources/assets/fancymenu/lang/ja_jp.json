@@ -2615,7 +2615,7 @@
   "fancymenu.placeholders.nbt_data_get.server": "NBTデータを取得（サーバー側）",
   "fancymenu.placeholders.nbt_data_get.server.desc": "§xサーバーにFancyMenuがインストールされている必要があります。§r\n\nサーバーからライブのNBTデータを取得し、'/data get' が対応するすべての対象をそのまま再現します。\nサーバーからの応答が来るまでは空の値を返します。\n\nこのプレースホルダーは '/data get' コマンドとまったく同じように動くので、コマンドでできることはこのプレースホルダーでもできるはずです。\n\n対応する source_type の値:\n- entity: フルセレクター構文（scores, advancements, predicates, rotation, gamemode など）\n- block: バニラのコマンドと同じ絶対、相対（~）、ローカル（^）座標\n- storage: コマンドストレージ識別子（namespace:key）\n\n任意の引数:\n- nbt_path: '/data get' と同じパスルール\n- scale: 数値結果に乗算する係数（デフォルト 1.0）\n- return_type: 'value', 'string', 'snbt', または 'json'\n\n応答は100msキャッシュされ、サーバーへの連打を防ぎます。",
   "fancymenu.placeholders.negate_number": "符号反転",
-  "fancymenu.placeholders.negate_number.desc": "指定した数値の符号を反転して返します。\n指定した数値が負なら、その数値を返します。",
+  "fancymenu.placeholders.negate_number.desc": "指定した数値を負の数にして返します。\n数値がすでに負または0の場合は、そのまま返します。",
   "fancymenu.placeholders.number_base_convert": "数値基数変換",
   "fancymenu.placeholders.number_base_convert.desc": "数値を基数間で変換します（小数対応）。\n値: input, from_base (2-36), to_base (2-36)。\n最大16桁の小数部がターゲット基数で生成されます。\n例: input=67, from_base=10, to_base=2 -> 1000011。",
   "fancymenu.placeholders.opengl_version": "OpenGLバージョン",
@@ -2698,7 +2698,7 @@
   "fancymenu.placeholders.video_background_duration": "動画背景の長さ",
   "fancymenu.placeholders.video_background_duration.desc": "Videoメニュー背景の合計時間を、IDを使ってMM:SS形式（例: '03:45'）またはミリ秒で返します。\n背景の準備がまだできていないか、動画が設定されていない場合は '00:00' または '0' を返します。\n\n必要な値:\n- background_identifier: Video背景のID\n- output_as_timestamp: ミリ秒で表示するには 'true' に設定\n\n背景の識別子を取得するには、エディターの背景を右クリックして\n'Copy Background Identifier' をクリックしてください。",
   "fancymenu.placeholders.video_background_paused_state": "動画背景の一時停止状態",
-  "fancymenu.placeholders.video_background_paused_state.desc": "IDを使ってVideoメニュー背景の一時停止状態を返します。\n要素が一時停止中なら 'true'、それ以外は 'false' を返します。\n\n背景の識別子を取得するには、エディターの背景を右クリックして\n'Copy Background Identifier' をクリックしてください。",
+  "fancymenu.placeholders.video_background_paused_state.desc": "IDを使ってVideoメニュー背景の一時停止状態を返します。\n背景が一時停止中なら 'true'、それ以外は 'false' を返します。\n\n背景の識別子を取得するには、エディターの背景を右クリックして\n'Copy Background Identifier' をクリックしてください。",
   "fancymenu.placeholders.video_background_playtime": "動画背景の再生時間",
   "fancymenu.placeholders.video_background_playtime.desc": "Videoメニュー背景の現在の再生時間\n（MM:SS形式）、再生進行率（0-100）、または現在の再生時間をミリ秒で返します。\n要素の準備がまだできていないか、動画が設定されていない場合は '00:00' または '0' を返します。\n\n必要な値:\n- background_identifier: Video背景のID\n- show_percentage: 時間ではなく割合を表示するには 'true' に設定\n- output_as_timestamp: ミリ秒で表示するには 'true' に設定\n\n優先順位:\n- show_percentage（最優先）\n- output_as_timestamp\n- デフォルトのMM:SS出力\n\n背景の識別子を取得するには、エディターの背景を右クリックして\n'Copy Background Identifier' をクリックしてください。",
   "fancymenu.placeholders.video_background_volume": "動画背景の音量",
@@ -3365,5 +3365,10 @@
   "fancymenu.widgetified_screens.title_screen.forge.top.example.line2": "ベータ版の警告などを表示するために使われます。",
   "fancymenu.widgetified_screens.title_screen.logo": "Minecraftロゴ",
   "fancymenu.widgetified_screens.title_screen.realmsnotification": "Realms通知アイコン",
-  "fancymenu.widgetified_screens.title_screen.splash": "バニラのスプラッシュテキスト"
+  "fancymenu.widgetified_screens.title_screen.splash": "バニラのスプラッシュテキスト",
+  "fancymenu.actions.screens.finish.no_action_selected": "§xまずアクションを選んでください！",
+  "fancymenu.elements.browser.rinku_initializing.line_1": "ブラウザを起動中...",
+  "fancymenu.elements.browser.rinku_initializing.line_2": "Rinku の初期化が終わるのを待っています。",
+  "fancymenu.elements.browser.rinku_failed.line_1": "ブラウザの初期化に失敗しました！",
+  "fancymenu.elements.browser.rinku_failed.line_2": "詳しくはゲームログを確認してください。"
 }
