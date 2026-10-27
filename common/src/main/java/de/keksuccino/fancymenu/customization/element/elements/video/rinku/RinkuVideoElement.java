@@ -53,7 +53,8 @@ public class RinkuVideoElement extends AbstractElement implements IVideoElement 
     protected String playerId = null;
 
     protected String lastFinalUrl = null;
-    protected final RawValuePlaceholderResolver videoSourceResolver = new RawValuePlaceholderResolver();
+    protected final RawValuePlaceholderResolver videoSourcePlaceholderResolver = new RawValuePlaceholderResolver();
+    protected final RinkuVideoSourceResolver rinkuVideoSourceResolver = new RinkuVideoSourceResolver();
     protected int lastAbsoluteWidth = -10000;
     protected int lastAbsoluteHeight = -10000;
     protected int lastAbsoluteX = -10000;
@@ -160,8 +161,8 @@ public class RinkuVideoElement extends AbstractElement implements IVideoElement 
 
             String finalVideoUrl = null;
             if (this.rawVideoUrlSource != null) {
-                String placeholderExpandedSource = this.videoSourceResolver.resolve(this.rawVideoUrlSource.getSourceWithoutPrefix());
-                finalVideoUrl = RinkuVideoSourceResolver.resolve(this.rawVideoUrlSource, placeholderExpandedSource);
+                String placeholderExpandedSource = this.videoSourcePlaceholderResolver.resolve(this.rawVideoUrlSource.getSourceWithoutPrefix());
+                finalVideoUrl = this.rinkuVideoSourceResolver.resolveCached(this.rawVideoUrlSource, placeholderExpandedSource);
             }
             // Check if the video URL has changed since last time
             boolean videoUrlChanged = !Objects.equals(finalVideoUrl, this.lastFinalUrl);
@@ -344,6 +345,7 @@ public class RinkuVideoElement extends AbstractElement implements IVideoElement 
         this.videoPlayer = null;
         this.playerId = null;
         this.lastFinalUrl = null;
+        this.rinkuVideoSourceResolver.reset();
         this.lastAbsoluteWidth = -10000;
         this.lastAbsoluteHeight = -10000;
         this.lastAbsoluteX = -10000;
