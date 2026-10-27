@@ -44,7 +44,8 @@ public class GameIntroHandler {
 	public static PlayableResource getIntro() {
 		String source = FancyMenu.getOptions().gameIntroAnimation.getValue();
 		if (source.trim().isEmpty()) return null;
-		source = PlaceholderParser.replacePlaceholders(source);
+		// Intro sources are URLs, paths or identifiers, so "&" formatting codes must stay as they are.
+		source = PlaceholderParser.replacePlaceholdersPreservingFormattingCodes(source);
 		ResourceSource resourceSource = ResourceSource.of(source);
 		FileType<?> fileType;
 		// Use advanced checks for web sources so MP4 URLs with query parameters are detected reliably.
