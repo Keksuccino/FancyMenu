@@ -1,7 +1,9 @@
 package de.keksuccino.fancymenu.platform.services;
 
+import com.mojang.blaze3d.systems.GpuDevice;
 import com.mojang.blaze3d.textures.GpuTexture;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -20,5 +22,12 @@ public interface IPlatformCompatibilityLayer {
      */
     @Nullable
     GpuTexture getBackendTexture(@Nullable GpuTexture texture);
+
+    /**
+     * Returns the backend device behind loader-side device wrappers.
+     * NeoForge's Blaze3D validation layer only accepts textures it created itself, so views of textures that wrap externally owned backend objects (e.g. another mod's OpenGL texture) have to be created on the backend device.
+     */
+    @NotNull
+    GpuDevice getBackendDevice(@NotNull GpuDevice device);
 
 }

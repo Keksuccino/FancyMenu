@@ -4,8 +4,11 @@ import com.mojang.blaze3d.opengl.GlTexture;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.FilterMode;
 import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.textures.TextureFormat;
+import de.keksuccino.fancymenu.platform.Services;
 import net.minecraft.client.renderer.texture.AbstractTexture;
+import org.jetbrains.annotations.NotNull;
 
 public class WatermediaFrameTexture extends AbstractTexture {
 
@@ -17,7 +20,7 @@ public class WatermediaFrameTexture extends AbstractTexture {
     public WatermediaFrameTexture(int id) {
         this.watermediaTexture = new WatermediaGlTexture(TEXTURE_USAGE_FANCYMENU, LABEL_FANCYMENU, TextureFormat.RGBA8, 100, 100, 1, 1, id);
         this.texture = this.watermediaTexture;
-        this.textureView = RenderSystem.getDevice().createTextureView(this.texture);
+        this.textureView = createTextureView(this.texture);
         this.sampler = RenderSystem.getSamplerCache().getRepeat(FilterMode.NEAREST, false);
     }
 
@@ -30,7 +33,7 @@ public class WatermediaFrameTexture extends AbstractTexture {
         if (this.textureView != null) {
             this.textureView.close();
         }
-        this.textureView = RenderSystem.getDevice().createTextureView(this.texture);
+        this.textureView = createTextureView(this.texture);
     }
 
     public void setWidth(int width) {
@@ -39,6 +42,15 @@ public class WatermediaFrameTexture extends AbstractTexture {
 
     public void setHeight(int height) {
         this.watermediaTexture.setHeight(height);
+    }
+
+    /**
+     * Creates the view on the backend device, because the texture wraps WaterMedia's own OpenGL texture and loader-side device wrappers
+     * (like NeoForge's Blaze3D validation layer) reject textures they did not create themselves.
+     */
+    @NotNull
+    protected static GpuTextureView createTextureView(@NotNull GpuTexture texture) {
+        return Services.COMPAT.getBackendDevice(RenderSystem.getDevice()).createTextureView(texture);
     }
 
     protected static class WatermediaGlTexture extends GlTexture {
