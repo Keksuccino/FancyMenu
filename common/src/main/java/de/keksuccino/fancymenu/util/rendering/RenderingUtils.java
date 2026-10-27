@@ -1,12 +1,15 @@
 package de.keksuccino.fancymenu.util.rendering;
 
 import com.mojang.blaze3d.opengl.GlStateManager;
+import com.mojang.blaze3d.opengl.GlTexture;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.textures.GpuSampler;
+import com.mojang.blaze3d.textures.GpuTexture;
 import com.mojang.blaze3d.textures.GpuTextureView;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphics;
+import de.keksuccino.fancymenu.platform.Services;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
@@ -45,6 +48,16 @@ public class RenderingUtils {
     private static int tooltipRenderingBlockDepth = 0;
     private static int overrideBackgroundBlurRadius = -1000;
     private static int shaderColor = -1;
+
+    /**
+     * Returns the OpenGL texture behind the given texture, also when the loader wraps it (e.g. NeoForge's Blaze3D validation layer).
+     *
+     * @return the OpenGL texture, or {@code null} if the texture is {@code null} or not backed by OpenGL
+     */
+    @Nullable
+    public static GlTexture getGlTexture(@Nullable GpuTexture texture) {
+        return (Services.COMPAT.getBackendTexture(texture) instanceof GlTexture glTexture) ? glTexture : null;
+    }
 
     public static void extractVanillaLikeFullscreenBlur(@NotNull GuiGraphics graphics, @NotNull Screen screen, float partial) {
         float blurRadius = convertVanillaBackgroundBlurrinessToGuiBlurRadius();

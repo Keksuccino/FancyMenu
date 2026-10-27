@@ -1,10 +1,12 @@
 package de.keksuccino.fancymenu.platform;
 
+import com.mojang.blaze3d.textures.GpuTexture;
 import de.keksuccino.fancymenu.platform.services.IPlatformCompatibilityLayer;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,6 +26,11 @@ public class FabricCompatibilityLayer implements IPlatformCompatibilityLayer {
         List<Component> lines = new ArrayList<>();
         lines.add(Component.literal(branding));
         return lines;
+    }
+
+    @Override
+    public @Nullable GpuTexture getBackendTexture(@Nullable GpuTexture texture) {
+        return texture;
     }
 
 }

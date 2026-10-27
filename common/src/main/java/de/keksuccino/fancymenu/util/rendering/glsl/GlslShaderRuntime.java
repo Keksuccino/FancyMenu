@@ -415,7 +415,8 @@ public class GlslShaderRuntime {
         Minecraft minecraft = Minecraft.getInstance();
         Window window = minecraft.getWindow();
         RenderTarget mainRenderTarget = minecraft.getMainRenderTarget();
-        if (!(mainRenderTarget.getColorTexture() instanceof GlTexture mainColorTexture)) {
+        GlTexture mainColorTexture = RenderingUtils.getGlTexture(mainRenderTarget.getColorTexture());
+        if (mainColorTexture == null) {
             this.lastCompileError = "Render error: OpenGL main render target is unavailable.";
             return false;
         }
@@ -1180,7 +1181,8 @@ public class GlslShaderRuntime {
 
     private int getGlTextureId(@NotNull Minecraft minecraft, @NotNull Identifier location, int fallbackTextureId) {
         try {
-            if (minecraft.getTextureManager().getTexture(location).getTexture() instanceof GlTexture glTexture) {
+            GlTexture glTexture = RenderingUtils.getGlTexture(minecraft.getTextureManager().getTexture(location).getTexture());
+            if (glTexture != null) {
                 return glTexture.glId();
             }
         } catch (Exception ignored) {

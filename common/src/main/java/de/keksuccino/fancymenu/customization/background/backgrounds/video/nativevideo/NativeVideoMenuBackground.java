@@ -732,7 +732,8 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
         try {
             AbstractTexture texture = Minecraft.getInstance().getTextureManager().getTexture(resourceLocation);
             if (texture == null) return;
-            int textureId = texture.getTexture() instanceof GlTexture glTexture ? glTexture.glId() : 0;
+            GlTexture glTexture = RenderingUtils.getGlTexture(texture.getTexture());
+            int textureId = (glTexture != null) ? glTexture.glId() : 0;
             if (textureId <= 0) return;
             GlStateManager._bindTexture(textureId);
             image = new NativeImage(width, height, false);
