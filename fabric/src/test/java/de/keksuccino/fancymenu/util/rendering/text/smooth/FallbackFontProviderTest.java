@@ -134,6 +134,72 @@ class FallbackFontProviderTest {
         assertSame(replacementFont, provider.get());
     }
 
+    @Test
+    void peekTreatsUnattemptedFontAsAvailableWithoutLoading() {
+        AtomicInteger attempts = new AtomicInteger();
+        FallbackFontProvider<Object> provider = new FallbackFontProvider<>(() -> {
+            attempts.incrementAndGet();
+            return null;
+        });
+
+        for (int i = 0; i < 100; i++) {
+            assertFalse(provider.peekShouldUseFallback(false));
+        }
+        assertEquals(0, attempts.get());
+    }
+
+    @Test
+    void peekHonorsExplicitFallbackPreferenceWithoutLoading() {
+        AtomicInteger attempts = new AtomicInteger();
+        FallbackFontProvider<Object> provider = new FallbackFontProvider<>(() -> {
+            attempts.incrementAndGet();
+            return new Object();
+        });
+
+        assertTrue(provider.peekShouldUseFallback(true));
+        assertEquals(0, attempts.get());
+        assertFalse(provider.shouldUseFallback(false));
+        assertTrue(provider.peekShouldUseFallback(true));
+        assertEquals(1, attempts.get());
+    }
+
+    @Test
+    void peekReportsTheResultOfThePreviousLoadAttempt() {
+        Object font = new Object();
+        AtomicReference<Object> availableFont = new AtomicReference<>();
+        AtomicInteger attempts = new AtomicInteger();
+        FallbackFontProvider<Object> provider = new FallbackFontProvider<>(() -> {
+            attempts.incrementAndGet();
+            return availableFont.get();
+        });
+
+        assertNull(provider.get());
+        assertTrue(provider.peekShouldUseFallback(false));
+        availableFont.set(font);
+        assertTrue(provider.peekShouldUseFallback(false));
+        assertEquals(1, attempts.get());
+
+        provider.clear();
+        assertFalse(provider.peekShouldUseFallback(false));
+        assertEquals(1, attempts.get());
+        assertSame(font, provider.get());
+        assertFalse(provider.peekShouldUseFallback(false));
+        assertEquals(2, attempts.get());
+    }
+
+    @Test
+    void peekAfterUnexpectedLoaderExceptionStillTreatsFontAsUnattempted() {
+        AtomicInteger attempts = new AtomicInteger();
+        FallbackFontProvider<Object> provider = new FallbackFontProvider<>(() -> {
+            attempts.incrementAndGet();
+            throw new IllegalStateException();
+        });
+
+        assertThrows(IllegalStateException.class, provider::get);
+        assertFalse(provider.peekShouldUseFallback(false));
+        assertEquals(1, attempts.get());
+    }
+
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
     void concurrentRequestsShareOneLoadAttempt(boolean available) throws Exception {
