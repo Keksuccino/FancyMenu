@@ -87,6 +87,7 @@
     "client.MixinResourceLoadStateTracker",
     "client.MixinScreen",
     "client.MixinSelectWorldScreen",
+    "client.MixinShaderManager",
     "client.MixinSoundEngine",
     "client.MixinSoundManager",
     "client.MixinSpriteIconButton_CenteredIcon",
