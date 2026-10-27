@@ -1,6 +1,12 @@
 
 CHANGELOG | FANCYMENU v3.9.15 [ W I P !! Not public yet !! ]
 
+- Added Ukrainian translation (#1817)
+- Added the newest texts (browser loading/error messages and the "select an action first" warning) to all other translations
+- Improved the description of the "Negate Number" placeholder in all languages
+- Fixed `/fmlayout` error messages showing "%s" instead of the layout name
+- Fixed typos in several English texts (boss name and boss health placeholders, experience progress placeholder, async requirement error, welcome screen title)
+- Fixed the "Video Background Paused State" placeholder description talking about an element instead of a background
 - Fixed local images, videos, file placeholders and file actions failing when the FancyMenu config folder (or `fancymenu_data`) is moved elsewhere and replaced with a symbolic link or junction (#1812)
 - Fixed the game crashing during startup on Minecraft 26.3 when FancyMenu elements are shown on the loading screen, for example in Drippy Loading Screen layouts (#1826)
 - Fixed the game crashing on the Vulkan renderer when FancyMenu elements are shown on the initial loading screen (#1826)
