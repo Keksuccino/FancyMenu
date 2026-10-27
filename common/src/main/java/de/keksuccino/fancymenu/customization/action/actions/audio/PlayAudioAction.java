@@ -91,6 +91,11 @@ public class PlayAudioAction extends Action {
     }
 
     @Override
+    public boolean hasRawValue() {
+        return true;
+    }
+
+    @Override
     public void execute(@Nullable String value) {
 
         PlayAudioConfig config = PlayAudioConfig.parse(value);

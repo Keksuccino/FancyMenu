@@ -58,6 +58,11 @@ public class SelectFileAction extends Action {
     }
 
     @Override
+    public boolean hasRawValue() {
+        return true;
+    }
+
+    @Override
     public void execute(@Nullable String value) {
         SelectFileConfig config = SelectFileConfig.parse(value);
         if (config == null) {
