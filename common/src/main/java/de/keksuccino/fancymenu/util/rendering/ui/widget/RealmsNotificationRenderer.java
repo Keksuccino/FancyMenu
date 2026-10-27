@@ -22,6 +22,8 @@ public class RealmsNotificationRenderer {
     private static final ResourceLocation NEWS_SPRITE = ResourceLocation.withDefaultNamespace("icon/news");
     private static final ResourceLocation INVITE_SPRITE = ResourceLocation.withDefaultNamespace("icon/invite");
     private static final ResourceLocation TRIAL_AVAILABLE_SPRITE = ResourceLocation.withDefaultNamespace("icon/trial_available");
+    // Width of the icon widget while no icon is shown, so its element never ends up with a zero size
+    private static final int EMPTY_WIDGET_WIDTH = 50;
 
     private final IMixinRealmsNotificationsScreen screenAccess;
     private final Minecraft minecraft;
@@ -45,9 +47,7 @@ public class RealmsNotificationRenderer {
      * This is the leftmost edge of the notification area (adjusted from original).
      */
     public int getDefaultPositionX() {
-        // Convert the original right-side position to an equivalent left-side position
-        int originalRightPosition = this.screenWidth / 2 + 100 - 3;
-        return originalRightPosition - getTotalWidth();
+        return getIconAreaRightX(this.screenWidth) - getTotalWidth();
     }
 
     /**
@@ -84,9 +84,7 @@ public class RealmsNotificationRenderer {
                 iconCount++;
             }
         }
-        // For iconCount icons, we need (iconCount - 1) * 16 pixels of spacing
-        // Plus an approximate width for the icons (using 14 as a reasonable estimate)
-        return iconCount > 0 ? (iconCount - 1) * 16 + 14 : 0;
+        return getIconsWidth(iconCount);
     }
 
     /**
@@ -95,6 +93,49 @@ public class RealmsNotificationRenderer {
     public int getTotalHeight() {
         // The maximum height of any icon with its Y offset is 14 + 4 = 18 pixels
         return 18;
+    }
+
+    /**
+     * Returns the width of the widget that holds the icons.
+     *
+     * @param iconsWidth The width of all shown icons, as returned by {@link RealmsNotificationRenderer#getTotalWidth()}
+     */
+    public static int getWidgetWidth(int iconsWidth) {
+        return (iconsWidth > 0) ? iconsWidth : EMPTY_WIDGET_WIDTH;
+    }
+
+    /**
+     * Returns the X position of the widget that holds the icons.<br>
+     * The widget is always right-aligned to the icon area, so it stays inside the Realms button for every icon count.
+     * This is important, because other mods (like Flashback) place their own buttons in the free space next to the Realms button
+     * when the Title screen initializes, and FancyMenu identifies these buttons by their position. If this widget reached into that space,
+     * these buttons would get placed differently and lose their customizations whenever the icon count differs, which it always does
+     * between the layout editor (which shows all icons) and the normal Title screen.
+     *
+     * @param widgetWidth The width of the widget, as returned by {@link RealmsNotificationRenderer#getWidgetWidth(int)}
+     */
+    public int getWidgetX(int widgetWidth) {
+        return getWidgetX(this.screenWidth, widgetWidth);
+    }
+
+    static int getWidgetX(int screenWidth, int widgetWidth) {
+        return getIconAreaRightX(screenWidth) - widgetWidth;
+    }
+
+    /**
+     * Returns the right edge of the icon area as implemented in RealmsNotificationsScreen.
+     */
+    static int getIconAreaRightX(int screenWidth) {
+        return screenWidth / 2 + 100 - 3;
+    }
+
+    /**
+     * Returns the width needed for the given number of icons.
+     */
+    static int getIconsWidth(int iconCount) {
+        // For iconCount icons, we need (iconCount - 1) * 16 pixels of spacing
+        // Plus an approximate width for the icons (using 14 as a reasonable estimate)
+        return iconCount > 0 ? (iconCount - 1) * 16 + 14 : 0;
     }
 
     /**

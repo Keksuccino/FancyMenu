@@ -87,9 +87,8 @@ public abstract class MixinTitleScreen extends Screen implements TitleScreenBran
 
         if (this.realmsNotificationsScreen != null) {
             RealmsNotificationRenderer notifications = new RealmsNotificationRenderer(this.realmsNotificationsScreen, this.width, this.height);
-            int totalWidth = notifications.getTotalWidth();
-            if (totalWidth == 0) totalWidth = 50;
-            this.addRenderableWidget(new RendererWidget(notifications.getDefaultPositionX(), notifications.getDefaultPositionY(), totalWidth, notifications.getTotalHeight(),
+            int widgetWidth = RealmsNotificationRenderer.getWidgetWidth(notifications.getTotalWidth());
+            this.addRenderableWidget(new RendererWidget(notifications.getWidgetX(widgetWidth), notifications.getDefaultPositionY(), widgetWidth, notifications.getTotalHeight(),
                             (graphics, mouseX, mouseY, partial, x, y, width, height, renderer) -> {
                                 notifications.renderIcons(graphics, x, y, DrawableColor.WHITE.getColorIntWithAlpha(renderer.getAlpha()));
                             }))
