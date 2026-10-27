@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.resource;
 
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.testing.TestPlaceholders;
 import de.keksuccino.fancymenu.util.file.type.FileMediaType;
 import de.keksuccino.fancymenu.util.file.type.FileType;
 import org.jetbrains.annotations.NotNull;
@@ -137,6 +138,18 @@ class ResourceSupplierTest {
             PlaceholderParser.removeParsingProcessor(processorId);
             PlaceholderParser.setPlaceholderCachingController(originalCachingController);
         }
+    }
+
+    @Test
+    void dispatchesPlaceholderSourcesWithFormattingCodeLookalikesIntact() {
+        withPlaceholderCachingDisabled(() -> {
+            RecordingResourceHandler handler = new RecordingResourceHandler();
+            RecordingResourceSupplier supplier = new RecordingResourceSupplier(FileMediaType.IMAGE, "[source:web]https://example.invalid/image.png?id=" + TestPlaceholders.echo("42") + "&embed=true&f=1", handler);
+
+            assertNotNull(supplier.get());
+            assertEquals("[source:web]https://example.invalid/image.png?id=42&embed=true&f=1", handler.lastSource.getSourceWithPrefix());
+            assertEquals(ResourceSourceType.WEB, supplier.getSourceType());
+        });
     }
 
     @Test
