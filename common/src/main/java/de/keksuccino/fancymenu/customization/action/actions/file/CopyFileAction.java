@@ -40,6 +40,11 @@ public class CopyFileAction extends Action {
     }
 
     @Override
+    public boolean hasRawValue() {
+        return true;
+    }
+
+    @Override
     public void execute(@Nullable String value) {
         try {
             this.executeWithResolver(value, GameDirectoryActionPathResolver.create());
