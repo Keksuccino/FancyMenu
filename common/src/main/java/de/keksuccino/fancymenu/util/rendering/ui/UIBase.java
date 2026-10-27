@@ -111,6 +111,14 @@ public class UIBase extends RenderingUtils {
         return SmoothFonts.shouldUseMinecraftFont(FancyMenu.getOptions().useMinecraftFont.getValue());
     }
 
+    /**
+     * Non-loading variant of {@link #shouldUseMinecraftFontForUIRendering()} for decisions that neither render nor measure text.
+     * The smooth font counts as available until a load attempt failed, so the first load still happens in text rendering.
+     */
+    public static boolean peekShouldUseMinecraftFontForUIRendering() {
+        return SmoothFonts.peekShouldUseMinecraftFont(FancyMenu.getOptions().useMinecraftFont.getValue());
+    }
+
     private static float resolveTextRenderScale() {
         if (isCurrentlyRenderingAtUIScale()) {
             return UIBase.getUIScale();

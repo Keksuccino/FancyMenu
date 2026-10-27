@@ -41,6 +41,15 @@ final class FallbackFontProvider<T> implements Supplier<T> {
         return preferFallback || this.get() == null;
     }
 
+    /**
+     * Same decision as {@link #shouldUseFallback(boolean)}, but never starts a load: an unattempted font counts as available.
+     * Use this for checks that only affect layout, because the first load can block the calling thread for a long time.
+     */
+    boolean peekShouldUseFallback(boolean preferFallback) {
+        Optional<T> result = this.cached;
+        return preferFallback || ((result != null) && result.isEmpty());
+    }
+
     synchronized void clear() {
         this.cached = null;
     }
