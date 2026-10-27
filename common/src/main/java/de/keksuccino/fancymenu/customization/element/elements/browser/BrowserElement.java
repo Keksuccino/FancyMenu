@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.customization.element.elements.browser;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.customization.placeholder.RawValuePlaceholderResolver;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rinku.BrowserHandler;
@@ -46,6 +46,7 @@ public class BrowserElement extends AbstractElement {
     public int lastTickWidth = -1;
     public int lastTickHeight = -1;
     public long lastLeftClickTime = -1;
+    private final RawValuePlaceholderResolver urlResolver = new RawValuePlaceholderResolver();
     private final BrowserWidgetSlot<WrappedRinkuBrowser> browserWidget = new BrowserWidgetSlot<>(() -> RinkuUtil.isRinkuLoaded() && RinkuUtil.rinku_initialized, this::createBrowser);
 
     public BrowserElement(@NotNull ElementBuilder<?, ?> builder) {
@@ -62,7 +63,7 @@ public class BrowserElement extends AbstractElement {
     private WrappedRinkuBrowser createBrowser() {
         WrappedRinkuBrowser wrappedBrowser = BrowserHandler.get(this.getInstanceIdentifier());
         if (wrappedBrowser == null || wrappedBrowser.isClosed()) {
-            wrappedBrowser = WrappedRinkuBrowser.build(resolveUrl(this.url), true, false, this.muteMedia, null);
+            wrappedBrowser = WrappedRinkuBrowser.build(this.resolveUrl(), true, false, this.muteMedia, null);
         } else if (wrappedBrowser.isMuted() != this.muteMedia) {
             wrappedBrowser.setMuted(this.muteMedia);
         }
@@ -159,12 +160,10 @@ public class BrowserElement extends AbstractElement {
                 this.lastTickWidth = w;
                 this.lastTickHeight = h;
 
-                // The cached default parse is only a cheap per-frame change check. Its formatting-code conversion would
-                // turn URL parameters like "&embed" into "§embed", so the URL that gets loaded is resolved separately.
-                String parsedUrl = PlaceholderParser.replacePlaceholders(this.url);
-                if (!parsedUrl.equals(this.getLastTickUrl())) {
-                    this.browser.setUrl(resolveUrl(this.url));
-                    this.setLastTickUrl(parsedUrl);
+                String finalUrl = this.resolveUrl();
+                if (!finalUrl.equals(this.getLastTickUrl())) {
+                    this.browser.setUrl(finalUrl);
+                    this.setLastTickUrl(finalUrl);
                 }
 
                 this.browser.extractRenderState(graphics, mouseX, mouseY, partial);
@@ -207,12 +206,11 @@ public class BrowserElement extends AbstractElement {
     }
 
     /**
-     * Replaces placeholders in a browser URL without converting "&" formatting codes, because URLs are not formatted text.
-     * This parse bypasses the placeholder cache, so only call it when the URL actually needs to get loaded.
+     * The URL with its placeholders replaced. URLs are not formatted text, so "&" formatting codes stay as they are.
      */
     @NotNull
-    static String resolveUrl(@NotNull String url) {
-        return PlaceholderParser.replacePlaceholdersPreservingFormattingCodes(url);
+    String resolveUrl() {
+        return this.urlResolver.resolve(this.url);
     }
 
     static String getBrowserStatusKey(boolean rinkuLoaded, boolean failed) {
