@@ -1,6 +1,7 @@
 
 CHANGELOG | FANCYMENU v3.9.15 [ W I P !! Not public yet !! ]
 
+- Fixed the "Multiplayer Screen Server Icons" setting not hiding server icons on MC 26.1.2 (#1819)
 - Fixed vanilla buttons and player entities not rendering when a GLSL shader is used as menu background (#1827)
 - Fixed customizations of buttons that other mods add next to the Realms button on the Title screen (like the Flashback button) not getting applied outside the layout editor (#1748)
 - Fixed a crash with OneConfig and other mods that render items into their own offscreen GUI, and fixed those mods' content being cut off or wrongly scaled (#1821)
