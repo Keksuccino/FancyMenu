@@ -22,10 +22,10 @@ public class ClientSideLayoutCommandPacketLogic {
                 layout.setEnabled(packet.enabled, true);
                 return true;
             } else {
-                packet.sendChatFeedback(Component.translatable("fancymenu.commmands.layout.unable_to_set_state"), true);
+                packet.sendChatFeedback(Component.translatable("fancymenu.commmands.layout.unable_to_set_state", packet.layout_name), true);
             }
         } catch (Exception ex) {
-            packet.sendChatFeedback(Component.translatable("fancymenu.commmands.layout.error"), true);
+            packet.sendChatFeedback(Component.translatable("fancymenu.commmands.layout.error", packet.layout_name), true);
             LOGGER.error("[FANCYMENU] An error happened while trying to set a layout state via the /fmlayout command!", ex);
         }
         return false;
