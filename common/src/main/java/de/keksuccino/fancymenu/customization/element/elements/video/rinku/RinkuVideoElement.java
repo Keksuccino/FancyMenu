@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.video.IVideoElement;
 import de.keksuccino.fancymenu.customization.element.elements.video.VideoElementController;
-import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.customization.placeholder.RawValuePlaceholderResolver;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rinku.RinkuUtil;
 import de.keksuccino.fancymenu.util.rinku.RinkuVideoSourceResolver;
@@ -52,6 +52,7 @@ public class RinkuVideoElement extends AbstractElement implements IVideoElement 
     protected String playerId = null;
 
     protected String lastFinalUrl = null;
+    protected final RawValuePlaceholderResolver videoSourceResolver = new RawValuePlaceholderResolver();
     protected int lastAbsoluteWidth = -10000;
     protected int lastAbsoluteHeight = -10000;
     protected int lastAbsoluteX = -10000;
@@ -158,7 +159,7 @@ public class RinkuVideoElement extends AbstractElement implements IVideoElement 
 
             String finalVideoUrl = null;
             if (this.rawVideoUrlSource != null) {
-                String placeholderExpandedSource = PlaceholderParser.replacePlaceholders(this.rawVideoUrlSource.getSourceWithoutPrefix());
+                String placeholderExpandedSource = this.videoSourceResolver.resolve(this.rawVideoUrlSource.getSourceWithoutPrefix());
                 finalVideoUrl = RinkuVideoSourceResolver.resolve(this.rawVideoUrlSource, placeholderExpandedSource);
             }
             // Check if the video URL has changed since last time

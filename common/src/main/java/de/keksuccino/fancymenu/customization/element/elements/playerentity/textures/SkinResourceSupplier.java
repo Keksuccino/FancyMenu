@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.element.elements.playerentity.text
 
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import com.mojang.blaze3d.platform.NativeImage;
-import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.file.type.FileMediaType;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
@@ -51,7 +50,7 @@ public class SkinResourceSupplier extends ResourceSupplier<ITexture> {
     @NotNull
     public ITexture get() {
         SkinMetadata playerNameSkinMetaFinal = this.playerNameSkinMeta;
-        String getterPlayerName = PlaceholderParser.replacePlaceholders(this.source);
+        String getterPlayerName = this.resolveSource();
         if (this.sourceIsPlayerName) {
             //If last player name is different one, reload supplier
             if (!getterPlayerName.equals(this.lastGetterPlayerName)) {
@@ -80,7 +79,7 @@ public class SkinResourceSupplier extends ResourceSupplier<ITexture> {
         if ((this.current != null) && this.current.isClosed()) {
             this.current = null;
         }
-        String getterSource = PlaceholderParser.replacePlaceholders(this.source);
+        String getterSource = this.resolveSource();
         if (this.sourceIsPlayerName) {
             if ((playerNameSkinMetaFinal == null) || (playerNameSkinMetaFinal.resourceSource() == null)) {
                 return DEFAULT_SKIN;

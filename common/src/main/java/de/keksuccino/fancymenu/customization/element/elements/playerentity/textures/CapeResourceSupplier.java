@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.playerentity.textures;
 
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
-import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.file.type.FileMediaType;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.minecraftuser.v2.MinecraftUsers;
@@ -47,7 +46,7 @@ public class CapeResourceSupplier extends ResourceSupplier<ITexture> {
     @NotNull
     public ITexture get() {
         String playerNameCapeUrlCached = this.playerNameCapeUrl;
-        String getterPlayerName = PlaceholderParser.replacePlaceholders(this.source);
+        String getterPlayerName = this.resolveSource();
         if (this.sourceIsPlayerName) {
             if (!getterPlayerName.equals(this.lastGetterPlayerName)) {
                 this.startedFindingPlayerNameCapeUrl = false;
@@ -72,7 +71,7 @@ public class CapeResourceSupplier extends ResourceSupplier<ITexture> {
         if ((this.current != null) && this.current.isClosed()) {
             this.current = null;
         }
-        String getterSource = PlaceholderParser.replacePlaceholders(this.source);
+        String getterSource = this.resolveSource();
         if (this.sourceIsPlayerName && (playerNameCapeUrlCached == null)) {
             return DEFAULT_CAPE;
         }
