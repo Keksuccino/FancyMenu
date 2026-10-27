@@ -47,7 +47,7 @@ final class GlslFrameUniformState {
     }
 
     @NotNull
-    FrameSnapshot capture(@NotNull Minecraft minecraft, @NotNull Window window, @NotNull GlslShaderRuntime.RenderSettings settings, float partialTick, int areaX, int areaY, int areaWidth, int areaHeight, int areaWidthPx, int areaHeightPx, int screenWidthPx, int screenHeightPx) {
+    FrameSnapshot capture(@NotNull Minecraft minecraft, @NotNull Window window, @NotNull GlslShaderRuntime.RenderSettings settings, float partialTick, double guiScale, int areaX, int areaY, int areaWidth, int areaHeight, int areaWidthPx, int areaHeightPx, int screenWidthPx, int screenHeightPx) {
         this.tickTime(settings);
         if (settings.useInput()) {
             GlslRuntimeEventTracker.syncMouseButtonsFromWindow(window.handle());
@@ -62,7 +62,6 @@ final class GlslFrameUniformState {
             frameRate = this.lastFrameRate;
         }
 
-        double guiScale = window.getGuiScale();
         double localMousePxX = (input.mouseX() - areaX) * guiScale;
         double localMousePxYBottom = (areaHeight - (input.mouseY() - areaY)) * guiScale;
         double localMouseNormX = areaWidthPx > 0 ? localMousePxX / areaWidthPx : 0.0D;
