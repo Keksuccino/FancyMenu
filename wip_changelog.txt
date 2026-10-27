@@ -1,6 +1,10 @@
 
 CHANGELOG | FANCYMENU v3.9.15 [ W I P !! Not public yet !! ]
 
+- Fixed the game crashing during startup on Minecraft 26.3 when FancyMenu elements are shown on the loading screen, for example in Drippy Loading Screen layouts (#1826)
+- Fixed the game crashing on the Vulkan renderer when FancyMenu elements are shown on the initial loading screen (#1826)
+- Fixed rounded shapes, images and panoramas being invisible on the initial loading screen until the game finished loading (#1826)
+- Fixed blurred elements on the initial loading screen resetting the selected resource packs or crashing the game (#1826)
 - Fixed the game crashing on startup with NeoForge when the loading screen window was resized (#1820)
 - Fixed the game freezing on the loading screen during startup, which could leave the old smaller frame in the top-left corner with black around it when the game switched to fullscreen (#1815)
 - Fixed the "Multiplayer Screen Server Icons" setting not hiding server icons on MC 26.1.2 (#1819)
