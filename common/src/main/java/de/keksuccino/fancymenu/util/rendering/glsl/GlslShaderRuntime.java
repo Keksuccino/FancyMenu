@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.util.rendering.GuiRenderPhaseAction;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
@@ -428,7 +429,8 @@ public class GlslShaderRuntime {
             return false;
         }
 
-        double guiScale = window.getGuiScale();
+        // GLSL areas are in the same logical space as FancyMenu's precise GUI projection, and Window#getGuiScale() only exposes its floored integer part while a fractional scale is active
+        double guiScale = WindowHandler.getGuiScale();
         int screenWidthPx = mainRenderTarget.width;
         int screenHeightPx = mainRenderTarget.height;
 
@@ -520,7 +522,7 @@ public class GlslShaderRuntime {
                 this.bindChannelTextures(routedChannels);
 
                 this.activeUniformProgram_FancyMenu = program;
-                this.uploadUniforms(minecraft, window, settings, partialTick,
+                this.uploadUniforms(minecraft, window, settings, partialTick, guiScale,
                         areaX, areaY, areaWidth, areaHeight,
                         0, 0, areaWidthPx, areaHeightPx, 0,
                         screenWidthPx, screenHeightPx, routedChannels, variableUniformSnapshot);
@@ -555,7 +557,7 @@ public class GlslShaderRuntime {
             this.bindChannelTextures(imageChannels);
 
             this.activeUniformProgram_FancyMenu = imageProgram;
-            this.uploadUniforms(minecraft, window, settings, partialTick,
+            this.uploadUniforms(minecraft, window, settings, partialTick, guiScale,
                     areaX, areaY, areaWidth, areaHeight,
                     areaXPx, areaYPxTop, areaWidthPx, areaHeightPx, areaYPxBottom,
                     screenWidthPx, screenHeightPx, imageChannels, variableUniformSnapshot);
@@ -1198,6 +1200,7 @@ public class GlslShaderRuntime {
                                 @NotNull Window window,
                                 @NotNull RenderSettings settings,
                                 float partialTick,
+                                double guiScale,
                                 int areaX,
                                 int areaY,
                                 int areaWidth,
@@ -1260,8 +1263,8 @@ public class GlslShaderRuntime {
         double mouseGuiY = input.mouseY();
         double localMouseGuiX = mouseGuiX - areaX;
         double localMouseGuiYTop = mouseGuiY - areaY;
-        double localMousePxX = localMouseGuiX * window.getGuiScale();
-        double localMousePxYBottom = (areaHeight - localMouseGuiYTop) * window.getGuiScale();
+        double localMousePxX = localMouseGuiX * guiScale;
+        double localMousePxYBottom = (areaHeight - localMouseGuiYTop) * guiScale;
 
         double localMouseNormX = areaWidthPx > 0 ? (localMousePxX / areaWidthPx) : 0.0D;
         double localMouseNormY = areaHeightPx > 0 ? (localMousePxYBottom / areaHeightPx) : 0.0D;
@@ -1271,8 +1274,8 @@ public class GlslShaderRuntime {
         double clickY = 0.0D;
         boolean hasClickData = input.lastMouseClickNanos().length > 0 && input.lastMouseClickNanos()[0] > 0L;
         if (hasClickData && input.lastMouseClickX().length > 0 && input.lastMouseClickY().length > 0) {
-            clickX = (input.lastMouseClickX()[0] - areaX) * window.getGuiScale();
-            clickY = (areaHeight - (input.lastMouseClickY()[0] - areaY)) * window.getGuiScale();
+            clickX = (input.lastMouseClickX()[0] - areaX) * guiScale;
+            clickY = (areaHeight - (input.lastMouseClickY()[0] - areaY)) * guiScale;
         }
 
         float iMouseX;
@@ -1360,10 +1363,10 @@ public class GlslShaderRuntime {
         setUniform2f("fmAreaPosition", areaXPx, areaYPxBottom);
         setUniform2f("fmAreaTopLeft", areaXPx, areaYPxTop);
         setUniform2f("fmScreenSize", screenWidthPx, screenHeightPx);
-        setUniform1f("fmGuiScale", (float) window.getGuiScale());
+        setUniform1f("fmGuiScale", (float) guiScale);
 
         setUniform4f("fmMouse", (float) localMousePxX, (float) localMousePxYBottom, (float) localMouseNormX, (float) localMouseNormY);
-        setUniform2f("fmMouseDelta", (float) (input.mouseDeltaX() * window.getGuiScale()), (float) (-input.mouseDeltaY() * window.getGuiScale()));
+        setUniform2f("fmMouseDelta", (float) (input.mouseDeltaX() * guiScale), (float) (-input.mouseDeltaY() * guiScale));
 
         int[] clickCounts = input.mouseClickCounts();
         int[] releaseCounts = input.mouseReleaseCounts();
