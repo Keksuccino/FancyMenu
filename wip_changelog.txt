@@ -6,6 +6,10 @@ CHANGELOG | FANCYMENU v3.9.15 [ W I P !! Not public yet !! ]
 - Improved the description of the "Negate Number" placeholder in all languages
 - Improved performance of video elements and video menu backgrounds that play local files with Rinku (the file is no longer re-checked on disk every frame)
 - The Pause screen's World Options button (Multiplayer Options in MC 26.2) now has a stable widget ID, so "Mimic Button" actions and layout customizations keep finding it even when other mods shift the menu (#1825)
+- Updated outdated texts in all translations so they match the current English descriptions (Delay Gate block, browser mute option, mouse button requirement, file and resource security notes, shader opacity and more)
+- Fixed some Russian and Polish opacity settings being labeled as "transparency"
+- Fixed inconsistent shader terms in the Spanish (Mexico) translation
+- Fixed stray foreign-language words in two Korean texts
 - Fixed the "Open Screen" action failing to open the "Open to LAN" and World Options screens (#1825)
 - Fixed Browser element, Browser menu background and Browser decoration overlay URLs breaking when they contain placeholders, because `&` parameters like `&embed` or `&f` were treated as Minecraft formatting codes (#1818)
 - Fixed image, audio, video and text sources, video elements and backgrounds, player skin and cape sources and the game intro breaking when their source contains placeholders and an `&` followed by a letter or number, like `&embed` (#1818)
