@@ -57,6 +57,10 @@ public class Listeners {
     public static final OnLeaveStructureListener ON_LEAVE_STRUCTURE = new OnLeaveStructureListener();
     public static final OnEnterStructureHighPrecisionListener ON_ENTER_STRUCTURE_HIGH_PRECISION = new OnEnterStructureHighPrecisionListener();
     public static final OnLeaveStructureHighPrecisionListener ON_LEAVE_STRUCTURE_HIGH_PRECISION = new OnLeaveStructureHighPrecisionListener();
+    public static final OnRaidStartedListener ON_RAID_STARTED = new OnRaidStartedListener();
+    public static final OnEnterActiveRaidAreaListener ON_ENTER_ACTIVE_RAID_AREA = new OnEnterActiveRaidAreaListener();
+    public static final OnLeaveActiveRaidAreaListener ON_LEAVE_ACTIVE_RAID_AREA = new OnLeaveActiveRaidAreaListener();
+    public static final OnRaidFinishedListener ON_RAID_FINISHED = new OnRaidFinishedListener();
     public static final OnDimensionEnteredListener ON_DIMENSION_ENTERED = new OnDimensionEnteredListener();
     public static final OnStartSwimmingListener ON_START_SWIMMING = new OnStartSwimmingListener();
     public static final OnStopSwimmingListener ON_STOP_SWIMMING = new OnStopSwimmingListener();
@@ -150,6 +154,10 @@ public class Listeners {
         ListenerRegistry.register(ON_LEAVE_STRUCTURE);
         ListenerRegistry.register(ON_ENTER_STRUCTURE_HIGH_PRECISION);
         ListenerRegistry.register(ON_LEAVE_STRUCTURE_HIGH_PRECISION);
+        ListenerRegistry.register(ON_RAID_STARTED);
+        ListenerRegistry.register(ON_ENTER_ACTIVE_RAID_AREA);
+        ListenerRegistry.register(ON_LEAVE_ACTIVE_RAID_AREA);
+        ListenerRegistry.register(ON_RAID_FINISHED);
         ListenerRegistry.register(ON_DIMENSION_ENTERED);
         ListenerRegistry.register(ON_START_SWIMMING);
         ListenerRegistry.register(ON_STOP_SWIMMING);
