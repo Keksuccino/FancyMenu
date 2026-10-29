@@ -72,6 +72,7 @@
     "client.MixinPlainTextButton",
     "client.MixinPlayer",
     "client.MixinProgressScreen",
+    "client.MixinRealmsConnect",
     "client.MixinRealmsNotificationsScreen",
     "client.MixinReceivingLevelScreen",
     "client.MixinRenderTarget",
