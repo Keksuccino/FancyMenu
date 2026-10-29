@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.widget.identification;
 
+import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import net.minecraft.client.gui.GuiGraphics;
@@ -213,6 +214,51 @@ class WidgetIdentifierHandlerTest {
         assertTrue(WidgetIdentifierHandler.isIdentifierOfWidget("vanillabtn:34691", meta));
         assertTrue(WidgetIdentifierHandler.isIdentifierOfWidget("button_compatibility_id:34691", meta));
         assertTrue(WidgetIdentifierHandler.isIdentifierOfWidget("fancymenu_options_button.cosmetica.home", meta));
+    }
+
+    @Test
+    void customizationsOfWidgetsMissingFromTheCurrentContextAreKept() {
+        TestWidget reporting = new TestWidget(Component.translatable("menu.playerReporting"));
+        reporting.setWidgetIdentifierFancyMenu("pause_player_reporting_button");
+        SerializedElement lan = serializedWidgetEntry("pause_share_to_lan_button");
+        SerializedElement prefixedLan = serializedWidgetEntry("vanillabtn:pause_share_to_lan_button");
+        SerializedElement current = serializedWidgetEntry("pause_player_reporting_button");
+        SerializedElement prefixedCurrent = serializedWidgetEntry("button_compatibility_id:pause_player_reporting_button");
+        SerializedElement currentNumeric = serializedWidgetEntry("30");
+        SerializedElement outdatedNumeric = serializedWidgetEntry("4120");
+        SerializedElement withoutIdentifier = new SerializedElement();
+        List<SerializedElement> entries = List.of(lan, current, prefixedLan, prefixedCurrent, currentNumeric, outdatedNumeric, withoutIdentifier);
+
+        List<SerializedElement> absent = WidgetIdentifierHandler.getCustomizationsOfAbsentWidgets(entries, List.of(createIdentityOnlyMeta(reporting, 30L)));
+
+        assertEquals(List.of(lan, prefixedLan), absent);
+    }
+
+    @Test
+    void legacyAliasOfCurrentWidgetIsNotTreatedAsAbsent() {
+        TestWidget online = new TestWidget(Component.translatable("options.online"));
+        WidgetIdentifierHandler.assignStableOptionsWidgetIdentifiers(List.of(online));
+        SerializedElement legacyWorldOptions = serializedWidgetEntry("fancymenu_options_options.worldoptions.button");
+
+        assertTrue(WidgetIdentifierHandler.getCustomizationsOfAbsentWidgets(List.of(legacyWorldOptions), List.of(createIdentityOnlyMeta(online, 1L))).isEmpty());
+    }
+
+    @Test
+    void targetIdentifierIsPrefixFreeAndFallsBackToLegacyActionIdentifier() {
+        SerializedElement current = serializedWidgetEntry("vanillabtn:current_identifier");
+        current.putProperty("actionid", "legacy_identifier");
+        SerializedElement legacy = new SerializedElement();
+        legacy.putProperty("actionid", "button_compatibility_id:legacy_identifier");
+
+        assertEquals("current_identifier", WidgetIdentifierHandler.getTargetWidgetIdentifier(current));
+        assertEquals("legacy_identifier", WidgetIdentifierHandler.getTargetWidgetIdentifier(legacy));
+        assertNull(WidgetIdentifierHandler.getTargetWidgetIdentifier(new SerializedElement()));
+    }
+
+    private static SerializedElement serializedWidgetEntry(String identifier) {
+        SerializedElement serialized = new SerializedElement();
+        serialized.putProperty("instance_identifier", identifier);
+        return serialized;
     }
 
     @SuppressWarnings("DataFlowIssue")
