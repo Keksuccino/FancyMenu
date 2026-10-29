@@ -59,6 +59,7 @@
 - Everything always needs to be compatible with Sodium and Iris. To check compatibility for these, scan the Sodium and Iris sources in the places you touch, to check if Sodium/Iris touch it too, and then see if both works well together.
 - Always clean up after yourself! When finishing a task, remove leftover code from testing, code from earlier unsuccessful implementation attempts, and dead code.
 - When you work with Vanilla Minecraft code, or Iris/Sodium, always deeply analyze the source code for these, so you really understand what you are working with and how the related code works.
+- When you are told to implement or fix something, without clarifying in which sub-workspace, it means you should implement/fix it in all sub-workspaces. For fixes, apply the fix to all sub-workspaces that need the fix.
 
 ## Mod Conflicts
 - When fixing mod conflicts, avoid injections into the other mod. Always try first to fix the issue purely on the project's side, without altering/patching the other mod's code.

@@ -1,0 +1,1 @@
+FancyMenu issue 1773 (sh gradlew :fabric:test --tests de.keksuccino.fancymenu.customization.listener.listeners.OnScreenshotTakenListenerTest --tests de.keksuccino.fancymenu.customization.listener.listeners.helpers.ListenerPathFormatterTest :fabric:compileJava :neoforge:compileJava --stacktrace) since Thu Oct 29 10:42:01 CET 2026
