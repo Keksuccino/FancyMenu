@@ -84,6 +84,7 @@
     "client.MixinRealmsNotificationsScreen",
     "client.MixinResourceLoadStateTracker",
     "client.MixinScreen",
+    "client.MixinScreenshot",
     "client.MixinSelectWorldScreen",
     "client.MixinSoundEngine",
     "client.MixinSoundManager",
