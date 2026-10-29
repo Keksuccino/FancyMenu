@@ -3394,5 +3394,9 @@
   "fancymenu.elements.widgets.click_sound_volume": "Click Sound Volume",
   "fancymenu.elements.widgets.click_sound_volume.desc": "How loud the custom click sound plays, from 0.0 (muted) to 1.0 (full volume).\n\nThe volume slider of its sound channel still applies on top of this.",
   "fancymenu.elements.widgets.click_sound_channel": "Click Sound Channel: %s",
-  "fancymenu.elements.widgets.click_sound_channel.desc": "The Minecraft sound channel the custom click sound plays on.\n\nThe sound follows the volume slider of that channel in Minecraft's sound settings."
+  "fancymenu.elements.widgets.click_sound_channel.desc": "The Minecraft sound channel the custom click sound plays on.\n\nThe sound follows the volume slider of that channel in Minecraft's sound settings.",
+  "fancymenu.placeholders.text_height": "Text Height",
+  "fancymenu.placeholders.text_height.desc": "Returns the height in pixels of the given text.\nEvery line of the text counts, so text with line breaks returns the height of all its lines.\nUseful for calculating element positions or sizes based on text height.\n\nWant to fit something to the text of a Text element? Use the Text Element Content Height placeholder instead, since it also respects the text scale, line spacing and automatic line wrapping of the element.",
+  "fancymenu.placeholders.text_element_content_height": "Text Element Content Height",
+  "fancymenu.placeholders.text_element_content_height.desc": "Returns the height in pixels a Text element needs to show all of its text without scrolling.\nAdjusts automatically to the number of lines (including automatically wrapped ones), the text scale and the line spacing of the element.\nUseful for making backgrounds or other elements fit the text of a Text element.\nReturns 0 if the element was not found or is not a Text element.\n\nRequired values:\n- element_identifier: The element identifier of the target Text element"
 }
