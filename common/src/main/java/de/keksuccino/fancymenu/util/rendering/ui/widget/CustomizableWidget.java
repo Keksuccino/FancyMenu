@@ -12,6 +12,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.sounds.SoundSource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.List;
@@ -191,6 +192,35 @@ public interface CustomizableWidget {
     default void stopCustomClickSoundFancyMenu() {
         IAudio a = this.getCustomClickSoundFancyMenu();
         if (a != null) a.stop();
+    }
+
+    /**
+     * Sets the base volume of the custom click sound. Gets clamped to 0.0 to 1.0.
+     */
+    void setCustomClickSoundVolumeFancyMenu(float volume);
+
+    float getCustomClickSoundVolumeFancyMenu();
+
+    void setCustomClickSoundChannelFancyMenu(@NotNull SoundSource channel);
+
+    @NotNull
+    SoundSource getCustomClickSoundChannelFancyMenu();
+
+    /**
+     * Plays the custom click sound from the beginning, using its configured sound channel and volume.<br>
+     * Audio resources are shared by everything that uses the same source, so the channel and volume get applied right before
+     * every playback instead of only once.
+     *
+     * @return True if the widget has a custom click sound, so the vanilla click sound should not play.
+     */
+    default boolean playCustomClickSoundFancyMenu() {
+        IAudio sound = this.getCustomClickSoundFancyMenu();
+        if (sound == null) return false;
+        sound.stop();
+        sound.setSoundChannel(this.getCustomClickSoundChannelFancyMenu());
+        sound.setVolume(this.getCustomClickSoundVolumeFancyMenu());
+        sound.play();
+        return true;
     }
 
     void setHoverSoundFancyMenu(@Nullable IAudio sound);

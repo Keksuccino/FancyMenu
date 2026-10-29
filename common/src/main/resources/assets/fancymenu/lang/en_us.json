@@ -3384,5 +3384,19 @@
   "fancymenu.decoration_overlays.string_lights.string.light_colors.desc": "Gives every light on the string its own color.\nJust enter a comma-separated list of HEX colors, like: #FF0000, #00FF00, #0000FF\n\nThe first color is for the first light, the second one for the\nnext light, and so on. If there are more lights than colors,\nthe list starts over. Lights are counted from where the string\nstarts (the first spot in its name, or the top for loose strings).\n\nLeave a value empty to keep the light's normal color.\nThese colors win over the light color and the Christmas lights mode.",
   "fancymenu.actions.variables.delete": "Delete Variable (FM Variable)",
   "fancymenu.actions.variables.delete.desc": "Completely deletes a variable, so it doesn't exist anymore. All other variables stay untouched.\n\nIf you only want to empty a variable but keep it around, use the 'Set Variable Value' action instead.",
-  "fancymenu.actions.variables.delete.value.desc": "Variable Name"
+  "fancymenu.actions.variables.delete.value.desc": "Variable Name",
+  "fancymenu.editor.open_audio.volume": "Screen Open-Audio Volume",
+  "fancymenu.editor.open_audio.volume.slider_label": "Screen Open-Audio Volume: %s",
+  "fancymenu.editor.open_audio.volume.desc": "How loud the screen open-audio plays, from 0.0 (muted) to 1.0 (full volume).\n\nThe volume slider of its sound channel still applies on top of this.",
+  "fancymenu.editor.open_audio.sound_channel": "Screen Open-Audio Sound Channel: %s",
+  "fancymenu.editor.open_audio.sound_channel.desc": "The Minecraft sound channel the screen open-audio plays on.\n\nThe audio follows the volume slider of that channel in Minecraft's sound settings.",
+  "fancymenu.editor.close_audio.volume": "Screen Close-Audio Volume",
+  "fancymenu.editor.close_audio.volume.slider_label": "Screen Close-Audio Volume: %s",
+  "fancymenu.editor.close_audio.volume.desc": "How loud the screen close-audio plays, from 0.0 (muted) to 1.0 (full volume).\n\nThe volume slider of its sound channel still applies on top of this.",
+  "fancymenu.editor.close_audio.sound_channel": "Screen Close-Audio Sound Channel: %s",
+  "fancymenu.editor.close_audio.sound_channel.desc": "The Minecraft sound channel the screen close-audio plays on.\n\nThe audio follows the volume slider of that channel in Minecraft's sound settings.",
+  "fancymenu.elements.widgets.click_sound_volume": "Click Sound Volume",
+  "fancymenu.elements.widgets.click_sound_volume.desc": "How loud the custom click sound plays, from 0.0 (muted) to 1.0 (full volume).\n\nThe volume slider of its sound channel still applies on top of this.",
+  "fancymenu.elements.widgets.click_sound_channel": "Click Sound Channel: %s",
+  "fancymenu.elements.widgets.click_sound_channel.desc": "The Minecraft sound channel the custom click sound plays on.\n\nThe sound follows the volume slider of that channel in Minecraft's sound settings."
 }

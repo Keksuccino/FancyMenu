@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import net.minecraft.sounds.SoundSource;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +27,13 @@ public class LayoutBase {
     public final List<Pair<AbstractDecorationOverlayBuilder<?>, AbstractDecorationOverlay<?>>> decorationOverlays = new ArrayList<>();
     public boolean preserveBackgroundAspectRatio = false;
     public ResourceSupplier<IAudio> openAudio;
+    public float openAudioVolume = 1.0F;
+    @NotNull
+    public SoundSource openAudioSoundChannel = SoundSource.MASTER;
     public ResourceSupplier<IAudio> closeAudio;
+    public float closeAudioVolume = 1.0F;
+    @NotNull
+    public SoundSource closeAudioSoundChannel = SoundSource.MASTER;
     public float forcedScale = 0;
     public int autoScalingWidth = 0;
     public int autoScalingHeight = 0;
@@ -58,11 +65,16 @@ public class LayoutBase {
                 if (layout.preserveBackgroundAspectRatio) {
                     stacked.preserveBackgroundAspectRatio = true;
                 }
+                // Volume and channel belong to the audio of the same layout, so they never get mixed between layouts.
                 if (layout.openAudio != null) {
                     stacked.openAudio = layout.openAudio;
+                    stacked.openAudioVolume = layout.openAudioVolume;
+                    stacked.openAudioSoundChannel = layout.openAudioSoundChannel;
                 }
                 if (layout.closeAudio != null) {
                     stacked.closeAudio = layout.closeAudio;
+                    stacked.closeAudioVolume = layout.closeAudioVolume;
+                    stacked.closeAudioSoundChannel = layout.closeAudioSoundChannel;
                 }
                 if (layout.forcedScale != 0) {
                     stacked.forcedScale = layout.forcedScale;
