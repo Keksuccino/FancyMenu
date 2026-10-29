@@ -24,6 +24,7 @@ import de.keksuccino.fancymenu.customization.action.actions.screen.CloseScreenAc
 import de.keksuccino.fancymenu.customization.action.actions.screen.OpenScreenAction;
 import de.keksuccino.fancymenu.customization.action.actions.screen.UpdateScreenAction;
 import de.keksuccino.fancymenu.customization.action.actions.variables.ClearVariablesAction;
+import de.keksuccino.fancymenu.customization.action.actions.variables.DeleteVariableAction;
 import de.keksuccino.fancymenu.customization.action.actions.variables.SetVariableAction;
 import de.keksuccino.fancymenu.customization.action.ActionRegistry;
 import de.keksuccino.fancymenu.customization.action.actions.video.background.SetVideoMenuBackgroundPlayTimeAction;
@@ -37,6 +38,7 @@ public class Actions {
 
     public static final SetVariableAction SET_VARIABLE = new SetVariableAction();
     public static final ClearVariablesAction CLEAR_VARIABLES = new ClearVariablesAction();
+    public static final DeleteVariableAction DELETE_VARIABLE = new DeleteVariableAction();
     public static final PasteToChatAction PASTE_TO_CHAT = new PasteToChatAction();
     public static final ToggleLayoutAction TOGGLE_LAYOUT = new ToggleLayoutAction();
     public static final EnableLayoutAction ENABLE_LAYOUT = new EnableLayoutAction();
@@ -103,6 +105,7 @@ public class Actions {
 
         ActionRegistry.register(SET_VARIABLE);
         ActionRegistry.register(CLEAR_VARIABLES);
+        ActionRegistry.register(DELETE_VARIABLE);
         ActionRegistry.register(PASTE_TO_CHAT);
         ActionRegistry.register(TOGGLE_LAYOUT);
         ActionRegistry.register(ENABLE_LAYOUT);
