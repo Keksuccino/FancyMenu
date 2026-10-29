@@ -27,6 +27,8 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
     protected final String logTypeName;
     @NotNull
     protected final Object playerInitLock = new Object();
+    @NotNull
+    protected final PlaybackLoopTracker loopTracker = new PlaybackLoopTracker();
 
     @Nullable
     protected volatile Object mrl;
@@ -50,8 +52,6 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
     protected volatile boolean closed = false;
     protected volatile boolean playerInitTaskQueued = false;
     protected volatile boolean loopForever = true;
-    protected volatile long lastPlaybackTimeMs = 0L;
-    protected volatile int completedLoops = 0;
     protected volatile int maxLoops = -1;
 
     public WatermediaAnimatedTextureBackend(@NotNull String uniqueId, @NotNull String typeName) {
@@ -165,8 +165,7 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
             this.mediaPlayer = createdPlayer;
             this.applyRepeatMode(createdPlayer);
             this.updateSizeFromPlayer(createdPlayer);
-            this.lastPlaybackTimeMs = 0L;
-            this.completedLoops = 0;
+            this.loopTracker.reset();
             if (this.playRequested) {
                 if (this.pausedRequested) {
                     WatermediaReflectionBridge.playerStartPaused(createdPlayer);
@@ -220,7 +219,8 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
         if (cachedPlayer == null) return RenderableResource.FULLY_TRANSPARENT_TEXTURE;
         if (this.handlePlayerError(cachedPlayer)) return RenderableResource.FULLY_TRANSPARENT_TEXTURE;
 
-        this.applyFiniteLoopStop(cachedPlayer);
+        // Finite loops need to get tracked while rendering, because the player can only repeat forever or not at all
+        if (!this.loopForever && (this.maxLoops > 1)) this.trackPlaybackLoops(cachedPlayer);
         this.updateSizeFromPlayer(cachedPlayer);
 
         long textureHandle = WatermediaReflectionBridge.playerTextureHandle(cachedPlayer);
@@ -230,21 +230,27 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
         return this.frameLocation;
     }
 
-    protected void applyFiniteLoopStop(@NotNull Object player) {
-        if (this.loopForever || (this.maxLoops <= 1)) return;
-        long durationMs = WatermediaReflectionBridge.playerDuration(player);
-        if (durationMs <= 0L) return;
-
-        long currentTimeMs = Math.max(0L, WatermediaReflectionBridge.playerTime(player));
-        long previousTimeMs = Math.max(0L, this.lastPlaybackTimeMs);
-        this.lastPlaybackTimeMs = currentTimeMs;
-
-        if (previousTimeMs > (currentTimeMs + 100L)) {
-            this.completedLoops++;
-            if (this.completedLoops >= (this.maxLoops - 1)) {
-                WatermediaReflectionBridge.setPlayerRepeat(player, false);
-            }
+    /**
+     * Notices loop restarts of the player. Restarts only get noticed if this gets called at least once per loop.
+     */
+    protected void trackPlaybackLoops(@NotNull Object player) {
+        if (!this.loopTracker.update(WatermediaReflectionBridge.playerTime(player), WatermediaReflectionBridge.playerDuration(player))) return;
+        // The player can only repeat forever or not at all, so it stops repeating once its final loop started
+        if (!this.loopForever && (this.maxLoops > 1) && (this.loopTracker.getCompletedLoops() >= (this.maxLoops - 1))) {
+            WatermediaReflectionBridge.setPlayerRepeat(player, false);
         }
+    }
+
+    /**
+     * Returns how many full play cycles the player completed since it got last (re)started, loop restarts included.
+     */
+    public int getCompletedPlayCycles() {
+        Object cachedPlayer = this.mediaPlayer;
+        if (cachedPlayer == null) return this.loopTracker.getCompletedLoops();
+        this.trackPlaybackLoops(cachedPlayer);
+        // A player that doesn't repeat ends its final cycle instead of jumping back to the start, so that cycle needs to get counted separately
+        boolean ended = WatermediaReflectionBridge.playerStatusName(cachedPlayer).equals("ENDED");
+        return this.loopTracker.getCompletedLoops() + (ended ? 1 : 0);
     }
 
     public void setLoopCount(int loops) {
@@ -309,8 +315,7 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
         if (this.closed) return;
         this.playRequested = true;
         this.pausedRequested = false;
-        this.completedLoops = 0;
-        this.lastPlaybackTimeMs = 0L;
+        this.loopTracker.reset();
         Object cachedPlayer = this.mediaPlayer;
         if (cachedPlayer != null) {
             WatermediaReflectionBridge.playerStop(cachedPlayer);
