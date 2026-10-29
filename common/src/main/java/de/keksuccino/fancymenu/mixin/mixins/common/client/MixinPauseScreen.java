@@ -48,7 +48,8 @@ public class MixinPauseScreen extends Screen {
                     if (replacementIdentifier != null) u.setWidgetIdentifierFancyMenu(replacementIdentifier);
                     if (c.getKey().equals("menu.options")) u.setWidgetIdentifierFancyMenu("pause_options_button");
                     if (c.getKey().equals("menu.shareToLan")) u.setWidgetIdentifierFancyMenu("pause_share_to_lan_button");
-                    if (c.getKey().equals("menu.playerReporting")) u.setWidgetIdentifierFancyMenu("pause_share_to_lan_button");
+                    // Report Player takes the LAN button's place outside of unpublished singleplayer worlds, but has its own identifier; WidgetIdentifierMigration upgrades layouts that still use the shared one.
+                    if (c.getKey().equals("menu.playerReporting")) u.setWidgetIdentifierFancyMenu("pause_player_reporting_button");
                     if (c.getKey().equals("menu.returnToMenu")) u.setWidgetIdentifierFancyMenu("pause_disconnect_button");
                     if (c.getKey().equals("menu.disconnect")) u.setWidgetIdentifierFancyMenu("pause_disconnect_button");
                     if (c.getKey().equals("menu.sendFeedback")) u.setWidgetIdentifierFancyMenu("pause_send_feedback_button");

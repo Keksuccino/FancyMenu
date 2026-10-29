@@ -25,6 +25,7 @@ import de.keksuccino.fancymenu.customization.overlay.ScreenOverlays;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.widget.ScreenWidgetDiscoverer;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
+import de.keksuccino.fancymenu.customization.widget.identification.WidgetIdentifierHandler;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.ObjectUtils;
@@ -97,6 +98,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	protected LayoutEditorHistory.Snapshot preDragElementSnapshot;
 	private boolean editorStateDestroyed = false;
 	public final List<WidgetMeta> cachedVanillaWidgetMetas = new ArrayList<>();
+	/** Customizations of vanilla widgets that only exist in other contexts of the target screen. They get serialized back unchanged, so editing never deletes them. */
+	protected final List<SerializedElement> absentVanillaWidgetElements = new ArrayList<>();
 	public boolean unsavedChanges = false;
 	public boolean justOpened = true;
     protected final LayoutEditorUI layoutEditorUI = new LayoutEditorUI(this);
@@ -545,6 +548,11 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			}
 		}
 
+		this.absentVanillaWidgetElements.clear();
+		if (this.layoutTargetScreen != null) {
+			this.absentVanillaWidgetElements.addAll(WidgetIdentifierHandler.getCustomizationsOfAbsentWidgets(this.layout.serializedVanillaButtonElements, this.cachedVanillaWidgetMetas));
+		}
+
 		this.constructElementInstances(this.layout.screenIdentifier, this.cachedVanillaWidgetMetas, this.layout, normalElements, vanillaWidgetElements);
 
 		//Wrap normal elements
@@ -589,6 +597,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				this.layout.serializedVanillaButtonElements.add(serialized);
 			}
 		}
+		this.layout.serializedVanillaButtonElements.addAll(this.absentVanillaWidgetElements);
 
 	}
 
