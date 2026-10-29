@@ -18,6 +18,7 @@ public class Listeners {
     public static final OnQuitMinecraftListener ON_QUIT_MINECRAFT = new OnQuitMinecraftListener();
     public static final OnDeathListener ON_DEATH = new OnDeathListener();
     public static final OnVariableUpdatedListener ON_VARIABLE_UPDATED = new OnVariableUpdatedListener();
+    public static final OnFileDownloadStartedListener ON_FILE_DOWNLOAD_STARTED = new OnFileDownloadStartedListener();
     public static final OnFileDownloadedListener ON_FILE_DOWNLOADED = new OnFileDownloadedListener();
     public static final OnFileSelectedListener ON_FILE_SELECTED = new OnFileSelectedListener();
     public static final OnZipExtractedListener ON_ZIP_EXTRACTED = new OnZipExtractedListener();
@@ -105,6 +106,7 @@ public class Listeners {
         ListenerRegistry.register(ON_CLOSE_SCREEN);
         ListenerRegistry.register(ON_QUIT_MINECRAFT);
         ListenerRegistry.register(ON_VARIABLE_UPDATED);
+        ListenerRegistry.register(ON_FILE_DOWNLOAD_STARTED);
         ListenerRegistry.register(ON_FILE_DOWNLOADED);
         ListenerRegistry.register(ON_FILE_SELECTED);
         ListenerRegistry.register(ON_ZIP_EXTRACTED);
