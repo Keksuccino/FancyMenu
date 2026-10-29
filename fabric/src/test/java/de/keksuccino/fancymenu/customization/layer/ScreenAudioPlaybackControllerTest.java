@@ -37,12 +37,56 @@ class ScreenAudioPlaybackControllerTest {
         TestAudioSupplier supplier = new TestAudioSupplier(() -> audio);
         ScreenAudioPlaybackController controller = newController(scheduler, clock);
 
-        controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, supplier, null);
+        controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, supplier, SoundSource.MASTER, 1.0F, null);
 
         assertEquals(List.of("stop", "play"), audio.operations);
         assertEquals(1, supplier.getCalls);
         assertEquals(0, scheduler.scheduleCalls);
         assertFalse(controller.isPending());
+    }
+
+    @Test
+    void playbackAppliesConfiguredChannelAndVolumeOverSharedAudioState() {
+        TestAudio audio = TestAudio.ready();
+        // Another user of the same shared audio resource left different settings behind.
+        audio.soundSource = SoundSource.RECORDS;
+        audio.volume = 0.9F;
+        ScreenAudioPlaybackController controller = newController(new ManualScheduler(), new MutableClock());
+
+        controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, new TestAudioSupplier(() -> audio), SoundSource.AMBIENT, 0.25F, null);
+
+        assertEquals(List.of("stop", "play"), audio.operations);
+        assertEquals(SoundSource.AMBIENT, audio.playedSoundSource);
+        assertEquals(0.25F, audio.playedVolume);
+    }
+
+    @Test
+    void deferredPlaybackAppliesTheChannelAndVolumeOfItsOwnCue() {
+        ManualScheduler scheduler = new ManualScheduler();
+        MutableClock clock = new MutableClock();
+        TestAudio audio = new TestAudio();
+        ScreenAudioPlaybackController controller = newController(scheduler, clock);
+
+        controller.playWhenReady(ScreenAudioPlaybackController.Cue.CLOSE, new TestAudioSupplier(() -> audio), SoundSource.PLAYERS, 0.5F, null);
+        assertTrue(controller.isPending());
+        audio.soundSource = SoundSource.MUSIC;
+        audio.volume = 1.0F;
+
+        audio.ready = true;
+        clock.set(POLL_INTERVAL_NANOS);
+        scheduler.tasks.get(0).runEvenIfCancelled();
+
+        assertEquals(List.of("stop", "play"), audio.operations);
+        assertEquals(SoundSource.PLAYERS, audio.playedSoundSource);
+        assertEquals(0.5F, audio.playedVolume);
+    }
+
+    @Test
+    void outOfRangeVolumesAreClampedBeforePlaying() {
+        assertEquals(1.0F, playReadyAudioWithVolume(3.0F).playedVolume);
+        assertEquals(0.0F, playReadyAudioWithVolume(-0.5F).playedVolume);
+        assertEquals(1.0F, playReadyAudioWithVolume(Float.NaN).playedVolume);
+        assertEquals(0.0F, playReadyAudioWithVolume(0.0F).playedVolume);
     }
 
     @Test
@@ -53,7 +97,7 @@ class ScreenAudioPlaybackControllerTest {
         TestAudioSupplier supplier = new TestAudioSupplier(() -> audio);
         ScreenAudioPlaybackController controller = newController(scheduler, clock);
 
-        controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, supplier, null);
+        controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, supplier, SoundSource.MASTER, 1.0F, null);
 
         assertEquals(1, scheduler.scheduleCalls);
         assertEquals(1, supplier.getCalls);
@@ -76,7 +120,7 @@ class ScreenAudioPlaybackControllerTest {
         TestAudioSupplier supplier = new TestAudioSupplier(() -> null);
         ScreenAudioPlaybackController controller = newController(scheduler, new MutableClock());
 
-        controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, supplier, null);
+        controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, supplier, SoundSource.MASTER, 1.0F, null);
 
         assertEquals(1, supplier.getCalls);
         assertEquals(0, scheduler.scheduleCalls);
@@ -91,7 +135,7 @@ class ScreenAudioPlaybackControllerTest {
         TestAudioSupplier supplier = new TestAudioSupplier(() -> audio);
         ScreenAudioPlaybackController controller = newController(scheduler, new MutableClock());
 
-        controller.playWhenReady(ScreenAudioPlaybackController.Cue.CLOSE, supplier, null);
+        controller.playWhenReady(ScreenAudioPlaybackController.Cue.CLOSE, supplier, SoundSource.MASTER, 1.0F, null);
 
         assertFalse(audio.isLoadingFailureRetryable());
         assertEquals(0, scheduler.scheduleCalls);
@@ -110,7 +154,7 @@ class ScreenAudioPlaybackControllerTest {
         TestAudioSupplier supplier = new TestAudioSupplier(() -> current[0]);
         ScreenAudioPlaybackController controller = newController(scheduler, clock);
 
-        controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, supplier, null);
+        controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, supplier, SoundSource.MASTER, 1.0F, null);
         assertTrue(controller.isPending());
         assertEquals(1, scheduler.scheduleCalls);
 
@@ -130,7 +174,7 @@ class ScreenAudioPlaybackControllerTest {
         TestAudioSupplier supplier = new TestAudioSupplier(() -> audio);
         ScreenAudioPlaybackController controller = newController(scheduler, new MutableClock());
 
-        controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, supplier, null);
+        controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, supplier, SoundSource.MASTER, 1.0F, null);
 
         assertEquals(List.of("stop", "play"), audio.operations);
         assertEquals(0, scheduler.scheduleCalls);
@@ -146,8 +190,8 @@ class ScreenAudioPlaybackControllerTest {
         ScreenAudioPlaybackController firstController = newController(scheduler, new MutableClock());
         ScreenAudioPlaybackController secondController = newController(scheduler, new MutableClock());
 
-        firstController.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, new TestAudioSupplier(() -> completed), null);
-        secondController.playWhenReady(ScreenAudioPlaybackController.Cue.CLOSE, new TestAudioSupplier(() -> closed), null);
+        firstController.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, new TestAudioSupplier(() -> completed), SoundSource.MASTER, 1.0F, null);
+        secondController.playWhenReady(ScreenAudioPlaybackController.Cue.CLOSE, new TestAudioSupplier(() -> closed), SoundSource.MASTER, 1.0F, null);
 
         assertEquals(0, scheduler.scheduleCalls);
         assertFalse(firstController.isPending());
@@ -161,7 +205,7 @@ class ScreenAudioPlaybackControllerTest {
         TestAudioSupplier supplier = new TestAudioSupplier(TestAudio::new);
         ScreenAudioPlaybackController controller = newController(scheduler, clock);
 
-        controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, supplier, null);
+        controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, supplier, SoundSource.MASTER, 1.0F, null);
         clock.set(TIMEOUT_NANOS);
         scheduler.tasks.get(0).runEvenIfCancelled();
 
@@ -177,7 +221,7 @@ class ScreenAudioPlaybackControllerTest {
         TestAudio audio = new TestAudio();
         ScreenAudioPlaybackController controller = new ScreenAudioPlaybackController(scheduler, clock, POLL_INTERVAL_NANOS, 250L);
 
-        controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, new TestAudioSupplier(() -> audio), null);
+        controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, new TestAudioSupplier(() -> audio), SoundSource.MASTER, 1.0F, null);
         assertEquals(100L, scheduler.tasks.get(0).delayNanos);
 
         clock.set(100L);
@@ -195,7 +239,7 @@ class ScreenAudioPlaybackControllerTest {
         TestAudioSupplier supplier = new TestAudioSupplier(TestAudio::new);
         ScreenAudioPlaybackController controller = newController(scheduler, new MutableClock());
 
-        controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, supplier, null);
+        controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, supplier, SoundSource.MASTER, 1.0F, null);
         ManualTask staleTask = scheduler.tasks.get(0);
         controller.cancel();
 
@@ -213,9 +257,9 @@ class ScreenAudioPlaybackControllerTest {
         TestAudioSupplier newSupplier = new TestAudioSupplier(() -> newAudio);
         ScreenAudioPlaybackController controller = newController(scheduler, new MutableClock());
 
-        controller.playWhenReady(ScreenAudioPlaybackController.Cue.CLOSE, oldSupplier, null);
+        controller.playWhenReady(ScreenAudioPlaybackController.Cue.CLOSE, oldSupplier, SoundSource.MASTER, 1.0F, null);
         ManualTask staleTask = scheduler.tasks.get(0);
-        controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, newSupplier, null);
+        controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, newSupplier, SoundSource.MASTER, 1.0F, null);
 
         assertEquals(1, staleTask.cancelCalls);
         staleTask.runEvenIfCancelled();
@@ -233,7 +277,7 @@ class ScreenAudioPlaybackControllerTest {
         AtomicBoolean cancellationReturned = new AtomicBoolean();
         List<Thread> spawnedThreads = new ArrayList<>();
 
-        Thread playbackThread = startThread(() -> controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, new TestAudioSupplier(() -> audio), null));
+        Thread playbackThread = startThread(() -> controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, new TestAudioSupplier(() -> audio), SoundSource.MASTER, 1.0F, null));
         spawnedThreads.add(playbackThread);
         Thread cancellationThread;
         try {
@@ -272,12 +316,12 @@ class ScreenAudioPlaybackControllerTest {
         newAudio.sharedOperations = playbackOrder;
         List<Thread> spawnedThreads = new ArrayList<>();
 
-        Thread oldPlaybackThread = startThread(() -> controller.playWhenReady(ScreenAudioPlaybackController.Cue.CLOSE, new TestAudioSupplier(() -> oldAudio), null));
+        Thread oldPlaybackThread = startThread(() -> controller.playWhenReady(ScreenAudioPlaybackController.Cue.CLOSE, new TestAudioSupplier(() -> oldAudio), SoundSource.MASTER, 1.0F, null));
         spawnedThreads.add(oldPlaybackThread);
         Thread newPlaybackThread;
         try {
             assertTrue(oldAudio.stopEntered.await(5L, TimeUnit.SECONDS));
-            newPlaybackThread = startThread(() -> controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, new TestAudioSupplier(() -> newAudio), null));
+            newPlaybackThread = startThread(() -> controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, new TestAudioSupplier(() -> newAudio), SoundSource.MASTER, 1.0F, null));
             spawnedThreads.add(newPlaybackThread);
 
             awaitBlocked(newPlaybackThread);
@@ -298,7 +342,7 @@ class ScreenAudioPlaybackControllerTest {
         TestAudioSupplier supplier = new TestAudioSupplier(TestAudio::new);
         ScreenAudioPlaybackController controller = newController(scheduler, new MutableClock());
 
-        controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, supplier, owner);
+        controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, supplier, SoundSource.MASTER, 1.0F, owner);
         ManualTask task = scheduler.tasks.get(0);
         controller.retainConfigured(supplier, owner, null, null);
         assertTrue(controller.isPending());
@@ -316,7 +360,7 @@ class ScreenAudioPlaybackControllerTest {
         Layout unrelated = new Layout("test-screen");
         ScreenAudioPlaybackController controller = newController(scheduler, new MutableClock());
 
-        controller.playWhenReady(ScreenAudioPlaybackController.Cue.CLOSE, new TestAudioSupplier(TestAudio::new), owner);
+        controller.playWhenReady(ScreenAudioPlaybackController.Cue.CLOSE, new TestAudioSupplier(TestAudio::new), SoundSource.MASTER, 1.0F, owner);
         ManualTask task = scheduler.tasks.get(0);
         controller.cancelIfOwnedBy(List.of(unrelated));
         assertTrue(controller.isPending());
@@ -335,7 +379,7 @@ class ScreenAudioPlaybackControllerTest {
         TestAudioSupplier supplier = new TestAudioSupplier(TestAudio::new);
         ScreenAudioPlaybackController controller = newController(scheduler, clock);
 
-        controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, supplier, owner);
+        controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, supplier, SoundSource.MASTER, 1.0F, owner);
         owner.destroy();
         clock.set(POLL_INTERVAL_NANOS);
         scheduler.tasks.get(0).runEvenIfCancelled();
@@ -351,11 +395,11 @@ class ScreenAudioPlaybackControllerTest {
         TestAudioSupplier rejectedSupplier = new TestAudioSupplier(() -> TestAudio.ready());
         ScreenAudioPlaybackController controller = newController(scheduler, new MutableClock());
 
-        controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, firstSupplier, null);
+        controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, firstSupplier, SoundSource.MASTER, 1.0F, null);
         ManualTask task = scheduler.tasks.get(0);
         controller.close();
         controller.close();
-        controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, rejectedSupplier, null);
+        controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, rejectedSupplier, SoundSource.MASTER, 1.0F, null);
 
         assertTrue(controller.isClosed());
         assertFalse(controller.isPending());
@@ -369,10 +413,16 @@ class ScreenAudioPlaybackControllerTest {
         scheduler.failureCall = 1;
         ScreenAudioPlaybackController controller = newController(scheduler, new MutableClock());
 
-        controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, new TestAudioSupplier(TestAudio::new), null);
+        controller.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, new TestAudioSupplier(TestAudio::new), SoundSource.MASTER, 1.0F, null);
 
         assertEquals(1, scheduler.scheduleCalls);
         assertFalse(controller.isPending());
+    }
+
+    private static TestAudio playReadyAudioWithVolume(float volume) {
+        TestAudio audio = TestAudio.ready();
+        newController(new ManualScheduler(), new MutableClock()).playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, new TestAudioSupplier(() -> audio), SoundSource.MASTER, volume, null);
+        return audio;
     }
 
     private static ScreenAudioPlaybackController newController(ManualScheduler scheduler, MutableClock clock) {
@@ -483,6 +533,9 @@ class ScreenAudioPlaybackControllerTest {
         private boolean paused;
         private float volume;
         private SoundSource soundSource = SoundSource.MASTER;
+        @Nullable
+        private SoundSource playedSoundSource;
+        private float playedVolume = Float.NaN;
         private String operationPrefix = "";
         @Nullable
         private List<String> sharedOperations;
@@ -507,6 +560,8 @@ class ScreenAudioPlaybackControllerTest {
         public void play() {
             this.operations.add("play");
             this.recordSharedOperation("play");
+            this.playedSoundSource = this.soundSource;
+            this.playedVolume = this.volume;
             this.playing = true;
             this.paused = false;
         }
