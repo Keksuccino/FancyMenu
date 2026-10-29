@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -9,6 +10,9 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UITheme;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiRenderTypes;
 import net.minecraft.network.chat.Component;
@@ -30,6 +34,14 @@ public class ColorPickerWindowBody extends PiPWindowBody {
     private static final int COLUMN_GAP = 24;
     private static final int PANEL_PADDING = 10;
     private static final int PREVIEW_SIZE = 70;
+    private static final int CHANNEL_INPUT_HEIGHT = 16;
+    private static final int CHANNEL_INPUT_MAX_WIDTH = 60;
+    private static final int CHANNEL_INPUT_MAX_LENGTH = 3;
+    private static final int CHANNEL_INPUT_COLUMNS = 2;
+    private static final int CHANNEL_INPUT_COLUMN_GAP = 12;
+    private static final int CHANNEL_INPUT_ROW_GAP = 6;
+    private static final int CHANNEL_LABEL_GAP = 4;
+    private static final ColorPickerState.Channel[] CHANNELS = ColorPickerState.Channel.values();
 
     @Nullable
     private final DrawableColor presetColor;
@@ -40,13 +52,15 @@ public class ColorPickerWindowBody extends PiPWindowBody {
     @NotNull
     private final Consumer<DrawableColor> onCancel;
 
-    private float hue = 0.0F;
-    private float saturation = 0.0F;
-    private float value = 1.0F;
-    private float alpha = 1.0F;
+    @NotNull
+    private final ColorPickerState colorState;
 
     private ExtendedButton doneButton;
     private ExtendedButton cancelButton;
+    private final ExtendedEditBox[] channelInputs = new ExtendedEditBox[CHANNELS.length];
+    private final String[] channelInputTexts = new String[CHANNELS.length];
+    private int channelInputTextsArgb;
+    private boolean syncingChannelInputs = false;
 
     private boolean draggingSV = false;
     private boolean draggingHue = false;
@@ -76,11 +90,23 @@ public class ColorPickerWindowBody extends PiPWindowBody {
         this.onDone = onDone;
         this.onCancel = onCancel;
         this.presetColor = presetColor;
-        this.applyPresetColor(this.presetColor);
+        this.colorState = new ColorPickerState((presetColor != null) ? presetColor.getColorInt() : 0xFFFFFFFF);
     }
 
     @Override
     protected void init() {
+        // Channel inputs get added first, so Tab navigation starts with them
+        for (int i = 0; i < CHANNELS.length; i++) {
+            ColorPickerState.Channel channel = CHANNELS[i];
+            ExtendedEditBox input = new ExtendedEditBox(Minecraft.getInstance().font, 0, 0, CHANNEL_INPUT_MAX_WIDTH, CHANNEL_INPUT_HEIGHT, Component.literal(channel.getLabel()));
+            input.setMaxLength(CHANNEL_INPUT_MAX_LENGTH);
+            input.setCharacterFilter(CharacterFilter.buildDigitFilter());
+            input.setResponder(text -> this.onChannelInputChanged(channel, text));
+            UIBase.applyDefaultWidgetSkinTo(input, UIBase.shouldBlur());
+            this.channelInputs[i] = this.addWidget(input);
+        }
+        this.syncChannelInputs();
+
         this.cancelButton = new ExtendedButton(0, 0, 100, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
             this.onCancel.accept(this.presetColor);
             this.closeWindow();
@@ -88,10 +114,7 @@ public class ColorPickerWindowBody extends PiPWindowBody {
         this.addWidget(this.cancelButton);
         UIBase.applyDefaultWidgetSkinTo(this.cancelButton, UIBase.shouldBlur());
 
-        this.doneButton = new ExtendedButton(0, 0, 100, 20, Component.translatable("fancymenu.common_components.done"), (button) -> {
-            this.onDone.accept(DrawableColor.of(this.getCurrentHex()));
-            this.closeWindow();
-        });
+        this.doneButton = new ExtendedButton(0, 0, 100, 20, Component.translatable("fancymenu.common_components.done"), (button) -> this.confirmAndCloseWindow());
         this.addWidget(this.doneButton);
         UIBase.applyDefaultWidgetSkinTo(this.doneButton, UIBase.shouldBlur());
     }
@@ -108,9 +131,10 @@ public class ColorPickerWindowBody extends PiPWindowBody {
         RenderSystem.enableBlend();
 
         this.updateLayout();
+        this.syncChannelInputs();
 
         this.renderLeftPanel(graphics, theme);
-        this.renderInfoPanel(graphics, theme);
+        this.renderInfoPanel(graphics, theme, mouseX, mouseY, partial);
 
         this.cancelButton.setX((this.width / 2) - this.cancelButton.getWidth() - 5);
         this.cancelButton.setY(this.height - 36);
@@ -128,7 +152,7 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
     @Override
     public boolean keyPressed(int button, int scanCode, int modifiers) {
         if (button == InputConstants.KEY_ENTER) {
-            this.closeWindow();
+            this.confirmAndCloseWindow();
             return true;
         }
         return super.keyPressed(button, scanCode, modifiers);
@@ -138,22 +162,27 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0) {
             if (RenderingUtils.isXYInArea(mouseX, mouseY, this.pickerX, this.pickerY, this.pickerSize, this.pickerSize)) {
+                this.clearInputFocus();
                 this.draggingSV = true;
                 this.updateSVFromMouse(mouseX, mouseY);
                 return true;
             }
             if (RenderingUtils.isXYInArea(mouseX, mouseY, this.hueX, this.hueY, this.hueWidth, this.hueHeight)) {
+                this.clearInputFocus();
                 this.draggingHue = true;
                 this.updateHueFromMouse(mouseX);
                 return true;
             }
             if (RenderingUtils.isXYInArea(mouseX, mouseY, this.alphaX, this.alphaY, this.alphaWidth, this.alphaHeight)) {
+                this.clearInputFocus();
                 this.draggingAlpha = true;
                 this.updateAlphaFromMouse(mouseX);
                 return true;
             }
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        boolean handled = super.mouseClicked(mouseX, mouseY, button);
+        this.unfocusInactiveChannelInputs();
+        return handled;
     }
 
     @Override
@@ -243,7 +272,7 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
         this.renderAlphaSlider(graphics, theme);
     }
 
-    private void renderInfoPanel(@NotNull GuiGraphics graphics, @NotNull UITheme theme) {
+    private void renderInfoPanel(@NotNull GuiGraphics graphics, @NotNull UITheme theme, int mouseX, int mouseY, float partial) {
         int panelX = this.infoX - PANEL_PADDING;
         int panelY = this.infoY - PANEL_PADDING;
         int panelW = this.infoWidth + (PANEL_PADDING * 2);
@@ -281,25 +310,49 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
 
         y += labelHeight + 8;
         UIBase.renderText(graphics, Component.translatable("fancymenu.ui.color_picker.rgba"), x, y);
-        y += labelHeight + 2;
-        int rgb = this.getCurrentColorInt();
-        int r = (rgb >> 16) & 0xFF;
-        int g = (rgb >> 8) & 0xFF;
-        int b = rgb & 0xFF;
-        int a = Math.round(this.alpha * 255.0F);
-        UIBase.renderText(graphics, Component.literal("R: " + r + "  G: " + g + "  B: " + b + "  A: " + a), x, y, theme.ui_interface_generic_text_color.getColorInt());
+        y += labelHeight + 4;
+        y = this.renderChannelInputs(graphics, x, y, mouseX, mouseY, partial);
 
-        y += labelHeight + 8;
+        y += 8;
         UIBase.renderText(graphics, Component.translatable("fancymenu.ui.color_picker.hsv"), x, y);
         y += labelHeight + 2;
-        int h = Math.round(this.hue * 360.0F);
-        int s = Math.round(this.saturation * 100.0F);
-        int v = Math.round(this.value * 100.0F);
+        int h = Math.round(this.colorState.getHue() * 360.0F);
+        int s = Math.round(this.colorState.getSaturation() * 100.0F);
+        int v = Math.round(this.colorState.getValue() * 100.0F);
         UIBase.renderText(graphics, Component.literal("H: " + h + "  S: " + s + "%  V: " + v + "%"), x, y, theme.ui_interface_generic_text_color.getColorInt());
     }
 
+    /**
+     * Lays out and renders the RGBA channel inputs in a grid, each with its channel letter in front of it.
+     *
+     * @return The bottom Y of the input grid.
+     */
+    private int renderChannelInputs(@NotNull GuiGraphics graphics, int x, int y, int mouseX, int mouseY, float partial) {
+        float labelHeight = UIBase.getUITextHeightNormal();
+        int labelWidth = 0;
+        for (ColorPickerState.Channel channel : CHANNELS) {
+            labelWidth = Math.max(labelWidth, (int) Math.ceil(UIBase.getUITextWidth(channel.getLabel())));
+        }
+        int columnWidth = (this.infoWidth - ((CHANNEL_INPUT_COLUMNS - 1) * CHANNEL_INPUT_COLUMN_GAP)) / CHANNEL_INPUT_COLUMNS;
+        int inputWidth = Math.max(1, Math.min(CHANNEL_INPUT_MAX_WIDTH, columnWidth - labelWidth - CHANNEL_LABEL_GAP));
+        int cellWidth = labelWidth + CHANNEL_LABEL_GAP + inputWidth + CHANNEL_INPUT_COLUMN_GAP;
+        int cellHeight = CHANNEL_INPUT_HEIGHT + CHANNEL_INPUT_ROW_GAP;
+        for (int i = 0; i < CHANNELS.length; i++) {
+            int cellX = x + ((i % CHANNEL_INPUT_COLUMNS) * cellWidth);
+            int cellY = y + ((i / CHANNEL_INPUT_COLUMNS) * cellHeight);
+            UIBase.renderText(graphics, CHANNELS[i].getLabel(), cellX, cellY + ((CHANNEL_INPUT_HEIGHT - labelHeight) / 2.0F));
+            ExtendedEditBox input = this.channelInputs[i];
+            input.setX(cellX + labelWidth + CHANNEL_LABEL_GAP);
+            input.setY(cellY);
+            input.setWidth(inputWidth);
+            input.render(graphics, mouseX, mouseY, partial);
+        }
+        int rows = (CHANNELS.length + CHANNEL_INPUT_COLUMNS - 1) / CHANNEL_INPUT_COLUMNS;
+        return y + (rows * cellHeight) - CHANNEL_INPUT_ROW_GAP;
+    }
+
     private void renderColorArea(@NotNull GuiGraphics graphics) {
-        int hueRgb = Color.HSBtoRGB(this.hue, 1.0F, 1.0F);
+        int hueRgb = Color.HSBtoRGB(this.colorState.getHue(), 1.0F, 1.0F);
         int hueColor = 0xFF000000 | (hueRgb & 0xFFFFFF);
         this.fillGradientHorizontal(graphics, this.pickerX, this.pickerY, this.pickerX + this.pickerSize, this.pickerY + this.pickerSize, 0xFFFFFFFF, hueColor);
         graphics.fillGradient(this.pickerX, this.pickerY, this.pickerX + this.pickerSize, this.pickerY + this.pickerSize, 0x00000000, 0xFF000000);
@@ -308,8 +361,8 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
 
     private void renderColorAreaSelector(@NotNull GuiGraphics graphics, @NotNull UITheme theme) {
         int max = Math.max(1, this.pickerSize - 1);
-        int selectorX = this.pickerX + Math.round(this.saturation * max);
-        int selectorY = this.pickerY + Math.round((1.0F - this.value) * max);
+        int selectorX = this.pickerX + Math.round(this.colorState.getSaturation() * max);
+        int selectorY = this.pickerY + Math.round((1.0F - this.colorState.getValue()) * max);
         int outerSize = 7;
         int innerSize = 5;
         int outerX = selectorX - (outerSize / 2);
@@ -339,7 +392,7 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
         UIBase.renderBorder(graphics, this.hueX, this.hueY, this.hueX + this.hueWidth, this.hueY + this.hueHeight, 1, theme.ui_interface_widget_border_color.getColorInt(), true, true, true, true);
 
         int max = Math.max(1, this.hueWidth - 1);
-        int markerX = this.hueX + Math.round(this.hue * max);
+        int markerX = this.hueX + Math.round(this.colorState.getHue() * max);
         graphics.fill(markerX - 1, this.hueY - 2, markerX + 1, this.hueY + this.hueHeight + 2, theme.ui_interface_generic_text_color.getColorInt());
     }
 
@@ -352,7 +405,7 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
         UIBase.renderBorder(graphics, this.alphaX, this.alphaY, this.alphaX + this.alphaWidth, this.alphaY + this.alphaHeight, 1, theme.ui_interface_widget_border_color.getColorInt(), true, true, true, true);
 
         int max = Math.max(1, this.alphaWidth - 1);
-        int markerX = this.alphaX + Math.round(this.alpha * max);
+        int markerX = this.alphaX + Math.round(this.colorState.getAlpha() * max);
         graphics.fill(markerX - 1, this.alphaY - 2, markerX + 1, this.alphaY + this.alphaHeight + 2, theme.ui_interface_generic_text_color.getColorInt());
     }
 
@@ -369,54 +422,96 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
 
     private void updateSVFromMouse(double mouseX, double mouseY) {
         int max = Math.max(1, this.pickerSize - 1);
-        this.saturation = clamp((float) ((mouseX - this.pickerX) / (double) max));
-        this.value = clamp(1.0F - (float) ((mouseY - this.pickerY) / (double) max));
-        this.notifyOnColorUpdate();
+        float saturation = (float) ((mouseX - this.pickerX) / (double) max);
+        float value = 1.0F - (float) ((mouseY - this.pickerY) / (double) max);
+        if (this.colorState.setSaturationAndValue(saturation, value)) {
+            this.notifyOnColorUpdate();
+        }
     }
 
     private void updateHueFromMouse(double mouseX) {
         int max = Math.max(1, this.hueWidth - 1);
-        this.hue = clamp((float) ((mouseX - this.hueX) / (double) max));
-        this.notifyOnColorUpdate();
+        if (this.colorState.setHue((float) ((mouseX - this.hueX) / (double) max))) {
+            this.notifyOnColorUpdate();
+        }
     }
 
     private void updateAlphaFromMouse(double mouseX) {
         int max = Math.max(1, this.alphaWidth - 1);
-        this.alpha = clamp((float) ((mouseX - this.alphaX) / (double) max));
-        this.notifyOnColorUpdate();
+        if (this.colorState.setAlpha((float) ((mouseX - this.alphaX) / (double) max))) {
+            this.notifyOnColorUpdate();
+        }
     }
 
-    private void applyPresetColor(@Nullable DrawableColor preset) {
-        DrawableColor color = (preset != null) ? preset : DrawableColor.of(new Color(255, 255, 255, 255));
-        Color awt = color.getColor();
-        float[] hsv = Color.RGBtoHSB(awt.getRed(), awt.getGreen(), awt.getBlue(), null);
-        this.hue = hsv[0];
-        this.saturation = hsv[1];
-        this.value = hsv[2];
-        this.alpha = Math.min(1.0F, Math.max(0.0F, (float) awt.getAlpha() / 255.0F));
+    private void onChannelInputChanged(@NotNull ColorPickerState.Channel channel, @NotNull String text) {
+        if (this.syncingChannelInputs) return;
+        int channelValue = ColorPickerState.parseChannelValue(text);
+        if (channelValue < 0) return;
+        if (this.colorState.setChannel(channel, channelValue)) {
+            this.notifyOnColorUpdate();
+        }
+    }
+
+    /**
+     * Writes the current color to every channel input that is not focused.<br>
+     * The focused input gets skipped, so text the user is still typing (empty input, leading zeros, values above 255) never gets replaced mid-edit.
+     * It gets normalized to the actual channel value as soon as it loses focus.<br>
+     * This runs every frame instead of reacting to focus changes, because inputs can lose focus in many ways (clicks, Tab navigation, re-init) that differ between Minecraft versions.
+     * The channel texts are cached per color, so this does not allocate anything while the color stays the same.
+     */
+    private void syncChannelInputs() {
+        int argb = this.colorState.getArgb();
+        if ((this.channelInputTexts[0] == null) || (this.channelInputTextsArgb != argb)) {
+            for (int i = 0; i < CHANNELS.length; i++) {
+                this.channelInputTexts[i] = String.valueOf(this.colorState.getChannel(CHANNELS[i]));
+            }
+            this.channelInputTextsArgb = argb;
+        }
+        this.syncingChannelInputs = true;
+        for (int i = 0; i < CHANNELS.length; i++) {
+            ExtendedEditBox input = this.channelInputs[i];
+            if ((input == null) || input.isFocused()) continue;
+            if (!this.channelInputTexts[i].equals(input.getValue())) {
+                input.setValue(this.channelInputTexts[i]);
+            }
+        }
+        this.syncingChannelInputs = false;
+    }
+
+    /**
+     * 1.19.2's container click handling stops at the first child that handles the click and doesn't unfocus the previously focused child.
+     * Without this, clicking an input that comes before the focused one in the children list would leave both focused,
+     * and the old one would keep its unfinished text, because {@link #syncChannelInputs()} skips focused inputs.
+     */
+    private void unfocusInactiveChannelInputs() {
+        GuiEventListener focused = this.getFocused();
+        for (ExtendedEditBox input : this.channelInputs) {
+            if ((input != null) && (input != focused)) input.setFocused(false);
+        }
+    }
+
+    private void clearInputFocus() {
+        for (ExtendedEditBox input : this.channelInputs) {
+            if (input != null) input.setFocused(false);
+        }
+        this.setFocused(null);
+    }
+
+    private void confirmAndCloseWindow() {
+        this.onDone.accept(DrawableColor.of(this.getCurrentHex()));
+        this.closeWindow();
     }
 
     private int getCurrentColorInt() {
-        int rgb = Color.HSBtoRGB(this.hue, this.saturation, this.value);
-        int alphaInt = Math.round(this.alpha * 255.0F);
-        return (alphaInt << 24) | (rgb & 0xFFFFFF);
+        return this.colorState.getArgb();
     }
 
     private String getCurrentHex() {
-        int rgb = Color.HSBtoRGB(this.hue, this.saturation, this.value);
-        int r = (rgb >> 16) & 0xFF;
-        int g = (rgb >> 8) & 0xFF;
-        int b = rgb & 0xFF;
-        int a = Math.round(this.alpha * 255.0F);
-        return DrawableColor.of(r, g, b, a).getHex();
+        return DrawableColor.of(this.colorState.getChannel(ColorPickerState.Channel.RED), this.colorState.getChannel(ColorPickerState.Channel.GREEN), this.colorState.getChannel(ColorPickerState.Channel.BLUE), this.colorState.getChannel(ColorPickerState.Channel.ALPHA)).getHex();
     }
 
     private void notifyOnColorUpdate() {
         this.onColorUpdate.accept(DrawableColor.of(this.getCurrentHex()));
-    }
-
-    private static float clamp(float value) {
-        return Math.max(0.0F, Math.min(1.0F, value));
     }
 
     private void fillGradientHorizontal(@NotNull GuiGraphics graphics, int x1, int y1, int x2, int y2, int colorLeft, int colorRight) {
