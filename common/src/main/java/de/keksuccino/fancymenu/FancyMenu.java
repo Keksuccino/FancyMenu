@@ -70,6 +70,8 @@ public class FancyMenu {
 
             TextColorFormatters.registerAll();
 
+            WindowHandler.init();
+
             SmoothFontManager.registerReloadListener();
             AudioEngineReloadHandler.register();
 
