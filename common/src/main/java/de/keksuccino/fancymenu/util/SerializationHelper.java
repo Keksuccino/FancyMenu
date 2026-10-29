@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
+import net.minecraft.sounds.SoundSource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -78,6 +79,19 @@ public interface SerializationHelper {
             }
             if (serialized.replace(" ", "").equalsIgnoreCase("false")) {
                 return false;
+            }
+        }
+        return fallbackValue;
+    }
+
+    /**
+     * Resolves a {@link SoundSource} by its {@link SoundSource#getName() name}.
+     */
+    @NotNull
+    default SoundSource deserializeSoundSource(@NotNull SoundSource fallbackValue, @Nullable String serialized) {
+        if (serialized != null) {
+            for (SoundSource source : SoundSource.values()) {
+                if (source.getName().equals(serialized)) return source;
             }
         }
         return fallbackValue;

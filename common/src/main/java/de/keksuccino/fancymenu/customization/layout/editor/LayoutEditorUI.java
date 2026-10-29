@@ -19,6 +19,7 @@ import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayout
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlayUI;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.Pair;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedEnumValueCycle;
@@ -38,6 +39,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.StringListChooserScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
+import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -46,12 +48,15 @@ import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.sounds.SoundSource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
@@ -726,6 +731,10 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.editor.open_audio.desc")))
                 .setIcon(MaterialIcons.VOLUME_UP);
 
+        this.addScreenAudioPlaybackEntriesTo(menu, "open_audio", layoutEditorFilter, layout -> layout.openAudioVolume, (layout, volume) -> layout.openAudioVolume = volume, layout -> layout.openAudioSoundChannel, (layout, channel) -> layout.openAudioSoundChannel = channel);
+
+        menu.addSeparatorEntry("separator_after_open_audio");
+
         this.addAudioResourceChooserContextMenuEntryTo(menu, "close_audio",
                         layoutEditorFilter,
                         null,
@@ -735,6 +744,8 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                         true, null, true, true, true)
                 .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.editor.close_audio.desc")))
                 .setIcon(MaterialIcons.VOLUME_DOWN);
+
+        this.addScreenAudioPlaybackEntriesTo(menu, "close_audio", layoutEditorFilter, layout -> layout.closeAudioVolume, (layout, volume) -> layout.closeAudioVolume = volume, layout -> layout.closeAudioSoundChannel, (layout, channel) -> layout.closeAudioSoundChannel = channel);
 
         menu.addSeparatorEntry("separator_after_close_audio");
 
@@ -860,6 +871,32 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
             label = label.append(Component.translatable("fancymenu.actions.deprecated").withStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_color.getColorInt())));
         }
         return label;
+    }
+
+    /**
+     * Adds the volume and sound channel entries of a screen open/close audio, so both audios share the same entry layout.
+     */
+    private void addScreenAudioPlaybackEntriesTo(@NotNull ContextMenu menu, @NotNull String audioIdentifier, @NotNull ConsumingSupplier<LayoutEditorUI, Boolean> layoutEditorFilter, @NotNull ConsumingSupplier<Layout, Float> volumeGetter, @NotNull BiConsumer<Layout, Float> volumeSetter, @NotNull ConsumingSupplier<Layout, SoundSource> channelGetter, @NotNull BiConsumer<Layout, SoundSource> channelSetter) {
+
+        this.addRangeSliderInputContextMenuEntryTo(menu, audioIdentifier + "_volume",
+                        layoutEditorFilter,
+                        consumes -> volumeGetter.get(editor.layout).doubleValue(),
+                        (consumes, value) -> volumeSetter.accept(editor.layout, IAudio.clampVolume(value.floatValue())),
+                        Component.translatable("fancymenu.editor." + audioIdentifier + ".volume"),
+                        true, 1.0D, 0.0D, 1.0D,
+                        value -> Component.translatable("fancymenu.editor." + audioIdentifier + ".volume.slider_label", ((int) Math.round(IAudio.clampVolume(value.floatValue()) * 100.0F)) + "%"))
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor." + audioIdentifier + ".volume.desc")))
+                .setIcon(MaterialIcons.VOLUME_UP);
+
+        this.addGenericCycleContextMenuEntryTo(menu, audioIdentifier + "_sound_channel",
+                        Arrays.asList(SoundSource.values()),
+                        layoutEditorFilter,
+                        consumes -> channelGetter.get(editor.layout),
+                        (consumes, channel) -> channelSetter.accept(editor.layout, channel),
+                        (menu1, entry, channel) -> Component.translatable("fancymenu.editor." + audioIdentifier + ".sound_channel", Component.translatable("soundCategory." + channel.getName()).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))))
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor." + audioIdentifier + ".sound_channel.desc")))
+                .setIcon(MaterialIcons.SPEAKER);
+
     }
 
     @NotNull

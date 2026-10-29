@@ -16,6 +16,7 @@ import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -42,6 +43,8 @@ public class InputFieldElement extends AbstractElement {
     public final Property<ResourceSupplier<IAudio>> hoverSound = putProperty(Property.resourceSupplierProperty(IAudio.class, "hoversound", null, "fancymenu.elements.button.hoversound", true, true, true, null));
     public final Property<ResourceSupplier<IAudio>> unhoverAudio = putProperty(Property.resourceSupplierProperty(IAudio.class, "unhover_audio", null, "fancymenu.elements.widgets.unhover_audio", true, true, true, null));
     public final Property<ResourceSupplier<IAudio>> clickSound = putProperty(Property.resourceSupplierProperty(IAudio.class, "clicksound", null, "fancymenu.elements.button.clicksound", true, true, true, null));
+    public final Property.FloatProperty clickSoundVolume = putProperty(Property.floatProperty("click_sound_volume", 1.0F, "fancymenu.elements.widgets.click_sound_volume", Property.NumericInputBehavior.<Float>builder().rangeInput(0.0F, 1.0F).build()));
+    public final Property<SoundSource> clickSoundChannel = putProperty(Property.soundSourceProperty("click_sound_channel", SoundSource.MASTER, "fancymenu.elements.widgets.click_sound_channel"));
 
     public InputFieldElement(ElementBuilder<InputFieldElement, InputFieldEditorElement> builder) {
         super(builder);
@@ -153,6 +156,8 @@ public class InputFieldElement extends AbstractElement {
             w.setHoverSoundFancyMenu((hover != null) ? hover.get() : null);
             w.setUnhoverSoundFancyMenu((unhover != null) ? unhover.get() : null);
             w.setCustomClickSoundFancyMenu((click != null) ? click.get() : null);
+            w.setCustomClickSoundVolumeFancyMenu(this.clickSoundVolume.getFloat());
+            w.setCustomClickSoundChannelFancyMenu(this.clickSoundChannel.tryGetNonNullElse(SoundSource.MASTER));
         }
     }
 
