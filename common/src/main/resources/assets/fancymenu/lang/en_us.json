@@ -3376,5 +3376,7 @@
   "fancymenu.overlay.menu_bar.customization.reload_minecraft_resources.confirm": "Do you really want to §xreload all Minecraft resources§r now?\nThis can take a while.\n\nTo only reload FancyMenu, use §xReload FancyMenu§r instead.",
   "fancymenu.actions.variables.delete": "Delete Variable (FM Variable)",
   "fancymenu.actions.variables.delete.desc": "Completely deletes a variable, so it doesn't exist anymore. All other variables stay untouched.\n\nIf you only want to empty a variable but keep it around, use the 'Set Variable Value' action instead.",
-  "fancymenu.actions.variables.delete.value.desc": "Variable Name"
+  "fancymenu.actions.variables.delete.value.desc": "Variable Name",
+  "fancymenu.listeners.on_screenshot_taken": "On Screenshot Taken",
+  "fancymenu.listeners.on_screenshot_taken.desc": "This listener triggers after a screenshot got taken and saved, like when you press the screenshot key.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$screenshot_path §r= The path of the screenshot file, relative to the instance folder (like /screenshots/2026-10-29_14.30.00.png)"
 }

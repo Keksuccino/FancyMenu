@@ -75,6 +75,7 @@
     "client.MixinRenderTarget",
     "client.MixinResourceLoadStateTracker",
     "client.MixinScreen",
+    "client.MixinScreenshot",
     "client.MixinSoundEngine",
     "client.MixinSoundManager",
     "client.MixinStringDecomposer",
