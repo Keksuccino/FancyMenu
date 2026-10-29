@@ -58,6 +58,7 @@
     "client.MixinGameRenderer",
     "client.MixinGenericDirtMessageScreen",
     "client.MixinGLFW",
+    "client.MixinGLX",
     "client.MixinGuiGraphics",
     "client.MixinImageButton",
     "client.MixinJoinMultiplayerScreen",
