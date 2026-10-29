@@ -49,6 +49,7 @@ public class Placeholders {
     public static final MousePosYPlaceholder MOUSE_POS_Y = new MousePosYPlaceholder();
     public static final ClicksPerSecondPlaceholder CLICKS_PER_SECOND = new ClicksPerSecondPlaceholder();
     public static final TextInputFieldValuePlaceholder TEXT_INPUT_FIELD_VALUE = new TextInputFieldValuePlaceholder();
+    public static final TextElementContentHeightPlaceholder TEXT_ELEMENT_CONTENT_HEIGHT = new TextElementContentHeightPlaceholder();
     public static final GuiScalePlaceholder GUI_SCALE = new GuiScalePlaceholder();
     public static final VanillaButtonLabelPlaceholder VANILLA_BUTTON_LABEL = new VanillaButtonLabelPlaceholder();
     public static final PlayerNamePlaceholder PLAYER_NAME = new PlayerNamePlaceholder();
@@ -201,6 +202,7 @@ public class Placeholders {
     public static final VideoMenuBackgroundPlaytimePlaceholder VIDEO_MENU_BACKGROUND_PLAYTIME = new VideoMenuBackgroundPlaytimePlaceholder();
     public static final TextCharacterCountPlaceholder TEXT_CHARACTER_COUNT = new TextCharacterCountPlaceholder();
     public static final TextWidthPlaceholder TEXT_WIDTH = new TextWidthPlaceholder();
+    public static final TextHeightPlaceholder TEXT_HEIGHT = new TextHeightPlaceholder();
     public static final ClipboardContentPlaceholder CLIPBOARD_CONTENT = new ClipboardContentPlaceholder();
     public static final ClientSideNbtDataGetPlaceholder NBT_DATA_GET = new ClientSideNbtDataGetPlaceholder();
     public static final ServerSideNbtDataGetPlaceholder NBT_DATA_GET_SERVER = new ServerSideNbtDataGetPlaceholder();
@@ -237,6 +239,7 @@ public class Placeholders {
         PlaceholderRegistry.register(MOUSE_POS_Y);
         PlaceholderRegistry.register(CLICKS_PER_SECOND);
         PlaceholderRegistry.register(TEXT_INPUT_FIELD_VALUE);
+        PlaceholderRegistry.register(TEXT_ELEMENT_CONTENT_HEIGHT);
         PlaceholderRegistry.register(GUI_SCALE);
         PlaceholderRegistry.register(VANILLA_BUTTON_LABEL);
 
@@ -412,6 +415,7 @@ public class Placeholders {
         PlaceholderRegistry.register(UPTIME_DURATION);
         PlaceholderRegistry.register(TEXT_CHARACTER_COUNT);
         PlaceholderRegistry.register(TEXT_WIDTH);
+        PlaceholderRegistry.register(TEXT_HEIGHT);
         PlaceholderRegistry.register(CLIPBOARD_CONTENT);
 
     }
