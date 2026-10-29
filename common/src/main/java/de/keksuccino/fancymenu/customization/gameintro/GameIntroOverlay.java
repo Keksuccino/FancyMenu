@@ -50,7 +50,7 @@ public class GameIntroOverlay extends Overlay {
     protected PlayableResource intro;
     private final GameIntroLifecycleController lifecycle;
     protected float opacity = 1.0F;
-    protected long start = -1;
+    protected final GameIntroEndTracker endTracker = new GameIntroEndTracker();
     protected boolean fadeToInitialized = false;
     protected int width;
     protected int height;
@@ -83,9 +83,9 @@ public class GameIntroOverlay extends Overlay {
 
         //----------------------
 
-        boolean startIntro = (this.start == -1);
+        boolean startIntro = !this.endTracker.isStarted();
         if (startIntro) {
-            this.start = System.currentTimeMillis();
+            this.endTracker.markStarted();
             this.intro.stop();
             if (this.intro instanceof IVideo videoIntro) {
                 videoIntro.setPlayTime(0.0F);
@@ -98,19 +98,20 @@ public class GameIntroOverlay extends Overlay {
             this.intro.play();
         }
 
-        if (this.endOfIntroReached() && !this.fadeToInitialized) {
+        boolean endOfIntroReached = this.endOfIntroReached();
+        if (endOfIntroReached && !this.fadeToInitialized) {
             this.initFadeToScreen();
         }
 
-        this.tickFadeOut();
+        this.tickFadeOut(endOfIntroReached);
 
         //Close screen after finished playing
-        if (this.endOfIntroReached() && (!this.fadeOutIntro() || (this.opacity < 0.1F))) {
+        if (endOfIntroReached && (!this.fadeOutIntro() || (this.opacity < 0.1F))) {
             this.close();
             return;
         }
 
-        if (this.endOfIntroReached()) {
+        if (endOfIntroReached) {
             RenderingUtils.executeAllPreRenderTasks(graphics, mouseX, mouseY, partial);
             EventHandler.INSTANCE.postEvent(new RenderScreenEvent.Pre(this.fadeTo, graphics, mouseX, mouseY, partial));
             this.fadeTo.render(graphics, mouseX, mouseY, partial);
@@ -213,14 +214,11 @@ public class GameIntroOverlay extends Overlay {
     }
 
     protected boolean endOfIntroReached() {
-        if (this.start == -1) return false;
-        long now = System.currentTimeMillis();
-        //If not playing (anymore) 2 seconds after starting to play it, consider the playable resource finished
-        return ((this.start + 2000) < now) && !this.intro.isPlaying();
+        return this.endTracker.checkEndReached(this.intro, FancyMenu.getOptions().gameIntroIgnoreLoops.getValue());
     }
 
-    protected void tickFadeOut() {
-        if (this.endOfIntroReached() && this.fadeOutIntro()) {
+    protected void tickFadeOut(boolean endOfIntroReached) {
+        if (endOfIntroReached && this.fadeOutIntro()) {
             this.opacity -= 0.02F;
         }
     }

@@ -53,6 +53,7 @@ public class FmaTexture implements ITexture, PlayableResource {
     protected final AtomicBoolean loadingFailed = new AtomicBoolean(false);
     protected final AtomicBoolean closed = new AtomicBoolean(false);
 
+    /** How many full play cycles got completed since the last reset, loop restarts included. **/
     protected final AtomicInteger cycles = new AtomicInteger(0);
     /** How many times the FMA should loop. Value <= 0 means infinite loops. **/
     protected final AtomicInteger numPlays = new AtomicInteger(0);
@@ -531,12 +532,9 @@ public class FmaTexture implements ITexture, PlayableResource {
         synchronized (this.streamStateLock) {
             if (generation != this.streamGeneration.get()) return CycleBoundaryResult.STALE;
             int plays = this.numPlays.get();
-            if (plays > 0) {
-                int newCycles = this.cycles.incrementAndGet();
-                willRestart = newCycles < plays;
-            } else {
-                willRestart = true;
-            }
+            // Cycles of infinitely looping textures (plays <= 0) get counted too, so their completed play cycles are known as well
+            int newCycles = this.cycles.incrementAndGet();
+            willRestart = (plays <= 0) || (newCycles < plays);
             if (willRestart) {
                 this.pendingStartEvent = true;
             } else {
@@ -763,6 +761,11 @@ public class FmaTexture implements ITexture, PlayableResource {
     @Override
     public boolean isPlaying() {
         return !this.closed.get() && this.playRequested && !this.pausedRequested && !this.maxLoopsReached;
+    }
+
+    @Override
+    public int getCompletedPlayCycles() {
+        return this.cycles.get();
     }
 
     @Override
