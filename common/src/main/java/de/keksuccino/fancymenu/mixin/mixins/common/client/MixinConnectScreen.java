@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.global.SeamlessWorldLoadingHandler;
+import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.customization.world.LastWorldHandler;
 import de.keksuccino.fancymenu.mixin.support.client.WidgetifiedTextReplacementController;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.WidgetifiedScreen;
@@ -16,6 +17,7 @@ import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.client.multiplayer.TransferState;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
 import net.minecraft.network.chat.Component;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -46,11 +48,20 @@ public abstract class MixinConnectScreen extends Screen {
         if (address != null) {
             LastWorldHandler.setLastWorld(address.getHost() + ":" + address.getPort(), true);
         }
-        if ($$3 != null && $$3.ip != null) {
-            SeamlessWorldLoadingHandler.beginServerLoad($$3.ip);
-        } else if (address != null) {
-            SeamlessWorldLoadingHandler.beginServerLoad(address.getHost() + ":" + address.getPort());
+        String serverIp = getServerIp_FancyMenu(address, $$3);
+        if (serverIp != null) {
+            SeamlessWorldLoadingHandler.beginServerLoad(serverIp);
         }
+    }
+
+    /**
+     * Fires after vanilla started the connection attempt instead of at HEAD, so it skips vanilla's "already connecting" early return and runs after startConnecting
+     * disconnected from the previous server (like on server transfers), which keeps it after "On Server Left" of that server.
+     * The ConnectScreen is already open at this point, so join actions of the listener get refused by vanilla and the Join Server action instead of starting nested connections.
+     */
+    @Inject(method = "startConnecting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/ConnectScreen;connect(Lnet/minecraft/client/Minecraft;Lnet/minecraft/client/multiplayer/resolver/ServerAddress;Lnet/minecraft/client/multiplayer/ServerData;Lnet/minecraft/client/multiplayer/TransferState;)V", shift = At.Shift.AFTER))
+    private static void afterConnectInStartConnectingFancyMenu(Screen $$0, Minecraft $$1, ServerAddress address, ServerData $$3, boolean $$4, TransferState $$5, CallbackInfo ci) {
+        if (Listeners.ON_START_JOINING_SERVER.hasInstancesListening()) Listeners.ON_START_JOINING_SERVER.onStartJoiningServer(getServerIp_FancyMenu(address, $$3));
     }
 
     @Inject(at = @At("HEAD"), method = "connect", cancellable = true)
@@ -70,6 +81,14 @@ public abstract class MixinConnectScreen extends Screen {
     @WrapWithCondition(method = "extractRenderState", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;centeredText(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;III)V"))
     private boolean wrapDrawCenteredStringInRenderFancyMenu(GuiGraphicsExtractor instance, Font $$0, Component $$1, int $$2, int $$3, int $$4) {
         return this.textReplacementController_FancyMenu.shouldRenderVanillaText();
+    }
+
+    @Unique
+    @Nullable
+    private static String getServerIp_FancyMenu(@Nullable ServerAddress address, @Nullable ServerData data) {
+        if (data != null && data.ip != null) return data.ip;
+        if (address != null) return address.getHost() + ":" + address.getPort();
+        return null;
     }
 
     @Unique
