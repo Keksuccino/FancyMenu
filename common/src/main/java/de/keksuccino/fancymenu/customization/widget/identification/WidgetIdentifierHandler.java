@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.widget.identification;
 
+import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.widget.identification.identificationcontext.WidgetIdentificationContext;
 import de.keksuccino.fancymenu.customization.widget.identification.identificationcontext.WidgetIdentificationContextRegistry;
@@ -11,6 +12,7 @@ import net.minecraft.network.chat.contents.TranslatableContents;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -38,8 +40,7 @@ public class WidgetIdentifierHandler {
      * another variant's compatibility alias (1). Compare these priorities within one layout, never across stacked layouts.
      */
     public static int getIdentifierMatchPriority(@NotNull String widgetIdentifier, @NotNull WidgetMeta meta) {
-        widgetIdentifier = widgetIdentifier.replace("button_compatibility_id:", "");
-        widgetIdentifier = widgetIdentifier.replace("vanillabtn:", "");
+        widgetIdentifier = stripIdentifierPrefixes(widgetIdentifier);
         if ((meta.getWidget() instanceof UniqueWidget u) && widgetIdentifier.equals(u.getWidgetIdentifierFancyMenu())) return 3;
         if (MathUtils.isLong(widgetIdentifier)) {
             return widgetIdentifier.equals("" + meta.getLongIdentifier()) ? 3 : 0;
@@ -52,6 +53,35 @@ public class WidgetIdentifierHandler {
             return originalKey != null && widgetIdentifier.equals(buildOptionsWidgetIdentifier(originalKey)) ? 2 : 1;
         }
         return 0;
+    }
+
+    /**
+     * Returns the prefix-free identifier of the widget a serialized vanilla widget customization targets, or NULL if it has none.
+     */
+    @Nullable
+    public static String getTargetWidgetIdentifier(@NotNull SerializedElement serializedWidgetElement) {
+        String identifier = serializedWidgetElement.getValue("instance_identifier");
+        // Very old layouts store it as action ID; element deserialization falls back to it the same way.
+        if (identifier == null) identifier = serializedWidgetElement.getValue("actionid");
+        return (identifier != null) ? stripIdentifierPrefixes(identifier) : null;
+    }
+
+    /**
+     * Returns the serialized vanilla widget customizations whose stable identifier matches none of the given widgets.<br>
+     * Some widgets only exist in certain contexts, like buttons that only show up in singleplayer or only in multiplayer. An editor that only
+     * re-serializes the widgets of its current screen instance has to keep these entries, otherwise editing a layout in one context deletes
+     * the customizations made in the other one.<br>
+     * Numeric identifiers are never kept, because they are derived from widget positions, so an unmatched one is indistinguishable from an outdated one.
+     */
+    @NotNull
+    public static List<SerializedElement> getCustomizationsOfAbsentWidgets(@NotNull List<SerializedElement> serializedWidgetElements, @NotNull List<WidgetMeta> currentWidgets) {
+        List<SerializedElement> absentWidgetCustomizations = new ArrayList<>();
+        for (SerializedElement serialized : serializedWidgetElements) {
+            String identifier = getTargetWidgetIdentifier(serialized);
+            if ((identifier == null) || MathUtils.isLong(identifier) || currentWidgets.stream().anyMatch(meta -> isIdentifierOfWidget(identifier, meta))) continue;
+            absentWidgetCustomizations.add(serialized);
+        }
+        return absentWidgetCustomizations;
     }
 
     @Nullable
@@ -135,6 +165,11 @@ public class WidgetIdentifierHandler {
             return captionContents.getKey();
         }
         return null;
+    }
+
+    @NotNull
+    private static String stripIdentifierPrefixes(@NotNull String widgetIdentifier) {
+        return widgetIdentifier.replace("button_compatibility_id:", "").replace("vanillabtn:", "");
     }
 
     @Nullable
