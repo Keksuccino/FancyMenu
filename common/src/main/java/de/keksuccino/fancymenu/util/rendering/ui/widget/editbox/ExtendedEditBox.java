@@ -14,7 +14,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.FancyMenuWidget;
-import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import net.minecraft.Util;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
@@ -345,11 +344,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     @Override
     public void playDownSound(@NotNull SoundManager handler) {
         if (this instanceof CustomizableWidget w) {
-            IAudio sound = w.getCustomClickSoundFancyMenu();
-            if (sound != null) {
-                sound.stop();
-                sound.play();
-            }
+            w.playCustomClickSoundFancyMenu();
         }
     }
 

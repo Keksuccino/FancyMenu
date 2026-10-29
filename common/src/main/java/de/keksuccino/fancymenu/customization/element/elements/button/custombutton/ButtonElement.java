@@ -34,6 +34,7 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
+import net.minecraft.sounds.SoundSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -49,6 +50,8 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     private final RangeSlider templateDummySlider = new RangeSlider(0, 0, 0, 0, Component.empty(), 0.0D, 1.0D, 0.5D);
 
     public ResourceSupplier<IAudio> clickSound;
+    public final Property.FloatProperty clickSoundVolume = putProperty(Property.floatProperty("click_sound_volume", 1.0F, "fancymenu.elements.widgets.click_sound_volume", Property.NumericInputBehavior.<Float>builder().rangeInput(0.0F, 1.0F).build()));
+    public final Property<SoundSource> clickSoundChannel = putProperty(Property.soundSourceProperty("click_sound_channel", SoundSource.MASTER, "fancymenu.elements.widgets.click_sound_channel"));
     public ResourceSupplier<IAudio> hoverSound;
     @Nullable
     public String label;
@@ -438,7 +441,10 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
 
     public void updateWidgetClickSound() {
         if (this.getWidget() instanceof CustomizableWidget w) {
-            w.setCustomClickSoundFancyMenu((this.getPropertySource().clickSound != null) ? this.getPropertySource().clickSound.get() : null);
+            ButtonElement propertySource = this.getPropertySource();
+            w.setCustomClickSoundFancyMenu((propertySource.clickSound != null) ? propertySource.clickSound.get() : null);
+            w.setCustomClickSoundVolumeFancyMenu(propertySource.clickSoundVolume.getFloat());
+            w.setCustomClickSoundChannelFancyMenu(propertySource.clickSoundChannel.tryGetNonNullElse(SoundSource.MASTER));
         }
     }
 

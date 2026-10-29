@@ -47,4 +47,13 @@ public interface IAudio extends PlayableResourceWithAudio {
     default void setPlayTime(float playTime) {
     }
 
+    /**
+     * Clamps the given volume to the 0.0 to 1.0 range used by {@link #setVolume(float)}.<br>
+     * NaN, for example from a hand-edited file, falls back to full volume.
+     */
+    static float clampVolume(float volume) {
+        if (Float.isNaN(volume)) return 1.0F;
+        return Math.max(0.0F, Math.min(1.0F, volume));
+    }
+
 }

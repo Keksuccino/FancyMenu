@@ -27,6 +27,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundSource;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
@@ -74,6 +75,8 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     @NotNull
     public RequirementContainer activeStateSupplier = new RequirementContainer();
     public ResourceSupplier<IAudio> clickSound;
+    public final Property.FloatProperty clickSoundVolume = putProperty(Property.floatProperty("click_sound_volume", 1.0F, "fancymenu.elements.widgets.click_sound_volume", Property.NumericInputBehavior.<Float>builder().rangeInput(0.0F, 1.0F).build()));
+    public final Property<SoundSource> clickSoundChannel = putProperty(Property.soundSourceProperty("click_sound_channel", SoundSource.MASTER, "fancymenu.elements.widgets.click_sound_channel"));
     public ResourceSupplier<IAudio> hoverSound;
 
     public final Property<ResourceSupplier<IAudio>> unhoverAudio = putProperty(Property.resourceSupplierProperty(IAudio.class, "unhover_audio", null, "fancymenu.elements.widgets.unhover_audio", true, true, true, null));
@@ -227,8 +230,11 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
 
     public void updateWidgetClickSound() {
         if (this.slider instanceof CustomizableWidget w) {
-            ResourceSupplier<IAudio> supplier = this.getClickSound();
+            ButtonElement propertySource = this.getPropertySource();
+            ResourceSupplier<IAudio> supplier = this.getTemplateProperty(propertySource, template -> template.clickSound, this.clickSound);
             w.setCustomClickSoundFancyMenu((supplier != null) ? supplier.get() : null);
+            w.setCustomClickSoundVolumeFancyMenu(this.getTemplateProperty(propertySource, template -> template.clickSoundVolume, this.clickSoundVolume).getFloat());
+            w.setCustomClickSoundChannelFancyMenu(this.getTemplateProperty(propertySource, template -> template.clickSoundChannel, this.clickSoundChannel).tryGetNonNullElse(SoundSource.MASTER));
         }
     }
 
@@ -388,10 +394,6 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
 
     public ResourceSupplier<IAudio> getUnhoverSound() {
         return this.getTemplateProperty(template -> template.unhoverAudio.get(), this.unhoverAudio.get());
-    }
-
-    public ResourceSupplier<IAudio> getClickSound() {
-        return this.getTemplateProperty(template -> template.clickSound, this.clickSound);
     }
 
     public ResourceSupplier<ITexture> getHandleTextureNormal() {

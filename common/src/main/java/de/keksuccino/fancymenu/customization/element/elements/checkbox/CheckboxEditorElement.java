@@ -56,6 +56,14 @@ public class CheckboxEditorElement extends AbstractEditorElement<CheckboxEditorE
         this.element.clickSound.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setIcon(MaterialIcons.VOLUME_UP);
 
+        this.element.clickSoundVolume.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.widgets.click_sound_volume.desc")))
+                .setIcon(MaterialIcons.VOLUME_UP);
+
+        this.element.clickSoundChannel.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.widgets.click_sound_channel.desc")))
+                .setIcon(MaterialIcons.SPEAKER);
+
         this.rightClickMenu.addSeparatorEntry("checkbox_separator_5").setStackable(true);
 
         this.element.tooltip.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
