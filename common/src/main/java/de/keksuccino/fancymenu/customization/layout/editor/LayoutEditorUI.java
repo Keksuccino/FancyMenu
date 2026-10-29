@@ -31,6 +31,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.StateIndicatorLabelSupplier;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
@@ -441,22 +442,11 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
             ContextMenu.ClickableContextMenuEntry<?> entry = menu.addClickableEntry("widget_" + i, Component.empty(), (menu1, entry1) -> {
                 w.setVisible(!w.isVisible());
             });
-            entry.setLabelSupplier((menu1, entry1) -> buildEditorWidgetToggleLabel(w));
+            entry.setLabelSupplier(new StateIndicatorLabelSupplier(w.getDisplayLabel(), w::isVisible));
             entry.setIcon(MaterialIcons.VISIBILITY);
             i++;
         }
         return menu;
-    }
-
-    private MutableComponent buildEditorWidgetToggleLabel(@NotNull AbstractLayoutEditorWidget widget) {
-        boolean visible = widget.isVisible();
-        int color = visible ? UIBase.getUITheme().success_color.getColorInt() : UIBase.getUITheme().error_color.getColorInt();
-        String symbol = visible ? "✔" : "✖";
-        MutableComponent label = Component.empty();
-        label.append(Component.literal(symbol).withStyle(Style.EMPTY.withColor(color)));
-        label.append(Component.literal(" "));
-        label.append(widget.getDisplayLabel().copy());
-        return label;
     }
 
     @NotNull
@@ -820,7 +810,8 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                     boolean deprecated = background.builder.isDeprecated();
                     if (deprecated && !background.showBackground.tryGetNonNullElse(false)) continue;
 
-                    var entry = this.addSubMenuEntry("menu_background_" + background.builder.getIdentifier(), buildMenuBackgroundLabel(background), background._initConfigMenu(editor));
+                    var entry = this.addSubMenuEntry("menu_background_" + background.builder.getIdentifier(), Component.empty(), background._initConfigMenu(editor));
+                    entry.setLabelSupplier(new StateIndicatorLabelSupplier(buildMenuBackgroundLabel(background), () -> background.showBackground.tryGetNonNullElse(false)));
                     entry.setIcon(MaterialIcons.WALLPAPER);
 
                     var desc = background.builder.getDescription();
@@ -874,7 +865,9 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                 .thenComparing((Pair<AbstractDecorationOverlayBuilder<?>, AbstractDecorationOverlay<?>> pair) -> pair.getFirst().getDisplayName().getString())
                 .thenComparing((Pair<AbstractDecorationOverlayBuilder<?>, AbstractDecorationOverlay<?>> pair) -> pair.getFirst().getIdentifier()));
         for (Pair<AbstractDecorationOverlayBuilder<?>, AbstractDecorationOverlay<?>> pair : sortedOverlays) {
-            var entry = menu.addSubMenuEntry("overlay_" + pair.getFirst().getIdentifier(), pair.getFirst().getDisplayName(), pair.getSecond()._initConfigMenu(editor));
+            AbstractDecorationOverlay<?> overlay = pair.getSecond();
+            var entry = menu.addSubMenuEntry("overlay_" + pair.getFirst().getIdentifier(), Component.empty(), overlay._initConfigMenu(editor));
+            entry.setLabelSupplier(new StateIndicatorLabelSupplier(pair.getFirst().getDisplayName(), () -> overlay.showOverlay.tryGetNonNullElse(false)));
             entry.setIcon(MaterialIcons.AUTO_AWESOME);
             var desc = pair.getFirst().getDescription();
             if (desc != null) entry.setTooltipSupplier((menu1, entry1) -> UITooltip.of(desc));
