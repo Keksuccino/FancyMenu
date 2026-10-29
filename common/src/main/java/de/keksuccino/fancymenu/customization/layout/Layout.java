@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.decorationoverlay.DecorationOverlay
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
+import de.keksuccino.fancymenu.customization.widget.identification.WidgetIdentifierMigration;
 import de.keksuccino.fancymenu.util.Pair;
 import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
@@ -119,6 +120,7 @@ public class Layout extends LayoutBase {
         meta.putProperty("render_custom_elements_behind_vanilla", "" + this.renderElementsBehindVanilla);
         meta.putProperty("last_edited_time", "" + this.lastEditedTime);
         meta.putProperty("is_enabled", "" + this.enabled);
+        meta.putProperty("widget_identifier_revision", "" + WidgetIdentifierMigration.CURRENT_REVISION);
 
         meta.putProperty("randommode", "" + this.randomMode);
         meta.putProperty("randomgroup", this.randomGroup);
@@ -392,6 +394,9 @@ public class Layout extends LayoutBase {
             if (layout.legacyLayout) {
                 layout.serializedVanillaButtonElements.addAll(convertLegacyVanillaButtonCustomizations(serialized));
             }
+            //Migrate vanilla button customizations of layouts saved before a widget got its own identifier
+            int widgetIdentifierRevision = (meta != null) ? SerializationHelper.INSTANCE.deserializeNumber(Integer.class, WidgetIdentifierMigration.UNVERSIONED_REVISION, meta.getValue("widget_identifier_revision")) : WidgetIdentifierMigration.UNVERSIONED_REVISION;
+            WidgetIdentifierMigration.migrate(layout.serializedVanillaButtonElements, widgetIdentifierRevision);
 
             //Handle normal elements
             for (PropertyContainer sec : ListUtils.mergeLists(serialized.getContainersOfType("element"), serialized.getContainersOfType("customization"))) {

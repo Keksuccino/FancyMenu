@@ -23,8 +23,8 @@ class PauseScreenWidgetIdentifierResolverTest {
     }
 
     @Test
-    void playerReportingKeepsLegacyLanIdentifier() {
-        assertEquals("pause_share_to_lan_button", PauseScreenWidgetIdentifierResolver.resolve("menu.playerReporting", true, true));
+    void playerReportingAndLanButtonHaveSeparateIdentifiers() {
+        assertEquals("pause_player_reporting_button", PauseScreenWidgetIdentifierResolver.resolve("menu.playerReporting", true, true));
         assertEquals("pause_share_to_lan_button", PauseScreenWidgetIdentifierResolver.resolve("menu.shareToLan", true, true));
     }
 
