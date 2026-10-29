@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.action.actions.file;
 
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
+import de.keksuccino.fancymenu.customization.listener.AbstractListener;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.util.file.GameDirectoryActionPathResolver;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
@@ -28,6 +29,7 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 public class DownloadFileAction extends Action {
 
@@ -68,23 +70,22 @@ public class DownloadFileAction extends Action {
             GameDirectoryActionPathResolver.ResolvedPath targetDirectory = null;
             try {
                 targetDirectory = this.resolveActionDirectoryPath(targetDirectoryPath, resolver);
-                String finalTargetPath = this.downloadFile(fileUrl, targetDirectory);
-                long listenerRevision = Listeners.ON_FILE_DOWNLOADED.getActiveInstanceRevision();
-                if (listenerRevision >= 0L) {
-                    MainThreadTaskExecutor.executeInMainThread(() -> { if (Listeners.ON_FILE_DOWNLOADED.isActiveAtRevision(listenerRevision)) Listeners.ON_FILE_DOWNLOADED.onFileDownloaded(fileUrl, finalTargetPath, true); }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
-                }
+                String finalTargetPath = this.downloadFile(fileUrl, targetDirectory, targetPath -> notifyListenerInMainThread(Listeners.ON_FILE_DOWNLOAD_STARTED, () -> Listeners.ON_FILE_DOWNLOAD_STARTED.onFileDownloadStarted(fileUrl, targetPath)));
+                notifyListenerInMainThread(Listeners.ON_FILE_DOWNLOADED, () -> Listeners.ON_FILE_DOWNLOADED.onFileDownloaded(fileUrl, finalTargetPath, true));
             } catch (Exception ex) {
                 LOGGER.error("[FANCYMENU] Failed to download file via DownloadFileAction: " + value, ex);
                 String failurePath = (targetDirectory != null) ? targetDirectory.path().toString() : targetDirectoryPath;
-                long listenerRevision = Listeners.ON_FILE_DOWNLOADED.getActiveInstanceRevision();
-                if (listenerRevision >= 0L) {
-                    MainThreadTaskExecutor.executeInMainThread(() -> { if (Listeners.ON_FILE_DOWNLOADED.isActiveAtRevision(listenerRevision)) Listeners.ON_FILE_DOWNLOADED.onFileDownloaded(fileUrl, failurePath, false); }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
-                }
+                notifyListenerInMainThread(Listeners.ON_FILE_DOWNLOADED, () -> Listeners.ON_FILE_DOWNLOADED.onFileDownloaded(fileUrl, failurePath, false));
             }
         });
     }
 
-    @NotNull String downloadFile(@NotNull String fileUrl, @NotNull GameDirectoryActionPathResolver.ResolvedPath targetDirectory) throws Exception {
+    /**
+     * Downloads the file into a temporary file next to its target and moves it to the target path once the transfer is complete.
+     *
+     * @param onTransferStarted Gets called with the final target path once the server responded and right before the file data starts getting written.
+     */
+    @NotNull String downloadFile(@NotNull String fileUrl, @NotNull GameDirectoryActionPathResolver.ResolvedPath targetDirectory, @NotNull Consumer<String> onTransferStarted) throws Exception {
         HttpURLConnection connection = null;
         try {
             URL actualURL = new URL(fileUrl);
@@ -110,6 +111,7 @@ public class DownloadFileAction extends Action {
                 targetFile.revalidate();
                 temporaryPath = Files.createTempFile(targetDirectory.path(), ".fancymenu-download-", ".tmp");
                 temporaryFile = targetDirectory.resolveSingleComponentChild(temporaryPath.getFileName().toString());
+                onTransferStarted.accept(targetPath.toString());
                 long totalBytesRead = 0;
                 try (OutputStream outputStream = Files.newOutputStream(temporaryPath, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, LinkOption.NOFOLLOW_LINKS)) {
                     byte[] buffer = new byte[BUFFER_SIZE];
@@ -135,6 +137,16 @@ public class DownloadFileAction extends Action {
             if (connection != null) {
                 connection.disconnect();
             }
+        }
+    }
+
+    /**
+     * Delivers the notification in the main thread, but only if the listener's instances did not change in the meantime, so reloaded or closed layouts never receive stale download events.
+     */
+    private static void notifyListenerInMainThread(@NotNull AbstractListener listener, @NotNull Runnable notification) {
+        long listenerRevision = listener.getActiveInstanceRevision();
+        if (listenerRevision >= 0L) {
+            MainThreadTaskExecutor.executeInMainThread(() -> { if (listener.isActiveAtRevision(listenerRevision)) notification.run(); }, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
         }
     }
 
