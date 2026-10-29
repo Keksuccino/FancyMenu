@@ -41,6 +41,7 @@
     "client.MixinAbstractSliderButton",
     "client.MixinAbstractWidget",
     "client.MixinChatListener",
+    "client.MixinClientAdvancements",
     "client.MixinClientPacketListener",
     "client.MixinConnectScreen",
     "client.MixinContainerEventHandler",
