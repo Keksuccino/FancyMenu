@@ -334,6 +334,14 @@ public class TextElement extends AbstractElement {
         }
     }
 
+    /**
+     * Returns the height in pixels this element needs to show all of its text without scrolling.<br>
+     * The markdown renderer lays out the text while the element renders, so this reflects the most recently rendered text, line wrapping and text settings.
+     */
+    public int getContentHeight() {
+        return (int) Math.ceil(this.markdownRenderer.getRealHeight() + (this.scrollArea.getBorderThickness() * 2));
+    }
+
     public void updateContent() {
 
         if (this.source == null) {
