@@ -36,6 +36,12 @@ class PauseMenuWidgetIdentifierResolverTest {
     }
 
     @Test
+    void playerReportingAndLanButtonHaveSeparateIdentifiers() {
+        assertEquals("pause_player_reporting_button", PauseMenuWidgetIdentifierResolver.resolve("menu.playerReporting", true, true));
+        assertEquals("pause_share_to_lan_button", PauseMenuWidgetIdentifierResolver.resolve("menu.shareToLan", true, true));
+    }
+
+    @Test
     void leavesUnknownWidgetsUnidentified() {
         assertNull(PauseMenuWidgetIdentifierResolver.resolve("modded.unknown", false, false));
     }
