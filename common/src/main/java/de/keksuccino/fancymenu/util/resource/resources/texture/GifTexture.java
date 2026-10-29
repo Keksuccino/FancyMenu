@@ -40,6 +40,7 @@ public class GifTexture implements ITexture, PlayableResource {
     protected volatile long lastResourceLocationCall = -1;
     protected final AtomicBoolean tickerThreadRunning = new AtomicBoolean(false);
     protected final AtomicBoolean decoded = new AtomicBoolean(false);
+    /** How many full play cycles got completed since the last reset, loop restarts included. **/
     protected final AtomicInteger cycles = new AtomicInteger(0);
     /** How many times the GIF should loop. Value <= 0 means infinite loops. **/
     protected final AtomicInteger numPlays = new AtomicInteger(0);
@@ -435,25 +436,12 @@ public class GifTexture implements ITexture, PlayableResource {
                                 if (currentIndexIncrement < cachedFrames.size()) {
                                     newCurrent = cachedFrames.get(currentIndexIncrement);
                                 } else if (cachedAllDecoded) {
-                                    int cachedNumPlays = this.numPlays.get();
-                                    //Count cycles up if APNG should not loop infinitely (numPlays > 0 = finite loops)
-                                    if (cachedNumPlays > 0) {
-                                        int newCycles = this.cycles.incrementAndGet();
-                                        boolean willRestart = newCycles < cachedNumPlays;
-                                        this.notifyAnimatedTextureFinished(willRestart);
-                                        if (!willRestart) {
-                                            this.maxLoopsReached = true;
-                                            break; //end the while loop of the frame ticker
-                                        }
-                                        //If APNG has a finite number of loops but did not reach its max loops yet, reset to first frame, because end reached
-                                        newCurrent = cachedFrames.get(0);
-                                        this.pendingStartEvent = true;
-                                    } else {
-                                        //If APNG loops infinitely, reset to first frame, because end reached
-                                        this.notifyAnimatedTextureFinished(true);
-                                        newCurrent = cachedFrames.get(0);
-                                        this.pendingStartEvent = true;
+                                    //End of the sequence reached, so restart it from the first frame or stop the ticker if all loops are done
+                                    if (!this.handleCycleBoundary()) {
+                                        this.maxLoopsReached = true;
+                                        break; //end the while loop of the frame ticker
                                     }
+                                    newCurrent = cachedFrames.get(0);
                                 }
                                 if (newCurrent != null) {
                                     if (this.frameStore.setCurrent(frameSnapshot.generation(), newCurrent)) {
@@ -577,9 +565,10 @@ public class GifTexture implements ITexture, PlayableResource {
             backend.reset();
             return;
         }
+        this.maxLoopsReached = false;
         this.pendingStartEvent = true;
         this.frameStore.resetToFirst();
-        if (!this.frameStore.isEmpty()) this.cycles.set(0);
+        this.cycles.set(0);
     }
 
     private void maybeEmitStartEvent(@NotNull List<GifFrame> frames, @Nullable GifFrame currentFrame) {
@@ -587,6 +576,19 @@ public class GifTexture implements ITexture, PlayableResource {
         if (currentFrame != frames.get(0)) return;
         this.pendingStartEvent = false;
         this.notifyAnimatedTextureStarted(this.willRestartAfterCurrentCycle());
+    }
+
+    /**
+     * Counts the finished play cycle and returns if the sequence should restart from its first frame.
+     */
+    protected boolean handleCycleBoundary() {
+        int plays = this.numPlays.get();
+        // Cycles of infinitely looping textures (plays <= 0) get counted too, so their completed play cycles are known as well
+        int newCycles = this.cycles.incrementAndGet();
+        boolean willRestart = (plays <= 0) || (newCycles < plays);
+        this.notifyAnimatedTextureFinished(willRestart);
+        if (willRestart) this.pendingStartEvent = true;
+        return willRestart;
     }
 
     private boolean willRestartAfterCurrentCycle() {
@@ -639,6 +641,13 @@ public class GifTexture implements ITexture, PlayableResource {
         WatermediaAnimatedTextureBackend backend = this.resolveWatermediaBackend();
         if (backend != null) return backend.isPlaying();
         return !this.maxLoopsReached;
+    }
+
+    @Override
+    public int getCompletedPlayCycles() {
+        WatermediaAnimatedTextureBackend backend = this.resolveWatermediaBackend();
+        if (backend != null) return backend.getCompletedPlayCycles();
+        return this.cycles.get();
     }
 
     @Override

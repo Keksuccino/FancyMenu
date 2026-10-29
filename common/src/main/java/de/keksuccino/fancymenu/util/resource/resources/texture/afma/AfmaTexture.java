@@ -51,6 +51,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
     protected final AtomicBoolean loadingFailed = new AtomicBoolean(false);
     protected final AtomicBoolean closed = new AtomicBoolean(false);
 
+    /** How many full play cycles got completed since the last reset, loop restarts included. **/
     protected final AtomicInteger cycles = new AtomicInteger(0);
     protected final AtomicInteger numPlays = new AtomicInteger(0);
 
@@ -621,6 +622,11 @@ public class AfmaTexture implements ITexture, PlayableResource {
             return;
         }
 
+        if (this.shouldIdleOnTerminalSingleMainFrame()) {
+            this.completeHeldMainFrameCycle(now);
+            return;
+        }
+
         long elapsed = now - this.playbackFrameStartMs;
         long delay = Math.max(MIN_FRAME_DELAY_MS, this.playbackFrameDelayMs);
         if (elapsed < delay) return;
@@ -988,21 +994,17 @@ public class AfmaTexture implements ITexture, PlayableResource {
         return this.playbackInitialized && !this.playbackIntro && (this.frameCount > 0) && (this.playbackIndex == (this.frameCount - 1));
     }
 
+    /**
+     * Counts the finished play cycle and returns if the sequence should restart from its first frame.
+     */
     protected boolean handleCycleBoundary() {
         int plays = this.numPlays.get();
-        if (plays > 0) {
-            int newCycles = this.cycles.incrementAndGet();
-            boolean willRestart = newCycles < plays;
-            this.notifyAnimatedTextureFinished(willRestart);
-            if (willRestart) {
-                this.pendingStartEvent = true;
-            }
-            return willRestart;
-        }
-
-        this.notifyAnimatedTextureFinished(true);
-        this.pendingStartEvent = true;
-        return true;
+        // Cycles of infinitely looping textures (plays <= 0) get counted too, so their completed play cycles are known as well
+        int newCycles = this.cycles.incrementAndGet();
+        boolean willRestart = (plays <= 0) || (newCycles < plays);
+        this.notifyAnimatedTextureFinished(willRestart);
+        if (willRestart) this.pendingStartEvent = true;
+        return willRestart;
     }
 
     protected void maybeEmitStartEvent(boolean isIntroFrame, int frameIndex) {
@@ -1036,6 +1038,15 @@ public class AfmaTexture implements ITexture, PlayableResource {
                 && (this.introFrameCount > 0)
                 && (this.frameCount == 1)
                 && (this.numPlays.get() <= 0);
+    }
+
+    /**
+     * A single infinitely looping main frame gets held instead of replayed, so it never reaches the normal cycle boundary.
+     * Its first full display still counts as a completed play cycle.
+     */
+    protected void completeHeldMainFrameCycle(long now) {
+        if ((now - this.playbackFrameStartMs) < Math.max(MIN_FRAME_DELAY_MS, this.playbackFrameDelayMs)) return;
+        this.cycles.compareAndSet(0, 1);
     }
 
     protected void requestPlaybackReset() {
@@ -1187,6 +1198,11 @@ public class AfmaTexture implements ITexture, PlayableResource {
     @Override
     public boolean isPlaying() {
         return !this.closed.get() && this.playRequested && !this.pausedRequested && !this.maxLoopsReached;
+    }
+
+    @Override
+    public int getCompletedPlayCycles() {
+        return this.cycles.get();
     }
 
     @Override

@@ -48,7 +48,7 @@ public class GameIntroOverlay extends Overlay {
     protected Screen fadeTo;
     protected PlayableResource intro;
     protected float opacity = 1.0F;
-    protected long start = -1;
+    protected final GameIntroEndTracker endTracker = new GameIntroEndTracker();
     protected boolean fadeToInitialized = false;
     protected int width;
     protected int height;
@@ -82,9 +82,9 @@ public class GameIntroOverlay extends Overlay {
 
         //----------------------
 
-        boolean startIntro = (this.start == -1);
+        boolean startIntro = !this.endTracker.isStarted();
         if (startIntro) {
-            this.start = System.currentTimeMillis();
+            this.endTracker.markStarted();
             this.intro.stop();
             if (this.intro instanceof IVideo videoIntro) {
                 videoIntro.setPlayTime(0.0F);
@@ -218,10 +218,7 @@ public class GameIntroOverlay extends Overlay {
     }
 
     protected boolean endOfIntroReached() {
-        if (this.start == -1) return false;
-        long now = System.currentTimeMillis();
-        //If not playing (anymore) 2 seconds after starting to play it, consider the playable resource finished
-        return ((this.start + 2000) < now) && !this.intro.isPlaying();
+        return this.endTracker.checkEndReached(this.intro, FancyMenu.getOptions().gameIntroIgnoreLoops.getValue());
     }
 
     protected void tickFadeOut(boolean endOfIntroReached) {
