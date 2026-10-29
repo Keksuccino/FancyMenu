@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.util.TaskExecutor;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
+import net.minecraft.sounds.SoundSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -46,15 +47,19 @@ final class ScreenAudioPlaybackController implements AutoCloseable {
         this.timeoutNanos = requirePositive(timeoutNanos, "timeoutNanos");
     }
 
-    /** Replaces any older cue from this layer and immediately checks whether the new audio is already playable. */
-    void playWhenReady(@NotNull Cue cue, @NotNull ResourceSupplier<IAudio> supplier, @Nullable Layout owner) {
+    /**
+     * Replaces any older cue from this layer and immediately checks whether the new audio is already playable.<br>
+     * The channel and volume get applied right before playback because the audio resource is shared with every other
+     * user of the same source.
+     */
+    void playWhenReady(@NotNull Cue cue, @NotNull ResourceSupplier<IAudio> supplier, @NotNull SoundSource channel, float volume, @Nullable Layout owner) {
         Attempt previous;
         Attempt attempt;
         synchronized (this.playbackBarrier) {
             synchronized (this.lifecycleLock) {
                 if (this.closed) return;
                 previous = this.currentAttempt;
-                attempt = new Attempt(Objects.requireNonNull(cue), Objects.requireNonNull(supplier), owner, this.nanoTimeSource.getAsLong());
+                attempt = new Attempt(Objects.requireNonNull(cue), Objects.requireNonNull(supplier), Objects.requireNonNull(channel), IAudio.clampVolume(volume), owner, this.nanoTimeSource.getAsLong());
                 this.currentAttempt = attempt;
             }
         }
@@ -186,7 +191,7 @@ final class ScreenAudioPlaybackController implements AutoCloseable {
         // but external audio code runs without that state lock so callbacks cannot observe a half-mutated attempt.
         synchronized (this.playbackBarrier) {
             if (!isOwnerValid(attempt.owner) || this.hasTimedOut(attempt) || !this.finish(attempt)) return;
-            restart(audio);
+            restart(audio, attempt.channel, attempt.volume);
         }
     }
 
@@ -275,13 +280,15 @@ final class ScreenAudioPlaybackController implements AutoCloseable {
         return false;
     }
 
-    private static void restart(@NotNull IAudio audio) {
+    private static void restart(@NotNull IAudio audio, @NotNull SoundSource channel, float volume) {
         try {
             audio.stop();
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to stop screen audio before restarting it!", ex);
         }
         try {
+            audio.setSoundChannel(channel);
+            audio.setVolume(volume);
             audio.play();
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to play screen audio!", ex);
@@ -337,15 +344,19 @@ final class ScreenAudioPlaybackController implements AutoCloseable {
 
         private final Cue cue;
         private final ResourceSupplier<IAudio> supplier;
+        private final SoundSource channel;
+        private final float volume;
         @Nullable
         private final Layout owner;
         private final long startedAtNanos;
         @Nullable
         private ScheduledSlot scheduledSlot;
 
-        private Attempt(@NotNull Cue cue, @NotNull ResourceSupplier<IAudio> supplier, @Nullable Layout owner, long startedAtNanos) {
+        private Attempt(@NotNull Cue cue, @NotNull ResourceSupplier<IAudio> supplier, @NotNull SoundSource channel, float volume, @Nullable Layout owner, long startedAtNanos) {
             this.cue = cue;
             this.supplier = supplier;
+            this.channel = channel;
+            this.volume = volume;
             this.owner = owner;
             this.startedAtNanos = startedAtNanos;
         }

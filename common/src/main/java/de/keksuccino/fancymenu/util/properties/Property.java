@@ -14,6 +14,7 @@ import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.ObjectUtils;
 import de.keksuccino.fancymenu.util.Pair;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.file.FileFilter;
 import de.keksuccino.fancymenu.util.file.type.FileMediaType;
@@ -47,12 +48,14 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -1434,6 +1437,64 @@ public class Property<T> {
     @NotNull
     public static BooleanProperty booleanProperty(@NotNull String key, boolean defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         return booleanProperty(key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase);
+    }
+
+    /**
+     * Creates a {@link SoundSource} (sound channel) {@link Property} with an explicit default and current value.
+     * <p>
+     * The property serializes the channel by its {@link SoundSource#getName() name}. Unknown names deserialize to
+     * the default value. Context menus show a stack-aware entry that cycles through all channels.
+     * </p>
+     *
+     * <h3>Example</h3>
+     * <pre>{@code
+     * Property<SoundSource> channel = Property.soundSourceProperty(
+     *     "sound_channel",
+     *     SoundSource.MASTER,
+     *     SoundSource.MASTER,
+     *     "fancymenu.menu.entry.sound_channel"
+     * );
+     * }</pre>
+     *
+     * <h3>Localization format</h3>
+     * The localization value for {@code contextMenuEntryLocalizationKeyBase} must include a
+     * {@code %s} placeholder (for example {@code "Sound Channel: %s"}). The mod replaces
+     * {@code %s} dynamically with the name of the current channel.
+     *
+     * @param key the unique key used for lookup and serialization
+     * @param defaultValue the value used when no current value is present
+     * @param currentValue the initial current value
+     * @param contextMenuEntryLocalizationKeyBase translation key base for the entry label
+     * @return a configured sound channel property
+     */
+    @NotNull
+    public static Property<SoundSource> soundSourceProperty(@NotNull String key, @NotNull SoundSource defaultValue, @NotNull SoundSource currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        Property<SoundSource> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
+        p.deserializationCodec = consumes -> SerializationHelper.INSTANCE.deserializeSoundSource(defaultValue, consumes);
+        p.serializationCodec = consumes -> (consumes != null) ? consumes.getName() : null;
+        p.contextMenuEntrySupplier = (property, builder, menu) -> builder.buildGenericCycleContextMenuEntry(menu, "menu_entry_" + key, Arrays.asList(SoundSource.values()),
+                        consumes -> consumes.getProperty(key) != null,
+                        consumes -> {
+                            Property<SoundSource> resolved = (Property<SoundSource>) consumes.getProperty(key);
+                            return (resolved != null) ? resolved.tryGetNonNullElse(defaultValue) : defaultValue;
+                        },
+                        (holder, soundSource) -> {
+                            Property<SoundSource> resolved = (Property<SoundSource>) holder.getProperty(key);
+                            if ((resolved != null) && (soundSource != null)) resolved.set(soundSource);
+                        },
+                        (contextMenu, entry, soundSource) -> Component.translatable(property.getContextMenuEntryLocalizationKeyBase(), Component.translatable("soundCategory." + soundSource.getName()).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))))
+                .setIcon(MaterialIcons.SPEAKER);
+        return p;
+    }
+
+    /**
+     * Convenience overload that uses {@code defaultValue} as the initial current value.
+     *
+     * @see #soundSourceProperty(String, SoundSource, SoundSource, String)
+     */
+    @NotNull
+    public static Property<SoundSource> soundSourceProperty(@NotNull String key, @NotNull SoundSource defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        return soundSourceProperty(key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase);
     }
 
     /**

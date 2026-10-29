@@ -131,6 +131,14 @@ public class ButtonEditorElement<E extends ButtonEditorElement<?, ?>, N extends 
                         Component.translatable("fancymenu.elements.button.clicksound"), true, null, true, true, true)
                 .setIcon(MaterialIcons.VOLUME_UP);
 
+        this.element.clickSoundVolume.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.widgets.click_sound_volume.desc")))
+                .setIcon(MaterialIcons.VOLUME_UP);
+
+        this.element.clickSoundChannel.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.widgets.click_sound_channel.desc")))
+                .setIcon(MaterialIcons.SPEAKER);
+
         this.rightClickMenu.addSeparatorEntry("button_separator_4").setStackable(true);
 
         this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "edit_tooltip",
