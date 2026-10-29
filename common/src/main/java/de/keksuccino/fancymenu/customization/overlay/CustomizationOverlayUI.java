@@ -361,6 +361,7 @@ public class CustomizationOverlayUI {
         }).setIcon(MaterialIcons.REFRESH);
 
         customizationMenu.addClickableEntry("disable_customization_for_all", Component.translatable("fancymenu.overlay.menu_bar.customization.disable_customization_for_all"), (menu, entry) -> {
+            menuBar.closeAllContextMenus();
             Dialogs.openMessageWithCallback(Component.translatable("fancymenu.overlay.menu_bar.customization.disable_customization_for_all.confirm"), MessageDialogStyle.WARNING, call -> {
                 if (call) {
                     MainThreadTaskExecutor.executeInMainThread(() -> {
