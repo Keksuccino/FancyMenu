@@ -141,6 +141,11 @@ public class Placeholders {
     public static final CurrentBossHealthPlaceholder CURRENT_BOSS_HEALTH = new CurrentBossHealthPlaceholder();
     public static final BossNamePlaceholder BOSS_NAME = new BossNamePlaceholder();
     public static final BossCountPlaceholder BOSS_COUNT = new BossCountPlaceholder();
+    public static final ActiveRaidTotalWavesPlaceholder ACTIVE_RAID_TOTAL_WAVES = new ActiveRaidTotalWavesPlaceholder();
+    public static final ActiveRaidRemainingWavesPlaceholder ACTIVE_RAID_REMAINING_WAVES = new ActiveRaidRemainingWavesPlaceholder();
+    public static final ActiveRaidCurrentWavePlaceholder ACTIVE_RAID_CURRENT_WAVE = new ActiveRaidCurrentWavePlaceholder();
+    public static final ActiveRaidAliveRaidersCountPlaceholder ACTIVE_RAID_ALIVE_RAIDERS_COUNT = new ActiveRaidAliveRaidersCountPlaceholder();
+    public static final ActiveRaidAliveRaidersListPlaceholder ACTIVE_RAID_ALIVE_RAIDERS_LIST = new ActiveRaidAliveRaidersListPlaceholder();
     public static final ActiveEffectsCountPlaceholder ACTIVE_EFFECTS_COUNT = new ActiveEffectsCountPlaceholder();
     public static final ActiveEffectPlaceholder ACTIVE_EFFECT = new ActiveEffectPlaceholder();
     public static final ActionBarMessageFmPlaceholder ACTION_BAR_MESSAGE_FM = new ActionBarMessageFmPlaceholder();
@@ -288,6 +293,11 @@ public class Placeholders {
         PlaceholderRegistry.register(CURRENT_BOSS_HEALTH);
         PlaceholderRegistry.register(BOSS_NAME);
         PlaceholderRegistry.register(BOSS_COUNT);
+        PlaceholderRegistry.register(ACTIVE_RAID_TOTAL_WAVES);
+        PlaceholderRegistry.register(ACTIVE_RAID_REMAINING_WAVES);
+        PlaceholderRegistry.register(ACTIVE_RAID_CURRENT_WAVE);
+        PlaceholderRegistry.register(ACTIVE_RAID_ALIVE_RAIDERS_COUNT);
+        PlaceholderRegistry.register(ACTIVE_RAID_ALIVE_RAIDERS_LIST);
         PlaceholderRegistry.register(ACTIVE_EFFECTS_COUNT);
         PlaceholderRegistry.register(ACTIVE_EFFECT);
         PlaceholderRegistry.register(ACTION_BAR_MESSAGE_FM);
