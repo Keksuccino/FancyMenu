@@ -14,6 +14,7 @@ import de.keksuccino.fancymenu.networking.packets.placeholders.gamerule.ServerGa
 import de.keksuccino.fancymenu.networking.packets.placeholders.gamerule.ServerGameruleValueResponsePacketCodec;
 import de.keksuccino.fancymenu.networking.packets.placeholders.nbt.ServerNbtDataRequestPacketCodec;
 import de.keksuccino.fancymenu.networking.packets.placeholders.nbt.ServerNbtDataResponsePacketCodec;
+import de.keksuccino.fancymenu.networking.packets.raid.ActiveRaidPacketCodec;
 import de.keksuccino.fancymenu.networking.packets.structure.clientstructures.StructureEventPacketCodec;
 import de.keksuccino.fancymenu.networking.packets.entities.EntityEventPacketCodec;
 import de.keksuccino.fancymenu.networking.packets.structure.playerpos.PlayerPosStructuresPacketCodec;
@@ -38,6 +39,7 @@ public class Packets {
     public static final PlayerPosStructuresPacketCodec PLAYER_POS_STRUCTURES_PACKET_CODEC = new PlayerPosStructuresPacketCodec();
     public static final FmDataToClientPacketCodec FMDATA_TO_CLIENT_PACKET_CODEC = new FmDataToClientPacketCodec();
     public static final FmDataToServerPacketCodec FMDATA_TO_SERVER_PACKET_CODEC = new FmDataToServerPacketCodec();
+    public static final ActiveRaidPacketCodec ACTIVE_RAID_PACKET_CODEC = new ActiveRaidPacketCodec();
 
     public static void registerAll() {
 
@@ -58,6 +60,7 @@ public class Packets {
         PacketRegistry.register(PLAYER_POS_STRUCTURES_PACKET_CODEC);
         PacketRegistry.register(FMDATA_TO_CLIENT_PACKET_CODEC);
         PacketRegistry.register(FMDATA_TO_SERVER_PACKET_CODEC);
+        PacketRegistry.register(ACTIVE_RAID_PACKET_CODEC);
 
     }
 
