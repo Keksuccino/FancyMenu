@@ -655,7 +655,7 @@ public class CustomizationOverlayUI {
                         s -> {
                             FancyMenu.getOptions().customWindowTitle.setValue(s);
                             WindowHandler.updateWindowTitle();
-                        }, true, FancyMenu.getOptions().customWindowTitle.getDefaultValue(), null, false, false, TextValidators.NO_EMPTY_STRING_SPACES_ALLOWED_TEXT_VALIDATOR, null, (screen1, s) -> {
+                        }, true, FancyMenu.getOptions().customWindowTitle.getDefaultValue(), null, false, true, TextValidators.NO_EMPTY_STRING_SPACES_ALLOWED_TEXT_VALIDATOR, null, (screen1, s) -> {
                             Minecraft.getInstance().setScreen(screen1);
                             forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(List.of("global_customizations", "window_title")));
                         })
