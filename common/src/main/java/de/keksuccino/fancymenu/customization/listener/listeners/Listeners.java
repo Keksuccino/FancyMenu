@@ -90,6 +90,7 @@ public class Listeners {
     public static final OnItemConsumedListener ON_ITEM_CONSUMED = new OnItemConsumedListener();
     public static final OnItemUsedListener ON_ITEM_USED = new OnItemUsedListener();
     public static final OnItemBrokeListener ON_ITEM_BROKE = new OnItemBrokeListener();
+    public static final OnScreenshotTakenListener ON_SCREENSHOT_TAKEN = new OnScreenshotTakenListener();
 
     public static void registerAll() {
 
@@ -182,6 +183,7 @@ public class Listeners {
         ListenerRegistry.register(ON_ITEM_CONSUMED);
         ListenerRegistry.register(ON_ITEM_USED);
         ListenerRegistry.register(ON_ITEM_BROKE);
+        ListenerRegistry.register(ON_SCREENSHOT_TAKEN);
 
     }
 
