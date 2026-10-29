@@ -173,7 +173,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			ResourceSupplier<IAudio> closeAudioSupplier = this.layoutBase.closeAudio;
 			// A close cue must survive the screen removal that triggers it. Its bounded controller still cancels it when the
 			// exact layout retires, a newer cue supersedes it, loading terminates, or the client shuts down.
-			this.audioPlaybackController.playWhenReady(ScreenAudioPlaybackController.Cue.CLOSE, closeAudioSupplier, this.findAudioOwner(closeAudioSupplier, false));
+			this.audioPlaybackController.playWhenReady(ScreenAudioPlaybackController.Cue.CLOSE, closeAudioSupplier, this.layoutBase.closeAudioSoundChannel, this.layoutBase.closeAudioVolume, this.findAudioOwner(closeAudioSupplier, false));
 		}
 
 		this.layoutBase.closeScreenExecutableBlocks.forEach(AbstractExecutableBlock::execute);
@@ -325,7 +325,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			this.audioPlaybackController.cancel();
 			if (this.layoutBase.openAudio != null) {
 				ResourceSupplier<IAudio> openAudioSupplier = this.layoutBase.openAudio;
-				this.audioPlaybackController.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, openAudioSupplier, this.findAudioOwner(openAudioSupplier, true));
+				this.audioPlaybackController.playWhenReady(ScreenAudioPlaybackController.Cue.OPEN, openAudioSupplier, this.layoutBase.openAudioSoundChannel, this.layoutBase.openAudioVolume, this.findAudioOwner(openAudioSupplier, true));
 			}
 		}
 

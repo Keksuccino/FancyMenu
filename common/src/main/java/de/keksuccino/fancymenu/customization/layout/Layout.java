@@ -40,6 +40,7 @@ import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.konkrete.math.MathUtils;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
+import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Style;
 import org.apache.logging.log4j.LogManager;
@@ -186,6 +187,14 @@ public class Layout extends LayoutBase {
             ps.putProperty("path", this.closeAudio.getSourceWithPrefix());
             set.putContainer(ps);
         }
+
+        //Screen Open/Close Audio Settings Container
+        PropertyContainer screenAudioSettings = new PropertyContainer("screen_audio_settings");
+        screenAudioSettings.putProperty("open_audio_volume", "" + this.openAudioVolume);
+        screenAudioSettings.putProperty("open_audio_sound_channel", this.openAudioSoundChannel.getName());
+        screenAudioSettings.putProperty("close_audio_volume", "" + this.closeAudioVolume);
+        screenAudioSettings.putProperty("close_audio_sound_channel", this.closeAudioSoundChannel.getName());
+        set.putContainer(screenAudioSettings);
 
         //Background Options Container
         PropertyContainer s = new PropertyContainer("customization");
@@ -513,6 +522,14 @@ public class Layout extends LayoutBase {
                 layout.repeatScrollListHeaderTexture = SerializationHelper.INSTANCE.deserializeBoolean(layout.repeatScrollListHeaderTexture, scrollListCustomizations.getValue("repeat_scroll_list_header_texture"));
                 layout.repeatScrollListFooterTexture = SerializationHelper.INSTANCE.deserializeBoolean(layout.repeatScrollListFooterTexture, scrollListCustomizations.getValue("repeat_scroll_list_footer_texture"));
                 layout.applyVanillaBackgroundBlur = SerializationHelper.INSTANCE.deserializeBoolean(layout.applyVanillaBackgroundBlur, scrollListCustomizations.getValue("apply_vanilla_background_blur"));
+            }
+
+            PropertyContainer screenAudioSettings = serialized.getFirstContainerOfType("screen_audio_settings");
+            if (screenAudioSettings != null) {
+                layout.openAudioVolume = IAudio.clampVolume(SerializationHelper.INSTANCE.deserializeNumber(Float.class, layout.openAudioVolume, screenAudioSettings.getValue("open_audio_volume")));
+                layout.openAudioSoundChannel = SerializationHelper.INSTANCE.deserializeSoundSource(layout.openAudioSoundChannel, screenAudioSettings.getValue("open_audio_sound_channel"));
+                layout.closeAudioVolume = IAudio.clampVolume(SerializationHelper.INSTANCE.deserializeNumber(Float.class, layout.closeAudioVolume, screenAudioSettings.getValue("close_audio_volume")));
+                layout.closeAudioSoundChannel = SerializationHelper.INSTANCE.deserializeSoundSource(layout.closeAudioSoundChannel, screenAudioSettings.getValue("close_audio_sound_channel"));
             }
 
             PropertyContainer executableBlocks = serialized.getFirstContainerOfType("layout_action_executable_blocks");
