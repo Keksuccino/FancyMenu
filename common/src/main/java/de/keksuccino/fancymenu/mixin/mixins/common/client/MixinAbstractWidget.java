@@ -27,6 +27,7 @@ import net.minecraft.client.gui.navigation.FocusNavigationEvent;
 import net.minecraft.client.input.MouseButtonInfo;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
@@ -62,6 +63,10 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	private Component hoverLabelFancyMenu;
 	@Unique @Nullable
 	private IAudio customClickSoundFancyMenu;
+	@Unique
+	private float customClickSoundVolumeFancyMenu = 1.0F;
+	@Unique @NotNull
+	private SoundSource customClickSoundChannelFancyMenu = SoundSource.MASTER;
 	@Unique @Nullable
 	private IAudio hoverSoundFancyMenu;
 	@Unique @Nullable
@@ -200,9 +205,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	
 	@Inject(method = "playDownSound", at = @At(value = "HEAD"), cancellable = true)
 	private void before_playDownSound_FancyMenu(SoundManager manager, CallbackInfo info) {
-		if (this.customClickSoundFancyMenu != null) {
-			this.customClickSoundFancyMenu.stop();
-			this.customClickSoundFancyMenu.play();
+		if (this.playCustomClickSoundFancyMenu()) {
 			info.cancel();
 		}
 	}
@@ -545,6 +548,8 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		this.setHoverSoundFancyMenu(null);
 		this.setUnhoverSoundFancyMenu(null);
 		this.setCustomClickSoundFancyMenu(null);
+		this.setCustomClickSoundVolumeFancyMenu(1.0F);
+		this.setCustomClickSoundChannelFancyMenu(SoundSource.MASTER);
 		this.setHiddenFancyMenu(false);
 		this.setCustomLabelFancyMenu(null);
 		this.setHoverLabelFancyMenu(null);
@@ -697,6 +702,31 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Override
 	public void setCustomClickSoundFancyMenu(@Nullable IAudio sound) {
 		this.customClickSoundFancyMenu = sound;
+	}
+
+	@Unique
+	@Override
+	public float getCustomClickSoundVolumeFancyMenu() {
+		return this.customClickSoundVolumeFancyMenu;
+	}
+
+	@Unique
+	@Override
+	public void setCustomClickSoundVolumeFancyMenu(float volume) {
+		this.customClickSoundVolumeFancyMenu = IAudio.clampVolume(volume);
+	}
+
+	@Unique
+	@NotNull
+	@Override
+	public SoundSource getCustomClickSoundChannelFancyMenu() {
+		return this.customClickSoundChannelFancyMenu;
+	}
+
+	@Unique
+	@Override
+	public void setCustomClickSoundChannelFancyMenu(@NotNull SoundSource channel) {
+		this.customClickSoundChannelFancyMenu = Objects.requireNonNull(channel);
 	}
 
 	@Unique
