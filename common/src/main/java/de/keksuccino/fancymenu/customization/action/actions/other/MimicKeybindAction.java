@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
+import de.keksuccino.fancymenu.util.input.KeyMappingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
@@ -67,7 +68,7 @@ public class MimicKeybindAction extends Action {
             return;
         }
 
-        KeyMapping keyMapping = findKeyMapping(config.keybindName);
+        KeyMapping keyMapping = KeyMappingUtils.findKeyMapping(config.keybindName);
         if (keyMapping == null) {
             handleMissingKeybind(config.keybindName);
             return;
@@ -171,18 +172,6 @@ public class MimicKeybindAction extends Action {
         }, "MimicKeybind-Hold-" + keyMapping.getName());
     }
 
-    @Nullable
-    protected KeyMapping findKeyMapping(@NotNull String identifier) {
-        String trimmedId = identifier.trim();
-        Minecraft minecraft = Minecraft.getInstance();
-        for (KeyMapping keyMapping : minecraft.options.keyMappings) {
-            if (keyMapping.getName().equals(trimmedId)) {
-                return keyMapping;
-            }
-        }
-        return null;
-    }
-
     protected void handleMissingKeybind(@NotNull String identifier) {
         LOGGER.error("[FANCYMENU] MimicKeybindAction failed to find keybind '{}'!", identifier);
         long now = System.currentTimeMillis();
@@ -254,9 +243,8 @@ public class MimicKeybindAction extends Action {
 
     @NotNull
     protected static List<String> getAvailableKeybindNames() {
-        Minecraft minecraft = Minecraft.getInstance();
         List<String> names = new ArrayList<>();
-        for (KeyMapping keyMapping : minecraft.options.keyMappings) {
+        for (KeyMapping keyMapping : KeyMappingUtils.getKeyMappings()) {
             names.add(keyMapping.getName());
         }
         if (names.isEmpty()) {
@@ -341,24 +329,13 @@ public class MimicKeybindAction extends Action {
 
         @NotNull
         protected Component buildCurrentKeyInfoComponent() {
-            KeyMapping keyMapping = getKeyMapping(this.config.keybindName);
+            KeyMapping keyMapping = KeyMappingUtils.findKeyMapping(this.config.keybindName);
             if (keyMapping == null) {
                 return Component.translatable("fancymenu.actions.mimic_keybind.edit.keybind_missing");
             }
             Component keyName = Component.translatable(keyMapping.getName());
             Component keyValue = keyMapping.getTranslatedKeyMessage();
             return Component.translatable("fancymenu.actions.mimic_keybind.edit.keybind_preview", keyName, keyValue);
-        }
-
-        @Nullable
-        protected KeyMapping getKeyMapping(@NotNull String identifier) {
-            Minecraft minecraft = Minecraft.getInstance();
-            for (KeyMapping keyMapping : minecraft.options.keyMappings) {
-                if (keyMapping.getName().equals(identifier.trim())) {
-                    return keyMapping;
-                }
-            }
-            return null;
         }
 
         @Override
