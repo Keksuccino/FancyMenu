@@ -1352,6 +1352,13 @@ public class CustomizationOverlayUI {
                 }))
                 .setIcon(MaterialIcons.TRANSITION_FADE);
 
+        gameIntroMenu.addValueCycleEntry("game_intro_ignore_loops", CommonCycles.cycleEnabledDisabled("fancymenu.overlay.menu_bar.customization.settings.game_intro.ignore_loops", FancyMenu.getOptions().gameIntroIgnoreLoops.getValue())
+                .addCycleListener(cycle -> {
+                    FancyMenu.getOptions().gameIntroIgnoreLoops.setValue(cycle.getAsBoolean());
+                }))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.customization.settings.game_intro.ignore_loops.tooltip")))
+                .setIcon(MaterialIcons.REPEAT_ONE);
+
         ContextMenuUtils.addInputContextMenuEntryTo(gameIntroMenu, "game_intro_set_custom_skip_text",
                         Component.translatable("fancymenu.overlay.menu_bar.customization.settings.game_intro.set_custom_skip_text"),
                         () -> {

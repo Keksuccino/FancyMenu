@@ -27,4 +27,13 @@ public interface PlayableResource extends Resource {
      */
     void stop();
 
+    /**
+     * How many times the resource finished playing its full sequence since it got last stopped or reset.<br>
+     * Loop restarts count as finished sequences, so this keeps increasing while a looping resource plays.<br>
+     * Resources that don't track their play cycles always return 0.
+     */
+    default int getCompletedPlayCycles() {
+        return 0;
+    }
+
 }
