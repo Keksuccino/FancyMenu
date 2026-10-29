@@ -354,7 +354,12 @@ public class CustomizationOverlayUI {
                 .setIcon(MaterialIcons.REFRESH);
 
         customizationMenu.addClickableEntry("reload_minecraft_resources", Component.translatable("fancymenu.overlay.menu_bar.customization.reload_minecraft_resources"), (menu, entry) -> {
-            MainThreadTaskExecutor.executeInMainThread(ReloadResourcePacksAction::triggerReload, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+            menuBar.closeAllContextMenus();
+            Dialogs.openMessageWithCallback(Component.translatable("fancymenu.overlay.menu_bar.customization.reload_minecraft_resources.confirm"), MessageDialogStyle.WARNING, call -> {
+                if (call) {
+                    MainThreadTaskExecutor.executeInMainThread(ReloadResourcePacksAction::triggerReload, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+                }
+            });
         }).setIcon(MaterialIcons.REFRESH);
 
         customizationMenu.addClickableEntry("disable_customization_for_all", Component.translatable("fancymenu.overlay.menu_bar.customization.disable_customization_for_all"), (menu, entry) -> {
