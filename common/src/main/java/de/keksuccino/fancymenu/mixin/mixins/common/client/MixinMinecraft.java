@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
+import de.keksuccino.fancymenu.util.window.OffscreenTestClient;
 import de.keksuccino.fancymenu.customization.global.SeamlessWorldLoadingHandler;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.customization.listener.listeners.OnStartLookingAtBlockListener;
@@ -76,6 +78,12 @@ public class MixinMinecraft {
 	@Shadow @Nullable public ClientLevel level;
 	@Shadow @Nullable public LocalPlayer player;
 	@Shadow @Nullable public HitResult hitResult;
+
+	/** @reason Keeps the game window hidden in the dev-only off-screen test client mode (see OffscreenTestClient and TESTING_GUIDELINES.md). */
+	@WrapWithCondition(method = "<init>", at = @At(value = "INVOKE", target = "Lorg/lwjgl/glfw/GLFW;glfwShowWindow(J)V", remap = false))
+	private boolean cancel_glfwShowWindow_FancyMenu(long window) {
+		return !OffscreenTestClient.isEnabled();
+	}
 
 	@Inject(method = "stop", at = @At("HEAD"))
 	private void before_stop_FancyMenu(CallbackInfo info) {
