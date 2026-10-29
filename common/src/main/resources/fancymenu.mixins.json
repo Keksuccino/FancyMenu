@@ -83,6 +83,7 @@
     "client.MixinPlayer",
     "client.MixinProgressScreen",
     "client.MixinQuickPlay",
+    "client.MixinRealmsConnect",
     "client.MixinRealmsNotificationsScreen",
     "client.MixinReceivingLevelScreen",
     "client.MixinResourceLoadStateTracker",

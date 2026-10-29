@@ -77,6 +77,7 @@ public class Listeners {
     public static final OnStartedRunningListener ON_STARTED_RUNNING = new OnStartedRunningListener();
     public static final OnStoppedRunningListener ON_STOPPED_RUNNING = new OnStoppedRunningListener();
     public static final OnJumpListener ON_JUMP = new OnJumpListener();
+    public static final OnStartJoiningServerListener ON_START_JOINING_SERVER = new OnStartJoiningServerListener();
     public static final OnServerJoinedListener ON_SERVER_JOINED = new OnServerJoinedListener();
     public static final OnServerLeftListener ON_SERVER_LEFT = new OnServerLeftListener();
     public static final OnFmDataReceivedListener ON_FM_DATA_RECEIVED = new OnFmDataReceivedListener();
@@ -174,6 +175,7 @@ public class Listeners {
         ListenerRegistry.register(ON_STARTED_RUNNING);
         ListenerRegistry.register(ON_STOPPED_RUNNING);
         ListenerRegistry.register(ON_JUMP);
+        ListenerRegistry.register(ON_START_JOINING_SERVER);
         ListenerRegistry.register(ON_SERVER_JOINED);
         ListenerRegistry.register(ON_SERVER_LEFT);
         ListenerRegistry.register(ON_FM_DATA_RECEIVED);
