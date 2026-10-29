@@ -2400,7 +2400,7 @@
   "fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.toggle.disabled.tooltip": "§xYou need to set all icons first!",
   "fancymenu.overlay.menu_bar.customization.settings.custom_window_icon.wrong_resolution": "Wrong resolution!\nThe icon has to be %s!",
   "fancymenu.overlay.menu_bar.customization.settings.custom_window_title": "Custom Window Title",
-  "fancymenu.overlay.menu_bar.customization.settings.custom_window_title.tooltip": "Set a custom window title that replaces\nthe default 'Minecraft 1.X.X' title.",
+  "fancymenu.overlay.menu_bar.customization.settings.custom_window_title.tooltip": "Set a custom window title that replaces\nthe default 'Minecraft 1.X.X' title.\n\nSupports placeholders. The title updates\nautomatically when their values change.",
   "fancymenu.overlay.menu_bar.customization.settings.developer": "Developer",
   "fancymenu.overlay.menu_bar.customization.settings.developer.force_rinku_missing": "Force Rinku Missing: %s",
   "fancymenu.overlay.menu_bar.customization.settings.developer.force_watermedia_missing": "Force Watermedia Missing: %s",

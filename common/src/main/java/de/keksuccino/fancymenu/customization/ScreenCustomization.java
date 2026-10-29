@@ -135,6 +135,13 @@ public class ScreenCustomization {
 
 	}
 
+	/**
+	 * Whether the customization engine is fully initialized, which includes all registered placeholders and loaded variables.
+	 */
+	public static boolean isInitialized() {
+		return initialized;
+	}
+
 	public static boolean isScreenCustomizationEnabled() {
 		return screenCustomizationEnabled;
 	}
