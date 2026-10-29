@@ -17,8 +17,15 @@ public class CharacterFilter {
 
     @NotNull
     public static CharacterFilter buildIntegerFilter() {
+        CharacterFilter f = buildDigitFilter();
+        f.addAllowedCharacters("-", "+");
+        return f;
+    }
+
+    @NotNull
+    public static CharacterFilter buildDigitFilter() {
         CharacterFilter f = new CharacterFilter();
-        f.addAllowedCharacters("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "-", "+");
+        f.addAllowedCharacters("0", "1", "2", "3", "4", "5", "6", "7", "8", "9");
         return f;
     }
 
