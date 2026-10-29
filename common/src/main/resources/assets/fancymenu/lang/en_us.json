@@ -3370,5 +3370,6 @@
   "fancymenu.elements.browser.rinku_initializing.line_1": "Browser is starting...",
   "fancymenu.elements.browser.rinku_initializing.line_2": "Waiting for Rinku to finish initializing.",
   "fancymenu.elements.browser.rinku_failed.line_1": "Browser initialization failed!",
-  "fancymenu.elements.browser.rinku_failed.line_2": "Check the game log for details."
+  "fancymenu.elements.browser.rinku_failed.line_2": "Check the game log for details.",
+  "fancymenu.overlay.menu_bar.customization.reload_minecraft_resources.confirm": "Do you really want to §xreload all Minecraft resources§r now?\nThis can take a while.\n\nTo only reload FancyMenu, use §xReload FancyMenu§r instead."
 }
