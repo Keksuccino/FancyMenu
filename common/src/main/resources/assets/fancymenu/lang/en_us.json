@@ -3373,5 +3373,7 @@
   "fancymenu.elements.browser.rinku_failed.line_2": "Check the game log for details.",
   "fancymenu.listeners.on_file_download_started": "On File Download Started via Action",
   "fancymenu.listeners.on_file_download_started.desc": "This listener triggers when a file starts downloading via the 'Download File to Game Directory' action.\n\nIt triggers as soon as the server answers and the file name is known, right before the file data starts getting saved. The file gets downloaded to a temporary file first and only shows up at its target path once the download is done, so use the 'On File Downloaded via Action' listener to know when it's ready.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$download_url §r= The URL of the file that is being downloaded\n- §z$$target_file_path §r= The path the file will get saved to",
+  "fancymenu.listeners.on_screenshot_taken": "On Screenshot Taken",
+  "fancymenu.listeners.on_screenshot_taken.desc": "This listener triggers after a screenshot got taken and saved, like when you press the screenshot key.\n\nIt provides the following variables for its actions and requirements:\n\n- §z$$screenshot_path §r= The path of the screenshot file, relative to the instance folder (like /screenshots/2026-10-29_14.30.00.png)",
   "fancymenu.overlay.menu_bar.customization.reload_minecraft_resources.confirm": "Do you really want to §xreload all Minecraft resources§r now?\nThis can take a while.\n\nTo only reload FancyMenu, use §xReload FancyMenu§r instead."
 }
