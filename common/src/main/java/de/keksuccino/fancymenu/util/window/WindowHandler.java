@@ -12,6 +12,11 @@ import javax.imageio.ImageIO;
 import com.mojang.blaze3d.platform.MacosUtil;
 import com.mojang.blaze3d.platform.TextureUtil;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
+import de.keksuccino.fancymenu.util.event.acara.EventHandler;
+import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
@@ -28,6 +33,15 @@ import org.lwjgl.system.MemoryUtil;
 public class WindowHandler {
 
 	private static final Logger LOGGER = LogManager.getLogger();
+	private static final CustomWindowTitleController CUSTOM_WINDOW_TITLE = new CustomWindowTitleController(() -> FancyMenu.getOptions().customWindowTitle.getValue(), PlaceholderParser::containsPlaceholders, ScreenCustomization::isInitialized, PlaceholderParser::replacePlaceholdersPreservingFormattingCodes, WindowHandler::updateWindowTitle);
+
+	private static boolean initialized = false;
+
+	public static void init() {
+		if (initialized) return;
+		initialized = true;
+		EventHandler.INSTANCE.registerListenersOf(WindowHandler.class);
+	}
 
 	public static void handleForceFullscreen() {
 		try {
@@ -204,13 +218,17 @@ public class WindowHandler {
 		Minecraft.getInstance().updateTitle();
 	}
 
+	/**
+	 * Returns the custom window title with all placeholders replaced, or {@code null} if the vanilla title should be used.
+	 */
 	@Nullable
 	public static String getCustomWindowTitle() {
-		String windowTitle = FancyMenu.getOptions().customWindowTitle.getValue();
-		if (windowTitle.isEmpty()) {
-			windowTitle = null;
-		}
-		return windowTitle;
+		return CUSTOM_WINDOW_TITLE.createTitle();
+	}
+
+	@EventListener
+	public static void onClientTickPost(ClientTickEvent.Post e) {
+		CUSTOM_WINDOW_TITLE.tick();
 	}
 
 }
