@@ -645,6 +645,12 @@ public class CustomizationOverlayUI {
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.customization.settings.seamless_world_loading.desc")))
                 .setIcon(MaterialIcons.YARD);
 
+        globalCustomizationsMenu.addValueCycleEntry("achievement_toasts",
+                        CommonCycles.cycleEnabledDisabled("fancymenu.global_customizations.achievement_toasts", FancyMenu.getOptions().showAchievementToasts.getValue())
+                                .addCycleListener(cycle -> FancyMenu.getOptions().showAchievementToasts.setValue(cycle.getAsBoolean())))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.global_customizations.achievement_toasts.desc")))
+                .setIcon(MaterialIcons.TROPHY);
+
         globalCustomizationsMenu.addSeparatorEntry("separator_after_mp_server_icons");
 
         globalCustomizationsMenu.addSubMenuEntry("window_icon", Component.translatable("fancymenu.overlay.menu_bar.customization.settings.custom_window_icon"), buildWindowIconMenu())

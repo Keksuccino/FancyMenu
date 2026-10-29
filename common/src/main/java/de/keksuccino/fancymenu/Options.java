@@ -70,6 +70,7 @@ public class Options extends AbstractOptions {
     public final Option<String> globalButtonClickSound = new Option<>(config, "global_button_click_sound", "", "global_customizations");
     public final Option<String> globalMenuBackgroundTexture = new Option<>(config, "global_menu_background_texture", "", "global_customizations");
     public final Option<Boolean> seamlessWorldLoading = new Option<>(config, "seamless_world_loading", false, "global_customizations");
+    public final Option<Boolean> showAchievementToasts = new Option<>(config, "show_achievement_toasts", true, "global_customizations");
 
     public final Option<Boolean> showMultiplayerScreenServerIcons = new Option<>(config, "show_multiplayer_screen_server_icons", true, "multiplayer_screen");
 
