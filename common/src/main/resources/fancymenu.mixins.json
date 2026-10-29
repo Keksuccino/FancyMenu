@@ -103,6 +103,7 @@
   ],
   "mixins": [
     "server.MixinLivingEntity",
+    "server.MixinRaid",
     "server.MixinServerLevel",
     "server.MixinServerPlayer"
   ],
