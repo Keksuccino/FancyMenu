@@ -9,12 +9,21 @@ import net.minecraft.util.FastColor;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 
 public class StringLightsOverlay extends AbstractWidget implements NavigatableWidget {
+
+    /** Bulb count that lets the overlay calculate the bulb count of a string from its length. */
+    public static final int AUTO_BULB_COUNT = 0;
+    public static final int MAX_CUSTOM_BULB_COUNT = 100;
+    public static final float MIN_BULB_SIZE_MULTIPLIER = 0.0F;
+    public static final float MAX_BULB_SIZE_MULTIPLIER = 10.0F;
+    public static final int DEFAULT_STRING_COLOR = 0xD22B2B2B;
 
     private static final float BASE_BULB_SPACING = 30.0F;
     private static final float BASE_BULB_SIZE = 5.5F;
@@ -27,9 +36,8 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
     private static final float MIN_FLICKER_SPEED = 0.0F;
     private static final float MAX_FLICKER_SPEED = 2.0F;
     private static final float MAX_DELTA_SECONDS = 0.1F;
-    private static final int STRING_RGB = 0x2B2B2B;
-    private static final int MIN_BULBS = 3;
-    private static final int MAX_BULBS = 36;
+    private static final int MIN_AUTO_BULBS = 3;
+    private static final int MAX_AUTO_BULBS = 36;
 
     private static final int[] CHRISTMAS_COLORS = new int[] {
             0xE04B4B,
@@ -43,9 +51,7 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
 
     private final RandomSource random = RandomSource.create();
     private final EnumMap<StringLightsPosition, StringLight> strings = new EnumMap<>(StringLightsPosition.class);
-    private final EnumMap<StringLightsPosition, Boolean> enabledPositions = new EnumMap<>(StringLightsPosition.class);
-    private final EnumMap<StringLightsPosition, Boolean> positionChristmasModes = new EnumMap<>(StringLightsPosition.class);
-    private final EnumMap<StringLightsPosition, ColorSettings> positionColors = new EnumMap<>(StringLightsPosition.class);
+    private final EnumMap<StringLightsPosition, PositionSettings> positionSettings = createPositionSettings();
     private int lastWidth = -1;
     private int lastHeight = -1;
     private float lastScale = -1.0F;
@@ -103,33 +109,107 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
     }
 
     public void setPositionChristmasMode(@NotNull StringLightsPosition position, boolean christmasMode) {
-        this.positionChristmasModes.put(position, christmasMode);
+        this.positionSettings.get(position).christmasMode = christmasMode;
     }
 
     public void clearPositionChristmasMode(@NotNull StringLightsPosition position) {
-        this.positionChristmasModes.remove(position);
+        this.positionSettings.get(position).christmasMode = null;
     }
 
     public void setPositionEnabled(@NotNull StringLightsPosition position, boolean enabled) {
-        this.enabledPositions.put(position, enabled);
+        this.positionSettings.get(position).enabled = enabled;
     }
 
     public boolean isPositionEnabled(@NotNull StringLightsPosition position) {
-        return Boolean.TRUE.equals(this.enabledPositions.get(position));
+        return this.positionSettings.get(position).enabled;
     }
 
     public void setPositionColor(@NotNull StringLightsPosition position, int color) {
-        ColorSettings settings = this.positionColors.get(position);
-        if (settings == null) {
-            settings = new ColorSettings();
-            this.positionColors.put(position, settings);
+        PositionSettings settings = this.positionSettings.get(position);
+        if (settings.color == null) {
+            settings.color = new ColorSettings();
         }
-        settings.color = color;
-        settings.alphaScale = resolveAlphaScale(color);
+        settings.color.color = color;
+        settings.color.alphaScale = resolveAlphaScale(color);
     }
 
     public void clearPositionColor(@NotNull StringLightsPosition position) {
-        this.positionColors.remove(position);
+        this.positionSettings.get(position).color = null;
+    }
+
+    /**
+     * Sets the ARGB color of the string itself. Its alpha channel is used as-is, so an alpha of 0 hides the string.
+     */
+    public void setPositionStringColor(@NotNull StringLightsPosition position, int color) {
+        this.positionSettings.get(position).stringColor = color;
+    }
+
+    public int getPositionStringColor(@NotNull StringLightsPosition position) {
+        return this.positionSettings.get(position).stringColor;
+    }
+
+    /**
+     * Sets the number of bulbs on a string. {@link #AUTO_BULB_COUNT} calculates the count from the string length.
+     */
+    public void setPositionBulbCount(@NotNull StringLightsPosition position, int bulbCount) {
+        int resolved = Mth.clamp(bulbCount, AUTO_BULB_COUNT, MAX_CUSTOM_BULB_COUNT);
+        PositionSettings settings = this.positionSettings.get(position);
+        if (settings.bulbCount != resolved) {
+            settings.bulbCount = resolved;
+            settings.rebuildRequested = true;
+        }
+    }
+
+    public int getPositionBulbCount(@NotNull StringLightsPosition position) {
+        return this.positionSettings.get(position).bulbCount;
+    }
+
+    /**
+     * Sets per-bulb size multipliers, going from the start to the end of the string.<br>
+     * The list repeats when the string has more bulbs than entries.<br>
+     * {@code null} entries keep the default (randomly varied) size of their bulbs.
+     */
+    public void setPositionBulbSizes(@NotNull StringLightsPosition position, @NotNull List<Float> sizeMultipliers) {
+        List<Float> sanitized = new ArrayList<>(sizeMultipliers.size());
+        for (Float multiplier : sizeMultipliers) {
+            sanitized.add(((multiplier != null) && Float.isFinite(multiplier)) ? Mth.clamp(multiplier, MIN_BULB_SIZE_MULTIPLIER, MAX_BULB_SIZE_MULTIPLIER) : null);
+        }
+        PositionSettings settings = this.positionSettings.get(position);
+        if (settings.bulbSizes.equals(sanitized)) {
+            return;
+        }
+        settings.bulbSizes = Collections.unmodifiableList(sanitized);
+        StringLight light = this.strings.get(position);
+        if (light != null) {
+            applyBulbSizes(light, settings);
+        }
+    }
+
+    @NotNull
+    public List<Float> getPositionBulbSizes(@NotNull StringLightsPosition position) {
+        return this.positionSettings.get(position).bulbSizes;
+    }
+
+    /**
+     * Sets per-bulb ARGB colors, going from the start to the end of the string.<br>
+     * The list repeats when the string has more bulbs than entries.<br>
+     * {@code null} entries keep the default color of their bulbs. Custom colors override the christmas mode.
+     */
+    public void setPositionBulbColors(@NotNull StringLightsPosition position, @NotNull List<Integer> colors) {
+        PositionSettings settings = this.positionSettings.get(position);
+        if (settings.bulbColors.equals(colors)) {
+            return;
+        }
+        settings.bulbColors = Collections.unmodifiableList(new ArrayList<>(colors));
+        StringLight light = this.strings.get(position);
+        if (light != null) {
+            applyBulbColors(light, settings);
+        }
+    }
+
+    @NotNull
+    public List<Integer> getPositionBulbColors(@NotNull StringLightsPosition position) {
+        return this.positionSettings.get(position).bulbColors;
     }
 
     @Override
@@ -147,6 +227,8 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
         boolean scaleChanged = Math.abs(this.scale - this.lastScale) > 0.001F;
         if (sizeChanged || scaleChanged || this.strings.isEmpty()) {
             rebuildStrings(overlayWidth, overlayHeight);
+        } else {
+            rebuildRequestedStrings(overlayWidth, overlayHeight);
         }
 
         float deltaSeconds = computeDeltaSeconds(sizeChanged || scaleChanged);
@@ -160,14 +242,26 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
     private void rebuildStrings(int width, int height) {
         this.strings.clear();
         for (StringLightsPosition position : StringLightsPosition.values()) {
-            this.strings.put(position, createString(position, width, height));
+            this.strings.put(position, createString(position, width, height, null));
+            this.positionSettings.get(position).rebuildRequested = false;
         }
         this.lastWidth = width;
         this.lastHeight = height;
         this.lastScale = this.scale;
     }
 
-    private StringLight createString(StringLightsPosition position, int width, int height) {
+    private void rebuildRequestedStrings(int width, int height) {
+        for (var entry : this.positionSettings.entrySet()) {
+            if (entry.getValue().rebuildRequested) {
+                StringLightsPosition position = entry.getKey();
+                this.strings.put(position, createString(position, width, height, this.strings.get(position)));
+                entry.getValue().rebuildRequested = false;
+            }
+        }
+    }
+
+    private StringLight createString(StringLightsPosition position, int width, int height, @Nullable StringLight previous) {
+        PositionSettings settings = this.positionSettings.get(position);
         StringLight light = new StringLight(position);
         light.startX = position.startX * Math.max(1, width - 1) + position.startOffsetX;
         light.startY = position.startY * Math.max(1, height - 1) + position.startOffsetY;
@@ -178,18 +272,22 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
         light.length = Mth.sqrt(dx * dx + dy * dy);
         light.sag = light.length * position.sagFactor * (0.75F + 0.25F * this.scale);
         light.windAmplitude = light.length * 0.015F * position.windMultiplier;
-        light.windSpeed = nextRange(0.35F, 0.9F);
-        light.windPhase = this.random.nextFloat() * ((float)Math.PI * 2.0F);
-        light.windTime = this.random.nextFloat() * ((float)Math.PI * 2.0F);
+        if (previous != null) {
+            // Strings get rebuilt when their bulb count changes, so keep their sway going to avoid a visible jump.
+            light.windSpeed = previous.windSpeed;
+            light.windPhase = previous.windPhase;
+            light.windTime = previous.windTime;
+        } else {
+            light.windSpeed = nextRange(0.35F, 0.9F);
+            light.windPhase = this.random.nextFloat() * ((float)Math.PI * 2.0F);
+            light.windTime = this.random.nextFloat() * ((float)Math.PI * 2.0F);
+        }
 
-        int bulbCount = computeBulbCount(light.length, position.densityMultiplier);
-        float bulbBaseSize = BASE_BULB_SIZE * this.scale * position.sizeMultiplier;
-        float maxBulbSize = 0.0F;
+        int bulbCount = resolveBulbCount(settings.bulbCount, light.length, BASE_BULB_SPACING * this.scale, position.densityMultiplier);
         for (int i = 0; i < bulbCount; i++) {
             LightBulb bulb = new LightBulb();
             bulb.t = (i + 1) / (float)(bulbCount + 1);
-            bulb.size = bulbBaseSize * nextRange(0.75F, 1.25F);
-            maxBulbSize = Math.max(maxBulbSize, bulb.size);
+            bulb.randomSizeFactor = nextRange(0.75F, 1.25F);
             bulb.baseBrightness = nextRange(0.78F, 1.15F);
             bulb.flickerSpeed = nextRange(0.25F, 0.65F);
             bulb.flickerPhase = this.random.nextFloat() * ((float)Math.PI * 2.0F);
@@ -197,22 +295,64 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
             bulb.christmasRgb = CHRISTMAS_COLORS[this.random.nextInt(CHRISTMAS_COLORS.length)];
             light.bulbs.add(bulb);
         }
-        light.maxBulbSize = maxBulbSize;
+        applyBulbSizes(light, settings);
+        applyBulbColors(light, settings);
 
         return light;
     }
 
-    private int computeBulbCount(float length, float densityMultiplier) {
+    static int resolveBulbCount(int configuredBulbCount, float length, float spacing, float densityMultiplier) {
+        if (configuredBulbCount > AUTO_BULB_COUNT) {
+            return Math.min(configuredBulbCount, MAX_CUSTOM_BULB_COUNT);
+        }
         if (length <= 0.1F) {
             return 0;
         }
-        float spacing = BASE_BULB_SPACING * this.scale;
         int count = Mth.floor((length / spacing) * densityMultiplier + 0.5F);
-        return Mth.clamp(count, MIN_BULBS, MAX_BULBS);
+        return Mth.clamp(count, MIN_AUTO_BULBS, MAX_AUTO_BULBS);
+    }
+
+    /**
+     * Returns the pattern entry of the bulb at the given index, repeating the pattern when there are more bulbs than entries.
+     * Returns {@code null} for empty patterns and for entries that should keep the bulb's default value.
+     */
+    @Nullable
+    static <T> T resolvePatternEntry(@NotNull List<T> pattern, int bulbIndex) {
+        if (pattern.isEmpty()) {
+            return null;
+        }
+        return pattern.get(bulbIndex % pattern.size());
+    }
+
+    private void applyBulbSizes(@NotNull StringLight light, @NotNull PositionSettings settings) {
+        float bulbBaseSize = BASE_BULB_SIZE * this.scale * light.position.sizeMultiplier;
+        float maxBulbSize = 0.0F;
+        for (int i = 0; i < light.bulbs.size(); i++) {
+            LightBulb bulb = light.bulbs.get(i);
+            Float customMultiplier = resolvePatternEntry(settings.bulbSizes, i);
+            bulb.size = bulbBaseSize * ((customMultiplier != null) ? customMultiplier : bulb.randomSizeFactor);
+            maxBulbSize = Math.max(maxBulbSize, bulb.size);
+        }
+        light.maxBulbSize = maxBulbSize;
+    }
+
+    private void applyBulbColors(@NotNull StringLight light, @NotNull PositionSettings settings) {
+        for (int i = 0; i < light.bulbs.size(); i++) {
+            LightBulb bulb = light.bulbs.get(i);
+            Integer customColor = resolvePatternEntry(settings.bulbColors, i);
+            bulb.hasCustomColor = (customColor != null);
+            if (customColor != null) {
+                bulb.customRgb = customColor & 0x00FFFFFF;
+                bulb.customAlphaScale = resolveAlphaScale(customColor);
+            }
+        }
     }
 
     private void updateAnimation(float deltaSeconds) {
         for (StringLight light : this.strings.values()) {
+            if (!this.positionSettings.get(light.position).enabled) {
+                continue;
+            }
             light.windTime += deltaSeconds * light.windSpeed;
             for (LightBulb bulb : light.bulbs) {
                 bulb.flickerTime += deltaSeconds * bulb.flickerSpeed * this.flickerSpeed;
@@ -223,19 +363,15 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
     private void renderStrings(GuiGraphics graphics, int overlayX, int overlayY, int overlayWidth, int overlayHeight) {
         float stringThickness = Math.max(1.0F, BASE_STRING_THICKNESS * this.scale);
 
-        for (var entry : this.strings.entrySet()) {
-            StringLightsPosition position = entry.getKey();
-            if (!isPositionEnabled(position)) {
+        for (StringLight light : this.strings.values()) {
+            PositionSettings settings = this.positionSettings.get(light.position);
+            if (!settings.enabled) {
                 continue;
             }
-            boolean christmasMode = resolveChristmasMode(position);
-            ColorSettings colorSettings = this.positionColors.get(position);
-            int baseColor = colorSettings != null ? colorSettings.color : this.baseColor;
-            float alphaScale = colorSettings != null ? colorSettings.alphaScale : this.baseAlphaScale;
+            boolean christmasMode = (settings.christmasMode != null) ? settings.christmasMode : this.christmasMode;
+            int baseColor = (settings.color != null) ? settings.color.color : this.baseColor;
+            float alphaScale = (settings.color != null) ? settings.color.alphaScale : this.baseAlphaScale;
             int baseRgb = baseColor & 0x00FFFFFF;
-            int stringAlpha = Mth.clamp(Mth.floor(210 * alphaScale), 0, 255);
-            int stringColor = (stringAlpha << 24) | STRING_RGB;
-            StringLight light = entry.getValue();
             float midX = (light.startX + light.endX) * 0.5F;
             float midY = (light.startY + light.endY) * 0.5F;
             float windScale = this.windStrength * light.position.windMultiplier;
@@ -243,7 +379,7 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
             float windOffsetY = Mth.cos(light.windTime * 0.7F + light.windPhase) * light.windAmplitude * 0.2F * windScale;
             float controlX = midX + windOffset;
             float controlY = midY + light.sag + windOffsetY;
-            if (position == StringLightsPosition.BOTTOM_LEFT_TO_BOTTOM_RIGHT) {
+            if (light.position == StringLightsPosition.BOTTOM_LEFT_TO_BOTTOM_RIGHT) {
                 float glowHalf = light.maxBulbSize * 1.05F;
                 float margin = BOTTOM_STRING_BOTTOM_MARGIN + glowHalf + stringThickness * 0.5F;
                 float maxCurveY = overlayHeight - margin;
@@ -253,7 +389,9 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
                 }
             }
 
-            renderStringLine(graphics, overlayX, overlayY, overlayWidth, overlayHeight, light, controlX, controlY, stringThickness, stringColor);
+            if (FastColor.ARGB32.alpha(settings.stringColor) > 0) {
+                renderStringLine(graphics, overlayX, overlayY, overlayWidth, overlayHeight, light, controlX, controlY, stringThickness, settings.stringColor);
+            }
             renderBulbs(graphics, overlayX, overlayY, overlayWidth, overlayHeight, light, controlX, controlY, christmasMode, baseRgb, alphaScale);
         }
     }
@@ -273,14 +411,19 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
 
     private void renderBulbs(GuiGraphics graphics, int overlayX, int overlayY, int overlayWidth, int overlayHeight, StringLight light, float controlX, float controlY, boolean christmasMode, int baseRgb, float baseAlphaScale) {
         for (LightBulb bulb : light.bulbs) {
+            if (bulb.size <= 0.0F) {
+                continue;
+            }
             float x = bezier(light.startX, controlX, light.endX, bulb.t);
             float y = bezier(light.startY, controlY, light.endY, bulb.t);
 
             float flicker = 0.75F + 0.25F * Mth.sin(bulb.flickerTime + bulb.flickerPhase);
             float intensity = bulb.baseBrightness * (0.65F + 0.35F * flicker);
             float colorBrightness = Mth.clamp(intensity, 0.4F, 1.4F);
-            int rgb = applyBrightness(christmasMode ? bulb.christmasRgb : baseRgb, colorBrightness);
-            float alphaScale = baseAlphaScale * Mth.clamp(0.55F + 0.45F * intensity, 0.0F, 1.0F);
+            int bulbRgb = bulb.hasCustomColor ? bulb.customRgb : (christmasMode ? bulb.christmasRgb : baseRgb);
+            float bulbAlphaScale = bulb.hasCustomColor ? bulb.customAlphaScale : baseAlphaScale;
+            int rgb = applyBrightness(bulbRgb, colorBrightness);
+            float alphaScale = bulbAlphaScale * Mth.clamp(0.55F + 0.45F * intensity, 0.0F, 1.0F);
             int alpha = Mth.clamp(Mth.floor(255 * alphaScale), 0, 255);
 
             float glowSize = bulb.size * 2.1F;
@@ -353,9 +496,13 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
         return deltaSeconds;
     }
 
-    private boolean resolveChristmasMode(@NotNull StringLightsPosition position) {
-        Boolean override = this.positionChristmasModes.get(position);
-        return override != null ? override : this.christmasMode;
+    @NotNull
+    private static EnumMap<StringLightsPosition, PositionSettings> createPositionSettings() {
+        EnumMap<StringLightsPosition, PositionSettings> settings = new EnumMap<>(StringLightsPosition.class);
+        for (StringLightsPosition position : StringLightsPosition.values()) {
+            settings.put(position, new PositionSettings());
+        }
+        return settings;
     }
 
     @Override
@@ -441,16 +588,36 @@ public class StringLightsOverlay extends AbstractWidget implements NavigatableWi
 
     private static final class LightBulb {
         private float t;
+        private float randomSizeFactor;
         private float size;
         private float baseBrightness;
         private float flickerSpeed;
         private float flickerPhase;
         private float flickerTime;
         private int christmasRgb;
+        private boolean hasCustomColor;
+        private int customRgb;
+        private float customAlphaScale;
+    }
+
+    private static final class PositionSettings {
+        private boolean enabled = false;
+        @Nullable
+        private Boolean christmasMode = null;
+        @Nullable
+        private ColorSettings color = null;
+        private int stringColor = DEFAULT_STRING_COLOR;
+        private int bulbCount = AUTO_BULB_COUNT;
+        private boolean rebuildRequested = false;
+        @NotNull
+        private List<Float> bulbSizes = List.of();
+        @NotNull
+        private List<Integer> bulbColors = List.of();
     }
 
     private static final class ColorSettings {
         private int color;
         private float alphaScale;
     }
+
 }
