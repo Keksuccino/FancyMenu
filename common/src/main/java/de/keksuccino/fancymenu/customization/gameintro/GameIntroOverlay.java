@@ -217,7 +217,14 @@ public class GameIntroOverlay extends Overlay {
     }
 
     protected boolean endOfIntroReached() {
-        return this.endTracker.checkEndReached(this.intro, FancyMenu.getOptions().gameIntroIgnoreLoops.getValue());
+        return this.endTracker.checkEndReached(this.intro, this.ignoreIntroLoops());
+    }
+
+    /**
+     * Videos never loop on their own. They only loop when another user of the same shared video makes them loop, like a looping video background, so their loops always get ignored.
+     */
+    protected boolean ignoreIntroLoops() {
+        return (this.intro instanceof IVideo) || FancyMenu.getOptions().gameIntroIgnoreLoops.getValue();
     }
 
     protected void tickFadeOut(boolean endOfIntroReached) {

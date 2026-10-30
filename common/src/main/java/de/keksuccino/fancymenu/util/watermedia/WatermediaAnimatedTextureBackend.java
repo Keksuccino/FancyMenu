@@ -29,7 +29,7 @@ public class WatermediaAnimatedTextureBackend implements AutoCloseable {
     @NotNull
     protected final Object playerInitLock = new Object();
     @NotNull
-    protected final PlaybackLoopTracker loopTracker = new PlaybackLoopTracker();
+    protected final PlaybackLoopTracker loopTracker = new PlaybackLoopTracker(false);
 
     @Nullable
     protected volatile Object mrl;
