@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.video.nativevideo;
 
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
@@ -236,7 +237,7 @@ public class NativeVideoElement extends AbstractElement implements IVideoElement
         if (!VideoElementController.hasMetaFor(this.getInstanceIdentifier())) {
             VideoElementController.putMeta(this.getInstanceIdentifier(), new VideoElementController.VideoElementMeta(this.getInstanceIdentifier(), 1.0F, false));
         }
-        if (getSoundSourceByName(Objects.requireNonNullElse(this.soundSource.get(), SoundSource.MASTER.getName())) == null) {
+        if (SerializationHelper.INSTANCE.deserializeSoundSource(this.soundSource.get()) == null) {
             this.soundSource.set(SoundSource.MASTER.getName());
         }
     }
@@ -692,20 +693,7 @@ public class NativeVideoElement extends AbstractElement implements IVideoElement
 
     @NotNull
     protected SoundSource getSoundSourceOrDefault() {
-        String name = this.soundSource.get();
-        if (name != null) {
-            SoundSource source = getSoundSourceByName(name);
-            if (source != null) return source;
-        }
-        return SoundSource.MASTER;
-    }
-
-    @Nullable
-    public static SoundSource getSoundSourceByName(@NotNull String name) {
-        for (SoundSource source : SoundSource.values()) {
-            if (source.getName().equals(name)) return source;
-        }
-        return null;
+        return SerializationHelper.INSTANCE.deserializeSoundSource(SoundSource.MASTER, this.soundSource.get());
     }
 
     @NotNull

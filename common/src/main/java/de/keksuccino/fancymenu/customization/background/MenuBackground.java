@@ -103,6 +103,12 @@ public abstract class MenuBackground<B extends MenuBackground<?>> implements Ren
         return null;
     }
 
+    @Override
+    public void discardSnapshot(@NotNull Object snapshot) {
+        var e = LayoutEditorScreen.getCurrentInstance();
+        if (e != null) e.history.discardSnapshot((LayoutEditorHistory.Snapshot) snapshot);
+    }
+
     protected abstract void initConfigMenu(@NotNull ContextMenu menu, @NotNull LayoutEditorScreen editor);
 
     @NotNull

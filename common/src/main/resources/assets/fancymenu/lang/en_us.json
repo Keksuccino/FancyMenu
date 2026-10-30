@@ -3434,5 +3434,18 @@
   "fancymenu.decoration_overlays.string_lights.string.light_sizes": "Individual Light Sizes",
   "fancymenu.decoration_overlays.string_lights.string.light_sizes.desc": "Gives every light on the string its own size.\nJust enter a comma-separated list of sizes, like: 1.0, 1.5, 0.5\n\nThe first value is for the first light, the second one for the\nnext light, and so on. If there are more lights than values,\nthe list starts over. Lights are counted from where the string\nstarts (the first spot in its name, or the top for loose strings).\n\n1.0 is the normal size and 0 hides a light. Leave a value empty\nto keep the light's default size. Sizes go from 0.0 to 10.0.",
   "fancymenu.decoration_overlays.string_lights.string.light_colors": "Individual Light Colors",
-  "fancymenu.decoration_overlays.string_lights.string.light_colors.desc": "Gives every light on the string its own color.\nJust enter a comma-separated list of HEX colors, like: #FF0000, #00FF00, #0000FF\n\nThe first color is for the first light, the second one for the\nnext light, and so on. If there are more lights than colors,\nthe list starts over. Lights are counted from where the string\nstarts (the first spot in its name, or the top for loose strings).\n\nLeave a value empty to keep the light's normal color.\nThese colors win over the light color and the Christmas lights mode."
+  "fancymenu.decoration_overlays.string_lights.string.light_colors.desc": "Gives every light on the string its own color.\nJust enter a comma-separated list of HEX colors, like: #FF0000, #00FF00, #0000FF\n\nThe first color is for the first light, the second one for the\nnext light, and so on. If there are more lights than colors,\nthe list starts over. Lights are counted from where the string\nstarts (the first spot in its name, or the top for loose strings).\n\nLeave a value empty to keep the light's normal color.\nThese colors win over the light color and the Christmas lights mode.",
+  "fancymenu.elements.widgets.hover_sound_volume": "Hover Sound Volume",
+  "fancymenu.elements.widgets.hover_sound_volume.desc": "How loud the hover sound plays, from 0.0 (muted) to 1.0 (full volume).\n\nThe volume slider of its sound channel still applies on top of this.",
+  "fancymenu.elements.widgets.hover_sound_channel": "Hover Sound Channel: %s",
+  "fancymenu.elements.widgets.hover_sound_channel.desc": "The Minecraft sound channel the hover sound plays on.\n\nThe sound follows the volume slider of that channel in Minecraft's sound settings.",
+  "fancymenu.elements.widgets.unhover_sound_volume": "Unhover Sound Volume",
+  "fancymenu.elements.widgets.unhover_sound_volume.desc": "How loud the unhover sound plays, from 0.0 (muted) to 1.0 (full volume).\n\nThe volume slider of its sound channel still applies on top of this.",
+  "fancymenu.elements.widgets.unhover_sound_channel": "Unhover Sound Channel: %s",
+  "fancymenu.elements.widgets.unhover_sound_channel.desc": "The Minecraft sound channel the unhover sound plays on.\n\nThe sound follows the volume slider of that channel in Minecraft's sound settings.",
+  "fancymenu.global_customizations.button_click_sound.volume": "Custom Button Click Sound Volume",
+  "fancymenu.global_customizations.button_click_sound.volume.slider_label": "Custom Button Click Sound Volume: %s",
+  "fancymenu.global_customizations.button_click_sound.volume.desc": "How loud the custom button click sound plays, from 0.0 (muted) to 1.0 (full volume).\n\nThe volume slider of its sound channel still applies on top of this.",
+  "fancymenu.global_customizations.button_click_sound.sound_channel": "Custom Button Click Sound Channel: %s",
+  "fancymenu.global_customizations.button_click_sound.sound_channel.desc": "The Minecraft sound channel the custom button click sound plays on.\n\nThe sound follows the volume slider of that channel in Minecraft's sound settings."
 }

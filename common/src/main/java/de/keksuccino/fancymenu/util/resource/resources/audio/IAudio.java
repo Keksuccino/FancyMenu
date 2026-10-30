@@ -48,6 +48,18 @@ public interface IAudio extends PlayableResourceWithAudio {
     }
 
     /**
+     * Plays the audio from the beginning, on the given sound channel and with the given volume.<br>
+     * Audio resources are shared by everything that uses the same source, so per-use channels and volumes have to get
+     * applied right before every playback instead of only once.
+     */
+    default void playFromStart(@NotNull SoundSource channel, float volume) {
+        this.stop();
+        this.setSoundChannel(channel);
+        this.setVolume(volume);
+        this.play();
+    }
+
+    /**
      * Clamps the given volume to the 0.0 to 1.0 range used by {@link #setVolume(float)}.<br>
      * NaN, for example from a hand-edited file, falls back to full volume.
      */
