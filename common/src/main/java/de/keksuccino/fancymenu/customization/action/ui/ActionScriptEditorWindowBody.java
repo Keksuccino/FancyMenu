@@ -462,9 +462,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
 
         // Reopens only after all entries got added, because the restored sub menu path gets resolved by entry identifiers
         if (reopen || wasOpen) {
-            float reopenX = this.hasStoredRightClickContextMenuPosition() ? this.rightClickContextMenuLastOpenX : (float)this.getRenderMouseX();
-            float reopenY = this.hasStoredRightClickContextMenuPosition() ? this.rightClickContextMenuLastOpenY : (float)this.getRenderMouseY();
-            this.openRightClickContextMenuAtMouse(reopenX, reopenY, resolvedEntryPath);
+            this.openRightClickContextMenuAtMouse(true, resolvedEntryPath);
         }
 
     }
@@ -603,10 +601,6 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             return null;
         }
         return this.findEntryForExecutable(this.contextMenuTargetExecutable);
-    }
-
-    protected boolean hasStoredRightClickContextMenuPosition() {
-        return !Float.isNaN(this.rightClickContextMenuLastOpenX) && !Float.isNaN(this.rightClickContextMenuLastOpenY);
     }
 
     @Nullable
@@ -1459,7 +1453,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                 }
                 this.contextMenuTargetExecutable = (target != null) ? target.executable : null;
                 if (this.rightClickContextMenu != null) {
-                    this.openRightClickContextMenuAtMouse((float)mouseX, (float)mouseY, null);
+                    this.openRightClickContextMenuAtMouse(false, null);
                 }
                 return true;
             }
@@ -2846,14 +2840,26 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         return null;
     }
 
-    protected void openRightClickContextMenuAtMouse(float inScreenX, float inScreenY, @Nullable List<String> entryPath) {
+    /**
+     * Opens the right-click menu at the mouse, or with {@code reopen} at the spot it got last opened at.<br>
+     * The position is in screen space, because the {@link ContextMenuHandler} renders menus on top of the whole screen,
+     * so the body-local mouse coordinates this window body receives can't be used for it.
+     */
+    protected void openRightClickContextMenuAtMouse(boolean reopen, @Nullable List<String> entryPath) {
         if (this.rightClickContextMenu == null) {
             return;
         }
-        this.rightClickContextMenuLastOpenX = inScreenX;
-        this.rightClickContextMenuLastOpenY = inScreenY;
+        int mX = MouseInput.getMouseX();
+        if (reopen && !Float.isNaN(this.rightClickContextMenuLastOpenX)) mX = (int) this.rightClickContextMenuLastOpenX;
+        int mY = MouseInput.getMouseY();
+        if (reopen && !Float.isNaN(this.rightClickContextMenuLastOpenY)) mY = (int) this.rightClickContextMenuLastOpenY;
+        if (reopen) {
+            this.rightClickContextMenu.supressOpenAnimationForNextOpen();
+        }
         List<String> path = (entryPath != null && !entryPath.isEmpty()) ? new ArrayList<>(entryPath) : null;
-        ContextMenuHandler.INSTANCE.setAndOpenAtMouse(this.rightClickContextMenu, path);
+        ContextMenuHandler.INSTANCE.setAndOpen(this.rightClickContextMenu, mX, mY, path);
+        this.rightClickContextMenuLastOpenX = mX;
+        this.rightClickContextMenuLastOpenY = mY;
     }
 
     protected boolean isInsideActionsScrollArea(int mouseX, int mouseY) {
