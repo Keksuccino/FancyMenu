@@ -64,13 +64,6 @@ public abstract class MixinConnectScreen extends Screen {
         if (Listeners.ON_START_JOINING_SERVER.hasInstancesListening()) Listeners.ON_START_JOINING_SERVER.onStartJoiningServer(getServerIp_FancyMenu(address, $$3));
     }
 
-    @Inject(at = @At("HEAD"), method = "connect", cancellable = true)
-    private void onConnectFancyMenu(Minecraft $$0, ServerAddress address, ServerData $$2, TransferState $$3, CallbackInfo info) {
-        if (address.getHost().equals("%fancymenu_dummy_address%")) {
-            info.cancel();
-        }
-    }
-
     @Inject(method = "updateStatus", at = @At("RETURN"))
     private void afterUpdateStatusFancyMenu(Component component, CallbackInfo info) {
         if (this.statusTextFancyMenu != null) {
