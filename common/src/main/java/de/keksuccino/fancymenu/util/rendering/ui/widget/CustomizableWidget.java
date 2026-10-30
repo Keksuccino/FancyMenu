@@ -207,19 +207,14 @@ public interface CustomizableWidget {
     SoundSource getCustomClickSoundChannelFancyMenu();
 
     /**
-     * Plays the custom click sound from the beginning, using its configured sound channel and volume.<br>
-     * Audio resources are shared by everything that uses the same source, so the channel and volume get applied right before
-     * every playback instead of only once.
+     * Plays the custom click sound from the beginning, using its configured sound channel and volume.
      *
      * @return True if the widget has a custom click sound, so the vanilla click sound should not play.
      */
     default boolean playCustomClickSoundFancyMenu() {
         IAudio sound = this.getCustomClickSoundFancyMenu();
         if (sound == null) return false;
-        sound.stop();
-        sound.setSoundChannel(this.getCustomClickSoundChannelFancyMenu());
-        sound.setVolume(this.getCustomClickSoundVolumeFancyMenu());
-        sound.play();
+        sound.playFromStart(this.getCustomClickSoundChannelFancyMenu(), this.getCustomClickSoundVolumeFancyMenu());
         return true;
     }
 
@@ -233,6 +228,18 @@ public interface CustomizableWidget {
         if (a != null) a.stop();
     }
 
+    /**
+     * Sets the base volume of the hover sound. Gets clamped to 0.0 to 1.0.
+     */
+    void setHoverSoundVolumeFancyMenu(float volume);
+
+    float getHoverSoundVolumeFancyMenu();
+
+    void setHoverSoundChannelFancyMenu(@NotNull SoundSource channel);
+
+    @NotNull
+    SoundSource getHoverSoundChannelFancyMenu();
+
     void setUnhoverSoundFancyMenu(@Nullable IAudio sound);
 
     @Nullable
@@ -242,6 +249,18 @@ public interface CustomizableWidget {
         IAudio a = this.getUnhoverSoundFancyMenu();
         if (a != null) a.stop();
     }
+
+    /**
+     * Sets the base volume of the unhover sound. Gets clamped to 0.0 to 1.0.
+     */
+    void setUnhoverSoundVolumeFancyMenu(float volume);
+
+    float getUnhoverSoundVolumeFancyMenu();
+
+    void setUnhoverSoundChannelFancyMenu(@NotNull SoundSource channel);
+
+    @NotNull
+    SoundSource getUnhoverSoundChannelFancyMenu();
 
     void setHiddenFancyMenu(boolean hidden);
 

@@ -154,18 +154,10 @@ public class AudioElementBuilder extends ElementBuilder<AudioElement, AudioEdito
         element.updateVolume();
 
         String soundSource = serialized.getValue("sound_source");
-        if (soundSource != null) element.setSoundSource(Objects.requireNonNullElse(getSoundSourceByName(soundSource), SoundSource.MASTER));
+        if (soundSource != null) element.setSoundSource(deserializeSoundSource(SoundSource.MASTER, soundSource));
 
         return element;
 
-    }
-
-    @Nullable
-    protected static SoundSource getSoundSourceByName(@NotNull String name) {
-        for (SoundSource source : SoundSource.values()) {
-            if (source.getName().equals(name)) return source;
-        }
-        return null;
     }
 
     @Override

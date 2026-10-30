@@ -193,6 +193,12 @@ public abstract class AbstractDecorationOverlay<O extends AbstractDecorationOver
     }
 
     @Override
+    public void discardSnapshot(@NotNull Object snapshot) {
+        var e = LayoutEditorScreen.getCurrentInstance();
+        if (e != null) e.history.discardSnapshot((LayoutEditorHistory.Snapshot) snapshot);
+    }
+
+    @Override
     public @NotNull List<O> getFilteredStackableObjectsList(@Nullable ConsumingSupplier<O, Boolean> filter) {
         return List.of((O)this);
     }

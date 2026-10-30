@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.background.backgrounds.video.nativevideo;
 
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.renderpearl.backend.opengl.GlStateManager;
 import com.mojang.renderpearl.backend.opengl.GlTexture;
@@ -767,20 +768,7 @@ public class NativeVideoMenuBackground extends MenuBackground<NativeVideoMenuBac
 
     @NotNull
     protected SoundSource getSoundSourceOrDefault() {
-        String name = this.soundSource.get();
-        if (name != null) {
-            SoundSource source = getSoundSourceByName(name);
-            if (source != null) return source;
-        }
-        return SoundSource.MASTER;
-    }
-
-    @Nullable
-    protected static SoundSource getSoundSourceByName(@NotNull String name) {
-        for (SoundSource source : SoundSource.values()) {
-            if (source.getName().equals(name)) return source;
-        }
-        return null;
+        return SerializationHelper.INSTANCE.deserializeSoundSource(SoundSource.MASTER, this.soundSource.get());
     }
 
     @NotNull

@@ -800,6 +800,31 @@ public class CustomizationOverlayUI {
                         Component.translatable("fancymenu.global_customizations.button_click_sound"), true, null, true, true, true)
                 .setIcon(MaterialIcons.VOLUME_UP);
 
+        ContextMenuUtils.addRangeSliderInputContextMenuEntryTo(
+                        globalCustomizationsMenu,
+                        "button_click_sound_volume",
+                        Component.translatable("fancymenu.global_customizations.button_click_sound.volume"),
+                        () -> (double) GlobalCustomizationHandler.getCustomButtonClickSoundVolume(),
+                        value -> FancyMenu.getOptions().globalButtonClickSoundVolume.setValue(IAudio.clampVolume(value.floatValue())),
+                        true,
+                        FancyMenu.getOptions().globalButtonClickSoundVolume.getDefaultValue().doubleValue(),
+                        0.0D,
+                        1.0D,
+                        value -> Component.translatable("fancymenu.global_customizations.button_click_sound.volume.slider_label", ((int) Math.round(IAudio.clampVolume(value.floatValue()) * 100.0F)) + "%"))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.global_customizations.button_click_sound.volume.desc")))
+                .setIcon(MaterialIcons.VOLUME_UP);
+
+        globalCustomizationsMenu.addValueCycleEntry("button_click_sound_channel",
+                        CommonCycles.cycle(
+                                        "fancymenu.global_customizations.button_click_sound.sound_channel",
+                                        Arrays.asList(SoundSource.values()),
+                                        GlobalCustomizationHandler.getCustomButtonClickSoundChannel())
+                                .setValueNameSupplier(soundSource -> Component.translatable("soundCategory." + soundSource.getName()).getString())
+                                .setValueComponentStyleSupplier(soundSource -> Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))
+                                .addCycleListener(soundSource -> FancyMenu.getOptions().globalButtonClickSoundChannel.setValue(soundSource.getName())))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.global_customizations.button_click_sound.sound_channel.desc")))
+                .setIcon(MaterialIcons.SPEAKER);
+
         globalCustomizationsMenu.addSeparatorEntry("separator_after_button_textures");
 
         ContextMenu sliderTexturesMenu = new ContextMenu();

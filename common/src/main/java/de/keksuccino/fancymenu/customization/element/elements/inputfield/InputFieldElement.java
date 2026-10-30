@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.element.elements.inputfield;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.WidgetSoundSettings;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.ListUtils;
@@ -16,7 +17,6 @@ import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -41,10 +41,11 @@ public class InputFieldElement extends AbstractElement {
     public String lastValue = "";
     public boolean navigatable = true;
     public final Property<ResourceSupplier<IAudio>> hoverSound = putProperty(Property.resourceSupplierProperty(IAudio.class, "hoversound", null, "fancymenu.elements.button.hoversound", true, true, true, null));
+    public final WidgetSoundSettings hoverSoundSettings = new WidgetSoundSettings(this, "hover_sound");
     public final Property<ResourceSupplier<IAudio>> unhoverAudio = putProperty(Property.resourceSupplierProperty(IAudio.class, "unhover_audio", null, "fancymenu.elements.widgets.unhover_audio", true, true, true, null));
+    public final WidgetSoundSettings unhoverSoundSettings = new WidgetSoundSettings(this, "unhover_sound");
     public final Property<ResourceSupplier<IAudio>> clickSound = putProperty(Property.resourceSupplierProperty(IAudio.class, "clicksound", null, "fancymenu.elements.button.clicksound", true, true, true, null));
-    public final Property.FloatProperty clickSoundVolume = putProperty(Property.floatProperty("click_sound_volume", 1.0F, "fancymenu.elements.widgets.click_sound_volume", Property.NumericInputBehavior.<Float>builder().rangeInput(0.0F, 1.0F).build()));
-    public final Property<SoundSource> clickSoundChannel = putProperty(Property.soundSourceProperty("click_sound_channel", SoundSource.MASTER, "fancymenu.elements.widgets.click_sound_channel"));
+    public final WidgetSoundSettings clickSoundSettings = new WidgetSoundSettings(this, "click_sound");
 
     public InputFieldElement(ElementBuilder<InputFieldElement, InputFieldEditorElement> builder) {
         super(builder);
@@ -152,10 +153,14 @@ public class InputFieldElement extends AbstractElement {
             ResourceSupplier<IAudio> unhover = this.unhoverAudio.get();
             ResourceSupplier<IAudio> click = this.clickSound.get();
             w.setHoverSoundFancyMenu((hover != null) ? hover.get() : null);
+            w.setHoverSoundVolumeFancyMenu(this.hoverSoundSettings.getVolume());
+            w.setHoverSoundChannelFancyMenu(this.hoverSoundSettings.getChannel());
             w.setUnhoverSoundFancyMenu((unhover != null) ? unhover.get() : null);
+            w.setUnhoverSoundVolumeFancyMenu(this.unhoverSoundSettings.getVolume());
+            w.setUnhoverSoundChannelFancyMenu(this.unhoverSoundSettings.getChannel());
             w.setCustomClickSoundFancyMenu((click != null) ? click.get() : null);
-            w.setCustomClickSoundVolumeFancyMenu(this.clickSoundVolume.getFloat());
-            w.setCustomClickSoundChannelFancyMenu(this.clickSoundChannel.tryGetNonNullElse(SoundSource.MASTER));
+            w.setCustomClickSoundVolumeFancyMenu(this.clickSoundSettings.getVolume());
+            w.setCustomClickSoundChannelFancyMenu(this.clickSoundSettings.getChannel());
         }
     }
 

@@ -3434,5 +3434,18 @@
   "fancymenu.placeholders.world.active_raid_alive_raiders_list": "Active Raid Alive Raiders List",
   "fancymenu.placeholders.world.active_raid_alive_raiders_list.desc": "§xFancyMenu needs to be installed on the server for this to work!\n\nReturns all raiders of the active raid that are still alive, separated by commas without spaces.\nEvery entry is built like 'mob_identifier#entity_uuid', for example 'minecraft:pillager#0d9a4b2e-5f1c-4a8e-9b3d-6c2f1e7a8b90'.\nThe active raid is the one whose raid bar is shown at the top of the screen.\nReturns an empty text when there's no active raid.",
   "fancymenu.requirements.world.is_in_active_raid_area": "Is In Active Raid Area",
-  "fancymenu.requirements.world.is_in_active_raid_area.desc": "Checks if the player is in the area of an active raid, which is when the raid bar is shown at the top of the screen.\n\n§xFancyMenu needs to be installed on the server for this to work!"
+  "fancymenu.requirements.world.is_in_active_raid_area.desc": "Checks if the player is in the area of an active raid, which is when the raid bar is shown at the top of the screen.\n\n§xFancyMenu needs to be installed on the server for this to work!",
+  "fancymenu.elements.widgets.hover_sound_volume": "Hover Sound Volume",
+  "fancymenu.elements.widgets.hover_sound_volume.desc": "How loud the hover sound plays, from 0.0 (muted) to 1.0 (full volume).\n\nThe volume slider of its sound channel still applies on top of this.",
+  "fancymenu.elements.widgets.hover_sound_channel": "Hover Sound Channel: %s",
+  "fancymenu.elements.widgets.hover_sound_channel.desc": "The Minecraft sound channel the hover sound plays on.\n\nThe sound follows the volume slider of that channel in Minecraft's sound settings.",
+  "fancymenu.elements.widgets.unhover_sound_volume": "Unhover Sound Volume",
+  "fancymenu.elements.widgets.unhover_sound_volume.desc": "How loud the unhover sound plays, from 0.0 (muted) to 1.0 (full volume).\n\nThe volume slider of its sound channel still applies on top of this.",
+  "fancymenu.elements.widgets.unhover_sound_channel": "Unhover Sound Channel: %s",
+  "fancymenu.elements.widgets.unhover_sound_channel.desc": "The Minecraft sound channel the unhover sound plays on.\n\nThe sound follows the volume slider of that channel in Minecraft's sound settings.",
+  "fancymenu.global_customizations.button_click_sound.volume": "Custom Button Click Sound Volume",
+  "fancymenu.global_customizations.button_click_sound.volume.slider_label": "Custom Button Click Sound Volume: %s",
+  "fancymenu.global_customizations.button_click_sound.volume.desc": "How loud the custom button click sound plays, from 0.0 (muted) to 1.0 (full volume).\n\nThe volume slider of its sound channel still applies on top of this.",
+  "fancymenu.global_customizations.button_click_sound.sound_channel": "Custom Button Click Sound Channel: %s",
+  "fancymenu.global_customizations.button_click_sound.sound_channel.desc": "The Minecraft sound channel the custom button click sound plays on.\n\nThe sound follows the volume slider of that channel in Minecraft's sound settings."
 }
