@@ -2,6 +2,7 @@
 CHANGELOG | FANCYMENU v3.9.15 [ W I P !! Not public yet !! ]
 
 - Added Ukrainian translation (#1817)
+- Added "On Start Joining Server" listener, which triggers as soon as you start connecting to a server or Realm, even when the connection fails, and gives you the server's IP as `$$server_ip` (#1738)
 - Added the "Keybind Key" placeholder, which shows the key currently bound to a keybind (like "Space" for "key.jump") (#1676)
 - Added a Light Count option to every string of the String Lights overlay, to set an exact number of lights or let it fill automatically (#1563)
 - Added a String Color option to every string of the String Lights overlay, with alpha support to make the string see-through or hide it (#1563)
@@ -23,6 +24,7 @@ CHANGELOG | FANCYMENU v3.9.15 [ W I P !! Not public yet !! ]
 - Updated outdated texts in all translations so they match the current English descriptions (Delay Gate block, browser mute option, mouse button requirement, file and resource security notes, shader opacity and more)
 - The "Open to LAN" and "Report Player" buttons of the pause screen can now be customized separately (#1730)
 - Layouts made before this change still give the "Report Player" button the "Open to LAN" button's customizations, so they look the same as before (#1730)
+- Fixed "On Server Joined" and "On Server Left" actions crashing the game when they triggered their own listener again, like a disconnect action in "On Server Left"
 - Fixed the layout editor deleting the customizations of vanilla buttons that only show up in singleplayer or only in multiplayer when saving a layout in the other mode (#1730)
 - Fixed some Russian and Polish opacity settings being labeled as "transparency"
 - Fixed inconsistent shader terms in the Spanish (Mexico) translation
