@@ -34,7 +34,7 @@ public class NativeVideoMenuBackgroundBuilder extends MenuBackgroundBuilder<Nati
 
         // Fix for unknown sound channels
         String soundSource = deserializeTo.soundSource.getString();
-        if ((soundSource != null) && (NativeVideoMenuBackground.getSoundSourceByName(soundSource) == null)) {
+        if ((soundSource != null) && (deserializeSoundSource(soundSource) == null)) {
             deserializeTo.soundSource.set(SoundSource.MASTER.getName());
         }
 

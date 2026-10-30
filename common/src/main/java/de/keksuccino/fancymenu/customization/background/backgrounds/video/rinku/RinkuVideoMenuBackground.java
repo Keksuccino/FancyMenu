@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.background.backgrounds.video.rinku;
 
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.background.backgrounds.video.IVideoMenuBackground;
@@ -461,20 +462,7 @@ public class RinkuVideoMenuBackground extends MenuBackground<RinkuVideoMenuBackg
 
     @NotNull
     protected SoundSource getSoundSourceOrDefault() {
-        String name = this.soundSource.get();
-        if (name != null) {
-            SoundSource source = getSoundSourceByName(name);
-            if (source != null) return source;
-        }
-        return SoundSource.MASTER;
-    }
-
-    @Nullable
-    protected static SoundSource getSoundSourceByName(@NotNull String name) {
-        for (SoundSource source : SoundSource.values()) {
-            if (source.getName().equals(name)) return source;
-        }
-        return null;
+        return SerializationHelper.INSTANCE.deserializeSoundSource(SoundSource.MASTER, this.soundSource.get());
     }
 
 }

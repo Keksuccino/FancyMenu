@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ExecutableElement;
 import de.keksuccino.fancymenu.customization.element.elements.WidgetTooltipText;
+import de.keksuccino.fancymenu.customization.element.elements.WidgetSoundSettings;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
@@ -34,7 +35,6 @@ import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
-import net.minecraft.sounds.SoundSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -50,9 +50,9 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     private final RangeSlider templateDummySlider = new RangeSlider(0, 0, 0, 0, Component.empty(), 0.0D, 1.0D, 0.5D);
 
     public ResourceSupplier<IAudio> clickSound;
-    public final Property.FloatProperty clickSoundVolume = putProperty(Property.floatProperty("click_sound_volume", 1.0F, "fancymenu.elements.widgets.click_sound_volume", Property.NumericInputBehavior.<Float>builder().rangeInput(0.0F, 1.0F).build()));
-    public final Property<SoundSource> clickSoundChannel = putProperty(Property.soundSourceProperty("click_sound_channel", SoundSource.MASTER, "fancymenu.elements.widgets.click_sound_channel"));
+    public final WidgetSoundSettings clickSoundSettings = new WidgetSoundSettings(this, "click_sound");
     public ResourceSupplier<IAudio> hoverSound;
+    public final WidgetSoundSettings hoverSoundSettings = new WidgetSoundSettings(this, "hover_sound");
     @Nullable
     public String label;
     @Nullable
@@ -95,6 +95,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public final Property.IntegerProperty nineSliceSliderHandleBorderX = putProperty(Property.integerProperty("nine_slice_slider_handle_border_x", 5, "fancymenu.elements.slider.v2.handle.textures.nine_slice.border_x"));
     public final Property.IntegerProperty nineSliceSliderHandleBorderY = putProperty(Property.integerProperty("nine_slice_slider_handle_border_y", 5, "fancymenu.elements.slider.v2.handle.textures.nine_slice.border_y"));
     public final Property<ResourceSupplier<IAudio>> unhoverAudio = putProperty(Property.resourceSupplierProperty(IAudio.class, "unhover_audio", null, "fancymenu.elements.widgets.unhover_audio", true, true, true, null));
+    public final WidgetSoundSettings unhoverSoundSettings = new WidgetSoundSettings(this, "unhover_sound");
 
     private static final LayerScopedTemplateCache<ScreenCustomizationLayer, ButtonElement> TEMPLATE_CACHE = new LayerScopedTemplateCache<>(100L);
 
@@ -428,14 +429,20 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
 
     public void updateWidgetHoverSound() {
         if (this.getWidget() instanceof CustomizableWidget w) {
-            w.setHoverSoundFancyMenu((this.getPropertySource().hoverSound != null) ? this.getPropertySource().hoverSound.get() : null);
+            ButtonElement propertySource = this.getPropertySource();
+            w.setHoverSoundFancyMenu((propertySource.hoverSound != null) ? propertySource.hoverSound.get() : null);
+            w.setHoverSoundVolumeFancyMenu(propertySource.hoverSoundSettings.getVolume());
+            w.setHoverSoundChannelFancyMenu(propertySource.hoverSoundSettings.getChannel());
         }
     }
 
     public void updateWidgetUnhoverSound() {
         if (this.getWidget() instanceof CustomizableWidget w) {
-            ResourceSupplier<IAudio> supplier = this.getPropertySource().unhoverAudio.get();
+            ButtonElement propertySource = this.getPropertySource();
+            ResourceSupplier<IAudio> supplier = propertySource.unhoverAudio.get();
             w.setUnhoverSoundFancyMenu((supplier != null) ? supplier.get() : null);
+            w.setUnhoverSoundVolumeFancyMenu(propertySource.unhoverSoundSettings.getVolume());
+            w.setUnhoverSoundChannelFancyMenu(propertySource.unhoverSoundSettings.getChannel());
         }
     }
 
@@ -443,8 +450,8 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         if (this.getWidget() instanceof CustomizableWidget w) {
             ButtonElement propertySource = this.getPropertySource();
             w.setCustomClickSoundFancyMenu((propertySource.clickSound != null) ? propertySource.clickSound.get() : null);
-            w.setCustomClickSoundVolumeFancyMenu(propertySource.clickSoundVolume.getFloat());
-            w.setCustomClickSoundChannelFancyMenu(propertySource.clickSoundChannel.tryGetNonNullElse(SoundSource.MASTER));
+            w.setCustomClickSoundVolumeFancyMenu(propertySource.clickSoundSettings.getVolume());
+            w.setCustomClickSoundChannelFancyMenu(propertySource.clickSoundSettings.getChannel());
         }
     }
 
