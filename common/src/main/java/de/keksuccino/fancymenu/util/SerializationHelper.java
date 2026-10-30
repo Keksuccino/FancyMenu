@@ -85,16 +85,29 @@ public interface SerializationHelper {
     }
 
     /**
-     * Resolves a {@link SoundSource} by its {@link SoundSource#getName() name}.
+     * Resolves a {@link SoundSource} by its {@link SoundSource#getName() name}, ignoring case.
+     *
+     * @return The matching {@link SoundSource} or {@code null} if the name is unknown.
+     */
+    @Nullable
+    default SoundSource deserializeSoundSource(@Nullable String serialized) {
+        if (serialized != null) {
+            for (SoundSource source : SoundSource.values()) {
+                if (source.getName().equalsIgnoreCase(serialized)) return source;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Resolves a {@link SoundSource} by its {@link SoundSource#getName() name}, ignoring case.
+     *
+     * @return The matching {@link SoundSource} or the fallback value if the name is unknown.
      */
     @NotNull
     default SoundSource deserializeSoundSource(@NotNull SoundSource fallbackValue, @Nullable String serialized) {
-        if (serialized != null) {
-            for (SoundSource source : SoundSource.values()) {
-                if (source.getName().equals(serialized)) return source;
-            }
-        }
-        return fallbackValue;
+        SoundSource source = this.deserializeSoundSource(serialized);
+        return (source != null) ? source : fallbackValue;
     }
 
 }

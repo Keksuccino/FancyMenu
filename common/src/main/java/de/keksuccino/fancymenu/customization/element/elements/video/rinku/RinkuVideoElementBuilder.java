@@ -12,7 +12,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.util.Objects;
 
 public class RinkuVideoElementBuilder extends ElementBuilder<RinkuVideoElement, RinkuVideoEditorElement> {
 
@@ -45,7 +44,7 @@ public class RinkuVideoElementBuilder extends ElementBuilder<RinkuVideoElement, 
         element.loop = deserializeBoolean(element.loop, serialized.getValue("loop"));
         element.preserveAspectRatio = deserializeBoolean(element.preserveAspectRatio, serialized.getValue("preserve_aspect_ratio"));
         String soundSource = serialized.getValue("sound_source");
-        if (soundSource != null) element.soundSource = Objects.requireNonNullElse(getSoundSourceByName(soundSource), SoundSource.MASTER);
+        if (soundSource != null) element.soundSource = deserializeSoundSource(SoundSource.MASTER, soundSource);
 
         return element;
 
@@ -78,14 +77,6 @@ public class RinkuVideoElementBuilder extends ElementBuilder<RinkuVideoElement, 
     @Override
     public @Nullable Component[] getDescription(@Nullable AbstractElement element) {
         return LocalizationUtils.splitLocalizedLines("fancymenu.elements.video_rinku.desc");
-    }
-
-    @Nullable
-    protected static SoundSource getSoundSourceByName(@NotNull String name) {
-        for (SoundSource source : SoundSource.values()) {
-            if (source.getName().equals(name)) return source;
-        }
-        return null;
     }
 
 }
