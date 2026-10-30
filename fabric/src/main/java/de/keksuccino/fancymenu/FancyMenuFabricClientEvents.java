@@ -1,14 +1,15 @@
 package de.keksuccino.fancymenu;
 
 import de.keksuccino.fancymenu.networking.PacketHandler;
+import de.keksuccino.fancymenu.networking.bridge.BridgePacketPayload;
 import de.keksuccino.fancymenu.util.input.ScreenKeyEventDispatcher;
 import de.keksuccino.fancymenu.util.reload.FancyMenuResourceReload;
+import net.fabricmc.fabric.api.client.networking.v1.C2SPlayChannelEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.fabricmc.fabric.api.client.screen.v1.ScreenKeyboardEvents;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
-import net.minecraft.network.Connection;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.PreparableReloadListener;
@@ -33,10 +34,12 @@ public class FancyMenuFabricClientEvents {
 
         registerScreenEvents();
 
-        ClientPlayConnectionEvents.JOIN.register((clientPacketListener, packetSender, minecraft) -> {
-            Connection connection = clientPacketListener.getConnection();
-            PacketHandler.onClientConnected(connection);
-            minecraft.execute(() -> PacketHandler.sendHandshakeToServer(connection));
+        ClientPlayConnectionEvents.JOIN.register((clientPacketListener, packetSender, minecraft) -> PacketHandler.onClientConnected(clientPacketListener.getConnection()));
+
+        // The server registers its channels only after JOIN, and Fabric applies that registration on the game thread right before
+        // firing this event. This is the first moment FancyMenu's channel is guaranteed to be sendable, so the handshake waits for it.
+        C2SPlayChannelEvents.REGISTER.register((clientPacketListener, packetSender, minecraft, channels) -> {
+            if (channels.contains(BridgePacketPayload.ID)) PacketHandler.sendHandshakeToServer(clientPacketListener.getConnection());
         });
 
         ClientPlayConnectionEvents.DISCONNECT.register((clientPacketListener, minecraft) -> PacketHandler.onClientDisconnected(clientPacketListener.getConnection()));

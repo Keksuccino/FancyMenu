@@ -22,6 +22,8 @@ public class PacketsForge {
 
     private static void registerForgeBridgePacket() {
 
+        // Forge calls these handlers on the network thread. Handling them on the game thread keeps them ordered behind the login
+        // packet, so the server's handshake can't arrive before LoggingIn started the client session and get dropped.
         PacketHandlerForge.registerMessage(BridgePacketPayload.class, BridgePacketPayload::write, BridgePacketPayload::new, (payload, context) -> {
             context.get().enqueueWork(() -> {
                 PacketHandler.PacketDirection direction = context.get().getDirection() == NetworkDirection.PLAY_TO_SERVER ? PacketHandler.PacketDirection.TO_SERVER : PacketHandler.PacketDirection.TO_CLIENT;
