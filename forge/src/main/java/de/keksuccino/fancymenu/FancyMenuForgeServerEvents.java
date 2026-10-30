@@ -48,6 +48,8 @@ public class FancyMenuForgeServerEvents {
     public void onServerStopping(ServerStoppingEvent e) {
         // Clear before player teardown. ServerStopped repeats this idempotently to cover partial shutdown paths.
         PacketHandler.onServerStopped(e.getServer());
+        // An integrated server can stop while its physical client keeps running, so only a dedicated-server process owns the
+        // shared internet availability monitor lifecycle.
         if (!Services.PLATFORM.isOnClient()) WebUtils.shutdown();
     }
 
