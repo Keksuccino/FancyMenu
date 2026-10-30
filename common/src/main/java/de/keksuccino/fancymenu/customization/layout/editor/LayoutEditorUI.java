@@ -1124,6 +1124,11 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
     }
 
     @Override
+    public void discardSnapshot(@NotNull Object snapshot) {
+        this.editor.history.discardSnapshot((LayoutEditorHistory.Snapshot) snapshot);
+    }
+
+    @Override
     public @NotNull List<LayoutEditorUI> getFilteredStackableObjectsList(@Nullable ConsumingSupplier<LayoutEditorUI, Boolean> filter) {
         return List.of(this);
     }

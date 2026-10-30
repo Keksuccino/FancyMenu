@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.ScreenUtils;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
@@ -260,13 +261,7 @@ public class PlayAudioAction extends Action {
 
         @NotNull
         public SoundSource getSoundSource() {
-            if (this.soundChannel == null) return SoundSource.MASTER;
-            for (SoundSource source : SoundSource.values()) {
-                if (source.getName().equalsIgnoreCase(this.soundChannel)) {
-                    return source;
-                }
-            }
-            return SoundSource.MASTER;
+            return SerializationHelper.INSTANCE.deserializeSoundSource(SoundSource.MASTER, this.soundChannel);
         }
 
         public void setSoundSource(@NotNull SoundSource soundSource) {

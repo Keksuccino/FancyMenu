@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.global;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.customization.element.elements.musiccontroller.MusicControllerHandler;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinMusicManager;
 import de.keksuccino.fancymenu.customization.panorama.LocalTexturePanoramaRenderer;
@@ -227,6 +228,15 @@ public final class GlobalCustomizationHandler {
 
     public static boolean hasCustomButtonClickSound() {
         return !FancyMenu.getOptions().globalButtonClickSound.getValue().isBlank();
+    }
+
+    public static float getCustomButtonClickSoundVolume() {
+        return IAudio.clampVolume(FancyMenu.getOptions().globalButtonClickSoundVolume.getValue());
+    }
+
+    @NotNull
+    public static SoundSource getCustomButtonClickSoundChannel() {
+        return SerializationHelper.INSTANCE.deserializeSoundSource(SoundSource.MASTER, FancyMenu.getOptions().globalButtonClickSoundChannel.getValue());
     }
 
     @Nullable

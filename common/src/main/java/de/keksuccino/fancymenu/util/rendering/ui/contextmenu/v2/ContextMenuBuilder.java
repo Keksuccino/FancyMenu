@@ -128,6 +128,59 @@ public interface ContextMenuBuilder<O> {
     }
 
     /**
+     * Undo snapshot for edits that get applied live while the user is still editing them, like sliders or color pickers.<br>
+     * The snapshot gets created before the first live change, because a snapshot taken when the edit gets confirmed would
+     * already contain the edited values, so undoing the edit would not restore anything.
+     */
+    final class LiveEditSnapshot {
+
+        @NotNull
+        private final ContextMenuBuilder<?> builder;
+        @Nullable
+        private final Object snapshot;
+        private boolean finished = false;
+
+        private LiveEditSnapshot(@NotNull ContextMenuBuilder<?> builder, @Nullable Object snapshot) {
+            this.builder = builder;
+            this.snapshot = snapshot;
+        }
+
+        /**
+         * Creates the snapshot of the current state. Call this before the edit applies its first live change.
+         */
+        @NotNull
+        public static LiveEditSnapshot create(@NotNull ContextMenuBuilder<?> builder) {
+            return new LiveEditSnapshot(Objects.requireNonNull(builder), builder.createSnapshot());
+        }
+
+        /**
+         * Adds the state from before the edit to the undo history. Call this when the user confirms the edit.<br>
+         * Builders that can't create snapshots in advance save a snapshot of the current state instead.
+         */
+        public void save() {
+            if (this.finished) return;
+            this.finished = true;
+            if (this.snapshot == null) {
+                this.builder.saveSnapshot();
+                return;
+            }
+            this.builder.saveSnapshot(this.snapshot);
+            // Only releases the snapshot if the history did not keep it, for example while snapshot saving is paused
+            this.builder.discardSnapshot(this.snapshot);
+        }
+
+        /**
+         * Releases the snapshot without adding it to the undo history. Call this when the user cancels the edit.
+         */
+        public void discard() {
+            if (this.finished) return;
+            this.finished = true;
+            if (this.snapshot != null) this.builder.discardSnapshot(this.snapshot);
+        }
+
+    }
+
+    /**
      * Returns the mutable processor list backing this builder.
      */
     @NotNull
@@ -250,6 +303,13 @@ public interface ContextMenuBuilder<O> {
 
     @Nullable
     Object createSnapshot();
+
+    /**
+     * Releases a snapshot from {@link #createSnapshot()} that is not needed anymore.<br>
+     * Snapshots that are part of the undo history stay untouched, so it is safe to call this for saved snapshots too.
+     */
+    default void discardSnapshot(@NotNull Object snapshot) {
+    }
 
     /**
      * Returns the list of stackable objects for multi-selection.
@@ -828,13 +888,17 @@ public interface ContextMenuBuilder<O> {
                     }
                     Double presetValue = targetFieldGetter.get(this.self());
                     menu.closeMenuChain();
+                    LiveEditSnapshot undoSnapshot = LiveEditSnapshot.create(this);
                     RangeSliderWindowBody sliderScreen = new RangeSliderWindowBody(minSliderValue, maxSliderValue, Objects.requireNonNullElse(presetValue, 0.0D), sliderLabelSupplier,
                             value -> this.applyStackAppliers(entry, value),
                             value -> {
-                                this.saveSnapshot();
+                                undoSnapshot.save();
                                 this.applyStackAppliers(entry, value);
                             },
-                            value -> this.applyStackAppliers(entry, value));
+                            value -> {
+                                undoSnapshot.discard();
+                                this.applyStackAppliers(entry, value);
+                            });
                     PiPWindow window = new PiPWindow(label)
                             .setScreen(sliderScreen)
                             .setForceFancyMenuUiScale(true)

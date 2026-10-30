@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.gameintro;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.file.type.FileType;
 import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
@@ -53,13 +54,7 @@ public class GameIntroHandler {
 
 	@NotNull
 	public static SoundSource getIntroSoundSource() {
-		String name = FancyMenu.getOptions().gameIntroSoundChannel.getValue();
-		if (name != null) {
-			for (SoundSource source : SoundSource.values()) {
-				if (source.getName().equals(name)) return source;
-			}
-		}
-		return SoundSource.MASTER;
+		return SerializationHelper.INSTANCE.deserializeSoundSource(SoundSource.MASTER, FancyMenu.getOptions().gameIntroSoundChannel.getValue());
 	}
 
 	@Nullable

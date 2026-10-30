@@ -1943,6 +1943,11 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
     }
 
     @Override
+    public void discardSnapshot(@NotNull Object snapshot) {
+        this.editor.history.discardSnapshot((LayoutEditorHistory.Snapshot) snapshot);
+    }
+
+    @Override
     public @NotNull List<ContextMenuBuilder.ContextMenuScreenOpenProcessor> getContextMenuScreenOpenProcessorList() {
         return this.contextMenuScreenOpenProcessorList;
     }
