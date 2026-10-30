@@ -6,7 +6,10 @@ import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.Options;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.GlobalSettingsUniform;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -18,6 +21,19 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinGameRenderer {
 
     @Shadow @Final Minecraft minecraft;
+    @Shadow @Final private GlobalSettingsUniform globalSettingsUniform;
+
+    /**
+     * @reason Vanilla creates the Globals uniform in the first render call, but atlas uploads and texture ticks draw with it too. When the
+     * initial resource reload completes before the first frame (mod initialization in the Minecraft constructor can block the render thread
+     * until all background reload work is done), these draws run without it: the dev-only uniform validation then fails the reload, which
+     * removes all selected resource packs, or crashes the game with "Missing uniform Globals". The first frame overwrites these initial values.
+     */
+    @Inject(method = "<init>", at = @At("RETURN"))
+    private void after_init_FancyMenu(CallbackInfo info) {
+        Options options = this.minecraft.options;
+        this.globalSettingsUniform.update(this.minecraft.getWindow().getWidth(), this.minecraft.getWindow().getHeight(), options.glintStrength().get(), 0L, DeltaTracker.ZERO, options.getMenuBackgroundBlurriness(), Vec3.ZERO, false);
+    }
 
     @Inject(method = "processBlurEffect", at = @At("HEAD"), cancellable = true)
     private void head_processBlurEffect_FancyMenu(CallbackInfo info) {
