@@ -259,7 +259,7 @@ public class GifTexture implements ITexture, PlayableResource {
         if (directSource == null) return false;
 
         WatermediaAnimatedTextureBackend backend = new WatermediaAnimatedTextureBackend(texture.uniqueId, "gif");
-        backend.setLoopCount(-1);
+        backend.setLoopCount(readDirectSourceLoopCount(texture, gifTextureName));
         boolean initialized = backend.initializeFromSource(directSource, gifTextureName);
         if (!initialized) {
             backend.close();
@@ -303,7 +303,7 @@ public class GifTexture implements ITexture, PlayableResource {
 
     protected static boolean populateTextureWithWatermedia(@NotNull GifTexture texture, @NotNull byte[] gifData, @NotNull String gifTextureName) {
         WatermediaAnimatedTextureBackend backend = new WatermediaAnimatedTextureBackend(texture.uniqueId, "gif");
-        backend.setLoopCount(readGifLoopCount(gifData));
+        backend.setLoopCount(AnimatedImageLoopCountReader.readGifLoopCount(gifData));
         boolean initialized = backend.initializeFromBytes(gifData, ".gif", gifTextureName);
         if (!initialized) {
             backend.close();
@@ -315,67 +315,17 @@ public class GifTexture implements ITexture, PlayableResource {
         return true;
     }
 
-    protected static int readGifLoopCount(@NotNull byte[] gifData) {
-        // Defaults to one playback if no loop extension is present.
-        if (gifData.length < 13) return 1;
-        int index = 6;
-        int packed = gifData[index + 4] & 255;
-        index += 7;
-        if ((packed & 0x80) != 0) {
-            int gctSize = 3 * (1 << ((packed & 0x07) + 1));
-            index += gctSize;
+    /**
+     * Watermedia reads direct sources on its own, so their loop count gets read separately from the start of the source.
+     */
+    protected static int readDirectSourceLoopCount(@NotNull GifTexture texture, @NotNull String gifTextureName) {
+        long maxBytes = (texture.sourceURL != null) ? AnimatedImageLoopCountReader.MAX_WEB_SOURCE_BYTES : Long.MAX_VALUE;
+        try (InputStream in = texture.open()) {
+            if (in != null) return AnimatedImageLoopCountReader.readGifLoopCount(new BufferedInputStream(in), maxBytes);
+        } catch (Exception ex) {
+            LOGGER.warn("[FANCYMENU] Failed to read loop count of GIF, so it loops forever: " + gifTextureName, ex);
         }
-        while (index < gifData.length) {
-            int block = gifData[index++] & 255;
-            if (block == 0x3B) break; // trailer
-            if (block == 0x21) { // extension
-                if (index >= gifData.length) break;
-                int label = gifData[index++] & 255;
-                String appIdentifier = null;
-                if ((label == 0xFF) && (index < gifData.length)) {
-                    int appBlockSize = gifData[index++] & 255;
-                    if ((appBlockSize > 0) && ((index + appBlockSize) <= gifData.length)) {
-                        appIdentifier = new String(gifData, index, appBlockSize);
-                        index += appBlockSize;
-                    } else {
-                        return 1;
-                    }
-                }
-                while (index < gifData.length) {
-                    int size = gifData[index++] & 255;
-                    if (size == 0) break;
-                    if ((index + size) > gifData.length) return 1;
-                    if ((appIdentifier != null)
-                            && (size >= 3)
-                            && (("NETSCAPE2.0".equals(appIdentifier)) || ("ANIMEXTS1.0".equals(appIdentifier)))
-                            && ((gifData[index] & 255) == 1)) {
-                        int loops = (gifData[index + 1] & 255) | ((gifData[index + 2] & 255) << 8);
-                        return (loops == 0) ? -1 : Math.max(1, loops);
-                    }
-                    index += size;
-                    if (index > gifData.length) return 1;
-                }
-            } else if (block == 0x2C) { // image descriptor
-                if ((index + 9) > gifData.length) break;
-                int localPacked = gifData[index + 8] & 255;
-                index += 9;
-                if ((localPacked & 0x80) != 0) {
-                    int lctSize = 3 * (1 << ((localPacked & 0x07) + 1));
-                    index += lctSize;
-                }
-                if (index >= gifData.length) break;
-                index++; // LZW min code size
-                while (index < gifData.length) {
-                    int size = gifData[index++] & 255;
-                    if (size == 0) break;
-                    index += size;
-                    if (index > gifData.length) return 1;
-                }
-            } else {
-                break;
-            }
-        }
-        return 1;
+        return AnimatedImageLoopCountReader.INFINITE_LOOPS;
     }
 
     protected GifTexture() {
