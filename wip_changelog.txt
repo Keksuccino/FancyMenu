@@ -2,6 +2,7 @@
 CHANGELOG | FANCYMENU v3.10.0 [ W I P !! Not public yet !! ]
 
 - Added Ukrainian translation (#1817)
+- Added an "Ignore Game Intro Loops" option to the Game Intro settings (enabled by default), so looping GIF, APNG, FMA and AFMA intros end after playing through once (#1650)
 - Added the "Total Active Raid Waves", "Remaining Active Raid Waves", "Current Active Raid Wave", "Active Raid Alive Raiders Count" and "Active Raid Alive Raiders List" placeholders (#1701)
 - Added the "On Raid Started", "On Enter Active Raid Area", "On Leave Active Raid Area" and "On Raid Finished" listeners, with "On Raid Finished" telling you whether the raid ended in a victory or a defeat (#1701)
 - Added the "Is In Active Raid Area" requirement (#1701)
@@ -34,6 +35,10 @@ CHANGELOG | FANCYMENU v3.10.0 [ W I P !! Not public yet !! ]
 - Updated outdated texts in all translations so they match the current English descriptions (Delay Gate block, browser mute option, mouse button requirement, file and resource security notes, shader opacity and more)
 - The "Open to LAN" and "Report Player" buttons of the pause screen can now be customized separately (#1730)
 - Layouts made before this change still give the "Report Player" button the "Open to LAN" button's customizations, so they look the same as before (#1730)
+- Video intros now always end after one playthrough, even if a looping video background uses the same video (#1650)
+- Fixed looping animated textures making the game intro play forever instead of ending on its own (#1650)
+- Fixed GIFs and web APNGs played through Watermedia always looping forever, ignoring the loop count set in the file (#1650)
+- Fixed re-triggering a GIF intro that already played all its loops not playing it again (#1650)
 - Fixed features that need FancyMenu on the server not working on 1.19.2 Forge, because the server never recognized FancyMenu clients
 - Fixed the client not recognizing servers with FancyMenu installed on Fabric 1.19.2 and 1.20.1
 - Fixed a "Missing uniform Globals" crash when starting NeoForge 26.2 or 26.3 in a development environment, which could also remove all selected resource packs
