@@ -2,6 +2,7 @@
 CHANGELOG | FANCYMENU v3.9.15 [ W I P !! Not public yet !! ]
 
 - Added Ukrainian translation (#1817)
+- Added input fields for the red, green, blue and alpha values to the color picker, so you can type exact RGBA values (#1652)
 - Added the newest texts (browser loading/error messages and the "select an action first" warning) to all other translations
 - Improved the description of the "Negate Number" placeholder in all languages
 - Improved performance of video elements and video menu backgrounds that play local files with Rinku (the file is no longer re-checked on disk every frame)
@@ -35,5 +36,6 @@ CHANGELOG | FANCYMENU v3.9.15 [ W I P !! Not public yet !! ]
 - Fixed WaterMedia videos crashing the game on NeoForge 1.21.11 when NeoForge's Blaze3D validation layer is enabled
 - Added a confirmation dialog to "Reload Minecraft Resources" in the customization menu bar, so a misclick no longer starts a full resource reload (#1574)
 - Fixed the confirmation dialog of "Disable Customization for ALL Screens" being hidden behind the open customization menu
+- Fixed pressing Enter in the color picker closing it without saving an undo step for the new color
 
 %changelog:end%
