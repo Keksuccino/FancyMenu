@@ -2,6 +2,8 @@ package de.keksuccino.fancymenu;
 
 import de.keksuccino.fancymenu.commands.Commands;
 import de.keksuccino.fancymenu.networking.PacketHandler;
+import de.keksuccino.fancymenu.platform.Services;
+import de.keksuccino.fancymenu.util.WebUtils;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.common.NeoForge;
@@ -46,6 +48,9 @@ public class FancyMenuNeoForgeServerEvents {
     public void onServerStopping(ServerStoppingEvent e) {
         // Clear before player teardown. ServerStopped repeats this idempotently to cover partial shutdown paths.
         PacketHandler.onServerStopped(e.getServer());
+        // An integrated server can stop while its physical client keeps running, so only a dedicated-server process owns the
+        // shared internet availability monitor lifecycle.
+        if (!Services.PLATFORM.isOnClient()) WebUtils.shutdown();
     }
 
     @SubscribeEvent
