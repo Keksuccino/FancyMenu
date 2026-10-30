@@ -2,6 +2,9 @@
 CHANGELOG | FANCYMENU v3.10.0 [ W I P !! Not public yet !! ]
 
 - Added Ukrainian translation (#1817)
+- Added the "Total Active Raid Waves", "Remaining Active Raid Waves", "Current Active Raid Wave", "Active Raid Alive Raiders Count" and "Active Raid Alive Raiders List" placeholders (#1701)
+- Added the "On Raid Started", "On Enter Active Raid Area", "On Leave Active Raid Area" and "On Raid Finished" listeners, with "On Raid Finished" telling you whether the raid ended in a victory or a defeat (#1701)
+- Added the "Is In Active Raid Area" requirement (#1701)
 - Added enabled/disabled indicators to the background types in the layout editor's background menu, so you can see at a glance which backgrounds are active (#1607)
 - Added enabled/disabled indicators to the decoration overlay types in the layout editor's overlay menu, so you can see at a glance which overlays are active (#1608)
 - Added volume and sound channel settings for the open and close audio of screens (#1603)
@@ -31,6 +34,10 @@ CHANGELOG | FANCYMENU v3.10.0 [ W I P !! Not public yet !! ]
 - Updated outdated texts in all translations so they match the current English descriptions (Delay Gate block, browser mute option, mouse button requirement, file and resource security notes, shader opacity and more)
 - The "Open to LAN" and "Report Player" buttons of the pause screen can now be customized separately (#1730)
 - Layouts made before this change still give the "Report Player" button the "Open to LAN" button's customizations, so they look the same as before (#1730)
+- Fixed features that need FancyMenu on the server not working on 1.19.2 Forge, because the server never recognized FancyMenu clients
+- Fixed the client not recognizing servers with FancyMenu installed on Fabric 1.19.2 and 1.20.1
+- Fixed a "Missing uniform Globals" crash when starting NeoForge 26.2 or 26.3 in a development environment, which could also remove all selected resource packs
+- Fixed dedicated Forge and NeoForge servers not stopping FancyMenu's internet connection check when they shut down
 - Fixed menus not going back to the submenu you were in, e.g. after closing a dialog opened from the Customization menu, or when the action script editor rebuilds its right-click menu
 - Fixed the right-click menu of the action script editor jumping to the mouse position when the editor gets rebuilt, e.g. after resizing the game window
 - Fixed undo not bringing back the old value after changing a setting with a slider, number picker or color picker in the layout editor
