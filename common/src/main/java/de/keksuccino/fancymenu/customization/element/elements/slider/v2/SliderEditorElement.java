@@ -168,8 +168,12 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
                         Component.translatable("fancymenu.elements.button.hoversound"), true, null, true, true, true)
                 .setIcon(MaterialIcons.VOLUME_UP);
 
+        this.element.hoverSoundSettings.addContextMenuEntriesTo(this.rightClickMenu, this);
+
         this.element.unhoverAudio.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setIcon(MaterialIcons.VOLUME_UP);
+
+        this.element.unhoverSoundSettings.addContextMenuEntriesTo(this.rightClickMenu, this);
 
         this.addAudioResourceChooserContextMenuEntryTo(this.rightClickMenu, "click_sound",
                         SliderEditorElement.class,
@@ -179,13 +183,7 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
                         Component.translatable("fancymenu.elements.slider.v2.clicksound"), true, null, true, true, true)
                 .setIcon(MaterialIcons.VOLUME_UP);
 
-        this.element.clickSoundVolume.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.widgets.click_sound_volume.desc")))
-                .setIcon(MaterialIcons.VOLUME_UP);
-
-        this.element.clickSoundChannel.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.widgets.click_sound_channel.desc")))
-                .setIcon(MaterialIcons.SPEAKER);
+        this.element.clickSoundSettings.addContextMenuEntriesTo(this.rightClickMenu, this);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_hover_sound").setStackable(true);
 

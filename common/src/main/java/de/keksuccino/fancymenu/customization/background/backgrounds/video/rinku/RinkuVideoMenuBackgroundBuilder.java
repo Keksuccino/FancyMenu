@@ -38,7 +38,7 @@ public class RinkuVideoMenuBackgroundBuilder extends MenuBackgroundBuilder<Rinku
 
         // Fix for unknown sound channels
         String soundSource = deserializeTo.soundSource.getString();
-        if ((soundSource != null) && (RinkuVideoMenuBackground.getSoundSourceByName(soundSource) == null)) {
+        if ((soundSource != null) && (deserializeSoundSource(soundSource) == null)) {
             deserializeTo.soundSource.set(SoundSource.MASTER.getName());
         }
 

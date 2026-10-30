@@ -14,7 +14,6 @@ import net.minecraft.client.sounds.SoundEventListener;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -93,9 +92,7 @@ public abstract class MixinSoundManager implements WorldSoundListenerController 
                     if (globalClickSound != null) {
                         globalClickSound.waitForLoadingCompletedOrFailed(1500);
                         if (globalClickSound.isReady()) {
-                            globalClickSound.setSoundChannel(SoundSource.MASTER);
-                            globalClickSound.stop();
-                            globalClickSound.play();
+                            globalClickSound.playFromStart(GlobalCustomizationHandler.getCustomButtonClickSoundChannel(), GlobalCustomizationHandler.getCustomButtonClickSoundVolume());
                         }
                     }
                     info.cancel();
