@@ -263,7 +263,7 @@ public class ApngTexture implements ITexture, PlayableResource {
         if (directSource == null) return false;
 
         WatermediaAnimatedTextureBackend backend = new WatermediaAnimatedTextureBackend(texture.uniqueId, "apng");
-        backend.setLoopCount(-1);
+        backend.setLoopCount(readDirectSourceLoopCount(texture, apngTextureName));
         boolean initialized = backend.initializeFromSource(directSource, apngTextureName);
         if (!initialized) {
             backend.close();
@@ -307,7 +307,7 @@ public class ApngTexture implements ITexture, PlayableResource {
 
     protected static boolean populateTextureWithWatermedia(@NotNull ApngTexture texture, @NotNull byte[] apngData, @NotNull String apngTextureName) {
         WatermediaAnimatedTextureBackend backend = new WatermediaAnimatedTextureBackend(texture.uniqueId, "apng");
-        backend.setLoopCount(readApngLoopCount(apngData));
+        backend.setLoopCount(AnimatedImageLoopCountReader.readApngLoopCount(apngData));
         // Use ".png" extension so Watermedia classifies the media as IMAGE and routes playback through TxMediaPlayer.
         boolean initialized = backend.initializeFromBytes(apngData, ".png", apngTextureName);
         if (!initialized) {
@@ -320,35 +320,17 @@ public class ApngTexture implements ITexture, PlayableResource {
         return true;
     }
 
-    protected static int readApngLoopCount(@NotNull byte[] apngData) {
-        // Default to infinite loops if the acTL chunk cannot be read.
-        if (apngData.length < 8) return -1;
-        int index = 8; // skip PNG signature
-        while ((index + 12) <= apngData.length) {
-            int chunkLength = ((apngData[index] & 255) << 24)
-                    | ((apngData[index + 1] & 255) << 16)
-                    | ((apngData[index + 2] & 255) << 8)
-                    | (apngData[index + 3] & 255);
-            int chunkType = ((apngData[index + 4] & 255) << 24)
-                    | ((apngData[index + 5] & 255) << 16)
-                    | ((apngData[index + 6] & 255) << 8)
-                    | (apngData[index + 7] & 255);
-            if (chunkType == 0x6163544C) { // acTL
-                int dataStart = index + 8;
-                if ((dataStart + 8) <= apngData.length) {
-                    int plays = ((apngData[dataStart + 4] & 255) << 24)
-                            | ((apngData[dataStart + 5] & 255) << 16)
-                            | ((apngData[dataStart + 6] & 255) << 8)
-                            | (apngData[dataStart + 7] & 255);
-                    return (plays == 0) ? -1 : Math.max(1, plays);
-                }
-                return -1;
-            }
-            long next = index + 12L + chunkLength;
-            if (next > apngData.length) break;
-            index = (int) next;
+    /**
+     * Watermedia reads direct sources on its own, so their loop count gets read separately from the start of the source.
+     */
+    protected static int readDirectSourceLoopCount(@NotNull ApngTexture texture, @NotNull String apngTextureName) {
+        long maxBytes = (texture.sourceURL != null) ? AnimatedImageLoopCountReader.MAX_WEB_SOURCE_BYTES : Long.MAX_VALUE;
+        try (InputStream in = texture.open()) {
+            if (in != null) return AnimatedImageLoopCountReader.readApngLoopCount(new BufferedInputStream(in), maxBytes);
+        } catch (Exception ex) {
+            LOGGER.warn("[FANCYMENU] Failed to read loop count of APNG, so it loops forever: " + apngTextureName, ex);
         }
-        return -1;
+        return AnimatedImageLoopCountReader.INFINITE_LOOPS;
     }
 
     protected ApngTexture() {
