@@ -554,7 +554,7 @@ public class CustomizationOverlayUI {
                         duration -> FancyMenu.getOptions().placeholderCachingDurationMs.setValue(duration),
                         true, FancyMenu.getOptions().placeholderCachingDurationMs.getDefaultValue(), null, null, (screen1, s) -> {
                             ScreenUtils.setScreen(screen1);
-                            forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(List.of("screen_settings", "placeholder_caching_duration")));
+                            forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(List.of("fancymenu_settings", "placeholder_caching_duration")));
                         })
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.settings.caching.placeholders.set.desc")))
                 .setIcon(MaterialIcons.TIMER);
@@ -565,7 +565,7 @@ public class CustomizationOverlayUI {
                         duration -> FancyMenu.getOptions().requirementCachingDurationMs.setValue(duration),
                         true, FancyMenu.getOptions().requirementCachingDurationMs.getDefaultValue(), null, null, (screen1, s) -> {
                             ScreenUtils.setScreen(screen1);
-                            forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(List.of("screen_settings", "requirement_caching_duration")));
+                            forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(List.of("fancymenu_settings", "requirement_caching_duration")));
                         })
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.settings.caching.requirements.set.desc")))
                 .setIcon(MaterialIcons.TIMER);
@@ -679,7 +679,7 @@ public class CustomizationOverlayUI {
                         integer -> FancyMenu.getOptions().defaultGuiScale.setValue(integer),
                         true, FancyMenu.getOptions().defaultGuiScale.getDefaultValue(), null, null, (screen1, s) -> {
                             ScreenUtils.setScreen(screen1);
-                            forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(List.of("screen_settings", "default_gui_scale")));
+                            forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(List.of("global_customizations", "default_gui_scale")));
                         })
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.customization.settings.set_default_gui_scale.tooltip")))
                 .setIcon(MaterialIcons.STRAIGHTEN);
@@ -1336,7 +1336,7 @@ public class CustomizationOverlayUI {
                 },
                 supplier -> {
                     FancyMenu.getOptions().gameIntroAnimation.setValue(supplier.getSourceWithPrefix());
-                    forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(List.of("screen_settings", "game_intro", "set_game_intro")));
+                    forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(List.of("global_customizations", "game_intro", "set_game_intro")));
                 },
                 Component.translatable("fancymenu.overlay.menu_bar.customization.settings.game_intro.set"), true, introFileTypeGroup, null, true, true, false)
                 .setIcon(MaterialIcons.VIDEOCAM);
@@ -1372,7 +1372,7 @@ public class CustomizationOverlayUI {
                         s -> FancyMenu.getOptions().gameIntroCustomSkipText.setValue((s != null) ? s : ""),
                         true, null, null, false, false, null, null, (screen1, s) -> {
                             ScreenUtils.setScreen(screen1);
-                            forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(List.of("screen_settings", "game_intro", "game_intro_set_custom_skip_text")));
+                            forScreenMenuBarTab(contextMenuBarEntry -> contextMenuBarEntry.openContextMenu(List.of("global_customizations", "game_intro", "game_intro_set_custom_skip_text")));
                         })
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.customization.settings.game_intro.set_custom_skip_text.tooltip")))
                 .setIcon(MaterialIcons.TEXT_FIELDS);

@@ -342,12 +342,6 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                 .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.delete"))
                 .setIcon(MaterialIcons.DELETE);
 
-        if (reopen || wasOpen) {
-            float reopenX = this.hasStoredRightClickContextMenuPosition() ? this.rightClickContextMenuLastOpenX : (float)this.getRenderMouseX();
-            float reopenY = this.hasStoredRightClickContextMenuPosition() ? this.rightClickContextMenuLastOpenY : (float)this.getRenderMouseY();
-            this.openRightClickContextMenuAtMouse(reopenX, reopenY, resolvedEntryPath);
-        }
-
         this.rightClickContextMenu.addSeparatorEntry("separator_after_remove");
 
         this.rightClickContextMenu.addClickableEntry("move_up", Component.translatable("fancymenu.actions.screens.move_action_up"), (menu, contextMenuEntry) -> {
@@ -467,6 +461,13 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                     this.onAppendElse(target);
                 }).addIsActiveSupplier((menu, entry) -> this.canAppendElseBlock(this.getContextMenuTargetEntry()))
                 .setIcon(MaterialIcons.LINK);
+
+        // Reopens only after all entries got added, because the restored sub menu path gets resolved by entry identifiers
+        if (reopen || wasOpen) {
+            float reopenX = this.hasStoredRightClickContextMenuPosition() ? this.rightClickContextMenuLastOpenX : (float)this.getRenderMouseX();
+            float reopenY = this.hasStoredRightClickContextMenuPosition() ? this.rightClickContextMenuLastOpenY : (float)this.getRenderMouseY();
+            this.openRightClickContextMenuAtMouse(reopenX, reopenY, resolvedEntryPath);
+        }
 
     }
 
