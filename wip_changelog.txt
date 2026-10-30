@@ -2,6 +2,7 @@
 CHANGELOG | FANCYMENU v3.9.15 [ W I P !! Not public yet !! ]
 
 - Added Ukrainian translation (#1817)
+- Added the "Keybind Key" placeholder, which shows the key currently bound to a keybind (like "Space" for "key.jump") (#1676)
 - Added a Light Count option to every string of the String Lights overlay, to set an exact number of lights or let it fill automatically (#1563)
 - Added a String Color option to every string of the String Lights overlay, with alpha support to make the string see-through or hide it (#1563)
 - Added Individual Light Sizes to every string of the String Lights overlay, to give each light its own size or hide single lights (#1563)
