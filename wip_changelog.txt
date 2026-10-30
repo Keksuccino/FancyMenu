@@ -2,6 +2,8 @@
 CHANGELOG | FANCYMENU v3.9.15 [ W I P !! Not public yet !! ]
 
 - Added Ukrainian translation (#1817)
+- Added a "Text Height" placeholder that returns the height of a text in pixels, counting every line (#1803)
+- Added a "Text Element Content Height" placeholder that returns the height a Text element needs to show all of its text, so backgrounds and other elements can automatically fit it (#1803)
 - Added a new "On Screenshot Taken" listener that triggers whenever you take a screenshot and gives you the screenshot's path inside your instance folder as a variable (#1773)
 - Added an "Achievement Toasts" option to Global Customizations to turn the popups for unlocked achievements on or off (on by default) (#1663)
 - Added "On Achievement Unlocked" listener that triggers when you unlock an achievement, with variables for the achievement's key, title, description, icon item and type (advancement, goal or challenge) (#1662)
