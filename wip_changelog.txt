@@ -16,6 +16,7 @@ CHANGELOG | FANCYMENU v3.9.15 [ W I P !! Not public yet !! ]
 - Added "On Achievement Unlocked" listener that triggers when you unlock an achievement, with variables for the achievement's key, title, description, icon item and type (advancement, goal or challenge) (#1662)
 - Added input fields for the red, green, blue and alpha values to the color picker, so you can type exact RGBA values (#1652)
 - Added the newest texts (browser loading/error messages and the "select an action first" warning) to all other translations
+- Added placeholder support to the Custom Window Title, so it can show things like your modpack version, the Minecraft version or variables (#1764)
 - Improved the description of the "Negate Number" placeholder in all languages
 - Improved performance of video elements and video menu backgrounds that play local files with Rinku (the file is no longer re-checked on disk every frame)
 - The Pause screen's World Options button (Multiplayer Options in MC 26.2) now has a stable widget ID, so "Mimic Button" actions and layout customizations keep finding it even when other mods shift the menu (#1825)
