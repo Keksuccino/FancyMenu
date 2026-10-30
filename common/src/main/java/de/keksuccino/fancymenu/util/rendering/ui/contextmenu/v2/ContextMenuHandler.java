@@ -27,7 +27,7 @@ public class ContextMenuHandler extends AbstractContainerEventHandler implements
     public void setAndOpen(@NotNull ContextMenu menu, float x, float y, @Nullable List<String> entryPath) {
         removeCurrent();
         this.children.add(menu);
-        menu.openMenuAt(x, y);
+        menu.openMenuAt(x, y, entryPath);
     }
 
     public void setAndOpenAtMouse(@NotNull ContextMenu menu) {
@@ -37,7 +37,7 @@ public class ContextMenuHandler extends AbstractContainerEventHandler implements
     public void setAndOpenAtMouse(@NotNull ContextMenu menu, @Nullable List<String> entryPath) {
         removeCurrent();
         this.children.add(menu);
-        menu.openMenuAtMouse();
+        menu.openMenuAtMouse(entryPath);
     }
 
     public void removeCurrent() {
