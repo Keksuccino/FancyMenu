@@ -1,5 +1,5 @@
 
-CHANGELOG | FANCYMENU v3.9.15 [ W I P !! Not public yet !! ]
+CHANGELOG | FANCYMENU v3.10.0 [ W I P !! Not public yet !! ]
 
 - Added Ukrainian translation (#1817)
 - Added "On Start Joining Server" listener, which triggers as soon as you start connecting to a server or Realm, even when the connection fails, and gives you the server's IP as `$$server_ip` (#1738)
