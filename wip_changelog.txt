@@ -2,6 +2,7 @@
 CHANGELOG | FANCYMENU v3.9.15 [ W I P !! Not public yet !! ]
 
 - Added Ukrainian translation (#1817)
+- Added "On Achievement Unlocked" listener that triggers when you unlock an achievement, with variables for the achievement's key, title, description, icon item and type (advancement, goal or challenge) (#1662)
 - Added input fields for the red, green, blue and alpha values to the color picker, so you can type exact RGBA values (#1652)
 - Added the newest texts (browser loading/error messages and the "select an action first" warning) to all other translations
 - Improved the description of the "Negate Number" placeholder in all languages
