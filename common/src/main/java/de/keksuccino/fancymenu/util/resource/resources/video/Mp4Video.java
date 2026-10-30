@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
+import de.keksuccino.fancymenu.util.watermedia.PlaybackLoopTracker;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaFrameTexture;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaReflectionBridge;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaUtil;
@@ -82,6 +83,8 @@ public class Mp4Video implements IVideo {
     protected volatile boolean listenerFinishedEventEmittedForCycle = false;
     protected volatile double listenerLastKnownPlaybackTimeSeconds = 0.0D;
     protected final Object playerInitLock = new Object();
+    /** Notices full playthroughs, also when another user of this shared video makes it loop. **/
+    protected final PlaybackLoopTracker loopTracker = new PlaybackLoopTracker(true);
 
     @NotNull
     public static Mp4Video location(@NotNull Identifier location) {
@@ -309,6 +312,7 @@ public class Mp4Video implements IVideo {
             }
             this.mediaPlayer = createdPlayer;
             this.resetFramePresentationStateForNewPlayer();
+            this.loopTracker.restartPass();
             this.applyVolumeToPlayer();
             this.applyLoopingToPlayer();
             if (this.playRequested) {
@@ -544,6 +548,7 @@ public class Mp4Video implements IVideo {
             this.maybeEmitVideoPlaybackStatusChanged(OnVideoPlaybackStatusChangedListener.VideoPlaybackStatus.STOPPED);
         }
         this.resetVideoPlaybackListenerState();
+        this.loopTracker.reset();
         this.clearFrameTextureId();
         long stopVersion = ++this.stopRequestVersion;
         Object cachedPlayer = this.mediaPlayer;
@@ -590,6 +595,7 @@ public class Mp4Video implements IVideo {
     public void setPlayTime(float playTime) {
         if (this.closed || this.dependencyMissing || this.loadingFailed) return;
         this.seekRequestedMs = Math.max(0L, (long)Math.floor(playTime * 1000.0F));
+        this.loopTracker.restartPass();
         Object cachedPlayer = this.mediaPlayer;
         if (cachedPlayer != null) {
             this.tryApplyQueuedSeekToPlayer(cachedPlayer);
@@ -631,6 +637,20 @@ public class Mp4Video implements IVideo {
     @Override
     public boolean isLooping() {
         return this.looping;
+    }
+
+    /**
+     * Loop restarts only get noticed while this gets called regularly, like every frame.
+     */
+    @Override
+    public int getCompletedPlayCycles() {
+        Object cachedPlayer = this.mediaPlayer;
+        if (this.closed || (cachedPlayer == null)) return this.loopTracker.getCompletedLoops();
+        long durationMs = WatermediaReflectionBridge.playerDuration(cachedPlayer);
+        this.loopTracker.update(WatermediaReflectionBridge.playerTime(cachedPlayer), durationMs);
+        // A video that doesn't loop ends its last cycle instead of jumping back to the start, so that cycle needs to get counted separately
+        boolean ended = this.loopTracker.isPlayedThrough(durationMs) && this.isNaturalEndStatus(cachedPlayer, WatermediaReflectionBridge.playerStatusName(cachedPlayer));
+        return this.loopTracker.getCompletedLoops() + (ended ? 1 : 0);
     }
 
     @Override
