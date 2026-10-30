@@ -2,6 +2,7 @@
 CHANGELOG | FANCYMENU v3.9.15 [ W I P !! Not public yet !! ]
 
 - Added Ukrainian translation (#1817)
+- Added a new "On Screenshot Taken" listener that triggers whenever you take a screenshot and gives you the screenshot's path inside your instance folder as a variable (#1773)
 - Added an "Achievement Toasts" option to Global Customizations to turn the popups for unlocked achievements on or off (on by default) (#1663)
 - Added "On Achievement Unlocked" listener that triggers when you unlock an achievement, with variables for the achievement's key, title, description, icon item and type (advancement, goal or challenge) (#1662)
 - Added input fields for the red, green, blue and alpha values to the color picker, so you can type exact RGBA values (#1652)
