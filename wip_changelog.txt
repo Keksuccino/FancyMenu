@@ -33,5 +33,7 @@ CHANGELOG | FANCYMENU v3.9.15 [ W I P !! Not public yet !! ]
 - Fixed GLSL shaders not rendering on NeoForge 1.21.11 when NeoForge's Blaze3D validation layer is enabled
 - Fixed GLSL shader channel textures and video background thumbnails not working on NeoForge 1.21.11 when NeoForge's Blaze3D validation layer is enabled
 - Fixed WaterMedia videos crashing the game on NeoForge 1.21.11 when NeoForge's Blaze3D validation layer is enabled
+- Added a confirmation dialog to "Reload Minecraft Resources" in the customization menu bar, so a misclick no longer starts a full resource reload (#1574)
+- Fixed the confirmation dialog of "Disable Customization for ALL Screens" being hidden behind the open customization menu
 
 %changelog:end%
