@@ -387,13 +387,17 @@ public class Property<T> {
             }
         }
 
+        ContextMenuBuilder.LiveEditSnapshot undoSnapshot = ContextMenuBuilder.LiveEditSnapshot.create(builder);
         NumberPickerWindowBody<N> picker = new NumberPickerWindowBody<>(inputMode, minValue, maxValue, cycleValues, presetValue, inputFilter, adapter,
                 value -> builder.applyStackAppliers(entry, value),
                 value -> {
-                    builder.saveSnapshot();
+                    undoSnapshot.save();
                     builder.applyStackAppliers(entry, value);
                 },
-                value -> restoreNumericSnapshots(selectedObjects, originalValues, key));
+                value -> {
+                    undoSnapshot.discard();
+                    restoreNumericSnapshots(selectedObjects, originalValues, key);
+                });
 
         contextMenu.closeMenuChain();
         PiPWindow window = new PiPWindow(Component.translatable(property.getContextMenuEntryLocalizationKeyBase()))
@@ -1774,6 +1778,7 @@ public class Property<T> {
                                         preset = parsed;
                                     }
                                 }
+                                ContextMenuBuilder.LiveEditSnapshot undoSnapshot = ContextMenuBuilder.LiveEditSnapshot.create(builder);
                                 ColorPickerWindowBody picker = new ColorPickerWindowBody(preset,
                                         drawable -> { // onColorUpdate
                                             if (drawable != null) {
@@ -1781,12 +1786,13 @@ public class Property<T> {
                                             }
                                         },
                                         drawable -> { // onDone
-                                            builder.saveSnapshot();
+                                            undoSnapshot.save();
                                             if (drawable != null) {
                                                 builder.applyStackAppliers(entry, drawable);
                                             }
                                         },
                                         drawable -> { // onCancel
+                                            undoSnapshot.discard();
                                             if (drawable != null) {
                                                 builder.applyStackAppliers(entry, drawable);
                                             }

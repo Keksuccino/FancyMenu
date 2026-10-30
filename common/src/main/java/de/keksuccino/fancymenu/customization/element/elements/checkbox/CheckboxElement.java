@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ExecutableElement;
 import de.keksuccino.fancymenu.customization.element.elements.WidgetTooltipText;
+import de.keksuccino.fancymenu.customization.element.elements.WidgetSoundSettings;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.input.TextValidators;
@@ -20,7 +21,6 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.input.StringUtils;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.sounds.SoundSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -46,10 +46,11 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
     public final Property<String> linkedVariable = putProperty(Property.stringProperty("linked_variable", null, false, false, "fancymenu.elements.checkbox.editor.set_variable")
             .setUserInputTextValidator(TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR));
     public final Property<ResourceSupplier<IAudio>> hoverSound = putProperty(Property.resourceSupplierProperty(IAudio.class, "hoversound", null, "fancymenu.elements.button.hoversound", true, true, true, null));
+    public final WidgetSoundSettings hoverSoundSettings = new WidgetSoundSettings(this, "hover_sound");
     public final Property<ResourceSupplier<IAudio>> unhoverAudio = putProperty(Property.resourceSupplierProperty(IAudio.class, "unhover_audio", null, "fancymenu.elements.widgets.unhover_audio", true, true, true, null));
+    public final WidgetSoundSettings unhoverSoundSettings = new WidgetSoundSettings(this, "unhover_sound");
     public final Property<ResourceSupplier<IAudio>> clickSound = putProperty(Property.resourceSupplierProperty(IAudio.class, "clicksound", null, "fancymenu.elements.button.clicksound", true, true, true, null));
-    public final Property.FloatProperty clickSoundVolume = putProperty(Property.floatProperty("click_sound_volume", 1.0F, "fancymenu.elements.widgets.click_sound_volume", Property.NumericInputBehavior.<Float>builder().rangeInput(0.0F, 1.0F).build()));
-    public final Property<SoundSource> clickSoundChannel = putProperty(Property.soundSourceProperty("click_sound_channel", SoundSource.MASTER, "fancymenu.elements.widgets.click_sound_channel"));
+    public final WidgetSoundSettings clickSoundSettings = new WidgetSoundSettings(this, "click_sound");
     public final Property<Boolean> navigatable = putProperty(Property.booleanProperty("navigatable", true, "fancymenu.elements.widgets.generic.navigatable"));
     public final Property<RequirementContainer> activeStateSupplier = putProperty(Property.requirementContainerProperty("widget_active_state_requirement_container_identifier", new RequirementContainer(), "fancymenu.elements.button.active_state_controller"))
             .setValueSetProcessor(consumes -> consumes.addValuePlaceholderToContainer("value", () -> "" + this.getCheckboxStateForPlaceholders()));
@@ -209,6 +210,8 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
         if (this.checkbox instanceof CustomizableWidget w) {
             ResourceSupplier<IAudio> supplier = this.hoverSound.get();
             w.setHoverSoundFancyMenu((supplier != null) ? supplier.get() : null);
+            w.setHoverSoundVolumeFancyMenu(this.hoverSoundSettings.getVolume());
+            w.setHoverSoundChannelFancyMenu(this.hoverSoundSettings.getChannel());
         }
     }
 
@@ -216,6 +219,8 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
         if (this.checkbox instanceof CustomizableWidget w) {
             ResourceSupplier<IAudio> supplier = this.unhoverAudio.get();
             w.setUnhoverSoundFancyMenu((supplier != null) ? supplier.get() : null);
+            w.setUnhoverSoundVolumeFancyMenu(this.unhoverSoundSettings.getVolume());
+            w.setUnhoverSoundChannelFancyMenu(this.unhoverSoundSettings.getChannel());
         }
     }
 
@@ -223,8 +228,8 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
         if (this.checkbox instanceof CustomizableWidget w) {
             ResourceSupplier<IAudio> supplier = this.clickSound.get();
             w.setCustomClickSoundFancyMenu((supplier != null) ? supplier.get() : null);
-            w.setCustomClickSoundVolumeFancyMenu(this.clickSoundVolume.getFloat());
-            w.setCustomClickSoundChannelFancyMenu(this.clickSoundChannel.tryGetNonNullElse(SoundSource.MASTER));
+            w.setCustomClickSoundVolumeFancyMenu(this.clickSoundSettings.getVolume());
+            w.setCustomClickSoundChannelFancyMenu(this.clickSoundSettings.getChannel());
         }
     }
 

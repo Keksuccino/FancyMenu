@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class MixinAbstractWidgetClickSoundTest {
+class MixinAbstractWidgetSoundTest {
 
     @Test
     void customClickSoundRestartsWithItsChannelAndVolumeAndReplacesTheVanillaSound() throws Exception {
@@ -76,17 +76,86 @@ class MixinAbstractWidgetClickSoundTest {
     }
 
     @Test
-    void resettingWidgetCustomizationsRestoresTheDefaultClickSoundSettings() {
+    void hoverAndUnhoverSoundsRestartWithTheirOwnChannelAndVolume() throws Exception {
+        TestWidget widget = new TestWidget();
+        RecordingAudio hover = new RecordingAudio();
+        RecordingAudio unhover = new RecordingAudio();
+        widget.setHoverSoundFancyMenu(hover);
+        widget.setHoverSoundVolumeFancyMenu(0.4F);
+        widget.setHoverSoundChannelFancyMenu(SoundSource.AMBIENT);
+        widget.setUnhoverSoundFancyMenu(unhover);
+        widget.setUnhoverSoundVolumeFancyMenu(0.7F);
+        widget.setUnhoverSoundChannelFancyMenu(SoundSource.WEATHER);
+
+        invokeSoundHandler(widget, "handleHoverSoundFancyMenu");
+        invokeSoundHandler(widget, "handleUnhoverSoundFancyMenu");
+
+        assertEquals(List.of("stop", "play"), hover.operations);
+        assertEquals(SoundSource.AMBIENT, hover.playedChannel);
+        assertEquals(0.4F, hover.playedVolume);
+        assertEquals(List.of("stop", "play"), unhover.operations);
+        assertEquals(SoundSource.WEATHER, unhover.playedChannel);
+        assertEquals(0.7F, unhover.playedVolume);
+    }
+
+    @Test
+    void hoverAndUnhoverSoundsPlayAtFullVolumeOnTheMasterChannelByDefault() throws Exception {
+        TestWidget widget = new TestWidget();
+        RecordingAudio hover = new RecordingAudio();
+        hover.channel = SoundSource.MUSIC;
+        hover.volume = 0.1F;
+        widget.setHoverSoundFancyMenu(hover);
+
+        invokeSoundHandler(widget, "handleHoverSoundFancyMenu");
+        invokeSoundHandler(widget, "handleUnhoverSoundFancyMenu");
+
+        assertEquals(SoundSource.MASTER, hover.playedChannel);
+        assertEquals(1.0F, hover.playedVolume);
+    }
+
+    @Test
+    void hoverAndUnhoverVolumesAreClampedToTheValidRange() {
+        TestWidget widget = new TestWidget();
+
+        widget.setHoverSoundVolumeFancyMenu(2.0F);
+        widget.setUnhoverSoundVolumeFancyMenu(-1.0F);
+        assertEquals(1.0F, widget.getHoverSoundVolumeFancyMenu());
+        assertEquals(0.0F, widget.getUnhoverSoundVolumeFancyMenu());
+        widget.setHoverSoundVolumeFancyMenu(Float.NaN);
+        assertEquals(1.0F, widget.getHoverSoundVolumeFancyMenu());
+    }
+
+    @Test
+    void resettingWidgetCustomizationsRestoresTheDefaultSoundSettings() {
         TestWidget widget = new TestWidget();
         widget.setCustomClickSoundFancyMenu(new RecordingAudio());
         widget.setCustomClickSoundVolumeFancyMenu(0.2F);
         widget.setCustomClickSoundChannelFancyMenu(SoundSource.WEATHER);
+        widget.setHoverSoundFancyMenu(new RecordingAudio());
+        widget.setHoverSoundVolumeFancyMenu(0.3F);
+        widget.setHoverSoundChannelFancyMenu(SoundSource.BLOCKS);
+        widget.setUnhoverSoundFancyMenu(new RecordingAudio());
+        widget.setUnhoverSoundVolumeFancyMenu(0.4F);
+        widget.setUnhoverSoundChannelFancyMenu(SoundSource.HOSTILE);
 
         widget.resetWidgetCustomizationsFancyMenu();
 
         assertNull(widget.getCustomClickSoundFancyMenu());
         assertEquals(1.0F, widget.getCustomClickSoundVolumeFancyMenu());
         assertEquals(SoundSource.MASTER, widget.getCustomClickSoundChannelFancyMenu());
+        assertNull(widget.getHoverSoundFancyMenu());
+        assertEquals(1.0F, widget.getHoverSoundVolumeFancyMenu());
+        assertEquals(SoundSource.MASTER, widget.getHoverSoundChannelFancyMenu());
+        assertNull(widget.getUnhoverSoundFancyMenu());
+        assertEquals(1.0F, widget.getUnhoverSoundVolumeFancyMenu());
+        assertEquals(SoundSource.MASTER, widget.getUnhoverSoundChannelFancyMenu());
+    }
+
+    private static void invokeSoundHandler(TestWidget widget, String handlerName) throws Exception {
+        // The hover state listeners that call these handlers only get registered on the first render, which needs a running client.
+        Method handler = MixinAbstractWidget.class.getDeclaredMethod(handlerName);
+        handler.setAccessible(true);
+        handler.invoke(widget);
     }
 
     private static CallbackInfo playDownSoundHook(TestWidget widget) throws Exception {

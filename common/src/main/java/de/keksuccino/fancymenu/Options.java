@@ -69,6 +69,8 @@ public class Options extends AbstractOptions {
     public final Option<String> globalBackgroundPanorama = new Option<>(config, "global_background_panorama", "", "global_customizations");
     public final Option<String> globalMenuMusicTracks = new Option<>(config, "global_menu_music_tracks", "", "global_customizations");
     public final Option<String> globalButtonClickSound = new Option<>(config, "global_button_click_sound", "", "global_customizations");
+    public final Option<Float> globalButtonClickSoundVolume = new Option<>(config, "global_button_click_sound_volume", 1.0F, "global_customizations");
+    public final Option<String> globalButtonClickSoundChannel = new Option<>(config, "global_button_click_sound_channel", SoundSource.MASTER.getName(), "global_customizations");
     public final Option<String> globalMenuBackgroundTexture = new Option<>(config, "global_menu_background_texture", "", "global_customizations");
     public final Option<Boolean> seamlessWorldLoading = new Option<>(config, "seamless_world_loading", false, "global_customizations");
     public final Option<Boolean> showAchievementToasts = new Option<>(config, "show_achievement_toasts", true, "global_customizations");

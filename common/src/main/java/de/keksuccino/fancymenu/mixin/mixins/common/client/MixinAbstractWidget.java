@@ -72,8 +72,16 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	private SoundSource customClickSoundChannelFancyMenu = SoundSource.MASTER;
 	@Unique @Nullable
 	private IAudio hoverSoundFancyMenu;
+	@Unique
+	private float hoverSoundVolumeFancyMenu = 1.0F;
+	@Unique @NotNull
+	private SoundSource hoverSoundChannelFancyMenu = SoundSource.MASTER;
 	@Unique @Nullable
 	private IAudio unhoverSoundFancyMenu;
+	@Unique
+	private float unhoverSoundVolumeFancyMenu = 1.0F;
+	@Unique @NotNull
+	private SoundSource unhoverSoundChannelFancyMenu = SoundSource.MASTER;
 	@Unique
 	private boolean hiddenFancyMenu = false;
 	@Unique
@@ -417,16 +425,14 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Unique
 	private void handleHoverSoundFancyMenu() {
 		if (this.hoverSoundFancyMenu != null) {
-			this.hoverSoundFancyMenu.stop();
-			this.hoverSoundFancyMenu.play();
+			this.hoverSoundFancyMenu.playFromStart(this.hoverSoundChannelFancyMenu, this.hoverSoundVolumeFancyMenu);
 		}
 	}
 
 	@Unique
 	private void handleUnhoverSoundFancyMenu() {
 		if (this.unhoverSoundFancyMenu != null) {
-			this.unhoverSoundFancyMenu.stop();
-			this.unhoverSoundFancyMenu.play();
+			this.unhoverSoundFancyMenu.playFromStart(this.unhoverSoundChannelFancyMenu, this.unhoverSoundVolumeFancyMenu);
 		}
 	}
 
@@ -554,7 +560,11 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		this.setCustomBackgroundInactiveFancyMenu(null);
 		this.setCustomBackgroundResetBehaviorFancyMenu(CustomBackgroundResetBehavior.RESET_NEVER);
 		this.setHoverSoundFancyMenu(null);
+		this.setHoverSoundVolumeFancyMenu(1.0F);
+		this.setHoverSoundChannelFancyMenu(SoundSource.MASTER);
 		this.setUnhoverSoundFancyMenu(null);
+		this.setUnhoverSoundVolumeFancyMenu(1.0F);
+		this.setUnhoverSoundChannelFancyMenu(SoundSource.MASTER);
 		this.setCustomClickSoundFancyMenu(null);
 		this.setCustomClickSoundVolumeFancyMenu(1.0F);
 		this.setCustomClickSoundChannelFancyMenu(SoundSource.MASTER);
@@ -759,6 +769,31 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	}
 
 	@Unique
+	@Override
+	public float getHoverSoundVolumeFancyMenu() {
+		return this.hoverSoundVolumeFancyMenu;
+	}
+
+	@Unique
+	@Override
+	public void setHoverSoundVolumeFancyMenu(float volume) {
+		this.hoverSoundVolumeFancyMenu = IAudio.clampVolume(volume);
+	}
+
+	@Unique
+	@NotNull
+	@Override
+	public SoundSource getHoverSoundChannelFancyMenu() {
+		return this.hoverSoundChannelFancyMenu;
+	}
+
+	@Unique
+	@Override
+	public void setHoverSoundChannelFancyMenu(@NotNull SoundSource channel) {
+		this.hoverSoundChannelFancyMenu = Objects.requireNonNull(channel);
+	}
+
+	@Unique
 	@Nullable
 	@Override
 	public IAudio getUnhoverSoundFancyMenu() {
@@ -769,6 +804,31 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Override
 	public void setUnhoverSoundFancyMenu(@Nullable IAudio sound) {
 		this.unhoverSoundFancyMenu = sound;
+	}
+
+	@Unique
+	@Override
+	public float getUnhoverSoundVolumeFancyMenu() {
+		return this.unhoverSoundVolumeFancyMenu;
+	}
+
+	@Unique
+	@Override
+	public void setUnhoverSoundVolumeFancyMenu(float volume) {
+		this.unhoverSoundVolumeFancyMenu = IAudio.clampVolume(volume);
+	}
+
+	@Unique
+	@NotNull
+	@Override
+	public SoundSource getUnhoverSoundChannelFancyMenu() {
+		return this.unhoverSoundChannelFancyMenu;
+	}
+
+	@Unique
+	@Override
+	public void setUnhoverSoundChannelFancyMenu(@NotNull SoundSource channel) {
+		this.unhoverSoundChannelFancyMenu = Objects.requireNonNull(channel);
 	}
 
 	@Unique
