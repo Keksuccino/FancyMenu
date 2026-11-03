@@ -2084,7 +2084,7 @@ CHANGELOG | FANCYMENU v3.0.2
 - Improved the success rate of v2 -> v3 layout conversions
 - I tried to reproduce the problems people have with "Mod Menu", but customizing the MM screen and button worked fine in MC 1.20.1, so maybe I fixed something by accident
 - Improved StringDecomposer mixin (related to text formatting codes)
---> This could fix some crashes caused by mods that add custom chat colors and similar text-formatting-related stuff
+  - This could fix some crashes caused by mods that add custom chat colors and similar text-formatting-related stuff
 - Fixed game sometimes crashing when using converted v2 layouts (Arithmetic Exception (Divided by zero))
 - There was a conflict with the "Chat Heads" mod which is now fixed on their end in Chat Heads v0.10.31
 - The v2 Audio extension is now listed as incompatible in the mod's meta files
@@ -2107,7 +2107,7 @@ CHANGELOG | FANCYMENU v3.0.2
 CHANGELOG | FANCYMENU v3.0.1
 
 - Improved mixins related to tab/arrow focus behavior of screen widgets
---> This fixes an incompatibility with YACL (Yet Another Config Lib)
+  - This fixes an incompatibility with YACL (Yet Another Config Lib)
 
 %changelog:metadata:start%
 "version":"3.0.1";
@@ -2154,7 +2154,7 @@ tl;dr: BACKUP your LAYOUTS and Minecraft INSTANCE before updating!
 - Old Audio elements from the Audio extension don't work anymore, you need to add the new Audio element of the base mod (sorry)
 
 - Old v2 layouts, variables, custom GUIs and other things get CONVERTED to v3, so there's no going back to v2 after loading your setuo in v3!
---> Make sure to backup your setup before loading it in v3!
+  - Make sure to backup your setup before loading it in v3!
 
 - Button tooltips (custom and Vanilla buttons) now look like Vanilla ones
 - Button tooltips will not jump to the complete opposite site of the mouse cursor anymore when hitting the edge of the screen
@@ -2183,7 +2183,7 @@ tl;dr: BACKUP your LAYOUTS and Minecraft INSTANCE before updating!
 - Complex loading requirements like "Is Number" now have a GUI to build/edit their values more easily
 - Complex actions like "Execute Terminal/CMD Command" now have a GUI to build/edit their values more easily
 - FancyMenu's "config.txt" file is now called "options.txt" (It's NOT recommended to rename the old one to "options.txt"!)
---> This also means everything from the old config needs to get set again (like custom window title, window icon, etc.) (sorry for that!)
+  - This also means everything from the old config needs to get set again (like custom window title, window icon, etc.) (sorry for that!)
 - The pose of Player Entity elements is now fully customizable (Every body part can be rotated on its X, Y and Z axis, except base body/torso, which only rotates on X and Y)
 - Player Entity elements now have separate "follow mouse" toggles for head and body
 - Player Entity elements now keep their customized pose while "follow mouse" is enabled
@@ -2203,13 +2203,13 @@ tl;dr: BACKUP your LAYOUTS and Minecraft INSTANCE before updating!
 - It's now possible to set GIF images as menu background
 - Text elements are now locked at a maximum of 45,000 characters, because the game isn't really usable anymore when using longer texts
 - The placeholder parser is now locked at a maximum of 17,000 characters per text that can be checked for placeholders
---> So if you use placeholders in text elements, this overrides the normal 45,000 characters maximum
+  - So if you use placeholders in text elements, this overrides the normal 45,000 characters maximum
 - Universal layouts now get always loaded BEFORE normal ones, so normal layouts can override parts of universal ones
 - The grid in the layout editor now always gets rendered at the same scale, no matter what GUI scale is used
 - FancyMenu now supports APNG textures (Animated PNGs, like GIFs, but better)
 - It is now possible to pre-load specific resources
---> Accessible via Customization Menu Bar -> Customization -> Pre-Load Resources
---> Recommended for APNGs used as game intro
+  - Accessible via Customization Menu Bar -> Customization -> Pre-Load Resources
+  - Recommended for APNGs used as game intro
 - The game intro now fades to the Title screen like the loading overlay (can be toggled off)
 - You can now undo/redo steps in the text editor
 - Backported Vanilla 1.19.4+ widget background rendering (9-slicing) to 1.18.2 and 1.19.2
@@ -2218,11 +2218,11 @@ tl;dr: BACKUP your LAYOUTS and Minecraft INSTANCE before updating!
 - Slideshows should now load when its properties file name is "properties.txt.txt" (you know why)
 
 - Animations are now deprecated!
---> APNGs exist now (and maybe videos soon), so there's no real need for animations anymore
---> It's not possible to add new Animation elements to layouts, but existing ones still work for now
---> Animations can't get set as game intro anymore, but existing animation intros still work for now
---> Animations can't get set as button background anymore, but existing animation button backgrounds still work for now
---> Animations can't get set as menu background anymore, but existing animation menu background still work for now
+  - APNGs exist now (and maybe videos soon), so there's no real need for animations anymore
+  - It's not possible to add new Animation elements to layouts, but existing ones still work for now
+  - Animations can't get set as game intro anymore, but existing animation intros still work for now
+  - Animations can't get set as button background anymore, but existing animation button backgrounds still work for now
+  - Animations can't get set as menu background anymore, but existing animation menu background still work for now
 
 - Added loading requirement "File/Folder Exists" to check if a file/folder exists
 - Added loading requirement "Is Button Active" to check if a button is active (clickable/not greyed out)
@@ -2262,47 +2262,47 @@ tl;dr: BACKUP your LAYOUTS and Minecraft INSTANCE before updating!
 - Added placeholder "FPS (Frames Per Second)" to get the current FPS
 
 - Added a bunch of accessibility stuff
---> UI Themes to change the color scheme of FancyMenu's UI (dark and light themes included by default and you can make your own themes!)
---> Toggle the text shadow of all of FancyMenu's UI text
---> Toggle the click sound of all of FancyMenu's UI elements
---> FancyMenu's UI Scale is now "Auto" by default (automatically shows the UI at scale 2 instead of 1 if the window is bigger than 1920x1080)
+  - UI Themes to change the color scheme of FancyMenu's UI (dark and light themes included by default and you can make your own themes!)
+  - Toggle the text shadow of all of FancyMenu's UI text
+  - Toggle the click sound of all of FancyMenu's UI elements
+  - FancyMenu's UI Scale is now "Auto" by default (automatically shows the UI at scale 2 instead of 1 if the window is bigger than 1920x1080)
 
 - The Layout Editor got a full rewrite
---> Better menu navigation
---> Added an anchor point overlay that shows the anchor of elements and lets you set the anchor of elements by hovering over an anchor
---> You can now move multiple elements at the same time with the mouse by holding CTRL (was only possible by using the arrow keys before)
---> Replaced "moving/dragging not allowed" message when moving an element with indicator that tells you the element in not moveable
---> You can now draw a mouse selection rectangle to select multiple elements
---> There's a "Layer" widget now that lets you easily reorder elements (and it lets you rename elements!)
---> Removed the delete confirmation for elements, because undo/redo exists
+  - Better menu navigation
+  - Added an anchor point overlay that shows the anchor of elements and lets you set the anchor of elements by hovering over an anchor
+  - You can now move multiple elements at the same time with the mouse by holding CTRL (was only possible by using the arrow keys before)
+  - Replaced "moving/dragging not allowed" message when moving an element with indicator that tells you the element in not moveable
+  - You can now draw a mouse selection rectangle to select multiple elements
+  - There's a "Layer" widget now that lets you easily reorder elements (and it lets you rename elements!)
+  - Removed the delete confirmation for elements, because undo/redo exists
 
 - Reworked Text elements
---> Text elements now have auto line wrapping/breaking (toggleable; enabled by default)
---> There's now full markdown support for web and local text sources
---> Special markdown formatting code to colorize text parts with HEX colors
---> Special markdown formatting codes to make text parts centered or right-sided
+  - Text elements now have auto line wrapping/breaking (toggleable; enabled by default)
+  - There's now full markdown support for web and local text sources
+  - Special markdown formatting code to colorize text parts with HEX colors
+  - Special markdown formatting codes to make text parts centered or right-sided
 
 - Reworked Slider elements
---> Sliders now execute actions (just like buttons) when their value gets changed
---> To get the current value of a Slider for use in its loading requirements and actions, use $$value as placeholder
---> Sliders now have 3 modes: List (pre-defined value list), Integer Range (range of whole numbers) and Decimal Range (range of decimals)
---> Just like Vanilla Sliders, custom ones have fully customizable textures now (handle and background)
---> Old Slider elements are deprecated now
+  - Sliders now execute actions (just like buttons) when their value gets changed
+  - To get the current value of a Slider for use in its loading requirements and actions, use $$value as placeholder
+  - Sliders now have 3 modes: List (pre-defined value list), Integer Range (range of whole numbers) and Decimal Range (range of decimals)
+  - Just like Vanilla Sliders, custom ones have fully customizable textures now (handle and background)
+  - Old Slider elements are deprecated now
 
 - Reworked Audio elements
---> Their options got simplified while keeping all features of the old version
---> They now have a detailed memory of what tracks they already played, so even in Shuffle mode they only play every audio once per loop (or once in total if not looping)
---> They never play the same track twice in a row (well except they only have one track)
---> The logic of when Audio elements keep playing across menus is more in line with the rest of FM now, so Audio elements only keep playing across menus if they are part of a universal layout now
---> The Manage Tracks GUI lets you easily reorder tracks to let them play in the correct order (if not in Shuffle)
---> They support WEB audio sources now!
---> Oh and they are part of the BASE MOD now! No Audio extension anymore!
+  - Their options got simplified while keeping all features of the old version
+  - They now have a detailed memory of what tracks they already played, so even in Shuffle mode they only play every audio once per loop (or once in total if not looping)
+  - They never play the same track twice in a row (well except they only have one track)
+  - The logic of when Audio elements keep playing across menus is more in line with the rest of FM now, so Audio elements only keep playing across menus if they are part of a universal layout now
+  - The Manage Tracks GUI lets you easily reorder tracks to let them play in the correct order (if not in Shuffle)
+  - They support WEB audio sources now!
+  - Oh and they are part of the BASE MOD now! No Audio extension anymore!
 
 - Reworked Custom GUIs
---> OLD SCREEN OVERRIDES DON'T WORK ANYMORE! You need to override screens again (sorry >.<)
---> They should now be way more stable and shouldn't cause so many issues anymore
---> Custom GUIs can now be managed more easily (custom GUI controls are now located in the "Customization" tab of the menu bar)
---> Overriding Vanilla/Mod screens should be more stable now and there's now a menu where you can see and manage (delete) all overridden screens
+  - OLD SCREEN OVERRIDES DON'T WORK ANYMORE! You need to override screens again (sorry >.<)
+  - They should now be way more stable and shouldn't cause so many issues anymore
+  - Custom GUIs can now be managed more easily (custom GUI controls are now located in the "Customization" tab of the menu bar)
+  - Overriding Vanilla/Mod screens should be more stable now and there's now a menu where you can see and manage (delete) all overridden screens
 
 - Removed deprecated (old) text element and web text element (this does not affect the new text element added in FancyMenu v2.12.0)
 - Removed deprecated background audio feature of layouts, since the Audio Extension is a thing now (install the extension mod and add an Audio element to the layout)
@@ -2929,22 +2929,22 @@ CHANGELOG | FANCYMENU v2.14.0
 - Added multi-action support for custom buttons (it's now possible to let buttons execute multiple actions without using a button script)
 
 - Completely reworked Visibility Requirements
---> They are called "Loading Requirements" now, because the last months made them evolve into more than just visibility controllers (they handle tickers, audio elements, etc.)
---> You can now add multiple instances of the same requirement type to one element/layout
---> "Show If" and "Show If Not" requirement modes are now called "NORMAL" and "OPPOSITE"
---> Added Requirement Groups
-----> Requirement groups can hold multiple requirements to basically make them one big requirement
-----> Groups have two modes to control how they should handle their child requirements
-------> In 'AND' mode, all of its requirements need to return TRUE for the group to return TRUE (which basically means "Yes, show this!")
-------> In 'OR' mode, only one requirement needs to return TRUE for the group to return TRUE
---> New fancy GUIs to manage requirements!
+  - They are called "Loading Requirements" now, because the last months made them evolve into more than just visibility controllers (they handle tickers, audio elements, etc.)
+  - You can now add multiple instances of the same requirement type to one element/layout
+  - "Show If" and "Show If Not" requirement modes are now called "NORMAL" and "OPPOSITE"
+  - Added Requirement Groups
+    - Requirement groups can hold multiple requirements to basically make them one big requirement
+    - Groups have two modes to control how they should handle their child requirements
+      - In 'AND' mode, all of its requirements need to return TRUE for the group to return TRUE (which basically means "Yes, show this!")
+      - In 'OR' mode, only one requirement needs to return TRUE for the group to return TRUE
+  - New fancy GUIs to manage requirements!
 
 - Reworked the Manage Actions GUI (when managing actions of buttons and tickers)
---> You can now re-order actions
---> You can now add new actions directly in the Manage Actions screen
+  - You can now re-order actions
+  - You can now add new actions directly in the Manage Actions screen
 
 - Most text inputs now open an in-game TEXT EDITOR to easily edit content
---> Especially useful when working with placeholders, since the text editor highlights them
+  - Especially useful when working with placeholders, since the text editor highlights them
 
 - Fixed advanced sizing/positioning of custom buttons not correctly saving/loading in the layout editor
 - Fixed text elements sometimes throwing errors due to getting updated asynchronously
@@ -3031,7 +3031,7 @@ CHANGELOG | FANCYMENU v2.13.3-2
 CHANGELOG | FANCYMENU v2.13.3-1
 
 - Compiled mod with latest Forge to try if it fixes the "Bad Access to Protected Data in GetField" crash
---> It's worth noting that this crash seems to not come from FancyMenu, but other mods (probably core mods)
+  - It's worth noting that this crash seems to not come from FancyMenu, but other mods (probably core mods)
     that were built using too old Forge builds. FancyMenu is just the mod that throws the error,
     because it happens in parts of FancyMenu's code.
 
@@ -3116,14 +3116,14 @@ CHANGELOG | FANCYMENU v2.13.1
 - IMPORTANT: THIS IS ONLY A DUMMY UPDATE FOR 1.12 AND ADDS NOTHING THERE!
 
 - Reworked the Player Entity element (1.16+)
---> THIS IS ONLY FOR 1.16+!! 1.12 did not get this rework since I'm a bit tired of it tbh.. (But if you're willing to port it to 1.12, hit me with a PR and I will add it!)
---> The old element is now DEPRECATED and will be removed in the future, so it's recommended to redo your player entities using the new element
---> Player name now supports placeholders
---> Skin and cape URLs now fully support placeholders
---> Added new "Is Baby" option to make the player a baby
---> Added new "Parrot On Left Shoulder" option to choose which shoulder the parrot should sit on
---> You can now separately enable the "Auto Skin" and "Auto Cape" options to pick the skin based on the player name
---> There is now an actual toggle to enable/disable the "Copy Client Player" option that automatically picks the client player name, skin and cape
+  - THIS IS ONLY FOR 1.16+!! 1.12 did not get this rework since I'm a bit tired of it tbh.. (But if you're willing to port it to 1.12, hit me with a PR and I will add it!)
+  - The old element is now DEPRECATED and will be removed in the future, so it's recommended to redo your player entities using the new element
+  - Player name now supports placeholders
+  - Skin and cape URLs now fully support placeholders
+  - Added new "Is Baby" option to make the player a baby
+  - Added new "Parrot On Left Shoulder" option to choose which shoulder the parrot should sit on
+  - You can now separately enable the "Auto Skin" and "Auto Cape" options to pick the skin based on the player name
+  - There is now an actual toggle to enable/disable the "Copy Client Player" option that automatically picks the client player name, skin and cape
 
 %changelog:metadata:start%
 "version":"2.13.1";
@@ -3143,15 +3143,15 @@ CHANGELOG | FANCYMENU v2.13.1
 - Added support for MC 1.19.3
 
 - Reworked the Player Entity element
---> I had to do this to make it work in 1.19.3, but I wanted to rework it anways, so I used the forced rework to modernize the element an add new stuff
---> Because the old element isn't working anymore in 1.19.3, you will sadly need to redo your player entity elements when updating to 1.19.3
---> The old element is now DEPRECATED in versions <1.19.3 and will be removed in the future, so it's recommended to redo your player entities using the new element
---> Player name now supports placeholders
---> Skin and cape URLs now fully support placeholders
---> Added new "Is Baby" option to make the player a baby
---> Added new "Parrot On Left Shoulder" option to choose which shoulder the parrot should sit on
---> You can now separately enable the "Auto Skin" and "Auto Cape" options to pick the skin based on the player name
---> There is now an actual toggle to enable/disable the "Copy Client Player" option that automatically picks the client player name, skin and cape
+  - I had to do this to make it work in 1.19.3, but I wanted to rework it anways, so I used the forced rework to modernize the element an add new stuff
+  - Because the old element isn't working anymore in 1.19.3, you will sadly need to redo your player entity elements when updating to 1.19.3
+  - The old element is now DEPRECATED in versions <1.19.3 and will be removed in the future, so it's recommended to redo your player entities using the new element
+  - Player name now supports placeholders
+  - Skin and cape URLs now fully support placeholders
+  - Added new "Is Baby" option to make the player a baby
+  - Added new "Parrot On Left Shoulder" option to choose which shoulder the parrot should sit on
+  - You can now separately enable the "Auto Skin" and "Auto Cape" options to pick the skin based on the player name
+  - There is now an actual toggle to enable/disable the "Copy Client Player" option that automatically picks the client player name, skin and cape
 
 %changelog:metadata:start%
 "version":"2.13.1";
@@ -3171,12 +3171,12 @@ CHANGELOG | FANCYMENU v2.13.0
 - Minimum required Konkrete version is 1.6.0 now
 
 - Reworked text placeholders
---> New system replaces old one! Old placeholders still work, but they are DEPRECATED now and will be removed in a future update!
---> It is really recommended to replace old placeholders with their new versions, since all the new features don't work for old ones.
---> New JSON-like syntax (Pseudo-JSON, not actual JSON)
---> Placeholders now support nesting! You can now use placeholders in values of other placeholders!
---> Syntax characters in values ( " { } ) can be escaped by putting a backslash ( \ ) before them
---> The old placeholder API is DEPRECATED as well now! Use the v2 PlaceholderRegistry instead (not in the 'api' package anymore)!
+  - New system replaces old one! Old placeholders still work, but they are DEPRECATED now and will be removed in a future update!
+  - It is really recommended to replace old placeholders with their new versions, since all the new features don't work for old ones.
+  - New JSON-like syntax (Pseudo-JSON, not actual JSON)
+  - Placeholders now support nesting! You can now use placeholders in values of other placeholders!
+  - Syntax characters in values ( " { } ) can be escaped by putting a backslash ( \ ) before them
+  - The old placeholder API is DEPRECATED as well now! Use the v2 PlaceholderRegistry instead (not in the 'api' package anymore)!
 
 - Added config option to disable the red unicode warning that appears when using a unicode font
 - Added "Screen Width" placeholder to get the width of the current screen (this one's actually not new, but wasn't accessible via the placeholder menu before)
@@ -3191,29 +3191,29 @@ CHANGELOG | FANCYMENU v2.13.0
 - Added "Mouse Y Position" placeholder to get the Y position of the mouse cursor
 - Added "GUI Scale" placeholder to get the GUI scale (duh)
 - Added "Is Text" visibility requirement to compare a text with another one
---> Supports multiple compare modes: equals, contains, starts-with, ends-with
+  - Supports multiple compare modes: equals, contains, starts-with, ends-with
 - Added "Is Number" visibility requirement to compare a number with another one
---> Supports multiple compare modes: equals, bigger-than, smaller-than, bigger-than-or-equals, smaller-than-or-equals
+  - Supports multiple compare modes: equals, bigger-than, smaller-than, bigger-than-or-equals, smaller-than-or-equals
 - Added "Is Element Hovered" visibility requirement to check if an element is hovered
---> Kinda replaces the old "Is Button Hovered" requirement, but old one can still be used
---> Checks hover-state based on the element's size, so some element's hover-states could be a little inaccurate due to its size being smaller than the actual element
+  - Kinda replaces the old "Is Button Hovered" requirement, but old one can still be used
+  - Checks hover-state based on the element's size, so some element's hover-states could be a little inaccurate due to its size being smaller than the actual element
 - Added Advanced Positioning for elements
---> Allows you to manually input X and Y positions for elements
---> Supports text placeholders to be used as value (combining this with the new calculator placeholder should give you A LOT of new things to do!)
+  - Allows you to manually input X and Y positions for elements
+  - Supports text placeholders to be used as value (combining this with the new calculator placeholder should give you A LOT of new things to do!)
 - Added Advanced Sizing for elements
---> Allows you to manually input width and height values for elements
---> Supports text placeholders to be used as value (combining this with the new calculator placeholder should give you A LOT of new things to do!)
+  - Allows you to manually input width and height values for elements
+  - Supports text placeholders to be used as value (combining this with the new calculator placeholder should give you A LOT of new things to do!)
 - Added "Ticker" element to execute actions (same as button actions) every tick
---> Can be set to tick asynchronously
---> Can run multiple actions
---> Allows you to set a tick delay (delay between ticks) in milliseconds
---> Can be set to tick only once every time you load the menu or only once per game session
+  - Can be set to tick asynchronously
+  - Can run multiple actions
+  - Allows you to set a tick delay (delay between ticks) in milliseconds
+  - Can be set to tick only once every time you load the menu or only once per game session
 - Added placeholder support to menu titles
 
 - It's now possible to use placeholders in visibility requirement values
 - Changed "Choose Layer" text in element right-click menu to "Pick Element", to be less confusing
 - Auto-scaling now requires the user to set a forced GUI scale first
---> Layouts with auto-scaling already enabled will not change, but it's really recommend to set a forced GUI scale if you haven't yet
+  - Layouts with auto-scaling already enabled will not change, but it's really recommend to set a forced GUI scale if you haven't yet
 - New text elements now get added below the top menu bar instead of behind it
 
 - Fixed some URLs containing '&' characters not working correctly
@@ -3372,19 +3372,19 @@ CHANGELOG | FANCYMENU v2.12.4
 - Minimum required Konkrete version is 1.5.3 now
 
 - Added config option to disable interactions with world-related registries
---> This can help in case of compatibility issues with some mods (world gen mods, custom entity mods, etc.)
---> Disabling this will also disable player entity elements
+  - This can help in case of compatibility issues with some mods (world gen mods, custom entity mods, etc.)
+  - Disabling this will also disable player entity elements
 
 - Improved client command registration in Fabric 1.19.X
---> Should fix some issues with other mods using client commands
+  - Should fix some issues with other mods using client commands
 - Improved ImageButton mixins
---> Fixes some conflicts with other mods, including "Armor Statues" buttons not rendering correctly
+  - Fixes some conflicts with other mods, including "Armor Statues" buttons not rendering correctly
 
 - Fixed rare game crash caused by button/widget mixins
 - Fixed "Menu Open Audio" constantly restarting when resizing the game window, instead of just playing when opening the menu
 - Fixed "Menu Close Audio" not working
 - Fixed crashes and issues related to the "Create" mod by disabling customizations for Create mod menus
---> It is no longer possible to customize menus of the Create mod
+  - It is no longer possible to customize menus of the Create mod
 - Fixed missing localizations for type names of slider element and text input field element
 - Fixed some cases of key-hold actions not working for text input boxes (like when holding arrow keys to quickly move the cursor)
 - Fixed "Bigger Than Width/Height" visibility requirements not working correctly in some cases
@@ -3408,19 +3408,19 @@ CHANGELOG | FANCYMENU v2.12.3
 - Minimum required Konkrete version is 1.5.3 now
 
 - Added config option to disable interactions with world-related registries
---> This can help in case of compatibility issues with some mods (world gen mods, custom entity mods, etc.)
---> Disabling this will also disable player entity elements
+  - This can help in case of compatibility issues with some mods (world gen mods, custom entity mods, etc.)
+  - Disabling this will also disable player entity elements
 
 - Improved client command registration in Fabric 1.19.X
---> Should fix some issues with other mods using client commands
+  - Should fix some issues with other mods using client commands
 - Improved ImageButton mixins
---> Fixes some conflicts with other mods, including "Armor Statues" buttons not rendering correctly
+  - Fixes some conflicts with other mods, including "Armor Statues" buttons not rendering correctly
 
 - Fixed rare game crash caused by button/widget mixins
 - Fixed "Menu Open Audio" constantly restarting when resizing the game window, instead of just playing when opening the menu
 - Fixed "Menu Close Audio" not working
 - Fixed crashes and issues related to the "Create" mod by disabling customizations for Create mod menus
---> It is no longer possible to customize menus of the Create mod
+  - It is no longer possible to customize menus of the Create mod
 - Fixed missing localizations for type names of slider element and text input field element
 - Fixed some cases of key-hold actions not working for text input boxes (like when holding arrow keys to quickly move the cursor)
 - Fixed "Bigger Than Width/Height" visibility requirements not working correctly in some cases
@@ -3517,7 +3517,7 @@ CHANGELOG | FANCYMENU v2.12.1
 - Lifted minimum required Konkrete version for Forge 1.18.X to v1.5.1
 
 - Fixed unable to execute commands using mods like FTB Quests
---> To make it possible to execute FancyMenu commands via mods like FTB Quests on servers, add FancyMenu and its dependencies to the server
+  - To make it possible to execute FancyMenu commands via mods like FTB Quests on servers, add FancyMenu and its dependencies to the server
 
 %changelog:metadata:start%
 "version":"2.12.1";
@@ -3539,23 +3539,23 @@ CHANGELOG | FANCYMENU v2.12.0
 - Lifted minimum required Konkrete version to v1.5.0
 
 - Completely reworked text elements
---> Web and local text elements are now combined in one element
---> Choose between 3 modes: Direct Text (directly input text), Local Source (use a TXT file as source), Web Source (use the plain text content of a website)
---> Text elements are now scrollable!
---> Set the base (HEX) text color
---> Text elements now kinda work like a display (they are resizeable and text gets rendered only inside the element area; they don't automatically resize anymore)
---> Direct text now supports multi-line by using "%n%" as line break
---> Customize the color and/or texture of the scroll grabber
---> Customize line spacing
---> Set elements to all-uppercase or all-lowercase (or normal)
---> More features I forgot to mention because I'm writing this at 4am
+  - Web and local text elements are now combined in one element
+  - Choose between 3 modes: Direct Text (directly input text), Local Source (use a TXT file as source), Web Source (use the plain text content of a website)
+  - Text elements are now scrollable!
+  - Set the base (HEX) text color
+  - Text elements now kinda work like a display (they are resizeable and text gets rendered only inside the element area; they don't automatically resize anymore)
+  - Direct text now supports multi-line by using "%n%" as line break
+  - Customize the color and/or texture of the scroll grabber
+  - Customize line spacing
+  - Set elements to all-uppercase or all-lowercase (or normal)
+  - More features I forgot to mention because I'm writing this at 4am
 
 - Added JSON Parser placeholder
---> Get values from JSONs
---> Supports local and web JSONs
---> See http://fm.keksuccino.com/en/guides/get-values-from-jsons for how to parse JSONs
+  - Get values from JSONs
+  - Supports local and web JSONs
+  - See http://fm.keksuccino.com/en/guides/get-values-from-jsons for how to parse JSONs
 - Added Web Text placeholder
---> Get the first line of plain text content from a website
+  - Get the first line of plain text content from a website
 
 - Removed the ability to add new legacy text elements (both local and web text), because they are deprecated now
 
@@ -3582,7 +3582,7 @@ CHANGELOG | FANCYMENU v2.11.1
 
 - Fixed Vanilla-like splash text not correctly picking random text on game start
 - Fixed commands not working when connected to a server (as client)
---> You can now use all commands on servers, even if the server does not have FancyMenu installed (FM is client-only and can't get loaded on servers anyways)
+  - You can now use all commands on servers, even if the server does not have FancyMenu installed (FM is client-only and can't get loaded on servers anyways)
 - Fixed unable to open the Create World screen by using the 'opengui' button action in MC 1.16-1.18
 - Fixed unable to open the Create World screen by using the /openguiscreen command in MC 1.16+
 - Fixed some Vanilla elements not showing warning when trying to move them
@@ -3607,15 +3607,15 @@ CHANGELOG | FANCYMENU v2.11.0
 - Added an option to the right-click menu of Vanilla/mod buttons to copy the button locator
 - Added the ability to right-click a button outside of the editor to copy its button locator ("Tools -> Button Info" needs to be enabled for this)
 - Added the ability to edit/remove menu titles in MC 1.16+
---> The title is the little headline of menus like the pause screen
---> To use, right-click the editor background and click on "Edit Menu Title" or "Reset Menu Title"
---> This will most probably not work for all menus and if that's the case, there's nothing you or I can do to fix it
+  - The title is the little headline of menus like the pause screen
+  - To use, right-click the editor background and click on "Edit Menu Title" or "Reset Menu Title"
+  - This will most probably not work for all menus and if that's the case, there's nothing you or I can do to fix it
 - Added visibility requirement "Is Real Time Week Day" to check for the current day of week (Week begins on sunday!)
 - Added option to restart background animations when opening the menu (right-click editor background to access option)
 
 - Changed the description of the 'mimicbutton' button action (now way more detailed and explains how to get the button locator)
 - Migrated all real-time visibility requirements to the new visibility requirement system
---> IMPORTANT: This change breaks elements and layouts using these requirements! You will need to set these requirements again, sorry.
+  - IMPORTANT: This change breaks elements and layouts using these requirements! You will need to set these requirements again, sorry.
 
 - Fixed animations not restarting when opening a menu while in-game (in a world/on a server)
 - Fixed Vanilla button animation background not restarting on first hover after opening/resizing the menu
@@ -3660,10 +3660,10 @@ CHANGELOG | FANCYMENU v2.10.0
 
 - Added a text input field element to set variable values by user input
 - Added a slider element to set variable values by user input
---> Supports two modes: RANGE and LIST (RANGE will set a range of numbers from smallest to biggest; LIST will allow to switch through multiple text values by moving the slider)
+  - Supports two modes: RANGE and LIST (RANGE will set a range of numbers from smallest to biggest; LIST will allow to switch through multiple text values by moving the slider)
 - Added layout-wide visibility requirements
---> Change visibility of whole layouts by visibiliy requirements
---> Can be accessed by right-clicking the editor background and clicking on "Visibility Requirements [Layout-Wide]"
+  - Change visibility of whole layouts by visibiliy requirements
+  - Can be accessed by right-clicking the editor background and clicking on "Visibility Requirements [Layout-Wide]"
 - Added a Vanilla-like splash text element (uses the Vanilla splash text source)
 - Added command 'closeguiscreen' to close the current GUI by command (only useful when working with mods that trigger commands on specific actions, etc.)
 - Added command 'fmvariable' to get and set variables
@@ -3706,15 +3706,15 @@ CHANGELOG | FANCYMENU v2.9.1
 CHANGELOG | FANCYMENU v2.9.0
 
 - Added the ability to customize some non-button Vanilla elements in the editor
---> Title Menu: Logo, splash text, realms icon and branding are now customizable in the editor (+ Beta/Outdated build notifications on Forge)
---> IMPORTANT: I had to remove the old settings related to the title menu, so you will need to set these things again with the new system (sorry >.<)
+  - Title Menu: Logo, splash text, realms icon and branding are now customizable in the editor (+ Beta/Outdated build notifications on Forge)
+  - IMPORTANT: I had to remove the old settings related to the title menu, so you will need to set these things again with the new system (sorry >.<)
 - Added the ability to store and get variables
---> Added button action 'set_variable:<variable_name>:<value>' to store/set a variable
---> Added button action 'clear_variables' to clear all stored variables
---> Added placeholder value '%get_variable:<variable_name>%' to get the value of a stored variable
---> Added visibility requirement "Is Variable Value" to check if the value of a stored variable is X
+  - Added button action 'set_variable:<variable_name>:<value>' to store/set a variable
+  - Added button action 'clear_variables' to clear all stored variables
+  - Added placeholder value '%get_variable:<variable_name>%' to get the value of a stored variable
+  - Added visibility requirement "Is Variable Value" to check if the value of a stored variable is X
 - Added button action 'paste_to_chat' to paste a text to the chat input field
---> Choose between "append" and "don't append" (append = add the text to the end of the input field text; don't append = replace the text in the input field)
+  - Choose between "append" and "don't append" (append = add the text to the end of the input field text; don't append = replace the text in the input field)
 - Added button action 'toggle_layout' to toggle a menu layout (Enable/Disable)
 - Added button action 'enable_layout' to enable a menu layout
 - Added button action 'disable_layout' to disable a menu layout
@@ -3868,8 +3868,8 @@ CHANGELOG | FANCYMENU v2.7.2-1
 CHANGELOG | FANCYMENU v2.7.2
 
 - Fixed button identifiers being broken for buttons added by mods (CRITICAL)
---> Please update to this version, open your layouts in the editor and save them once, this will fix broken layouts
---> You will maybe need to manually fix some customizations made to mod buttons, I'm very sorry for this
+  - Please update to this version, open your layouts in the editor and save them once, this will fix broken layouts
+  - You will maybe need to manually fix some customizations made to mod buttons, I'm very sorry for this
 
 - Improved button identification when a mod adds a copy of a Vanilla button to a menu, without removing the original button
 
@@ -3889,8 +3889,8 @@ CHANGELOG | FANCYMENU v2.7.2
 CHANGELOG | FANCYMENU v2.7.1
 
 - Added the Button Layout Compatibility System
---> Prevents menu layouts from breaking when the Vanilla button layout changes due to a mod adding a button to the menu, etc.
---> I need to manually add support for every menu so that it can use this system, that's why it only works for the main menu, death screen and pause menu for now
+  - Prevents menu layouts from breaking when the Vanilla button layout changes due to a mod adding a button to the menu, etc.
+  - I need to manually add support for every menu so that it can use this system, that's why it only works for the main menu, death screen and pause menu for now
 
 - Fixed some death reasons breaking menu layouts for the death screen, because the positions of the buttons change
 
@@ -3912,7 +3912,7 @@ CHANGELOG | FANCYMENU v2.7.0-1
 - This update is only for Forge 1.16+
 
 - Hopefully fixed mod getting detected as virus by some anti-virus tools (This was a FALSE-POSITIVE! You can check the code on GitHub.)
---> If you still encounter issues related to anti-virus tools, PLEASE REPORT THEM TO ME via GitHub or Discord (discord.keksuccino.com)! Thank you very much!
+  - If you still encounter issues related to anti-virus tools, PLEASE REPORT THEM TO ME via GitHub or Discord (discord.keksuccino.com)! Thank you very much!
 
 %changelog:metadata:start%
 "version":"2.7.0-1";
@@ -3930,8 +3930,8 @@ CHANGELOG | FANCYMENU v2.7.0-1
 CHANGELOG | FANCYMENU v2.7.0
 
 - Added Universal Layouts
---> Make layouts that get applied to every customizable menu instead of just one menu
---> Can be used to apply stuff like background images, sounds, etc. to all menus at once
+  - Make layouts that get applied to every customizable menu instead of just one menu
+  - Can be used to apply stuff like background images, sounds, etc. to all menus at once
 - Added "Open Progress Screen" option to the Miscellaneous tab of the customization menu bar in MC 1.16+
 - Added "Open Receiving Level Screen" option to the Miscellaneous tab of the customization menu bar in MC 1.16+
 - Added "Open Connect Screen" option to the Miscellaneous tab of the customization menu bar in MC 1.16+
@@ -3995,14 +3995,14 @@ CHANGELOG | FANCYMENU v2.6.4-1
 - This update is only for MC 1.16+
 
 - IMPORTANT: Everything related to the old menu audio system is now DEPRECATED and will be removed in the near future!
--- Instead, you will now need to download the new audio extension for FancyMenu, with new features and a better audio system
--- It's not possible anymore to add new audios using the old system, but you can still remove them (via Element -> Manage Audios)
+  - Instead, you will now need to download the new audio extension for FancyMenu, with new features and a better audio system
+  - It's not possible anymore to add new audios using the old system, but you can still remove them (via Element -> Manage Audios)
 
 - IMPORTANT: The new audio extension only supports OGG files, since it's now completely integrated into the MC sound engine, so you will need to convert your old WAV files
 
 - Added support for the FancyMenu Audio Extension
--- FORGE: https://www.curseforge.com/minecraft/mc-mods/audio-extension-for-fancymenu-forge
--- FABRIC: https://www.curseforge.com/minecraft/mc-mods/audio-extension-for-fancymenu-fabric
+  - FORGE: https://www.curseforge.com/minecraft/mc-mods/audio-extension-for-fancymenu-forge
+  - FABRIC: https://www.curseforge.com/minecraft/mc-mods/audio-extension-for-fancymenu-fabric
 
 - Removed config option to stop world music when in a customizable menu (a very similar option is now part of the audio extension)
 
