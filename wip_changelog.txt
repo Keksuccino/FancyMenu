@@ -2,6 +2,7 @@
 CHANGELOG | FANCYMENU v3.10.0 [ W I P !! Not public yet !! ]
 
 - Added Ukrainian translation (#1817)
+- Added a confirmation popup to the "Join the Discord" button in the menu bar, explaining that the server is for Keksuccino's mods and not for the modpack you're playing
 - Added an "Ignore Game Intro Loops" option to the Game Intro settings (enabled by default), so looping GIF, APNG, FMA and AFMA intros end after playing through once (#1650)
 - Added the "Total Active Raid Waves", "Remaining Active Raid Waves", "Current Active Raid Wave", "Active Raid Alive Raiders Count" and "Active Raid Alive Raiders List" placeholders (#1701)
 - Added the "On Raid Started", "On Enter Active Raid Area", "On Leave Active Raid Area" and "On Raid Finished" listeners, with "On Raid Finished" telling you whether the raid ended in a victory or a defeat (#1701)
@@ -77,5 +78,6 @@ CHANGELOG | FANCYMENU v3.10.0 [ W I P !! Not public yet !! ]
 - Added a confirmation dialog to "Reload Minecraft Resources" in the customization menu bar, so a misclick no longer starts a full resource reload (#1574)
 - Fixed the confirmation dialog of "Disable Customization for ALL Screens" being hidden behind the open customization menu
 - Fixed pressing Enter in the color picker closing it without saving an undo step for the new color
+- Fixed the expensive FMA warning popup opening slightly off-center
 
 %changelog:end%
