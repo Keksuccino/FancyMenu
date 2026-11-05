@@ -2435,6 +2435,7 @@
   "fancymenu.overlay.menu_bar.help.curseforge_fancymenu_category.tooltip": "CurseForgeのFancyMenuカテゴリで\nFancyMenuのセットアップを見つけたり共有したりできます！",
   "fancymenu.overlay.menu_bar.help.discord": "Discordに参加",
   "fancymenu.overlay.menu_bar.help.discord.tooltip": "素早いヘルプと、\n気軽に遊べる最高のコミュニティのためにDiscordサーバーに参加しよう！",
+  "fancymenu.overlay.menu_bar.help.discord.confirm": "ご注意ください！この招待リンクから参加するのは §xKeksuccino の Discord サーバー§rで、FancyMenu（このメニューバーを提供している Mod）など、彼の Mod 向けのサポートサーバーです。\n\nプレイ中かもしれないModパックのサポートサーバーでは§xありません§r！Modパックについて助けが必要な場合は、そのModパックの作者に問い合わせてください。\n\nそれでも参加しますか？",
   "fancymenu.overlay.menu_bar.help.patreon": "PatreonのKeksuccino",
   "fancymenu.overlay.menu_bar.help.paypal": "PayPalチップジャー",
   "fancymenu.overlay.menu_bar.help.report_issue": "バグを報告",

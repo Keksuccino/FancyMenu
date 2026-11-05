@@ -2435,6 +2435,7 @@
   "fancymenu.overlay.menu_bar.help.curseforge_fancymenu_category.tooltip": "Du kannst FancyMenu-Setups in der\nFancyMenu-Kategorie auf CurseForge finden und teilen!",
   "fancymenu.overlay.menu_bar.help.discord": "Dem Discord beitreten",
   "fancymenu.overlay.menu_bar.help.discord.tooltip": "Tritt dem Discord-Server für schnelle Hilfe\nund eine coole Community zum Abhängen bei!",
+  "fancymenu.overlay.menu_bar.help.discord.confirm": "Kurzer Hinweis! Diese Einladung bringt Dich auf §xKeksuccinos Discord-Server§r, den Support-Server für seine Mods wie FancyMenu (von diesem Mod stammt auch die Menüleiste hier).\n\nDas ist §xNICHT§r der Support-Server des Modpacks, das Du vielleicht gerade spielst! Wenn Du Hilfe zu einem Modpack brauchst, wende Dich bitte direkt an dessen Ersteller.\n\nTrotzdem beitreten?",
   "fancymenu.overlay.menu_bar.help.patreon": "Keksuccino auf Patreon",
   "fancymenu.overlay.menu_bar.help.paypal": "PayPal-Spendenbox",
   "fancymenu.overlay.menu_bar.help.report_issue": "Einen Fehler melden",

@@ -2435,6 +2435,7 @@
   "fancymenu.overlay.menu_bar.help.curseforge_fancymenu_category.tooltip": "CurseForge의 FancyMenu 카테고리에서\nFancyMenu 세팅을 찾고 공유할 수 있습니다!",
   "fancymenu.overlay.menu_bar.help.discord": "디스코드 참여하기",
   "fancymenu.overlay.menu_bar.help.discord.tooltip": "빠른 도움을 받을 수 있는 디스코드 서버에\n참여하고, 함께 어울릴 멋진 커뮤니티를 만나보세요!",
+  "fancymenu.overlay.menu_bar.help.discord.confirm": "잠깐만요! 이 초대 링크는 §xKeksuccino의 디스코드 서버§r로 연결돼요. FancyMenu(이 메뉴 바를 제공하는 모드) 같은 Keksuccino의 모드를 지원하는 서버예요.\n\n지금 플레이 중일 수도 있는 모드팩의 지원 서버가 §x아니에요§r! 모드팩 관련 도움이 필요하다면 그 모드팩 제작자에게 문의해 주세요.\n\n그래도 참여할까요?",
   "fancymenu.overlay.menu_bar.help.patreon": "Patreon의 Keksuccino",
   "fancymenu.overlay.menu_bar.help.paypal": "PayPal 팁 통",
   "fancymenu.overlay.menu_bar.help.report_issue": "버그 신고",
