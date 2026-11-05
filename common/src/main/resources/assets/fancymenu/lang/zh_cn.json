@@ -2435,6 +2435,7 @@
   "fancymenu.overlay.menu_bar.help.curseforge_fancymenu_category.tooltip": "你可以在 CurseForge 的 FancyMenu 分类里\n找到并分享 FancyMenu 配置！",
   "fancymenu.overlay.menu_bar.help.discord": "加入 Discord",
   "fancymenu.overlay.menu_bar.help.discord.tooltip": "加入 Discord 服务器，快速获取帮助，\n还能和超棒的社区一起聊天！",
+  "fancymenu.overlay.menu_bar.help.discord.confirm": "注意一下！这个邀请会带你进入§xKeksuccino 的 Discord 服务器§r，这是他的模组（比如这个菜单栏所属的 FancyMenu）的支持服务器。\n\n它§x不是§r你可能正在玩的整合包的支持服务器！如果你需要整合包方面的帮助，请直接联系整合包的作者。\n\n还是要加入吗？",
   "fancymenu.overlay.menu_bar.help.patreon": "Patreon 上的 Keksuccino",
   "fancymenu.overlay.menu_bar.help.paypal": "PayPal 打赏箱",
   "fancymenu.overlay.menu_bar.help.report_issue": "报告 Bug",
