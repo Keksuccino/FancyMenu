@@ -2435,6 +2435,7 @@
   "fancymenu.overlay.menu_bar.help.curseforge_fancymenu_category.tooltip": "Możesz znajdować i udostępniać ustawienia FancyMenu\nw kategorii FancyMenu na CurseForge!",
   "fancymenu.overlay.menu_bar.help.discord": "Dołącz do Discorda",
   "fancymenu.overlay.menu_bar.help.discord.tooltip": "Dołącz do serwera Discord, żeby szybko dostać pomoc\ni mieć świetną społeczność do pogadania!",
+  "fancymenu.overlay.menu_bar.help.discord.confirm": "Uwaga! To zaproszenie prowadzi na §xserwer Discord Keksuccino§r, czyli serwer pomocy dla jego modów, takich jak FancyMenu (to właśnie z tego moda pochodzi ten pasek menu).\n\nTo §xNIE§r jest serwer pomocy modpacka, w który być może grasz! Jeśli potrzebujesz pomocy z modpackiem, odezwij się lepiej do jego twórcy.\n\nChcesz mimo to dołączyć?",
   "fancymenu.overlay.menu_bar.help.patreon": "Keksuccino na Patreon",
   "fancymenu.overlay.menu_bar.help.paypal": "Skrzynka na napiwki PayPal",
   "fancymenu.overlay.menu_bar.help.report_issue": "Zgłoś błąd",

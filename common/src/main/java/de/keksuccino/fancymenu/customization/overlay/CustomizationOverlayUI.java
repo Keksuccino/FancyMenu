@@ -1470,7 +1470,11 @@ public class CustomizationOverlayUI {
                 .setIcon(MaterialIcons.MENU_BOOK);
 
         helpMenu.addClickableEntry("join_the_discord", Component.translatable("fancymenu.overlay.menu_bar.help.discord"), (menu, entry) -> {
-            WebUtils.openWebLink("https://discord.gg/rhayah27GC");
+            menuBar.closeAllContextMenus();
+            // Modpacks sometimes ship with the menu bar still visible, so players need to know this is not their modpack's support server before joining
+            Dialogs.openMessageWithCallback(Component.translatable("fancymenu.overlay.menu_bar.help.discord.confirm"), MessageDialogStyle.WARNING, 514, 254, join -> {
+                if (join) WebUtils.openWebLink("https://discord.gg/rhayah27GC");
+            }).setDelay(3000);
         }).setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.help.discord.tooltip")))
                 .setIcon(MaterialIcons.CHAT);
 
