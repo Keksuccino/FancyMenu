@@ -46,7 +46,7 @@
     "rrls": "<4.0.1",
     "watermedia": "<${watermedia_version}",
     "wm_binaries": "<${watermedia_binaries_version}",
-    "wakes": "*"
+    "wakes": "<0.7.3"
   },
   "accessWidener": "fancymenu.accesswidener"
 }
