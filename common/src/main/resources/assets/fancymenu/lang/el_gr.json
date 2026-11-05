@@ -2435,6 +2435,7 @@
   "fancymenu.overlay.menu_bar.help.curseforge_fancymenu_category.tooltip": "Μπορείς να βρεις και να μοιραστείς setups του FancyMenu\nστην κατηγορία FancyMenu στο CurseForge!",
   "fancymenu.overlay.menu_bar.help.discord": "Μπες στο Discord",
   "fancymenu.overlay.menu_bar.help.discord.tooltip": "Μπες στον Discord server για γρήγορη βοήθεια\nκαι μια φοβερή κοινότητα για παρέα!",
+  "fancymenu.overlay.menu_bar.help.discord.confirm": "Για να ξέρεις! Αυτή η πρόσκληση σε πάει στον §xDiscord server του Keksuccino§r, τον server υποστήριξης για τα mods του, όπως το FancyMenu (από αυτό το mod είναι και η μπάρα μενού εδώ).\n\n§xΔΕΝ§r είναι ο server υποστήριξης του modpack που ίσως παίζεις! Αν χρειάζεσαι βοήθεια με κάποιο modpack, καλύτερα να επικοινωνήσεις με τον δημιουργό του.\n\nΘες να μπεις παρ' όλα αυτά;",
   "fancymenu.overlay.menu_bar.help.patreon": "Keksuccino στο Patreon",
   "fancymenu.overlay.menu_bar.help.paypal": "Tip jar στο PayPal",
   "fancymenu.overlay.menu_bar.help.report_issue": "Αναφορά σφάλματος",
