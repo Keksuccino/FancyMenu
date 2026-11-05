@@ -100,6 +100,7 @@ public class EditBoxSuggestions extends CommandSuggestions {
     public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY) {
         if (!this.input.isFocused()) {
             this.setSuggestions(null);
+            this.input.setSuggestion(null);
         }
         super.extractRenderState(graphics, mouseX, mouseY);
     }
