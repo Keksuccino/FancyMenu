@@ -37,6 +37,7 @@ CHANGELOG | FANCYMENU v3.10.0 [ W I P !! Not public yet !! ]
 - The "Open to LAN" and "Report Player" buttons of the pause screen can now be customized separately (#1730)
 - Layouts made before this change still give the "Report Player" button the "Open to LAN" button's customizations, so they look the same as before (#1730)
 - Video intros now always end after one playthrough, even if a looping video background uses the same video (#1650)
+- Wakes is no longer marked as incompatible on MC 1.21.11, and on newer versions only Wakes versions older than 0.7.3 are still blocked, since Wakes fixed the crash on its end (#1830)
 - Fixed looping animated textures making the game intro play forever instead of ending on its own (#1650)
 - Fixed GIFs and web APNGs played through Watermedia always looping forever, ignoring the loop count set in the file (#1650)
 - Fixed re-triggering a GIF intro that already played all its loops not playing it again (#1650)
