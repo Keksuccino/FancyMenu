@@ -99,6 +99,7 @@ public class EditBoxSuggestions extends CommandSuggestions {
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY) {
         if (!this.input.isFocused()) {
             this.setSuggestions(null);
+            this.input.setSuggestion(null);
         }
         super.render(graphics, mouseX, mouseY);
     }
