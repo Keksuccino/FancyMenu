@@ -107,6 +107,7 @@ public class Requirements {
     public static final IsPlayerUsingItemRequirement IS_PLAYER_USING_ITEM = new IsPlayerUsingItemRequirement();
     public static final IsPlayerInStructureRequirement IS_PLAYER_IN_STRUCTURE = new IsPlayerInStructureRequirement();
     public static final IsInActiveRaidAreaRequirement IS_IN_ACTIVE_RAID_AREA = new IsInActiveRaidAreaRequirement();
+    public static final IsInTagRequirement IS_IN_TAG = new IsInTagRequirement();
 
     public static void registerAll() {
 
@@ -203,6 +204,7 @@ public class Requirements {
         RequirementRegistry.register(IS_PLAYER_USING_ITEM);
         RequirementRegistry.register(IS_PLAYER_IN_STRUCTURE);
         RequirementRegistry.register(IS_IN_ACTIVE_RAID_AREA);
+        RequirementRegistry.register(IS_IN_TAG);
 
     }
 
