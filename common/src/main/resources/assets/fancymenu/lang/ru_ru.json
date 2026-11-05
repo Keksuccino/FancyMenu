@@ -2435,6 +2435,7 @@
   "fancymenu.overlay.menu_bar.help.curseforge_fancymenu_category.tooltip": "Ты можешь находить и делиться настройками FancyMenu\nв категории FancyMenu на CurseForge!",
   "fancymenu.overlay.menu_bar.help.discord": "Присоединиться к Discord",
   "fancymenu.overlay.menu_bar.help.discord.tooltip": "Залетай на Discord-сервер за быстрой помощью\nи классным комьюнити, с которым можно потусить!",
+  "fancymenu.overlay.menu_bar.help.discord.confirm": "Внимание! Это приглашение ведёт на §xDiscord-сервер Keksuccino§r — сервер поддержки его модов, например FancyMenu (именно ему принадлежит эта панель меню).\n\nЭто §xНЕ§r сервер поддержки модпака, в который ты, возможно, играешь! Если тебе нужна помощь с модпаком, лучше обратись к его автору.\n\nВсё равно присоединиться?",
   "fancymenu.overlay.menu_bar.help.patreon": "Keksuccino на Patreon",
   "fancymenu.overlay.menu_bar.help.paypal": "Копилка PayPal",
   "fancymenu.overlay.menu_bar.help.report_issue": "Сообщить об ошибке",
