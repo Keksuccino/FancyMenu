@@ -4,7 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import java.nio.file.Path;
 
 /**
- * A snapshot of a profile at the time it got listed.
+ * The state of a profile at the time it got listed.
  *
  * @param directory the directory that holds the content of the profile. For the active profile, this is the FancyMenu config directory.
  */
