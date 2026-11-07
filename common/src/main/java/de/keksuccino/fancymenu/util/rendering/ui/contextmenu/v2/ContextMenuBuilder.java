@@ -414,18 +414,7 @@ public interface ContextMenuBuilder<O> {
             }
             current = current.getStackMeta().getNextInStack();
         }
-        if (values.isEmpty()) {
-            return StackValue.empty();
-        }
-        V first = values.get(0);
-        boolean mixed = false;
-        for (int i = 1; i < values.size(); i++) {
-            if (!Objects.equals(first, values.get(i))) {
-                mixed = true;
-                break;
-            }
-        }
-        return new StackValue<>(false, mixed, first);
+        return StackValue.of(values);
     }
 
     /**
@@ -555,6 +544,24 @@ public interface ContextMenuBuilder<O> {
         @NotNull
         public static <V> StackValue<V> empty() {
             return new StackValue<>(true, false, null);
+        }
+
+        /**
+         * @param values the values of all stacked entries, in stack order
+         * @return an empty stack value for no values, a mixed one if not all values are equal, otherwise one holding the common value
+         */
+        @NotNull
+        public static <V> StackValue<V> of(@NotNull List<V> values) {
+            if (values.isEmpty()) {
+                return empty();
+            }
+            V first = values.get(0);
+            for (int i = 1; i < values.size(); i++) {
+                if (!Objects.equals(first, values.get(i))) {
+                    return new StackValue<>(false, true, first);
+                }
+            }
+            return new StackValue<>(false, false, first);
         }
 
         /**
