@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.input.InputUtils;
@@ -2106,13 +2107,15 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             stacked.forceRawXY = menusToStack[0].forceRawXY;
             stacked.forceSide = menusToStack[0].forceSide;
 
+            boolean throwOnIncompleteCopy = Services.PLATFORM.isDevelopmentEnvironment();
+
             for (ContextMenuEntry<?> ignoredEntry : menusToStack[0].getStackableEntries()) {
 
                 List<ContextMenuEntry<?>> entryStack = collectInstancesOfStackableEntryInMenus(ignoredEntry.identifier, menusToStack);
                 if (!entryStack.isEmpty() && (entryStack.size() == menusToStack.length)) { // only stack entries if all menus have a stackable instance of it
 
-                    List<ContextMenuEntry<?>> stackCopies = new ArrayList<>(entryStack.size());
-                    entryStack.forEach(entry -> stackCopies.add(entry.copy()));
+                    List<ContextMenuEntry<?>> stackCopies = copyEntriesForStack(entryStack, throwOnIncompleteCopy);
+                    if (stackCopies == null) continue;
 
                     ContextMenuEntry<?> first = linkStackCopies(stackCopies, stacked);
                     stacked.addEntry(first);
@@ -2128,6 +2131,35 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         return stacked;
 
+    }
+
+    /**
+     * Copies every entry of a stack, because stacked menus only work with copies of the original entries.
+     * <p>
+     * {@link ContextMenuEntry#copy()} always creates an instance of the class that implements it, so a subclass (anonymous ones included)
+     * that changes behavior without overriding {@link ContextMenuEntry#copy()} would silently lose that behavior in stacked menus.
+     * Entries like that get left out of the stack instead of showing up broken. Configure entries through their setters
+     * (click action, suppliers, etc.) instead of subclassing them, or override {@link ContextMenuEntry#copy()} in the subclass.
+     *
+     * @param throwOnIncompleteCopy if an incomplete copy should throw an {@link IllegalStateException} instead of only getting logged,
+     *                              so the mistake shows up right away in development environments
+     * @return the copies in stack order, or null if at least one entry can't get copied completely
+     */
+    @Nullable
+    protected static List<ContextMenuEntry<?>> copyEntriesForStack(@NotNull List<ContextMenuEntry<?>> entryStack, boolean throwOnIncompleteCopy) {
+        List<ContextMenuEntry<?>> copies = new ArrayList<>(entryStack.size());
+        for (ContextMenuEntry<?> entry : entryStack) {
+            ContextMenuEntry<?> copy = entry.copy();
+            if (copy.getClass() != entry.getClass()) {
+                String message = "[FANCYMENU] Failed to stack ContextMenu entry '" + entry.identifier + "'! Its type " + entry.getClass().getName()
+                        + " doesn't override copy(), so its copy (" + copy.getClass().getName() + ") would lose its behavior in stacked menus. Override copy() in that type or configure the entry through its setters instead of subclassing it.";
+                if (throwOnIncompleteCopy) throw new IllegalStateException(message);
+                LOGGER.error(message);
+                return null;
+            }
+            copies.add(copy);
+        }
+        return copies;
     }
 
     /**
