@@ -18,7 +18,7 @@ class ProfileMetadataTest {
         metadata.setLinks(List.of(
                 new ProfileMetadata.Link(ProfileLinkType.DISCORD, "", "https://discord.gg/abc"),
                 new ProfileMetadata.Link(ProfileLinkType.OTHER, "Blog", "https://example.com/blog")));
-        metadata.setFancyMenuVersion("3.9.15");
+        metadata.setFancyMenuVersion("3.10.0");
 
         ProfileMetadata parsed = ProfileMetadata.fromJson(metadata.toJson(), "fallback");
 
@@ -29,7 +29,7 @@ class ProfileMetadataTest {
         assertEquals("# Hello\nSome **markdown**.", parsed.getDescription());
         assertEquals("https://github.com/example/setup/issues", parsed.getIssueTrackerUrl());
         assertEquals(metadata.getLinks(), parsed.getLinks());
-        assertEquals("3.9.15", parsed.getFancyMenuVersion());
+        assertEquals("3.10.0", parsed.getFancyMenuVersion());
     }
 
     @Test
