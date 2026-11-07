@@ -18,7 +18,7 @@ class TitleScreenWidgetIdentificationContextTest {
 
     @ParameterizedTest
     @CsvSource({
-            "fml.menu.mods, forge_titlescreen_mods_button",
+            "fml.menu.mods, titlescreen_mods_button",
             "narrator.button.language, mc_titlescreen_language_button",
             "options.language, mc_titlescreen_language_button",
             "menu.options, mc_titlescreen_options_button",
@@ -29,7 +29,7 @@ class TitleScreenWidgetIdentificationContextTest {
             "menu.multiplayer, mc_titlescreen_multiplayer_button",
             "menu.online, mc_titlescreen_realms_button",
             "menu.playdemo, mc_titlescreen_playdemo_button",
-            "modmenu.title, modmenu_titlescreen_mods_button"
+            "modmenu.title, titlescreen_mods_button"
     })
     void everyKnownLocalizationKeyResolvesToItsIdentifier(String localizationKey, String expectedIdentifier) {
         assertEquals(expectedIdentifier, this.identify(button(Component.translatable(localizationKey))));

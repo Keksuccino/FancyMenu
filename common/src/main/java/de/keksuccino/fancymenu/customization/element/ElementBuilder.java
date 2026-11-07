@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElemen
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.widget.identification.WidgetIdentifierHandler;
 import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
@@ -172,7 +173,7 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
                 anchorElement = serialized.getValue("orientation_element");
             }
             if (anchorElement != null) {
-                element.anchorPointElementIdentifier = anchorElement;
+                element.anchorPointElementIdentifier = WidgetIdentifierHandler.normalizeIdentifier(anchorElement);
             }
 
             String stayOnScreen = serialized.getValue("stay_on_screen");
