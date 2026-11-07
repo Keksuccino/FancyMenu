@@ -98,5 +98,8 @@ CHANGELOG | FANCYMENU v3.10.0 [ W I P !! Not public yet !! ]
 - Fixed italic FancyMenu UI text being slanted too much
 - Fixed text shadows of colored FancyMenu UI text being too bright
 - Fixed obfuscated FancyMenu UI text constantly changing its width
+- Fixed the menu bar, context menus and windows showing at the wrong size on screens that use an auto-scaling layout
+- Fixed smooth text and rounded shapes rendering slightly off on screens that use an auto-scaling layout
+- Fixed browser elements reacting to clicks in the wrong spot and rendering at the wrong resolution on screens that use an auto-scaling layout
 
 %changelog:end%
