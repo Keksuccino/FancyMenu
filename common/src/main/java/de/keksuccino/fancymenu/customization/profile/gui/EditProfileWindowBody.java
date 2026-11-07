@@ -8,6 +8,8 @@ import de.keksuccino.fancymenu.customization.profile.ProfileMetadata;
 import de.keksuccino.fancymenu.customization.profile.ProfileTask;
 import de.keksuccino.fancymenu.customization.profile.ProfileTasks;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
+import de.keksuccino.fancymenu.util.file.type.types.FileTypes;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -34,7 +36,6 @@ import org.jetbrains.annotations.Nullable;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.function.Consumer;
 
 /**
@@ -249,10 +250,7 @@ public class EditProfileWindowBody extends PiPCellWindowBody {
             this.pendingIconSource = file.toPath();
             this.removeIcon = false;
         });
-        chooser.setFileFilter(file -> {
-            String name = file.getName().toLowerCase(Locale.ROOT);
-            return name.endsWith(".png") || name.endsWith(".jpg") || name.endsWith(".jpeg");
-        });
+        chooser.setFileTypes(FileTypeGroup.of(FileTypes.PNG_IMAGE));
         chooser.setBlockResourceUnfriendlyFileNames(false);
         chooser.openInWindow(this.getWindow());
     }

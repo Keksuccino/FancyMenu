@@ -3510,6 +3510,7 @@
   "fancymenu.profiles.import.conflict.replace": "Replace",
   "fancymenu.profiles.import.conflict.keep_both": "Keep Both",
   "fancymenu.profiles.import.drop_no_archive": "Only FancyMenu profile files (.fmp) can get imported here.",
+  "fancymenu.profiles.archive.file_type": "FancyMenu Profile",
   "fancymenu.profiles.error.switch": "Couldn't load the profile, so your current setup stays loaded.",
   "fancymenu.profiles.error.create": "Couldn't create the profile.",
   "fancymenu.profiles.error.duplicate": "Couldn't duplicate the profile.",
@@ -3542,9 +3543,9 @@
   "fancymenu.profiles.edit.links.type.desc": "Click to choose the platform of this link. Pasting a link picks it on its own.",
   "fancymenu.profiles.edit.links.label.hint": "Label",
   "fancymenu.profiles.edit.icon.choose": "Choose Icon",
-  "fancymenu.profiles.edit.icon.choose.desc": "Pick a PNG or JPEG image. Images that aren't square get cropped to their center and scaled to 64x64 pixels.",
+  "fancymenu.profiles.edit.icon.choose.desc": "Pick a PNG image. Images that aren't square get cropped to their center and scaled to 64x64 pixels.",
   "fancymenu.profiles.edit.icon.remove": "Remove Icon",
   "fancymenu.profiles.edit.error.no_title": "Please give your profile a title.",
   "fancymenu.profiles.edit.error.invalid_url": "This isn't a valid web link:\n%s",
-  "fancymenu.profiles.edit.error.icon": "Couldn't update the icon. Please pick a PNG or JPEG image."
+  "fancymenu.profiles.edit.error.icon": "Couldn't update the icon. Please pick a PNG image."
 }
