@@ -26,7 +26,6 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.nio.file.Path;
@@ -153,17 +152,12 @@ public class ManageProfilesWindowBody extends PiPWindowBody {
             Profile selected = this.getSelectedProfile();
             if (selected != null) this.actions.openFolder(selected);
         }).setIsActiveSupplier(consumes -> this.canUseSelectedProfile());
-        UITooltip deleteTooltip = createActionTooltip("fancymenu.profiles.delete", "fancymenu.profiles.delete.desc");
-        UITooltip deleteActiveTooltip = createActionTooltip("fancymenu.profiles.delete", "fancymenu.profiles.delete.active");
         this.deleteButton = this.addIconButton(MaterialIcons.DELETE, "fancymenu.profiles.delete", button -> {
             Profile selected = this.getSelectedProfile();
             if (selected != null) this.actions.delete(selected);
         }).setIsActiveSupplier(consumes -> {
             Profile selected = this.getSelectedProfile();
             return !ProfileHandler.isBusy() && (selected != null) && !selected.active();
-        }).setTooltipSupplier(consumes -> {
-            Profile selected = this.getSelectedProfile();
-            return ((selected != null) && selected.active()) ? deleteActiveTooltip : deleteTooltip;
         });
 
         this.loadButton = this.addButton(new ExtendedButton(0, bottomY, 130, BUTTON_HEIGHT, Component.translatable("fancymenu.profiles.load"), button -> {
@@ -197,24 +191,13 @@ public class ManageProfilesWindowBody extends PiPWindowBody {
     }
 
     /**
-     * Adds a toolbar icon button with a tooltip made of the {@code <key>} and {@code <key>.desc} localizations.
+     * Adds a toolbar icon button. Icon buttons have no label, so their tooltip shows the name of the action.
      */
     @NotNull
-    private UIIconButton addIconButton(@NotNull MaterialIcon icon, @NotNull String localizationKey, @NotNull Consumer<UIIconButton> clickAction) {
+    private UIIconButton addIconButton(@NotNull MaterialIcon icon, @NotNull String nameKey, @NotNull Consumer<UIIconButton> clickAction) {
         UIIconButton button = new UIIconButton(0, 0, BUTTON_HEIGHT, BUTTON_HEIGHT, icon, clickAction)
-                .setTooltip(createActionTooltip(localizationKey, localizationKey + ".desc"));
+                .setTooltip(UITooltip.of(Component.translatable(nameKey)));
         return this.addRenderableWidget(button);
-    }
-
-    /**
-     * Icon buttons have no label, so their tooltip names the action in bold above its description.
-     */
-    @NotNull
-    private static UITooltip createActionTooltip(@NotNull String nameKey, @NotNull String descriptionKey) {
-        List<Component> lines = new ArrayList<>();
-        lines.add(Component.translatable(nameKey).withStyle(Style.EMPTY.withBold(true)));
-        lines.addAll(Arrays.asList(LocalizationUtils.splitLocalizedLines(descriptionKey)));
-        return UITooltip.of(lines.toArray(new Component[0]));
     }
 
     private boolean canUseSelectedProfile() {
