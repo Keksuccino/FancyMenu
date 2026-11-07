@@ -9,6 +9,10 @@ import de.keksuccino.fancymenu.customization.profile.ProfileTask;
 import de.keksuccino.fancymenu.customization.profile.ProfileTasks;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.file.GameDirectoryUtils;
+import de.keksuccino.fancymenu.util.file.type.FileCodec;
+import de.keksuccino.fancymenu.util.file.type.FileMediaType;
+import de.keksuccino.fancymenu.util.file.type.FileType;
+import de.keksuccino.fancymenu.util.file.type.groups.FileTypeGroup;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
@@ -33,6 +37,8 @@ import java.util.List;
 final class ProfileActions {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    /** Profile archives never get loaded as a resource, so this type is not registered and only names and lists them in file browsers. */
+    private static final FileType<Object> ARCHIVE_FILE_TYPE = new FileType<>(FileCodec.empty(Object.class), null, FileMediaType.OTHER, ProfileArchive.FILE_EXTENSION) {}.setCustomDisplayName(Component.translatable("fancymenu.profiles.archive.file_type"));
 
     /** Remembers where the user exported or imported archives last, because people usually keep them in one place. */
     @Nullable
@@ -108,6 +114,7 @@ final class ProfileActions {
                 if (task.getState() == ProfileTask.State.SUCCEEDED) this.showExportSuccess(finalTarget);
             }));
         });
+        chooser.setFileTypes(FileTypeGroup.of(ARCHIVE_FILE_TYPE));
         chooser.setForceResourceFriendlyFileNames(false);
         chooser.setBlockResourceUnfriendlyFileNames(false);
         chooser.openInWindow(this.manager.getWindow());
@@ -128,7 +135,7 @@ final class ProfileActions {
             if (file.getParentFile() != null) lastArchiveDirectory = file.getParentFile();
             this.importArchive(file.toPath());
         });
-        chooser.setFileFilter(file -> ProfileArchive.hasArchiveExtension(file.toPath()));
+        chooser.setFileTypes(FileTypeGroup.of(ARCHIVE_FILE_TYPE));
         chooser.setBlockResourceUnfriendlyFileNames(false);
         chooser.openInWindow(this.manager.getWindow());
     }
