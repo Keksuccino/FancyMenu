@@ -6,10 +6,12 @@ import de.keksuccino.fancymenu.customization.profile.ProfileHandler;
 import de.keksuccino.fancymenu.customization.profile.ProfileMetadata;
 import de.keksuccino.fancymenu.customization.profile.ProfileTasks;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.input.FileDragTracker;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.ScrollableMarkdownRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.UISounds;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcon;
@@ -65,6 +67,8 @@ public class ManageProfilesWindowBody extends PiPWindowBody {
     private final ProfileDetailsPanel detailsPanel = new ProfileDetailsPanel(this);
     @NotNull
     private final ProfileTaskOverlay taskOverlay = new ProfileTaskOverlay();
+    @NotNull
+    private final ProfileDropIndicator dropIndicator = new ProfileDropIndicator();
     @NotNull
     private final ProfileActions actions = new ProfileActions(this);
     @NotNull
@@ -268,7 +272,18 @@ public class ManageProfilesWindowBody extends PiPWindowBody {
 
     @Override
     public void renderLateBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        this.dropIndicator.renderOverlay(graphics, this.width, this.height, this.isFileDraggedOver());
         this.taskOverlay.render(graphics, mouseX, mouseY, partial, this.width, this.height, ProfileTasks.getCurrentTask(), ProfileHandler.isSwitching());
+    }
+
+    /**
+     * Whether a file gets dragged over this window right now, at a spot where dropping it would reach this window.
+     */
+    private boolean isFileDraggedOver() {
+        if (!FileDragTracker.isDragging() || ProfileHandler.isBusy()) return false;
+        PiPWindow window = this.getWindow();
+        FileDragTracker.Position position = FileDragTracker.getLastGuiPosition();
+        return (window != null) && (position != null) && PiPWindowHandler.INSTANCE.canMouseReachWindow(window, position.x(), position.y());
     }
 
     /**
@@ -314,6 +329,7 @@ public class ManageProfilesWindowBody extends PiPWindowBody {
             this.listArea.addEntry(entry);
             if (profile.getId().equals(this.selectedId)) entry.setSelected(true);
         }
+        this.listArea.addEntry(new ProfileDropHintEntry(this.listArea));
     }
 
     /**
@@ -458,6 +474,7 @@ public class ManageProfilesWindowBody extends PiPWindowBody {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        this.dropIndicator.dismissRejected();
         if (this.taskOverlay.mouseClicked(mouseX, mouseY, button, ProfileHandler.isBusy())) return true;
         if (this.detailsPanel.mouseClicked(mouseX, mouseY, button)) return true;
         return super.mouseClicked(mouseX, mouseY, button);
@@ -465,6 +482,7 @@ public class ManageProfilesWindowBody extends PiPWindowBody {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        this.dropIndicator.dismissRejected();
         if (!ProfileHandler.isBusy()) {
             if (keyCode == InputConstants.KEY_UP) {
                 this.moveSelection(-1);
@@ -504,7 +522,10 @@ public class ManageProfilesWindowBody extends PiPWindowBody {
                 return;
             }
         }
-        if (!paths.isEmpty()) this.actions.showNoArchiveDropped();
+        if (!paths.isEmpty()) {
+            this.dropIndicator.showRejected();
+            UISounds.playDefaultBeep();
+        }
     }
 
     @Override
