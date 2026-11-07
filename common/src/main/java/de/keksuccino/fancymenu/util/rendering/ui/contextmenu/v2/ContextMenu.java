@@ -2135,38 +2135,16 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
             for (ContextMenuEntry<?> ignoredEntry : menusToStack[0].getStackableEntries()) {
 
-                RuntimePropertyContainer stackProperties = new RuntimePropertyContainer();
                 List<ContextMenuEntry<?>> entryStack = collectInstancesOfStackableEntryInMenus(ignoredEntry.identifier, menusToStack);
                 if (!entryStack.isEmpty() && (entryStack.size() == menusToStack.length)) { // only stack entries if all menus have a stackable instance of it
 
-                    ContextMenuEntry<?> firstOriginal = entryStack.get(0);
-                    List<ContextMenuEntry<?>> entryStackCopyWithoutFirst = new ArrayList<>();
-                    entryStack.forEach((entry) ->  {
-                        if (entry != firstOriginal) entryStackCopyWithoutFirst.add(entry.copy());
-                    });
+                    List<ContextMenuEntry<?>> stackCopies = new ArrayList<>(entryStack.size());
+                    entryStack.forEach(entry -> stackCopies.add(entry.copy()));
 
-                    ContextMenuEntry<?> first = firstOriginal.copy();
-                    first.stackMeta.firstInStack = true;
-                    first.stackMeta.lastInStack = false;
-                    first.stackMeta.partOfStack = true;
-                    first.stackMeta.properties = stackProperties;
-                    first.parent = stacked;
+                    ContextMenuEntry<?> first = linkStackCopies(stackCopies, stacked);
                     stacked.addEntry(first);
                     if (first instanceof SubMenuContextMenuEntry s) {
                         s.setSubContextMenu(stackContextMenus(getSubContextMenusOfSubMenuEntries(entryStack)));
-                        s.stackMeta.lastInStack = true;
-                    } else {
-                        ContextMenuEntry<?> prev = first;
-                        for (ContextMenuEntry<?> e2 : entryStackCopyWithoutFirst) {
-                            prev.stackMeta.nextInStack = e2;
-                            prev = e2;
-                            e2.stackMeta.properties = stackProperties;
-                            e2.stackMeta.partOfStack = true;
-                            e2.stackMeta.firstInStack = false;
-                            e2.stackMeta.lastInStack = false;
-                            e2.parent = stacked;
-                        }
-                        prev.stackMeta.lastInStack = true;
                     }
 
                 }
@@ -2177,6 +2155,28 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
         return stacked;
 
+    }
+
+    /**
+     * Links the copies of a stack into one chain (see {@link ContextMenuStackMeta#getNextInStack()}), with the first copy being the one that gets
+     * added to the stacked menu. Stack-aware actions walk this chain to reach every stacked menu, so it includes the copies of {@link SubMenuContextMenuEntry}s too.
+     *
+     * @return the first copy of the stack
+     */
+    @NotNull
+    protected static ContextMenuEntry<?> linkStackCopies(@NotNull List<ContextMenuEntry<?>> stackCopies, @NotNull ContextMenu stacked) {
+        RuntimePropertyContainer stackProperties = new RuntimePropertyContainer();
+        int lastIndex = stackCopies.size() - 1;
+        for (int i = 0; i <= lastIndex; i++) {
+            ContextMenuEntry<?> copy = stackCopies.get(i);
+            copy.parent = stacked;
+            copy.stackMeta.properties = stackProperties;
+            copy.stackMeta.partOfStack = true;
+            copy.stackMeta.firstInStack = (i == 0);
+            copy.stackMeta.lastInStack = (i == lastIndex);
+            copy.stackMeta.nextInStack = (i < lastIndex) ? stackCopies.get(i + 1) : null;
+        }
+        return stackCopies.get(0);
     }
 
     protected static List<ContextMenuEntry<?>> collectInstancesOfStackableEntryInMenus(String entryIdentifier, ContextMenu[] menus) {
