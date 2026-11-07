@@ -23,7 +23,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.konkrete.input.MouseInput;
-import net.minecraft.client.Minecraft;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -967,7 +967,7 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
         if (!targetWindow.isSizeScaledToGuiScale()) {
             return scaledSize;
         }
-        double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
+        double guiScale = WindowHandler.getGuiScale();
         if (guiScale <= 1.0D) {
             return scaledSize;
         }

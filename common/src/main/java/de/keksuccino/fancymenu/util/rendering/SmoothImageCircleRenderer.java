@@ -12,6 +12,7 @@ import com.mojang.renderpearl.api.vertex.VertexFormat;
 import com.mojang.renderpearl.api.vertex.VertexFormatElement;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinBufferBuilder;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphicsExtractor;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
@@ -142,7 +143,7 @@ public final class SmoothImageCircleRenderer {
     }
 
     private static float resolveGuiScale_FancyMenu() {
-        double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
+        double guiScale = WindowHandler.getGuiScale();
         if (!Double.isFinite(guiScale) || guiScale <= 0.0D) {
             return 1.0F;
         }
