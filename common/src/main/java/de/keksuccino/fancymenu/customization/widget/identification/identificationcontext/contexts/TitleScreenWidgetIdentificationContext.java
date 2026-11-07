@@ -3,53 +3,37 @@ package de.keksuccino.fancymenu.customization.widget.identification.identificati
 import de.keksuccino.fancymenu.customization.widget.identification.identificationcontext.WidgetIdentificationContext;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.contents.TranslatableContents;
 import org.jetbrains.annotations.NotNull;
+import java.util.Map;
 
 public class TitleScreenWidgetIdentificationContext extends WidgetIdentificationContext {
+
+    /**
+     * Maps the localization keys of Title screen buttons to their universal identifiers.<br>
+     * The Language and Accessibility buttons have two keys each, because Minecraft labels them with {@code narrator.button.*} keys
+     * up to 1.20.1 and with the {@code options.*} keys of {@code CommonButtons} in later versions.
+     * Both keys need to stay, so layouts using these identifiers keep working in all Minecraft versions.
+     */
+    private static final Map<String, String> IDENTIFIERS_BY_LOCALIZATION_KEY = Map.ofEntries(
+            Map.entry("fml.menu.mods", "forge_titlescreen_mods_button"),
+            Map.entry("narrator.button.language", "mc_titlescreen_language_button"),
+            Map.entry("options.language", "mc_titlescreen_language_button"),
+            Map.entry("menu.options", "mc_titlescreen_options_button"),
+            Map.entry("menu.quit", "mc_titlescreen_quit_button"),
+            Map.entry("narrator.button.accessibility", "mc_titlescreen_accessibility_button"),
+            Map.entry("options.accessibility", "mc_titlescreen_accessibility_button"),
+            Map.entry("menu.singleplayer", "mc_titlescreen_singleplayer_button"),
+            Map.entry("menu.multiplayer", "mc_titlescreen_multiplayer_button"),
+            Map.entry("menu.online", "mc_titlescreen_realms_button"),
+            Map.entry("menu.playdemo", "mc_titlescreen_playdemo_button"),
+            Map.entry("modmenu.title", "modmenu_titlescreen_mods_button")
+    );
 
     public TitleScreenWidgetIdentificationContext() {
 
         this.addUniversalIdentifierProvider(meta -> {
-            Component c = meta.getWidget().getMessage();
-            if ((c instanceof MutableComponent) && (c.getContents() instanceof TranslatableContents)) {
-                String key = meta.getWidgetLocalizationKey();
-                if (key != null) {
-                    if (key.equals("fml.menu.mods")) {
-                        return "forge_titlescreen_mods_button";
-                    }
-                    if (key.equals("narrator.button.language")) {
-                        return "mc_titlescreen_language_button";
-                    }
-                    if (key.equals("menu.options")) {
-                        return "mc_titlescreen_options_button";
-                    }
-                    if (key.equals("menu.quit")) {
-                        return "mc_titlescreen_quit_button";
-                    }
-                    if (key.equals("narrator.button.accessibility")) {
-                        return "mc_titlescreen_accessibility_button";
-                    }
-                    if (key.equals("menu.singleplayer")) {
-                        return "mc_titlescreen_singleplayer_button";
-                    }
-                    if (key.equals("menu.multiplayer")) {
-                        return "mc_titlescreen_multiplayer_button";
-                    }
-                    if (key.equals("menu.online")) {
-                        return "mc_titlescreen_realms_button";
-                    }
-                    if (key.equals("menu.playdemo")) {
-                        return "mc_titlescreen_playdemo_button";
-                    }
-                    if (key.equals("modmenu.title")) {
-                        return "modmenu_titlescreen_mods_button";
-                    }
-                }
-            }
-            return null;
+            String key = meta.getWidgetLocalizationKey();
+            return (key != null) ? IDENTIFIERS_BY_LOCALIZATION_KEY.get(key) : null;
         });
 
     }
