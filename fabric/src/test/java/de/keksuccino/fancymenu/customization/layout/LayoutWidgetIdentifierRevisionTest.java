@@ -16,6 +16,7 @@ class LayoutWidgetIdentifierRevisionTest {
 
     private static final String LAN_IDENTIFIER = "pause_share_to_lan_button";
     private static final String REPORTING_IDENTIFIER = "pause_player_reporting_button";
+    private static final String MODS_IDENTIFIER = "titlescreen_mods_button";
 
     @Test
     void savedLayoutStoresCurrentRevisionAndKeepsLanOnlyCustomizationOffPlayerReporting() {
@@ -46,6 +47,21 @@ class LayoutWidgetIdentifierRevisionTest {
 
         loaded.serializedVanillaButtonElements.remove(1);
         assertEquals(List.of(LAN_IDENTIFIER), targetIdentifiers(loaded.copy()));
+    }
+
+    @Test
+    void layoutOfPreviousRevisionMovesModsButtonCustomizationToTheSharedIdentifierOnLoad() {
+        PropertyContainerSet previous = new PropertyContainerSet("fancymenu_layout");
+        PropertyContainer meta = new PropertyContainer("layout-meta");
+        meta.putProperty("identifier", "title_screen");
+        meta.putProperty("widget_identifier_revision", "1");
+        previous.putContainer(meta);
+        previous.putContainer(vanillaWidgetEntry("vanillabtn:modmenu_titlescreen_mods_button"));
+
+        Layout loaded = Layout.deserialize(previous, null);
+        assertNotNull(loaded);
+        assertEquals(List.of(MODS_IDENTIFIER), targetIdentifiers(loaded));
+        assertEquals(List.of(MODS_IDENTIFIER), targetIdentifiers(loaded.copy()));
     }
 
     private static SerializedElement vanillaWidgetEntry(String identifier) {

@@ -27,7 +27,7 @@ public class WidgetIdentifierHandler {
     private static final Map<AbstractWidget, String> GENERATED_OPTIONS_WIDGET_IDENTIFIERS = new WeakHashMap<>();
 
     public static boolean isIdentifierOfWidget(@NotNull String widgetIdentifier, @NotNull WidgetMeta meta) {
-        widgetIdentifier = stripIdentifierPrefixes(widgetIdentifier);
+        widgetIdentifier = normalizeIdentifier(widgetIdentifier);
         if ((meta.getWidget() instanceof UniqueWidget u) && widgetIdentifier.equals(u.getWidgetIdentifierFancyMenu())) return true;
         if (MathUtils.isLong(widgetIdentifier)) {
             return widgetIdentifier.equals("" + meta.getLongIdentifier());
@@ -116,6 +116,15 @@ public class WidgetIdentifierHandler {
             GENERATED_OPTIONS_WIDGET_IDENTIFIERS.put(widget, generatedIdentifier);
             occupiedIdentifiers.add(generatedIdentifier);
         }
+    }
+
+    /**
+     * Strips the legacy prefixes off a widget identifier and resolves identifiers that got replaced in newer FancyMenu versions,
+     * so stored widget references keep finding their widget. Identifiers of other elements stay unchanged.
+     */
+    @NotNull
+    public static String normalizeIdentifier(@NotNull String identifier) {
+        return WidgetIdentifierMigration.getCurrentIdentifier(stripIdentifierPrefixes(identifier));
     }
 
     @NotNull
