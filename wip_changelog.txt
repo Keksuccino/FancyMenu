@@ -31,6 +31,12 @@ CHANGELOG | FANCYMENU v3.10.0 [ W I P !! Not public yet !! ]
 - Added input fields for the red, green, blue and alpha values to the color picker, so you can type exact RGBA values (#1652)
 - Added the newest texts (browser loading/error messages and the "select an action first" warning) to all other translations
 - Added placeholder support to the Custom Window Title, so it can show things like your modpack version, the Minecraft version or variables (#1764)
+- Added color emoji support to FancyMenu's UI text, including flags, skin tones and combined emoji like 👨‍👩‍👧
+- Improved FancyMenu's UI text so it looks much sharper at every GUI and UI scale, including scaled text
+- Improved letter spacing of FancyMenu's UI text by adding kerning
+- Improved performance of FancyMenu's UI text rendering, text measuring and line wrapping, and reduced its GPU memory use
+- Improved loading of Japanese, Korean and Chinese FancyMenu UI fonts, which now only load when text needs them
+- Improved line wrapping in FancyMenu's UI so it no longer splits emoji
 - Improved the description of the "Negate Number" placeholder in all languages
 - Improved performance of video elements and video menu backgrounds that play local files with Rinku (the file is no longer re-checked on disk every frame)
 - The Pause screen's World Options button (Multiplayer Options in MC 26.2) now has a stable widget ID, so "Mimic Button" actions and layout customizations keep finding it even when other mods shift the menu (#1825)
@@ -82,5 +88,8 @@ CHANGELOG | FANCYMENU v3.10.0 [ W I P !! Not public yet !! ]
 - Fixed pressing Enter in the color picker closing it without saving an undo step for the new color
 - Fixed the expensive FMA warning popup opening slightly off-center
 - Fixed text inputs with suggestions sometimes still showing a grey completion hint after clicking away from them
+- Fixed italic FancyMenu UI text being slanted too much
+- Fixed text shadows of colored FancyMenu UI text being too bright
+- Fixed obfuscated FancyMenu UI text constantly changing its width
 
 %changelog:end%
