@@ -37,7 +37,7 @@ public final class GuiBlurRenderer {
      * @param y The Y position in GUI pixels (top-left origin). Recommended range: 0 to screen height.
      * @param width The width in GUI pixels. Recommended range: 1 to screen width.
      * @param height The height in GUI pixels. Recommended range: 1 to screen height.
-     * @param blurRadius The blur intensity in GUI pixels. Values are hard-clamped to 0 through {@link GuiBlurRadius#MAX_RADIUS} (4 is a good default).
+     * @param blurRadius The blur radius in GUI pixels (4 is a good default). Recommended range: 0 to {@link GuiBlurRadius#MAX_RADIUS}; the GPU work stays bounded by {@link GuiBlurRadius#MAX_FRAMEBUFFER_RADIUS} framebuffer pixels.
      * @param cornerRadius The rounded corner radius in GUI pixels. Recommended range: 0 to min(width, height) / 2 (6 is a good default).
      * @param tint The tint color that is mixed into the blurred area. Use alpha to control strength (0.15 is a good default).
      * @param partial Partial tick for the frame; pass the current render partial.
@@ -101,7 +101,7 @@ public final class GuiBlurRenderer {
         GuiPoseTransformUtil.TransformedArea area = transform.transformArea(x, y, width, height);
         float scale = transform.scale();
         CornerRadii cornerRadii = CornerRadii.of(topLeftRadius * scale, topRightRadius * scale, bottomRightRadius * scale, bottomLeftRadius * scale);
-        queueBlurArea(graphics, new BlurArea(area.x(), area.y(), area.width(), area.height(), GuiBlurRadius.sanitize(blurRadius * scale), cornerRadii, SHAPE_TYPE_ROUNDED_RECT, 2.0F, tint, 0.0F, DrawableColor.FULLY_TRANSPARENT, opacity));
+        queueBlurArea(graphics, new BlurArea(area.x(), area.y(), area.width(), area.height(), blurRadius * scale, cornerRadii, SHAPE_TYPE_ROUNDED_RECT, 2.0F, tint, 0.0F, DrawableColor.FULLY_TRANSPARENT, opacity));
     }
 
     /**
@@ -113,7 +113,7 @@ public final class GuiBlurRenderer {
      * <br>- Diamond-like (pointier): {@code roundness = 1.0}
      */
     public static void renderBlurAreaCircle(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float blurRadius, float roundness, @Nonnull DrawableColor tint, float partial) {
-        queueBlurArea(graphics, new BlurArea(x, y, width, height, GuiBlurRadius.sanitize(blurRadius), CornerRadii.uniform(0.0F), SHAPE_TYPE_SUPERELLIPSE, clampRoundness(roundness), tint, 0.0F, DrawableColor.FULLY_TRANSPARENT, 1.0F));
+        queueBlurArea(graphics, new BlurArea(x, y, width, height, blurRadius, CornerRadii.uniform(0.0F), SHAPE_TYPE_SUPERELLIPSE, clampRoundness(roundness), tint, 0.0F, DrawableColor.FULLY_TRANSPARENT, 1.0F));
     }
 
     public static void renderBlurAreaCircleScaled(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float blurRadius, float roundness, @Nonnull DrawableColor tint, float partial) {
@@ -128,7 +128,7 @@ public final class GuiBlurRenderer {
     public static void renderBlurAreaCircleScaled(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float blurRadius, float roundness, @Nonnull DrawableColor tint, float opacity, float partial) {
         GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
         GuiPoseTransformUtil.TransformedArea area = transform.transformArea(x, y, width, height);
-        queueBlurArea(graphics, new BlurArea(area.x(), area.y(), area.width(), area.height(), GuiBlurRadius.sanitize(blurRadius * transform.scale()), CornerRadii.uniform(0.0F), SHAPE_TYPE_SUPERELLIPSE, clampRoundness(roundness), tint, 0.0F, DrawableColor.FULLY_TRANSPARENT, opacity));
+        queueBlurArea(graphics, new BlurArea(area.x(), area.y(), area.width(), area.height(), blurRadius * transform.scale(), CornerRadii.uniform(0.0F), SHAPE_TYPE_SUPERELLIPSE, clampRoundness(roundness), tint, 0.0F, DrawableColor.FULLY_TRANSPARENT, opacity));
     }
 
     /**
@@ -201,7 +201,7 @@ public final class GuiBlurRenderer {
      * @param headerTint Tint of the header band; {@code tint} applies to the rest of the area.
      */
     public static void renderBlurAreaWithIntensityAndHeader(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float baseBlurRadius, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, @Nonnull DrawableColor tint, float headerHeight, @Nonnull DrawableColor headerTint, float partial) {
-        queueBlurArea(graphics, new BlurArea(x, y, width, height, GuiBlurRadius.sanitize(applyBlurIntensity(baseBlurRadius)), CornerRadii.of(topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius), SHAPE_TYPE_ROUNDED_RECT, 2.0F, tint, headerHeight, headerTint, 1.0F));
+        queueBlurArea(graphics, new BlurArea(x, y, width, height, applyBlurIntensity(baseBlurRadius), CornerRadii.of(topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius), SHAPE_TYPE_ROUNDED_RECT, 2.0F, tint, headerHeight, headerTint, 1.0F));
     }
 
     public static void renderBlurAreaWithIntensityAndHeaderScaled(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float baseBlurRadius, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, @Nonnull DrawableColor tint, float headerHeight, @Nonnull DrawableColor headerTint, float partial) {
@@ -216,7 +216,7 @@ public final class GuiBlurRenderer {
     }
 
     private static void renderBlurAreaInternal(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float blurRadius, @Nonnull CornerRadii cornerRadii, @Nonnull DrawableColor tint, float partial) {
-        queueBlurArea(graphics, new BlurArea(x, y, width, height, GuiBlurRadius.sanitize(blurRadius), cornerRadii, SHAPE_TYPE_ROUNDED_RECT, 2.0F, tint, 0.0F, DrawableColor.FULLY_TRANSPARENT, 1.0F));
+        queueBlurArea(graphics, new BlurArea(x, y, width, height, blurRadius, cornerRadii, SHAPE_TYPE_ROUNDED_RECT, 2.0F, tint, 0.0F, DrawableColor.FULLY_TRANSPARENT, 1.0F));
     }
 
     private static void queueBlurArea(@Nonnull GuiGraphicsExtractor graphics, @Nonnull BlurArea area) {

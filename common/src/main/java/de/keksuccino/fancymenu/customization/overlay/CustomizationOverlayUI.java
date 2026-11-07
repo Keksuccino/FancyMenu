@@ -1610,7 +1610,7 @@ public class CustomizationOverlayUI {
                 true,
                 FancyMenu.getOptions().uiBlurIntensity.getDefaultValue().doubleValue(),
                 0.25D,
-                3.0D,
+                10.0D,
                 v -> {
                     double pct = MathUtils.round(v * 100.0D, 1);
                     return Component.translatable("fancymenu.overlay.menu_bar.user_interface.ui_blur_intensity.slider_label", pct);
