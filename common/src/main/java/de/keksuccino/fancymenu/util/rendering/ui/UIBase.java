@@ -119,17 +119,6 @@ public class UIBase extends RenderingUtils {
         return SmoothFonts.peekShouldUseMinecraftFont(FancyMenu.getOptions().useMinecraftFont.getValue());
     }
 
-    private static float resolveTextRenderScale() {
-        if (isCurrentlyRenderingAtUIScale()) {
-            return UIBase.getUIScale();
-        }
-        float guiScale = (float) Minecraft.getInstance().getWindow().getGuiScale();
-        if (!Float.isFinite(guiScale) || guiScale <= 0.0F) {
-            return 1.0F;
-        }
-        return guiScale;
-    }
-
     public static float getUITextSizeNormal() {
         if (isCurrentlyRenderingAtUIScale()) {
             if (UIBase.getUIScale() <= 1) return SmoothFonts.DEFAULT_TEXT_SIZE + 1; // make text easier to read on small scales
@@ -167,38 +156,32 @@ public class UIBase extends RenderingUtils {
 
     public static float getUITextWidthNormal(@NotNull Component text) {
         if (shouldUseMinecraftFontForUIRendering()) return Minecraft.getInstance().font.width(text);
-        float renderScale = resolveTextRenderScale();
-        return SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeNormal(), renderScale);
+        return SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeNormal());
     }
 
     public static float getUITextWidthLarge(@NotNull Component text) {
         if (shouldUseMinecraftFontForUIRendering()) return Minecraft.getInstance().font.width(text);
-        float renderScale = resolveTextRenderScale();
-        return SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeLarge(), renderScale);
+        return SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeLarge());
     }
 
     public static float getUITextWidthSmall(@NotNull Component text) {
         if (shouldUseMinecraftFontForUIRendering()) return Minecraft.getInstance().font.width(text);
-        float renderScale = resolveTextRenderScale();
-        return SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeSmall(), renderScale);
+        return SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeSmall());
     }
 
     public static float getUITextWidth(@NotNull String text) {
         if (shouldUseMinecraftFontForUIRendering()) return Minecraft.getInstance().font.width(text);
-        float renderScale = resolveTextRenderScale();
-        return SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeNormal(), renderScale);
+        return SmoothTextRenderer.getTextWidth(getUIFont(), text, getUITextSizeNormal());
     }
 
     public static float getUITextWidth(@NotNull Component text, float textSize) {
         if (shouldUseMinecraftFontForUIRendering()) return Minecraft.getInstance().font.width(text);
-        float renderScale = resolveTextRenderScale();
-        return SmoothTextRenderer.getTextWidth(getUIFont(), text, textSize, renderScale);
+        return SmoothTextRenderer.getTextWidth(getUIFont(), text, textSize);
     }
 
     public static float getUITextWidth(@NotNull String text, float textSize) {
         if (shouldUseMinecraftFontForUIRendering()) return Minecraft.getInstance().font.width(text);
-        float renderScale = resolveTextRenderScale();
-        return SmoothTextRenderer.getTextWidth(getUIFont(), text, textSize, renderScale);
+        return SmoothTextRenderer.getTextWidth(getUIFont(), text, textSize);
     }
 
     public static float getAreaLabelVerticalPadding() {
@@ -462,8 +445,7 @@ public class UIBase extends RenderingUtils {
             graphics.drawString(Minecraft.getInstance().font, text, (int)x, (int)y, baseColor, false);
             return dimensions;
         }
-        float renderScale = resolveTextRenderScale();
-        return SmoothTextRenderer.renderText(graphics, getUIFont(), text, x, y, baseColor, textSize, renderScale, false);
+        return SmoothTextRenderer.renderText(graphics, getUIFont(), text, x, y, baseColor, textSize, false);
     }
 
     /**
@@ -472,8 +454,7 @@ public class UIBase extends RenderingUtils {
     @NotNull
     public static <C extends Component> List<MutableComponent> lineWrapUIComponentsNormal(@NotNull List<C> lines, float maxWidth) {
         if (shouldUseMinecraftFontForUIRendering()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
-        float renderScale = resolveTextRenderScale();
-        return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeNormal(), maxWidth, renderScale);
+        return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeNormal(), maxWidth);
     }
 
     /**
@@ -482,8 +463,7 @@ public class UIBase extends RenderingUtils {
     @NotNull
     public static <C extends Component> List<MutableComponent> lineWrapUIComponentsNormal(@NotNull C lines, float maxWidth) {
         if (shouldUseMinecraftFontForUIRendering()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
-        float renderScale = resolveTextRenderScale();
-        return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeNormal(), maxWidth, renderScale);
+        return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeNormal(), maxWidth);
     }
 
     /**
@@ -492,8 +472,7 @@ public class UIBase extends RenderingUtils {
     @NotNull
     public static <C extends Component> List<MutableComponent> lineWrapUIComponentsSmall(@NotNull List<C> lines, float maxWidth) {
         if (shouldUseMinecraftFontForUIRendering()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
-        float renderScale = resolveTextRenderScale();
-        return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeSmall(), maxWidth, renderScale);
+        return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeSmall(), maxWidth);
     }
 
     /**
@@ -502,8 +481,7 @@ public class UIBase extends RenderingUtils {
     @NotNull
     public static <C extends Component> List<MutableComponent> lineWrapUIComponentsSmall(@NotNull C lines, float maxWidth) {
         if (shouldUseMinecraftFontForUIRendering()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
-        float renderScale = resolveTextRenderScale();
-        return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeSmall(), maxWidth, renderScale);
+        return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeSmall(), maxWidth);
     }
 
     /**
@@ -512,8 +490,7 @@ public class UIBase extends RenderingUtils {
     @NotNull
     public static <C extends Component> List<MutableComponent> lineWrapUIComponentsLarge(@NotNull List<C> lines, float maxWidth) {
         if (shouldUseMinecraftFontForUIRendering()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
-        float renderScale = resolveTextRenderScale();
-        return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeLarge(), maxWidth, renderScale);
+        return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeLarge(), maxWidth);
     }
 
     /**
@@ -522,8 +499,7 @@ public class UIBase extends RenderingUtils {
     @NotNull
     public static <C extends Component> List<MutableComponent> lineWrapUIComponentsLarge(@NotNull C lines, float maxWidth) {
         if (shouldUseMinecraftFontForUIRendering()) return TextFormattingUtils.lineWrapComponents(lines, (int) maxWidth);
-        float renderScale = resolveTextRenderScale();
-        return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeLarge(), maxWidth, renderScale);
+        return TextFormattingUtils.lineWrapComponentsSmooth(lines, getUIFont(), getUITextSizeLarge(), maxWidth);
     }
 
 }
