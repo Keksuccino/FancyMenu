@@ -221,7 +221,7 @@ public abstract class ScrollAreaEntry extends UIBase implements Renderable {
     }
 
     public void setClickable(boolean clickable) {
-        this.clickable = true;
+        this.clickable = clickable;
     }
 
     public boolean isClickable() {
