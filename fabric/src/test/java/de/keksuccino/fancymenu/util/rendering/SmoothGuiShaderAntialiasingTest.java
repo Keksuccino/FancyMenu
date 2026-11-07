@@ -43,7 +43,7 @@ class SmoothGuiShaderAntialiasingTest {
                 Arguments.of("assets/minecraft/shaders/include/fancymenu_rounded_box.glsl", 1, "float antialiasWidth = max(fwidth(distance) * 0.5, 0.0001);"),
                 Arguments.of("assets/minecraft/shaders/program/fancymenu_gui_smooth_image_rect.fsh", 1, "float antialiasWidth = max(fwidth(distance) * 0.5, 0.0001);"),
                 Arguments.of("assets/minecraft/shaders/program/fancymenu_gui_smooth_rect.fsh", 1, "float antialiasWidth = max(fwidth(distance) * 0.5, 0.0001);"),
-                Arguments.of("assets/minecraft/shaders/program/fancymenu_gui_blur.fsh", 2, "float antialiasWidth = max(fwidth(distance) * 0.5, 0.0001);"),
+                Arguments.of("assets/minecraft/shaders/core/fancymenu_blur_composite.fsh", 2, "#moj_import <fancymenu_rounded_box.glsl>"),
                 Arguments.of("assets/minecraft/shaders/core/fancymenu_gui_smooth_rect_local.fsh", 0, "#moj_import <fancymenu_rounded_box.glsl>")
         );
     }

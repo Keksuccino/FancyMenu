@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -62,10 +61,6 @@ class CustomGuiBaseScreenTest {
             this.graphics = mock(GuiGraphics.class);
         }
         this.renderingAccess = mockStatic(RenderingUtils.class);
-        this.renderingAccess.when(() -> RenderingUtils.setOverrideBackgroundBlurRadius(anyInt())).thenCallRealMethod();
-        this.renderingAccess.when(RenderingUtils::resetOverrideBackgroundBlurRadius).thenCallRealMethod();
-        this.renderingAccess.when(RenderingUtils::shouldOverrideBackgroundBlurRadius).thenCallRealMethod();
-        this.renderingAccess.when(RenderingUtils::getOverrideBackgroundBlurRadius).thenCallRealMethod();
         // Only OpenGL setup and the final graphics fill are replaced; the production overlay helper still runs.
         doAnswer(invocation -> {
             assertEquals(0, (int) invocation.getArgument(0));
@@ -84,7 +79,6 @@ class CustomGuiBaseScreenTest {
     void restoreGlobalState() {
         EventHandler.INSTANCE.unregisterListenersOf(this.listener);
         if (this.renderingAccess != null) {
-            RenderingUtils.resetOverrideBackgroundBlurRadius();
             this.renderingAccess.close();
         }
         if (this.minecraftAccess != null) this.minecraftAccess.close();
@@ -104,8 +98,6 @@ class CustomGuiBaseScreenTest {
 
         assertEquals(expected, this.steps);
         this.assertBackgroundEvent(screen);
-        assertFalse(RenderingUtils.shouldOverrideBackgroundBlurRadius());
-        if (expected.contains(DrawStep.BLUR)) assertEquals(popup && hasParent, screen.blurOverrideActive);
     }
 
     private static Stream<Arguments> backgroundCases() {
@@ -137,7 +129,6 @@ class CustomGuiBaseScreenTest {
 
         assertEquals(popup ? List.of(DrawStep.PARENT, DrawStep.BLUR, DrawStep.EVENT) : List.of(DrawStep.BLUR, DrawStep.TINT, DrawStep.EVENT), this.steps);
         this.assertBackgroundEvent(screen);
-        assertFalse(RenderingUtils.shouldOverrideBackgroundBlurRadius());
     }
 
     @Test
@@ -203,7 +194,6 @@ class CustomGuiBaseScreenTest {
 
         private final List<DrawStep> steps;
         private boolean failBlur;
-        private boolean blurOverrideActive;
 
         private RecordingScreen(CustomGui gui, Screen parent, List<DrawStep> steps) {
             super(gui, parent, null);
@@ -223,8 +213,6 @@ class CustomGuiBaseScreenTest {
         @Override
         protected void renderGuiBlurBackground(GuiGraphics graphics, float partial) {
             this.steps.add(DrawStep.BLUR);
-            this.blurOverrideActive = RenderingUtils.shouldOverrideBackgroundBlurRadius();
-            if (this.blurOverrideActive) assertEquals(7, RenderingUtils.getOverrideBackgroundBlurRadius());
             if (this.failBlur) throw new IllegalStateException();
         }
 

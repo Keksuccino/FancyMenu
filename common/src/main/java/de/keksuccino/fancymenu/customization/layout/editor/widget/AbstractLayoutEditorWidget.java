@@ -147,8 +147,8 @@ public abstract class AbstractLayoutEditorWidget extends AbstractContainerEventH
                 graphics.pose().scale((float) renderScale, (float) renderScale, 1.0F);
                 graphics.pose().translate(this.getTranslatedX(), this.getTranslatedY(), this.posZ);
 
+                this.renderBackground(graphics, partial);
                 if (this.isExpanded()) {
-                    this.renderBackground(graphics, partial);
                     this.renderBodyViewport(graphics, localMouseX, localMouseY, renderScale, partial);
                 }
                 this.renderFrame(graphics, localMouseX, localMouseY, partial);
@@ -168,7 +168,25 @@ public abstract class AbstractLayoutEditorWidget extends AbstractContainerEventH
 
     protected abstract void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial);
 
+    /**
+     * Renders the body background while expanded. With blur, it renders the blur area of the whole widget instead, with the title bar as its header band,
+     * so the widget needs only one blur in both states.
+     */
     protected void renderBackground(@NotNull GuiGraphics graphics, float partial) {
+        float cornerRadius = UIBase.getInterfaceCornerRoundingRadius();
+        if (UIBase.shouldBlur()) {
+            float titleBarHeight = this.getTitleBarHeight();
+            float width = this.getBodyWidth();
+            float height = this.isExpanded() ? titleBarHeight + this.getBodyHeight() + this.getBorderThickness() : titleBarHeight;
+            if (width > 0 && height > 0) {
+                // The widget renders inside a pose scaled to FancyMenu's UI scale, so the blur radius stays in UI pixels.
+                GuiBlurRenderer.renderBlurAreaWithIntensityAndHeaderScaled(graphics, this.getBorderThickness(), this.getBorderThickness(), width, height, UIBase.getUIScaleBlurRadius(), cornerRadius, cornerRadius, cornerRadius, cornerRadius, this.getBackgroundColor(), titleBarHeight, this.getTitleBarColor(), partial);
+            }
+            return;
+        }
+        if (!this.isExpanded()) {
+            return;
+        }
         float x = this.getRealBodyX();
         float y = this.getBorderThickness() + this.getTitleBarHeight();
         float width = this.getBodyWidth();
@@ -176,12 +194,7 @@ public abstract class AbstractLayoutEditorWidget extends AbstractContainerEventH
         if (width <= 0 || height <= 0) {
             return;
         }
-        float cornerRadius = UIBase.getInterfaceCornerRoundingRadius();
-        if (UIBase.shouldBlur()) {
-            GuiBlurRenderer.renderBlurAreaWithIntensityRoundAllCornersScaled(graphics, x, y, width, height, UIBase.getBlurRadius(), 0.0F, 0.0F, cornerRadius, cornerRadius, this.getBackgroundColor(), partial);
-        } else {
-            SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(graphics, x, y, width, height, 0.0F, 0.0F, cornerRadius, cornerRadius, this.getBackgroundColor().getColorInt(), partial);
-        }
+        SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(graphics, x, y, width, height, 0.0F, 0.0F, cornerRadius, cornerRadius, this.getBackgroundColor().getColorInt(), partial);
     }
 
     protected void renderFrame(@NotNull GuiGraphics graphics, double localMouseX, double localMouseY, float partial) {
@@ -275,9 +288,8 @@ public abstract class AbstractLayoutEditorWidget extends AbstractContainerEventH
             boolean expanded = this.isExpanded();
             float bottomLeft = expanded ? 0.0F : cornerRadius;
             float bottomRight = expanded ? 0.0F : cornerRadius;
-            if (UIBase.shouldBlur()) {
-                GuiBlurRenderer.renderBlurAreaWithIntensityRoundAllCornersScaled(graphics, innerX, innerY, innerWidth, innerHeight, UIBase.getBlurRadius(), cornerRadius, cornerRadius, bottomRight, bottomLeft, this.getTitleBarColor(), partial);
-            } else {
+            // With blur, the title bar is the header band of the widget's blur area in renderBackground().
+            if (!UIBase.shouldBlur()) {
                 SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(
                         graphics,
                         innerX,

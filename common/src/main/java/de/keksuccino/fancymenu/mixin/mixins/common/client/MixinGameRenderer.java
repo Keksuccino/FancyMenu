@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
+import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
@@ -61,6 +62,7 @@ public class MixinGameRenderer {
     @Inject(method = "render", at = @At("HEAD"))
     private void before_render_FancyMenu(float partialTicks, long nanoTime, boolean renderLevel, CallbackInfo info) {
         ScreenCustomization.onPreGameRenderTick();
+        GuiBlurRenderer.onFrameStart_FancyMenu();
     }
 
     @Inject(
@@ -245,6 +247,11 @@ public class MixinGameRenderer {
         }
 
         return entityHitResult;
+    }
+
+    @Inject(method = "close", at = @At("TAIL"))
+    private void after_close_FancyMenu(CallbackInfo info) {
+        GuiBlurRenderer.close_FancyMenu();
     }
 
 }

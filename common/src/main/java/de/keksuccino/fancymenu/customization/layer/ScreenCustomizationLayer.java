@@ -620,13 +620,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		if (width <= 0 || height <= 0 || RenderingUtils.isVanillaMenuBlurringBlocked()) {
 			return;
 		}
-		int radius = RenderingUtils.shouldOverrideBackgroundBlurRadius()
-				? RenderingUtils.getOverrideBackgroundBlurRadius()
-				: VANILLA_BACKGROUND_BLUR_RADIUS_FANCYMENU;
-		if (radius < 1) {
-			return;
-		}
-		float blurRadius = GuiBlurRenderer.convertFramebufferBlurRadiusToGui(radius);
+		float blurRadius = GuiBlurRenderer.convertFramebufferBlurRadiusToGui(VANILLA_BACKGROUND_BLUR_RADIUS_FANCYMENU);
 		GuiBlurRenderer.renderBlurArea(graphics, 0.0F, 0.0F, width, height, blurRadius, 0.0F, DrawableColor.FULLY_TRANSPARENT, partial);
 		Minecraft.getInstance().getMainRenderTarget().bindWrite(false);
 	}

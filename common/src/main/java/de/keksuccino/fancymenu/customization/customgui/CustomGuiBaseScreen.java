@@ -26,6 +26,8 @@ import org.jetbrains.annotations.Nullable;
 
 public class CustomGuiBaseScreen extends ModernScreen {
 
+    // Matches the default vanilla menu blur of later Minecraft versions, which have an option for it.
+    private static final float BACKGROUND_BLUR_FRAMEBUFFER_RADIUS = 7.0F;
     private static final Logger LOGGER = LogManager.getLogger();
 
 	protected final CustomGui gui;
@@ -110,9 +112,6 @@ public class CustomGuiBaseScreen extends ModernScreen {
                 this.renderDirtBackground(graphics);
             }
         }
-        if (popup) {
-            RenderingUtils.setOverrideBackgroundBlurRadius(7);
-        }
         try {
             if ((!popup && renderBackgroundOverlay) || (popup && popupOverlay)) {
                 this.renderGuiBlurBackground(graphics, partial);
@@ -120,7 +119,6 @@ public class CustomGuiBaseScreen extends ModernScreen {
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Error while rendering background blur in Custom GUI!", ex);
         }
-        RenderingUtils.resetOverrideBackgroundBlurRadius();
         if (!popup && renderBackgroundOverlay) {
             // Dirt is only the opaque fallback above; drawing it as an overlay would hide the world after blurring it.
             ScreenCustomizationLayer.renderBackgroundOverlay(graphics, 0, 0, this.width, this.height);
@@ -146,9 +144,11 @@ public class CustomGuiBaseScreen extends ModernScreen {
         }
     }
 
+    /**
+     * Blurs the background like vanilla menus of later Minecraft versions do. This version has no blur strength option, so it uses a fixed strength.
+     */
     protected void renderGuiBlurBackground(@NotNull GuiGraphics graphics, float partial) {
-        int radius = 7;
-        float blurRadius = GuiBlurRenderer.convertFramebufferBlurRadiusToGui(radius);
+        float blurRadius = GuiBlurRenderer.convertFramebufferBlurRadiusToGui(BACKGROUND_BLUR_FRAMEBUFFER_RADIUS);
         GuiBlurRenderer.renderBlurArea(graphics, 0.0F, 0.0F, this.width, this.height, blurRadius, 0.0F, DrawableColor.FULLY_TRANSPARENT, partial);
     }
 
