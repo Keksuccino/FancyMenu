@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.properties;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
@@ -42,13 +41,9 @@ import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
-import de.keksuccino.fancymenu.FancyMenu;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -1257,11 +1252,11 @@ public class Property<T> {
         p.deserializationCodec = Boolean::valueOf;
         p.contextMenuEntrySupplier = (property, builder, menu) -> {
             ContextMenu subMenu = new ContextMenu();
-            Object manualToggleSentinel = new Object();
+            // Every menu of a stack (multi-selection) built its own applier, so the applied values must not be instances that only one of these appliers knows
             ContextMenu.StackApplier stackApplier = (stackEntry, value) -> {
                 BooleanProperty resolved = (BooleanProperty) builder.self().getProperty(key);
                 if (resolved == null) return;
-                if (value == manualToggleSentinel) {
+                if (value == BooleanProperty.ToggleMode.MANUAL) {
                     String manualValue = resolved.getRawInputOrFormattedValue();
                     if (manualValue == null) {
                         Boolean fallback = resolved.get();
@@ -1271,12 +1266,10 @@ public class Property<T> {
                         manualValue = String.valueOf(fallback != null && fallback);
                     }
                     resolved.setManualInput(manualValue);
+                } else if (value instanceof BooleanProperty.ToggleMode mode) {
+                    resolved.set(mode == BooleanProperty.ToggleMode.ENABLED);
                 } else if (value instanceof String stringValue) {
                     resolved.setManualInput(stringValue);
-                } else if (value instanceof Boolean boolValue) {
-                    resolved.set(boolValue);
-                } else if (value == null) {
-                    resolved.set(property.getDefault());
                 }
             };
 
@@ -1319,100 +1312,29 @@ public class Property<T> {
                     .setStackApplier(stackApplier)
                     .setIcon(MaterialIcons.TEXT_FIELDS);
 
-            ContextMenu.SubMenuContextMenuEntry entry = new ContextMenu.SubMenuContextMenuEntry("menu_entry_" + key, menu, Component.empty(), subMenu) {
-                private static final int MODE_DISABLED = 0;
-                private static final int MODE_ENABLED = 1;
-                private static final int MODE_MANUAL = 2;
-
-                private boolean isManualMode() {
-                    BooleanProperty resolved = (BooleanProperty) builder.self().getProperty(key);
-                    return (resolved != null) && resolved.hasManualInput();
+            ContextMenu.SubMenuContextMenuEntry entry = new ContextMenu.SubMenuContextMenuEntry("menu_entry_" + key, menu, Component.empty(), subMenu);
+            // The toggle behavior lives in the click action and suppliers instead of a subclass, because stacked (multi-selection) menus only work with entry copies
+            entry.setClickAction((contextMenu, entryRef) -> {
+                if (entryRef.getStackMeta().isPartOfStack() && !entryRef.getStackMeta().isFirstInStack()) {
+                    return;
                 }
-
-                @Override
-                protected void renderSubMenuArrow(GuiGraphicsExtractor graphics) {
-                    if (this.isManualMode()) {
-                        super.renderSubMenuArrow(graphics);
-                    }
+                BooleanProperty.ToggleMode currentMode = BooleanProperty.ToggleMode.ofStack(builder.resolveStackValue(entryRef));
+                if (currentMode == null) {
+                    return;
                 }
-
-                @Override
-                protected void tickEntry() {
-                    if (!this.isManualMode()) {
-                        if (this.subContextMenu.isOpen()) {
-                            this.subContextMenu.closeMenu();
-                        }
-                        return;
-                    }
-                    super.tickEntry();
-                }
-
-                @Override
-                public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean isDoubleClick) {
-                    return this.mouseClicked(event.x(), event.y(), event.button());
-                }
-                
-                public boolean mouseClicked(double mouseX, double mouseY, int button) {
-                    if ((button == InputConstants.MOUSE_BUTTON_LEFT) && this.isHovered() && this.isActive() && !this.parent.isSubMenuHovered() && !this.tooltipIconHovered) {
-                        if (this.getStackMeta().isPartOfStack() && !this.getStackMeta().isFirstInStack()) {
-                            return true;
-                        }
-                        if (FancyMenu.getOptions().playUiClickSounds.getValue() && this.enableClickSound) {
-                            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
-                        }
-                        ContextMenuBuilder.StackContext<? extends PropertyHolder> stack = builder.stack(this, consumes -> consumes.getProperty(key) != null);
-                        if (stack.isEmpty()) {
-                            return true;
-                        }
-                        boolean anyManual = false;
-                        boolean allManual = true;
-                        for (PropertyHolder holder : stack.getObjects()) {
-                            BooleanProperty resolved = (BooleanProperty) holder.getProperty(key);
-                            if ((resolved != null) && resolved.hasManualInput()) {
-                                anyManual = true;
-                            } else {
-                                allManual = false;
-                            }
-                        }
-                        int currentMode;
-                        if (anyManual && allManual) {
-                            currentMode = MODE_MANUAL;
-                        } else if (anyManual) {
-                            currentMode = MODE_DISABLED;
-                        } else {
-                            ContextMenuBuilder.StackValue<Boolean> currentValue = builder.resolveStackValue(this);
-                            if (currentValue.isEmpty()) {
-                                return true;
-                            }
-                            boolean baseValue = currentValue.hasCommonValue() ? currentValue.getValue() : false;
-                            currentMode = baseValue ? MODE_ENABLED : MODE_DISABLED;
-                        }
-                        int nextMode = switch (currentMode) {
-                            case MODE_DISABLED -> MODE_ENABLED;
-                            case MODE_ENABLED -> MODE_MANUAL;
-                            default -> MODE_DISABLED;
-                        };
-                        builder.saveSnapshot();
-                        if (nextMode == MODE_MANUAL) {
-                            builder.applyStackAppliers(this, manualToggleSentinel);
-                        } else {
-                            builder.applyStackAppliers(this, nextMode == MODE_ENABLED);
-                        }
-                        return true;
-                    }
-                    return super.mouseClicked(mouseX, mouseY, button);
-                }
-            };
-
+                builder.saveSnapshot();
+                builder.applyStackAppliers(entryRef, currentMode.next());
+            });
+            // The plain text input is only part of the manual mode
+            entry.setSubMenuAvailableSupplier((contextMenu, entryRef) -> BooleanProperty.ToggleMode.ofStack(builder.resolveStackValue(entryRef)) == BooleanProperty.ToggleMode.MANUAL);
             entry.setLabelSupplier((contextMenu, entryRef) -> {
-                BooleanProperty resolved = (BooleanProperty) builder.self().getProperty(key);
-                if ((resolved != null) && resolved.hasManualInput()) {
+                BooleanProperty.ToggleMode mode = BooleanProperty.ToggleMode.ofStack(builder.resolveStackValue(entryRef));
+                if (mode == BooleanProperty.ToggleMode.MANUAL) {
                     Component manual = Component.translatable("fancymenu.general.cycle.enabled_disabled.manual")
                             .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()));
                     return Component.translatable(property.getContextMenuEntryLocalizationKeyBase(), manual);
                 }
-                Boolean value = (resolved != null) ? resolved.get() : property.getDefault();
-                if (value != null && value) {
+                if (mode == BooleanProperty.ToggleMode.ENABLED) {
                     Component enabled = Component.translatable("fancymenu.general.cycle.enabled_disabled.enabled")
                             .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().success_color.getColorInt()));
                     return Component.translatable(property.getContextMenuEntryLocalizationKeyBase(), enabled);
@@ -1422,10 +1344,7 @@ public class Property<T> {
                 return Component.translatable(property.getContextMenuEntryLocalizationKeyBase(), disabled);
             });
             entry.setStackApplier(stackApplier);
-            entry.setStackValueSupplier(stackEntry -> {
-                BooleanProperty resolved = (BooleanProperty) builder.self().getProperty(key);
-                return (resolved != null) ? resolved.get() : property.getDefault();
-            });
+            entry.setStackValueSupplier(stackEntry -> BooleanProperty.ToggleMode.of((BooleanProperty) builder.self().getProperty(key), property.getDefault()));
             entry.setStackable(true);
             entry.setStackGroupKey(builder.self().getClass());
             entry.setIcon(MaterialIcons.TOGGLE_ON);
@@ -3438,6 +3357,49 @@ public class Property<T> {
             if ("true".equalsIgnoreCase(trimmed)) return true;
             if ("false".equalsIgnoreCase(trimmed)) return false;
             return null;
+        }
+
+        /**
+         * The modes the context menu toggle of a {@link BooleanProperty} cycles through.
+         */
+        protected enum ToggleMode {
+
+            DISABLED,
+            ENABLED,
+            MANUAL;
+
+            /**
+             * @param property the property to get the mode of, or null if its holder doesn't have it
+             * @param defaultValue the value to use when the holder doesn't have the property
+             */
+            @NotNull
+            protected static ToggleMode of(@Nullable BooleanProperty property, @Nullable Boolean defaultValue) {
+                if ((property != null) && property.hasManualInput()) return MANUAL;
+                Boolean value = (property != null) ? property.get() : defaultValue;
+                return ((value != null) && value) ? ENABLED : DISABLED;
+            }
+
+            /**
+             * Resolves the mode of all stacked toggles. Mixed stacks count as {@link #DISABLED}, so toggling them enables all of them.
+             *
+             * @return the mode of the stack, or null if the stack is empty
+             */
+            @Nullable
+            protected static ToggleMode ofStack(@NotNull ContextMenuBuilder.StackValue<ToggleMode> stackValue) {
+                if (stackValue.isEmpty()) return null;
+                ToggleMode commonMode = stackValue.getValue();
+                return (stackValue.hasCommonValue() && (commonMode != null)) ? commonMode : DISABLED;
+            }
+
+            @NotNull
+            protected ToggleMode next() {
+                return switch (this) {
+                    case DISABLED -> ENABLED;
+                    case ENABLED -> MANUAL;
+                    case MANUAL -> DISABLED;
+                };
+            }
+
         }
 
     }
