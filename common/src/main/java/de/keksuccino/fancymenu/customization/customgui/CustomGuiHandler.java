@@ -40,14 +40,7 @@ public class CustomGuiHandler {
 
 		reload();
 
-		//Deserialize legacy GUIs
-		if (!LegacyHandler.getCheckList().customGuisPorted.getValue()) {
-			LegacyHandler.getCheckList().customGuisPorted.setValue(true);
-			for (CustomGui gui : deserializeLegacyGuis()) {
-				CUSTOM_GUI_SCREENS.put(gui.identifier, gui);
-			}
-			saveChanges();
-		}
+		importLegacyGuisIfNeeded();
 
 		EventHandler.INSTANCE.registerListenersOf(new CustomGuiHandler());
 
@@ -55,10 +48,35 @@ public class CustomGuiHandler {
 
 	}
 
+	/**
+	 * Saves the current custom GUIs and reads them from the file again.
+	 */
 	public static void reload() {
-		try {
+		if (initialized || !CUSTOM_GUIS_FILE.isFile()) saveChanges();
+		readFromFile();
+	}
 
-			if (initialized || !CUSTOM_GUIS_FILE.isFile()) saveChanges();
+	/**
+	 * Replaces all custom GUIs with the ones in the file, without saving the current ones first.<br>
+	 * Used when the file got replaced on disk, like after switching profiles, because {@link #reload()} would overwrite the new file with the old GUIs.
+	 */
+	public static void reloadFromFile() {
+		readFromFile();
+		importLegacyGuisIfNeeded();
+	}
+
+	private static void importLegacyGuisIfNeeded() {
+		if (!LegacyHandler.getCheckList().customGuisPorted.getValue()) {
+			LegacyHandler.getCheckList().customGuisPorted.setValue(true);
+			for (CustomGui gui : deserializeLegacyGuis()) {
+				CUSTOM_GUI_SCREENS.put(gui.identifier, gui);
+			}
+			saveChanges();
+		}
+	}
+
+	private static void readFromFile() {
+		try {
 
 			OVERRIDDEN_SCREENS.clear();
 			CUSTOM_GUI_SCREENS.clear();

@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.customlocals;
 
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.MinecraftResourceReloadObserver;
 import net.minecraft.client.Minecraft;
 import org.apache.logging.log4j.LogManager;
@@ -16,7 +17,7 @@ public class CustomLocalsHandler {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final CustomLocalizationStorage STORAGE = new CustomLocalizationStorage();
 
-    public static final File CUSTOM_LOCALS_DIR = new File("config/fancymenu/custom_locals");
+    public static final File CUSTOM_LOCALS_DIR = new File(FancyMenu.MOD_DIR, "custom_locals");
 
     private static boolean initialized;
 
