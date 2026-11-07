@@ -10,6 +10,7 @@ import sun.misc.Unsafe;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -38,7 +39,7 @@ class ContextMenuStackingTest {
             copies.add(copy);
         }
 
-        ContextMenu.ContextMenuEntry<?> first = ContextMenu.linkStackCopies(copies, allocate(ContextMenu.class));
+        ContextMenu.ContextMenuEntry<?> first = ContextMenu.linkStackCopies(allocateSubMenuEntries(copies.size()), copies, allocate(ContextMenu.class));
         new TestBuilder().applyStackAppliers(first, true);
 
         assertSame(copies.get(0), first);
@@ -65,7 +66,7 @@ class ContextMenuStackingTest {
         ContextMenu stacked = allocate(ContextMenu.class);
         List<ContextMenu.ContextMenuEntry<?>> copies = List.of(allocateEntry(ContextMenu.SubMenuContextMenuEntry.class), allocateEntry(ContextMenu.SubMenuContextMenuEntry.class), allocateEntry(ContextMenu.SubMenuContextMenuEntry.class));
 
-        ContextMenu.linkStackCopies(copies, stacked);
+        ContextMenu.linkStackCopies(allocateSubMenuEntries(copies.size()), copies, stacked);
 
         for (int i = 0; i < copies.size(); i++) {
             ContextMenu.ContextMenuStackMeta meta = copies.get(i).getStackMeta();
@@ -82,11 +83,49 @@ class ContextMenuStackingTest {
     void singleCopyIsBothFirstAndLastInItsStack() {
         ContextMenu.SubMenuContextMenuEntry copy = allocateEntry(ContextMenu.SubMenuContextMenuEntry.class);
 
-        ContextMenu.linkStackCopies(List.of(copy), allocate(ContextMenu.class));
+        ContextMenu.linkStackCopies(allocateSubMenuEntries(1), List.of(copy), allocate(ContextMenu.class));
 
         assertTrue(copy.getStackMeta().isFirstInStack());
         assertTrue(copy.getStackMeta().isLastInStack());
         assertNull(copy.getStackMeta().getNextInStack());
+    }
+
+    @Test
+    void stackedEntryOnlyShowsWhileVisibleInEveryStackedMenu() {
+        AtomicBoolean firstVisible = new AtomicBoolean(true);
+        AtomicBoolean secondVisible = new AtomicBoolean(true);
+        AtomicBoolean thirdVisible = new AtomicBoolean(true);
+        List<ContextMenu.ContextMenuEntry<?>> originals = new ArrayList<>();
+        for (AtomicBoolean visible : List.of(firstVisible, secondVisible, thirdVisible)) {
+            ContextMenu.SubMenuContextMenuEntry original = allocateEntry(ContextMenu.SubMenuContextMenuEntry.class);
+            original.addIsVisibleSupplier((menu, entry) -> visible.get());
+            originals.add(original);
+        }
+
+        ContextMenu.ContextMenuEntry<?> first = ContextMenu.linkStackCopies(originals, allocateSubMenuEntries(originals.size()), allocate(ContextMenu.class));
+
+        assertTrue(first.isVisible());
+        secondVisible.set(false);
+        assertFalse(first.isVisible());
+        secondVisible.set(true);
+        thirdVisible.set(false);
+        assertFalse(first.isVisible());
+        thirdVisible.set(true);
+        assertTrue(first.isVisible());
+    }
+
+    @Test
+    void stackedEntryIsHiddenWhileHiddenInAllStackedMenus() {
+        List<ContextMenu.ContextMenuEntry<?>> originals = new ArrayList<>();
+        for (int i = 0; i < 2; i++) {
+            ContextMenu.SubMenuContextMenuEntry original = allocateEntry(ContextMenu.SubMenuContextMenuEntry.class);
+            original.addIsVisibleSupplier((menu, entry) -> false);
+            originals.add(original);
+        }
+
+        ContextMenu.ContextMenuEntry<?> first = ContextMenu.linkStackCopies(originals, allocateSubMenuEntries(originals.size()), allocate(ContextMenu.class));
+
+        assertFalse(first.isVisible());
     }
 
     @Test
@@ -125,13 +164,23 @@ class ContextMenuStackingTest {
             copy.setStackValueSupplier(stackEntry -> value);
             copies.add(copy);
         }
-        return ContextMenu.linkStackCopies(copies, allocate(ContextMenu.class));
+        return ContextMenu.linkStackCopies(allocateSubMenuEntries(copies.size()), copies, allocate(ContextMenu.class));
+    }
+
+    @NotNull
+    private static List<ContextMenu.ContextMenuEntry<?>> allocateSubMenuEntries(int count) {
+        List<ContextMenu.ContextMenuEntry<?>> entries = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            entries.add(allocateEntry(ContextMenu.SubMenuContextMenuEntry.class));
+        }
+        return entries;
     }
 
     @NotNull
     private static <T extends ContextMenu.ContextMenuEntry<?>> T allocateEntry(@NotNull Class<T> type) {
         T entry = allocate(type);
         entry.stackMeta = new ContextMenu.ContextMenuStackMeta();
+        entry.visibleStateSuppliers = new ArrayList<>();
         return entry;
     }
 
