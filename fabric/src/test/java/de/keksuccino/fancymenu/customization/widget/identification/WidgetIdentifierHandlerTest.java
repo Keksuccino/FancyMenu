@@ -244,6 +244,27 @@ class WidgetIdentifierHandlerTest {
     }
 
     @Test
+    void replacedModsButtonIdentifiersStillFindTheWidget() {
+        TestWidget mods = new TestWidget(Component.translatable("modmenu.title"));
+        WidgetMeta meta = createIdentityOnlyMeta(mods, 1L);
+        meta.setUniversalIdentifier("titlescreen_mods_button");
+
+        for (String identifier : List.of("titlescreen_mods_button", "forge_titlescreen_mods_button", "modmenu_titlescreen_mods_button")) {
+            for (String prefix : List.of("", "vanillabtn:", "button_compatibility_id:")) {
+                assertTrue(WidgetIdentifierHandler.isIdentifierOfWidget(prefix + identifier, meta));
+                assertEquals("titlescreen_mods_button", WidgetIdentifierHandler.normalizeIdentifier(prefix + identifier));
+            }
+        }
+    }
+
+    @Test
+    void normalizingOnlyStripsPrefixesOfIdentifiersThatWereNeverReplaced() {
+        assertEquals("custom_element_identifier", WidgetIdentifierHandler.normalizeIdentifier("custom_element_identifier"));
+        assertEquals("mc_titlescreen_options_button", WidgetIdentifierHandler.normalizeIdentifier("vanillabtn:mc_titlescreen_options_button"));
+        assertEquals("505166", WidgetIdentifierHandler.normalizeIdentifier("button_compatibility_id:505166"));
+    }
+
+    @Test
     void targetIdentifierIsPrefixFreeAndFallsBackToLegacyActionIdentifier() {
         SerializedElement current = serializedWidgetEntry("vanillabtn:current_identifier");
         current.putProperty("actionid", "legacy_identifier");
