@@ -75,7 +75,6 @@
     "client.MixinMultiPlayerGameMode",
     "client.MixinMusicManager",
     "client.MixinOnlineServerEntry",
-    "client.MixinOptions",
     "client.MixinPauseScreen",
     "client.MixinPathPackResources",
     "client.MixinPlainTextButton",

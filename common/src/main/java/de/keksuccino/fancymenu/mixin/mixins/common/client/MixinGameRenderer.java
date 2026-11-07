@@ -48,6 +48,7 @@ public class MixinGameRenderer {
     @Inject(method = "render", at = @At("HEAD"))
     private void before_render_FancyMenu(CallbackInfo info) {
         ScreenCustomization.onPreGameRenderTick();
+        GuiBlurRenderer.onFrameStart_FancyMenu();
     }
 
     @Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;render3dHud(Lnet/minecraft/client/renderer/state/level/CameraRenderState;Lnet/minecraft/client/renderer/state/level/PlayerRenderState;Lnet/minecraft/client/renderer/state/OptionsRenderState;Z)V", shift = At.Shift.BEFORE))

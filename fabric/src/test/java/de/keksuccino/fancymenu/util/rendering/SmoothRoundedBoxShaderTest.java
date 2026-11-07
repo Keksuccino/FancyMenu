@@ -79,7 +79,7 @@ class SmoothRoundedBoxShaderTest {
         String sharedCoverage = readResource("/assets/fancymenu/shaders/include/fancymenu_rounded_box.glsl");
         String imageRectangleShader = readResource("/assets/minecraft/shaders/core/fancymenu_gui_smooth_image_rect.fsh");
         String rectangleShader = readResource("/assets/minecraft/shaders/core/fancymenu_gui_smooth_rect.fsh");
-        String blurShader = readResource("/assets/minecraft/shaders/post/fancymenu_gui_blur.fsh");
+        String blurShader = readResource("/assets/minecraft/shaders/post/fancymenu_blur_composite.fsh");
 
         assertTrue(sharedCoverage.contains("fwidth(position)"));
         assertTrue(sharedCoverage.contains("smoothstep(0.0, cornerTransitionWidth"));

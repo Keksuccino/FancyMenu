@@ -102,7 +102,7 @@ class EarlyShaderSourceTest {
     @Test
     void onlyTreatsFancyMenuShadersAndIncludesAsFancyMenuShaders() {
         assertTrue(EarlyShaderSource.isFancyMenuShader(SMOOTH_RECT_SHADER));
-        assertTrue(EarlyShaderSource.isFancyMenuShader(Identifier.withDefaultNamespace("post/fancymenu_box_blur")));
+        assertTrue(EarlyShaderSource.isFancyMenuShader(Identifier.withDefaultNamespace("post/fancymenu_blur_gaussian")));
         assertTrue(EarlyShaderSource.isFancyMenuShader(FANCYMENU_INCLUDE));
         assertFalse(EarlyShaderSource.isFancyMenuShader(VANILLA_SHADER));
         assertFalse(EarlyShaderSource.isFancyMenuShader(VANILLA_INCLUDE));
@@ -141,7 +141,7 @@ class EarlyShaderSourceTest {
 
     private static List<RenderPipeline> fancyMenuPipelines() throws IllegalAccessException {
         List<RenderPipeline> pipelines = new ArrayList<>();
-        for (Class<?> renderer : List.of(SmoothRectangleRenderer.class, SmoothCircleRenderer.class, SmoothImageRectangleRenderer.class, SmoothImageCircleRenderer.class, LocalTexturePanoramaRenderer.class, GuiBlurRenderer.class)) {
+        for (Class<?> renderer : List.of(SmoothRectangleRenderer.class, SmoothCircleRenderer.class, SmoothImageRectangleRenderer.class, SmoothImageCircleRenderer.class, LocalTexturePanoramaRenderer.class, GuiBlurPasses.class)) {
             for (Field field : renderer.getDeclaredFields()) {
                 if (Modifier.isStatic(field.getModifiers()) && field.getType() == RenderPipeline.class) {
                     field.setAccessible(true);

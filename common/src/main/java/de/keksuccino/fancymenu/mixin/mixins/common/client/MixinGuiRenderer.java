@@ -32,7 +32,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalDouble;
@@ -45,7 +44,6 @@ public abstract class MixinGuiRenderer {
     @Unique private final List<RenderPhaseAction_FancyMenu> renderPhaseActions_FancyMenu = new ArrayList<>();
     @Unique private FancyMenuPanoramaPictureInPictureRenderer panoramaPictureInPictureRenderer_FancyMenu;
     @Unique private GuiRenderState.TraverseRange activeTraverseRange_FancyMenu = GuiRenderState.TraverseRange.ALL;
-    @Unique private int nextRenderPhaseActionOrder_FancyMenu;
     // Other mods create their own GuiRenderers (e.g. for offscreen item atlases) with their own target sizes and scissor mapping, so FancyMenu's precise GUI scale must only touch the main one
     @Unique private boolean mainGuiRenderer_FancyMenu;
 
@@ -116,7 +114,6 @@ public abstract class MixinGuiRenderer {
         this.previousScissorArea = null;
         this.renderPhaseActions_FancyMenu.add(new RenderPhaseAction_FancyMenu(
                 this.draws.size(),
-                this.nextRenderPhaseActionOrder_FancyMenu++,
                 this.activeTraverseRange_FancyMenu,
                 renderPhaseAction
         ));
@@ -129,33 +126,36 @@ public abstract class MixinGuiRenderer {
             return;
         }
 
-        this.renderPhaseActions_FancyMenu.stream()
-                .sorted(Comparator.comparingInt(RenderPhaseAction_FancyMenu::order_FancyMenu))
-                .forEach(action -> action.renderPhaseAction_FancyMenu().executeRender_FancyMenu());
+        // Actions are recorded in render order, so no sorting is needed.
+        for (int i = 0; i < this.renderPhaseActions_FancyMenu.size(); i++) {
+            this.renderPhaseActions_FancyMenu.get(i).renderPhaseAction_FancyMenu().executeRender_FancyMenu();
+        }
     }
 
     @Inject(method = "executeDrawRange", at = @At("HEAD"), cancellable = true)
     private void before_executeDrawRange_FancyMenu(Supplier<String> label, RenderTarget mainRenderTarget, GpuBufferSlice dynamicTransforms, int startIndex, int endIndex, CallbackInfo info) {
         GuiRenderState.TraverseRange executeRange = this.resolveExecuteRange_FancyMenu(startIndex);
-        List<RenderPhaseAction_FancyMenu> actions = this.renderPhaseActions_FancyMenu.stream()
-                .filter(action -> action.range_FancyMenu() == executeRange)
-                .filter(action -> action.drawIndex_FancyMenu() >= startIndex && action.drawIndex_FancyMenu() <= endIndex)
-                .sorted(Comparator.comparingInt(RenderPhaseAction_FancyMenu::drawIndex_FancyMenu).thenComparingInt(RenderPhaseAction_FancyMenu::order_FancyMenu))
-                .toList();
-        if (actions.isEmpty()) {
-            return;
-        }
-
-        info.cancel();
         int currentIndex = startIndex;
-        for (RenderPhaseAction_FancyMenu action : actions) {
-            int actionIndex = Math.max(startIndex, Math.min(endIndex, action.drawIndex_FancyMenu()));
+        boolean executedAction = false;
+        // Actions are recorded in render order and draws only get appended, so their draw indices never decrease and need no sorting.
+        for (int i = 0; i < this.renderPhaseActions_FancyMenu.size(); i++) {
+            RenderPhaseAction_FancyMenu action = this.renderPhaseActions_FancyMenu.get(i);
+            int actionIndex = action.drawIndex_FancyMenu();
+            if (action.range_FancyMenu() != executeRange || actionIndex < startIndex || actionIndex > endIndex) {
+                continue;
+            }
+            if (!executedAction) {
+                info.cancel();
+                executedAction = true;
+            }
             this.executePlainDrawRange_FancyMenu(label, mainRenderTarget, dynamicTransforms, currentIndex, actionIndex);
             action.renderPhaseAction_FancyMenu().executeRender_FancyMenu();
             currentIndex = actionIndex;
         }
 
-        this.executePlainDrawRange_FancyMenu(label, mainRenderTarget, dynamicTransforms, currentIndex, endIndex);
+        if (executedAction) {
+            this.executePlainDrawRange_FancyMenu(label, mainRenderTarget, dynamicTransforms, currentIndex, endIndex);
+        }
     }
 
     /** @reason Render the main GUI with FancyMenu's precise (possibly fractional) GUI scale instead of vanilla's integer scale. */
@@ -231,7 +231,6 @@ public abstract class MixinGuiRenderer {
     @Unique
     private void clearRenderPhaseActions_FancyMenu() {
         this.renderPhaseActions_FancyMenu.clear();
-        this.nextRenderPhaseActionOrder_FancyMenu = 0;
         this.activeTraverseRange_FancyMenu = GuiRenderState.TraverseRange.ALL;
     }
 
@@ -299,7 +298,7 @@ public abstract class MixinGuiRenderer {
     }
 
     @Unique
-    private record RenderPhaseAction_FancyMenu(int drawIndex_FancyMenu, int order_FancyMenu, GuiRenderState.TraverseRange range_FancyMenu, GuiRenderPhaseAction renderPhaseAction_FancyMenu) {
+    private record RenderPhaseAction_FancyMenu(int drawIndex_FancyMenu, GuiRenderState.TraverseRange range_FancyMenu, GuiRenderPhaseAction renderPhaseAction_FancyMenu) {
     }
 
 }
