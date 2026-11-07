@@ -3510,6 +3510,7 @@
   "fancymenu.profiles.import.conflict.replace": "Заменить",
   "fancymenu.profiles.import.conflict.keep_both": "Оставить оба",
   "fancymenu.profiles.import.drop_no_archive": "Сюда можно импортировать только файлы профилей FancyMenu (.fmp).",
+  "fancymenu.profiles.archive.file_type": "Профиль FancyMenu",
   "fancymenu.profiles.error.switch": "Не удалось загрузить профиль, поэтому текущая настройка остаётся загруженной.",
   "fancymenu.profiles.error.create": "Не удалось создать профиль.",
   "fancymenu.profiles.error.duplicate": "Не удалось дублировать профиль.",
@@ -3542,9 +3543,9 @@
   "fancymenu.profiles.edit.links.type.desc": "Нажми, чтобы выбрать платформу этой ссылки. Если вставить ссылку, она выберется сама.",
   "fancymenu.profiles.edit.links.label.hint": "Подпись",
   "fancymenu.profiles.edit.icon.choose": "Выбрать значок",
-  "fancymenu.profiles.edit.icon.choose.desc": "Выбери изображение PNG или JPEG. Неквадратные изображения обрезаются по центру и масштабируются до 64x64 пикселей.",
+  "fancymenu.profiles.edit.icon.choose.desc": "Выбери изображение PNG. Неквадратные изображения обрезаются по центру и масштабируются до 64x64 пикселей.",
   "fancymenu.profiles.edit.icon.remove": "Убрать значок",
   "fancymenu.profiles.edit.error.no_title": "Дай своему профилю название.",
   "fancymenu.profiles.edit.error.invalid_url": "Это неправильная ссылка:\n%s",
-  "fancymenu.profiles.edit.error.icon": "Не удалось обновить значок. Выбери изображение PNG или JPEG."
+  "fancymenu.profiles.edit.error.icon": "Не удалось обновить значок. Выбери изображение PNG."
 }

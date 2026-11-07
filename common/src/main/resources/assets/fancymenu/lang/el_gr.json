@@ -3510,6 +3510,7 @@
   "fancymenu.profiles.import.conflict.replace": "Αντικατάσταση",
   "fancymenu.profiles.import.conflict.keep_both": "Κράτα και τα δύο",
   "fancymenu.profiles.import.drop_no_archive": "Εδώ μπορούν να εισαχθούν μόνο αρχεία προφίλ του FancyMenu (.fmp).",
+  "fancymenu.profiles.archive.file_type": "Προφίλ FancyMenu",
   "fancymenu.profiles.error.switch": "Δεν ήταν δυνατή η φόρτωση του προφίλ, οπότε η τωρινή διαμόρφωση μένει φορτωμένη.",
   "fancymenu.profiles.error.create": "Δεν ήταν δυνατή η δημιουργία του προφίλ.",
   "fancymenu.profiles.error.duplicate": "Δεν ήταν δυνατή η αντιγραφή του προφίλ.",
@@ -3542,9 +3543,9 @@
   "fancymenu.profiles.edit.links.type.desc": "Κάνε κλικ για να επιλέξεις την πλατφόρμα αυτού του συνδέσμου. Αν επικολλήσεις σύνδεσμο, επιλέγεται μόνη της.",
   "fancymenu.profiles.edit.links.label.hint": "Ετικέτα",
   "fancymenu.profiles.edit.icon.choose": "Επιλογή εικονιδίου",
-  "fancymenu.profiles.edit.icon.choose.desc": "Διάλεξε εικόνα PNG ή JPEG. Οι εικόνες που δεν είναι τετράγωνες κόβονται στο κέντρο τους και κλιμακώνονται σε 64x64 pixel.",
+  "fancymenu.profiles.edit.icon.choose.desc": "Διάλεξε εικόνα PNG. Οι εικόνες που δεν είναι τετράγωνες κόβονται στο κέντρο τους και κλιμακώνονται σε 64x64 pixel.",
   "fancymenu.profiles.edit.icon.remove": "Αφαίρεση εικονιδίου",
   "fancymenu.profiles.edit.error.no_title": "Δώσε έναν τίτλο στο προφίλ σου.",
   "fancymenu.profiles.edit.error.invalid_url": "Αυτός δεν είναι έγκυρος σύνδεσμος:\n%s",
-  "fancymenu.profiles.edit.error.icon": "Δεν ήταν δυνατή η ενημέρωση του εικονιδίου. Διάλεξε εικόνα PNG ή JPEG."
+  "fancymenu.profiles.edit.error.icon": "Δεν ήταν δυνατή η ενημέρωση του εικονιδίου. Διάλεξε εικόνα PNG."
 }
