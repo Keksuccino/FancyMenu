@@ -194,10 +194,6 @@ final class ProfileActions {
         }));
     }
 
-    void showNoArchiveDropped() {
-        Dialogs.openMessage(Component.translatable("fancymenu.profiles.import.drop_no_archive"), MessageDialogStyle.INFO);
-    }
-
     /**
      * Refreshes the manager after a task and selects the profile the task created or changed.
      */
