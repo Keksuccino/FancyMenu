@@ -55,6 +55,14 @@ public class ListenerHandler {
         writeToFile();
     }
 
+    /**
+     * Replaces all listener instances with the ones currently saved in the file.
+     */
+    public static synchronized void reload() {
+        assertInitialized();
+        readFromFile();
+    }
+
     @Nullable
     public static synchronized ListenerInstance getInstance(@NotNull String identifier) {
         assertInitialized();

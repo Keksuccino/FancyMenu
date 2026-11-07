@@ -151,6 +151,22 @@ public class SchedulerHandler {
         }
     }
 
+    public static void stopAllSchedulers() {
+        synchronized (LOCK) {
+            new ArrayList<>(RUNNING.keySet()).forEach(SchedulerHandler::stopSchedulerInternal);
+        }
+    }
+
+    /**
+     * Stops all schedulers, re-reads them from the file and starts the ones that start on launch, like on a fresh game launch.
+     */
+    public static void reload() {
+        assertInitialized();
+        stopAllSchedulers();
+        readFromFile();
+        startSchedulersOnLaunch();
+    }
+
     public static boolean isRunning(@NotNull String identifier) {
         SchedulerInstance instance = INSTANCES.get(identifier);
         if (instance != null) {

@@ -6,11 +6,13 @@ import de.keksuccino.fancymenu.util.rendering.ui.Tickable;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.UISounds;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nullable;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -174,6 +176,19 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
             }
         }
         return null;
+    }
+
+    /**
+     * Gives files that got dropped onto the game window to the window under the mouse.
+     *
+     * @return TRUE if a window took the files, so the screen behind it doesn't get them.
+     */
+    public boolean onFilesDrop(@NotNull List<Path> paths, double mouseX, double mouseY) {
+        PiPWindow window = getTopWindowAt(mouseX, mouseY);
+        if (window == null) return false;
+        Screen screen = window.getScreen();
+        if (screen != null) screen.onFilesDrop(paths);
+        return true;
     }
 
     public boolean isPointVisibleForWindow(@NotNull PiPWindow window, double mouseX, double mouseY) {

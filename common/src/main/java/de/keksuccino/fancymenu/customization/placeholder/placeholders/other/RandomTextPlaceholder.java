@@ -38,6 +38,14 @@ public class RandomTextPlaceholder extends Placeholder {
         this(CONTENT_CACHE);
     }
 
+    /**
+     * Forgets all cached file contents and picked texts, so files that got replaced on disk get read again.
+     */
+    public static void clearCache() {
+        CONTENT_CACHE.clear();
+        randomTextIntervals.clear();
+    }
+
     RandomTextPlaceholder(@NotNull AsyncRefreshingValueCache.TaskLauncher taskLauncher, @NotNull AsyncRefreshingValueCache.ValueLoader<String, List<String>> sourceLoader, @NotNull LongSupplier timeSource) {
         this(createContentCache(taskLauncher, sourceLoader, timeSource));
     }
