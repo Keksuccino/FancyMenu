@@ -185,7 +185,18 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
      */
     public boolean onFilesDrop(@NotNull List<Path> paths, double mouseX, double mouseY) {
         PiPWindow window = getTopWindowAt(mouseX, mouseY);
+        // Drops follow the same rules as clicks, so neither blocked windows nor the screen behind a blocking window get files
+        PiPWindow blockingWindow = getTopInputBlockingWindow();
+        if ((blockingWindow != null) && (blockingWindow != window)) {
+            triggerBlockedInputOverlay(blockingWindow);
+            UISounds.playDefaultBeep();
+            return true;
+        }
         if (window == null) return false;
+        if (window.isInputLocked()) {
+            this.rejectInputOfLockedWindow(window);
+            return true;
+        }
         Screen screen = window.getScreen();
         if (screen != null) screen.onFilesDrop(paths);
         return true;
@@ -196,6 +207,10 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
     }
 
     public boolean canMouseReachWindow(@NotNull PiPWindow window, double mouseX, double mouseY) {
+        // Locked windows take no input, so they also show no hover effects or tooltips that would make them look usable
+        if (window.isInputLocked()) {
+            return false;
+        }
         PiPWindow blockingWindow = getTopInputBlockingWindow();
         if (blockingWindow != null && blockingWindow != window) {
             return false;
@@ -209,22 +224,70 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
         }
     }
 
+    /**
+     * Brings the window to the front and focuses it.<br>
+     * Child windows block their parent, so they get raised with it and stay in front of it in their current order, and the top one of them gets the focus.
+     */
     public void bringToFront(@NotNull PiPWindow window) {
-        if (windows.remove(window)) {
-            int insertIndex = getInsertIndexForFront(window);
-            windows.add(insertIndex, window);
+        this.moveToFront(window);
+        if (!window.getChildWindows().isEmpty()) {
+            for (PiPWindow openWindow : new ArrayList<>(windows)) {
+                if (isDescendantOf(openWindow, window)) this.moveToFront(openWindow);
+            }
         }
-        focusedWindow = window;
+        focusedWindow = this.getTopWindowOfFamily(window);
         enforceForceFocus();
     }
 
     void refreshWindowOrder(@NotNull PiPWindow window) {
-        if (!windows.remove(window)) {
-            return;
+        if (this.moveToFront(window)) {
+            enforceForceFocus();
         }
-        int insertIndex = getInsertIndexForFront(window);
-        windows.add(insertIndex, window);
-        enforceForceFocus();
+    }
+
+    /**
+     * Moves the window to the front of its layer, without changing the focus.
+     *
+     * @return TRUE if the window is open.
+     */
+    private boolean moveToFront(@NotNull PiPWindow window) {
+        if (!windows.remove(window)) {
+            return false;
+        }
+        windows.add(getInsertIndexForFront(window), window);
+        return true;
+    }
+
+    /**
+     * Returns the top visible window out of the window and its child windows, or the window itself if none of its child windows is visible.
+     */
+    @NotNull
+    private PiPWindow getTopWindowOfFamily(@NotNull PiPWindow window) {
+        for (int i = windows.size() - 1; i >= 0; i--) {
+            PiPWindow openWindow = windows.get(i);
+            if (openWindow == window) return window;
+            if (openWindow.isVisible() && isDescendantOf(openWindow, window)) return openWindow;
+        }
+        return window;
+    }
+
+    private static boolean isDescendantOf(@NotNull PiPWindow window, @NotNull PiPWindow ancestor) {
+        for (PiPWindow parent = window.getParentWindow(); parent != null; parent = parent.getParentWindow()) {
+            if (parent == ancestor) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Child windows block their parent, so input on the parent only raises them, with the same overlay and beep as input outside a blocking window.
+     */
+    private void rejectInputOfLockedWindow(@NotNull PiPWindow window) {
+        bringToFront(window);
+        PiPWindow blockingChild = this.getTopWindowOfFamily(window);
+        if (blockingChild != window) {
+            triggerBlockedInputOverlay(blockingChild);
+            UISounds.playDefaultBeep();
+        }
     }
 
     @Override
@@ -359,8 +422,7 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
             windowClickedThisTick = true;
             lastClickedWindowThisTick = window;
             if (window.isInputLocked()) {
-                bringToFront(window);
-                focusedWindow = window;
+                this.rejectInputOfLockedWindow(window);
                 activePointerWindow = window;
                 activePointerButton = button;
                 enforceForceFocus();
@@ -378,8 +440,8 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
                     enforceForceFocus();
                     return true;
                 }
+                // Keeps windows that the click opened in front, since child windows always stay in front of their parent
                 bringToFront(window);
-                focusedWindow = window;
                 activePointerWindow = window;
                 activePointerButton = button;
                 enforceForceFocus();
@@ -650,10 +712,11 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
             this.blockedInputOverlayWindow = null;
             return null;
         }
+        // Child windows block their parent, so they get the overlay too, not only windows that block everything
         if (this.blockedInputOverlayWindow != null
                 && this.windows.contains(this.blockedInputOverlayWindow)
                 && this.blockedInputOverlayWindow.isVisible()
-                && isInputBlockingWindow(this.blockedInputOverlayWindow)) {
+                && (isInputBlockingWindow(this.blockedInputOverlayWindow) || (this.blockedInputOverlayWindow.getParentWindow() != null))) {
             return this.blockedInputOverlayWindow;
         }
         this.blockedInputOverlayWindow = getTopInputBlockingWindow();

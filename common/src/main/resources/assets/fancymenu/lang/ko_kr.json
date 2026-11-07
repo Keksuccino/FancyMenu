@@ -3510,6 +3510,7 @@
   "fancymenu.profiles.import.conflict.replace": "바꾸기",
   "fancymenu.profiles.import.conflict.keep_both": "둘 다 두기",
   "fancymenu.profiles.import.drop_no_archive": "여기서는 FancyMenu 프로필 파일(.fmp)만 가져올 수 있어요.",
+  "fancymenu.profiles.archive.file_type": "FancyMenu 프로필",
   "fancymenu.profiles.error.switch": "프로필을 불러오지 못해서 현재 설정이 그대로 유지돼요.",
   "fancymenu.profiles.error.create": "프로필을 만들지 못했어요.",
   "fancymenu.profiles.error.duplicate": "프로필을 복제하지 못했어요.",
@@ -3542,9 +3543,9 @@
   "fancymenu.profiles.edit.links.type.desc": "클릭해서 이 링크의 플랫폼을 골라요. 링크를 붙여 넣으면 자동으로 골라져요.",
   "fancymenu.profiles.edit.links.label.hint": "라벨",
   "fancymenu.profiles.edit.icon.choose": "아이콘 고르기",
-  "fancymenu.profiles.edit.icon.choose.desc": "PNG나 JPEG 이미지를 골라 주세요. 정사각형이 아닌 이미지는 가운데를 잘라 64x64 픽셀로 맞춰요.",
+  "fancymenu.profiles.edit.icon.choose.desc": "PNG 이미지를 골라 주세요. 정사각형이 아닌 이미지는 가운데를 잘라 64x64 픽셀로 맞춰요.",
   "fancymenu.profiles.edit.icon.remove": "아이콘 제거",
   "fancymenu.profiles.edit.error.no_title": "프로필에 제목을 붙여 주세요.",
   "fancymenu.profiles.edit.error.invalid_url": "올바른 웹 링크가 아니에요:\n%s",
-  "fancymenu.profiles.edit.error.icon": "아이콘을 업데이트하지 못했어요. PNG나 JPEG 이미지를 골라 주세요."
+  "fancymenu.profiles.edit.error.icon": "아이콘을 업데이트하지 못했어요. PNG 이미지를 골라 주세요."
 }
