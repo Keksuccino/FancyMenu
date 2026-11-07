@@ -13,8 +13,11 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -86,6 +89,34 @@ class ContextMenuStackingTest {
         assertNull(copy.getStackMeta().getNextInStack());
     }
 
+    @Test
+    void entriesThatCopyTheirOwnTypeGetCopiedInStackOrder() {
+        List<ContextMenu.ContextMenuEntry<?>> entryStack = List.of(allocateEntry(CopyableEntry.class), allocateEntry(CopyableEntry.class));
+
+        List<ContextMenu.ContextMenuEntry<?>> copies = ContextMenu.copyEntriesForStack(entryStack, true);
+
+        assertEquals(2, copies.size());
+        for (int i = 0; i < entryStack.size(); i++) {
+            assertInstanceOf(CopyableEntry.class, copies.get(i));
+            assertNotSame(entryStack.get(i), copies.get(i));
+            assertSame(entryStack.get(i), ((CopyableEntry) copies.get(i)).original);
+        }
+    }
+
+    @Test
+    void entriesWhoseCopyWouldLoseTheirBehaviorGetLeftOutOfTheStack() {
+        List<ContextMenu.ContextMenuEntry<?>> entryStack = List.of(allocateEntry(CustomBehaviorEntry.class), allocateEntry(CustomBehaviorEntry.class));
+
+        assertNull(ContextMenu.copyEntriesForStack(entryStack, false));
+    }
+
+    @Test
+    void entriesWhoseCopyWouldLoseTheirBehaviorFailLoudlyWhenAsked() {
+        List<ContextMenu.ContextMenuEntry<?>> entryStack = List.of(allocateEntry(CopyableEntry.class), allocateEntry(CustomBehaviorEntry.class));
+
+        assertThrows(IllegalStateException.class, () -> ContextMenu.copyEntriesForStack(entryStack, true));
+    }
+
     @NotNull
     private static ContextMenu.ContextMenuEntry<?> linkSubMenuCopiesWithValues(@NotNull String... values) {
         List<ContextMenu.ContextMenuEntry<?>> copies = new ArrayList<>();
@@ -122,6 +153,39 @@ class ContextMenuStackingTest {
         } catch (ReflectiveOperationException ex) {
             throw new IllegalStateException(ex);
         }
+    }
+
+    /** Copies itself the way the built-in entry types do: as an instance of the exact type that implements {@link #copy()}. */
+    private static class CopyableEntry extends ContextMenu.SeparatorContextMenuEntry {
+
+        @Nullable
+        private ContextMenu.ContextMenuEntry<?> original;
+
+        private CopyableEntry(@NotNull String identifier, @NotNull ContextMenu parent) {
+            super(identifier, parent);
+        }
+
+        @Override
+        public ContextMenu.SeparatorContextMenuEntry copy() {
+            CopyableEntry copy = allocateEntry(CopyableEntry.class);
+            copy.original = this;
+            return copy;
+        }
+
+    }
+
+    /** Changes behavior without overriding {@link #copy()}, like an anonymous subclass of an entry type would. */
+    private static class CustomBehaviorEntry extends CopyableEntry {
+
+        private CustomBehaviorEntry(@NotNull String identifier, @NotNull ContextMenu parent) {
+            super(identifier, parent);
+        }
+
+        @Override
+        public float getMinWidth() {
+            return 42.0F;
+        }
+
     }
 
     private static final class TestBuilder implements ContextMenuBuilder<TestBuilder> {
