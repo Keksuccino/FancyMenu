@@ -125,13 +125,13 @@ public class VanillaWidgetElement extends ButtonElement implements HideableEleme
     public @NotNull String getInstanceIdentifier() {
         if (this.serializedWidgetIdentifier != null) return this.serializedWidgetIdentifier;
         if (this.widgetMeta != null) {
-            return this.widgetMeta.getIdentifier().replace("vanillabtn:", "").replace("button_compatibility_id:", "");
+            return WidgetIdentifierHandler.normalizeIdentifier(this.widgetMeta.getIdentifier());
         }
-        return super.getInstanceIdentifier().replace("vanillabtn:", "").replace("button_compatibility_id:", "");
+        return WidgetIdentifierHandler.normalizeIdentifier(super.getInstanceIdentifier());
     }
 
     public void setVanillaWidget(WidgetMeta data, boolean mirrorWidgetSizeAndPos) {
-        String existingIdentifier = super.getInstanceIdentifier().replace("vanillabtn:", "").replace("button_compatibility_id:", "");
+        String existingIdentifier = WidgetIdentifierHandler.normalizeIdentifier(super.getInstanceIdentifier());
         this.serializedWidgetIdentifier = null;
         if (WidgetIdentifierHandler.isIdentifierOfWidget(existingIdentifier, data)) this.serializedWidgetIdentifier = existingIdentifier;
         this.widgetMeta = data;
