@@ -1,41 +1,40 @@
 package de.keksuccino.fancymenu.util.rendering.text.smooth;
 
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import net.minecraft.client.Minecraft;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import java.awt.Font;
-import java.awt.font.FontRenderContext;
 import java.awt.font.LineMetrics;
+import java.awt.geom.Rectangle2D;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Supplier;
 
+/**
+ * A family of font files that get used together: the first file is the primary font (it defines the metrics), the others are
+ * fallbacks for characters the primary font can't draw. Fallback files only get loaded when some text needs them.
+ * <p>
+ * All metrics are defined at the {@linkplain #getBaseSize() base size} and scale linearly with the requested text size.
+ * Instances must only be used on the render thread.
+ * </p>
+ */
 public final class SmoothFont implements AutoCloseable {
 
-    // Mirrored from MaterialIcons sizing heuristics to keep glyph quality consistent.
-    private static final int BASELINE_GLYPH_DP = 24;
-    private static final float BASELINE_QUALITY_SCALE = 2.0F;
-    private static final float GLYPH_COVERAGE_COMPENSATION = 1.2F;
-    private static final int DEFAULT_FALLBACK_PIXEL_SIZE = 96;
-    private static final float MAX_MINIFICATION_RATIO_DEFAULT = 2.75F;
-    private static final float MAX_MINIFICATION_RATIO_HIGH_SCALE = 2.4F;
-    private static final float SDF_RANGE_MIN = 2.0F;
-    private static final float SDF_RANGE_MAX = 4.0F;
-    private static final int SMALL_ATLAS_SIZE = 512;
-    private static final int DEFAULT_ATLAS_SIZE = 1024;
+    static final int SOURCE_INDEX_MASK = 0xFF;
+    static final int SOURCE_MISSING = 1 << 8;
+    static final int MISSING_GLYPH_CODEPOINT = '?';
+
+    private static final int LAYOUT_CACHE_LIMIT = 1024;
 
     private final String debugName;
     private final float baseSize;
-    private final FontRenderContext fontRenderContext;
 
-    // Metrics
+    // Metrics at base size
     private final float ascent;
     private final float descent;
     private final float lineHeight;
-    private final float lineHeightOverride;
     private final float lineHeightOffset;
     private final float yOffset;
     private final float metricsScale;
@@ -43,545 +42,287 @@ public final class SmoothFont implements AutoCloseable {
     private final float underlineThickness;
     private final float strikethroughOffset;
     private final float strikethroughThickness;
+    /** Cap height of the primary font in em, used to center color glyphs vertically. */
+    private final float capHeightEm;
+    private final float colorGlyphScale;
 
-    private final FontSource[] sources;
-    private final String[] sourceLabels;
+    private final SmoothFontSource[] sources;
     private final int[] defaultOrder;
     @Nullable
     private final Map<String, int[]> languageOrders;
-    private final Int2IntOpenHashMap codepointToSourceIndex = new Int2IntOpenHashMap();
-    private String cachedLanguageCode = "";
+    private final Supplier<String> languageCode;
+    private String activeLanguage;
+    private int[] textOrder;
+    private int[] emojiOrder;
+    private final Int2IntOpenHashMap textSourceCache = new Int2IntOpenHashMap();
+    private final Int2IntOpenHashMap emojiSourceCache = new Int2IntOpenHashMap();
     private final int fallbackSourceIndex;
 
-    SmoothFont(@Nonnull String debugName, @Nonnull Font baseFont, float baseSize) {
-        this(debugName, List.of(baseFont), baseSize, -1.0F, 0.0F, 0.0F, null, null);
-    }
+    private final SmoothGlyphAtlas atlas;
+    private final SmoothStyledText legacyScratch = new SmoothStyledText(64);
+    private final LinkedHashMap<SmoothStyledText, SmoothTextLayout> styledLayouts = createLayoutCache();
+    private final LinkedHashMap<String, SmoothTextLayout> singleLineLegacyLayouts = createLayoutCache();
+    private final LinkedHashMap<String, SmoothTextLayout> multilineLegacyLayouts = createLayoutCache();
 
-    SmoothFont(@Nonnull String debugName, @Nonnull List<Font> baseFonts, float baseSize, @Nullable Map<String, int[]> languageOrders, @Nullable List<String> sourceLabels) {
-        this(debugName, baseFonts, baseSize, -1.0F, 0.0F, 0.0F, languageOrders, sourceLabels);
-    }
-
-    SmoothFont(@Nonnull String debugName, @Nonnull List<Font> baseFonts, float baseSize, float lineHeightOverride, float lineHeightOffset, float yOffset, @Nullable Map<String, int[]> languageOrders, @Nullable List<String> sourceLabels) {
+    /**
+     * @param sources font files; the first one must be loadable, because it defines the metrics
+     * @param languageOrders per language code, the order in which the files get searched for a character
+     * @param colorGlyphScale size of color (emoji) glyphs relative to the text size
+     * @param languageCode supplies the active language code, to pick the matching entry of {@code languageOrders}
+     * @throws IllegalStateException when the primary font file can't be loaded
+     */
+    SmoothFont(@NotNull String debugName, @NotNull List<SmoothFontSource> sources, float baseSize, float lineHeightOverride, float lineHeightOffset, float yOffset, @Nullable Map<String, int[]> languageOrders, float colorGlyphScale, @NotNull Supplier<String> languageCode) {
         this.debugName = Objects.requireNonNull(debugName);
-        Objects.requireNonNull(baseFonts);
-        if (baseFonts.isEmpty()) {
-            throw new IllegalArgumentException("SmoothFont requires at least one base font");
+        if (sources.isEmpty() || sources.size() > SOURCE_INDEX_MASK) {
+            throw new IllegalArgumentException("SmoothFont needs between 1 and " + SOURCE_INDEX_MASK + " font files");
+        }
+        this.sources = sources.toArray(new SmoothFontSource[0]);
+        SmoothFontSource.Loaded primary = this.sources[0].get();
+        if (primary == null) {
+            throw new IllegalStateException("The primary font file of '" + debugName + "' could not be loaded");
         }
         this.baseSize = Math.max(1.0F, baseSize);
-        this.fontRenderContext = new FontRenderContext(null, true, true);
 
-        // Calculate metrics using the primary font at base size
-        Font logicalFont = baseFonts.get(0).deriveFont(Font.PLAIN, this.baseSize);
-        LineMetrics metrics = logicalFont.getLineMetrics("Hg", this.fontRenderContext);
+        Font logicalFont = primary.font.deriveFont(Font.PLAIN, this.baseSize);
+        LineMetrics metrics = logicalFont.getLineMetrics("Hg", SmoothFontSource.RENDER_CONTEXT);
         this.ascent = metrics.getAscent();
         this.descent = metrics.getDescent();
-        float minHeight = this.ascent + this.descent;
-        this.lineHeight = Math.max(1.0F, minHeight);
-        this.lineHeightOverride = lineHeightOverride > 0.0F ? lineHeightOverride : -1.0F;
+        this.lineHeight = Math.max(1.0F, this.ascent + this.descent);
+        float resolvedOverride = (lineHeightOverride > 0.0F) ? lineHeightOverride : -1.0F;
         this.lineHeightOffset = lineHeightOffset;
         this.yOffset = yOffset;
-        this.metricsScale = (this.lineHeightOverride > 0.0F)
-                ? (this.lineHeightOverride / this.lineHeight)
-                : 1.0F;
+        this.metricsScale = (resolvedOverride > 0.0F) ? (resolvedOverride / this.lineHeight) : 1.0F;
         this.underlineOffset = metrics.getUnderlineOffset();
         this.underlineThickness = metrics.getUnderlineThickness();
         this.strikethroughOffset = metrics.getStrikethroughOffset();
         this.strikethroughThickness = metrics.getStrikethroughThickness();
-
-        this.sources = new FontSource[baseFonts.size()];
-        this.sourceLabels = normalizeLabels(sourceLabels, baseFonts.size());
-        for (int i = 0; i < baseFonts.size(); i++) {
-            Font font = Objects.requireNonNull(baseFonts.get(i));
-            String sourceDebugName = this.debugName + "_f" + i;
-            this.sources[i] = new FontSource(this, font, sourceDebugName, this.sourceLabels[i], i);
-        }
+        Rectangle2D capBounds = primary.layoutFont(0).createGlyphVector(SmoothFontSource.RENDER_CONTEXT, "H").getVisualBounds();
+        this.capHeightEm = (float) capBounds.getHeight() / SmoothFontSource.LAYOUT_SIZE;
+        this.colorGlyphScale = (colorGlyphScale > 0.0F) ? colorGlyphScale : 1.0F;
 
         this.defaultOrder = new int[this.sources.length];
         for (int i = 0; i < this.sources.length; i++) {
             this.defaultOrder[i] = i;
         }
         this.languageOrders = (languageOrders == null || languageOrders.isEmpty()) ? null : languageOrders;
-        this.codepointToSourceIndex.defaultReturnValue(-1);
-        this.fallbackSourceIndex = resolveFallbackSourceIndex();
-    }
-
-    /**
-     * Resolves the glyph generation size (in pixels) for a specific render size and scale.
-     *
-     * @param size logical text size
-     * @param renderScale scale the text will be rendered at (GUI scale * additional pose scaling)
-     * @return generation size in pixels
-     */
-    public int getGenerationSize(float size, float renderScale) {
-        return resolveGenerationSize(size, renderScale);
+        this.languageCode = languageCode;
+        this.textSourceCache.defaultReturnValue(-1);
+        this.emojiSourceCache.defaultReturnValue(-1);
+        this.refreshLanguage();
+        this.fallbackSourceIndex = this.findFallbackSource();
+        this.atlas = new SmoothGlyphAtlas(this.debugName);
     }
 
     public float getBaseSize() {
-        return baseSize;
-    }
-
-    // Calculates the rendering scale factor between the requested size and the generated glyph size.
-    float getScaleForGenerationSize(int generationSize, float size) {
-        int resolvedSize = normalizeSize(generationSize);
-        if (resolvedSize <= 0) {
-            return 0.0F;
-        }
-        return size / (float) resolvedSize;
+        return this.baseSize;
     }
 
     public float getLineHeight(float size) {
-        float resolved = (lineHeight * metricsScale) + lineHeightOffset;
-        return Math.max(1.0F, resolved) * (size / baseSize);
+        float resolved = (this.lineHeight * this.metricsScale) + this.lineHeightOffset;
+        return Math.max(1.0F, resolved) * (size / this.baseSize);
     }
 
     public float getAscent(float size) {
-        return ascent * metricsScale * (size / baseSize);
+        return this.ascent * this.metricsScale * (size / this.baseSize);
     }
 
     public float getDescent(float size) {
-        return descent * metricsScale * (size / baseSize);
+        return this.descent * this.metricsScale * (size / this.baseSize);
     }
 
     public float getUnderlineOffset(float size) {
-        return underlineOffset * metricsScale * (size / baseSize);
+        return this.underlineOffset * this.metricsScale * (size / this.baseSize);
     }
 
     public float getUnderlineThickness(float size) {
-        return Math.max(1.0F, underlineThickness * metricsScale * (size / baseSize));
+        return Math.max(1.0F, this.underlineThickness * this.metricsScale * (size / this.baseSize));
     }
 
     public float getStrikethroughOffset(float size) {
-        return strikethroughOffset * metricsScale * (size / baseSize);
+        return this.strikethroughOffset * this.metricsScale * (size / this.baseSize);
     }
 
     public float getStrikethroughThickness(float size) {
-        return Math.max(1.0F, strikethroughThickness * metricsScale * (size / baseSize));
+        return Math.max(1.0F, this.strikethroughThickness * this.metricsScale * (size / this.baseSize));
     }
 
     public float getYOffset(float size) {
-        return yOffset * (size / baseSize);
+        return this.yOffset * (size / this.baseSize);
     }
 
-    private static int resolveGenerationSize(float size, float renderScale) {
-        float logicalSize = size;
-        if (!Float.isFinite(logicalSize) || logicalSize <= 0.0F) {
-            return normalizeSize(DEFAULT_FALLBACK_PIXEL_SIZE);
-        }
-        float scale = renderScale;
-        if (!Float.isFinite(scale) || scale <= 0.0F) {
-            scale = 1.0F;
-        }
-
-        float renderPixelSize = logicalSize * scale;
-        if (!Float.isFinite(renderPixelSize) || renderPixelSize <= 0.0F) {
-            return normalizeSize(DEFAULT_FALLBACK_PIXEL_SIZE);
-        }
-
-        float densityBucket = resolveDensityBucket(scale);
-        float qualityScale = resolveQualityScale(renderPixelSize);
-        float minTextureSize = BASELINE_GLYPH_DP * densityBucket * qualityScale;
-        float oversample = resolveOversampleFactor(renderPixelSize);
-        float desiredSize = renderPixelSize * oversample * GLYPH_COVERAGE_COMPENSATION;
-
-        float targetSize = Math.max(minTextureSize, desiredSize);
-        float maxMinification = resolveMaxMinificationRatio(scale);
-        float maxAllowedSize = renderPixelSize * maxMinification;
-        if (Float.isFinite(maxAllowedSize) && maxAllowedSize > 0.0F) {
-            targetSize = Math.min(targetSize, maxAllowedSize);
-        }
-        int resolvedSize = quantizeTextureSize(targetSize);
-        return normalizeSize(resolvedSize);
+    float capHeightEm() {
+        return this.capHeightEm;
     }
 
-    private static float resolveDensityBucket(float renderScale) {
-        if (renderScale <= 1.0F) {
-            return 1.0F;
-        }
-        float bucket = (float) Math.ceil(renderScale * 2.0F) / 2.0F;
-        return Math.min(4.0F, Math.max(1.0F, bucket));
+    float colorGlyphScale() {
+        return this.colorGlyphScale;
     }
 
-    private static float resolveOversampleFactor(float renderPixelSize) {
-        if (renderPixelSize <= 12.0F) {
-            return 2.2F;
-        }
-        if (renderPixelSize <= 16.0F) {
-            return 2.0F;
-        }
-        if (renderPixelSize <= 20.0F) {
-            return 1.8F;
-        }
-        if (renderPixelSize <= 24.0F) {
-            return 1.65F;
-        }
-        if (renderPixelSize <= 32.0F) {
-            return 1.45F;
-        }
-        if (renderPixelSize <= 48.0F) {
-            return 1.3F;
-        }
-        if (renderPixelSize <= 64.0F) {
-            return 1.2F;
-        }
-        if (renderPixelSize <= 96.0F) {
-            return 1.12F;
-        }
-        return 1.08F;
+    @NotNull
+    SmoothFontSource source(int index) {
+        return this.sources[index];
     }
 
-    private static float resolveQualityScale(float renderPixelSize) {
-        if (renderPixelSize <= 18.0F) {
-            return 1.0F;
-        }
-        if (renderPixelSize <= 24.0F) {
-            return 1.2F;
-        }
-        if (renderPixelSize <= 32.0F) {
-            return 1.5F;
-        }
-        if (renderPixelSize <= 48.0F) {
-            return 1.75F;
-        }
-        return BASELINE_QUALITY_SCALE;
-    }
-
-    private static float resolveMaxMinificationRatio(float renderScale) {
-        if (renderScale >= 3.0F) {
-            return MAX_MINIFICATION_RATIO_HIGH_SCALE;
-        }
-        return MAX_MINIFICATION_RATIO_DEFAULT;
-    }
-
-    private static int quantizeTextureSize(float desiredSize) {
-        int size = Math.max(1, (int) Math.ceil(desiredSize));
-        int step = resolveQuantizationStep(size);
-        return roundUpToStep(size, step);
-    }
-
-    private static int resolveQuantizationStep(int size) {
-        if (size <= 24) {
-            return 1;
-        }
-        if (size <= 64) {
-            return 2;
-        }
-        if (size <= 160) {
-            return 4;
-        }
-        if (size <= 320) {
-            return 8;
-        }
-        return 16;
-    }
-
-    private static int roundUpToStep(int value, int step) {
-        return ((value + step - 1) / step) * step;
-    }
-
-    private static int normalizeSize(int sizePx) {
-        if (sizePx <= 0) {
-            return DEFAULT_FALLBACK_PIXEL_SIZE;
-        }
-        return sizePx;
-    }
-
-    private static float resolveSdfRange(int sizePx) {
-        int normalizedSize = normalizeSize(sizePx);
-        if (normalizedSize <= 24) {
-            return 3.0F;
-        }
-        if (normalizedSize <= 32) {
-            return 2.8F;
-        }
-        if (normalizedSize <= 48) {
-            return 2.7F;
-        }
-        if (normalizedSize <= 64) {
-            return 2.5F;
-        }
-        if (normalizedSize <= 96) {
-            return 2.4F;
-        }
-        if (normalizedSize <= 128) {
-            return 2.2F;
-        }
-        return SDF_RANGE_MIN;
-    }
-
-    private static int resolveBlurPadding(float sdfRange, int generationSize) {
-        float sigma = sdfRange / 4.0F;
-        int radius = (int) Math.ceil(sigma * 3.0F);
-        int padding = Math.max(1, Math.min(6, radius));
-        if (sdfRange >= 2.8F && padding > 1) {
-            padding -= 1;
-        }
-        float scale = resolvePaddingScale(generationSize);
-        int reduced = Math.round(padding * scale);
-        return Math.max(0, reduced);
-    }
-
-    private static float resolvePaddingScale(int sizePx) {
-        int normalizedSize = normalizeSize(sizePx);
-        if (normalizedSize <= 32) {
-            return 0.2F;
-        }
-        return 0.3F;
-    }
-
-    private static int resolveInitialAtlasSize(int generationSize) {
-        int normalizedSize = normalizeSize(generationSize);
-        if (normalizedSize <= 32) {
-            return SMALL_ATLAS_SIZE;
-        }
-        return DEFAULT_ATLAS_SIZE;
-    }
-
-    SmoothFontGlyph getGlyph(int generationSize, int codepoint, boolean bold, boolean italic) {
-        int sourceIndex = resolveSourceIndex(codepoint);
-        return sources[sourceIndex].getGlyph(generationSize, codepoint, bold, italic);
-    }
-
-    // Internal method to expose Atlas for texture binding
-    SmoothFontAtlas getAtlas(int generationSize, boolean bold, boolean italic) {
-        return sources[0].getAtlas(generationSize, bold, italic);
-    }
-
-    FontRenderContext getFontRenderContext() {
-        return fontRenderContext;
+    @NotNull
+    SmoothGlyphAtlas atlas() {
+        return this.atlas;
     }
 
     String getDebugName() {
-        return debugName;
+        return this.debugName;
     }
 
-    @Override
-    public void close() {
-        for (FontSource source : sources) {
-            source.close();
+    /**
+     * Returns the layout of a legacy formatted string, shaping it on the first request.
+     */
+    @NotNull
+    SmoothTextLayout layoutLegacy(@NotNull String text, boolean multiline) {
+        LinkedHashMap<String, SmoothTextLayout> cache = multiline ? this.multilineLegacyLayouts : this.singleLineLegacyLayouts;
+        SmoothTextLayout layout = cache.get(text);
+        if (layout == null) {
+            this.refreshLanguage();
+            layout = SmoothTextShaper.shape(this, this.legacyScratch.reset(multiline).appendLegacy(text));
+            // A non-empty string that only holds formatting codes still takes up one empty line, so code that stacks lines
+            // by their measured heights keeps those lines.
+            if (layout.lineCount == 0 && !text.isEmpty()) {
+                layout = SmoothTextLayout.EMPTY_LINE;
+            }
+            cache.put(text, layout);
         }
+        return layout;
     }
 
-    private int resolveFallbackSourceIndex() {
-        for (int i = 0; i < sources.length; i++) {
-            if (sources[i].canDisplay('?')) {
-                return i;
+    /**
+     * Returns the layout of a styled text, shaping it on the first request. The given text may be a reused scratch instance.
+     */
+    @NotNull
+    SmoothTextLayout layout(@NotNull SmoothStyledText text) {
+        SmoothTextLayout layout = this.styledLayouts.get(text);
+        if (layout == null) {
+            this.refreshLanguage();
+            layout = SmoothTextShaper.shape(this, text);
+            this.styledLayouts.put(text.copy(), layout);
+        }
+        return layout;
+    }
+
+    void clearLayouts() {
+        this.styledLayouts.clear();
+        this.singleLineLegacyLayouts.clear();
+        this.multilineLegacyLayouts.clear();
+    }
+
+    /**
+     * Finds the font file that draws a character, loading fallback files on demand.
+     *
+     * @param emoji whether the character starts an emoji cluster; emoji prefer the emoji fallback files, everything else avoids them
+     * @return the source index, combined with {@link #SOURCE_MISSING} when no file can draw the character
+     */
+    int resolveSource(int codepoint, boolean emoji) {
+        Int2IntOpenHashMap cache = emoji ? this.emojiSourceCache : this.textSourceCache;
+        int cached = cache.get(codepoint);
+        if (cached != -1) {
+            return cached;
+        }
+        int resolved = this.searchSource(codepoint, emoji ? this.emojiOrder : this.textOrder, !emoji);
+        cache.put(codepoint, resolved);
+        return resolved;
+    }
+
+    /**
+     * Like {@link #resolveSource(int, boolean)} for text presentation, used when a color font can't draw an emoji sequence.
+     */
+    int resolveTextSource(int codepoint) {
+        return this.resolveSource(codepoint, false);
+    }
+
+    /**
+     * @param avoidColor whether a file that draws the character as a color glyph should only be used when no other file can draw
+     *                   it, so characters in text presentation (like U+2764 with U+FE0E) stay monochrome when possible
+     */
+    private int searchSource(int codepoint, @NotNull int[] order, boolean avoidColor) {
+        if (this.sources.length == 1) {
+            return this.sources[0].canDisplay(codepoint) ? 0 : (this.fallbackSourceIndex | SOURCE_MISSING);
+        }
+        int firstColorSource = -1;
+        for (int index : order) {
+            SmoothFontSource source = this.sources[index];
+            if (!source.canDisplay(codepoint)) {
+                continue;
+            }
+            if (avoidColor && source.displaysAsColor(codepoint)) {
+                if (firstColorSource < 0) {
+                    firstColorSource = index;
+                }
+                continue;
+            }
+            return index;
+        }
+        return (firstColorSource >= 0) ? firstColorSource : (this.fallbackSourceIndex | SOURCE_MISSING);
+    }
+
+    private int findFallbackSource() {
+        for (int index : this.textOrder) {
+            if (this.sources[index].canDisplay(MISSING_GLYPH_CODEPOINT)) {
+                return index;
             }
         }
         return 0;
     }
 
-    private int resolveSourceIndex(int codepoint) {
-        if (sources.length == 1) {
-            return 0;
+    /**
+     * Picks the search orders of the active language. A language change resets everything that depends on them.
+     */
+    private void refreshLanguage() {
+        String language = this.languageCode.get();
+        if (language.equals(this.activeLanguage)) {
+            return;
         }
-        String languageCode = resolveLanguageCode();
-        if (!languageCode.equals(cachedLanguageCode)) {
-            cachedLanguageCode = languageCode;
-            codepointToSourceIndex.clear();
-        }
-        int cached = codepointToSourceIndex.get(codepoint);
-        if (cached != -1) {
-            return cached;
-        }
-
-        int[] order = resolveOrderForLanguage(languageCode);
-        for (int index : order) {
-            if (sources[index].canDisplay(codepoint)) {
-                codepointToSourceIndex.put(codepoint, index);
-                return index;
-            }
-        }
-        codepointToSourceIndex.put(codepoint, fallbackSourceIndex);
-        return fallbackSourceIndex;
-    }
-
-    private int[] resolveOrderForLanguage(String languageCode) {
-        if (languageOrders == null || languageCode.isEmpty()) {
-            return defaultOrder;
-        }
-        int[] order = languageOrders.get(languageCode);
-        return order == null ? defaultOrder : order;
-    }
-
-    private static String resolveLanguageCode() {
-        Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft == null || minecraft.options == null || minecraft.options.languageCode == null) {
-            return "";
-        }
-        return minecraft.options.languageCode.toLowerCase(Locale.ROOT);
-    }
-
-    private static String[] normalizeLabels(@Nullable List<String> labels, int size) {
-        String[] resolved = new String[size];
-        for (int i = 0; i < size; i++) {
-            String label = null;
-            if (labels != null && i < labels.size()) {
-                label = labels.get(i);
-            }
-            if (label == null || label.isBlank()) {
-                label = "unknown";
-            }
-            resolved[i] = label;
-        }
-        return resolved;
-    }
-
-    private static class FontSource implements AutoCloseable {
-        final SmoothFont parent;
-        final Font rawFont;
-        final String debugName;
-        final String sourceLabel;
-        final int sourceIndex;
-        final Int2ObjectOpenHashMap<SizeLevel> sizeLevels;
-
-        FontSource(SmoothFont parent, Font rawFont, String debugName, String sourceLabel, int sourceIndex) {
-            this.parent = parent;
-            this.rawFont = rawFont;
-            this.debugName = debugName;
-            this.sourceLabel = sourceLabel;
-            this.sourceIndex = sourceIndex;
-            this.sizeLevels = new Int2ObjectOpenHashMap<>();
-        }
-
-        boolean canDisplay(int codepoint) {
-            return rawFont.canDisplay(codepoint);
-        }
-
-        SmoothFontGlyph getGlyph(int generationSize, int codepoint, boolean bold, boolean italic) {
-            return getSizeLevel(generationSize).getAtlas(bold, italic).getGlyph(codepoint);
-        }
-
-        SmoothFontAtlas getAtlas(int generationSize, boolean bold, boolean italic) {
-            return getSizeLevel(generationSize).getAtlas(bold, italic);
-        }
-
-        @Override
-        public void close() {
-            for (SizeLevel level : sizeLevels.values()) {
-                level.close();
-            }
-            sizeLevels.clear();
-        }
-
-        private SizeLevel getSizeLevel(int generationSize) {
-            int resolvedSize = normalizeSize(generationSize);
-            SizeLevel level = sizeLevels.get(resolvedSize);
-            if (level != null) {
-                return level;
-            }
-            synchronized (this) {
-                level = sizeLevels.get(resolvedSize);
-                if (level == null) {
-                    level = createSizeLevel(resolvedSize);
-                    sizeLevels.put(resolvedSize, level);
-                }
-                return level;
-            }
-        }
-
-        private SizeLevel createSizeLevel(int generationSize) {
-            float sdfRange = resolveSdfRange(generationSize);
-            int padding = resolveBlurPadding(sdfRange, generationSize);
-            int initialAtlasSize = resolveInitialAtlasSize(generationSize);
-            String sizeLabel = generationSize + "px";
-            return new SizeLevel(parent, rawFont, generationSize, sdfRange, padding, initialAtlasSize, debugName, sizeLabel, sourceLabel, sourceIndex);
-        }
-    }
-
-    private static class SizeLevel implements AutoCloseable {
-        final int generationSize;
-        private final SmoothFont parent;
-        private final Font rawFont;
-        private final float sdfRange;
-        private final int padding;
-        private final int initialAtlasSize;
-        private final String debugName;
-        private final String sizeLabel;
-        private final String sourceLabel;
-        private final int sourceIndex;
-        private SmoothFontAtlas plainAtlas;
-        private SmoothFontAtlas boldAtlas;
-        private SmoothFontAtlas italicAtlas;
-        private SmoothFontAtlas boldItalicAtlas;
-
-        SizeLevel(SmoothFont parent, Font rawFont, int genSize, float sdfRange, int padding, int initialAtlasSize, String debugName, String sizeLabel, String sourceLabel, int sourceIndex) {
-            this.generationSize = genSize;
-            this.parent = parent;
-            this.rawFont = rawFont;
-            this.initialAtlasSize = Math.max(1, initialAtlasSize);
-            this.debugName = debugName;
-            this.sizeLabel = sizeLabel;
-            this.sourceLabel = sourceLabel;
-            this.sourceIndex = sourceIndex;
-            this.sdfRange = Math.max(0.5F, Math.min(SDF_RANGE_MAX, sdfRange));
-            this.padding = Math.max(1, padding);
-        }
-
-        SmoothFontAtlas getAtlas(boolean bold, boolean italic) {
-            if (bold && italic) {
-                if (boldItalicAtlas != null) {
-                    return boldItalicAtlas;
-                }
-                synchronized (this) {
-                    if (boldItalicAtlas == null) {
-                        boldItalicAtlas = createAtlas(Font.BOLD | Font.ITALIC, "_bold_italic", "bold_italic");
-                    }
-                    return boldItalicAtlas;
-                }
-            }
-            if (bold) {
-                if (boldAtlas != null) {
-                    return boldAtlas;
-                }
-                synchronized (this) {
-                    if (boldAtlas == null) {
-                        boldAtlas = createAtlas(Font.BOLD, "_bold", "bold");
-                    }
-                    return boldAtlas;
-                }
-            }
-            if (italic) {
-                if (italicAtlas != null) {
-                    return italicAtlas;
-                }
-                synchronized (this) {
-                    if (italicAtlas == null) {
-                        italicAtlas = createAtlas(Font.ITALIC, "_italic", "italic");
-                    }
-                    return italicAtlas;
-                }
-            }
-            if (plainAtlas != null) {
-                return plainAtlas;
-            }
-            synchronized (this) {
-                if (plainAtlas == null) {
-                    plainAtlas = createAtlas(Font.PLAIN, "_plain", "plain");
-                }
-                return plainAtlas;
-            }
-        }
-
-        private SmoothFontAtlas createAtlas(int style, String styleSuffix, String styleLabel) {
-            Font derived = rawFont.deriveFont(style, (float) generationSize);
-            String atlasName = debugName + "_" + generationSize + styleSuffix;
-            return new SmoothFontAtlas(parent, derived, parent.getFontRenderContext(), sdfRange, padding, atlasName, initialAtlasSize, sourceLabel, sourceIndex, sizeLabel, styleLabel);
-        }
-
-        @Override
-        public void close() {
-            if (plainAtlas != null) {
-                plainAtlas.close();
-            }
-            if (boldAtlas != null) {
-                boldAtlas.close();
-            }
-            if (italicAtlas != null) {
-                italicAtlas.close();
-            }
-            if (boldItalicAtlas != null) {
-                boldItalicAtlas.close();
+        this.activeLanguage = language;
+        int[] order = (this.languageOrders != null) ? this.languageOrders.getOrDefault(language, this.defaultOrder) : this.defaultOrder;
+        this.textOrder = this.partitionOrder(order, false);
+        this.emojiOrder = this.partitionOrder(order, true);
+        this.textSourceCache.clear();
+        this.emojiSourceCache.clear();
+        this.clearLayouts();
+        // The language's preferred fallback (for example the Japanese font for ja_jp) is needed right away, so it loads ahead of time.
+        if (this.languageOrders != null && this.languageOrders.containsKey(language) && order.length > 1) {
+            SmoothFontSource preferred = this.sources[order[1]];
+            if (!preferred.emojiFallback) {
+                preferred.preloadAsync();
             }
         }
     }
+
+    @NotNull
+    private int[] partitionOrder(@NotNull int[] order, boolean emojiFirst) {
+        int[] result = new int[order.length];
+        int count = 0;
+        for (int pass = 0; pass < 2; pass++) {
+            boolean wantEmoji = (pass == 0) == emojiFirst;
+            for (int index : order) {
+                if (this.sources[index].emojiFallback == wantEmoji) {
+                    result[count++] = index;
+                }
+            }
+        }
+        return result;
+    }
+
+    @Override
+    public void close() {
+        this.atlas.close();
+        this.clearLayouts();
+    }
+
+    @NotNull
+    private static <K> LinkedHashMap<K, SmoothTextLayout> createLayoutCache() {
+        return new LinkedHashMap<>(64, 0.75F, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<K, SmoothTextLayout> eldest) {
+                return this.size() > LAYOUT_CACHE_LIMIT;
+            }
+        };
+    }
+
 }
