@@ -46,7 +46,6 @@ public class RenderingUtils {
     private static int depthTestLockDepth = 0;
     private static int blurBlockDepth = 0;
     private static int tooltipRenderingBlockDepth = 0;
-    private static int overrideBackgroundBlurRadius = -1000;
     private static int shaderColor = -1;
 
     /**
@@ -162,22 +161,6 @@ public class RenderingUtils {
         graphics.fill(x, y + partH, x + partW, y + height, MISSING_TEXTURE_COLOR_BLACK.getColorInt());
         //Bottom-right
         graphics.fill(x + partW, y + partH, x + width, y + height, MISSING_TEXTURE_COLOR_MAGENTA.getColorInt());
-    }
-
-    public static void setOverrideBackgroundBlurRadius(int radius) {
-        overrideBackgroundBlurRadius = radius;
-    }
-
-    public static void resetOverrideBackgroundBlurRadius() {
-        overrideBackgroundBlurRadius = -1000;
-    }
-
-    public static boolean shouldOverrideBackgroundBlurRadius() {
-        return overrideBackgroundBlurRadius != -1000;
-    }
-
-    public static int getOverrideBackgroundBlurRadius() {
-        return overrideBackgroundBlurRadius;
     }
 
     public static void setDepthTestLocked(boolean locked) {

@@ -56,7 +56,7 @@ class SmoothRenderingShaderResourceTest {
 
     @Test
     void blurMaskUsesSharedRectangleCoverageAndHalfDerivativeForSuperellipseEdge() throws IOException {
-        String shader = readResource("assets/minecraft/shaders/post/fancymenu_gui_blur.fsh");
+        String shader = readResource("assets/minecraft/shaders/post/fancymenu_blur_composite.fsh");
 
         assertTrue(shader.contains("max(fwidth(d) * 0.5, 0.0001)"));
         assertTrue(shader.contains(SHARED_ROUNDED_BOX_IMPORT));

@@ -34,6 +34,8 @@ public class UIBase extends RenderingUtils {
     public static final int VERTICAL_SCROLL_BAR_HEIGHT = 40;
     public static final int HORIZONTAL_SCROLL_BAR_WIDTH = 40;
     public static final int HORIZONTAL_SCROLL_BAR_HEIGHT = 5;
+    // At the default blur intensity of 300% and the "Large" UI scale (2.5), this blurs by 15 framebuffer pixels.
+    private static final float UI_BLUR_RADIUS = 2.0F;
     private static int uiScaleRenderingDepth = 0;
 
     /**
@@ -201,10 +203,21 @@ public class UIBase extends RenderingUtils {
     }
 
     /**
-     * Blur strength applied to supported UI surfaces.
+     * Blur strength of supported UI surfaces in GUI pixels, before FancyMenu's blur intensity setting. It follows FancyMenu's
+     * UI scale, so the blur keeps its look relative to the UI at every UI and GUI scale.
+     *
+     * <p>Blur areas that render inside a pose scaled by {@link #getFixedUIRenderScale()} and use a {@code *Scaled} blur method
+     * get that scale from the pose, so they need {@link #getUIScaleBlurRadius()} instead.</p>
      */
     public static float getBlurRadius() {
-        return 4.0F;
+        return UI_BLUR_RADIUS * getFixedUIRenderScale();
+    }
+
+    /**
+     * Blur strength of supported UI surfaces in UI pixels, before FancyMenu's blur intensity setting.
+     */
+    public static float getUIScaleBlurRadius() {
+        return UI_BLUR_RADIUS;
     }
 
     /**

@@ -230,6 +230,17 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         float bottom = frameY + frameHeight;
         float border = getRenderBorderThickness();
         float titleHeight = getRenderTitleBarHeight();
+        float normalCornerRadius = getFrameCornerRadius();
+        UITheme theme = getTheme();
+        if (UIBase.shouldBlur()) {
+            // The title bar shares the body's blur area as its header band, so the whole window needs only one blur.
+            float blurWidth = frameWidth - border - border;
+            float blurHeight = frameHeight - border - border;
+            if (blurWidth > 0.0F && blurHeight > 0.0F) {
+                GuiBlurRenderer.renderBlurAreaWithIntensityAndHeader(graphics, frameX + border, frameY + border, blurWidth, blurHeight, UIBase.getBlurRadius(), normalCornerRadius, normalCornerRadius, normalCornerRadius, normalCornerRadius, theme.ui_blur_interface_background_tint, Math.min(titleHeight, blurHeight), theme.ui_blur_interface_title_bar_tint, partial);
+            }
+            return;
+        }
         float innerLeft = frameX + border;
         float innerTop = frameY + border + titleHeight;
         float innerRight = right - border;
@@ -239,44 +250,34 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         if (innerRight <= innerLeft || innerBottom <= innerTop) {
             return;
         }
-        float normalCornerRadius = getFrameCornerRadius();
-        UITheme theme = getTheme();
-        if (UIBase.shouldBlur()) {
-            if (titleHeight > 0.0F) {
-                GuiBlurRenderer.renderBlurAreaWithIntensityRoundBottomCorners(graphics, innerLeft, innerTop, innerWidth, innerHeight, UIBase.getBlurRadius(), normalCornerRadius, theme.ui_blur_interface_background_tint, partial);
-            } else {
-                GuiBlurRenderer.renderBlurAreaWithIntensityRoundAllCorners(graphics, innerLeft, innerTop, innerWidth, innerHeight, UIBase.getBlurRadius(), normalCornerRadius, normalCornerRadius, normalCornerRadius, normalCornerRadius, theme.ui_blur_interface_background_tint, partial);
-            }
+        if (titleHeight > 0.0F) {
+            SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
+                    graphics,
+                    innerLeft,
+                    innerTop,
+                    innerWidth,
+                    innerHeight,
+                    0.0F,
+                    0.0F,
+                    normalCornerRadius,
+                    normalCornerRadius,
+                    theme.ui_interface_background_color.getColorInt(),
+                    partial
+            );
         } else {
-            if (titleHeight > 0.0F) {
-                SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
-                        graphics,
-                        innerLeft,
-                        innerTop,
-                        innerWidth,
-                        innerHeight,
-                        0.0F,
-                        0.0F,
-                        normalCornerRadius,
-                        normalCornerRadius,
-                        theme.ui_interface_background_color.getColorInt(),
-                        partial
-                );
-            } else {
-                SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
-                        graphics,
-                        innerLeft,
-                        innerTop,
-                        innerWidth,
-                        innerHeight,
-                        normalCornerRadius,
-                        normalCornerRadius,
-                        normalCornerRadius,
-                        normalCornerRadius,
-                        theme.ui_interface_background_color.getColorInt(),
-                        partial
-                );
-            }
+            SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
+                    graphics,
+                    innerLeft,
+                    innerTop,
+                    innerWidth,
+                    innerHeight,
+                    normalCornerRadius,
+                    normalCornerRadius,
+                    normalCornerRadius,
+                    normalCornerRadius,
+                    theme.ui_interface_background_color.getColorInt(),
+                    partial
+            );
         }
     }
 
@@ -444,50 +445,40 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
         float innerRight = right - border;
         float innerBottom = bottom - border;
         float titleHeight = getRenderTitleBarHeight();
-        if (innerRight > innerLeft && innerBottom > innerTop && titleHeight > 0.0F) {
+        // The blur variant of the title bar is the header band of the window's blur area in renderWindowBackground().
+        if (innerRight > innerLeft && innerBottom > innerTop && titleHeight > 0.0F && !UIBase.shouldBlur()) {
             float titleBottom = innerTop + titleHeight;
-            if (UIBase.shouldBlur()) {
-                float blurWidth = innerRight - innerLeft;
-                float blurHeight = Math.min(titleBottom, innerBottom) - innerTop;
-                boolean hasBody = innerBottom > titleBottom;
-                if (hasBody) {
-                    GuiBlurRenderer.renderBlurAreaWithIntensityRoundTopCorners(graphics, innerLeft, innerTop, blurWidth, blurHeight, UIBase.getBlurRadius(), normalCornerRadius, theme.ui_blur_interface_title_bar_tint, partial);
-                } else {
-                    GuiBlurRenderer.renderBlurAreaWithIntensityRoundAllCorners(graphics, innerLeft, innerTop, blurWidth, blurHeight, UIBase.getBlurRadius(), normalCornerRadius, normalCornerRadius, normalCornerRadius, normalCornerRadius, theme.ui_blur_interface_title_bar_tint, partial);
-                }
+            float titleWidth = innerRight - innerLeft;
+            float titleHeightClamped = Math.min(titleBottom, innerBottom) - innerTop;
+            boolean hasBody = innerBottom > titleBottom;
+            if (hasBody) {
+                SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
+                        graphics,
+                        innerLeft,
+                        innerTop,
+                        titleWidth,
+                        titleHeightClamped,
+                        normalCornerRadius,
+                        normalCornerRadius,
+                        0.0F,
+                        0.0F,
+                        theme.ui_interface_title_bar_color.getColorInt(),
+                        partial
+                );
             } else {
-                float titleWidth = innerRight - innerLeft;
-                float titleHeightClamped = Math.min(titleBottom, innerBottom) - innerTop;
-                boolean hasBody = innerBottom > titleBottom;
-                if (hasBody) {
-                    SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
-                            graphics,
-                            innerLeft,
-                            innerTop,
-                            titleWidth,
-                            titleHeightClamped,
-                            normalCornerRadius,
-                            normalCornerRadius,
-                            0.0F,
-                            0.0F,
-                            theme.ui_interface_title_bar_color.getColorInt(),
-                            partial
-                    );
-                } else {
-                    SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
-                            graphics,
-                            innerLeft,
-                            innerTop,
-                            titleWidth,
-                            titleHeightClamped,
-                            normalCornerRadius,
-                            normalCornerRadius,
-                            normalCornerRadius,
-                            normalCornerRadius,
-                            theme.ui_interface_title_bar_color.getColorInt(),
-                            partial
-                    );
-                }
+                SmoothRectangleRenderer.renderSmoothRectRoundAllCorners(
+                        graphics,
+                        innerLeft,
+                        innerTop,
+                        titleWidth,
+                        titleHeightClamped,
+                        normalCornerRadius,
+                        normalCornerRadius,
+                        normalCornerRadius,
+                        normalCornerRadius,
+                        theme.ui_interface_title_bar_color.getColorInt(),
+                        partial
+                );
             }
         }
 
