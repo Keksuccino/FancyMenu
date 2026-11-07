@@ -28,6 +28,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogSty
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Renderable;
@@ -1451,7 +1452,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                             int bottomEdge = topEdge + this.getHeight();
 
                             // Get GUI scale to account for the scale difference
-                            double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
+                            double guiScale = WindowHandler.getGuiScale();
 
                             // Get grid size
                             int gridSize = FancyMenu.getOptions().layoutEditorGridSize.getValue();

@@ -18,6 +18,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.EditBoxSuggestions;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.AbstractExtendedSlider;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
@@ -93,7 +94,7 @@ public class UIBase extends RenderingUtils {
      * @return render-scale multiplier that aligns with window pixels
      */
     public static float calculateFixedRenderScale(float logicalScale) {
-        double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
+        double guiScale = WindowHandler.getGuiScale();
         if (guiScale == 0.0D) return logicalScale; // fallback to avoid divide-by-zero
         return logicalScale / (float) guiScale;
     }

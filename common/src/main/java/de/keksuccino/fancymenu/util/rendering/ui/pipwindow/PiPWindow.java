@@ -13,6 +13,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UITheme;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -2150,7 +2151,7 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     private double getMainGuiScale() {
-        return this.minecraft.getWindow().getGuiScale();
+        return WindowHandler.getGuiScale();
     }
 
     private int calculateGuiScale(int guiScaleSetting, boolean forceUnicode, int framebufferWidth, int framebufferHeight) {
