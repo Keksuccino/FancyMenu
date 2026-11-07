@@ -1497,7 +1497,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         if (this.arrowNavigationEntry instanceof SubMenuContextMenuEntry sub) {
             boolean opensRight = sub.subContextMenu.getPossibleSubMenuOpeningSide() == SubMenuOpeningSide.RIGHT;
             if ((opensRight && goRight) || (!opensRight && goLeft)) {
-                if (sub.isActive()) {
+                if (sub.isActive() && sub.isSubMenuAvailable()) {
                     if (!sub.subContextMenu.isOpen()) {
                         menu.closeSubMenusExcept(sub);
                         sub.openSubMenu();
@@ -3006,6 +3006,8 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         protected long entryNotHoveredStartTime = -1;
         @NotNull
         protected IconAnimation.Instance subMenuArrowSpin = IconAnimations.SHORT_SPIN_UP_SUBTLE.createInstance();
+        @Nullable
+        protected BooleanSupplier subMenuAvailableSupplier;
 
         public SubMenuContextMenuEntry(@NotNull String identifier, @NotNull ContextMenu parent, @NotNull Component label, @NotNull ContextMenu subContextMenu) {
             super(identifier, parent, label, ((menu, entry) -> {}));
@@ -3021,8 +3023,29 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
             super.render(graphics, mouseX, mouseY, partial);
 
-            this.renderSubMenuArrow(graphics);
+            if (this.isSubMenuAvailable()) {
+                this.renderSubMenuArrow(graphics);
+            }
 
+        }
+
+        /**
+         * @return true if the sub menu of this entry can get opened right now. See {@link #setSubMenuAvailableSupplier(BooleanSupplier)}.
+         */
+        public boolean isSubMenuAvailable() {
+            return (this.subMenuAvailableSupplier == null) || this.subMenuAvailableSupplier.getBoolean(this.parent, this);
+        }
+
+        /**
+         * Controls if the sub menu of this entry can get opened, for entries that only offer their sub menu in some states.
+         * <p>
+         * While the sub menu is unavailable, the entry hides its arrow, keeps its sub menu closed and works like a normal clickable entry,
+         * so combine this with {@link #setClickAction(ClickAction)} to give the entry its own click behavior.
+         */
+        @NotNull
+        public SubMenuContextMenuEntry setSubMenuAvailableSupplier(@Nullable BooleanSupplier subMenuAvailableSupplier) {
+            this.subMenuAvailableSupplier = subMenuAvailableSupplier;
+            return this;
         }
 
         protected void renderSubMenuArrow(GuiGraphics graphics) {
@@ -3072,6 +3095,14 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
 
         protected void tickEntry() {
+            //Keep unavailable sub menus closed and restart the hover delay, so the sub menu opens like usual once it becomes available
+            if (!this.isSubMenuAvailable()) {
+                if (this.subContextMenu.isOpen()) {
+                    this.subContextMenu.closeMenu();
+                }
+                this.entryHoverStartTime = -1;
+                return;
+            }
             //Close sub menu when hovering over parent menu AFTER sub menu was hovered
             if (!this.subContextMenu.isOpen()) {
                 this.subMenuHoveredAfterOpen = false;
@@ -3132,6 +3163,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
          * @param entryPath The {@link SubMenuContextMenuEntry} path of menus to open.
          */
         public void openSubMenu(@NotNull List<String> entryPath) {
+            if (!this.isSubMenuAvailable()) return;
             if (this.isActive() && !this.subContextMenu.isOpen()) {
                 this.subMenuArrowSpin.start();
             }
@@ -3142,6 +3174,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
          * Opens the {@link ContextMenu} of this {@link SubMenuContextMenuEntry}.
          */
         public void openSubMenu() {
+            if (!this.isSubMenuAvailable()) return;
             if (this.isActive() && !this.subContextMenu.isOpen()) {
                 this.subMenuArrowSpin.start();
             }
@@ -3179,6 +3212,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             copy.activeStateSuppliers = new ArrayList<>(this.activeStateSuppliers);
             copy.labelSupplier = this.labelSupplier;
             copy.clickAction = this.clickAction;
+            copy.subMenuAvailableSupplier = this.subMenuAvailableSupplier;
             copy.icon = this.icon;
             copy.materialIcon = this.materialIcon;
             copy.iconWiggleAnimation = this.iconWiggleAnimation.getAnimation().createInstance();
@@ -3218,10 +3252,13 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             return i;
         }
 
+        /**
+         * Replaces opening the sub menu on click. Hovering the entry still opens its sub menu while it's available
+         * (see {@link #setSubMenuAvailableSupplier(BooleanSupplier)}).
+         */
         @Override
         public @NotNull SubMenuContextMenuEntry setClickAction(@NotNull ClickAction clickAction) {
-            LOGGER.error("[FANCYMENU] You can't set the click action of SubMenuContextMenuEntries.");
-            return this;
+            return super.setClickAction(clickAction);
         }
 
         @Override
