@@ -52,6 +52,9 @@ CHANGELOG | FANCYMENU v3.10.0 [ W I P !! Not public yet !! ]
 - Layouts made before this change still give the "Report Player" button the "Open to LAN" button's customizations, so they look the same as before (#1730)
 - Video intros now always end after one playthrough, even if a looping video background uses the same video (#1650)
 - Wakes is no longer marked as incompatible on MC 1.21.11, and on newer versions only Wakes versions older than 0.7.3 are still blocked, since Wakes fixed the crash on its end (#1830)
+- The Mods button in the Title screen now has the same identifier (`titlescreen_mods_button`) on Fabric (Mod Menu), Forge and NeoForge, so customizing it on one loader also works on the others
+  - Old layouts that customized the Mods button with its old Forge/NeoForge or Mod Menu identifier get converted to the new identifier automatically when loaded
+  - Element anchors, actions, requirements and placeholders that still use one of the old Mods button identifiers keep working
 - Fixed looping animated textures making the game intro play forever instead of ending on its own (#1650)
 - Fixed GIFs and web APNGs played through Watermedia always looping forever, ignoring the loop count set in the file (#1650)
 - Fixed re-triggering a GIF intro that already played all its loops not playing it again (#1650)
