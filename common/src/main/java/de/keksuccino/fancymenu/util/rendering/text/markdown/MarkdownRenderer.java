@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Predicate;
 
 @SuppressWarnings("unused")
 public class MarkdownRenderer implements Renderable, FocuslessContainerEventHandler, NarratableEntry, NavigatableWidget {
@@ -111,6 +112,9 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     protected boolean dragging;
     @Nullable
     protected TextEventHandler textEventHandler = null;
+    /** Decides which hyperlinks open on click. NULL opens all of them. */
+    @Nullable
+    protected Predicate<String> hyperlinkFilter = null;
     protected final Set<String> hoveredTextEventIds = new HashSet<>();
     protected final List<MarkdownTextLine> lines = new ArrayList<>();
     protected final List<MarkdownTextFragment> fragments = new ArrayList<>();
@@ -844,6 +848,18 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     public MarkdownRenderer setTextEventHandler(@Nullable TextEventHandler textEventHandler) {
         this.textEventHandler = textEventHandler;
         return this;
+    }
+
+    /**
+     * Restricts which hyperlinks open on click, for example to only allow web links in text that comes from other users.
+     */
+    public MarkdownRenderer setHyperlinkFilter(@Nullable Predicate<String> hyperlinkFilter) {
+        this.hyperlinkFilter = hyperlinkFilter;
+        return this;
+    }
+
+    protected boolean isHyperlinkAllowed(@NotNull String link) {
+        return (this.hyperlinkFilter == null) || this.hyperlinkFilter.test(link);
     }
 
     protected void fireTextClickEvent(@NotNull String eventId) {

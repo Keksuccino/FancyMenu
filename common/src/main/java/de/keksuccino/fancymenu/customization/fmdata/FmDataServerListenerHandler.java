@@ -32,6 +32,14 @@ public class FmDataServerListenerHandler {
 
     private static boolean initialized = false;
 
+    /**
+     * Replaces everything in memory with the content of the file.
+     */
+    public static synchronized void reload() {
+        initialized = false;
+        init();
+    }
+
     public static synchronized void init() {
         if (initialized) {
             return;

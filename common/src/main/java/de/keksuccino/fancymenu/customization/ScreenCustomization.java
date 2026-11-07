@@ -65,7 +65,7 @@ public class ScreenCustomization {
 
 	private static final Logger LOGGER = LogManager.getLogger();
 
-	public static final File CUSTOMIZABLE_MENUS_FILE = new File("config/fancymenu/customizablemenus.txt");
+	public static final File CUSTOMIZABLE_MENUS_FILE = new File(FancyMenu.MOD_DIR, "customizablemenus.txt");
 
 	private static final List<ScreenBlacklistRule> SCREEN_BLACKLIST_RULES = new ArrayList<>();
 
@@ -305,11 +305,20 @@ public class ScreenCustomization {
 		ResourceHandlers.reloadAll();
 		UIThemes.reloadThemes();
 		LayoutHandler.reloadLayouts();
+		finishFancyMenuReload(true);
+	}
+
+	/**
+	 * The last steps of every FancyMenu reload. Clears runtime caches and fires the {@link ModReloadEvent}, so everything that listens to it reloads.
+	 *
+	 * @param reInitScreen whether to re-initialize the current screen afterward.
+	 */
+	public static void finishFancyMenuReload(boolean reInitScreen) {
 		AnimationControllerHandler.stopAllAnimations();
 		AnimationControllerHandler.clearMemory();
 		TextEditorWindowBody.clearCompiledSingleLineCache();
 		EventHandler.INSTANCE.postEvent(new ModReloadEvent(Minecraft.getInstance().screen));
-		reInitCurrentScreen();
+		if (reInitScreen) reInitCurrentScreen();
 	}
 
 	public static void reInitCurrentScreen() {

@@ -21,6 +21,13 @@ public class OncePerSessionRequirement extends Requirement {
         super("once_per_session");
     }
 
+    /**
+     * Forgets all requirement instances that already returned true, like on a fresh game launch.
+     */
+    public static void clearSeenInstances() {
+        SEEN_REQUIREMENT_INSTANCES.clear();
+    }
+
     @Override
     public boolean canRunAsync() {
         return false;

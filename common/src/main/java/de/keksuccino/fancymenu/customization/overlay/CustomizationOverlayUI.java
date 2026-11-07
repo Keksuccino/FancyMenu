@@ -17,6 +17,7 @@ import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.ChoosePanoramaScreen;
 import de.keksuccino.fancymenu.customization.listener.gui.ManageListenersWindowBody;
+import de.keksuccino.fancymenu.customization.profile.gui.ManageProfilesWindowBody;
 import de.keksuccino.fancymenu.customization.scheduler.gui.ManageSchedulersWindowBody;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
 import de.keksuccino.fancymenu.customization.screen.dummyscreen.DummyScreenBuilder;
@@ -193,6 +194,13 @@ public class CustomizationOverlayUI {
         }).setIcon(MaterialIcons.EXIT_TO_APP);
 
         customizationMenu.addSeparatorEntry("separator_after_override_current");
+
+        customizationMenu.addClickableEntry("profiles", Component.translatable("fancymenu.profiles.manage"), (menu, entry) -> {
+                    ManageProfilesWindowBody.openInWindow();
+                    menu.closeMenuChain();
+                })
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.profiles.manage.desc")))
+                .setIcon(MaterialIcons.STACKS);
 
         ContextMenu layoutMenu = buildLayoutMenu(screen, identifier, true, layout -> buildManageLayoutSubMenu(layout, List.of("layouts"), screen));
         customizationMenu.addSubMenuEntry("layouts", Component.translatable("fancymenu.overlay.menu_bar.customization.layout"), layoutMenu)
