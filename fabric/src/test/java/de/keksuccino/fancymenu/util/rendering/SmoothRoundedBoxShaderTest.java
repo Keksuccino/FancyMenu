@@ -82,7 +82,7 @@ class SmoothRoundedBoxShaderTest {
         String localRectangleShader = readResource("/assets/minecraft/shaders/core/fancymenu_gui_smooth_rect_local.fsh");
         String imageRectangleShader = readResource("/assets/minecraft/shaders/program/fancymenu_gui_smooth_image_rect.fsh");
         String rectangleShader = readResource("/assets/minecraft/shaders/program/fancymenu_gui_smooth_rect.fsh");
-        String blurShader = readResource("/assets/minecraft/shaders/program/fancymenu_gui_blur.fsh");
+        String blurShader = readResource("/assets/minecraft/shaders/core/fancymenu_blur_composite.fsh");
 
         assertTrue(sharedCoverage.contains("fwidth(position)"));
         assertTrue(sharedCoverage.contains("smoothstep(0.0, cornerTransitionWidth"));
@@ -94,7 +94,8 @@ class SmoothRoundedBoxShaderTest {
 
         assertEffectProgramUsesCompatibilityCopy(imageRectangleShader, sharedCoverage, 1);
         assertEffectProgramUsesCompatibilityCopy(rectangleShader, sharedCoverage, 2);
-        assertEffectProgramUsesCompatibilityCopy(blurShader, sharedCoverage, 1);
+        assertTrue(blurShader.contains(SHARED_COVERAGE_IMPORT));
+        assertEquals(1, countOccurrences(blurShader, "fancymenuRoundedBoxAlpha("));
     }
 
     private static void assertEffectProgramUsesCompatibilityCopy(String shader, String sharedCoverage, int invocationCount) {

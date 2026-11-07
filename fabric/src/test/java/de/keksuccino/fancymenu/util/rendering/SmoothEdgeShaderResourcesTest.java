@@ -20,7 +20,7 @@ class SmoothEdgeShaderResourcesTest {
     private static final String SMOOTH_IMAGE_RECT = "program/fancymenu_gui_smooth_image_rect.fsh";
     private static final String SMOOTH_RECT = "program/fancymenu_gui_smooth_rect.fsh";
     private static final String SMOOTH_RECT_LOCAL = "core/fancymenu_gui_smooth_rect_local.fsh";
-    private static final String GUI_BLUR = "program/fancymenu_gui_blur.fsh";
+    private static final String GUI_BLUR = "core/fancymenu_blur_composite.fsh";
     private static final List<String> MAPPED_SHADERS = List.of(SMOOTH_CIRCLE, SMOOTH_IMAGE_CIRCLE, SMOOTH_IMAGE_RECT, SMOOTH_RECT, SMOOTH_RECT_LOCAL, GUI_BLUR);
     private static final List<String> IMAGE_SHADERS = List.of(SMOOTH_IMAGE_CIRCLE, SMOOTH_IMAGE_RECT);
 

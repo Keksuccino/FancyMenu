@@ -40,17 +40,18 @@ public class CircleShapeElement extends AbstractElement {
         int c = FastColor.ARGB32.color(alpha, colorResolved.getColor().getRed(), colorResolved.getColor().getGreen(), colorResolved.getColor().getBlue());
 
         if (this.blurEnabled.tryGetNonNull()) {
-            DrawableColor tint = DrawableColor.of(colorResolved.getColor().getRed(), colorResolved.getColor().getGreen(), colorResolved.getColor().getBlue(), alpha);
-            float appliedBlurRadius = Math.max(0.0F, resolvedBlurRadius * this.opacity);
+            // The blur fades through its opacity instead of its radius, so fading elements don't look sharper while fading.
+            DrawableColor tint = DrawableColor.of(colorResolved.getColor().getRed(), colorResolved.getColor().getGreen(), colorResolved.getColor().getBlue(), baseAlpha);
             GuiBlurRenderer.renderBlurAreaCircleScaled(
                     graphics,
                     this.getAbsoluteX(),
                     this.getAbsoluteY(),
                     this.getAbsoluteWidth(),
                     this.getAbsoluteHeight(),
-                    appliedBlurRadius,
+                    resolvedBlurRadius,
                     resolvedRoundness,
                     tint,
+                    this.opacity,
                     partial
             );
         } else {

@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
+import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.global.SeamlessWorldLoadingHandler;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
@@ -42,6 +43,7 @@ public class MixinGameRenderer {
     @Inject(method = "render", at = @At("HEAD"))
     private void before_render_FancyMenu(float partialTicks, long nanoTime, boolean renderLevel, CallbackInfo info) {
         ScreenCustomization.onPreGameRenderTick();
+        GuiBlurRenderer.onFrameStart_FancyMenu();
     }
 
     @Inject(method = "renderLevel", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;renderItemInHand(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/Camera;F)V", shift = At.Shift.BEFORE))
@@ -207,6 +209,11 @@ public class MixinGameRenderer {
         }
 
         return entityHitResult;
+    }
+
+    @Inject(method = "close", at = @At("TAIL"))
+    private void after_close_FancyMenu(CallbackInfo info) {
+        GuiBlurRenderer.close_FancyMenu();
     }
 
 }
