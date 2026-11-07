@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering;
 
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.ApiStatus;
 
@@ -16,8 +17,8 @@ public final class RenderScaleUtil {
      * <p>
      * This is a snapshot of the effective GUI scale that FancyMenu should render with, combining:
      * <ul>
-     *     <li>The current Minecraft window GUI scale ({@link net.minecraft.client.Minecraft#getInstance()} →
-     *     {@link com.mojang.blaze3d.platform.Window#getGuiScale()}).</li>
+     *     <li>The current main GUI scale ({@link WindowHandler#getGuiScale()}, which includes FancyMenu's
+     *     precise fractional scale).</li>
      *     <li>Any additional scaling applied through {@link com.mojang.blaze3d.vertex.PoseStack#scale(float, float, float)}
      *     (tracked in real time via mixins).</li>
      * </ul>
@@ -26,7 +27,7 @@ public final class RenderScaleUtil {
      * @return current absolute render scale (window GUI scale × active pose scale)
      */
     public static float getCurrentRenderScale() {
-        float baseScale = (float) Minecraft.getInstance().getWindow().getGuiScale();
+        float baseScale = (float) WindowHandler.getGuiScale();
         return baseScale * ACTIVE_RENDER_SCALE_FANCYMENU.get();
     }
 

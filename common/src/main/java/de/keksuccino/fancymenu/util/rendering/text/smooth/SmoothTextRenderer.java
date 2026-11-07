@@ -3,7 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.text.smooth;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.GuiScissorUtil;
-import net.minecraft.client.Minecraft;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.state.GuiRenderState;
@@ -93,7 +93,7 @@ public final class SmoothTextRenderer {
             return dimensions;
         }
         Matrix3x2f pose = new Matrix3x2f(graphics.pose());
-        float guiScale = (float) Minecraft.getInstance().getWindow().getGuiScale();
+        float guiScale = (float) WindowHandler.getGuiScale();
         MESH.begin(font, pose.m00, pose.m01, pose.m10, pose.m11, pose.m20, pose.m21, guiScale);
         if (shadow) {
             MESH.addLayout(layout, x, y, size, color, true);

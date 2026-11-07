@@ -9,7 +9,7 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormatElement;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinBufferBuilder;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphics;
-import net.minecraft.client.Minecraft;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.TextureSetup;
@@ -253,7 +253,7 @@ public final class SmoothCircleRenderer {
     }
 
     private static float resolveGuiScale_FancyMenu() {
-        double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
+        double guiScale = WindowHandler.getGuiScale();
         if (!Double.isFinite(guiScale) || guiScale <= 0.0D) {
             return 1.0F;
         }

@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.Tickable;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.UISounds;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
@@ -85,7 +86,7 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
         int screenHeight = minecraft.getWindow().getGuiScaledHeight();
         int targetWidth = Math.max(1, (int) Math.round(screenWidth * DEFAULT_WINDOW_SIZE_SCALE_WIDTH));
         int targetHeight = Math.max(1, (int) Math.round(screenHeight * DEFAULT_WINDOW_SIZE_SCALE_HEIGHT));
-        double guiScale = window.isSizeScaledToGuiScale() ? minecraft.getWindow().getGuiScale() : 1.0;
+        double guiScale = window.isSizeScaledToGuiScale() ? WindowHandler.getGuiScale() : 1.0;
         if (guiScale <= 1.0) {
             guiScale = 1.0;
         }
