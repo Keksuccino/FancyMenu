@@ -2,6 +2,13 @@
 CHANGELOG | FANCYMENU v3.10.0 [ W I P !! Not public yet !! ]
 
 - Added Ukrainian translation (#1817)
+- Added Profiles, which save your whole FancyMenu setup so you can switch between setups at any time (Customization → Profiles)
+  - Profiles can have a title, version, authors, a Markdown description, an issue tracker link, social links and a 64x64 icon
+  - Loading a profile fully reloads FancyMenu, just like starting the game fresh
+  - Your current setup is saved to its own profile automatically when you load another one, so nothing gets lost
+  - Profiles can be shared as .fmp files, and importing one is as easy as dropping it onto the Profiles window
+  - Imports warn you when a profile was made with a newer FancyMenu version, and let you replace or keep both when you already have that profile
+  - New empty profiles keep your personal FancyMenu UI settings, so you don't see the welcome screen or lose your UI preferences
 - Added "Is Block/Item In Tag" requirement to check if a block or item is part of a tag like #minecraft:logs or #c:tools, which also works with listener variables like $$block_key (#1829)
 - Added a confirmation popup to the "Join the Discord" button in the menu bar, explaining that the server is for Keksuccino's mods and not for the modpack you're playing
 - Added an "Ignore Game Intro Loops" option to the Game Intro settings (enabled by default), so looping GIF, APNG, FMA and AFMA intros end after playing through once (#1650)
