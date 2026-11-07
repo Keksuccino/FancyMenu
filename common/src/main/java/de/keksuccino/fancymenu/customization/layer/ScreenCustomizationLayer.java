@@ -27,6 +27,7 @@ import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.events.ModReloadEvent;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.customization.widget.identification.WidgetIdentifierHandler;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.ScreenTitleUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -626,7 +627,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 	@Nullable
 	public AbstractElement getElementByInstanceIdentifier(String instanceIdentifier) {
-		instanceIdentifier = instanceIdentifier.replace("vanillabtn:", "").replace("button_compatibility_id:", "");
+		instanceIdentifier = WidgetIdentifierHandler.normalizeIdentifier(instanceIdentifier);
 		for (AbstractElement element : this.allElements) {
 			if (element.getInstanceIdentifier().equals(instanceIdentifier)) {
 				return element;
