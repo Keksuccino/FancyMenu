@@ -64,6 +64,9 @@ CHANGELOG | FANCYMENU v3.10.0 [ W I P !! Not public yet !! ]
 - Blurred shape elements now fade in and out smoothly instead of looking sharper while they fade
 - Custom GUI popup backgrounds now follow Minecraft's "Menu Background Blur" accessibility option (1.21.1 and newer)
 - Toggles with an Enabled/Disabled/Manual state now show the state of the whole selection when multiple elements are selected, and one click on a mixed selection enables all of them (#1831)
+- Raised the maximum UI blur intensity from 300% to 1000%
+- Changed the default UI blur intensity to 500% for new configs
+- Fixed strong UI blur intensities getting capped at small GUI scales
 - Fixed blur areas not being clipped by scrollable or clipped regions on Minecraft 1.21.11 and newer
 - Fixed visible color banding in smooth blurred gradients
 - Fixed looping animated textures making the game intro play forever instead of ending on its own (#1650)
