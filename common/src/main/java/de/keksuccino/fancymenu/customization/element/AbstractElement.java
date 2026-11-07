@@ -13,6 +13,7 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandl
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.widget.identification.WidgetIdentifierHandler;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.properties.PropertyHolder;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
@@ -933,10 +934,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			return;
 		}
 
-		// Normalize the identifier (remove potential prefixes)
-		String normalizedIdentifier = anchorPointElementIdentifier
-				.replace("vanillabtn:", "")
-				.replace("button_compatibility_id:", "");
+		// Normalize the identifier (remove potential prefixes and resolve replaced widget identifiers)
+		String normalizedIdentifier = WidgetIdentifierHandler.normalizeIdentifier(anchorPointElementIdentifier);
 
 		// Check for self-anchoring
 		if (this.getInstanceIdentifier().equals(normalizedIdentifier)) {
@@ -1000,7 +999,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			}
 
 			// Normalize the parent ID
-			parentId = parentId.replace("vanillabtn:", "").replace("button_compatibility_id:", "");
+			parentId = WidgetIdentifierHandler.normalizeIdentifier(parentId);
 
 			current = getElementByInstanceIdentifier(parentId);
 			depth++;
@@ -1176,7 +1175,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	@SuppressWarnings("all")
 	@Nullable
 	public static AbstractElement getElementByInstanceIdentifier(String identifier) {
-		identifier = identifier.replace("vanillabtn:", "").replace("button_compatibility_id:", "");
+		identifier = WidgetIdentifierHandler.normalizeIdentifier(identifier);
 		if (LayoutEditorScreen.getCurrentInstance() != null) {
 			AbstractEditorElement editorElement = LayoutEditorScreen.getCurrentInstance().getElementByInstanceIdentifier(identifier);
 			if (editorElement != null) return editorElement.element;
