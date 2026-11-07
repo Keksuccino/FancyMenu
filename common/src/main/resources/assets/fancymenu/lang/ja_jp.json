@@ -3510,6 +3510,7 @@
   "fancymenu.profiles.import.conflict.replace": "置き換える",
   "fancymenu.profiles.import.conflict.keep_both": "両方残す",
   "fancymenu.profiles.import.drop_no_archive": "ここでインポートできるのは FancyMenu のプロファイルファイル（.fmp）だけです。",
+  "fancymenu.profiles.archive.file_type": "FancyMenu プロファイル",
   "fancymenu.profiles.error.switch": "プロファイルを読み込めなかったので、今の設定がそのまま使われます。",
   "fancymenu.profiles.error.create": "プロファイルを作成できませんでした。",
   "fancymenu.profiles.error.duplicate": "プロファイルを複製できませんでした。",
@@ -3542,9 +3543,9 @@
   "fancymenu.profiles.edit.links.type.desc": "クリックしてリンクのプラットフォームを選びます。リンクを貼り付けると自動で選ばれます。",
   "fancymenu.profiles.edit.links.label.hint": "ラベル",
   "fancymenu.profiles.edit.icon.choose": "アイコンを選ぶ",
-  "fancymenu.profiles.edit.icon.choose.desc": "PNG か JPEG の画像を選んでください。正方形でない画像は中央が切り抜かれ、64x64 ピクセルに縮小されます。",
+  "fancymenu.profiles.edit.icon.choose.desc": "PNG 画像を選んでください。正方形でない画像は中央が切り抜かれ、64x64 ピクセルに縮小されます。",
   "fancymenu.profiles.edit.icon.remove": "アイコンを外す",
   "fancymenu.profiles.edit.error.no_title": "プロファイルにタイトルを付けてください。",
   "fancymenu.profiles.edit.error.invalid_url": "有効なウェブリンクではありません:\n%s",
-  "fancymenu.profiles.edit.error.icon": "アイコンを更新できませんでした。PNG か JPEG の画像を選んでください。"
+  "fancymenu.profiles.edit.error.icon": "アイコンを更新できませんでした。PNG 画像を選んでください。"
 }

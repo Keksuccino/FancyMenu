@@ -3510,6 +3510,7 @@
   "fancymenu.profiles.import.conflict.replace": "Remplacer",
   "fancymenu.profiles.import.conflict.keep_both": "Garder les deux",
   "fancymenu.profiles.import.drop_no_archive": "Seuls les fichiers de profil FancyMenu (.fmp) peuvent être importés ici.",
+  "fancymenu.profiles.archive.file_type": "Profil FancyMenu",
   "fancymenu.profiles.error.switch": "Impossible de charger le profil, ta config actuelle reste donc chargée.",
   "fancymenu.profiles.error.create": "Impossible de créer le profil.",
   "fancymenu.profiles.error.duplicate": "Impossible de dupliquer le profil.",
@@ -3542,9 +3543,9 @@
   "fancymenu.profiles.edit.links.type.desc": "Clique pour choisir la plateforme de ce lien. Coller un lien la choisit tout seul.",
   "fancymenu.profiles.edit.links.label.hint": "Libellé",
   "fancymenu.profiles.edit.icon.choose": "Choisir une icône",
-  "fancymenu.profiles.edit.icon.choose.desc": "Choisis une image PNG ou JPEG. Les images qui ne sont pas carrées sont recadrées au centre et mises à 64x64 pixels.",
+  "fancymenu.profiles.edit.icon.choose.desc": "Choisis une image PNG. Les images qui ne sont pas carrées sont recadrées au centre et mises à 64x64 pixels.",
   "fancymenu.profiles.edit.icon.remove": "Retirer l'icône",
   "fancymenu.profiles.edit.error.no_title": "Donne un titre à ton profil, s'il te plaît.",
   "fancymenu.profiles.edit.error.invalid_url": "Ce n'est pas un lien web valide :\n%s",
-  "fancymenu.profiles.edit.error.icon": "Impossible de mettre à jour l'icône. Choisis une image PNG ou JPEG."
+  "fancymenu.profiles.edit.error.icon": "Impossible de mettre à jour l'icône. Choisis une image PNG."
 }

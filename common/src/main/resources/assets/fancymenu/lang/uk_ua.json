@@ -3510,6 +3510,7 @@
   "fancymenu.profiles.import.conflict.replace": "Замінити",
   "fancymenu.profiles.import.conflict.keep_both": "Залишити обидва",
   "fancymenu.profiles.import.drop_no_archive": "Сюди можна імпортувати лише файли профілів FancyMenu (.fmp).",
+  "fancymenu.profiles.archive.file_type": "Профіль FancyMenu",
   "fancymenu.profiles.error.switch": "Не вдалося завантажити профіль, тож поточне налаштування лишається завантаженим.",
   "fancymenu.profiles.error.create": "Не вдалося створити профіль.",
   "fancymenu.profiles.error.duplicate": "Не вдалося дублювати профіль.",
@@ -3542,9 +3543,9 @@
   "fancymenu.profiles.edit.links.type.desc": "Натисни, щоб вибрати платформу цього посилання. Якщо вставити посилання, вона вибереться сама.",
   "fancymenu.profiles.edit.links.label.hint": "Підпис",
   "fancymenu.profiles.edit.icon.choose": "Вибрати значок",
-  "fancymenu.profiles.edit.icon.choose.desc": "Вибери зображення PNG або JPEG. Неквадратні зображення обрізаються по центру й масштабуються до 64x64 пікселів.",
+  "fancymenu.profiles.edit.icon.choose.desc": "Вибери зображення PNG. Неквадратні зображення обрізаються по центру й масштабуються до 64x64 пікселів.",
   "fancymenu.profiles.edit.icon.remove": "Прибрати значок",
   "fancymenu.profiles.edit.error.no_title": "Дай своєму профілю назву.",
   "fancymenu.profiles.edit.error.invalid_url": "Це неправильне посилання:\n%s",
-  "fancymenu.profiles.edit.error.icon": "Не вдалося оновити значок. Вибери зображення PNG або JPEG."
+  "fancymenu.profiles.edit.error.icon": "Не вдалося оновити значок. Вибери зображення PNG."
 }

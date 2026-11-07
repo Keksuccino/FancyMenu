@@ -76,7 +76,9 @@ public class ManageProfilesWindowBody extends PiPWindowBody {
     @Nullable
     private String selectedId;
     private ScrollArea listArea;
-    private ScrollableMarkdownRenderer descriptionRenderer;
+    /** Gets its real area with the first description it shows. */
+    private final ScrollableMarkdownRenderer descriptionRenderer = new ScrollableMarkdownRenderer(0, 0, 0, 0);
+    /** The description the renderer shows, or null while the renderer is not part of the screen. */
     @Nullable
     private String shownDescription;
     private float[] descriptionBounds = new float[4];
@@ -177,10 +179,9 @@ public class ManageProfilesWindowBody extends PiPWindowBody {
             return UITooltip.of(LocalizationUtils.splitLocalizedLines(((selected != null) && selected.active()) ? "fancymenu.profiles.load.active.desc" : "fancymenu.profiles.load.desc"));
         });
 
-        if (this.descriptionRenderer == null) this.descriptionRenderer = new ScrollableMarkdownRenderer(0, 0, 10, 10);
+        // Rebuilding the widgets removed the description renderer, so it gets added and laid out again with the next description it shows
         this.descriptionBounds = new float[4];
         this.shownDescription = null;
-        this.addRenderableWidget(this.descriptionRenderer);
 
     }
 
@@ -271,28 +272,30 @@ public class ManageProfilesWindowBody extends PiPWindowBody {
     }
 
     /**
+     * Shows the description in the given area, or takes the renderer off the screen when there is no description, so it can't render or take input.<br>
      * The markdown renderer needs a rebuild when its area changes, so this only happens when the selected profile or the window size changes.
      */
     private void updateDescription(@Nullable String description, float x, float y, float width, float height) {
         if (description == null) {
             if (this.shownDescription != null) {
-                this.descriptionRenderer.setText("");
+                this.removeWidget(this.descriptionRenderer);
                 this.shownDescription = null;
             }
             return;
         }
+        if (this.shownDescription == null) this.addRenderableWidget(this.descriptionRenderer);
         float[] bounds = {x, y, width, height};
-        if (!Arrays.equals(bounds, this.descriptionBounds)) {
+        boolean rebuilt = !Arrays.equals(bounds, this.descriptionBounds);
+        if (rebuilt) {
             this.descriptionBounds = bounds;
             this.descriptionRenderer.rebuild(x, y, width, height);
             this.styleDescriptionRenderer();
-            this.shownDescription = null;
         }
-        if (!description.equals(this.shownDescription)) {
+        if (rebuilt || !description.equals(this.shownDescription)) {
             this.descriptionRenderer.setText(description);
             this.descriptionRenderer.getScrollArea().verticalScrollBar.setScroll(0.0F);
-            this.shownDescription = description;
         }
+        this.shownDescription = description;
     }
 
     private void styleDescriptionRenderer() {
@@ -487,7 +490,7 @@ public class ManageProfilesWindowBody extends PiPWindowBody {
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaY) {
         if (ProfileHandler.isBusy()) return true;
-        if ((mouseY >= this.descriptionBoxY) && (mouseX > (MARGIN + LIST_WIDTH))) {
+        if ((this.shownDescription != null) && (mouseY >= this.descriptionBoxY) && (mouseX > (MARGIN + LIST_WIDTH))) {
             return this.descriptionRenderer.mouseScrolled(mouseX, mouseY, scrollDeltaY);
         }
         return this.listArea.mouseScrolled(mouseX, mouseY, scrollDeltaY);
