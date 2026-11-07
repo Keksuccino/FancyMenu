@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.listener.listeners.OnStartLookingAt
 import de.keksuccino.fancymenu.customization.listener.listeners.OnStartLookingAtEntityListener;
 import de.keksuccino.fancymenu.customization.listener.listeners.OnStopLookingAtBlockListener;
 import de.keksuccino.fancymenu.customization.listener.listeners.OnStopLookingAtEntityListener;
+import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -51,6 +52,7 @@ public class MixinGameRenderer {
     @Inject(method = "render", at = @At("HEAD"))
     private void before_render_FancyMenu(DeltaTracker $$0, boolean $$1, CallbackInfo info) {
         ScreenCustomization.onPreGameRenderTick();
+        GuiBlurRenderer.onFrameStart_FancyMenu();
     }
 
     @Inject(
@@ -233,6 +235,11 @@ public class MixinGameRenderer {
         }
 
         return entityHitResult;
+    }
+
+    @Inject(method = "close", at = @At("TAIL"))
+    private void after_close_FancyMenu(CallbackInfo info) {
+        GuiBlurRenderer.close_FancyMenu();
     }
 
 }

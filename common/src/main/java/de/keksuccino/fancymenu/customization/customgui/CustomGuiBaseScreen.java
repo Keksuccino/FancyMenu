@@ -7,8 +7,6 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
 import net.minecraft.client.Minecraft;
@@ -105,9 +103,6 @@ public class CustomGuiBaseScreen extends Screen {
                 this.renderPanorama(graphics, partial);
             }
         }
-        if (popup) {
-            RenderingUtils.setOverrideBackgroundBlurRadius(7);
-        }
         try {
             if ((!popup && renderBackgroundOverlay) || (popup && popupOverlay)) {
                 this.renderGuiBlurBackground(graphics, partial);
@@ -115,7 +110,6 @@ public class CustomGuiBaseScreen extends Screen {
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Error while rendering background blur in Custom GUI!", ex);
         }
-        RenderingUtils.resetOverrideBackgroundBlurRadius();
         if (!popup && renderBackgroundOverlay) {
             this.renderMenuBackground(graphics);
         }
@@ -140,10 +134,11 @@ public class CustomGuiBaseScreen extends Screen {
         }
     }
 
+    /**
+     * Blurs the background like vanilla menus do, with the strength of vanilla's "Menu Background Blur" option.
+     */
     protected void renderGuiBlurBackground(@NotNull GuiGraphics graphics, float partial) {
-        int radius = 7;
-        float blurRadius = GuiBlurRenderer.convertFramebufferBlurRadiusToGui(radius);
-        GuiBlurRenderer.renderBlurArea(graphics, 0.0F, 0.0F, this.width, this.height, blurRadius, 0.0F, DrawableColor.FULLY_TRANSPARENT, partial);
+        RenderingUtils.renderVanillaLikeFullscreenBlur(graphics, this, partial);
     }
 
     protected void withPopupMenuBackgroundScreen(@NotNull Screen backgroundScreen, @NotNull Runnable action) {

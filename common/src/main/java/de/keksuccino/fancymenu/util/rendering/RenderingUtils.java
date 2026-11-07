@@ -6,6 +6,7 @@ import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
@@ -29,6 +30,7 @@ public class RenderingUtils {
     public static final DrawableColor MISSING_TEXTURE_COLOR_MAGENTA = DrawableColor.of(Color.MAGENTA);
     public static final DrawableColor MISSING_TEXTURE_COLOR_BLACK = DrawableColor.BLACK;
     public static final ResourceLocation FULLY_TRANSPARENT_TEXTURE = ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/fully_transparent.png");
+    public static final float VANILLA_BACKGROUND_BLUR_TO_GUI_BLUR_MULTIPLIER = 1.5F;
 
     private static final List<RenderingTask> PRE_RENDER_CONTEXTS = new ArrayList<>();
     private static final List<RenderingTask> POST_RENDER_CONTEXTS = new ArrayList<>();
@@ -36,7 +38,6 @@ public class RenderingUtils {
     private static int depthTestLockDepth = 0;
     private static int blurBlockDepth = 0;
     private static int tooltipRenderingBlockDepth = 0;
-    private static int overrideBackgroundBlurRadius = -1000;
 
     public static void postPreRenderTask(@NotNull RenderingTask context) {
         PRE_RENDER_CONTEXTS.add(Objects.requireNonNull(context));
@@ -87,20 +88,23 @@ public class RenderingUtils {
         graphics.fill(x + partW, y + partH, x + width, y + height, MISSING_TEXTURE_COLOR_MAGENTA.getColorInt());
     }
 
-    public static void setOverrideBackgroundBlurRadius(int radius) {
-        overrideBackgroundBlurRadius = radius;
+    /**
+     * Blurs the whole screen like vanilla menus do, with the strength of vanilla's "Menu Background Blur" option.
+     */
+    public static void renderVanillaLikeFullscreenBlur(@NotNull GuiGraphics graphics, @NotNull Screen screen, float partial) {
+        float blurRadius = convertVanillaBackgroundBlurrinessToGuiBlurRadius();
+        if (blurRadius > 0.0F) {
+            GuiBlurRenderer.renderBlurArea(graphics, 0.0F, 0.0F, screen.width, screen.height, blurRadius, 0.0F, DrawableColor.FULLY_TRANSPARENT, partial);
+        }
     }
 
-    public static void resetOverrideBackgroundBlurRadius() {
-        overrideBackgroundBlurRadius = -1000;
-    }
-
-    public static boolean shouldOverrideBackgroundBlurRadius() {
-        return overrideBackgroundBlurRadius != -1000;
-    }
-
-    public static int getOverrideBackgroundBlurRadius() {
-        return overrideBackgroundBlurRadius;
+    public static float convertVanillaBackgroundBlurrinessToGuiBlurRadius() {
+        int backgroundBlurriness = Minecraft.getInstance().options.getMenuBackgroundBlurriness();
+        if (backgroundBlurriness < 1) {
+            return 0.0F;
+        }
+        float convertedBackgroundBlurriness = (float)backgroundBlurriness * VANILLA_BACKGROUND_BLUR_TO_GUI_BLUR_MULTIPLIER;
+        return GuiBlurRenderer.convertFramebufferBlurRadiusToGui(convertedBackgroundBlurriness);
     }
 
     public static void setDepthTestLocked(boolean locked) {

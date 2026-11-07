@@ -16,7 +16,7 @@ class SmoothShapeShaderResourceTest {
     private static final Map<String, List<String>> EXPECTED_DERIVATIVE_RAMPS = Map.of(
             "/assets/minecraft/shaders/program/fancymenu_gui_smooth_circle.fsh", List.of("max(fwidth(d) * 0.5, 0.0001)", "max(fwidth(angle) * 0.5, 0.0001)"),
             "/assets/minecraft/shaders/program/fancymenu_gui_smooth_image_circle.fsh", List.of("max(fwidth(d) * 0.5, 0.0001)"),
-            "/assets/minecraft/shaders/program/fancymenu_gui_blur.fsh", List.of("max(fwidth(d) * 0.5, 0.0001)")
+            "/assets/minecraft/shaders/core/fancymenu_blur_composite.fsh", List.of("max(fwidth(d) * 0.5, 0.0001)")
     );
 
     @Test

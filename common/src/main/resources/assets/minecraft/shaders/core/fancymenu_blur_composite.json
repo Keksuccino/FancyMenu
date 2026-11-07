@@ -1,0 +1,20 @@
+{
+  "vertex": "fancymenu_blur_screenquad",
+  "fragment": "fancymenu_blur_composite",
+  "samplers": [
+    { "name": "BlurSampler" }
+  ],
+  "attributes": [
+    "Position"
+  ],
+  "uniforms": [
+    { "name": "Rect", "type": "float", "count": 4, "values": [ 0.0, 0.0, 0.0, 0.0 ] },
+    { "name": "CornerRadii", "type": "float", "count": 4, "values": [ 0.0, 0.0, 0.0, 0.0 ] },
+    { "name": "Rotation", "type": "float", "count": 4, "values": [ 1.0, 0.0, 0.0, 1.0 ] },
+    { "name": "Tint", "type": "float", "count": 4, "values": [ 0.0, 0.0, 0.0, 0.0 ] },
+    { "name": "HeaderTint", "type": "float", "count": 4, "values": [ 0.0, 0.0, 0.0, 0.0 ] },
+    { "name": "ShapeInfo", "type": "float", "count": 4, "values": [ 0.0, 2.0, 0.0, 1.0 ] },
+    { "name": "SampleInfo", "type": "float", "count": 4, "values": [ 1.0, 1.0, 2.0, 0.0 ] },
+    { "name": "TargetInfo", "type": "float", "count": 4, "values": [ 1.0, 1.0, 0.0, 0.0 ] }
+  ]
+}

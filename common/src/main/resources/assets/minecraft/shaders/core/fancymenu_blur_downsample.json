@@ -1,0 +1,13 @@
+{
+  "vertex": "fancymenu_blur_screenquad",
+  "fragment": "fancymenu_blur_downsample",
+  "samplers": [
+    { "name": "InSampler" }
+  ],
+  "attributes": [
+    "Position"
+  ],
+  "uniforms": [
+    { "name": "BlurSizes", "type": "float", "count": 4, "values": [ 1.0, 1.0, 1.0, 1.0 ] }
+  ]
+}
