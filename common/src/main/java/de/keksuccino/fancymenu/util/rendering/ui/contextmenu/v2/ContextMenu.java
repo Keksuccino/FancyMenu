@@ -2115,7 +2115,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                     List<ContextMenuEntry<?>> stackCopies = copyEntriesForStack(entryStack, throwOnIncompleteCopy);
                     if (stackCopies == null) continue;
 
-                    ContextMenuEntry<?> first = linkStackCopies(stackCopies, stacked);
+                    ContextMenuEntry<?> first = linkStackCopies(entryStack, stackCopies, stacked);
                     stacked.addEntry(first);
                     if (first instanceof SubMenuContextMenuEntry s) {
                         s.setSubContextMenu(stackContextMenus(getSubContextMenusOfSubMenuEntries(entryStack)));
@@ -2163,11 +2163,16 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
     /**
      * Links the copies of a stack into one chain (see {@link ContextMenuStackMeta#getNextInStack()}), with the first copy being the one that gets
      * added to the stacked menu. Stack-aware actions walk this chain to reach every stacked menu, so it includes the copies of {@link SubMenuContextMenuEntry}s too.
+     * <p>
+     * The first copy only shows while the entry is visible in every stacked menu, because the visibility of an entry depends on the object
+     * its menu belongs to (like an element type that can't get stretched). This gets checked live, so the stacked entry follows changes
+     * to the stacked objects while the menu is open.
      *
+     * @param entryStack the original entries of the stack, in the same order as their copies
      * @return the first copy of the stack
      */
     @NotNull
-    protected static ContextMenuEntry<?> linkStackCopies(@NotNull List<ContextMenuEntry<?>> stackCopies, @NotNull ContextMenu stacked) {
+    protected static ContextMenuEntry<?> linkStackCopies(@NotNull List<ContextMenuEntry<?>> entryStack, @NotNull List<ContextMenuEntry<?>> stackCopies, @NotNull ContextMenu stacked) {
         RuntimePropertyContainer stackProperties = new RuntimePropertyContainer();
         int lastIndex = stackCopies.size() - 1;
         for (int i = 0; i <= lastIndex; i++) {
@@ -2179,7 +2184,14 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             copy.stackMeta.lastInStack = (i == lastIndex);
             copy.stackMeta.nextInStack = (i < lastIndex) ? stackCopies.get(i + 1) : null;
         }
-        return stackCopies.get(0);
+        ContextMenuEntry<?> first = stackCopies.get(0);
+        first.addIsVisibleSupplier((menu, entry) -> {
+            for (ContextMenuEntry<?> original : entryStack) {
+                if (!original.isVisible()) return false;
+            }
+            return true;
+        });
+        return first;
     }
 
     protected static List<ContextMenuEntry<?>> collectInstancesOfStackableEntryInMenus(String entryIdentifier, ContextMenu[] menus) {
@@ -2464,6 +2476,12 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         protected void onRemoved() {
         }
 
+        /**
+         * Copies this entry for stacked menus (see {@link ContextMenu#stackContextMenus(ContextMenu...)}), so the copy has to be an instance of the exact same type.
+         * <p>
+         * Visibility suppliers are not part of the copy, because they belong to the object of the original entry's menu.
+         * Stacked menus show the copy only while all of its stacked original entries are visible instead.
+         */
         public abstract ContextMenuEntry<?> copy();
 
         @Override
