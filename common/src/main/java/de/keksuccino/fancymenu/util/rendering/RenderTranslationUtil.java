@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering;
 
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
 import org.jetbrains.annotations.ApiStatus;
 
@@ -26,7 +27,7 @@ public final class RenderTranslationUtil {
      * @return current absolute X translation in screen space
      */
     public static float getCurrentRenderTranslationX() {
-        float baseScale = (float) Minecraft.getInstance().getWindow().getGuiScale();
+        float baseScale = (float) WindowHandler.getGuiScale();
         return baseScale * ACTIVE_RENDER_TRANSLATION_FANCYMENU.get().x;
     }
 
@@ -45,7 +46,7 @@ public final class RenderTranslationUtil {
      * @return current absolute Y translation in screen space
      */
     public static float getCurrentRenderTranslationY() {
-        float baseScale = (float) Minecraft.getInstance().getWindow().getGuiScale();
+        float baseScale = (float) WindowHandler.getGuiScale();
         return baseScale * ACTIVE_RENDER_TRANSLATION_FANCYMENU.get().y;
     }
 
@@ -59,7 +60,7 @@ public final class RenderTranslationUtil {
      * @return current absolute Z translation in screen space
      */
     public static float getCurrentRenderTranslationZ() {
-        float baseScale = (float) Minecraft.getInstance().getWindow().getGuiScale();
+        float baseScale = (float) WindowHandler.getGuiScale();
         return baseScale * ACTIVE_RENDER_TRANSLATION_FANCYMENU.get().z;
     }
 

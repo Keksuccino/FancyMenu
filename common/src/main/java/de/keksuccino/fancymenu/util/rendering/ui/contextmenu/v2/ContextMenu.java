@@ -213,7 +213,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         renderEntries.add(new SpacerContextMenuEntry("unregistered_spacer_bottom", this));
 
         // Calculate max height considering both menu scale and GUI scale
-        double guiScale = Minecraft.getInstance().getWindow().getGuiScale();
         float menuScale = UIBase.calculateFixedRenderScale(this.scale);
         float maxMenuHeight = (getScreenHeight() / menuScale) * 0.7f;
 

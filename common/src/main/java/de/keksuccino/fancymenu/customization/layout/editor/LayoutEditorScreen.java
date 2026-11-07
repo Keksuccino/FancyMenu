@@ -194,12 +194,12 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		//Handle auto-scaling
 		if ((this.layout.autoScalingWidth != 0) && (this.layout.autoScalingHeight != 0)) {
-			double guiWidth = this.width * window.getGuiScale();
-			double guiHeight = this.height * window.getGuiScale();
+			double guiWidth = this.width * WindowHandler.getGuiScale();
+			double guiHeight = this.height * WindowHandler.getGuiScale();
 			double percentX = (guiWidth / (double)this.layout.autoScalingWidth) * 100.0D;
 			double percentY = (guiHeight / (double)this.layout.autoScalingHeight) * 100.0D;
-			double newScaleX = (percentX / 100.0D) * window.getGuiScale();
-			double newScaleY = (percentY / 100.0D) * window.getGuiScale();
+			double newScaleX = (percentX / 100.0D) * WindowHandler.getGuiScale();
+			double newScaleY = (percentY / 100.0D) * WindowHandler.getGuiScale();
 			double newScale = Math.min(newScaleX, newScaleY);
 			WindowHandler.setGuiScale(newScale);
 			this.width = window.getGuiScaledWidth();
