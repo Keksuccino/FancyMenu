@@ -28,6 +28,15 @@ public class ScrollScreenNormalizerHandler {
 
     private static boolean loaded = false;
 
+    /**
+     * Replaces everything in memory with the content of the file.
+     */
+    public static void reload() {
+        NORMALIZE_SCREEN_MAP.clear();
+        loaded = false;
+        loadFromFile();
+    }
+
     private static void loadFromFile() {
         if (loaded) return;
         try {

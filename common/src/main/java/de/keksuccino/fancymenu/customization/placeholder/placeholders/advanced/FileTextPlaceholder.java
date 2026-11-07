@@ -35,6 +35,13 @@ public class FileTextPlaceholder extends Placeholder {
         this(FILE_CACHE);
     }
 
+    /**
+     * Forgets all cached file contents, so files that got replaced on disk get read again.
+     */
+    public static void clearCache() {
+        FILE_CACHE.clear();
+    }
+
     FileTextPlaceholder(@NotNull AsyncRefreshingValueCache.TaskLauncher taskLauncher, @NotNull AsyncRefreshingValueCache.ValueLoader<String, List<String>> sourceLoader, @NotNull LongSupplier timeSource) {
         this(createContentCache(taskLauncher, sourceLoader, timeSource));
     }
