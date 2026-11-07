@@ -55,6 +55,15 @@ CHANGELOG | FANCYMENU v3.10.0 [ W I P !! Not public yet !! ]
 - The Mods button in the Title screen now has the same identifier (`titlescreen_mods_button`) on Fabric (Mod Menu), Forge and NeoForge, so customizing it on one loader also works on the others
   - Old layouts that customized the Mods button with its old Forge/NeoForge or Mod Menu identifier get converted to the new identifier automatically when loaded
   - Element anchors, actions, requirements and placeholders that still use one of the old Mods button identifiers keep working
+- Reworked UI and element blur so it looks smoother and costs far less GPU time and video memory
+- Blur strength now looks the same at every GUI scale and screen resolution
+- The UI blur intensity slider now works across its whole range
+- Blur memory is freed automatically when nothing has used blur for a few seconds
+- PiP windows and layout editor widgets now render their background and title bar as one blurred surface with a separately tinted title bar
+- Blurred shape elements now fade in and out smoothly instead of looking sharper while they fade
+- Custom GUI popup backgrounds now follow Minecraft's "Menu Background Blur" accessibility option (1.21.1 and newer)
+- Fixed blur areas not being clipped by scrollable or clipped regions on Minecraft 1.21.11 and newer
+- Fixed visible color banding in smooth blurred gradients
 - Fixed looping animated textures making the game intro play forever instead of ending on its own (#1650)
 - Fixed GIFs and web APNGs played through Watermedia always looping forever, ignoring the loop count set in the file (#1650)
 - Fixed re-triggering a GIF intro that already played all its loops not playing it again (#1650)
