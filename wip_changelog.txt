@@ -63,6 +63,7 @@ CHANGELOG | FANCYMENU v3.10.0 [ W I P !! Not public yet !! ]
 - PiP windows and layout editor widgets now render their background and title bar as one blurred surface with a separately tinted title bar
 - Blurred shape elements now fade in and out smoothly instead of looking sharper while they fade
 - Custom GUI popup backgrounds now follow Minecraft's "Menu Background Blur" accessibility option (1.21.1 and newer)
+- Toggles with an Enabled/Disabled/Manual state now show the state of the whole selection when multiple elements are selected, and one click on a mixed selection enables all of them (#1831)
 - Fixed blur areas not being clipped by scrollable or clipped regions on Minecraft 1.21.11 and newer
 - Fixed visible color banding in smooth blurred gradients
 - Fixed looping animated textures making the game intro play forever instead of ending on its own (#1650)
@@ -114,5 +115,7 @@ CHANGELOG | FANCYMENU v3.10.0 [ W I P !! Not public yet !! ]
 - Fixed smooth text and rounded shapes rendering slightly off on screens that use an auto-scaling layout
 - Fixed browser elements reacting to clicks in the wrong spot and rendering at the wrong resolution on screens that use an auto-scaling layout
 - Fixed layouts not being able to move or customize the Language and Accessibility buttons of the Title screen (#1832)
+- Fixed toggles with an Enabled/Disabled/Manual state (like "Stretch Horizontally") doing nothing when multiple elements are selected (#1831)
+- Fixed the right-click menu for multiple selected elements showing options that don't apply to all of them, like the stretch options for elements that can't be stretched
 
 %changelog:end%
