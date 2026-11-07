@@ -262,7 +262,7 @@ final class ProfileActions {
     }
 
     /**
-     * Compares versions like "3.9.15" number by number. Parts that are no numbers count as 0.
+     * Compares versions like "3.10.0" number by number. Parts that are no numbers count as 0.
      */
     static int compareVersions(@NotNull String first, @NotNull String second) {
         String[] a = first.split("[^0-9]+");
