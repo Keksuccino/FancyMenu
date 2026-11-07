@@ -82,7 +82,7 @@ public final class ProfileTasks {
     }
 
     /**
-     * Copies a profile into a new stored profile. Copying the active profile creates a snapshot of the current setup.
+     * Copies a profile into a new stored profile. Works for the active profile too, which copies the current setup.
      */
     @NotNull
     public static ProfileTask copyProfile(@NotNull Profile source, @NotNull String title, @NotNull Consumer<ProfileTask> onDone) {
@@ -90,7 +90,7 @@ public final class ProfileTasks {
         if (source.active()) VariableHandler.flush();
         String id = ProfileStorage.generateProfileId(title, getTakenIds());
         Predicate<Path> filter = getContentFilter(storage, source.directory());
-        return submit(source.active() ? ProfileTask.Type.SNAPSHOT : ProfileTask.Type.DUPLICATE, progress -> {
+        return submit(ProfileTask.Type.DUPLICATE, progress -> {
             Path temp = storage.getStoreDirectory().resolve(TEMP_PREFIX + id);
             try {
                 progress.setTotalBytes(ProfileFiles.measureSize(source.directory(), filter));
