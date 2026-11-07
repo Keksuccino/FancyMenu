@@ -17,10 +17,10 @@ class ProfileActionsTest {
 
     @Test
     void versionsGetComparedNumberByNumber() {
-        assertTrue(ProfileActions.compareVersions("3.10.0", "3.9.15") > 0);
-        assertTrue(ProfileActions.compareVersions("3.9.15", "3.9.15") == 0);
+        assertTrue(ProfileActions.compareVersions("3.10.0", "3.9.14") > 0);
+        assertTrue(ProfileActions.compareVersions("3.10.0", "3.10.0") == 0);
         assertTrue(ProfileActions.compareVersions("3.9", "3.9.1") < 0);
-        assertTrue(ProfileActions.compareVersions("4.0.0-beta.2", "3.9.15") > 0);
+        assertTrue(ProfileActions.compareVersions("4.0.0-beta.2", "3.10.0") > 0);
         assertEquals(0, ProfileActions.compareVersions("abc", "0"));
     }
 
