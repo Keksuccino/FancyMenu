@@ -1,17 +1,16 @@
 package de.keksuccino.fancymenu.util.rendering;
 
 /**
- * Central work limit for FancyMenu's six-pass GUI box blur.
+ * Radius limits of FancyMenu's GUI blur.
  *
- * <p>The box-blur shader samples proportionally to its radius for every affected pixel. The
- * renderer's existing recommended upper bound of 16 pixels is therefore also the hard limit at
- * property, transformed-GUI, framebuffer, and shader boundaries. Applying the same limit after
- * coordinate scaling is intentional: transforms and forced GUI scales must not expand an otherwise
- * safe value back into an unbounded shader loop.</p>
+ * <p>Blur radii are GUI-space values, so a blur keeps the same look relative to the GUI at every GUI scale and resolution.
+ * {@link #MAX_RADIUS} is the user-facing limit in GUI pixels. {@link #MAX_FRAMEBUFFER_RADIUS} bounds the GPU work after the
+ * GUI-to-framebuffer conversion, so transforms and forced GUI scales can't create unbounded blur work. Normal GUI scales never reach it.</p>
  */
 public final class GuiBlurRadius {
 
     public static final float MAX_RADIUS = 16.0F;
+    public static final float MAX_FRAMEBUFFER_RADIUS = 256.0F;
 
     private GuiBlurRadius() {
     }
@@ -27,11 +26,10 @@ public final class GuiBlurRadius {
     }
 
     /**
-     * Converts a GUI-space radius into the final shader radius without allowing scaling to exceed
-     * the shared work limit. Invalid radius or scale inputs map to zero, while a product that
-     * overflows from otherwise finite positive inputs saturates at {@link #MAX_RADIUS}.
+     * Converts a GUI-space radius into framebuffer pixels. Invalid radius or scale inputs map to zero, while a product
+     * above {@link #MAX_FRAMEBUFFER_RADIUS} (including overflows from finite inputs) saturates at that limit.
      */
-    public static float resolveShaderRadius(float guiRadius, double guiScale) {
+    public static float resolveFramebufferRadius(float guiRadius, double guiScale) {
         if (!Float.isFinite(guiRadius) || !Double.isFinite(guiScale) || guiScale <= 0.0D) {
             return 0.0F;
         }
@@ -39,11 +37,11 @@ public final class GuiBlurRadius {
         if (sanitizedGuiRadius == 0.0F) {
             return 0.0F;
         }
-        double scaledRadius = sanitizedGuiRadius * guiScale;
-        if (!Double.isFinite(scaledRadius) || scaledRadius >= MAX_RADIUS) {
-            return MAX_RADIUS;
+        double framebufferRadius = sanitizedGuiRadius * guiScale;
+        if (!Double.isFinite(framebufferRadius) || framebufferRadius >= MAX_FRAMEBUFFER_RADIUS) {
+            return MAX_FRAMEBUFFER_RADIUS;
         }
-        return sanitize((float)scaledRadius);
+        return (float) framebufferRadius;
     }
 
 }

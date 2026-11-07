@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.global.SeamlessWorldLoadingHandler;
+import de.keksuccino.fancymenu.util.rendering.GuiBlurRenderer;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -26,6 +27,7 @@ public class MixinGameRenderer {
     @Inject(method = "render", at = @At("HEAD"))
     private void before_render_FancyMenu(DeltaTracker $$0, boolean $$1, CallbackInfo info) {
         ScreenCustomization.onPreGameRenderTick();
+        GuiBlurRenderer.onFrameStart_FancyMenu();
     }
 
     @Inject(
@@ -47,6 +49,11 @@ public class MixinGameRenderer {
         if (this.minecraft != null && this.minecraft.level != null) {
             SeamlessWorldLoadingHandler.captureFrameIfNeeded(this.minecraft.getMainRenderTarget());
         }
+    }
+
+    @Inject(method = "close", at = @At("TAIL"))
+    private void after_close_FancyMenu(CallbackInfo info) {
+        GuiBlurRenderer.close_FancyMenu();
     }
 
 }

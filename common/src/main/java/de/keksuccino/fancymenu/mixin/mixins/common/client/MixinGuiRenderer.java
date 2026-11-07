@@ -36,7 +36,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -57,7 +56,6 @@ public abstract class MixinGuiRenderer {
     @Unique private final List<RenderPhaseAction_FancyMenu> renderPhaseActions_FancyMenu = new ArrayList<>();
     @Unique private FancyMenuPanoramaPictureInPictureRenderer panoramaPictureInPictureRenderer_FancyMenu;
     @Unique private GuiRenderState.TraverseRange activeTraverseRange_FancyMenu = GuiRenderState.TraverseRange.ALL;
-    @Unique private int nextRenderPhaseActionOrder_FancyMenu;
     // Other mods create their own GuiRenderers (e.g. for offscreen item atlases) with their own target sizes and scissor mapping, so FancyMenu's precise GUI scale must only touch the main one
     @Unique private boolean mainGuiRenderer_FancyMenu;
 
@@ -122,7 +120,7 @@ public abstract class MixinGuiRenderer {
         this.previousTextureSetup = null;
         this.previousScissorArea = null;
         // In 26.1.2 recordDraws creates one draw per mesh, so the current mesh count is the future draw boundary.
-        this.renderPhaseActions_FancyMenu.add(new RenderPhaseAction_FancyMenu(this.meshesToDraw.size(), this.nextRenderPhaseActionOrder_FancyMenu++, this.activeTraverseRange_FancyMenu, renderPhaseAction));
+        this.renderPhaseActions_FancyMenu.add(new RenderPhaseAction_FancyMenu(this.meshesToDraw.size(), this.activeTraverseRange_FancyMenu, renderPhaseAction));
         info.cancel();
     }
 
@@ -152,25 +150,27 @@ public abstract class MixinGuiRenderer {
     @WrapMethod(method = "executeDrawRange")
     private void wrap_executeDrawRange_FancyMenu(Supplier<String> label, RenderTarget mainRenderTarget, GpuBufferSlice fogBuffer, GpuBufferSlice dynamicTransforms, GpuBuffer indexBuffer, VertexFormat.IndexType indexType, int startIndex, int endIndex, Operation<Void> original) {
         GuiRenderState.TraverseRange executeRange = this.resolveExecuteRange_FancyMenu(startIndex);
-        List<RenderPhaseAction_FancyMenu> actions = this.renderPhaseActions_FancyMenu.stream()
-                .filter(action -> action.range_FancyMenu() == executeRange)
-                .filter(action -> action.drawIndex_FancyMenu() >= startIndex && action.drawIndex_FancyMenu() <= endIndex)
-                .sorted(Comparator.comparingInt(RenderPhaseAction_FancyMenu::drawIndex_FancyMenu).thenComparingInt(RenderPhaseAction_FancyMenu::order_FancyMenu))
-                .toList();
-        if (actions.isEmpty()) {
-            original.call(label, mainRenderTarget, fogBuffer, dynamicTransforms, indexBuffer, indexType, startIndex, endIndex);
-            return;
-        }
-
         int currentIndex = startIndex;
-        for (RenderPhaseAction_FancyMenu action : actions) {
-            int actionIndex = Math.max(startIndex, Math.min(endIndex, action.drawIndex_FancyMenu()));
+        boolean executedAction = false;
+        // Actions are recorded in render order and meshes only get appended, so their draw indices never decrease and need no sorting.
+        for (int i = 0; i < this.renderPhaseActions_FancyMenu.size(); ) {
+            RenderPhaseAction_FancyMenu action = this.renderPhaseActions_FancyMenu.get(i);
+            int actionIndex = action.drawIndex_FancyMenu();
+            if (action.range_FancyMenu() != executeRange || actionIndex < startIndex || actionIndex > endIndex) {
+                i++;
+                continue;
+            }
+            executedAction = true;
             if (currentIndex < actionIndex) {
                 original.call(label, mainRenderTarget, fogBuffer, dynamicTransforms, indexBuffer, indexType, currentIndex, actionIndex);
             }
             action.renderPhaseAction_FancyMenu().executeRender_FancyMenu();
-            this.renderPhaseActions_FancyMenu.remove(action);
+            this.renderPhaseActions_FancyMenu.remove(i);
             currentIndex = actionIndex;
+        }
+        if (!executedAction) {
+            original.call(label, mainRenderTarget, fogBuffer, dynamicTransforms, indexBuffer, indexType, startIndex, endIndex);
+            return;
         }
 
         if (currentIndex < endIndex) {
@@ -237,7 +237,6 @@ public abstract class MixinGuiRenderer {
     @Unique
     private void clearRenderPhaseActions_FancyMenu() {
         this.renderPhaseActions_FancyMenu.clear();
-        this.nextRenderPhaseActionOrder_FancyMenu = 0;
         this.activeTraverseRange_FancyMenu = GuiRenderState.TraverseRange.ALL;
     }
 
@@ -248,23 +247,30 @@ public abstract class MixinGuiRenderer {
 
     @Unique
     private boolean hasPendingRenderPhaseActions_FancyMenu(GuiRenderState.TraverseRange range) {
-        return this.renderPhaseActions_FancyMenu.stream().anyMatch(action -> action.range_FancyMenu() == range);
+        for (int i = 0; i < this.renderPhaseActions_FancyMenu.size(); i++) {
+            if (this.renderPhaseActions_FancyMenu.get(i).range_FancyMenu() == range) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Unique
     private void executePendingRenderPhaseActions_FancyMenu(GuiRenderState.TraverseRange range) {
-        List<RenderPhaseAction_FancyMenu> actions = this.renderPhaseActions_FancyMenu.stream()
-                .filter(action -> action.range_FancyMenu() == range)
-                .sorted(Comparator.comparingInt(RenderPhaseAction_FancyMenu::drawIndex_FancyMenu).thenComparingInt(RenderPhaseAction_FancyMenu::order_FancyMenu))
-                .toList();
-        for (RenderPhaseAction_FancyMenu action : actions) {
+        // Actions are recorded in render order, so no sorting is needed.
+        for (int i = 0; i < this.renderPhaseActions_FancyMenu.size(); ) {
+            RenderPhaseAction_FancyMenu action = this.renderPhaseActions_FancyMenu.get(i);
+            if (action.range_FancyMenu() != range) {
+                i++;
+                continue;
+            }
             action.renderPhaseAction_FancyMenu().executeRender_FancyMenu();
-            this.renderPhaseActions_FancyMenu.remove(action);
+            this.renderPhaseActions_FancyMenu.remove(i);
         }
     }
 
     @Unique
-    private record RenderPhaseAction_FancyMenu(int drawIndex_FancyMenu, int order_FancyMenu, GuiRenderState.TraverseRange range_FancyMenu, GuiRenderPhaseAction renderPhaseAction_FancyMenu) {
+    private record RenderPhaseAction_FancyMenu(int drawIndex_FancyMenu, GuiRenderState.TraverseRange range_FancyMenu, GuiRenderPhaseAction renderPhaseAction_FancyMenu) {
     }
 
 }
