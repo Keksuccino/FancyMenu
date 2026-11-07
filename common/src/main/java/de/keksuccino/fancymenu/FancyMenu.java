@@ -53,13 +53,13 @@ public class FancyMenu {
 		// Has to run before anything reads the config directory, because it completes or rolls back profile switches that got interrupted by a crash
 		if (Services.PLATFORM.isOnClient()) ProfileHandler.init();
 
-		AfmaIoHelper.configureBaseTempDirectory(TEMP_DATA_DIR);
-
 		if (Services.PLATFORM.isOnClient()) {
 			LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in client-side mode on " + MOD_LOADER.toUpperCase() + "!");
 		} else {
 			LOGGER.info("[FANCYMENU] Loading v" + VERSION + " in server-side mode on " + MOD_LOADER.toUpperCase() + "!");
 		}
+
+		AfmaIoHelper.configureBaseTempDirectory(TEMP_DATA_DIR);
 
 		WebUtils.init();
 
