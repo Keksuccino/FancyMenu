@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.VanillaEvents;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.input.ClicksPerSecondTracker;
+import de.keksuccino.fancymenu.util.input.FileDragTracker;
 import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.rinku.BrowserHandler;
 import de.keksuccino.fancymenu.util.rinku.RinkuUtil;
@@ -218,6 +219,12 @@ public class MixinMouseHandler {
     private void wrap_onDrop_FancyMenu(Screen instance, List<Path> files, Operation<Void> original) {
         double mouseX = this.xpos * this.mc_FancyMenu.getWindow().getGuiScaledWidth() / this.mc_FancyMenu.getWindow().getScreenWidth();
         double mouseY = this.ypos * this.mc_FancyMenu.getWindow().getGuiScaledHeight() / this.mc_FancyMenu.getWindow().getScreenHeight();
+        // Some window backends (SDL) don't move the cursor while files get dragged, so the position of the drag tells better where they got dropped
+        FileDragTracker.Position dragPosition = FileDragTracker.getLastGuiPosition();
+        if (dragPosition != null) {
+            mouseX = dragPosition.x();
+            mouseY = dragPosition.y();
+        }
         if (PiPWindowHandler.INSTANCE.onFilesDrop(files, mouseX, mouseY)) return;
         original.call(instance, files);
     }
