@@ -61,14 +61,8 @@ final class ProfileActions {
         });
     }
 
-    void createSnapshot() {
-        Profile active = ProfileHandler.getActiveProfile();
-        String title = I18n.get("fancymenu.profiles.new.snapshot.default_title", this.manager.getDisplayTitle(active));
-        this.runTask(() -> ProfileTasks.copyProfile(active, title, this::onProfileCreated));
-    }
-
     void createEmpty() {
-        String title = I18n.get("fancymenu.profiles.new.empty.default_title");
+        String title = I18n.get("fancymenu.profiles.new.default_title");
         this.runTask(() -> ProfileTasks.createEmptyProfile(title, this::onProfileCreated));
     }
 

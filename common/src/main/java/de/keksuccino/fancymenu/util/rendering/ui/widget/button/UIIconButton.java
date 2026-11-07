@@ -2,10 +2,13 @@ package de.keksuccino.fancymenu.util.rendering.ui.widget.button;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.math.Axis;
+import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.IconAnimation;
 import de.keksuccino.fancymenu.util.rendering.IconAnimations;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcon;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -21,6 +24,7 @@ import java.util.function.Consumer;
 public class UIIconButton implements Renderable, GuiEventListener, NarratableEntry {
 
     private static final float DEFAULT_ICON_PADDING = 4.0F;
+    private static final float INACTIVE_ICON_ALPHA = 0.35F;
     private float x;
     private float y;
     private float width;
@@ -35,6 +39,10 @@ public class UIIconButton implements Renderable, GuiEventListener, NarratableEnt
     private IconAnimation iconHoverAnimation = IconAnimations.SHORT_DIAGONAL_BOUNCE;
     @Nullable
     private IconAnimation.Instance iconHoverAnimationInstance = this.iconHoverAnimation.createInstance();
+    @Nullable
+    private ConsumingSupplier<UIIconButton, UITooltip> tooltipSupplier;
+    @Nullable
+    private ConsumingSupplier<UIIconButton, Boolean> activeSupplier;
     private boolean hovered = false;
     private boolean focused = false;
 
@@ -51,21 +59,26 @@ public class UIIconButton implements Renderable, GuiEventListener, NarratableEnt
     public void extractRenderState(@Nonnull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         boolean wasHovered = this.hovered;
         this.hovered = this.isMouseOver(mouseX, mouseY);
-        this.updateHoverAnimation(wasHovered);
+        boolean active = this.isActive();
+        this.updateHoverAnimation(wasHovered, active);
 
-        if (this.hovered) {
+        if (this.hovered && active) {
             UIBase.renderIconButtonHoverBackground(graphics, this.x, this.y, this.width, this.height);
         }
 
         IconAnimation.Offset offset = this.getHoverOffset();
-        this.renderIcon(graphics, offset);
+        this.renderIcon(graphics, offset, active ? this.iconAlpha : (this.iconAlpha * INACTIVE_ICON_ALPHA));
+
+        // Inactive buttons keep their tooltip, so it's still clear what they do
+        UITooltip tooltip = this.hovered ? this.getTooltip() : null;
+        if (tooltip != null) TooltipHandler.INSTANCE.addRenderTickTooltip(tooltip, () -> true);
     }
 
-    private void updateHoverAnimation(boolean wasHovered) {
+    private void updateHoverAnimation(boolean wasHovered, boolean active) {
         if (this.iconHoverAnimationInstance == null) {
             return;
         }
-        if (!UIBase.shouldPlayAnimations()) {
+        if (!UIBase.shouldPlayAnimations() || !active) {
             this.iconHoverAnimationInstance.reset();
             return;
         }
@@ -89,7 +102,7 @@ public class UIIconButton implements Renderable, GuiEventListener, NarratableEnt
         return this.iconHoverAnimationInstance.getOffset();
     }
 
-    private void renderIcon(@Nonnull GuiGraphicsExtractor graphics, @Nonnull IconAnimation.Offset offset) {
+    private void renderIcon(@Nonnull GuiGraphicsExtractor graphics, @Nonnull IconAnimation.Offset offset, float alpha) {
         float maxSize = Math.min(this.width, this.height);
         float padding = Math.max(0.0F, this.iconPadding);
         float baseSize = Math.max(1.0F, maxSize - (padding * 2.0F));
@@ -105,7 +118,7 @@ public class UIIconButton implements Renderable, GuiEventListener, NarratableEnt
         float drawY = baseY + offset.y();
 
         de.keksuccino.fancymenu.util.rendering.RenderingUtils.defaultBlendFunc();
-        UIBase.getUITheme().setUITextureShaderColor(graphics, this.iconAlpha);
+        UIBase.getUITheme().setUITextureShaderColor(graphics, alpha);
         blitScaledIcon(graphics, iconData, drawX, drawY, areaWidth, areaHeight, offset.rotationDegrees());
         UIBase.resetShaderColor(graphics);
     }
@@ -182,6 +195,16 @@ public class UIIconButton implements Renderable, GuiEventListener, NarratableEnt
         return this.hovered;
     }
 
+    public boolean isActive() {
+        if (this.activeSupplier == null) return true;
+        return !Boolean.FALSE.equals(this.activeSupplier.get(this));
+    }
+
+    @Nullable
+    public UITooltip getTooltip() {
+        return (this.tooltipSupplier != null) ? this.tooltipSupplier.get(this) : null;
+    }
+
     @Nonnull
     public MaterialIcon getIcon() {
         return this.icon;
@@ -248,6 +271,24 @@ public class UIIconButton implements Renderable, GuiEventListener, NarratableEnt
         return this;
     }
 
+    /**
+     * Inactive buttons render their icon faded out and ignore clicks, but still show their tooltip.
+     */
+    public UIIconButton setIsActiveSupplier(@Nullable ConsumingSupplier<UIIconButton, Boolean> activeSupplier) {
+        this.activeSupplier = activeSupplier;
+        return this;
+    }
+
+    public UIIconButton setTooltipSupplier(@Nullable ConsumingSupplier<UIIconButton, UITooltip> tooltipSupplier) {
+        this.tooltipSupplier = tooltipSupplier;
+        return this;
+    }
+
+    public UIIconButton setTooltip(@Nullable UITooltip tooltip) {
+        this.tooltipSupplier = (tooltip != null) ? consumes -> tooltip : null;
+        return this;
+    }
+
     @Override
     public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean isDoubleClick) {
         return this.mouseClicked(event.x(), event.y(), event.button());
@@ -257,7 +298,7 @@ public class UIIconButton implements Renderable, GuiEventListener, NarratableEnt
         if (button != 0) {
             return false;
         }
-        if (!this.isMouseOver(mouseX, mouseY)) {
+        if (!this.isMouseOver(mouseX, mouseY) || !this.isActive()) {
             return false;
         }
         if (this.clickAction != null) {

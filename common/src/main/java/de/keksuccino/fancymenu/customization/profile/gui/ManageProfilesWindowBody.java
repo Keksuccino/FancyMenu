@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.util.rendering.text.markdown.ScrollableMarkdownRe
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcon;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
@@ -26,6 +27,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.nio.file.Path;
@@ -37,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * The profile manager. Lists all profiles on the left and shows the selected one with all its details on the right.
@@ -51,7 +54,8 @@ public class ManageProfilesWindowBody extends PiPWindowBody {
     private static final int COLUMN_GAP = 16;
     private static final int LIST_WIDTH = 236;
     private static final int BUTTON_HEIGHT = 20;
-    private static final int BUTTON_GAP = 5;
+    private static final int ICON_BUTTON_GAP = 2;
+    private static final int DESTRUCTIVE_ACTION_GAP = 8;
     private static final int DESCRIPTION_PADDING = 8;
 
     @Nullable
@@ -79,12 +83,14 @@ public class ManageProfilesWindowBody extends PiPWindowBody {
     private String shownDescription;
     private float[] descriptionBounds = new float[4];
     private float descriptionBoxY = 0;
-    private ExtendedButton newButton;
-    private ExtendedButton importButton;
+    private UIIconButton newButton;
+    private UIIconButton importButton;
+    private UIIconButton editButton;
+    private UIIconButton exportButton;
+    private UIIconButton duplicateButton;
+    private UIIconButton openFolderButton;
+    private UIIconButton deleteButton;
     private ExtendedButton loadButton;
-    private ExtendedButton editButton;
-    private ExtendedButton exportButton;
-    private UIIconButton moreButton;
 
     /**
      * Opens the profile manager, or brings it to the front if it is already open.
@@ -126,21 +132,41 @@ public class ManageProfilesWindowBody extends PiPWindowBody {
         this.listArea.verticalScrollBar.setScroll(oldScroll);
         this.addRenderableWidget(this.listArea);
 
-        int halfWidth = (LIST_WIDTH - BUTTON_GAP) / 2;
         int bottomY = this.height - MARGIN - BUTTON_HEIGHT;
-        this.newButton = this.addButton(new ExtendedButton(MARGIN, bottomY, halfWidth, BUTTON_HEIGHT, Component.translatable("fancymenu.profiles.new"), button -> this.openNewProfileMenu()))
-                .setUITooltip(UITooltip.of(Component.translatable("fancymenu.profiles.new.desc")));
-        this.importButton = this.addButton(new ExtendedButton(MARGIN + halfWidth + BUTTON_GAP, bottomY, LIST_WIDTH - halfWidth - BUTTON_GAP, BUTTON_HEIGHT, Component.translatable("fancymenu.profiles.import"), button -> this.actions.chooseArchiveToImport()))
-                .setUITooltip(UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.profiles.import.desc")));
+        this.newButton = this.addIconButton(MaterialIcons.ADD, "fancymenu.profiles.new", button -> this.actions.createEmpty())
+                .setIsActiveSupplier(consumes -> !ProfileHandler.isBusy());
+        this.importButton = this.addIconButton(MaterialIcons.DOWNLOAD, "fancymenu.profiles.import", button -> this.actions.chooseArchiveToImport())
+                .setIsActiveSupplier(consumes -> !ProfileHandler.isBusy());
 
-        this.editButton = this.addButton(new ExtendedButton(0, bottomY, 80, BUTTON_HEIGHT, Component.translatable("fancymenu.profiles.edit"), button -> {
+        this.editButton = this.addIconButton(MaterialIcons.EDIT, "fancymenu.profiles.edit", button -> {
             Profile selected = this.getSelectedProfile();
             if (selected != null) this.actions.edit(selected);
-        })).setUITooltip(UITooltip.of(Component.translatable("fancymenu.profiles.edit.desc")));
-        this.exportButton = this.addButton(new ExtendedButton(0, bottomY, 80, BUTTON_HEIGHT, Component.translatable("fancymenu.profiles.export"), button -> {
+        }).setIsActiveSupplier(consumes -> this.canUseSelectedProfile());
+        this.exportButton = this.addIconButton(MaterialIcons.IOS_SHARE, "fancymenu.profiles.export", button -> {
             Profile selected = this.getSelectedProfile();
             if (selected != null) this.actions.export(selected);
-        })).setUITooltip(UITooltip.of(Component.translatable("fancymenu.profiles.export.desc")));
+        }).setIsActiveSupplier(consumes -> this.canUseSelectedProfile());
+        this.duplicateButton = this.addIconButton(MaterialIcons.CONTENT_COPY, "fancymenu.profiles.duplicate", button -> {
+            Profile selected = this.getSelectedProfile();
+            if (selected != null) this.actions.duplicate(selected);
+        }).setIsActiveSupplier(consumes -> this.canUseSelectedProfile());
+        this.openFolderButton = this.addIconButton(MaterialIcons.FOLDER_OPEN, "fancymenu.profiles.open_folder", button -> {
+            Profile selected = this.getSelectedProfile();
+            if (selected != null) this.actions.openFolder(selected);
+        }).setIsActiveSupplier(consumes -> this.canUseSelectedProfile());
+        UITooltip deleteTooltip = createActionTooltip("fancymenu.profiles.delete", "fancymenu.profiles.delete.desc");
+        UITooltip deleteActiveTooltip = createActionTooltip("fancymenu.profiles.delete", "fancymenu.profiles.delete.active");
+        this.deleteButton = this.addIconButton(MaterialIcons.DELETE, "fancymenu.profiles.delete", button -> {
+            Profile selected = this.getSelectedProfile();
+            if (selected != null) this.actions.delete(selected);
+        }).setIsActiveSupplier(consumes -> {
+            Profile selected = this.getSelectedProfile();
+            return !ProfileHandler.isBusy() && (selected != null) && !selected.active();
+        }).setTooltipSupplier(consumes -> {
+            Profile selected = this.getSelectedProfile();
+            return ((selected != null) && selected.active()) ? deleteActiveTooltip : deleteTooltip;
+        });
+
         this.loadButton = this.addButton(new ExtendedButton(0, bottomY, 130, BUTTON_HEIGHT, Component.translatable("fancymenu.profiles.load"), button -> {
             Profile selected = this.getSelectedProfile();
             if (selected != null) this.loadProfile(selected);
@@ -158,12 +184,6 @@ public class ManageProfilesWindowBody extends PiPWindowBody {
             return UITooltip.of(LocalizationUtils.splitLocalizedLines(((selected != null) && selected.active()) ? "fancymenu.profiles.load.active.desc" : "fancymenu.profiles.load.desc"));
         });
 
-        this.moreButton = new UIIconButton(0, bottomY, BUTTON_HEIGHT, BUTTON_HEIGHT, MaterialIcons.MORE_HORIZ, button -> {
-            Profile selected = this.getSelectedProfile();
-            if (selected != null) ContextMenuHandler.INSTANCE.setAndOpenAtMouse(this.buildProfileMenu(selected, false));
-        });
-        this.addRenderableWidget(this.moreButton);
-
         if (this.descriptionRenderer == null) this.descriptionRenderer = new ScrollableMarkdownRenderer(0, 0, 10, 10);
         this.descriptionBounds = new float[4];
         this.shownDescription = null;
@@ -177,6 +197,31 @@ public class ManageProfilesWindowBody extends PiPWindowBody {
         return this.addRenderableWidget(button);
     }
 
+    /**
+     * Adds a toolbar icon button with a tooltip made of the {@code <key>} and {@code <key>.desc} localizations.
+     */
+    @NotNull
+    private UIIconButton addIconButton(@NotNull MaterialIcon icon, @NotNull String localizationKey, @NotNull Consumer<UIIconButton> clickAction) {
+        UIIconButton button = new UIIconButton(0, 0, BUTTON_HEIGHT, BUTTON_HEIGHT, icon, clickAction)
+                .setTooltip(createActionTooltip(localizationKey, localizationKey + ".desc"));
+        return this.addRenderableWidget(button);
+    }
+
+    /**
+     * Icon buttons have no label, so their tooltip names the action in bold above its description.
+     */
+    @NotNull
+    private static UITooltip createActionTooltip(@NotNull String nameKey, @NotNull String descriptionKey) {
+        List<Component> lines = new ArrayList<>();
+        lines.add(Component.translatable(nameKey).withStyle(Style.EMPTY.withBold(true)));
+        lines.addAll(Arrays.asList(LocalizationUtils.splitLocalizedLines(descriptionKey)));
+        return UITooltip.of(lines.toArray(new Component[0]));
+    }
+
+    private boolean canUseSelectedProfile() {
+        return !ProfileHandler.isBusy() && (this.getSelectedProfile() != null);
+    }
+
     @Override
     public void renderBody(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
@@ -185,18 +230,13 @@ public class ManageProfilesWindowBody extends PiPWindowBody {
         int bottomY = this.height - MARGIN - BUTTON_HEIGHT;
 
         Profile selected = this.getSelectedProfile();
-        boolean busy = ProfileHandler.isBusy();
-        this.newButton.active = !busy;
-        this.importButton.active = !busy;
-        this.editButton.active = !busy && (selected != null);
-        this.exportButton.active = !busy && (selected != null);
 
-        // Action bar of the detail view: secondary actions on the left, the main action on the right
-        this.editButton.setX((int) panelX);
-        this.exportButton.setX(this.editButton.getX() + this.editButton.getWidth() + BUTTON_GAP);
-        this.moreButton.setX(this.exportButton.getX() + this.exportButton.getWidth() + BUTTON_GAP);
+        // Toolbars: list actions below the list, profile actions below the details with the main action on the right
+        this.layoutToolbar(MARGIN, bottomY, this.newButton, this.importButton);
+        float deleteX = this.layoutToolbar(panelX, bottomY, this.editButton, this.exportButton, this.duplicateButton, this.openFolderButton);
+        // Delete stays a bit apart from the other actions, so it doesn't get clicked by accident
+        this.layoutToolbar(deleteX + DESTRUCTIVE_ACTION_GAP, bottomY, this.deleteButton);
         this.loadButton.setX((int) (panelX + panelWidth - this.loadButton.getWidth()));
-        this.moreButton.setY(bottomY);
 
         if (selected == null) {
             this.updateDescription(null, 0, 0, 0, 0);
@@ -230,6 +270,17 @@ public class ManageProfilesWindowBody extends PiPWindowBody {
             this.updateDescription(description, panelX + DESCRIPTION_PADDING, boxY + DESCRIPTION_PADDING, panelWidth - (DESCRIPTION_PADDING * 2) - 6, boxHeight - (DESCRIPTION_PADDING * 2));
         }
 
+    }
+
+    /**
+     * Places the buttons next to each other and returns the X position after the last one.
+     */
+    private float layoutToolbar(float x, float y, @NotNull UIIconButton... buttons) {
+        for (UIIconButton button : buttons) {
+            button.setX(x).setY(y);
+            x += button.getWidth() + ICON_BUTTON_GAP;
+        }
+        return x;
     }
 
     @Override
@@ -350,27 +401,25 @@ public class ManageProfilesWindowBody extends PiPWindowBody {
 
     void openProfileContextMenu(@NotNull Profile profile) {
         if (ProfileHandler.isBusy()) return;
-        ContextMenuHandler.INSTANCE.setAndOpenAtMouse(this.buildProfileMenu(profile, true));
+        ContextMenuHandler.INSTANCE.setAndOpenAtMouse(this.buildProfileMenu(profile));
     }
 
     @NotNull
-    private ContextMenu buildProfileMenu(@NotNull Profile profile, boolean includeMainActions) {
+    private ContextMenu buildProfileMenu(@NotNull Profile profile) {
         ContextMenu menu = new ContextMenu();
-        if (includeMainActions) {
-            menu.addClickableEntry("load", Component.translatable("fancymenu.profiles.load"), (m, entry) -> {
-                m.closeMenu();
-                this.loadProfile(profile);
-            }).setIsActiveSupplier((m, e) -> !profile.active() && !ProfileHandler.isBusy()).setIcon(MaterialIcons.PLAY_ARROW);
-            menu.addClickableEntry("edit", Component.translatable("fancymenu.profiles.edit"), (m, entry) -> {
-                m.closeMenu();
-                this.actions.edit(profile);
-            }).setIcon(MaterialIcons.EDIT);
-            menu.addClickableEntry("export", Component.translatable("fancymenu.profiles.export"), (m, entry) -> {
-                m.closeMenu();
-                this.actions.export(profile);
-            }).setIcon(MaterialIcons.IOS_SHARE);
-            menu.addSeparatorEntry("separator_after_main_actions");
-        }
+        menu.addClickableEntry("load", Component.translatable("fancymenu.profiles.load"), (m, entry) -> {
+            m.closeMenu();
+            this.loadProfile(profile);
+        }).setIsActiveSupplier((m, e) -> !profile.active() && !ProfileHandler.isBusy()).setIcon(MaterialIcons.PLAY_ARROW);
+        menu.addClickableEntry("edit", Component.translatable("fancymenu.profiles.edit"), (m, entry) -> {
+            m.closeMenu();
+            this.actions.edit(profile);
+        }).setIcon(MaterialIcons.EDIT);
+        menu.addClickableEntry("export", Component.translatable("fancymenu.profiles.export"), (m, entry) -> {
+            m.closeMenu();
+            this.actions.export(profile);
+        }).setIcon(MaterialIcons.IOS_SHARE);
+        menu.addSeparatorEntry("separator_after_main_actions");
         menu.addClickableEntry("duplicate", Component.translatable("fancymenu.profiles.duplicate"), (m, entry) -> {
             m.closeMenu();
             this.actions.duplicate(profile);
@@ -387,19 +436,6 @@ public class ManageProfilesWindowBody extends PiPWindowBody {
                 .setTooltipSupplier((m, e) -> profile.active() ? UITooltip.of(Component.translatable("fancymenu.profiles.delete.active")) : null)
                 .setIcon(MaterialIcons.DELETE);
         return menu;
-    }
-
-    private void openNewProfileMenu() {
-        ContextMenu menu = new ContextMenu();
-        menu.addClickableEntry("snapshot", Component.translatable("fancymenu.profiles.new.snapshot"), (m, entry) -> {
-            m.closeMenu();
-            this.actions.createSnapshot();
-        }).setTooltipSupplier((m, e) -> UITooltip.of(Component.translatable("fancymenu.profiles.new.snapshot.desc"))).setIcon(MaterialIcons.CONTENT_COPY);
-        menu.addClickableEntry("empty", Component.translatable("fancymenu.profiles.new.empty"), (m, entry) -> {
-            m.closeMenu();
-            this.actions.createEmpty();
-        }).setTooltipSupplier((m, e) -> UITooltip.of(Component.translatable("fancymenu.profiles.new.empty.desc"))).setIcon(MaterialIcons.ADD);
-        ContextMenuHandler.INSTANCE.setAndOpenAtMouse(menu);
     }
 
     private void scrollToSelected() {
