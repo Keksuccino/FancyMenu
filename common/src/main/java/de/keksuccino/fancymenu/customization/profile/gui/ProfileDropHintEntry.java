@@ -22,11 +22,11 @@ class ProfileDropHintEntry extends ScrollAreaEntry {
 
     ProfileDropHintEntry(@NotNull ScrollArea parent) {
         super(parent, 100, ProfileListEntry.HEIGHT);
-        this.selectable = false;
-        this.clickable = false;
-        this.playClickSound = false;
-        this.backgroundColorNormal = null;
-        this.backgroundColorHover = null;
+        this.setSelectable(false);
+        this.setClickable(false);
+        this.setPlayClickSound(false);
+        this.setBackgroundColorNormal(null);
+        this.setBackgroundColorHover(null);
     }
 
     @Override
