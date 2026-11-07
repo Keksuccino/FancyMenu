@@ -17,6 +17,7 @@ import de.keksuccino.fancymenu.util.rinku.BrowserHandler;
 import de.keksuccino.fancymenu.util.rinku.RinkuUtil;
 import de.keksuccino.fancymenu.util.rendering.glsl.GlslRuntimeEventTracker;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuInputRouter;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
@@ -25,6 +26,8 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.input.MouseButtonInfo;
 import org.jetbrains.annotations.Nullable;
+import java.nio.file.Path;
+import java.util.List;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -208,6 +211,15 @@ public class MixinMouseHandler {
         int button = (this.activeButton != null) ? this.activeButton.button() : 0;
         if (ScreenOverlayHandler.INSTANCE.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) return true;
         return original.call(instance, event, dragX, dragY);
+    }
+
+    /** @reason Files dropped onto a FancyMenu window go to that window instead of the screen behind it. */
+    @WrapOperation(method = "onDrop", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;onFilesDrop(Ljava/util/List;)V"))
+    private void wrap_onDrop_FancyMenu(Screen instance, List<Path> files, Operation<Void> original) {
+        double mouseX = this.xpos * this.mc_FancyMenu.getWindow().getGuiScaledWidth() / this.mc_FancyMenu.getWindow().getScreenWidth();
+        double mouseY = this.ypos * this.mc_FancyMenu.getWindow().getGuiScaledHeight() / this.mc_FancyMenu.getWindow().getScreenHeight();
+        if (PiPWindowHandler.INSTANCE.onFilesDrop(files, mouseX, mouseY)) return;
+        original.call(instance, files);
     }
 
 }
