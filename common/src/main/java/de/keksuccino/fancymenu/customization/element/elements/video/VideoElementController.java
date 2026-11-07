@@ -22,6 +22,14 @@ public class VideoElementController {
 
     private static boolean initialized = false;
 
+    /**
+     * Replaces everything in memory with the content of the file.
+     */
+    public static void reload() {
+        read();
+        initialized = true;
+    }
+
     protected static void read() {
 
         METAS.clear();

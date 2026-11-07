@@ -14,6 +14,8 @@ import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import net.minecraft.client.gui.screens.Screen;
+import java.nio.file.Path;
 
 public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable {
 
@@ -174,6 +176,19 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
             }
         }
         return null;
+    }
+
+    /**
+     * Gives files that got dropped onto the game window to the window under the mouse.
+     *
+     * @return TRUE if a window took the files, so the screen behind it doesn't get them.
+     */
+    public boolean onFilesDrop(@NotNull List<Path> paths, double mouseX, double mouseY) {
+        PiPWindow window = getTopWindowAt(mouseX, mouseY);
+        if (window == null) return false;
+        Screen screen = window.getScreen();
+        if (screen != null) screen.onFilesDrop(paths);
+        return true;
     }
 
     public boolean isPointVisibleForWindow(@NotNull PiPWindow window, double mouseX, double mouseY) {

@@ -20,6 +20,7 @@ import de.keksuccino.fancymenu.util.resource.resources.audio.AudioEngineReloadHa
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaIoHelper;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.fancymenu.customization.customlocals.CustomLocalsHandler;
+import de.keksuccino.fancymenu.customization.profile.ProfileHandler;
 import de.keksuccino.fancymenu.customization.server.ServerCache;
 import net.minecraft.SharedConstants;
 import org.apache.logging.log4j.LogManager;
@@ -48,6 +49,9 @@ public class FancyMenu {
 	private static Options options;
 
 	public static void init() {
+
+		// Has to run before anything reads the config directory, because it completes or rolls back profile switches that got interrupted by a crash
+		if (Services.PLATFORM.isOnClient()) ProfileHandler.init();
 
 		AfmaIoHelper.configureBaseTempDirectory(TEMP_DATA_DIR);
 

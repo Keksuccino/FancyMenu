@@ -664,7 +664,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
         // Handle regular hyperlink clicks
         if ((this.hyperlink != null) && this.hovered) {
-            WebUtils.openWebLink(this.hyperlink.link);
+            if (this.parent.isHyperlinkAllowed(this.hyperlink.link)) WebUtils.openWebLink(this.hyperlink.link);
             return true;
         }
         return false;

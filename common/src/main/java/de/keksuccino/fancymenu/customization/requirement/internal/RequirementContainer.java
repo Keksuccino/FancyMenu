@@ -34,6 +34,10 @@ public class RequirementContainer implements ValuePlaceholderHolder {
     protected boolean forceRequirementsNotMet = false;
     protected final String cachingIdentifier = ScreenCustomization.generateUniqueIdentifier();
 
+    public static void clearCooldownCache() {
+        COOLDOWN_CACHE.clear();
+    }
+
     public static boolean isCachingRequirements() {
         return FancyMenu.getOptions().requirementCachingDurationMs.getValue() > 0;
     }
