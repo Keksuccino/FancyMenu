@@ -31,6 +31,9 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
+import java.nio.file.Path;
+import java.util.List;
 
 @Mixin(value = MouseHandler.class, priority = 2147483647)
 public class MixinMouseHandler {
@@ -220,6 +223,15 @@ public class MixinMouseHandler {
         int button = (this.activeButton != null) ? this.activeButton.button() : 0;
         if (ScreenOverlayHandler.INSTANCE.mouseDragged(mouseX, mouseY, button, deltaX, deltaY)) return true;
         return original.call(instance, event, dragX, dragY);
+    }
+
+    /** @reason Files dropped onto a FancyMenu window go to that window instead of the screen behind it. */
+    @WrapOperation(method = "onDrop", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/Screen;onFilesDrop(Ljava/util/List;)V"))
+    private void wrap_onDrop_FancyMenu(Screen instance, List<Path> files, Operation<Void> original) {
+        double mouseX = this.xpos * this.mc_FancyMenu.getWindow().getGuiScaledWidth() / this.mc_FancyMenu.getWindow().getScreenWidth();
+        double mouseY = this.ypos * this.mc_FancyMenu.getWindow().getGuiScaledHeight() / this.mc_FancyMenu.getWindow().getScreenHeight();
+        if (PiPWindowHandler.INSTANCE.onFilesDrop(files, mouseX, mouseY)) return;
+        original.call(instance, files);
     }
 
 }
