@@ -40,7 +40,7 @@ public class WidgetIdentifierHandler {
      * another variant's compatibility alias (1). Compare these priorities within one layout, never across stacked layouts.
      */
     public static int getIdentifierMatchPriority(@NotNull String widgetIdentifier, @NotNull WidgetMeta meta) {
-        widgetIdentifier = stripIdentifierPrefixes(widgetIdentifier);
+        widgetIdentifier = normalizeIdentifier(widgetIdentifier);
         if ((meta.getWidget() instanceof UniqueWidget u) && widgetIdentifier.equals(u.getWidgetIdentifierFancyMenu())) return 3;
         if (MathUtils.isLong(widgetIdentifier)) {
             return widgetIdentifier.equals("" + meta.getLongIdentifier()) ? 3 : 0;
@@ -165,6 +165,15 @@ public class WidgetIdentifierHandler {
             return captionContents.getKey();
         }
         return null;
+    }
+
+    /**
+     * Strips the legacy prefixes off a widget identifier and resolves identifiers that got replaced in newer FancyMenu versions,
+     * so stored widget references keep finding their widget. Identifiers of other elements stay unchanged.
+     */
+    @NotNull
+    public static String normalizeIdentifier(@NotNull String identifier) {
+        return WidgetIdentifierMigration.getCurrentIdentifier(stripIdentifierPrefixes(identifier));
     }
 
     @NotNull
