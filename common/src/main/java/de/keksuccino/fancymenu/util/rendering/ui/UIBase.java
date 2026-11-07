@@ -33,7 +33,7 @@ public class UIBase extends RenderingUtils {
     public static final int VERTICAL_SCROLL_BAR_HEIGHT = 40;
     public static final int HORIZONTAL_SCROLL_BAR_WIDTH = 40;
     public static final int HORIZONTAL_SCROLL_BAR_HEIGHT = 5;
-    // At the default blur intensity of 300% and the "Large" UI scale (2.5), this blurs by 15 framebuffer pixels.
+    // At the default blur intensity of 500% and the "Large" UI scale (2.5), this blurs by 25 framebuffer pixels.
     private static final float UI_BLUR_RADIUS = 2.0F;
     private static int uiScaleRenderingDepth = 0;
 
