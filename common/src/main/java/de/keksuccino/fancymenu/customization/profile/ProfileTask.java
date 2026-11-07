@@ -78,7 +78,6 @@ public class ProfileTask {
     public enum Type {
 
         CREATE(false),
-        SNAPSHOT(true),
         DUPLICATE(true),
         DELETE(false),
         EXPORT(true),
