@@ -22,7 +22,8 @@ class GuiBlurRadiusTest {
         assertEquals(8.0F, GuiBlurRadius.resolveFramebufferRadius(4.0F, 2.0D));
         assertEquals(48.0F, GuiBlurRadius.resolveFramebufferRadius(12.0F, 4.0D));
         assertEquals(GuiBlurRadius.MAX_RADIUS * 6.0F, GuiBlurRadius.resolveFramebufferRadius(GuiBlurRadius.MAX_RADIUS, 6.0D));
-        assertEquals(GuiBlurRadius.MAX_RADIUS * 4.0F, GuiBlurRadius.resolveFramebufferRadius(GuiBlurRadius.MAX_RADIUS + 1.0F, 4.0D));
+        // Scaled radii, like strong UI blur intensities, may exceed the limit for user-configured radii.
+        assertEquals((GuiBlurRadius.MAX_RADIUS + 4.0F) * 2.0F, GuiBlurRadius.resolveFramebufferRadius(GuiBlurRadius.MAX_RADIUS + 4.0F, 2.0D));
     }
 
     @Test
