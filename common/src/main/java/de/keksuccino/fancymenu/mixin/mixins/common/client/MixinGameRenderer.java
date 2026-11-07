@@ -43,6 +43,7 @@ public class MixinGameRenderer {
     @Inject(method = "render", at = @At("HEAD"))
     private void before_render_FancyMenu(DeltaTracker $$0, boolean $$1, CallbackInfo info) {
         ScreenCustomization.onPreGameRenderTick();
+        GuiBlurRenderer.onFrameStart_FancyMenu();
     }
 
     @Inject(

@@ -79,7 +79,7 @@ class EarlyShaderSourceTest {
 
     private static List<RenderPipeline> fancyMenuPipelines() throws IllegalAccessException {
         List<RenderPipeline> pipelines = new ArrayList<>();
-        for (Class<?> renderer : List.of(SmoothRectangleRenderer.class, SmoothCircleRenderer.class, SmoothImageRectangleRenderer.class, SmoothImageCircleRenderer.class, LocalTexturePanoramaRenderer.class, GuiBlurRenderer.class)) {
+        for (Class<?> renderer : List.of(SmoothRectangleRenderer.class, SmoothCircleRenderer.class, SmoothImageRectangleRenderer.class, SmoothImageCircleRenderer.class, LocalTexturePanoramaRenderer.class, GuiBlurPasses.class)) {
             for (Field field : renderer.getDeclaredFields()) {
                 if (Modifier.isStatic(field.getModifiers()) && field.getType() == RenderPipeline.class) {
                     field.setAccessible(true);

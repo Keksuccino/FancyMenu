@@ -1,94 +1,30 @@
 package de.keksuccino.fancymenu.util.rendering;
 
-import com.mojang.blaze3d.GpuFormat;
-import com.mojang.blaze3d.buffers.GpuBuffer;
-import com.mojang.blaze3d.buffers.Std140Builder;
-import com.mojang.blaze3d.pipeline.BindGroupLayout;
-import com.mojang.blaze3d.pipeline.RenderPipeline;
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.pipeline.TextureTarget;
-import com.mojang.blaze3d.shaders.UniformType;
-import com.mojang.blaze3d.systems.CommandEncoder;
-import com.mojang.blaze3d.systems.RenderPass;
-import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.textures.FilterMode;
-import com.mojang.blaze3d.textures.GpuSampler;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphicsExtractor;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.state.gui.GuiRenderState;
-import net.minecraft.resources.Identifier;
-import org.lwjgl.system.MemoryStack;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.nio.ByteBuffer;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.OptionalDouble;
 
+/**
+ * Renders blurred, tinted areas of whatever the GUI rendered below them.
+ *
+ * <p>Blur radii are in GUI pixels and keep their look at every GUI scale. Areas get queued into the GUI render state and run
+ * through {@link GuiBlurPasses} when the GUI renderer reaches them.</p>
+ */
 public final class GuiBlurRenderer {
 
     private static final float SHAPE_TYPE_ROUNDED_RECT = 0.0F;
     private static final float SHAPE_TYPE_SUPERELLIPSE = 1.0F;
-    private static final String BLUR_CONFIG_UNIFORM_FANCYMENU = "BlurConfig";
-    private static final String GUI_BLUR_CONFIG_UNIFORM_FANCYMENU = "GuiBlurConfig";
-    private static final String SAMPLER_INFO_UNIFORM_FANCYMENU = "SamplerInfo";
-    private static final String IN_SAMPLER_FANCYMENU = "InSampler";
-    private static final String ORIGINAL_SAMPLER_FANCYMENU = "OriginalSampler";
-    private static final String BLUR_SAMPLER_FANCYMENU = "BlurSampler";
-    private static final int BLUR_CONFIG_UBO_SIZE_FANCYMENU = 12;
-    private static final int GUI_BLUR_CONFIG_UBO_SIZE_FANCYMENU = 80;
-    private static final int SINGLE_INPUT_SAMPLER_INFO_UBO_SIZE_FANCYMENU = 16;
-    private static final int DOUBLE_INPUT_SAMPLER_INFO_UBO_SIZE_FANCYMENU = 24;
-    private static final float[] BLUR_RADIUS_MULTIPLIERS_FANCYMENU = new float[]{1.0F, 1.0F, 0.5F, 0.5F, 0.25F, 0.25F};
-    private static final BindGroupLayout BOX_BLUR_BIND_GROUP_LAYOUT_FANCYMENU = BindGroupLayout.builder()
-            .withSampler(IN_SAMPLER_FANCYMENU)
-            .withUniform(SAMPLER_INFO_UNIFORM_FANCYMENU, UniformType.UNIFORM_BUFFER)
-            .withUniform(BLUR_CONFIG_UNIFORM_FANCYMENU, UniformType.UNIFORM_BUFFER)
-            .build();
-    private static final BindGroupLayout SCREEN_COPY_BIND_GROUP_LAYOUT_FANCYMENU = BindGroupLayout.builder()
-            .withSampler(IN_SAMPLER_FANCYMENU)
-            .withUniform(SAMPLER_INFO_UNIFORM_FANCYMENU, UniformType.UNIFORM_BUFFER)
-            .build();
-    private static final BindGroupLayout GUI_BLUR_BIND_GROUP_LAYOUT_FANCYMENU = BindGroupLayout.builder()
-            .withSampler(ORIGINAL_SAMPLER_FANCYMENU)
-            .withSampler(BLUR_SAMPLER_FANCYMENU)
-            .withUniform(SAMPLER_INFO_UNIFORM_FANCYMENU, UniformType.UNIFORM_BUFFER)
-            .withUniform(GUI_BLUR_CONFIG_UNIFORM_FANCYMENU, UniformType.UNIFORM_BUFFER)
-            .build();
-    private static final RenderPipeline BOX_BLUR_PIPELINE_FANCYMENU = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
-            .withLocation(Identifier.withDefaultNamespace("pipeline/fancymenu_box_blur"))
-            .withVertexShader("core/screenquad")
-            .withFragmentShader("post/fancymenu_box_blur")
-            .withShaderDefine("FANCYMENU_MAX_BLUR_RADIUS", GuiBlurRadius.MAX_RADIUS)
-            .withBindGroupLayout(BOX_BLUR_BIND_GROUP_LAYOUT_FANCYMENU)
-            .build();
-    private static final RenderPipeline SCREEN_COPY_PIPELINE_FANCYMENU = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
-            .withLocation(Identifier.withDefaultNamespace("pipeline/fancymenu_copy_screen"))
-            .withVertexShader("core/screenquad")
-            .withFragmentShader("post/fancymenu_copy_screen")
-            .withBindGroupLayout(SCREEN_COPY_BIND_GROUP_LAYOUT_FANCYMENU)
-            .build();
-    private static final RenderPipeline GUI_BLUR_PIPELINE_FANCYMENU = RenderPipeline.builder(RenderPipelines.POST_PROCESSING_SNIPPET)
-            .withLocation(Identifier.withDefaultNamespace("pipeline/fancymenu_gui_blur"))
-            .withVertexShader("core/screenquad")
-            .withFragmentShader("post/fancymenu_gui_blur")
-            .withBindGroupLayout(GUI_BLUR_BIND_GROUP_LAYOUT_FANCYMENU)
-            .build();
-    private static final GpuBuffer[] BLUR_CONFIG_BUFFERS_FANCYMENU = new GpuBuffer[BLUR_RADIUS_MULTIPLIERS_FANCYMENU.length];
-
-    private static TextureTarget blurOriginalTarget_FancyMenu;
-    private static TextureTarget blurSwapTarget_FancyMenu;
-    private static TextureTarget blurBlurredTarget_FancyMenu;
-    private static GpuBuffer boxBlurSamplerInfoBuffer_FancyMenu;
-    private static GpuBuffer guiBlurSamplerInfoBuffer_FancyMenu;
-    private static GpuBuffer guiBlurConfigBuffer_FancyMenu;
-    private static int blurTargetWidth_FancyMenu;
-    private static int blurTargetHeight_FancyMenu;
+    private static final GuiBlurPlan PLAN = new GuiBlurPlan();
+    private static final GuiBlurPlan.Region COMPOSITE_REGION = new GuiBlurPlan.Region();
+    private static final GuiBlurKernel.Kernel NO_BLUR = GuiBlurKernel.resolve(0.0F);
 
     private GuiBlurRenderer() {
     }
@@ -152,22 +88,20 @@ public final class GuiBlurRenderer {
     }
 
     public static void renderBlurAreaRoundAllCornersScaled(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float blurRadius, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, @Nonnull DrawableColor tint, float partial) {
+        renderBlurAreaRoundAllCornersScaled(graphics, x, y, width, height, blurRadius, topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius, tint, 1.0F, partial);
+    }
+
+    /**
+     * Renders a blur area with individually specified corner radii (top-left, top-right, bottom-right, bottom-left) that fades with {@code opacity}.
+     *
+     * @param opacity Fades the whole blur area, including its tint, in and out (0 to 1). It keeps the blur radius, so fades don't make the blur look sharper.
+     */
+    public static void renderBlurAreaRoundAllCornersScaled(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float blurRadius, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, @Nonnull DrawableColor tint, float opacity, float partial) {
         GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
         GuiPoseTransformUtil.TransformedArea area = transform.transformArea(x, y, width, height);
-        renderBlurAreaRoundAllCorners(
-                graphics,
-                area.x(),
-                area.y(),
-                area.width(),
-                area.height(),
-                blurRadius * transform.scale(),
-                topLeftRadius * transform.scale(),
-                topRightRadius * transform.scale(),
-                bottomRightRadius * transform.scale(),
-                bottomLeftRadius * transform.scale(),
-                tint,
-                partial
-        );
+        float scale = transform.scale();
+        CornerRadii cornerRadii = CornerRadii.of(topLeftRadius * scale, topRightRadius * scale, bottomRightRadius * scale, bottomLeftRadius * scale);
+        queueBlurArea(graphics, new BlurArea(area.x(), area.y(), area.width(), area.height(), GuiBlurRadius.sanitize(blurRadius * scale), cornerRadii, SHAPE_TYPE_ROUNDED_RECT, 2.0F, tint, 0.0F, DrawableColor.FULLY_TRANSPARENT, opacity));
     }
 
     /**
@@ -179,13 +113,22 @@ public final class GuiBlurRenderer {
      * <br>- Diamond-like (pointier): {@code roundness = 1.0}
      */
     public static void renderBlurAreaCircle(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float blurRadius, float roundness, @Nonnull DrawableColor tint, float partial) {
-        renderBlurAreaInternal(graphics, x, y, width, height, blurRadius, CornerRadii.uniform(0.0F), SHAPE_TYPE_SUPERELLIPSE, roundness, tint, partial);
+        queueBlurArea(graphics, new BlurArea(x, y, width, height, GuiBlurRadius.sanitize(blurRadius), CornerRadii.uniform(0.0F), SHAPE_TYPE_SUPERELLIPSE, clampRoundness(roundness), tint, 0.0F, DrawableColor.FULLY_TRANSPARENT, 1.0F));
     }
 
     public static void renderBlurAreaCircleScaled(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float blurRadius, float roundness, @Nonnull DrawableColor tint, float partial) {
+        renderBlurAreaCircleScaled(graphics, x, y, width, height, blurRadius, roundness, tint, 1.0F, partial);
+    }
+
+    /**
+     * Renders a superellipse blur area that fades with {@code opacity}.
+     *
+     * @param opacity Fades the whole blur area, including its tint, in and out (0 to 1). It keeps the blur radius, so fades don't make the blur look sharper.
+     */
+    public static void renderBlurAreaCircleScaled(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float blurRadius, float roundness, @Nonnull DrawableColor tint, float opacity, float partial) {
         GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
         GuiPoseTransformUtil.TransformedArea area = transform.transformArea(x, y, width, height);
-        renderBlurAreaCircle(graphics, area.x(), area.y(), area.width(), area.height(), blurRadius * transform.scale(), roundness, tint, partial);
+        queueBlurArea(graphics, new BlurArea(area.x(), area.y(), area.width(), area.height(), GuiBlurRadius.sanitize(blurRadius * transform.scale()), CornerRadii.uniform(0.0F), SHAPE_TYPE_SUPERELLIPSE, clampRoundness(roundness), tint, 0.0F, DrawableColor.FULLY_TRANSPARENT, opacity));
     }
 
     /**
@@ -201,8 +144,7 @@ public final class GuiBlurRenderer {
      * and renders the blur so UI code doesn’t need to recompute the radius everywhere.
      */
     public static void renderBlurAreaWithIntensity(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float baseBlurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
-        float appliedRadius = Math.max(0.0F, baseBlurRadius * Math.max(0.0F, FancyMenu.getOptions().uiBlurIntensity.getValue()));
-        renderBlurAreaInternal(graphics, x, y, width, height, appliedRadius, CornerRadii.uniform(cornerRadius), tint, partial);
+        renderBlurAreaInternal(graphics, x, y, width, height, applyBlurIntensity(baseBlurRadius), CornerRadii.uniform(cornerRadius), tint, partial);
     }
 
     public static void renderBlurAreaWithIntensityScaled(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float baseBlurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
@@ -215,8 +157,7 @@ public final class GuiBlurRenderer {
      * Blur area using FancyMenu's blur intensity with only the top corners rounded.
      */
     public static void renderBlurAreaWithIntensityRoundTopCorners(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float baseBlurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
-        float appliedRadius = Math.max(0.0F, baseBlurRadius * Math.max(0.0F, FancyMenu.getOptions().uiBlurIntensity.getValue()));
-        renderBlurAreaInternal(graphics, x, y, width, height, appliedRadius, CornerRadii.topOnly(cornerRadius), tint, partial);
+        renderBlurAreaInternal(graphics, x, y, width, height, applyBlurIntensity(baseBlurRadius), CornerRadii.topOnly(cornerRadius), tint, partial);
     }
 
     public static void renderBlurAreaWithIntensityRoundTopCornersScaled(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float baseBlurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
@@ -229,8 +170,7 @@ public final class GuiBlurRenderer {
      * Blur area using FancyMenu's blur intensity with only the bottom corners rounded.
      */
     public static void renderBlurAreaWithIntensityRoundBottomCorners(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float baseBlurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
-        float appliedRadius = Math.max(0.0F, baseBlurRadius * Math.max(0.0F, FancyMenu.getOptions().uiBlurIntensity.getValue()));
-        renderBlurAreaInternal(graphics, x, y, width, height, appliedRadius, CornerRadii.bottomOnly(cornerRadius), tint, partial);
+        renderBlurAreaInternal(graphics, x, y, width, height, applyBlurIntensity(baseBlurRadius), CornerRadii.bottomOnly(cornerRadius), tint, partial);
     }
 
     public static void renderBlurAreaWithIntensityRoundBottomCornersScaled(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float baseBlurRadius, float cornerRadius, @Nonnull DrawableColor tint, float partial) {
@@ -243,57 +183,69 @@ public final class GuiBlurRenderer {
      * Blur area using FancyMenu's blur intensity with individually specified corner radii (top-left, top-right, bottom-right, bottom-left).
      */
     public static void renderBlurAreaWithIntensityRoundAllCorners(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float baseBlurRadius, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, @Nonnull DrawableColor tint, float partial) {
-        float appliedRadius = Math.max(0.0F, baseBlurRadius * Math.max(0.0F, FancyMenu.getOptions().uiBlurIntensity.getValue()));
-        renderBlurAreaInternal(graphics, x, y, width, height, appliedRadius, CornerRadii.of(topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius), tint, partial);
+        renderBlurAreaInternal(graphics, x, y, width, height, applyBlurIntensity(baseBlurRadius), CornerRadii.of(topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius), tint, partial);
     }
 
     public static void renderBlurAreaWithIntensityRoundAllCornersScaled(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float baseBlurRadius, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, @Nonnull DrawableColor tint, float partial) {
         GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
         GuiPoseTransformUtil.TransformedArea area = transform.transformArea(x, y, width, height);
-        renderBlurAreaWithIntensityRoundAllCorners(
-                graphics,
-                area.x(),
-                area.y(),
-                area.width(),
-                area.height(),
-                baseBlurRadius * transform.scale(),
-                topLeftRadius * transform.scale(),
-                topRightRadius * transform.scale(),
-                bottomRightRadius * transform.scale(),
-                bottomLeftRadius * transform.scale(),
-                tint,
-                partial
-        );
+        float scale = transform.scale();
+        renderBlurAreaWithIntensityRoundAllCorners(graphics, area.x(), area.y(), area.width(), area.height(), baseBlurRadius * scale, topLeftRadius * scale, topRightRadius * scale, bottomRightRadius * scale, bottomLeftRadius * scale, tint, partial);
+    }
+
+    /**
+     * Blur area using FancyMenu's blur intensity with a header band, e.g. a window with its title bar. The whole area shares one blur,
+     * which is cheaper than separate areas and keeps the header from blurring the content below it.
+     *
+     * @param headerHeight Height of the band at the area's top in GUI pixels.
+     * @param headerTint Tint of the header band; {@code tint} applies to the rest of the area.
+     */
+    public static void renderBlurAreaWithIntensityAndHeader(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float baseBlurRadius, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, @Nonnull DrawableColor tint, float headerHeight, @Nonnull DrawableColor headerTint, float partial) {
+        queueBlurArea(graphics, new BlurArea(x, y, width, height, GuiBlurRadius.sanitize(applyBlurIntensity(baseBlurRadius)), CornerRadii.of(topLeftRadius, topRightRadius, bottomRightRadius, bottomLeftRadius), SHAPE_TYPE_ROUNDED_RECT, 2.0F, tint, headerHeight, headerTint, 1.0F));
+    }
+
+    public static void renderBlurAreaWithIntensityAndHeaderScaled(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float baseBlurRadius, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, @Nonnull DrawableColor tint, float headerHeight, @Nonnull DrawableColor headerTint, float partial) {
+        GuiPoseTransformUtil.PoseTransform transform = GuiPoseTransformUtil.resolve(graphics);
+        GuiPoseTransformUtil.TransformedArea area = transform.transformArea(x, y, width, height);
+        float scale = transform.scale();
+        renderBlurAreaWithIntensityAndHeader(graphics, area.x(), area.y(), area.width(), area.height(), baseBlurRadius * scale, topLeftRadius * scale, topRightRadius * scale, bottomRightRadius * scale, bottomLeftRadius * scale, tint, headerHeight * scale, headerTint, partial);
+    }
+
+    private static float applyBlurIntensity(float baseBlurRadius) {
+        return Math.max(0.0F, baseBlurRadius * Math.max(0.0F, FancyMenu.getOptions().uiBlurIntensity.getValue()));
     }
 
     private static void renderBlurAreaInternal(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float blurRadius, @Nonnull CornerRadii cornerRadii, @Nonnull DrawableColor tint, float partial) {
-        renderBlurAreaInternal(graphics, x, y, width, height, blurRadius, cornerRadii, SHAPE_TYPE_ROUNDED_RECT, 2.0F, tint, partial);
+        queueBlurArea(graphics, new BlurArea(x, y, width, height, GuiBlurRadius.sanitize(blurRadius), cornerRadii, SHAPE_TYPE_ROUNDED_RECT, 2.0F, tint, 0.0F, DrawableColor.FULLY_TRANSPARENT, 1.0F));
     }
 
-    private static void renderBlurAreaInternal(@Nonnull GuiGraphicsExtractor graphics, float x, float y, float width, float height, float blurRadius, @Nonnull CornerRadii cornerRadii, float shapeType, float roundness, @Nonnull DrawableColor tint, float partial) {
+    private static void queueBlurArea(@Nonnull GuiGraphicsExtractor graphics, @Nonnull BlurArea area) {
         Objects.requireNonNull(graphics);
-        Objects.requireNonNull(cornerRadii);
-        Objects.requireNonNull(tint);
-        if (width <= 0.0F || height <= 0.0F) {
+        Objects.requireNonNull(area.tint);
+        Objects.requireNonNull(area.headerTint);
+        if (!(area.width > 0.0F) || !(area.height > 0.0F) || !(area.opacity > 0.0F) || !area.hasVisibleEffect()) {
             return;
         }
-        _renderBlurArea(graphics, partial, new BlurArea(x, y, width, height, GuiBlurRadius.sanitize(blurRadius), cornerRadii, shapeType, clampRoundness(roundness), tint));
-    }
-
-    private static void _renderBlurArea(GuiGraphicsExtractor graphics, float partial, BlurArea area) {
+        IMixinGuiGraphicsExtractor accessor = (IMixinGuiGraphicsExtractor) graphics;
         RenderRotationUtil.Rotation2D maskRotation = GuiPoseTransformUtil.resolve(graphics).rotation();
-        GuiRenderState renderState = ((IMixinGuiGraphicsExtractor) graphics).get_guiRenderState_FancyMenu();
-        QueuedBlurArea queuedBlurArea = new QueuedBlurArea(area, maskRotation);
+        ScreenRectangle bounds = toScreenBounds(area);
+        ScreenRectangle clip = accessor.get_scissorStack_FancyMenu().peek();
+        if (clip != null && isRotationIdentity(maskRotation)) {
+            bounds = bounds.intersection(clip);
+            if (bounds == null) {
+                return;
+            }
+        }
+        GuiRenderState renderState = accessor.get_guiRenderState_FancyMenu();
         renderState.nextStratum();
-        renderState.addGuiElement(new GuiBlurRenderState(queuedBlurArea, toScreenBounds(area)));
+        renderState.addGuiElement(new GuiBlurRenderState(new QueuedBlurArea(area, maskRotation, clip), bounds));
         renderState.nextStratum();
         RenderingUtils.resetShaderColor(graphics);
     }
 
     public static void executeQueuedBlurArea_FancyMenu(@Nonnull QueuedBlurArea queuedBlurArea) {
         Objects.requireNonNull(queuedBlurArea);
-        Minecraft minecraft = Minecraft.getInstance();
-        RenderTarget mainTarget = minecraft.gameRenderer.mainRenderTarget();
+        RenderTarget mainTarget = Minecraft.getInstance().gameRenderer.mainRenderTarget();
         int targetWidth = mainTarget.width;
         int targetHeight = mainTarget.height;
         if (targetWidth <= 0 || targetHeight <= 0) {
@@ -310,263 +262,91 @@ public final class GuiBlurRenderer {
             return;
         }
 
-        float blurRadius = GuiBlurRadius.resolveShaderRadius(area.blurRadius, guiScale);
-        CornerRadii scaledRadii = area.cornerRadii.scaled(guiScale).clamped(Math.min(scaledWidth, scaledHeight) * 0.5F).flipVertical();
-
-        DrawableColor.FloatColor tint = area.tint.getAsFloats();
-        RenderRotationUtil.Rotation2D maskRotation = queuedBlurArea.maskRotation_FancyMenu;
-        RenderRotationUtil.Rotation2D scissorRotation = maskRotation;
-        float margin = (float)(blurRadius / guiScale * 4.0D);
-        BlurScissor scissor = toBlurScissor(resolveScissorBounds(area, margin, scissorRotation), guiScale, targetWidth, targetHeight);
-        if (scissor.isEmpty()) {
+        RenderRotationUtil.Rotation2D rotation = queuedBlurArea.maskRotation_FancyMenu;
+        if (!GuiBlurPlan.resolveCompositeRegion(COMPOSITE_REGION, area.x, area.y, area.width, area.height, rotation.m00(), rotation.m01(), rotation.m10(), rotation.m11(), guiScale, targetWidth, targetHeight)) {
+            return;
+        }
+        ScreenRectangle clip = queuedBlurArea.clip_FancyMenu;
+        if (clip != null && !GuiBlurPlan.clipToGuiScissor(COMPOSITE_REGION, clip.left(), clip.top(), clip.right(), clip.bottom(), guiScale, targetWidth, targetHeight)) {
             return;
         }
 
-        ensureBlurTargets_FancyMenu(targetWidth, targetHeight);
-        updateSamplerInfoUniforms_FancyMenu(targetWidth, targetHeight);
-        updateBlurConfigUniforms_FancyMenu(scaledX, scaledY, scaledWidth, scaledHeight, blurRadius, scaledRadii, area.shapeType, area.roundness, maskRotation, tint);
-        executeBlurPasses_FancyMenu(mainTarget, scissor);
+        DrawableColor.FloatColor tint = area.tint.getAsFloats();
+        DrawableColor.FloatColor headerTint = area.headerTint.getAsFloats();
+        float headerHeight = Math.min(scaledHeight, Math.max(0.0F, (float)(area.headerHeight * guiScale)));
+        boolean hasHeader = headerHeight > 0.0F;
+        GuiBlurKernel.Kernel kernel = GuiBlurKernel.resolve(GuiBlurRadius.resolveFramebufferRadius(area.blurRadius, guiScale));
+        // A fully opaque tint hides the blur, so only sample it where some of it stays visible.
+        boolean sampleBlur = kernel.hasBlur() && (tint.alpha() < 1.0F || (hasHeader && headerTint.alpha() < 1.0F));
+        if (!sampleBlur && tint.alpha() <= 0.0F && (!hasHeader || headerTint.alpha() <= 0.0F)) {
+            return;
+        }
+        if (!PLAN.prepare(COMPOSITE_REGION, sampleBlur ? kernel : NO_BLUR, targetWidth, targetHeight)) {
+            return;
+        }
+
+        CornerRadii radii = area.cornerRadii.scaled(guiScale).clamped(Math.min(scaledWidth, scaledHeight) * 0.5F);
+        GuiBlurPasses.render(mainTarget, PLAN, sampleBlur, new GuiBlurPasses.CompositeShape(scaledX, scaledY, scaledWidth, scaledHeight, radii.topLeft(), radii.topRight(), radii.bottomRight(), radii.bottomLeft(), rotation, tint, headerTint, area.shapeType, area.roundness, headerHeight, Math.min(1.0F, area.opacity)));
+    }
+
+    /**
+     * Releases the blur's GPU resources once blur areas stopped rendering for a while. Gets called once per frame.
+     */
+    public static void onFrameStart_FancyMenu() {
+        GuiBlurPasses.releaseIfIdle();
     }
 
     public static void close_FancyMenu() {
-        closeBlurTargets_FancyMenu();
-        closeBuffer_FancyMenu(boxBlurSamplerInfoBuffer_FancyMenu);
-        closeBuffer_FancyMenu(guiBlurSamplerInfoBuffer_FancyMenu);
-        closeBuffer_FancyMenu(guiBlurConfigBuffer_FancyMenu);
-        boxBlurSamplerInfoBuffer_FancyMenu = null;
-        guiBlurSamplerInfoBuffer_FancyMenu = null;
-        guiBlurConfigBuffer_FancyMenu = null;
-        for (int i = 0; i < BLUR_CONFIG_BUFFERS_FANCYMENU.length; i++) {
-            closeBuffer_FancyMenu(BLUR_CONFIG_BUFFERS_FANCYMENU[i]);
-            BLUR_CONFIG_BUFFERS_FANCYMENU[i] = null;
-        }
-    }
-
-    private static void ensureBlurTargets_FancyMenu(int width, int height) {
-        if (blurOriginalTarget_FancyMenu != null && blurTargetWidth_FancyMenu == width && blurTargetHeight_FancyMenu == height) {
-            return;
-        }
-        closeBlurTargets_FancyMenu();
-        blurOriginalTarget_FancyMenu = new TextureTarget("FancyMenu GUI blur original", width, height, false, GpuFormat.RGBA8_UNORM);
-        blurSwapTarget_FancyMenu = new TextureTarget("FancyMenu GUI blur swap", width, height, false, GpuFormat.RGBA8_UNORM);
-        blurBlurredTarget_FancyMenu = new TextureTarget("FancyMenu GUI blur blurred", width, height, false, GpuFormat.RGBA8_UNORM);
-        blurTargetWidth_FancyMenu = width;
-        blurTargetHeight_FancyMenu = height;
-    }
-
-    private static void closeBlurTargets_FancyMenu() {
-        if (blurOriginalTarget_FancyMenu != null) {
-            blurOriginalTarget_FancyMenu.destroyBuffers();
-            blurOriginalTarget_FancyMenu = null;
-        }
-        if (blurSwapTarget_FancyMenu != null) {
-            blurSwapTarget_FancyMenu.destroyBuffers();
-            blurSwapTarget_FancyMenu = null;
-        }
-        if (blurBlurredTarget_FancyMenu != null) {
-            blurBlurredTarget_FancyMenu.destroyBuffers();
-            blurBlurredTarget_FancyMenu = null;
-        }
-        blurTargetWidth_FancyMenu = 0;
-        blurTargetHeight_FancyMenu = 0;
-    }
-
-    private static void updateSamplerInfoUniforms_FancyMenu(int width, int height) {
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            ByteBuffer data = Std140Builder.onStack(stack, SINGLE_INPUT_SAMPLER_INFO_UBO_SIZE_FANCYMENU)
-                    .putVec2(width, height)
-                    .putVec2(width, height)
-                    .get();
-            boxBlurSamplerInfoBuffer_FancyMenu = updateUniformBuffer_FancyMenu(boxBlurSamplerInfoBuffer_FancyMenu, "box blur sampler info", data);
-        }
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            ByteBuffer data = Std140Builder.onStack(stack, DOUBLE_INPUT_SAMPLER_INFO_UBO_SIZE_FANCYMENU)
-                    .putVec2(width, height)
-                    .putVec2(width, height)
-                    .putVec2(width, height)
-                    .get();
-            guiBlurSamplerInfoBuffer_FancyMenu = updateUniformBuffer_FancyMenu(guiBlurSamplerInfoBuffer_FancyMenu, "GUI blur sampler info", data);
-        }
-    }
-
-    private static void updateBlurConfigUniforms_FancyMenu(float x, float y, float width, float height, float blurRadius, CornerRadii cornerRadii, float shapeType, float roundness, RenderRotationUtil.Rotation2D rotation, DrawableColor.FloatColor tint) {
-        for (int i = 0; i < BLUR_RADIUS_MULTIPLIERS_FANCYMENU.length; i++) {
-            float directionX = (i & 1) == 0 ? 1.0F : 0.0F;
-            float directionY = (i & 1) == 0 ? 0.0F : 1.0F;
-            try (MemoryStack stack = MemoryStack.stackPush()) {
-                ByteBuffer data = Std140Builder.onStack(stack, BLUR_CONFIG_UBO_SIZE_FANCYMENU)
-                        .putVec2(directionX, directionY)
-                        .putFloat(blurRadius * BLUR_RADIUS_MULTIPLIERS_FANCYMENU[i])
-                        .get();
-                BLUR_CONFIG_BUFFERS_FANCYMENU[i] = updateUniformBuffer_FancyMenu(BLUR_CONFIG_BUFFERS_FANCYMENU[i], "box blur config " + i, data);
-            }
-        }
-
-        try (MemoryStack stack = MemoryStack.stackPush()) {
-            ByteBuffer data = Std140Builder.onStack(stack, GUI_BLUR_CONFIG_UBO_SIZE_FANCYMENU)
-                    .putVec4(x, y, width, height)
-                    .putVec4(cornerRadii.topLeft(), cornerRadii.topRight(), cornerRadii.bottomRight(), cornerRadii.bottomLeft())
-                    .putVec4(rotation.m00(), rotation.m01(), rotation.m10(), rotation.m11())
-                    .putVec4(tint.red(), tint.green(), tint.blue(), tint.alpha())
-                    .putVec4(shapeType, roundness, 0.0F, 0.0F)
-                    .get();
-            guiBlurConfigBuffer_FancyMenu = updateUniformBuffer_FancyMenu(guiBlurConfigBuffer_FancyMenu, "GUI blur config", data);
-        }
-    }
-
-    private static GpuBuffer updateUniformBuffer_FancyMenu(@Nullable GpuBuffer currentBuffer, String uniformName, ByteBuffer data) {
-        if (currentBuffer == null || currentBuffer.isClosed() || currentBuffer.size() != data.remaining() || (currentBuffer.usage() & GpuBuffer.USAGE_COPY_DST) == 0) {
-            GpuBuffer newBuffer = RenderSystem.getDevice().createBuffer(() -> "FancyMenu GUI blur " + uniformName, GpuBuffer.USAGE_UNIFORM | GpuBuffer.USAGE_COPY_DST, data);
-            closeBuffer_FancyMenu(currentBuffer);
-            return newBuffer;
-        }
-
-        RenderSystem.getDevice().createCommandEncoder().writeToBuffer(currentBuffer.slice(), data);
-        return currentBuffer;
-    }
-
-    private static void executeBlurPasses_FancyMenu(RenderTarget mainTarget, BlurScissor scissor) {
-        if (mainTarget.getColorTexture() == null || blurOriginalTarget_FancyMenu == null || blurSwapTarget_FancyMenu == null || blurBlurredTarget_FancyMenu == null || blurOriginalTarget_FancyMenu.getColorTexture() == null) {
-            return;
-        }
-        if (boxBlurSamplerInfoBuffer_FancyMenu == null || guiBlurSamplerInfoBuffer_FancyMenu == null || guiBlurConfigBuffer_FancyMenu == null) {
-            return;
-        }
-        for (GpuBuffer blurConfigBuffer : BLUR_CONFIG_BUFFERS_FANCYMENU) {
-            if (blurConfigBuffer == null) {
-                return;
-            }
-        }
-
-        CommandEncoder commandEncoder = RenderSystem.getDevice().createCommandEncoder();
-        GpuSampler blurSampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.LINEAR);
-        if (RenderingUtils.isVulkanActive()) {
-            executeTextureCopy_FancyMenu(commandEncoder, mainTarget, blurOriginalTarget_FancyMenu, scissor);
-        } else {
-            GpuSampler copySampler = RenderSystem.getSamplerCache().getClampToEdge(FilterMode.NEAREST);
-            executeScreenCopyPass_FancyMenu(commandEncoder, mainTarget, blurOriginalTarget_FancyMenu, scissor, copySampler);
-        }
-        executeBoxBlurPass_FancyMenu(commandEncoder, "FancyMenu GUI blur horizontal 0", blurOriginalTarget_FancyMenu, blurSwapTarget_FancyMenu, BLUR_CONFIG_BUFFERS_FANCYMENU[0], scissor, blurSampler);
-        executeBoxBlurPass_FancyMenu(commandEncoder, "FancyMenu GUI blur vertical 0", blurSwapTarget_FancyMenu, blurBlurredTarget_FancyMenu, BLUR_CONFIG_BUFFERS_FANCYMENU[1], scissor, blurSampler);
-        executeBoxBlurPass_FancyMenu(commandEncoder, "FancyMenu GUI blur horizontal 1", blurBlurredTarget_FancyMenu, blurSwapTarget_FancyMenu, BLUR_CONFIG_BUFFERS_FANCYMENU[2], scissor, blurSampler);
-        executeBoxBlurPass_FancyMenu(commandEncoder, "FancyMenu GUI blur vertical 1", blurSwapTarget_FancyMenu, blurBlurredTarget_FancyMenu, BLUR_CONFIG_BUFFERS_FANCYMENU[3], scissor, blurSampler);
-        executeBoxBlurPass_FancyMenu(commandEncoder, "FancyMenu GUI blur horizontal 2", blurBlurredTarget_FancyMenu, blurSwapTarget_FancyMenu, BLUR_CONFIG_BUFFERS_FANCYMENU[4], scissor, blurSampler);
-        executeBoxBlurPass_FancyMenu(commandEncoder, "FancyMenu GUI blur vertical 2", blurSwapTarget_FancyMenu, blurBlurredTarget_FancyMenu, BLUR_CONFIG_BUFFERS_FANCYMENU[5], scissor, blurSampler);
-        executeGuiBlurPass_FancyMenu(commandEncoder, mainTarget, scissor, blurSampler);
-    }
-
-    private static void executeTextureCopy_FancyMenu(CommandEncoder commandEncoder, RenderTarget inputTarget, RenderTarget outputTarget, BlurScissor scissor) {
-        if (inputTarget.getColorTexture() == null || outputTarget.getColorTexture() == null) {
-            return;
-        }
-
-        commandEncoder.copyTextureToTexture(
-                inputTarget.getColorTexture(),
-                outputTarget.getColorTexture(),
-                0,
-                scissor.x(),
-                scissor.y(),
-                scissor.x(),
-                scissor.y(),
-                scissor.width(),
-                scissor.height()
-        );
-    }
-
-    private static void executeScreenCopyPass_FancyMenu(CommandEncoder commandEncoder, RenderTarget inputTarget, RenderTarget outputTarget, BlurScissor scissor, GpuSampler sampler) {
-        if (inputTarget.getColorTextureView() == null || outputTarget.getColorTextureView() == null) {
-            return;
-        }
-
-        // OpenGL texture copies go through framebuffer blits, so use a render pass for predictable sub-region semantics.
-        try (RenderPass renderPass = commandEncoder.createRenderPass(() -> "FancyMenu GUI blur source copy", outputTarget.getColorTextureView(), Optional.empty())) {
-            renderPass.setPipeline(SCREEN_COPY_PIPELINE_FANCYMENU);
-            RenderSystem.bindDefaultUniforms(renderPass);
-            renderPass.setUniform(SAMPLER_INFO_UNIFORM_FANCYMENU, boxBlurSamplerInfoBuffer_FancyMenu);
-            renderPass.bindTexture(IN_SAMPLER_FANCYMENU, inputTarget.getColorTextureView(), sampler);
-            enableScissor_FancyMenu(renderPass, scissor);
-            renderPass.draw(3, 1, 0, 0);
-            renderPass.disableScissor();
-        }
-    }
-
-    private static void executeBoxBlurPass_FancyMenu(CommandEncoder commandEncoder, String label, RenderTarget inputTarget, RenderTarget outputTarget, GpuBuffer blurConfigBuffer, BlurScissor scissor, GpuSampler sampler) {
-        if (inputTarget.getColorTextureView() == null || outputTarget.getColorTextureView() == null) {
-            return;
-        }
-
-        try (RenderPass renderPass = commandEncoder.createRenderPass(() -> label, outputTarget.getColorTextureView(), Optional.empty())) {
-            renderPass.setPipeline(BOX_BLUR_PIPELINE_FANCYMENU);
-            RenderSystem.bindDefaultUniforms(renderPass);
-            renderPass.setUniform(SAMPLER_INFO_UNIFORM_FANCYMENU, boxBlurSamplerInfoBuffer_FancyMenu);
-            renderPass.setUniform(BLUR_CONFIG_UNIFORM_FANCYMENU, blurConfigBuffer);
-            renderPass.bindTexture(IN_SAMPLER_FANCYMENU, inputTarget.getColorTextureView(), sampler);
-            enableScissor_FancyMenu(renderPass, scissor);
-            renderPass.draw(3, 1, 0, 0);
-            renderPass.disableScissor();
-        }
-    }
-
-    private static void executeGuiBlurPass_FancyMenu(CommandEncoder commandEncoder, RenderTarget mainTarget, BlurScissor scissor, GpuSampler sampler) {
-        if (mainTarget.getColorTextureView() == null || blurOriginalTarget_FancyMenu.getColorTextureView() == null || blurBlurredTarget_FancyMenu.getColorTextureView() == null) {
-            return;
-        }
-
-        try (RenderPass renderPass = commandEncoder.createRenderPass(() -> "FancyMenu GUI blur composite", mainTarget.getColorTextureView(), Optional.empty(), mainTarget.useDepth ? mainTarget.getDepthTextureView() : null, OptionalDouble.empty())) {
-            renderPass.setPipeline(GUI_BLUR_PIPELINE_FANCYMENU);
-            RenderSystem.bindDefaultUniforms(renderPass);
-            renderPass.setUniform(SAMPLER_INFO_UNIFORM_FANCYMENU, guiBlurSamplerInfoBuffer_FancyMenu);
-            renderPass.setUniform(GUI_BLUR_CONFIG_UNIFORM_FANCYMENU, guiBlurConfigBuffer_FancyMenu);
-            renderPass.bindTexture(ORIGINAL_SAMPLER_FANCYMENU, blurOriginalTarget_FancyMenu.getColorTextureView(), sampler);
-            renderPass.bindTexture(BLUR_SAMPLER_FANCYMENU, blurBlurredTarget_FancyMenu.getColorTextureView(), sampler);
-            enableScissor_FancyMenu(renderPass, scissor);
-            renderPass.draw(3, 1, 0, 0);
-            renderPass.disableScissor();
-        }
-    }
-
-    private static void enableScissor_FancyMenu(RenderPass renderPass, BlurScissor scissor) {
-        renderPass.enableScissor(scissor.x(), scissor.y(), scissor.width(), scissor.height());
-    }
-
-    private static void closeBuffer_FancyMenu(@Nullable GpuBuffer buffer) {
-        if (buffer != null && !buffer.isClosed()) {
-            buffer.close();
-        }
-    }
-
-    private static BlurScissor toBlurScissor(ScissorBounds bounds, double guiScale, int targetWidth, int targetHeight) {
-        double minX = bounds.minX() * guiScale;
-        double maxX = bounds.maxX() * guiScale;
-        double minY = targetHeight - bounds.maxY() * guiScale;
-        double maxY = targetHeight - bounds.minY() * guiScale;
-
-        int x0 = clampToInt(floorToInt(minX), 0, targetWidth);
-        int y0 = clampToInt(floorToInt(minY), 0, targetHeight);
-        int x1 = clampToInt(ceilToInt(maxX), 0, targetWidth);
-        int y1 = clampToInt(ceilToInt(maxY), 0, targetHeight);
-        return new BlurScissor(x0, y0, Math.max(0, x1 - x0), Math.max(0, y1 - y0));
+        GuiBlurPasses.close();
     }
 
     private static ScreenRectangle toScreenBounds(BlurArea area) {
-        int x0 = floorToInt(area.x);
-        int y0 = floorToInt(area.y);
-        int x1 = ceilToInt(area.x + area.width);
-        int y1 = ceilToInt(area.y + area.height);
+        int x0 = (int) Math.floor(area.x);
+        int y0 = (int) Math.floor(area.y);
+        int x1 = (int) Math.ceil(area.x + area.width);
+        int y1 = (int) Math.ceil(area.y + area.height);
         return new ScreenRectangle(x0, y0, Math.max(1, x1 - x0), Math.max(1, y1 - y0));
     }
 
-    private record BlurArea(float x, float y, float width, float height, float blurRadius, CornerRadii cornerRadii, float shapeType, float roundness, DrawableColor tint) {
+    private static boolean isRotationIdentity(@Nonnull RenderRotationUtil.Rotation2D rotation) {
+        return Math.abs(rotation.m00() - 1.0F) <= 1.0E-4F && Math.abs(rotation.m11() - 1.0F) <= 1.0E-4F && Math.abs(rotation.m01()) <= 1.0E-4F && Math.abs(rotation.m10()) <= 1.0E-4F;
+    }
+
+    private static float clampRoundness(float roundness) {
+        if (!Float.isFinite(roundness)) {
+            return 2.0F;
+        }
+        return Math.max(0.1F, roundness);
+    }
+
+    /**
+     * Blur areas are extracted in the same logical coordinate space as FancyMenu's precise GUI projection.
+     * Keep every framebuffer conversion on this scale; Window#getGuiScale() only exposes its floored integer part while a fractional scale is active.
+     */
+    private static double getEffectiveGuiScale_FancyMenu() {
+        double guiScale = WindowHandler.getGuiScale();
+        return Double.isFinite(guiScale) && guiScale > 0.0D ? guiScale : 1.0D;
+    }
+
+    private record BlurArea(float x, float y, float width, float height, float blurRadius, CornerRadii cornerRadii, float shapeType, float roundness, DrawableColor tint, float headerHeight, DrawableColor headerTint, float opacity) {
+
+        private boolean hasVisibleEffect() {
+            return this.blurRadius > 0.0F || this.tint.getColor().getAlpha() > 0 || (this.headerHeight > 0.0F && this.headerTint.getColor().getAlpha() > 0);
+        }
+
     }
 
     public static final class QueuedBlurArea {
 
         private final BlurArea area_FancyMenu;
         private final RenderRotationUtil.Rotation2D maskRotation_FancyMenu;
+        @Nullable
+        private final ScreenRectangle clip_FancyMenu;
 
-        private QueuedBlurArea(BlurArea area, RenderRotationUtil.Rotation2D maskRotation) {
+        private QueuedBlurArea(BlurArea area, RenderRotationUtil.Rotation2D maskRotation, @Nullable ScreenRectangle clip) {
             this.area_FancyMenu = area;
             this.maskRotation_FancyMenu = maskRotation;
+            this.clip_FancyMenu = clip;
         }
 
     }
@@ -578,12 +358,10 @@ public final class GuiBlurRenderer {
             executeQueuedBlurArea_FancyMenu(this.queuedBlurArea);
         }
 
-    }
-
-    private record BlurScissor(int x, int y, int width, int height) {
-
-        private boolean isEmpty() {
-            return width <= 0 || height <= 0;
+        @Override
+        @Nullable
+        public ScreenRectangle scissorArea() {
+            return this.queuedBlurArea.clip_FancyMenu;
         }
 
     }
@@ -615,107 +393,12 @@ public final class GuiBlurRenderer {
             return new CornerRadii(clampCorner(topLeft, clampedMax), clampCorner(topRight, clampedMax), clampCorner(bottomRight, clampedMax), clampCorner(bottomLeft, clampedMax));
         }
 
-        private CornerRadii flipVertical() {
-            return new CornerRadii(bottomLeft, bottomRight, topRight, topLeft);
-        }
-
         private static float clampCorner(float value, float max) {
             if (value <= 0.0F) {
                 return 0.0F;
             }
             return value > max ? max : value;
         }
-    }
-
-    private static float clampRoundness(float roundness) {
-        if (!Float.isFinite(roundness)) {
-            return 2.0F;
-        }
-        return Math.max(0.1F, roundness);
-    }
-
-    private static ScissorBounds resolveScissorBounds(BlurArea area, float margin, RenderRotationUtil.Rotation2D rotation) {
-        float baseMinX = area.x - margin;
-        float baseMinY = area.y - margin;
-        float baseMaxX = area.x + area.width + margin;
-        float baseMaxY = area.y + area.height + margin;
-
-        if (rotation == null || isRotationIdentity(rotation)) {
-            return new ScissorBounds(baseMinX, baseMinY, baseMaxX, baseMaxY);
-        }
-
-        float m00 = rotation.m00();
-        float m01 = rotation.m01();
-        float m10 = rotation.m10();
-        float m11 = rotation.m11();
-        if (!isFinite(m00) || !isFinite(m01) || !isFinite(m10) || !isFinite(m11)) {
-            return new ScissorBounds(baseMinX, baseMinY, baseMaxX, baseMaxY);
-        }
-
-        float halfWidth = area.width * 0.5F;
-        float halfHeight = area.height * 0.5F;
-        float boundHalfWidth = Math.abs(m00) * halfWidth + Math.abs(m01) * halfHeight;
-        float boundHalfHeight = Math.abs(m10) * halfWidth + Math.abs(m11) * halfHeight;
-        if (!Float.isFinite(boundHalfWidth) || !Float.isFinite(boundHalfHeight)) {
-            return new ScissorBounds(baseMinX, baseMinY, baseMaxX, baseMaxY);
-        }
-
-        float centerX = area.x + halfWidth;
-        float centerY = area.y + halfHeight;
-
-        float rotatedMinX = centerX - boundHalfWidth - margin;
-        float rotatedMaxX = centerX + boundHalfWidth + margin;
-        float rotatedMinY = centerY - boundHalfHeight - margin;
-        float rotatedMaxY = centerY + boundHalfHeight + margin;
-
-        return new ScissorBounds(
-                Math.min(baseMinX, rotatedMinX),
-                Math.min(baseMinY, rotatedMinY),
-                Math.max(baseMaxX, rotatedMaxX),
-                Math.max(baseMaxY, rotatedMaxY)
-        );
-    }
-
-    private static boolean isRotationIdentity(RenderRotationUtil.Rotation2D rotation) {
-        return nearlyEqual(rotation.m00(), 1.0F)
-                && nearlyEqual(rotation.m11(), 1.0F)
-                && nearlyEqual(rotation.m01(), 0.0F)
-                && nearlyEqual(rotation.m10(), 0.0F);
-    }
-
-    private static boolean nearlyEqual(float a, float b) {
-        return Math.abs(a - b) <= 1.0E-4F;
-    }
-
-    private static boolean isFinite(float value) {
-        return Float.isFinite(value);
-    }
-
-    private static int clampToInt(int value, int min, int max) {
-        if (value < min) {
-            return min;
-        }
-        return Math.min(value, max);
-    }
-
-    private static int floorToInt(double value) {
-        return (int) Math.floor(value);
-    }
-
-    private static int ceilToInt(double value) {
-        return (int) Math.ceil(value);
-    }
-
-    /**
-     * Blur areas are extracted in the same logical coordinate space as FancyMenu's precise GUI projection.
-     * Keep every framebuffer conversion on this scale; Window#getGuiScale() only exposes its floored integer part while a fractional scale is active.
-     */
-    private static double getEffectiveGuiScale_FancyMenu() {
-        double guiScale = WindowHandler.getGuiScale();
-        return Double.isFinite(guiScale) && guiScale > 0.0D ? guiScale : 1.0D;
-    }
-
-    private record ScissorBounds(float minX, float minY, float maxX, float maxY) {
     }
 
 }
