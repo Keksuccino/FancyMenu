@@ -3288,48 +3288,6 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         public void renderEntry(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         }
 
-protected void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-            DrawableColor color = null;
-            if (!this.isHovered() && !this.isSelected()) {
-                if (this.backgroundColorNormal != null) {
-                    color = this.backgroundColorNormal.get();
-                }
-            } else if (this.backgroundColorHover != null) {
-                color = this.backgroundColorHover.get();
-            }
-            if (color == null) {
-                return;
-            }
-            float entryX = this.x;
-            float entryY = this.y;
-            float entryWidth = this.width;
-            float entryHeight = this.height;
-            ScrollArea scrollArea = this.parent;
-            float scissorPadding = scrollArea.isScissorEnabled() ? 2.0F : 0.0F;
-            float areaY = scrollArea.getInnerY() + scissorPadding;
-            float areaBottom = (scrollArea.getInnerY() + scrollArea.getInnerHeight()) - scissorPadding;
-            float visibleTop = Math.max(entryY, areaY);
-            float visibleBottom = Math.min(entryY + entryHeight, areaBottom);
-            float visibleHeight = visibleBottom - visibleTop;
-            if (visibleHeight <= 0.0F) {
-                return;
-            }
-            boolean roundTop = entryY <= areaY + 5;
-            boolean roundBottom = (entryY + entryHeight) >= areaBottom - 5;
-            if (roundTop || roundBottom) {
-                float radius = Math.min(UIBase.getInterfaceCornerRoundingRadius(), Math.max(0.0F, visibleHeight / 2.0F));
-                if (roundTop && roundBottom) {
-                    SmoothRectangleRenderer.renderSmoothRectRoundAllCornersScaled(graphics, entryX, visibleTop, entryWidth, visibleHeight, radius, radius, radius, radius, color.getColorInt(), partial);
-                } else if (roundTop) {
-                    SmoothRectangleRenderer.renderSmoothRectRoundTopCornersScaled(graphics, entryX, visibleTop, entryWidth, visibleHeight, radius, color.getColorInt(), partial);
-                } else {
-                    SmoothRectangleRenderer.renderSmoothRectRoundBottomCornersScaled(graphics, entryX, visibleTop, entryWidth, visibleHeight, radius, color.getColorInt(), partial);
-                }
-            } else {
-                fillF(graphics, entryX, visibleTop, entryX + entryWidth, visibleTop + visibleHeight, color.getColorInt());
-            }
-        }
-
         @Override
         public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
             this.renderInternal(graphics, mouseX, mouseY, partial, true);
