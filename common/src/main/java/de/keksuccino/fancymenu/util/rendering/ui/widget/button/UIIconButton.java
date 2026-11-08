@@ -1,10 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.button;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
-import de.keksuccino.fancymenu.util.rendering.IconAnimation;
-import de.keksuccino.fancymenu.util.rendering.IconAnimations;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcon;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
@@ -36,10 +33,6 @@ public class UIIconButton implements Renderable, GuiEventListener, NarratableEnt
     @Nullable
     private Consumer<UIIconButton> clickAction;
     @Nullable
-    private IconAnimation iconHoverAnimation = IconAnimations.SHORT_DIAGONAL_BOUNCE;
-    @Nullable
-    private IconAnimation.Instance iconHoverAnimationInstance = this.iconHoverAnimation.createInstance();
-    @Nullable
     private ConsumingSupplier<UIIconButton, UITooltip> tooltipSupplier;
     @Nullable
     private ConsumingSupplier<UIIconButton, Boolean> activeSupplier;
@@ -57,71 +50,36 @@ public class UIIconButton implements Renderable, GuiEventListener, NarratableEnt
 
     @Override
     public void render(@Nonnull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-        boolean wasHovered = this.hovered;
         this.hovered = this.isMouseOver(mouseX, mouseY);
         boolean active = this.isActive();
-        this.updateHoverAnimation(wasHovered, active);
 
         com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
         if (this.hovered && active) {
             UIBase.renderIconButtonHoverBackground(graphics, this.x, this.y, this.width, this.height);
         }
 
-        IconAnimation.Offset offset = this.getHoverOffset();
-        this.renderIcon(graphics, offset, active ? this.iconAlpha : (this.iconAlpha * INACTIVE_ICON_ALPHA));
+        this.renderIcon(graphics, active ? this.iconAlpha : (this.iconAlpha * INACTIVE_ICON_ALPHA));
 
         // Inactive buttons keep their tooltip, so it's still clear what they do
         UITooltip tooltip = this.hovered ? this.getTooltip() : null;
         if (tooltip != null) TooltipHandler.INSTANCE.addRenderTickTooltip(tooltip, () -> true);
     }
 
-    private void updateHoverAnimation(boolean wasHovered, boolean active) {
-        if (this.iconHoverAnimationInstance == null) {
-            return;
-        }
-        if (!UIBase.shouldPlayAnimations() || !active) {
-            this.iconHoverAnimationInstance.reset();
-            return;
-        }
-        if (this.hovered) {
-            if (!wasHovered) {
-                this.iconHoverAnimationInstance.start();
-            }
-        } else {
-            this.iconHoverAnimationInstance.reset();
-        }
-    }
-
-    @Nonnull
-    private IconAnimation.Offset getHoverOffset() {
-        if (!UIBase.shouldPlayAnimations()) {
-            return IconAnimation.Offset.ZERO;
-        }
-        if (this.iconHoverAnimationInstance == null) {
-            return IconAnimation.Offset.ZERO;
-        }
-        return this.iconHoverAnimationInstance.getOffset();
-    }
-
-    private void renderIcon(@Nonnull GuiGraphics graphics, @Nonnull IconAnimation.Offset offset, float alpha) {
+    private void renderIcon(@Nonnull GuiGraphics graphics, float alpha) {
         float maxSize = Math.min(this.width, this.height);
         float padding = Math.max(0.0F, this.iconPadding);
-        float baseSize = Math.max(1.0F, maxSize - (padding * 2.0F));
-        float areaWidth = Math.max(1.0F, baseSize + offset.widthOffset());
-        float areaHeight = Math.max(1.0F, baseSize + offset.heightOffset());
-        IconRenderData iconData = resolveMaterialIconData(this.icon, areaWidth, areaHeight);
+        float iconSize = Math.max(1.0F, maxSize - (padding * 2.0F));
+        IconRenderData iconData = resolveMaterialIconData(this.icon, iconSize, iconSize);
         if (iconData == null) {
             return;
         }
-        float baseX = this.x + (this.width - areaWidth) * 0.5F;
-        float baseY = this.y + (this.height - areaHeight) * 0.5F;
-        float drawX = baseX + offset.x();
-        float drawY = baseY + offset.y();
+        float drawX = this.x + (this.width - iconSize) * 0.5F;
+        float drawY = this.y + (this.height - iconSize) * 0.5F;
 
         com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
         de.keksuccino.fancymenu.util.rendering.RenderingUtils.defaultBlendFunc();
         UIBase.getUITheme().setUITextureShaderColor(graphics, alpha);
-        blitScaledIcon(graphics, iconData, drawX, drawY, areaWidth, areaHeight, offset.rotationDegrees());
+        blitScaledIcon(graphics, iconData, drawX, drawY, iconSize, iconSize);
         UIBase.resetShaderColor(graphics);
     }
 
@@ -145,7 +103,7 @@ public class UIIconButton implements Renderable, GuiEventListener, NarratableEnt
         return new IconRenderData(location, width, height);
     }
 
-    private static void blitScaledIcon(@Nonnull GuiGraphics graphics, @Nonnull IconRenderData iconData, float areaX, float areaY, float areaWidth, float areaHeight, float rotationDegrees) {
+    private static void blitScaledIcon(@Nonnull GuiGraphics graphics, @Nonnull IconRenderData iconData, float areaX, float areaY, float areaWidth, float areaHeight) {
         if (areaWidth <= 0.0F || areaHeight <= 0.0F || iconData.width <= 0 || iconData.height <= 0) {
             return;
         }
@@ -160,11 +118,6 @@ public class UIIconButton implements Renderable, GuiEventListener, NarratableEnt
         graphics.pose().pushMatrix();
         graphics.pose().translate(drawX, drawY);
         graphics.pose().scale(scale, scale);
-        if (rotationDegrees != 0.0F) {
-            graphics.pose().translate(iconData.width * 0.5F, iconData.height * 0.5F);
-            graphics.pose().rotate((float)Math.toRadians(rotationDegrees));
-            graphics.pose().translate(-iconData.width * 0.5F, -iconData.height * 0.5F);
-        }
         graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, iconData.texture, 0, 0, 0.0F, 0.0F, iconData.width, iconData.height, iconData.width, iconData.height);
         graphics.pose().popMatrix();
     }
@@ -213,11 +166,6 @@ public class UIIconButton implements Renderable, GuiEventListener, NarratableEnt
     }
 
     @Nullable
-    public IconAnimation getIconHoverAnimation() {
-        return this.iconHoverAnimation;
-    }
-
-    @Nullable
     public Consumer<UIIconButton> getClickAction() {
         return this.clickAction;
     }
@@ -256,15 +204,6 @@ public class UIIconButton implements Renderable, GuiEventListener, NarratableEnt
 
     public UIIconButton setIcon(@Nonnull MaterialIcon icon) {
         this.icon = Objects.requireNonNull(icon, "icon");
-        return this;
-    }
-
-    public UIIconButton setIconHoverAnimation(@Nullable IconAnimation iconHoverAnimation) {
-        this.iconHoverAnimation = iconHoverAnimation;
-        this.iconHoverAnimationInstance = (iconHoverAnimation != null) ? iconHoverAnimation.createInstance() : null;
-        if (this.hovered && this.iconHoverAnimationInstance != null && UIBase.shouldPlayAnimations()) {
-            this.iconHoverAnimationInstance.start();
-        }
         return this;
     }
 
