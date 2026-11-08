@@ -101,7 +101,7 @@ public class Options extends AbstractOptions {
     public final Option<Integer> contextMenuHoverOpenSpeed = new Option<>(config, "context_menu_hover_open_speed", 1, "ui");
     public final Option<String> uiTheme = new Option<>(config, "ui_theme", "dark", "ui");
     public final Option<Boolean> enableUiBlur = new Option<>(config, "enable_ui_blur", false, "ui");
-    public final Option<Float> uiBlurIntensity = new Option<>(config, "ui_blur_intensity", 5.0F, "ui");
+    public final Option<Float> uiBlurIntensity = new Option<>(config, "ui_blur_intensity", 9.0F, "ui");
     public final Option<Boolean> useMinecraftFont = new Option<>(config, "use_minecraft_font", false, "ui");
     public final Option<Boolean> smoothFontMultilineRendering = new Option<>(config, "smooth_font_multiline_rendering", false, "ui");
     public final Option<Boolean> enableUiAnimations = new Option<>(config, "enable_ui_animations", true, "ui");
