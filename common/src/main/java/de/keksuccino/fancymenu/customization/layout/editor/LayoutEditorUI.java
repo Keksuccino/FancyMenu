@@ -27,7 +27,6 @@ import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.TextValidators;
-import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIconTexture;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -61,8 +60,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
-
-    private static final MaterialIconTexture CLOSE_EDITOR_ICON_TEXTURE = new MaterialIconTexture(MaterialIcons.CLOSE);
 
     @Nullable
     private MenuBar grandfatheredMenuBar = null;
@@ -400,7 +397,7 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                             editor.closeEditor();
                         }
                     });
-                }).setIconTexture(CLOSE_EDITOR_ICON_TEXTURE)
+                }).setMaterialIcon(MaterialIcons.CLOSE)
                 .setIconTextureColor(() -> UIBase.getUITheme().menu_bar_close_icon_color)
                 .setIconPaddingSupplier(consumes -> 7)
                 .setBaseWidth(MenuBar.PIXEL_SIZE);

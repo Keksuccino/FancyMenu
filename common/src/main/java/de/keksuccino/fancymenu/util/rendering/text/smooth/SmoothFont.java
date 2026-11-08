@@ -1,13 +1,19 @@
 package de.keksuccino.fancymenu.util.rendering.text.smooth;
 
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.Font;
+import java.awt.Shape;
 import java.awt.font.LineMetrics;
+import java.awt.geom.PathIterator;
 import java.awt.geom.Rectangle2D;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -22,11 +28,16 @@ import java.util.function.Supplier;
  */
 public final class SmoothFont implements AutoCloseable {
 
+    private static final Logger LOGGER = LogManager.getLogger();
+
     static final int SOURCE_INDEX_MASK = 0xFF;
     static final int SOURCE_MISSING = 1 << 8;
     static final int MISSING_GLYPH_CODEPOINT = '?';
 
     private static final int LAYOUT_CACHE_LIMIT = 1024;
+    /** Precision (in layout units) of the curve flattening that measures the ink bounds of icon glyphs. */
+    private static final double ICON_BOUNDS_FLATNESS = 0.01;
+    private static final IconGlyph MISSING_ICON = new IconGlyph(0, 0, null, 0.0F, 0.0F, 0.0F, 0.0F);
 
     private final String debugName;
     private final float baseSize;
@@ -59,6 +70,8 @@ public final class SmoothFont implements AutoCloseable {
     private final int fallbackSourceIndex;
 
     private final SmoothGlyphAtlas atlas;
+    private final Int2ObjectOpenHashMap<IconGlyph> iconGlyphs = new Int2ObjectOpenHashMap<>();
+    private boolean closed;
     private final SmoothStyledText legacyScratch = new SmoothStyledText(64);
     private final LinkedHashMap<SmoothStyledText, SmoothTextLayout> styledLayouts = createLayoutCache();
     private final LinkedHashMap<String, SmoothTextLayout> singleLineLegacyLayouts = createLayoutCache();
@@ -69,9 +82,10 @@ public final class SmoothFont implements AutoCloseable {
      * @param languageOrders per language code, the order in which the files get searched for a character
      * @param colorGlyphScale size of color (emoji) glyphs relative to the text size
      * @param languageCode supplies the active language code, to pick the matching entry of {@code languageOrders}
+     * @param atlasPageSize edge length of the glyph atlas pages in pixels
      * @throws IllegalStateException when the primary font file can't be loaded
      */
-    SmoothFont(@NotNull String debugName, @NotNull List<SmoothFontSource> sources, float baseSize, float lineHeightOverride, float lineHeightOffset, float yOffset, @Nullable Map<String, int[]> languageOrders, float colorGlyphScale, @NotNull Supplier<String> languageCode) {
+    SmoothFont(@NotNull String debugName, @NotNull List<SmoothFontSource> sources, float baseSize, float lineHeightOverride, float lineHeightOffset, float yOffset, @Nullable Map<String, int[]> languageOrders, float colorGlyphScale, @NotNull Supplier<String> languageCode, int atlasPageSize) {
         this.debugName = Objects.requireNonNull(debugName);
         if (sources.isEmpty() || sources.size() > SOURCE_INDEX_MASK) {
             throw new IllegalArgumentException("SmoothFont needs between 1 and " + SOURCE_INDEX_MASK + " font files");
@@ -110,7 +124,7 @@ public final class SmoothFont implements AutoCloseable {
         this.emojiSourceCache.defaultReturnValue(-1);
         this.refreshLanguage();
         this.fallbackSourceIndex = this.findFallbackSource();
-        this.atlas = new SmoothGlyphAtlas(this.debugName);
+        this.atlas = new SmoothGlyphAtlas(this.debugName, atlasPageSize);
     }
 
     public float getBaseSize() {
@@ -204,6 +218,64 @@ public final class SmoothFont implements AutoCloseable {
             this.styledLayouts.put(text.copy(), layout);
         }
         return layout;
+    }
+
+    /**
+     * Returns the glyph that draws a character as an icon, or {@code null} when no file of this font has a glyph for it.
+     * Results get cached, so this is cheap after the first request for a character.
+     */
+    @Nullable
+    IconGlyph iconGlyph(int codepoint) {
+        IconGlyph glyph = this.iconGlyphs.get(codepoint);
+        if (glyph == null) {
+            glyph = this.loadIconGlyph(codepoint);
+            this.iconGlyphs.put(codepoint, glyph);
+        }
+        return (glyph == MISSING_ICON) ? null : glyph;
+    }
+
+    @NotNull
+    private IconGlyph loadIconGlyph(int codepoint) {
+        int resolved = this.resolveSource(codepoint, false);
+        SmoothFontSource.Loaded source = this.sources[resolved & SOURCE_INDEX_MASK].get();
+        if ((resolved & SOURCE_MISSING) != 0 || source == null) {
+            LOGGER.error("[FANCYMENU] Smooth font '{}' has no glyph for icon U+{}.", this.debugName, Integer.toHexString(codepoint).toUpperCase(Locale.ROOT));
+            return MISSING_ICON;
+        }
+        int glyphId = source.layoutFont(0).createGlyphVector(SmoothFontSource.RENDER_CONTEXT, Character.toChars(codepoint)).getGlyphCode(0);
+        Shape outline = source.layoutFont(0).createGlyphVector(SmoothFontSource.RENDER_CONTEXT, new int[]{glyphId}).getGlyphOutline(0);
+        float[] bounds = inkBounds(outline);
+        if (bounds == null) {
+            return MISSING_ICON;
+        }
+        float layoutSize = SmoothFontSource.LAYOUT_SIZE;
+        return new IconGlyph(resolved & SOURCE_INDEX_MASK, glyphId, outline, bounds[0] / layoutSize, bounds[1] / layoutSize, bounds[2] / layoutSize, bounds[3] / layoutSize);
+    }
+
+    /**
+     * Measures the tight bounds of an outline ({@code minX, minY, maxX, maxY}), or returns {@code null} for an empty outline.
+     * {@link Shape#getBounds2D()} isn't used, because older Java versions include the control points of curves in it.
+     */
+    @Nullable
+    static float[] inkBounds(@NotNull Shape outline) {
+        double[] coords = new double[6];
+        double minX = Double.POSITIVE_INFINITY;
+        double minY = Double.POSITIVE_INFINITY;
+        double maxX = Double.NEGATIVE_INFINITY;
+        double maxY = Double.NEGATIVE_INFINITY;
+        for (PathIterator iterator = outline.getPathIterator(null, ICON_BOUNDS_FLATNESS); !iterator.isDone(); iterator.next()) {
+            if (iterator.currentSegment(coords) == PathIterator.SEG_CLOSE) {
+                continue;
+            }
+            minX = Math.min(minX, coords[0]);
+            minY = Math.min(minY, coords[1]);
+            maxX = Math.max(maxX, coords[0]);
+            maxY = Math.max(maxY, coords[1]);
+        }
+        if (!(maxX > minX) || !(maxY > minY)) {
+            return null;
+        }
+        return new float[]{(float) minX, (float) minY, (float) maxX, (float) maxY};
     }
 
     void clearLayouts() {
@@ -309,10 +381,36 @@ public final class SmoothFont implements AutoCloseable {
         return result;
     }
 
+    /**
+     * Whether this font got closed, which happens to all cached fonts on resource reloads. Closed fonts can't draw anymore,
+     * so holders of a font should build it again.
+     */
+    public boolean isClosed() {
+        return this.closed;
+    }
+
     @Override
     public void close() {
+        this.closed = true;
         this.atlas.close();
         this.clearLayouts();
+        this.iconGlyphs.clear();
+    }
+
+    /**
+     * A glyph drawn as an icon: its outline at {@link SmoothFontSource#LAYOUT_SIZE} and the tight bounds of its ink in em
+     * (y grows down, relative to the pen position on the baseline). Icons get scaled to fit their ink box into the target area.
+     */
+    record IconGlyph(int source, int glyphId, Shape outline, float minX, float minY, float maxX, float maxY) {
+
+        float inkWidth() {
+            return this.maxX - this.minX;
+        }
+
+        float inkHeight() {
+            return this.maxY - this.minY;
+        }
+
     }
 
     @NotNull

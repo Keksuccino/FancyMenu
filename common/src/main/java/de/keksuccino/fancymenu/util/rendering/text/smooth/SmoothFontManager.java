@@ -242,6 +242,7 @@ public final class SmoothFontManager {
         private float lineHeightOverride = -1.0F;
         private float lineHeightOffset = 0.0F;
         private float yOffset = 0.0F;
+        private int atlasPageSize = SmoothGlyphAtlas.DEFAULT_PAGE_SIZE;
 
         private Builder(@NotNull SourceKind<S> kind, float baseSize, @NotNull Supplier<List<S>> files) {
             this.kind = kind;
@@ -307,6 +308,16 @@ public final class SmoothFontManager {
         }
 
         /**
+         * Edge length of the font's glyph atlas pages in pixels ({@code 512..4096}; smaller pages couldn't hold the largest glyph
+         * bitmaps). Fonts that only draw a few small glyphs at a time, like icon fonts, save GPU memory with smaller pages.
+         */
+        @NotNull
+        public Builder<S> atlasPageSize(int atlasPageSize) {
+            this.atlasPageSize = Math.max(512, Math.min(4096, atlasPageSize));
+            return this;
+        }
+
+        /**
          * Builds the font, or returns the cached instance built from the same configuration.
          *
          * @return the font, or {@code null} if there are no font files or the primary file can't be loaded
@@ -333,7 +344,7 @@ public final class SmoothFontManager {
             }
             String debugName = this.kind.label(files.get(0)).toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9_.-]", "_") + "_" + Integer.toHexString(key.hashCode());
             try {
-                SmoothFont font = new SmoothFont(debugName, sources, this.baseSize, override, this.lineHeightOffset, this.yOffset, this.languageOrders(files), this.colorGlyphScale, SmoothFontManager::activeLanguageCode);
+                SmoothFont font = new SmoothFont(debugName, sources, this.baseSize, override, this.lineHeightOffset, this.yOffset, this.languageOrders(files), this.colorGlyphScale, SmoothFontManager::activeLanguageCode, this.atlasPageSize);
                 FONT_CACHE.put(key, font);
                 return font;
             } catch (IllegalStateException ex) {
@@ -377,7 +388,8 @@ public final class SmoothFontManager {
                     .append(Float.floatToIntBits(override)).append(':')
                     .append(Float.floatToIntBits(this.lineHeightOffset)).append(':')
                     .append(Float.floatToIntBits(this.yOffset)).append(':')
-                    .append(Float.floatToIntBits(this.colorGlyphScale)).append(':');
+                    .append(Float.floatToIntBits(this.colorGlyphScale)).append(':')
+                    .append(this.atlasPageSize).append(':');
             for (S file : files) {
                 builder.append(this.kind.id(file)).append(this.emojiFonts.contains(file) ? "!;" : ";");
             }

@@ -72,19 +72,6 @@ final class ProfileUiRendering {
         blitTexture(graphics, location, x, y, size, size, (width - side) / 2.0F, (height - side) / 2.0F, side, side, width, height, -1);
     }
 
-    static void renderMaterialIcon(@NotNull GuiGraphicsExtractor graphics, @NotNull MaterialIcon icon, float x, float y, float size, int color) {
-        Identifier location = icon.getTextureLocationForUI(size, size);
-        if (location == null) return;
-        int textureSize = icon.calculateBestTextureSizeForUI(size, size);
-        int width = icon.getWidth(textureSize);
-        int height = icon.getHeight(textureSize);
-        if ((width <= 0) || (height <= 0)) return;
-        float scale = Math.min(size / width, size / height);
-        float drawWidth = width * scale;
-        float drawHeight = height * scale;
-        blitTexture(graphics, location, x + ((size - drawWidth) / 2.0F), y + ((size - drawHeight) / 2.0F), drawWidth, drawHeight, 0, 0, width, height, width, height, color);
-    }
-
     private static void blitTexture(@NotNull GuiGraphicsExtractor graphics, @NotNull Identifier location, float x, float y, float width, float height, float u, float v, float regionWidth, float regionHeight, int textureWidth, int textureHeight, int color) {
         RenderingUtils.blitF(graphics, RenderPipelines.GUI_TEXTURED, location, x, y, u, v, width, height, regionWidth, regionHeight, textureWidth, textureHeight, color);
     }
