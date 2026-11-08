@@ -25,21 +25,27 @@ final class SmoothGlyphAtlas implements AutoCloseable {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final int PAGE_SIZE = 1024;
+    static final int DEFAULT_PAGE_SIZE = 1024;
     private static final int SOFT_PAGE_LIMIT = 8;
     private static final long PAGE_IDLE_NANOS = 3_000_000_000L;
     /** Every page starts with a small opaque white block, used to draw underlines and strikethroughs in the same batch as glyphs. */
     private static final int WHITE_BLOCK_SIZE = 4;
+    private static final long ICON_KEY_FLAG = 1L << 40;
 
     private final String debugName;
+    private final int pageSize;
     private final Long2ObjectOpenHashMap<Glyph> glyphs = new Long2ObjectOpenHashMap<>();
     private final List<Page> pages = new ArrayList<>();
     @Nullable
     private ByteBuffer staging;
     private boolean warnedAboutPageLimit;
 
-    SmoothGlyphAtlas(@NotNull String debugName) {
+    /**
+     * @param pageSize edge length of the pages in pixels; fonts that only draw a few glyphs (like icon fonts) save memory with smaller pages
+     */
+    SmoothGlyphAtlas(@NotNull String debugName, int pageSize) {
         this.debugName = debugName;
+        this.pageSize = pageSize;
     }
 
     /**
@@ -50,6 +56,16 @@ final class SmoothGlyphAtlas implements AutoCloseable {
      */
     static long key(int source, int glyphId, int styleIndex, int sizePixels, int subpixelBin) {
         return (glyphId & 0x1FFFFFL) | ((long) (source & 0x1F) << 21) | ((long) (styleIndex & 3) << 26) | ((long) (subpixelBin & 3) << 28) | ((long) (sizePixels & 0x3FF) << 30);
+    }
+
+    /**
+     * Cache key of a glyph rasterized as icon by {@link SmoothGlyphRasterizer#rasterizeIcon}. Icon bitmaps are sized by their ink
+     * instead of their em square, so they get their own key space.
+     *
+     * @param inkPixels size of the larger side of the glyph's ink box in pixels ({@code 1..1023})
+     */
+    static long iconKey(int source, int glyphId, int inkPixels) {
+        return key(source, glyphId, 0, inkPixels, 0) | ICON_KEY_FLAG;
     }
 
     @Nullable
@@ -121,7 +137,7 @@ final class SmoothGlyphAtlas implements AutoCloseable {
                 LOGGER.warn("[FANCYMENU] Smooth font '{}' uses more than {} glyph atlas pages at once.", this.debugName, SOFT_PAGE_LIMIT);
             }
         }
-        int size = Math.min(PAGE_SIZE, SmoothGlyphTexture.maxSize());
+        int size = Math.min(this.pageSize, SmoothGlyphTexture.maxSize());
         Page page = new Page(new SmoothGlyphTexture("fancymenu_smooth_font_" + this.debugName + "_" + this.pages.size(), size), size, now);
         this.reserveWhiteBlock(page);
         this.pages.add(page);

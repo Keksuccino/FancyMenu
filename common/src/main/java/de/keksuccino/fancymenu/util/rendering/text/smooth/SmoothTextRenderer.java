@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix3x2f;
 
 /**
- * Draws and measures text with a {@link SmoothFont}.
+ * Draws and measures text with a {@link SmoothFont}, and draws single glyphs of icon fonts.
  * <p>
  * Text gets shaped once into a cached, size-independent layout, so measuring and drawing the same text again is cheap.
  * Drawing turns the layout into one batched GUI element per atlas page, with glyphs rasterized at the device pixel size
@@ -78,6 +78,21 @@ public final class SmoothTextRenderer {
         return carets;
     }
 
+    /**
+     * Draws one character of an icon font, scaled to fit its ink into the given area and centered in it. Like text, the icon gets
+     * rasterized at the device pixel size it is shown at, so it stays sharp at every GUI scale and pose scale.
+     *
+     * @param color ARGB color the icon gets drawn in
+     */
+    public static void renderIcon(@NotNull GuiGraphicsExtractor graphics, @NotNull SmoothFont font, int codepoint, float x, float y, float width, float height, int color) {
+        if (!(width > 0.0F) || !(height > 0.0F)) return;
+        SmoothFont.IconGlyph icon = font.iconGlyph(codepoint);
+        if (icon == null) return;
+        Matrix3x2f pose = beginMesh(graphics, font);
+        MESH.addIcon(icon, x, y, width, height, color);
+        submitMesh(graphics, pose);
+    }
+
     @NotNull
     private static SmoothTextLayout layout(@NotNull SmoothFont font, @NotNull FormattedCharSequence text) {
         return font.layout(STYLED_SCRATCH.reset(isMultilineEnabled()).appendSequence(text));
@@ -92,13 +107,29 @@ public final class SmoothTextRenderer {
         if (layout.glyphCount == 0 && layout.decorationCount == 0) {
             return dimensions;
         }
-        Matrix3x2f pose = new Matrix3x2f(graphics.pose());
-        float guiScale = (float) WindowHandler.getGuiScale();
-        MESH.begin(font, pose.m00, pose.m01, pose.m10, pose.m11, pose.m20, pose.m21, guiScale);
+        Matrix3x2f pose = beginMesh(graphics, font);
         if (shadow) {
             MESH.addLayout(layout, x, y, size, color, true);
         }
         MESH.addLayout(layout, x, y, size, color, false);
+        submitMesh(graphics, pose);
+        return dimensions;
+    }
+
+    /**
+     * Starts the shared mesh for the current pose and returns a copy of that pose for the render states.
+     */
+    @NotNull
+    private static Matrix3x2f beginMesh(@NotNull GuiGraphicsExtractor graphics, @NotNull SmoothFont font) {
+        Matrix3x2f pose = new Matrix3x2f(graphics.pose());
+        MESH.begin(font, pose.m00, pose.m01, pose.m10, pose.m11, pose.m20, pose.m21, (float) WindowHandler.getGuiScale());
+        return pose;
+    }
+
+    /**
+     * Submits every batch of the shared mesh as one GUI element.
+     */
+    private static void submitMesh(@NotNull GuiGraphicsExtractor graphics, @NotNull Matrix3x2f pose) {
         ScreenRectangle scissor = GuiScissorUtil.getActiveScissor(graphics);
         GuiRenderState renderState = ((IMixinGuiGraphicsExtractor) graphics).get_guiRenderState_FancyMenu();
         for (int i = 0; i < MESH.batchCount(); i++) {
@@ -108,7 +139,6 @@ public final class SmoothTextRenderer {
                 renderState.addGuiElement(new SmoothTextRenderState(pose, batch, page.texture.textureSetup(), scissor));
             }
         }
-        return dimensions;
     }
 
     private static boolean isMultilineEnabled() {

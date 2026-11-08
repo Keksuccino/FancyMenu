@@ -11,7 +11,6 @@ import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
-import net.minecraft.resources.Identifier;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -68,56 +67,9 @@ public class UIIconButton implements Renderable, GuiEventListener, NarratableEnt
         float maxSize = Math.min(this.width, this.height);
         float padding = Math.max(0.0F, this.iconPadding);
         float iconSize = Math.max(1.0F, maxSize - (padding * 2.0F));
-        IconRenderData iconData = resolveMaterialIconData(this.icon, iconSize, iconSize);
-        if (iconData == null) {
-            return;
-        }
         float drawX = this.x + (this.width - iconSize) * 0.5F;
         float drawY = this.y + (this.height - iconSize) * 0.5F;
-
-        de.keksuccino.fancymenu.util.rendering.RenderingUtils.defaultBlendFunc();
-        UIBase.getUITheme().setUITextureShaderColor(graphics, alpha);
-        blitScaledIcon(graphics, iconData, drawX, drawY, iconSize, iconSize);
-        UIBase.resetShaderColor(graphics);
-    }
-
-    @Nullable
-    private static IconRenderData resolveMaterialIconData(@Nullable MaterialIcon icon, float renderWidth, float renderHeight) {
-        if (icon == null) {
-            return null;
-        }
-        float safeRenderWidth = Math.max(1.0F, renderWidth);
-        float safeRenderHeight = Math.max(1.0F, renderHeight);
-        Identifier location = icon.getTextureLocationForUI(safeRenderWidth, safeRenderHeight);
-        if (location == null) {
-            return null;
-        }
-        int size = icon.calculateBestTextureSizeForUI(safeRenderWidth, safeRenderHeight);
-        int width = icon.getWidth(size);
-        int height = icon.getHeight(size);
-        if (width <= 0 || height <= 0) {
-            return null;
-        }
-        return new IconRenderData(location, width, height);
-    }
-
-    private static void blitScaledIcon(@Nonnull GuiGraphicsExtractor graphics, @Nonnull IconRenderData iconData, float areaX, float areaY, float areaWidth, float areaHeight) {
-        if (areaWidth <= 0.0F || areaHeight <= 0.0F || iconData.width <= 0 || iconData.height <= 0) {
-            return;
-        }
-        float scale = Math.min(areaWidth / (float) iconData.width, areaHeight / (float) iconData.height);
-        if (!Float.isFinite(scale) || scale <= 0.0F) {
-            return;
-        }
-        float scaledWidth = iconData.width * scale;
-        float scaledHeight = iconData.height * scale;
-        float drawX = areaX + (areaWidth - scaledWidth) * 0.5F;
-        float drawY = areaY + (areaHeight - scaledHeight) * 0.5F;
-        graphics.pose().pushMatrix();
-        graphics.pose().translate(drawX, drawY);
-        graphics.pose().scale(scale, scale);
-        graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, iconData.texture, 0, 0, 0.0F, 0.0F, iconData.width, iconData.height, iconData.width, iconData.height);
-        graphics.pose().popMatrix();
+        this.icon.render(graphics, drawX, drawY, iconSize, iconSize, UIBase.getUITheme().getUIIconColor(alpha));
     }
 
     public float getX() {
@@ -274,15 +226,4 @@ public class UIIconButton implements Renderable, GuiEventListener, NarratableEnt
     public void updateNarration(@Nonnull NarrationElementOutput var1) {
     }
 
-    private static final class IconRenderData {
-        private final Identifier texture;
-        private final int width;
-        private final int height;
-
-        private IconRenderData(@Nonnull Identifier texture, int width, int height) {
-            this.texture = texture;
-            this.width = width;
-            this.height = height;
-        }
-    }
 }

@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Builds the textured quads of laid out text, grouped by atlas page, so each page becomes one batch (one draw call).
+ * Builds the textured quads of laid out text and icon glyphs, grouped by atlas page, so each page becomes one batch (one draw call).
  * <p>
  * When the text is drawn without rotation or skew, glyph origins get snapped to the device pixel grid (horizontally to quarter
  * pixels, matching the subpixel bins of the rasterizer) and every glyph texel covers exactly one screen pixel, which keeps text
@@ -182,6 +182,58 @@ final class SmoothTextMesh {
             page.lastUsedNanos = now;
             this.batch(page, shadow).add(x0, y0, x1, y1, page.whiteU, page.whiteV, page.whiteU, page.whiteV, color);
         }
+    }
+
+    /**
+     * Adds an icon glyph, scaled to fit its ink box into the given area (in local space) and centered in it.
+     * <p>
+     * When drawn pixel aligned, the larger side of the ink box spans a whole number of device pixels and the top-left ink corner
+     * sits on a pixel corner, so the outer edges of icons stay sharp. The icon can end up to half a pixel off center for that.
+     * </p>
+     */
+    void addIcon(@NotNull SmoothFont.IconGlyph icon, float x, float y, float width, float height, int color) {
+        float inkWidth = icon.inkWidth();
+        float inkHeight = icon.inkHeight();
+        float scale = Math.min(width / inkWidth, height / inkHeight);
+        if (!(scale > 0.0F) || !Float.isFinite(scale)) {
+            return;
+        }
+        float inkMajor = Math.max(inkWidth, inkHeight);
+        float majorPixels = inkMajor * scale * this.deviceScale;
+        int rasterMajor = quantizeRasterSize(majorPixels);
+        float pixelsPerEm = rasterMajor / inkMajor;
+        SmoothGlyphAtlas atlas = this.font.atlas();
+        long key = SmoothGlyphAtlas.iconKey(icon.source(), icon.glyphId(), rasterMajor);
+        SmoothGlyphAtlas.Glyph glyph = atlas.find(key);
+        if (glyph == null) {
+            glyph = atlas.add(key, SmoothGlyphRasterizer.rasterizeIcon(icon, pixelsPerEm));
+        }
+        SmoothGlyphAtlas.Page page = glyph.page();
+        if (page == null) {
+            return;
+        }
+        float centerX = x + (width * 0.5F);
+        float centerY = y + (height * 0.5F);
+        float x0;
+        float y0;
+        float x1;
+        float y1;
+        if (this.pixelAligned && majorPixels <= MAX_RASTER_SIZE) {
+            float inkLeft = Math.round(this.toDeviceX(centerX) - (inkWidth * pixelsPerEm * 0.5F));
+            float inkTop = Math.round(this.toDeviceY(centerY) - (inkHeight * pixelsPerEm * 0.5F));
+            x0 = this.toLocalX(inkLeft + glyph.left());
+            y0 = this.toLocalY(inkTop + glyph.top());
+            x1 = this.toLocalX(inkLeft + glyph.left() + glyph.width());
+            y1 = this.toLocalY(inkTop + glyph.top() + glyph.height());
+        } else {
+            float localPerPixel = scale / pixelsPerEm;
+            x0 = centerX - (inkWidth * scale * 0.5F) + (glyph.left() * localPerPixel);
+            y0 = centerY - (inkHeight * scale * 0.5F) + (glyph.top() * localPerPixel);
+            x1 = x0 + (glyph.width() * localPerPixel);
+            y1 = y0 + (glyph.height() * localPerPixel);
+        }
+        page.lastUsedNanos = System.nanoTime();
+        this.batch(page, false).add(x0, y0, x1, y1, glyph.u0(), glyph.v0(), glyph.u1(), glyph.v1(), color);
     }
 
     /**

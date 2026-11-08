@@ -13,12 +13,13 @@ import java.util.concurrent.atomic.AtomicIntegerArray;
  */
 final class TestFonts {
 
-    static final String BASE = "noto_sans.ttf";
-    static final String JAPANESE = "noto_sans_jp.ttf";
-    static final String COLOR_EMOJI = "noto_color_emoji.ttf";
-    static final String MONO_EMOJI = "noto_sans_emoji.ttf";
+    static final String BASE = "fonts/noto_sans/noto_sans.ttf";
+    static final String JAPANESE = "fonts/noto_sans/noto_sans_jp.ttf";
+    static final String COLOR_EMOJI = "fonts/noto_sans/noto_color_emoji.ttf";
+    static final String MONO_EMOJI = "fonts/noto_sans/noto_sans_emoji.ttf";
+    static final String MATERIAL_ICONS = "textures/icons/material_icons.ttf";
 
-    private static final String FOLDER = "assets/fancymenu/fonts/noto_sans/";
+    private static final String FOLDER = "assets/fancymenu/";
 
     private TestFonts() {
     }
@@ -49,7 +50,7 @@ final class TestFonts {
                 return bytes(file);
             }));
         }
-        return new SmoothFont("test", sources, 32.0F, -1.0F, 0.0F, 0.0F, languageOrders, 0.86F, () -> languageCode);
+        return new SmoothFont("test", sources, 32.0F, -1.0F, 0.0F, 0.0F, languageOrders, 0.86F, () -> languageCode, SmoothGlyphAtlas.DEFAULT_PAGE_SIZE);
     }
 
     static SmoothFont font(String... files) {
