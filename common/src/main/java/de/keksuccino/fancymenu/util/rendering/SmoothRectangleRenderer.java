@@ -90,6 +90,23 @@ public final class SmoothRectangleRenderer {
         );
     }
 
+    /**
+     * Renders only the part of the rounded rectangle that lies within the clip bounds. The clipping happens on the rendered quad instead of
+     * via scissor, so it keeps sub-pixel precision and clip bounds sharing an edge line up seamlessly, like neighboring fills do.
+     * The clip bounds are axis-aligned on screen, so they don't follow rotations of the pose.
+     */
+    public static void renderSmoothRectRoundAllCornersClippedScaled(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float topLeftRadius, float topRightRadius, float bottomRightRadius, float bottomLeftRadius, float clipMinX, float clipMinY, float clipMaxX, float clipMaxY, int color, float partial) {
+        if (clipMaxX <= clipMinX || clipMaxY <= clipMinY) {
+            return;
+        }
+        float additionalScale = resolveAdditionalRenderScale();
+        float translationX = resolveAdditionalRenderTranslationX();
+        float translationY = resolveAdditionalRenderTranslationY();
+        CornerRadii cornerRadii = CornerRadii.of(topLeftRadius * additionalScale, topRightRadius * additionalScale, bottomRightRadius * additionalScale, bottomLeftRadius * additionalScale);
+        QuadBounds clip = new QuadBounds(clipMinX * additionalScale + translationX, clipMinY * additionalScale + translationY, clipMaxX * additionalScale + translationX, clipMaxY * additionalScale + translationY);
+        renderSmoothRectInternal(graphics, x * additionalScale + translationX, y * additionalScale + translationY, width * additionalScale, height * additionalScale, 0.0F, cornerRadii, color, clip);
+    }
+
     public static void renderSmoothBorder(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float borderThickness, float cornerRadius, int color, float partial) {
         renderSmoothRectInternal(graphics, x, y, width, height, borderThickness, CornerRadii.uniform(cornerRadius), color);
     }
@@ -136,12 +153,16 @@ public final class SmoothRectangleRenderer {
     }
 
     private static void renderSmoothRectInternal(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float borderThickness, @Nonnull CornerRadii cornerRadii, int color) {
+        renderSmoothRectInternal(graphics, x, y, width, height, borderThickness, cornerRadii, color, null);
+    }
+
+    private static void renderSmoothRectInternal(@Nonnull GuiGraphics graphics, float x, float y, float width, float height, float borderThickness, @Nonnull CornerRadii cornerRadii, int color, @Nullable QuadBounds clip) {
         Objects.requireNonNull(graphics);
         Objects.requireNonNull(cornerRadii);
         if (width <= 0.0F || height <= 0.0F) {
             return;
         }
-        _renderSmoothRect(graphics, new RectArea(x, y, width, height, Math.max(0.0F, borderThickness), cornerRadii, color));
+        _renderSmoothRect(graphics, new RectArea(x, y, width, height, Math.max(0.0F, borderThickness), cornerRadii, color, clip));
     }
 
     private static float resolveAdditionalRenderScale() {
@@ -199,6 +220,12 @@ public final class SmoothRectangleRenderer {
         applyUniforms_FancyMenu(shader, scaledX, scaledY, scaledWidth, scaledHeight, scaledBorderThickness, scaledRadii, rotation, red, green, blue, alpha);
 
         QuadBounds bounds = computeQuadBounds_FancyMenu(area, targetHeight, guiScale, scaledX, scaledY, scaledWidth, scaledHeight, rotation);
+        if (area.clip != null) {
+            bounds = bounds.intersection(area.clip);
+            if (bounds == null) {
+                return;
+            }
+        }
 
         graphics.flush();
         RenderingUtils.RenderStateSnapshot renderState = RenderingUtils.captureRenderState();
@@ -213,6 +240,13 @@ public final class SmoothRectangleRenderer {
     }
 
     private static void renderFallbackRect_FancyMenu(@Nonnull GuiGraphics graphics, @Nonnull RectArea area) {
+        if (area.clip != null) {
+            QuadBounds visible = new QuadBounds(area.x, area.y, area.x + area.width, area.y + area.height).intersection(area.clip);
+            if (visible != null) {
+                RenderingUtils.fillF(graphics, visible.minX(), visible.minY(), visible.maxX(), visible.maxY(), area.color);
+            }
+            return;
+        }
         if (area.borderThickness > 0.0F) {
             float border = Math.min(area.borderThickness, Math.min(area.width * 0.5F, area.height * 0.5F));
             if (border <= 0.0F) {
@@ -323,10 +357,20 @@ public final class SmoothRectangleRenderer {
         BufferUploader.drawWithShader(builder.end());
     }
 
-    private record RectArea(float x, float y, float width, float height, float borderThickness, CornerRadii cornerRadii, int color) {
+    private record RectArea(float x, float y, float width, float height, float borderThickness, CornerRadii cornerRadii, int color, @Nullable QuadBounds clip) {
     }
 
     private record QuadBounds(float minX, float minY, float maxX, float maxY) {
+
+        @Nullable
+        private QuadBounds intersection(@Nonnull QuadBounds other) {
+            float minX = Math.max(this.minX, other.minX);
+            float minY = Math.max(this.minY, other.minY);
+            float maxX = Math.min(this.maxX, other.maxX);
+            float maxY = Math.min(this.maxY, other.maxY);
+            return (maxX > minX && maxY > minY) ? new QuadBounds(minX, minY, maxX, maxY) : null;
+        }
+
     }
 
     private record CornerRadii(float topLeft, float topRight, float bottomRight, float bottomLeft) {
