@@ -160,8 +160,14 @@ public class UITheme {
     }
 
     public void setUITextureShaderColor(GuiGraphics graphics, float alpha) {
-        boolean blur = UIBase.shouldBlur();
-        UIBase.setShaderColor(graphics, blur ? ui_blur_icon_texture_color : ui_icon_texture_color, alpha);
+        UIBase.setShaderColor(graphics, getUIIconColor(alpha));
+    }
+
+    /**
+     * Color of UI icons (like Material icons), with the given alpha.
+     */
+    public int getUIIconColor(float alpha) {
+        return (UIBase.shouldBlur() ? ui_blur_icon_texture_color : ui_icon_texture_color).getColorIntWithAlpha(alpha);
     }
 
     @NotNull
