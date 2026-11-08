@@ -1765,12 +1765,7 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
             float areaY = this.y + BORDER + padding;
             float areaWidth = iconWidth - (padding * 2);
             float areaHeight = iconHeight - (padding * 2);
-            IconRenderData iconData = resolveMaterialIconData(this.getIcon(), areaWidth, areaHeight);
-            if (iconData != null) {
-                UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
-                blitScaledIcon(graphics, iconData, areaX, areaY, areaWidth, areaHeight);
-                UIBase.resetShaderColor(graphics);
-            }
+            this.getIcon().render(graphics, areaX, areaY, areaWidth, areaHeight, UIBase.getUITheme().getUIIconColor(1.0F));
 
             UIBase.renderText(graphics, this.entryNameComponent, this.x + BORDER + ICON_PIXEL_SIZE + 3, this.y + (this.height / 2f) - (UIBase.getUITextHeightNormal() / 2f), this.getTextColor());
 
@@ -1778,55 +1773,6 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
                 TooltipHandler.INSTANCE.addRenderTickTooltip(UITooltip.of(Component.translatable("fancymenu.ui.filechooser.resource_name_check.not_passed.tooltip")), () -> true);
             }
 
-        }
-
-        @Nullable
-        private static IconRenderData resolveMaterialIconData(@Nullable MaterialIcon icon, float renderWidth, float renderHeight) {
-            if (icon == null) {
-                return null;
-            }
-            ResourceLocation location = icon.getTextureLocationForUI(renderWidth, renderHeight);
-            if (location == null) {
-                return null;
-            }
-            int iconSize = icon.calculateBestTextureSizeForUI(renderWidth, renderHeight);
-            int width = icon.getWidth(iconSize);
-            int height = icon.getHeight(iconSize);
-            if (width <= 0 || height <= 0) {
-                return null;
-            }
-            return new IconRenderData(location, width, height);
-        }
-
-        private static void blitScaledIcon(@NotNull GuiGraphics graphics, @NotNull IconRenderData iconData, float areaX, float areaY, float areaWidth, float areaHeight) {
-            if (areaWidth <= 0.0F || areaHeight <= 0.0F) {
-                return;
-            }
-            float scale = Math.min(areaWidth / (float) iconData.width, areaHeight / (float) iconData.height);
-            if (!Float.isFinite(scale) || scale <= 0.0F) {
-                return;
-            }
-            float scaledWidth = iconData.width * scale;
-            float scaledHeight = iconData.height * scale;
-            float drawX = areaX + (areaWidth - scaledWidth) * 0.5F;
-            float drawY = areaY + (areaHeight - scaledHeight) * 0.5F;
-            graphics.pose().pushPose();
-            graphics.pose().translate(drawX, drawY, 0.0F);
-            graphics.pose().scale(scale, scale, 1.0F);
-            graphics.blit(iconData.texture, 0, 0, 0.0F, 0.0F, iconData.width, iconData.height, iconData.width, iconData.height);
-            graphics.pose().popPose();
-        }
-
-        private static final class IconRenderData {
-            private final ResourceLocation texture;
-            private final int width;
-            private final int height;
-
-            private IconRenderData(@NotNull ResourceLocation texture, int width, int height) {
-                this.texture = texture;
-                this.width = width;
-                this.height = height;
-            }
         }
 
     }

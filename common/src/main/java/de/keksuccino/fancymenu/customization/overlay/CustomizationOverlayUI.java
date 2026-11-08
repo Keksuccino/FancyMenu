@@ -40,7 +40,6 @@ import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.properties.PropertyHolder;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothTextRenderer;
-import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIconTexture;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcon;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
@@ -103,7 +102,6 @@ public class CustomizationOverlayUI {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final ResourceSupplier<ITexture> FM_LOGO_TEXTURE_SUPPLIER = ResourceSupplier.image(ResourceSource.of("fancymenu:textures/menubar/icons/fancymenu_logo.png", ResourceSourceType.LOCATION).getSourceWithPrefix());
-    private static final MaterialIconTexture LEAVE_SCREEN_ICON_TEXTURE = new MaterialIconTexture(MaterialIcons.EXIT_TO_APP);
 
     private static CustomizationOverlayMenuBar grandfatheredMenuBar = null;
 
@@ -449,7 +447,7 @@ public class CustomizationOverlayUI {
         //LEAVE CURRENT SCREEN BUTTON
         menuBar.addClickableEntry(MenuBar.Side.RIGHT, "leave_current_screen", Component.empty(), (bar, entry) -> {
             Minecraft.getInstance().setScreen(null);
-        }).setIconTexture(LEAVE_SCREEN_ICON_TEXTURE)
+        }).setMaterialIcon(MaterialIcons.EXIT_TO_APP)
                 .setIconTextureColor(() -> UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_icon_texture_color : UIBase.getUITheme().ui_icon_texture_color)
                 .setBaseWidth(MenuBar.PIXEL_SIZE)
                 .setIconPaddingSupplier(consumes -> 7)

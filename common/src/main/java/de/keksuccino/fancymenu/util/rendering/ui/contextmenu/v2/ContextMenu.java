@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.cycle.ILocalizedValueCycle;
@@ -397,20 +396,14 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 );
 
                 // Render arrow centered
-                RenderSystem.enableBlend();
-                UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
-                IconRenderData iconData = resolveMaterialIconData(SCROLL_UP_ICON, SCROLL_INDICATOR_ICON_SIZE, SCROLL_INDICATOR_ICON_SIZE);
-                if (iconData != null) {
-                    blitScaledIcon(
-                            graphics,
-                            iconData,
-                            scaledX + this.getWidth() / 2.0F - (SCROLL_INDICATOR_ICON_SIZE / 2.0F),
-                            scaledY + (SCROLL_INDICATOR_HEIGHT - SCROLL_INDICATOR_ICON_SIZE) / 2.0F, // Center vertically
-                            SCROLL_INDICATOR_ICON_SIZE,
-                            SCROLL_INDICATOR_ICON_SIZE
-                    );
-                }
-                RenderingUtils.resetShaderColor(graphics);
+                SCROLL_UP_ICON.render(
+                        graphics,
+                        scaledX + this.getWidth() / 2.0F - (SCROLL_INDICATOR_ICON_SIZE / 2.0F),
+                        scaledY + (SCROLL_INDICATOR_HEIGHT - SCROLL_INDICATOR_ICON_SIZE) / 2.0F, // Center vertically
+                        SCROLL_INDICATOR_ICON_SIZE,
+                        SCROLL_INDICATOR_ICON_SIZE,
+                        UIBase.getUITheme().getUIIconColor(1.0F)
+                );
             }
 
             // Render down arrow background and arrow if can scroll further
@@ -431,20 +424,14 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 );
 
                 // Render arrow centered (with fixed position)
-                RenderSystem.enableBlend();
-                UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
-                IconRenderData iconData = resolveMaterialIconData(SCROLL_DOWN_ICON, SCROLL_INDICATOR_ICON_SIZE, SCROLL_INDICATOR_ICON_SIZE);
-                if (iconData != null) {
-                    blitScaledIcon(
-                            graphics,
-                            iconData,
-                            scaledX + this.getWidth() / 2.0F - (SCROLL_INDICATOR_ICON_SIZE / 2.0F),
-                            scaledY + displayHeight - SCROLL_INDICATOR_HEIGHT + (SCROLL_INDICATOR_HEIGHT - SCROLL_INDICATOR_ICON_SIZE) / 2.0F, // Centered in area
-                            SCROLL_INDICATOR_ICON_SIZE,
-                            SCROLL_INDICATOR_ICON_SIZE
-                    );
-                }
-                RenderingUtils.resetShaderColor(graphics);
+                SCROLL_DOWN_ICON.render(
+                        graphics,
+                        scaledX + this.getWidth() / 2.0F - (SCROLL_INDICATOR_ICON_SIZE / 2.0F),
+                        scaledY + displayHeight - SCROLL_INDICATOR_HEIGHT + (SCROLL_INDICATOR_HEIGHT - SCROLL_INDICATOR_ICON_SIZE) / 2.0F, // Centered in area
+                        SCROLL_INDICATOR_ICON_SIZE,
+                        SCROLL_INDICATOR_ICON_SIZE,
+                        UIBase.getUITheme().getUIIconColor(1.0F)
+                );
             }
         }
 
@@ -2557,66 +2544,16 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
 
         protected void renderIcon(GuiGraphics graphics) {
-            IconRenderData iconData = this.resolveIconData();
-            if (iconData == null) {
-                return;
-            }
             float areaX = this.x + ICON_PADDING_LEFT + this.getIconWiggleOffsetX();
             float areaY = this.y + (this.getHeight() / 2.0F) - (ICON_WIDTH_HEIGHT / 2.0F);
-            RenderSystem.enableBlend();
-            UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
-            this.blitScaledIcon(graphics, iconData, areaX, areaY, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT);
-            RenderingUtils.resetShaderColor(graphics);
-        }
-
-        @Nullable
-        protected IconRenderData resolveIconData() {
             if (this.materialIcon != null) {
-                float renderSize = ICON_WIDTH_HEIGHT;
-                ResourceLocation location = this.materialIcon.getTextureLocationForUI(renderSize, renderSize);
-                if (location == null) {
-                    return null;
-                }
-                int iconSize = this.materialIcon.calculateBestTextureSizeForUI(renderSize, renderSize);
-                int width = this.materialIcon.getWidth(iconSize);
-                int height = this.materialIcon.getHeight(iconSize);
-                if (width <= 0 || height <= 0) {
-                    return null;
-                }
-                return new IconRenderData(location, width, height);
+                this.materialIcon.render(graphics, areaX, areaY, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, UIBase.getUITheme().getUIIconColor(1.0F));
+            } else if (this.icon != null) {
+                RenderSystem.enableBlend();
+                UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
+                RenderingUtils.blitF(graphics, this.icon, areaX, areaY, 0.0F, 0.0F, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT);
+                RenderingUtils.resetShaderColor(graphics);
             }
-            if (this.icon != null) {
-                return new IconRenderData(this.icon, ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT);
-            }
-            return null;
-        }
-
-        protected void blitScaledIcon(@NotNull GuiGraphics graphics, @NotNull IconRenderData iconData, float areaX, float areaY, float areaWidth, float areaHeight) {
-            this.blitScaledIcon(graphics, iconData, areaX, areaY, areaWidth, areaHeight, 0.0F);
-        }
-
-        protected void blitScaledIcon(@NotNull GuiGraphics graphics, @NotNull IconRenderData iconData, float areaX, float areaY, float areaWidth, float areaHeight, float rotationDegrees) {
-            if (areaWidth <= 0.0F || areaHeight <= 0.0F) {
-                return;
-            }
-            float scale = Math.min(areaWidth / (float) iconData.width, areaHeight / (float) iconData.height);
-            if (!Float.isFinite(scale) || scale <= 0.0F) {
-                return;
-            }
-            float scaledWidth = iconData.width * scale;
-            float scaledHeight = iconData.height * scale;
-            float drawX = areaX + (areaWidth - scaledWidth) * 0.5F;
-            float drawY = areaY + (areaHeight - scaledHeight) * 0.5F;
-            graphics.pose().pushPose();
-            graphics.pose().translate(drawX, drawY, 0.0F);
-            graphics.pose().scale(scale, scale, 1.0F);
-            if (rotationDegrees != 0.0F) {
-                graphics.pose().translate(iconData.width * 0.5F, iconData.height * 0.5F, 0.0F);
-                graphics.pose().mulPose(Axis.ZP.rotationDegrees(rotationDegrees));
-                graphics.pose().translate(-iconData.width * 0.5F, -iconData.height * 0.5F, 0.0F);
-            }
-            graphics.blit(iconData.texture, 0, 0, 0.0F, 0.0F, iconData.width, iconData.height, iconData.width, iconData.height);
-            graphics.pose().popPose();
         }
 
         protected boolean hasIconAssigned() {
@@ -2660,13 +2597,8 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 }
                 this.tooltipActive = (this.tooltipIconHoverStart != -1) && ((this.tooltipIconHoverStart + 200) < System.currentTimeMillis());
 
-                RenderSystem.enableBlend();
-                UIBase.getUITheme().ui_icon_texture_color.setAsShaderColor(graphics, this.tooltipIconHovered ? 1.0F : 0.2F);
-                IconRenderData iconData = this.resolveTooltipIconData();
-                if (iconData != null) {
-                    this.blitScaledIcon(graphics, iconData, this.getTooltipIconX(), this.getTooltipIconY(), ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT);
-                }
-                RenderingUtils.resetShaderColor(graphics);
+                int tooltipIconColor = UIBase.getUITheme().ui_icon_texture_color.getColorIntWithAlpha(this.tooltipIconHovered ? 1.0F : 0.2F);
+                CONTEXT_MENU_TOOLTIP_ICON.render(graphics, this.getTooltipIconX(), this.getTooltipIconY(), ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, tooltipIconColor);
 
                 if (this.tooltipActive) {
                     TooltipHandler.INSTANCE.addRenderTickTooltip(tooltip, () -> true);
@@ -2702,22 +2634,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             return (int) (this.y + 5);
         }
 
-        @Nullable
-        protected IconRenderData resolveTooltipIconData() {
-            float renderSize = ICON_WIDTH_HEIGHT;
-            ResourceLocation location = CONTEXT_MENU_TOOLTIP_ICON.getTextureLocationForUI(renderSize, renderSize);
-            if (location == null) {
-                return null;
-            }
-            int iconSize = CONTEXT_MENU_TOOLTIP_ICON.calculateBestTextureSizeForUI(renderSize, renderSize);
-            int width = CONTEXT_MENU_TOOLTIP_ICON.getWidth(iconSize);
-            int height = CONTEXT_MENU_TOOLTIP_ICON.getHeight(iconSize);
-            if (width <= 0 || height <= 0) {
-                return null;
-            }
-            return new IconRenderData(location, width, height);
-        }
-
         protected void renderBackground(@NotNull GuiGraphics graphics) {
             if (this.isChangeBackgroundColorOnHover() && this.isHovered() && this.isActive()) {
                 int backColor = UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_interface_widget_background_color_hover_type_1.getColorInt() : UIBase.getUITheme().ui_interface_widget_background_color_hover_type_1.getColorInt();
@@ -2732,16 +2648,17 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
             return this.isActive() ? UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt() : UIBase.getUITheme().ui_interface_widget_label_color_inactive.getColorInt();
         }
 
+        /**
+         * The texture icon of this entry, or {@code null} when it has none (or a Material icon instead).
+         */
         @Nullable
         public ResourceLocation getIcon() {
-            if (this.icon != null) {
-                return this.icon;
-            }
-            if (this.materialIcon != null) {
-                float renderSize = ICON_WIDTH_HEIGHT;
-                return this.materialIcon.getTextureLocationForUI(renderSize, renderSize);
-            }
-            return null;
+            return this.icon;
+        }
+
+        @Nullable
+        public MaterialIcon getMaterialIcon() {
+            return this.materialIcon;
         }
 
         /**
@@ -2869,55 +2786,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
 
     }
 
-    protected static final class IconRenderData {
-        final ResourceLocation texture;
-        final int width;
-        final int height;
-
-        private IconRenderData(@NotNull ResourceLocation texture, int width, int height) {
-            this.texture = texture;
-            this.width = width;
-            this.height = height;
-        }
-    }
-
-    @Nullable
-    private static IconRenderData resolveMaterialIconData(@Nullable MaterialIcon icon, float renderWidth, float renderHeight) {
-        if (icon == null) {
-            return null;
-        }
-        ResourceLocation location = icon.getTextureLocationForUI(renderWidth, renderHeight);
-        if (location == null) {
-            return null;
-        }
-        int iconSize = icon.calculateBestTextureSizeForUI(renderWidth, renderHeight);
-        int width = icon.getWidth(iconSize);
-        int height = icon.getHeight(iconSize);
-        if (width <= 0 || height <= 0) {
-            return null;
-        }
-        return new IconRenderData(location, width, height);
-    }
-
-    private static void blitScaledIcon(@NotNull GuiGraphics graphics, @NotNull IconRenderData iconData, float areaX, float areaY, float areaWidth, float areaHeight) {
-        if (areaWidth <= 0.0F || areaHeight <= 0.0F) {
-            return;
-        }
-        float scale = Math.min(areaWidth / (float) iconData.width, areaHeight / (float) iconData.height);
-        if (!Float.isFinite(scale) || scale <= 0.0F) {
-            return;
-        }
-        float scaledWidth = iconData.width * scale;
-        float scaledHeight = iconData.height * scale;
-        float drawX = areaX + (areaWidth - scaledWidth) * 0.5F;
-        float drawY = areaY + (areaHeight - scaledHeight) * 0.5F;
-        graphics.pose().pushPose();
-        graphics.pose().translate(drawX, drawY, 0.0F);
-        graphics.pose().scale(scale, scale, 1.0F);
-        graphics.blit(iconData.texture, 0, 0, 0.0F, 0.0F, iconData.width, iconData.height, iconData.width, iconData.height);
-        graphics.pose().popPose();
-    }
-
     public static class ValueCycleContextMenuEntry<V> extends ClickableContextMenuEntry<ValueCycleContextMenuEntry<V>> {
 
         protected final ILocalizedValueCycle<V> valueCycle;
@@ -3019,13 +2887,7 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
 
         protected void renderSubMenuArrow(GuiGraphics graphics) {
-            RenderSystem.enableBlend();
-            UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
-            IconRenderData iconData = this.resolveSubMenuArrowIconData();
-            if (iconData != null) {
-                this.blitScaledIcon(graphics, iconData, (int) (this.x + this.width - 20), (int) (this.y + 5), ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, this.getSubMenuArrowRotation());
-            }
-            RenderingUtils.resetShaderColor(graphics);
+            SUB_CONTEXT_MENU_ARROW_ICON.render(graphics, (int) (this.x + this.width - 20), (int) (this.y + 5), ICON_WIDTH_HEIGHT, ICON_WIDTH_HEIGHT, UIBase.getUITheme().getUIIconColor(1.0F), this.getSubMenuArrowRotation());
         }
 
         protected float getSubMenuArrowRotation() {
@@ -3038,22 +2900,6 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
                 return 0.0F;
             }
             return this.subMenuArrowSpin.getRotationDegrees();
-        }
-
-        @Nullable
-        protected IconRenderData resolveSubMenuArrowIconData() {
-            float renderSize = ICON_WIDTH_HEIGHT;
-            ResourceLocation location = SUB_CONTEXT_MENU_ARROW_ICON.getTextureLocationForUI(renderSize, renderSize);
-            if (location == null) {
-                return null;
-            }
-            int iconSize = SUB_CONTEXT_MENU_ARROW_ICON.calculateBestTextureSizeForUI(renderSize, renderSize);
-            int width = SUB_CONTEXT_MENU_ARROW_ICON.getWidth(iconSize);
-            int height = SUB_CONTEXT_MENU_ARROW_ICON.getHeight(iconSize);
-            if (width <= 0 || height <= 0) {
-                return null;
-            }
-            return new IconRenderData(location, width, height);
         }
 
         @Override
@@ -3501,54 +3347,12 @@ public class ContextMenu implements Renderable, GuiEventListener, NarratableEntr
         }
 
         private void renderIcon(@NotNull GuiGraphics graphics) {
-            IconRenderData iconData = this.resolveIconData();
-            if (iconData == null) {
+            if (this.icon == null) {
                 return;
             }
             float areaX = this.x + ClickableContextMenuEntry.ICON_PADDING_LEFT;
             float areaY = this.y + (this.getHeight() / 2.0F) - (ClickableContextMenuEntry.ICON_WIDTH_HEIGHT / 2.0F);
-            RenderSystem.enableBlend();
-            UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
-            this.blitScaledIcon(graphics, iconData, areaX, areaY, ClickableContextMenuEntry.ICON_WIDTH_HEIGHT, ClickableContextMenuEntry.ICON_WIDTH_HEIGHT);
-            RenderingUtils.resetShaderColor(graphics);
-        }
-
-        @Nullable
-        private IconRenderData resolveIconData() {
-            if (this.icon == null) {
-                return null;
-            }
-            float renderSize = ClickableContextMenuEntry.ICON_WIDTH_HEIGHT;
-            ResourceLocation location = this.icon.getTextureLocationForUI(renderSize, renderSize);
-            if (location == null) {
-                return null;
-            }
-            int iconSize = this.icon.calculateBestTextureSizeForUI(renderSize, renderSize);
-            int width = this.icon.getWidth(iconSize);
-            int height = this.icon.getHeight(iconSize);
-            if (width <= 0 || height <= 0) {
-                return null;
-            }
-            return new IconRenderData(location, width, height);
-        }
-
-        private void blitScaledIcon(@NotNull GuiGraphics graphics, @NotNull IconRenderData iconData, float areaX, float areaY, float areaWidth, float areaHeight) {
-            if (areaWidth <= 0.0F || areaHeight <= 0.0F) {
-                return;
-            }
-            float scale = Math.min(areaWidth / (float) iconData.width, areaHeight / (float) iconData.height);
-            if (!Float.isFinite(scale) || scale <= 0.0F) {
-                return;
-            }
-            float scaledWidth = iconData.width * scale;
-            float scaledHeight = iconData.height * scale;
-            float drawX = areaX + (areaWidth - scaledWidth) * 0.5F;
-            float drawY = areaY + (areaHeight - scaledHeight) * 0.5F;
-            graphics.pose().pushPose();
-            graphics.pose().translate(drawX, drawY, 0.0F);
-            graphics.pose().scale(scale, scale, 1.0F);
-            graphics.blit(iconData.texture, 0, 0, 0.0F, 0.0F, iconData.width, iconData.height, iconData.width, iconData.height);
-            graphics.pose().popPose();
+            this.icon.render(graphics, areaX, areaY, ClickableContextMenuEntry.ICON_WIDTH_HEIGHT, ClickableContextMenuEntry.ICON_WIDTH_HEIGHT, UIBase.getUITheme().getUIIconColor(1.0F));
         }
 
         private void applySkinIfNeeded() {

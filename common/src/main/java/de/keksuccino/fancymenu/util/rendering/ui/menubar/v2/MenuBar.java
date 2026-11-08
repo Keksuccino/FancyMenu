@@ -9,7 +9,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.PressState;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuHandler;
-import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIconTexture;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcon;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
@@ -50,8 +50,6 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
     protected final List<MenuBarEntry> rightEntries = new ArrayList<>();
     protected final List<MenuBarClickListener> clickListeners = new ArrayList<>();
     protected final List<PendingContextMenuOpen> pendingContextMenuOpens = new ArrayList<>();
-    protected static final MaterialIconTexture COLLAPSE_ICON_TEXTURE = new MaterialIconTexture(MaterialIcons.UNFOLD_LESS_DOUBLE);
-    protected static final MaterialIconTexture EXPAND_ICON_TEXTURE = new MaterialIconTexture(MaterialIcons.UNFOLD_MORE_DOUBLE);
     protected boolean hovered = false;
     protected boolean expanded = true;
     protected boolean layoutReady = false;
@@ -62,7 +60,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
     public MenuBar() {
         this.collapseOrExpandEntry = this.addClickableEntry(Side.RIGHT, "collapse_or_expand", Component.empty(), (bar, entry) -> {
             this.setExpanded(!this.expanded);
-        }).setIconTextureSupplier((bar, entry) -> this.expanded ? COLLAPSE_ICON_TEXTURE : EXPAND_ICON_TEXTURE)
+        }).setMaterialIconSupplier((bar, entry) -> this.expanded ? MaterialIcons.UNFOLD_LESS_DOUBLE : MaterialIcons.UNFOLD_MORE_DOUBLE)
                 .setIconPaddingSupplier(entry -> 4)
                 .setBaseWidth(16);
         this.addSpacerEntry(Side.RIGHT, "spacer_after_collapse_or_expand_entry").setWidth(10);
@@ -761,6 +759,8 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         @Nullable
         protected MenuBarEntrySupplier<ITexture> iconTextureSupplier;
         @Nullable
+        protected MenuBarEntrySupplier<MaterialIcon> materialIconSupplier;
+        @Nullable
         protected Supplier<DrawableColor> iconTextureColor = () -> UIBase.getUITheme().ui_icon_texture_color;
         @Nullable
         protected ConsumingSupplier<ClickableMenuBarEntry, Integer> iconPaddingSupplier;
@@ -788,9 +788,9 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
 
         protected void renderLabelOrIcon(GuiGraphics graphics) {
             RenderSystem.enableBlend();
-            Component label = this.getLabel();
-            ITexture iconTexture = this.getIconTexture();
-            if (iconTexture != null) {
+            MaterialIcon materialIcon = this.getMaterialIcon();
+            ITexture iconTexture = (materialIcon == null) ? this.getIconTexture() : null;
+            if (materialIcon != null || iconTexture != null) {
                 int padding = 0;
                 if (this.iconPaddingSupplier != null) {
                     Integer suppliedPadding = this.iconPaddingSupplier.get(this);
@@ -802,60 +802,46 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
                 int entryHeight = PIXEL_SIZE;
                 int availableWidth = Math.max(1, entryWidth - (padding * 2));
                 int availableHeight = Math.max(1, entryHeight - (padding * 2));
-                int drawWidth;
-                int drawHeight;
-                int textureWidth;
-                int textureHeight;
-                int drawX = this.x;
-                int drawY = this.y;
-                int baseWidth = iconTexture.getWidth();
-                int baseHeight = iconTexture.getHeight();
-                boolean isMaterialIcon = iconTexture instanceof MaterialIconTexture;
-                ResourceLocation materialIconLocation = null;
-                if (isMaterialIcon) {
-                    MaterialIconTexture materialIconTexture = (MaterialIconTexture) iconTexture;
-                    materialIconTexture.updateRenderContext((float) availableWidth, (float) availableHeight, UIBase.getUIScale());
-                    baseWidth = materialIconTexture.getWidth();
-                    baseHeight = materialIconTexture.getHeight();
-                    materialIconLocation = materialIconTexture.getResourceLocation();
-                }
-                boolean hasBaseSize = baseWidth > 0 && baseHeight > 0;
-                if (hasBaseSize) {
-                    float scale = Math.min(availableWidth / (float) baseWidth, availableHeight / (float) baseHeight);
-                    if (isMaterialIcon) {
-                        scale = Math.min(1.0F, scale);
-                    }
-                    if (!Float.isFinite(scale) || scale <= 0.0F) {
-                        scale = 1.0F;
-                    }
-                    drawWidth = Math.max(1, Math.round(baseWidth * scale));
-                    drawHeight = Math.max(1, Math.round(baseHeight * scale));
-                    textureWidth = baseWidth;
-                    textureHeight = baseHeight;
-                } else {
-                    int[] size = iconTexture.getAspectRatio().getAspectRatioSizeByMaximumSize(availableWidth, availableHeight);
-                    drawWidth = size[0];
-                    drawHeight = size[1];
-                    textureWidth = size[0];
-                    textureHeight = size[1];
-                }
-                drawX = this.x + ((entryWidth - drawWidth) / 2);
-                drawY = this.y + ((entryHeight - drawHeight) / 2);
                 UIBase.resetShaderColor(graphics);
                 DrawableColor iconColor = (this.iconTextureColor != null) ? this.iconTextureColor.get() : null;
-                if (iconColor != null) UIBase.setShaderColor(graphics, iconColor);
-                ResourceLocation loc = materialIconLocation;
-                if (loc == null) {
-                    if (isMaterialIcon) {
-                        loc = ITexture.MISSING_TEXTURE_LOCATION;
+                if (materialIcon != null) {
+                    float areaX = this.x + ((entryWidth - availableWidth) / 2.0F);
+                    float areaY = this.y + ((entryHeight - availableHeight) / 2.0F);
+                    materialIcon.render(graphics, areaX, areaY, availableWidth, availableHeight, (iconColor != null) ? iconColor.getColorInt() : -1);
+                } else {
+                    int drawWidth;
+                    int drawHeight;
+                    int textureWidth;
+                    int textureHeight;
+                    int baseWidth = iconTexture.getWidth();
+                    int baseHeight = iconTexture.getHeight();
+                    if (baseWidth > 0 && baseHeight > 0) {
+                        float scale = Math.min(availableWidth / (float) baseWidth, availableHeight / (float) baseHeight);
+                        if (!Float.isFinite(scale) || scale <= 0.0F) {
+                            scale = 1.0F;
+                        }
+                        drawWidth = Math.max(1, Math.round(baseWidth * scale));
+                        drawHeight = Math.max(1, Math.round(baseHeight * scale));
+                        textureWidth = baseWidth;
+                        textureHeight = baseHeight;
                     } else {
-                        ResourceLocation fallback = iconTexture.getResourceLocation();
-                        loc = (fallback != null) ? fallback : ITexture.MISSING_TEXTURE_LOCATION;
+                        int[] size = iconTexture.getAspectRatio().getAspectRatioSizeByMaximumSize(availableWidth, availableHeight);
+                        drawWidth = size[0];
+                        drawHeight = size[1];
+                        textureWidth = size[0];
+                        textureHeight = size[1];
                     }
+                    int drawX = this.x + ((entryWidth - drawWidth) / 2);
+                    int drawY = this.y + ((entryHeight - drawHeight) / 2);
+                    if (iconColor != null) UIBase.setShaderColor(graphics, iconColor);
+                    ResourceLocation loc = iconTexture.getResourceLocation();
+                    if (loc == null) {
+                        loc = ITexture.MISSING_TEXTURE_LOCATION;
+                    }
+                    graphics.blit(loc, drawX, drawY, drawWidth, drawHeight, 0.0F, 0.0F, textureWidth, textureHeight, textureWidth, textureHeight);
                 }
-                graphics.blit(loc, drawX, drawY, drawWidth, drawHeight, 0.0F, 0.0F, textureWidth, textureHeight, textureWidth, textureHeight);
             } else {
-                UIBase.renderText(graphics, label, this.x + ENTRY_LABEL_SPACE_LEFT_RIGHT, this.y + ((float) PIXEL_SIZE / 2) - (UIBase.getUITextHeightNormal() / 2), this.getLabelColor());
+                UIBase.renderText(graphics, this.getLabel(), this.x + ENTRY_LABEL_SPACE_LEFT_RIGHT, this.y + ((float) PIXEL_SIZE / 2) - (UIBase.getUITextHeightNormal() / 2), this.getLabelColor());
             }
             UIBase.resetShaderColor(graphics);
         }
@@ -870,8 +856,7 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         @Override
         protected int getWidth() {
             Component label = this.getLabel();
-            ITexture iconTexture = this.getIconTexture();
-            if (iconTexture != null) {
+            if (this.getMaterialIcon() != null || this.getIconTexture() != null) {
                 return Math.max(1, this.baseWidth);
             }
             int labelWidth = (int) (UIBase.getUITextWidthNormal(label) + (ENTRY_LABEL_SPACE_LEFT_RIGHT * 2));
@@ -945,14 +930,42 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
             return this.iconTextureSupplier;
         }
 
+        /**
+         * Sets the texture icon supplier. Replaces the Material icon of the entry, if it has one.
+         */
         public ClickableMenuBarEntry setIconTextureSupplier(@Nullable MenuBarEntrySupplier<ITexture> iconTextureSupplier) {
             this.iconTextureSupplier = iconTextureSupplier;
+            this.materialIconSupplier = null;
             return this;
         }
 
+        /**
+         * Sets the texture icon. Replaces the Material icon of the entry, if it has one.
+         */
         public ClickableMenuBarEntry setIconTexture(@Nullable ITexture iconTexture) {
-            this.iconTextureSupplier = (iconTexture != null) ? ((bar, entry) -> iconTexture) : null;
+            return this.setIconTextureSupplier((iconTexture != null) ? ((bar, entry) -> iconTexture) : null);
+        }
+
+        @Nullable
+        protected MaterialIcon getMaterialIcon() {
+            if (this.materialIconSupplier != null) return this.materialIconSupplier.get(this.parent, this);
+            return null;
+        }
+
+        /**
+         * Sets the Material icon supplier. Replaces the texture icon of the entry, if it has one.
+         */
+        public ClickableMenuBarEntry setMaterialIconSupplier(@Nullable MenuBarEntrySupplier<MaterialIcon> materialIconSupplier) {
+            this.materialIconSupplier = materialIconSupplier;
+            this.iconTextureSupplier = null;
             return this;
+        }
+
+        /**
+         * Sets the Material icon. Replaces the texture icon of the entry, if it has one.
+         */
+        public ClickableMenuBarEntry setMaterialIcon(@Nullable MaterialIcon materialIcon) {
+            return this.setMaterialIconSupplier((materialIcon != null) ? ((bar, entry) -> materialIcon) : null);
         }
 
         public ClickableMenuBarEntry setIconPaddingSupplier(@Nullable ConsumingSupplier<ClickableMenuBarEntry, Integer> iconPaddingSupplier) {
@@ -1094,6 +1107,16 @@ public class MenuBar implements Renderable, GuiEventListener, NarratableEntry, N
         @Override
         public ContextMenuBarEntry setIconTextureSupplier(@Nullable MenuBarEntrySupplier<ITexture> iconTextureSupplier) {
             return (ContextMenuBarEntry) super.setIconTextureSupplier(iconTextureSupplier);
+        }
+
+        @Override
+        public ContextMenuBarEntry setMaterialIcon(@Nullable MaterialIcon materialIcon) {
+            return (ContextMenuBarEntry) super.setMaterialIcon(materialIcon);
+        }
+
+        @Override
+        public ContextMenuBarEntry setMaterialIconSupplier(@Nullable MenuBarEntrySupplier<MaterialIcon> materialIconSupplier) {
+            return (ContextMenuBarEntry) super.setMaterialIconSupplier(materialIconSupplier);
         }
 
         @Override
