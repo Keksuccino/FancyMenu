@@ -74,17 +74,8 @@ public enum UIScale {
     public static float getUIScaleFloat() {
         UIScale scale = getUIScale();
         float uiScale = scale.getScale();
-        //Handle "Auto" scale (use SMALL for 2K-ish windows, MEDIUM for 4K-ish windows)
         if (scale == AUTO) {
-            uiScale = EXTRA_SMALL.getScale();
-            int windowWidth = Minecraft.getInstance().getWindow().getWidth();
-            int windowHeight = Minecraft.getInstance().getWindow().getHeight();
-            if ((windowWidth >= 2400) || (windowHeight >= 1300)) {
-                uiScale = SMALL.getScale();
-            }
-            if ((windowWidth > 3000) || (windowHeight > 1700)) {
-                uiScale = MEDIUM.getScale();
-            }
+            uiScale = getAutoScaleForWindow(Minecraft.getInstance().getWindow().getWidth(), Minecraft.getInstance().getWindow().getHeight());
         }
         //Force a scale of 2 or bigger if Unicode font is enabled
         // Only peek at the font state: this getter runs every frame and during loading screens, where selecting the font would load the whole smooth font family on the render thread.
@@ -92,6 +83,17 @@ public enum UIScale {
             uiScale = MEDIUM.getScale();
         }
         return uiScale;
+    }
+
+    /**
+     * Resolves the "Auto" UI scale for the given window framebuffer size:
+     * SMALL for 2K-ish windows, MEDIUM for 3K-ish windows and LARGE for 4K-ish windows.
+     */
+    static float getAutoScaleForWindow(int windowWidth, int windowHeight) {
+        if ((windowWidth > 3200) || (windowHeight > 1900)) return LARGE.getScale();
+        if ((windowWidth > 3000) || (windowHeight > 1700)) return MEDIUM.getScale();
+        if ((windowWidth >= 2400) || (windowHeight >= 1300)) return SMALL.getScale();
+        return EXTRA_SMALL.getScale();
     }
 
 }
