@@ -48,6 +48,7 @@ public class ScrollArea implements GuiEventListener, Renderable, NarratableEntry
     protected boolean setupForBlurInterface = false;
     protected boolean scissorEnabled = true;
     protected boolean renderOnlyEntriesInArea = true;
+    private boolean entryScissorActive = false;
     private int renderFrameId = 0;
 
     public ScrollArea(float x, float y, float width, float height) {
@@ -93,7 +94,7 @@ public class ScrollArea implements GuiEventListener, Renderable, NarratableEntry
         DrawableColor backColor = this.backgroundColor.get();
         if (backColor != null) {
             if (this.roundedStyle) {
-                float radius = UIBase.getInterfaceCornerRoundingRadius();
+                float radius = this.getInnerCornerRadius();
                 UIBase.renderRoundedRect(graphics, this.getInnerX(), this.getInnerY(), this.getInnerWidth(), this.getInnerHeight(), radius, radius, radius, radius, backColor.getColorInt());
             } else {
                 UIBase.fillF(graphics, this.getInnerX(), this.getInnerY(), this.getInnerX() + this.getInnerWidth(), this.getInnerY() + this.getInnerHeight(), backColor.getColorInt());
@@ -120,11 +121,7 @@ public class ScrollArea implements GuiEventListener, Renderable, NarratableEntry
 
         final float totalWidth = this.makeAllEntriesWidthOfWidestEntry ? this.getTotalEntryWidth() : 0;
         if (this.scissorEnabled) {
-            int scissorMinX = (int) (this.getInnerX() + 2);
-            int scissorMinY = (int) (this.getInnerY() + 2);
-            int scissorMaxX = (int) (this.getInnerX() + this.getInnerWidth() - 2);
-            int scissorMaxY = (int) (this.getInnerY() + this.getInnerHeight() - 2);
-            graphics.enableScissor(scissorMinX, scissorMinY, scissorMaxX, scissorMaxY);
+            this.enableEntryScissor(graphics);
         }
         this.updateEntriesForRender((entry) -> {
             if (this.makeAllEntriesWidthOfWidestEntry) entry.setWidth(totalWidth);
@@ -136,9 +133,44 @@ public class ScrollArea implements GuiEventListener, Renderable, NarratableEntry
             }
         });
         if (this.scissorEnabled) {
-            graphics.disableScissor();
+            this.disableEntryScissor(graphics);
         }
 
+    }
+
+    /**
+     * Clips entry content 2px inside the inner area, which keeps it clear of the rounded corners of the area.
+     */
+    private void enableEntryScissor(@NotNull GuiGraphicsExtractor graphics) {
+        int scissorMinX = (int) (this.getInnerX() + 2);
+        int scissorMinY = (int) (this.getInnerY() + 2);
+        int scissorMaxX = (int) (this.getInnerX() + this.getInnerWidth() - 2);
+        int scissorMaxY = (int) (this.getInnerY() + this.getInnerHeight() - 2);
+        graphics.enableScissor(scissorMinX, scissorMinY, scissorMaxX, scissorMaxY);
+        this.entryScissorActive = true;
+    }
+
+    private void disableEntryScissor(@NotNull GuiGraphicsExtractor graphics) {
+        graphics.disableScissor();
+        this.entryScissorActive = false;
+    }
+
+    /**
+     * Lifts the entry content scissor, so entries can fill the whole inner area with their background.
+     * Everything rendered while the scissor is lifted has to clip itself to the inner area.<br>
+     * The entry scissor gets popped from the scissor stack, so it has to be the innermost scissor when calling this.
+     * Entries must not call this while they have their own scissor enabled.
+     *
+     * @return TRUE if the scissor got lifted. It then has to get restored via {@link ScrollArea#restoreEntryScissor(GuiGraphicsExtractor)}.
+     */
+    public boolean liftEntryScissor(@NotNull GuiGraphicsExtractor graphics) {
+        if (!this.entryScissorActive) return false;
+        this.disableEntryScissor(graphics);
+        return true;
+    }
+
+    public void restoreEntryScissor(@NotNull GuiGraphicsExtractor graphics) {
+        this.enableEntryScissor(graphics);
     }
 
     public int getRenderFrameId() {
@@ -391,6 +423,14 @@ public class ScrollArea implements GuiEventListener, Renderable, NarratableEntry
 
     public boolean isRoundedStyle() {
         return this.roundedStyle;
+    }
+
+    /**
+     * The corner radius of the inner area in rounded style. It's the inner radius of the rounded border,
+     * so backgrounds of the area and its entries meet the border without a gap in the corners.
+     */
+    public float getInnerCornerRadius() {
+        return Math.max(0.0F, UIBase.getInterfaceCornerRoundingRadius() - this.borderThickness);
     }
 
     public ScrollArea setRoundedStyleEnabled(boolean rounded) {
