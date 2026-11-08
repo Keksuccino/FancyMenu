@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 
 /**
- * Draws and measures text with a {@link SmoothFont}.
+ * Draws and measures text with a {@link SmoothFont}, and draws single glyphs of icon fonts.
  * <p>
  * Text gets shaped once into a cached, size-independent layout, so measuring and drawing the same text again is cheap.
  * Drawing turns the layout into one batch per atlas page, with glyphs rasterized at the device pixel size derived from the
@@ -76,6 +76,21 @@ public final class SmoothTextRenderer {
         return carets;
     }
 
+    /**
+     * Draws one character of an icon font, scaled to fit its ink into the given area and centered in it. Like text, the icon gets
+     * rasterized at the device pixel size it is shown at, so it stays sharp at every GUI scale and pose scale.
+     *
+     * @param color ARGB color the icon gets drawn in
+     */
+    public static void renderIcon(@NotNull GuiGraphics graphics, @NotNull SmoothFont font, int codepoint, float x, float y, float width, float height, int color) {
+        if (!(width > 0.0F) || !(height > 0.0F)) return;
+        SmoothFont.IconGlyph icon = font.iconGlyph(codepoint);
+        if (icon == null) return;
+        Matrix4f pose = beginMesh(graphics, font);
+        MESH.addIcon(icon, x, y, width, height, color);
+        submitMesh(graphics, pose);
+    }
+
     @NotNull
     private static SmoothTextLayout layout(@NotNull SmoothFont font, @NotNull FormattedCharSequence text) {
         return font.layout(STYLED_SCRATCH.reset(isMultilineEnabled()).appendSequence(text));
@@ -90,13 +105,30 @@ public final class SmoothTextRenderer {
         if (layout.glyphCount == 0 && layout.decorationCount == 0) {
             return dimensions;
         }
-        Matrix4f pose = graphics.pose().last().pose();
-        float guiScale = (float) Minecraft.getInstance().getWindow().getGuiScale();
-        MESH.begin(font, pose.m00(), pose.m01(), pose.m10(), pose.m11(), pose.m30(), pose.m31(), guiScale);
+        Matrix4f pose = beginMesh(graphics, font);
         if (shadow) {
             MESH.addLayout(layout, x, y, size, color, true);
         }
         MESH.addLayout(layout, x, y, size, color, false);
+        submitMesh(graphics, pose);
+        return dimensions;
+    }
+
+    /**
+     * Starts the shared mesh for the current pose and returns that pose for the vertices.
+     */
+    @NotNull
+    private static Matrix4f beginMesh(@NotNull GuiGraphics graphics, @NotNull SmoothFont font) {
+        Matrix4f pose = graphics.pose().last().pose();
+        float guiScale = (float) Minecraft.getInstance().getWindow().getGuiScale();
+        MESH.begin(font, pose.m00(), pose.m01(), pose.m10(), pose.m11(), pose.m30(), pose.m31(), guiScale);
+        return pose;
+    }
+
+    /**
+     * Draws every batch of the shared mesh right away, so it stays in order with the other immediate GUI draws.
+     */
+    private static void submitMesh(@NotNull GuiGraphics graphics, @NotNull Matrix4f pose) {
         MultiBufferSource.BufferSource buffers = graphics.bufferSource();
         for (int i = 0; i < MESH.batchCount(); i++) {
             SmoothTextMesh.Batch batch = MESH.batchAt(i);
@@ -123,7 +155,6 @@ public final class SmoothTextRenderer {
             }
         }
         graphics.flush();
-        return dimensions;
     }
 
     private static boolean isMultilineEnabled() {

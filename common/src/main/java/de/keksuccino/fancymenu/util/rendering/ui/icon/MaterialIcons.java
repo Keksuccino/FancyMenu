@@ -1,55 +1,38 @@
 package de.keksuccino.fancymenu.util.rendering.ui.icon;
 
-import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.MinecraftResourceReloadObserver;
+import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothFont;
+import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothFontManager;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.FastColor;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.awt.AlphaComposite;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.FontFormatException;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.font.FontRenderContext;
-import java.awt.font.GlyphVector;
-import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.io.InputStream;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * All Material icons, drawn as glyphs of the bundled icon font. See {@link MaterialIcon#render}.
+ */
 @SuppressWarnings("unused")
 public final class MaterialIcons {
 
-    private static final Logger LOGGER = LogManager.getLogger();
     public static final ResourceLocation FONT_LOCATION = new ResourceLocation("fancymenu", "textures/icons/material_icons.ttf");
-    public static final float BASE_SIZE = 20.0F;
-    public static final int DEFAULT_PIXEL_SIZE = Math.round(BASE_SIZE);
+    /** Icons are small, so one atlas page of this size holds hundreds of them, while a default-sized page would mostly stay empty. */
+    private static final int ATLAS_PAGE_SIZE = 512;
+    /** Base size of the icon font. Icons get sized by their render area, so this only needs to be a valid font size. */
+    private static final float FONT_BASE_SIZE = 24.0F;
 
-    private static final float SDF_RANGE_MIN = 2.0F;
-    private static final float SDF_RANGE_MAX = 4.0F;
     private static final List<MaterialIcon> ALL_ICONS = new ArrayList<>(4200);
     private static final List<MaterialIcon> ALL_ICONS_VIEW = Collections.unmodifiableList(ALL_ICONS);
     private static final Map<String, MaterialIcon> ICONS_BY_NAME = new HashMap<>();
-    private static final FontRenderContext FONT_RENDER_CONTEXT = new FontRenderContext(null, true, true);
-    private static final Object FONT_LOCK = new Object();
 
-    private static final Map<Integer, Font> SIZED_FONTS = new HashMap<>();
-    private static volatile Font baseFont;
-    private static volatile boolean reloadListenerRegistered;
+    @Nullable
+    private static SmoothFont font;
+    private static boolean fontFailed;
+    private static boolean reloadListenerRegistered;
 
     public static final MaterialIcon _10K = register("_10k", 0xE951);
     public static final MaterialIcon _10MP = register("_10mp", 0xE952);
@@ -3915,334 +3898,56 @@ public final class MaterialIcons {
     }
 
     @Nullable
-    public static MaterialIcon get(@Nonnull String name) {
+    public static MaterialIcon get(@NotNull String name) {
         return ICONS_BY_NAME.get(name);
     }
 
-    @Nonnull
+    @NotNull
     public static List<MaterialIcon> values() {
         return ALL_ICONS_VIEW;
     }
 
-    private static MaterialIcon register(@Nonnull String name, int codepoint) {
+    private static MaterialIcon register(@NotNull String name, int codepoint) {
         MaterialIcon icon = new MaterialIcon(name, codepoint);
         ALL_ICONS.add(icon);
         ICONS_BY_NAME.put(name, icon);
         return icon;
     }
 
-    static void loadIcon(@Nonnull MaterialIcon icon, @Nonnull MaterialIcon.SizeCache cache, int sizePx) {
-        Font font = getFont(sizePx);
-        if (font == null) {
-            icon.markFailed(cache);
-            return;
-        }
-        if (!font.canDisplay(icon.getCodepoint())) {
-            LOGGER.error("[FANCYMENU] Material icon '{}' (U+{}) is not supported by the font.", icon.getName(), Integer.toHexString(icon.getCodepoint()));
-            icon.markFailed(cache);
-            return;
-        }
-
-        GlyphVector glyphVector = font.createGlyphVector(FONT_RENDER_CONTEXT, new String(Character.toChars(icon.getCodepoint())));
-        if (glyphVector.getNumGlyphs() <= 0) {
-            icon.markFailed(cache);
-            return;
-        }
-
-        Rectangle2D bounds = glyphVector.getGlyphOutline(0).getBounds2D();
-        if (bounds == null || bounds.isEmpty() || bounds.getWidth() <= 0.0 || bounds.getHeight() <= 0.0) {
-            icon.markFailed(cache);
-            return;
-        }
-
-        float sdfRange = resolveSdfRange(sizePx);
-        int padding = resolveBlurPadding(sdfRange, sizePx);
-        double minX = Math.floor(bounds.getX()) - padding;
-        double minY = Math.floor(bounds.getY()) - padding;
-        double maxX = Math.ceil(bounds.getMaxX()) + padding;
-        double maxY = Math.ceil(bounds.getMaxY()) + padding;
-        int width = (int)Math.ceil(maxX - minX);
-        int height = (int)Math.ceil(maxY - minY);
-        if (width <= 0 || height <= 0) {
-            icon.markFailed(cache);
-            return;
-        }
-
-        BufferedImage image = renderGlyph(glyphVector, minX, minY, width, height, sdfRange);
-        NativeImage nativeImage = null;
-        DynamicTexture dynamicTexture = null;
-        try {
-            nativeImage = toNativeImage(image);
-            dynamicTexture = new DynamicTexture(nativeImage);
-            ResourceLocation location = Minecraft.getInstance().getTextureManager().register(buildTextureKey(icon.getName(), sizePx), dynamicTexture);
-            icon.assign(cache, location, width, height);
-            applyMaterialIconFilter(location);
-        } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to create material icon texture: {} @{}px", icon.getName(), sizePx, ex);
-            icon.markFailed(cache);
-            if (dynamicTexture != null) {
-                try {
-                    dynamicTexture.close();
-                } catch (Exception ignored) {
-                }
-            } else if (nativeImage != null) {
-                try {
-                    nativeImage.close();
-                } catch (Exception ignored) {
-                }
-            }
-        }
-    }
-
-    private static void applyMaterialIconFilter(@Nonnull ResourceLocation location) {
-        Runnable action = () -> {
-            try {
-                var texture = Minecraft.getInstance().getTextureManager().getTexture(location);
-                texture.setFilter(true, false);
-                texture.bind();
-                GlStateManager._texParameter(3553, 10242, 33071);
-                GlStateManager._texParameter(3553, 10243, 33071);
-            } catch (Exception ignored) {
-            }
-        };
-        if (RenderSystem.isOnRenderThreadOrInit()) {
-            action.run();
-        } else {
-            RenderSystem.recordRenderCall(action::run);
-        }
-    }
-
+    /**
+     * Returns the icon font, or {@code null} when it failed to load. A failed font gets loaded again after the next resource reload.
+     * Must only be called on the render thread.
+     */
     @Nullable
-    private static Font getFont(int sizePx) {
-        int normalizedSize = normalizeSize(sizePx);
-        Font font = SIZED_FONTS.get(normalizedSize);
-        if (font != null) {
-            return font;
+    static SmoothFont font() {
+        SmoothFont current = font;
+        // Resource reloads close all smooth fonts, so a closed font gets replaced by a freshly loaded one
+        if (current != null && !current.isClosed()) {
+            return current;
         }
-        synchronized (FONT_LOCK) {
-            font = SIZED_FONTS.get(normalizedSize);
-            if (font != null) {
-                return font;
-            }
-            Font loadedBase = baseFont;
-            if (loadedBase == null) {
-                try (InputStream in = Minecraft.getInstance().getResourceManager().open(FONT_LOCATION)) {
-                    loadedBase = Font.createFont(Font.TRUETYPE_FONT, in);
-                    baseFont = loadedBase;
-                } catch (FontFormatException | IOException ex) {
-                    LOGGER.error("[FANCYMENU] Failed to load material icons font: {}", FONT_LOCATION, ex);
-                    return null;
-                }
-            }
-            Font derived = loadedBase.deriveFont((float) normalizedSize);
-            SIZED_FONTS.put(normalizedSize, derived);
-            return derived;
+        if (fontFailed) {
+            return null;
         }
+        registerReloadListener();
+        current = SmoothFontManager.fontBuilder(FONT_LOCATION, FONT_BASE_SIZE).atlasPageSize(ATLAS_PAGE_SIZE).build();
+        font = current;
+        fontFailed = (current == null);
+        return current;
     }
 
-    public static void registerReloadListener() {
+    private static void registerReloadListener() {
         if (reloadListenerRegistered) {
             return;
         }
         reloadListenerRegistered = true;
         MinecraftResourceReloadObserver.addReloadListener(action -> {
             if (action == MinecraftResourceReloadObserver.ReloadAction.STARTING) {
-                RenderSystem.recordRenderCall(MaterialIcons::clearCache);
+                Minecraft.getInstance().execute(() -> {
+                    font = null;
+                    fontFailed = false;
+                });
             }
         });
-    }
-
-    private static void clearCache() {
-        for (MaterialIcon icon : ALL_ICONS) {
-            icon.clearCache(location -> Minecraft.getInstance().getTextureManager().release(location));
-        }
-        baseFont = null;
-        SIZED_FONTS.clear();
-    }
-
-    private static String buildTextureKey(@Nonnull String name, int sizePx) {
-        StringBuilder builder = new StringBuilder("fancymenu_material_icon_").append(sizePx).append('_');
-        for (int i = 0; i < name.length(); i++) {
-            char c = name.charAt(i);
-            if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_' || c == '-' || c == '.' || c == '/') {
-                builder.append(c);
-            } else {
-                builder.append('_');
-            }
-        }
-        return builder.toString();
-    }
-
-    static int normalizeSize(int sizePx) {
-        if (sizePx <= 0) {
-            return DEFAULT_PIXEL_SIZE;
-        }
-        return sizePx;
-    }
-
-    private static float resolveSdfRange(int sizePx) {
-        int normalizedSize = normalizeSize(sizePx);
-        if (normalizedSize <= 24) {
-            return 3.0F;
-        }
-        if (normalizedSize <= 32) {
-            return 2.8F;
-        }
-        if (normalizedSize <= 48) {
-            return 2.7F;
-        }
-        if (normalizedSize <= 64) {
-            return 2.5F;
-        }
-        if (normalizedSize <= 96) {
-            return 2.4F;
-        }
-        if (normalizedSize <= 128) {
-            return 2.2F;
-        }
-        return SDF_RANGE_MIN;
-    }
-
-    private static int resolveBlurPadding(float sdfRange, int sizePx) {
-        float sigma = sdfRange / 4.0F;
-        int radius = (int) Math.ceil(sigma * 3.0F);
-        int padding = Math.max(1, Math.min(6, radius));
-        if (sdfRange >= 2.8F && padding > 1) {
-            padding -= 1;
-        }
-        float scale = resolvePaddingScale(sizePx);
-        int reduced = Math.round(padding * scale);
-        return Math.max(0, reduced);
-    }
-
-    private static float resolvePaddingScale(int sizePx) {
-        int normalizedSize = normalizeSize(sizePx);
-        if (normalizedSize <= 32) {
-            return 0.2F;
-        }
-        return 0.3F;
-    }
-
-    private static BufferedImage renderGlyph(@Nonnull GlyphVector glyphVector, double minX, double minY, int width, int height, float sdfRange) {
-        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D graphics = image.createGraphics();
-        graphics.setComposite(AlphaComposite.Clear);
-        graphics.fillRect(0, 0, width, height);
-        graphics.setComposite(AlphaComposite.SrcOver);
-        graphics.setFont(glyphVector.getFont());
-        graphics.setColor(Color.WHITE);
-
-        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-        graphics.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
-        graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-        graphics.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
-        graphics.setRenderingHint(RenderingHints.KEY_ALPHA_INTERPOLATION, RenderingHints.VALUE_ALPHA_INTERPOLATION_QUALITY);
-
-        graphics.translate(-minX, -minY);
-        graphics.drawGlyphVector(glyphVector, 0, 0);
-        graphics.dispose();
-
-        float sigma = sdfRange / 4.0F;
-        if (sigma > 0.1F) {
-            image = applyBlur(image, sigma);
-        }
-
-        return image;
-    }
-
-    private static NativeImage toNativeImage(@Nonnull BufferedImage image) {
-        int width = image.getWidth();
-        int height = image.getHeight();
-        NativeImage nativeImage = new NativeImage(width, height, true);
-        int[] pixels = new int[width * height];
-        image.getRGB(0, 0, width, height, pixels, 0, width);
-        int index = 0;
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                nativeImage.setPixelRGBA(x, y, argbToAbgr(pixels[index++]));
-            }
-        }
-        return nativeImage;
-    }
-
-    private static BufferedImage applyBlur(BufferedImage src, float sigma) {
-        int radius = (int) Math.ceil(sigma * 3.0F);
-        if (radius <= 0) return src;
-
-        int kernelSize = radius * 2 + 1;
-        float[] kernel = new float[kernelSize];
-        float twoSigmaSq = 2.0F * sigma * sigma;
-        float sigmaRoot = (float) Math.sqrt(twoSigmaSq * Math.PI);
-        float total = 0.0F;
-
-        for (int i = -radius; i <= radius; i++) {
-            float distanceSq = i * i;
-            float value = (float) Math.exp(-distanceSq / twoSigmaSq) / sigmaRoot;
-            kernel[i + radius] = value;
-            total += value;
-        }
-        for (int i = 0; i < kernel.length; i++) {
-            kernel[i] /= total;
-        }
-
-        int width = src.getWidth();
-        int height = src.getHeight();
-        int[] pixels = src.getRGB(0, 0, width, height, null, 0, width);
-
-        float[] sourceAlpha = new float[pixels.length];
-        for (int i = 0; i < pixels.length; i++) {
-            sourceAlpha[i] = (pixels[i] >> 24) & 0xFF;
-        }
-
-        float[] tempAlpha = new float[pixels.length];
-        convolveFloat1D(sourceAlpha, tempAlpha, width, height, kernel, radius, true);
-        convolveFloat1D(tempAlpha, sourceAlpha, width, height, kernel, radius, false);
-
-        for (int i = 0; i < pixels.length; i++) {
-            int a = Math.min(255, Math.max(0, Math.round(sourceAlpha[i])));
-            pixels[i] = (a << 24) | 0xFFFFFF;
-        }
-
-        BufferedImage dst = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        dst.setRGB(0, 0, width, height, pixels, 0, width);
-        return dst;
-    }
-
-    private static void convolveFloat1D(float[] src, float[] dest, int width, int height, float[] kernel, int radius, boolean horizontal) {
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                float a = 0.0F;
-
-                for (int k = -radius; k <= radius; k++) {
-                    int kIndex = k + radius;
-                    int px = horizontal ? x + k : x;
-                    int py = horizontal ? y : y + k;
-
-                    if (px < 0) px = 0;
-                    else if (px >= width) px = width - 1;
-                    if (py < 0) py = 0;
-                    else if (py >= height) py = height - 1;
-
-                    a += src[py * width + px] * kernel[kIndex];
-                }
-
-                dest[y * width + x] = a;
-            }
-        }
-    }
-
-    private static int argbToAbgr(int color) {
-        return FastColor.ABGR32.color(
-                FastColor.ARGB32.alpha(color),
-                FastColor.ARGB32.blue(color),
-                FastColor.ARGB32.green(color),
-                FastColor.ARGB32.red(color)
-        );
-    }
-
-    static {
-        registerReloadListener();
     }
 
 }
