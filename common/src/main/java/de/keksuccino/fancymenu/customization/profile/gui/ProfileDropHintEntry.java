@@ -43,7 +43,7 @@ class ProfileDropHintEntry extends ScrollAreaEntry {
             UIBase.renderRoundedRect(graphics, slotX, slotY, ICON_SLOT_SIZE, ICON_SLOT_SIZE, radius, radius, radius, radius, ProfileUiRendering.withAlpha(color, 0.12F));
         }
         UIBase.renderRoundedBorder(graphics, slotX, slotY, slotX + ICON_SLOT_SIZE, slotY + ICON_SLOT_SIZE, 1, radius, radius, radius, radius, ProfileUiRendering.withAlpha(color, fileDragged ? 1.0F : 0.5F));
-        ProfileUiRendering.renderMaterialIcon(graphics, MaterialIcons.DOWNLOAD, slotX + ((ICON_SLOT_SIZE - ICON_SIZE) / 2.0F), slotY + ((ICON_SLOT_SIZE - ICON_SIZE) / 2.0F), ICON_SIZE, color);
+        MaterialIcons.DOWNLOAD.render(graphics, slotX + ((ICON_SLOT_SIZE - ICON_SIZE) / 2.0F), slotY + ((ICON_SLOT_SIZE - ICON_SIZE) / 2.0F), ICON_SIZE, ICON_SIZE, color);
 
         float textX = slotX + ICON_SLOT_SIZE + 8;
         float textWidth = Math.max(10, (this.x + this.width - PADDING - 4) - textX);

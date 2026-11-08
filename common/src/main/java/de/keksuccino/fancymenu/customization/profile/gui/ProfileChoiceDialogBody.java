@@ -95,7 +95,7 @@ final class ProfileChoiceDialogBody extends PiPWindowBody {
         int textHeight = this.lines.size() * LINE_SPACING;
         int blockHeight = Math.max(textHeight, ICON_SIZE);
         int contentY = PADDING + Math.max(0, (contentBottom - PADDING - blockHeight) / 2);
-        ProfileUiRendering.renderMaterialIcon(graphics, this.icon, PADDING, contentY + ((blockHeight - ICON_SIZE) / 2.0F), ICON_SIZE, this.iconColor);
+        this.icon.render(graphics, PADDING, contentY + ((blockHeight - ICON_SIZE) / 2.0F), ICON_SIZE, ICON_SIZE, this.iconColor);
         int textX = PADDING + ICON_SIZE + ICON_GAP;
         int y = contentY + Math.max(0, (blockHeight - textHeight) / 2);
         for (Component line : this.lines) {

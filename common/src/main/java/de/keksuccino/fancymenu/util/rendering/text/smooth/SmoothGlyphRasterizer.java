@@ -32,6 +32,8 @@ final class SmoothGlyphRasterizer {
 
     static final int PADDING = 1;
     static final GlyphBitmap EMPTY = new GlyphBitmap(0, 0, 0, 0, false, null, null);
+    /** Float error that gets ignored when rounding ink sizes up to whole pixels, so an ink box of exactly 20 pixels stays 20 pixels wide. */
+    private static final float INK_EDGE_TOLERANCE = 1.0E-3F;
 
     private SmoothGlyphRasterizer() {
     }
@@ -48,15 +50,38 @@ final class SmoothGlyphRasterizer {
         if (bounds.isEmpty()) {
             return EMPTY;
         }
-        int left = bounds.x - PADDING;
-        int top = bounds.y - PADDING;
-        int width = bounds.width + (PADDING * 2);
-        int height = bounds.height + (PADDING * 2);
+        return fillCoverage(outline, bounds.x - PADDING, bounds.y - PADDING, bounds.width + (PADDING * 2), bounds.height + (PADDING * 2));
+    }
+
+    /**
+     * Rasterizes an icon glyph so the top-left corner of its ink box lands exactly on a pixel corner, which keeps the outer edges
+     * of icons sharp. The bitmap's {@code left}/{@code top} place it relative to that corner.
+     *
+     * @param pixelsPerEm scale of the glyph; fractional values are fine, because the outline gets scaled directly
+     */
+    @NotNull
+    static GlyphBitmap rasterizeIcon(@NotNull SmoothFont.IconGlyph glyph, float pixelsPerEm) {
+        int inkWidth = (int) Math.ceil(glyph.inkWidth() * pixelsPerEm - INK_EDGE_TOLERANCE);
+        int inkHeight = (int) Math.ceil(glyph.inkHeight() * pixelsPerEm - INK_EDGE_TOLERANCE);
+        if (inkWidth <= 0 || inkHeight <= 0) {
+            return EMPTY;
+        }
+        double scale = pixelsPerEm / SmoothFontSource.LAYOUT_SIZE;
+        AffineTransform transform = AffineTransform.getTranslateInstance(-glyph.minX() * pixelsPerEm, -glyph.minY() * pixelsPerEm);
+        transform.scale(scale, scale);
+        return fillCoverage(transform.createTransformedShape(glyph.outline()), -PADDING, -PADDING, inkWidth + (PADDING * 2), inkHeight + (PADDING * 2));
+    }
+
+    /**
+     * Fills a shape white into a fresh image covering the given pixel area and returns the coverage of every pixel.
+     */
+    @NotNull
+    private static GlyphBitmap fillCoverage(@NotNull Shape shape, int left, int top, int width, int height) {
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = createGraphics(image);
         graphics.setColor(Color.WHITE);
         graphics.translate(-left, -top);
-        graphics.fill(outline);
+        graphics.fill(shape);
         graphics.dispose();
         int[] pixels = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
         byte[] coverage = new byte[pixels.length];

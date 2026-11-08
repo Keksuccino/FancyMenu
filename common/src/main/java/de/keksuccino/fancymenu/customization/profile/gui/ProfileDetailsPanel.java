@@ -136,7 +136,7 @@ final class ProfileDetailsPanel {
         float radius = CHIP_HEIGHT / 2.0F;
         UIBase.renderRoundedRect(graphics, chip.x, chip.y, chip.width, CHIP_HEIGHT, radius, radius, radius, radius, hovered ? ProfileUiRendering.getHoverColor() : ProfileUiRendering.getSecondaryAreaColor());
         int contentColor = hovered ? ProfileUiRendering.getTextColor() : ProfileUiRendering.getDimTextColor();
-        ProfileUiRendering.renderMaterialIcon(graphics, chip.icon, chip.x + 8, chip.y + ((CHIP_HEIGHT - CHIP_ICON_SIZE) / 2.0F), CHIP_ICON_SIZE, contentColor);
+        chip.icon.render(graphics, chip.x + 8, chip.y + ((CHIP_HEIGHT - CHIP_ICON_SIZE) / 2.0F), CHIP_ICON_SIZE, CHIP_ICON_SIZE, contentColor);
         float smallSize = UIBase.getUITextSizeSmall();
         float labelX = chip.x + 8 + CHIP_ICON_SIZE + 5;
         UIBase.renderText(graphics, Component.literal(chip.displayLabel), labelX, chip.y + ((CHIP_HEIGHT - UIBase.getUITextHeight(smallSize)) / 2.0F), contentColor, smallSize);

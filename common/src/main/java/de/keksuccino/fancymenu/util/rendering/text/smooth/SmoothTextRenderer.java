@@ -12,7 +12,7 @@ import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector4f;
 
 /**
- * Draws and measures text with a {@link SmoothFont}.
+ * Draws and measures text with a {@link SmoothFont}, and draws single glyphs of icon fonts.
  * <p>
  * Text gets shaped once into a cached, size-independent layout, so measuring and drawing the same text again is cheap.
  * Drawing turns the layout into one batch per atlas page, with glyphs rasterized at the device pixel size derived from the
@@ -77,6 +77,21 @@ public final class SmoothTextRenderer {
         return carets;
     }
 
+    /**
+     * Draws one character of an icon font, scaled to fit its ink into the given area and centered in it. Like text, the icon gets
+     * rasterized at the device pixel size it is shown at, so it stays sharp at every GUI scale and pose scale.
+     *
+     * @param color ARGB color the icon gets drawn in
+     */
+    public static void renderIcon(@NotNull GuiGraphics graphics, @NotNull SmoothFont font, int codepoint, float x, float y, float width, float height, int color) {
+        if (!(width > 0.0F) || !(height > 0.0F)) return;
+        SmoothFont.IconGlyph icon = font.iconGlyph(codepoint);
+        if (icon == null) return;
+        Matrix4f pose = beginMesh(graphics, font);
+        MESH.addIcon(icon, x, y, width, height, color);
+        submitMesh(graphics, pose);
+    }
+
     @NotNull
     private static SmoothTextLayout layout(@NotNull SmoothFont font, @NotNull FormattedCharSequence text) {
         return font.layout(STYLED_SCRATCH.reset(isMultilineEnabled()).appendSequence(text));
@@ -91,6 +106,27 @@ public final class SmoothTextRenderer {
         if (layout.glyphCount == 0 && layout.decorationCount == 0) {
             return dimensions;
         }
+        Matrix4f pose = beginMesh(graphics, font);
+        if (shadow) {
+            MESH.addLayout(layout, x, y, size, color, true);
+        }
+        MESH.addLayout(layout, x, y, size, color, false);
+        submitMesh(graphics, pose);
+        return dimensions;
+    }
+
+    @NotNull
+    private static Vector4f transform(@NotNull Matrix4f matrix, float x, float y, float w) {
+        Vector4f vector = new Vector4f(x, y, 0.0F, w);
+        vector.transform(matrix);
+        return vector;
+    }
+
+    /**
+     * Starts the shared mesh for the current pose and returns that pose for the vertices.
+     */
+    @NotNull
+    private static Matrix4f beginMesh(@NotNull GuiGraphics graphics, @NotNull SmoothFont font) {
         Matrix4f pose = graphics.pose().last().pose();
         float guiScale = (float) Minecraft.getInstance().getWindow().getGuiScale();
         // Mojang's Matrix4f hides its fields, so the 2D affine part gets read by transforming the basis vectors and the origin.
@@ -98,10 +134,13 @@ public final class SmoothTextRenderer {
         Vector4f axisY = transform(pose, 0.0F, 1.0F, 0.0F);
         Vector4f origin = transform(pose, 0.0F, 0.0F, 1.0F);
         MESH.begin(font, axisX.x(), axisX.y(), axisY.x(), axisY.y(), origin.x(), origin.y(), guiScale);
-        if (shadow) {
-            MESH.addLayout(layout, x, y, size, color, true);
-        }
-        MESH.addLayout(layout, x, y, size, color, false);
+        return pose;
+    }
+
+    /**
+     * Draws every batch of the shared mesh right away, so it stays in order with the other immediate GUI draws.
+     */
+    private static void submitMesh(@NotNull GuiGraphics graphics, @NotNull Matrix4f pose) {
         MultiBufferSource.BufferSource buffers = graphics.bufferSource();
         for (int i = 0; i < MESH.batchCount(); i++) {
             SmoothTextMesh.Batch batch = MESH.batchAt(i);
@@ -128,14 +167,6 @@ public final class SmoothTextRenderer {
             }
         }
         graphics.flush();
-        return dimensions;
-    }
-
-    @NotNull
-    private static Vector4f transform(@NotNull Matrix4f matrix, float x, float y, float w) {
-        Vector4f vector = new Vector4f(x, y, 0.0F, w);
-        vector.transform(matrix);
-        return vector;
     }
 
     private static boolean isMultilineEnabled() {

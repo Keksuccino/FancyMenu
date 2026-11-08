@@ -74,7 +74,7 @@ final class ProfileDropIndicator {
         float contentHeight = ICON_SIZE + 10.0F + titleHeight + 4.0F + UIBase.getUITextHeight(descriptionSize);
         float top = (height - contentHeight) / 2.0F;
 
-        ProfileUiRendering.renderMaterialIcon(graphics, icon, (width - ICON_SIZE) / 2.0F, top + iconOffsetY, ICON_SIZE, ProfileUiRendering.withAlpha(color, alpha));
+        icon.render(graphics, (width - ICON_SIZE) / 2.0F, top + iconOffsetY, ICON_SIZE, ICON_SIZE, ProfileUiRendering.withAlpha(color, alpha));
         float titleY = top + ICON_SIZE + 10.0F;
         UIBase.renderText(graphics, title, (width - UIBase.getUITextWidth(title, titleSize)) / 2.0F, titleY, ProfileUiRendering.withAlpha(ProfileUiRendering.getTextColor(), alpha), titleSize);
         UIBase.renderText(graphics, description, (width - UIBase.getUITextWidth(description, descriptionSize)) / 2.0F, titleY + titleHeight + 4.0F, ProfileUiRendering.withAlpha(ProfileUiRendering.getDimTextColor(), alpha), descriptionSize);

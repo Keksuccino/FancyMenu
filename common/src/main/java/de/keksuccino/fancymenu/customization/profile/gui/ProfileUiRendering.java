@@ -71,19 +71,6 @@ final class ProfileUiRendering {
         blitTexture(graphics, location, x, y, size, size, (width - side) / 2.0F, (height - side) / 2.0F, side, side, width, height, -1);
     }
 
-    static void renderMaterialIcon(@NotNull GuiGraphics graphics, @NotNull MaterialIcon icon, float x, float y, float size, int color) {
-        ResourceLocation location = icon.getTextureLocationForUI(size, size);
-        if (location == null) return;
-        int textureSize = icon.calculateBestTextureSizeForUI(size, size);
-        int width = icon.getWidth(textureSize);
-        int height = icon.getHeight(textureSize);
-        if ((width <= 0) || (height <= 0)) return;
-        float scale = Math.min(size / width, size / height);
-        float drawWidth = width * scale;
-        float drawHeight = height * scale;
-        blitTexture(graphics, location, x + ((size - drawWidth) / 2.0F), y + ((size - drawHeight) / 2.0F), drawWidth, drawHeight, 0, 0, width, height, width, height, color);
-    }
-
     /**
      * The blit of this version always samples a region as big as the rendered area, so the texture size and UV get scaled to make it sample the wanted region.
      */
