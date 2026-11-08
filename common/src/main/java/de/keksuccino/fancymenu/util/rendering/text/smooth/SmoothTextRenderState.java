@@ -12,7 +12,7 @@ import org.joml.Matrix3x2f;
 import java.util.Arrays;
 
 /**
- * All quads of one text draw call that use the same atlas page, submitted to the GUI render state as a single element.
+ * All quads of one text or icon draw call that use the same atlas page, submitted to the GUI render state as a single element.
  * One element per text (instead of one per glyph) keeps the GUI renderer's layer placement and sorting cheap, and the
  * glyphs of a text never end up on different layers.
  */

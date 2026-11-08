@@ -30,7 +30,6 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -825,84 +824,9 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         this.updateList(true);
     }
 
-    @Nullable
-    private static IconRenderData resolveMaterialIconData(@Nullable MaterialIcon icon, float renderWidth, float renderHeight) {
-        if (icon == null) {
-            return null;
-        }
-        float safeRenderWidth = Math.max(1.0F, renderWidth);
-        float safeRenderHeight = Math.max(1.0F, renderHeight);
-        Identifier location = icon.getTextureLocationForUI(safeRenderWidth, safeRenderHeight);
-        if (location == null) {
-            return null;
-        }
-        int size = icon.calculateBestTextureSizeForUI(safeRenderWidth, safeRenderHeight);
-        int width = icon.getWidth(size);
-        int height = icon.getHeight(size);
-        if (width <= 0 || height <= 0) {
-            return null;
-        }
-        return new IconRenderData(location, width, height);
-    }
-
-    private static void blitScaledIcon(@NotNull GuiGraphicsExtractor graphics, @NotNull IconRenderData iconData, float areaX, float areaY, float areaWidth, float areaHeight) {
-        blitScaledIcon(graphics, iconData, areaX, areaY, areaWidth, areaHeight, 0.0F);
-    }
-
-    private static void blitScaledIcon(@NotNull GuiGraphicsExtractor graphics, @NotNull IconRenderData iconData, float areaX, float areaY, float areaWidth, float areaHeight, float rotationDegrees) {
-        if (areaWidth <= 0.0F || areaHeight <= 0.0F || iconData.width <= 0 || iconData.height <= 0) {
-            return;
-        }
-        float scale = Math.min(areaWidth / (float) iconData.width, areaHeight / (float) iconData.height);
-        if (!Float.isFinite(scale) || scale <= 0.0F) {
-            return;
-        }
-        float scaledWidth = iconData.width * scale;
-        float scaledHeight = iconData.height * scale;
-        float drawX = areaX + (areaWidth - scaledWidth) * 0.5F;
-        float drawY = areaY + (areaHeight - scaledHeight) * 0.5F;
-        graphics.pose().pushMatrix();
-        graphics.pose().translate(drawX, drawY);
-        graphics.pose().scale(scale, scale);
-        if (rotationDegrees != 0.0F) {
-            graphics.pose().translate(iconData.width * 0.5F, iconData.height * 0.5F);
-            graphics.pose().rotate((float)Math.toRadians(rotationDegrees));
-            graphics.pose().translate(-iconData.width * 0.5F, -iconData.height * 0.5F);
-        }
-        graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED, iconData.texture, 0, 0, 0.0F, 0.0F, iconData.width, iconData.height, iconData.width, iconData.height);
-        graphics.pose().popMatrix();
-    }
-
-    private void renderMaterialIcon(@NotNull GuiGraphicsExtractor graphics, @NotNull MaterialIcon icon, float x, float y, float width, float height, float alpha) {
-        this.renderMaterialIcon(graphics, icon, x, y, width, height, alpha, 0.0F);
-    }
-
-    private void renderMaterialIcon(@NotNull GuiGraphicsExtractor graphics, @NotNull MaterialIcon icon, float x, float y, float width, float height, float alpha, float rotationDegrees) {
-        IconRenderData iconData = resolveMaterialIconData(icon, width, height);
-        if (iconData == null) {
-            return;
-        }
-        de.keksuccino.fancymenu.util.rendering.RenderingUtils.defaultBlendFunc();
-        UIBase.getUITheme().setUITextureShaderColor(graphics, alpha);
-        blitScaledIcon(graphics, iconData, x, y, width, height, rotationDegrees);
-        UIBase.resetShaderColor(graphics);
-    }
-
     private static float getIconSize(float areaWidth, float areaHeight, float padding) {
         float size = Math.min(areaWidth, areaHeight) - (padding * 2.0f);
         return Math.max(1.0f, size);
-    }
-
-    private static final class IconRenderData {
-        private final Identifier texture;
-        private final int width;
-        private final int height;
-
-        private IconRenderData(@NotNull Identifier texture, int width, int height) {
-            this.texture = texture;
-            this.width = width;
-            this.height = height;
-        }
     }
 
     private void openContextMenuForBackground() {
@@ -1263,16 +1187,9 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             float maxIconSize = Math.max(1.0F, TITLE_BAR_ICON_BASE_SIZE);
             float iconSize = Math.max(1.0F, Math.min(this.width - iconPadding, maxIconSize));
             iconSize = Math.min(iconSize, Math.min(this.width, this.parent.getTitleBarHeight()));
-            IconRenderData iconData = resolveMaterialIconData(icon, iconSize, iconSize);
-            if (iconData == null) {
-                return;
-            }
             float iconX = this.x + (this.width - iconSize) * 0.5F;
             float iconY = this.y + (this.parent.getTitleBarHeight() - iconSize) * 0.5F;
-            de.keksuccino.fancymenu.util.rendering.RenderingUtils.defaultBlendFunc();
-            UIBase.getUITheme().setUITextureShaderColor(graphics, 1.0F);
-            blitScaledIcon(graphics, iconData, iconX, iconY, iconSize, iconSize);
-            UIBase.resetShaderColor(graphics);
+            icon.render(graphics, iconX, iconY, iconSize, iconSize, UIBase.getUITheme().getUIIconColor(1.0F));
         }
 
         @Override
@@ -1358,7 +1275,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             float layerIconSize = getIconSize(this.getLayerIconWidth(), this.getLayerIconHeight(), LAYER_ENTRY_ICON_PADDING);
             float layerIconX = this.getLayerIconX() + (this.getLayerIconWidth() - layerIconSize) * 0.5f;
             float layerIconY = this.getLayerIconY() + (this.getLayerIconHeight() - layerIconSize) * 0.5f;
-            this.layerWidget.renderMaterialIcon(graphics, LAYER_ICON, layerIconX, layerIconY, layerIconSize, layerIconSize, 1.0f);
+            LAYER_ICON.render(graphics, layerIconX, layerIconY, layerIconSize, layerIconSize, UIBase.getUITheme().getUIIconColor(1.0F));
 
             this.updateEyeButtonLayout();
             int renderMouseX = this.isIconButtonInteractionAllowed() ? mouseX : Integer.MIN_VALUE;
@@ -1604,7 +1521,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             float groupIconSize = getIconSize(this.getGroupIconWidth(), this.getGroupIconHeight(), LAYER_ENTRY_ICON_PADDING);
             float groupIconX = this.getGroupIconX() + (this.getGroupIconWidth() - groupIconSize) * 0.5f;
             float groupIconY = this.getGroupIconY() + (this.getGroupIconHeight() - groupIconSize) * 0.5f;
-            this.layerWidget.renderMaterialIcon(graphics, GROUP_ICON, groupIconX, groupIconY, groupIconSize, groupIconSize, 1.0f);
+            GROUP_ICON.render(graphics, groupIconX, groupIconY, groupIconSize, groupIconSize, UIBase.getUITheme().getUIIconColor(1.0F));
 
             this.updateEyeButtonLayout();
             this.updateCollapseButtonLayout();
@@ -1847,7 +1764,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             float iconSize = getIconSize(30.0f, this.getHeight(), LAYER_ENTRY_ICON_PADDING);
             float iconBaseX = this.x + (30.0f - iconSize) * 0.5f;
             float iconBaseY = this.y + (this.getHeight() - iconSize) * 0.5f;
-            this.layerWidget.renderMaterialIcon(graphics, VANILLA_ICON, iconBaseX, iconBaseY, iconSize, iconSize, 1.0f);
+            VANILLA_ICON.render(graphics, iconBaseX, iconBaseY, iconSize, iconSize, UIBase.getUITheme().getUIIconColor(1.0F));
             float labelX = iconBaseX + iconSize + LAYER_ICON_TEXT_GAP;
             float rightEdge = this.x + this.getWidth() - RIGHT_SIDE_BUTTON_OFFSET;
             float labelWidth = rightEdge - this.moveTopBottomButton.getWidth() - labelX - 3f;
