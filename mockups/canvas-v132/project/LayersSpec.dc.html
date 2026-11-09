@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Editor panel states</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.state-line{display:grid;grid-template-columns:minmax(0,1fr) 264px;align-items:center;gap:24px;padding:8px 0;border-bottom:1px solid var(--sep)}
+.state-line:last-child{border-bottom:0}
+.row-wrap{display:contents}
+</style>
+</helmet>
+<div class="fm spec {{themeClass}} {{matClass}}" style="min-height: 1856px">
+
+<header style="display: flex; flex-direction: column; gap: 12px; max-width: 900px">
+<div style="font-size: 12px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; color: var(--text-3)">FancyMenu · UI rework concept · editor panels</div>
+<h1 style="margin: 0; font-size: 34px; line-height: 1.15; font-weight: 700; color: var(--title)">Panels: the same language, one size smaller</h1>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: var(--text-2)">Editor widgets like Layers stay on screen while you work, so they use a lighter version of the window: a compact title bar, small lights for the actions they actually have, and rows that behave like a macOS sidebar.</p>
+</header>
+
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px">
+<sc-for list="{{cards}}" as="c" hint-placeholder-count="11">
+
+<sc-if value="{{c.isHeading}}" hint-placeholder-val="{{false}}">
+<div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 6px; margin-top: 24px">
+<h2 style="margin: 0; font-size: 20px; font-weight: 700; color: var(--title)">{{c.title}}</h2>
+<p style="margin: 0; color: var(--text-2); font-size: 13.5px; max-width: 840px; line-height: 1.5">{{c.text}}</p>
+</div>
+</sc-if>
+
+<sc-if value="{{c.isLegend}}" hint-placeholder-val="{{false}}">
+<div class="spec-card" style="align-self: start; margin-top: 26px;">
+<div style="font-size: 12px; font-weight: 600; color: var(--text-3)">Type icons</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; color: var(--text)">
+<span style="display: flex; align-items: center; gap: 8px"><span class="ms" style="font-size: 16px" aria-hidden="true">smart_button</span>Button</span>
+<span style="display: flex; align-items: center; gap: 8px"><span class="ms" style="font-size: 16px" aria-hidden="true">text_fields</span>Text</span>
+<span style="display: flex; align-items: center; gap: 8px"><span class="ms" style="font-size: 16px" aria-hidden="true">image</span>Image</span>
+<span style="display: flex; align-items: center; gap: 8px"><span class="ms" style="font-size: 16px" aria-hidden="true">music_note</span>Audio</span>
+<span style="display: flex; align-items: center; gap: 8px"><span class="ms" style="font-size: 16px" aria-hidden="true">folder</span>Group</span>
+<span style="display: flex; align-items: center; gap: 8px"><span class="ms" style="font-size: 16px" aria-hidden="true">dashboard</span>Vanilla</span>
+</div>
+<div style="font-size: 11.5px; color: var(--text-3); line-height: 1.45">Today every layer uses the same icon. Each element type brings its own instead (rule 74), the same one New Element and element pickers show.</div>
+</div>
+</sc-if>
+
+<sc-if value="{{c.isCard}}" hint-placeholder-val="{{true}}">
+<div style="{{c.cardStyle}}">
+<div style="font-size: 12px; font-weight: 600; color: var(--text-3)">{{c.title}}</div>
+<div class="spec-surface" style="{{c.surfaceStyle}}">
+<sc-if value="{{c.hasArt}}" hint-placeholder-val="{{true}}"><img class="art" src="dusk_valley.png" alt="" aria-hidden="true" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; opacity: .9"></sc-if>
+
+<sc-if value="{{c.isStates}}" hint-placeholder-val="{{false}}">
+<div class="group" style="position: relative; padding: 4px 18px; background: var(--win)">
+<sc-for list="{{c.rows}}" as="r" hint-placeholder-count="7">
+<div class="state-line">
+<div><div style="color: var(--text)">{{r.label}}</div><div style="font-size: 11.5px; color: var(--text-3); margin-top: 2px">{{r.note}}</div></div>
+<div class="panel" style="width: 264px; padding: 0 6px; box-shadow: none">
+<div class="{{r.cls}}">
+<sc-if value="{{r.isGroup}}" hint-placeholder-val="{{false}}"><button class="{{r.chevCls}}" aria-label="Collapse group"><span class="ms" aria-hidden="true">chevron_right</span></button></sc-if>
+<sc-if value="{{r.noChev}}" hint-placeholder-val="{{true}}"><span class="lspace"></span></sc-if>
+<button class="lmain">
+<sc-if value="{{r.iFolder}}" hint-placeholder-val="{{false}}"><span class="ms" aria-hidden="true">folder</span></sc-if>
+<sc-if value="{{r.iButton}}" hint-placeholder-val="{{false}}"><span class="ms" aria-hidden="true">smart_button</span></sc-if>
+<sc-if value="{{r.iText}}" hint-placeholder-val="{{false}}"><span class="ms" aria-hidden="true">text_fields</span></sc-if>
+<sc-if value="{{r.iAudio}}" hint-placeholder-val="{{false}}"><span class="ms" aria-hidden="true">music_note</span></sc-if>
+<sc-if value="{{r.iCube}}" hint-placeholder-val="{{false}}"><span class="ms" aria-hidden="true">dashboard</span></sc-if>
+<span class="lname">{{r.name}}</span>
+</button>
+<sc-if value="{{r.isVanilla}}" hint-placeholder-val="{{false}}"><button class="leye" aria-label="Move above your elements"><span class="ms" aria-hidden="true">vertical_align_top</span></button></sc-if>
+<sc-if value="{{r.hasEye}}" hint-placeholder-val="{{true}}"><button class="leye" aria-label="{{r.eyeLabel}}"><sc-if value="{{r.visible}}" hint-placeholder-val="{{true}}"><span class="ms" aria-hidden="true">visibility</span></sc-if><sc-if value="{{r.hidden}}" hint-placeholder-val="{{false}}"><span class="ms" aria-hidden="true">visibility_off</span></sc-if></button></sc-if>
+</div>
+</div>
+</div>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{c.isPanel}}" hint-placeholder-val="{{true}}">
+<div class="{{c.panelCls}}" style="position: relative; margin: 0 auto">
+<div class="ptitle">
+<div class="{{c.tlCls}}"><button class="c" aria-label="Hide panel"><span class="ms" aria-hidden="true">close</span></button><button class="m" aria-label="Collapse panel"><span class="ms" aria-hidden="true">remove</span></button></div>
+<div class="wt"><span class="ms" aria-hidden="true">layers</span>Layers</div>
+<div class="wa"><button class="ib" aria-label="New Group"><span class="ms" aria-hidden="true">create_new_folder</span></button></div>
+</div>
+<sc-if value="{{c.hasList}}" hint-placeholder-val="{{true}}">
+<div class="plist">
+<sc-for list="{{c.rows}}" as="r" hint-placeholder-count="6">
+<sc-if value="{{r.isSep}}" hint-placeholder-val="{{false}}"><div class="lsep"></div></sc-if>
+<sc-if value="{{r.isRow}}" hint-placeholder-val="{{true}}">
+<div class="{{r.cls}}" style="{{r.style}}">
+<sc-if value="{{r.isGroup}}" hint-placeholder-val="{{false}}"><button class="{{r.chevCls}}" aria-label="Toggle group"><span class="ms" aria-hidden="true">chevron_right</span></button></sc-if>
+<sc-if value="{{r.noChev}}" hint-placeholder-val="{{true}}"><span class="lspace"></span></sc-if>
+<button class="lmain">
+<sc-if value="{{r.iFolder}}" hint-placeholder-val="{{false}}"><span class="ms" aria-hidden="true">folder</span></sc-if>
+<sc-if value="{{r.iButton}}" hint-placeholder-val="{{false}}"><span class="ms" aria-hidden="true">smart_button</span></sc-if>
+<sc-if value="{{r.iText}}" hint-placeholder-val="{{false}}"><span class="ms" aria-hidden="true">text_fields</span></sc-if>
+<sc-if value="{{r.iAudio}}" hint-placeholder-val="{{false}}"><span class="ms" aria-hidden="true">music_note</span></sc-if>
+<sc-if value="{{r.iCube}}" hint-placeholder-val="{{false}}"><span class="ms" aria-hidden="true">dashboard</span></sc-if>
+<span class="lname">{{r.name}}</span>
+</button>
+<sc-if value="{{r.isVanilla}}" hint-placeholder-val="{{false}}"><button class="leye" aria-label="Move above your elements"><span class="ms" aria-hidden="true">vertical_align_top</span></button></sc-if>
+<sc-if value="{{r.hasEye}}" hint-placeholder-val="{{true}}"><button class="leye" aria-label="{{r.eyeLabel}}"><sc-if value="{{r.visible}}" hint-placeholder-val="{{true}}"><span class="ms" aria-hidden="true">visibility</span></sc-if><sc-if value="{{r.hidden}}" hint-placeholder-val="{{false}}"><span class="ms" aria-hidden="true">visibility_off</span></sc-if></button></sc-if>
+</div>
+</sc-if>
+</sc-for>
+<sc-if value="{{c.hasDropLine}}" hint-placeholder-val="{{false}}"><div class="drop-line" style="{{c.dropStyle}}"></div></sc-if>
+</div>
+</sc-if>
+<sc-if value="{{c.hasMenu}}" hint-placeholder-val="{{false}}"><div style="position: absolute; z-index: 30; left: 46px; top: 89px"><dc-import name="ContextMenu" items="{{c.menuItems}}" label="Layer" standalone="{{no}}" hint-size="auto,160px"></dc-import></div></sc-if>
+</div>
+</sc-if>
+</div>
+<div style="font-size: 12px; color: var(--text-3); line-height: 1.45">{{c.caption}}</div>
+</div>
+</sc-if>
+
+</sc-for>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1440,"height":1856}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const row = (o) => {
+      const icon = o.group ? 'folder' : o.icon;
+      const cls = ['item', 'lrow', o.child && 'child', o.sel && 'sel', o.dim && 'dim', o.hov && 'hov', o.off && 'off', o.vanilla && 'vanilla', o.ghost && 'ghost', o.into && 'drop-into', o.lifted && 'lifted'].filter(Boolean).join(' ');
+      return {
+        isRow: true, label: o.label || '', note: o.note || '', name: o.name, cls,
+        style: o.lifted ? 'position: absolute; z-index: 5; left: ' + o.lifted[0] + 'px; width: 176px; top: ' + o.lifted[1] + 'px' : '',
+        isGroup: !!o.group, noChev: !o.group, chevCls: o.group === 'open' ? 'lchev open' : 'lchev',
+        isVanilla: !!o.vanilla, hasEye: !o.vanilla, visible: !o.off, hidden: !!o.off, eyeLabel: o.off ? 'Show layer' : 'Hide layer',
+        iFolder: icon === 'folder', iButton: icon === 'button', iText: icon === 'text', iAudio: icon === 'audio', iCube: icon === 'cube'
+      };
+    };
+    const sep = { isSep: true };
+    // layer menu icons, by their Material Symbols names
+    const LI = {
+      settings: 'settings',
+      rename: 'drive_file_rename_outline',
+      addGroup: 'create_new_folder',
+      collapse: 'unfold_less'
+    };
+    // the same items the Layers panel's right-click menu shows for an element
+    const layerMenu = [
+      { d: LI.settings, label: 'Element Settings', sub: true, hl: true },
+      { d: LI.rename, label: 'Rename Layer' },
+      { ic: 'eye', label: 'Hide Layer' },
+      { sep: true },
+      { d: LI.addGroup, label: 'Add Group' }
+    ];
+    const panel = (o) => ({
+      isCard: true, isPanel: true, hasArt: true, title: o.title, caption: o.caption,
+      cardStyle: 'display: flex; flex-direction: column; gap: 10px' + (o.span ? '; grid-column: span ' + o.span : ''),
+      surfaceStyle: 'height: ' + (o.height || 300) + 'px',
+      panelCls: 'win panel' + (o.collapsed ? '' : ' open'), tlCls: o.showGlyphs ? 'tl sm show' : 'tl sm',
+      hasList: !o.collapsed, rows: o.rows || [], hasMenu: !!o.menu, menuItems: o.menu ? layerMenu : [],
+      hasDropLine: o.dropTop !== undefined, dropStyle: 'top: ' + o.dropTop + 'px' + (o.dropLeft ? '; left: ' + o.dropLeft + 'px' : '')
+    });
+    const t = (i) => 6 + i * 27;
+    const cards = [
+      { isHeading: true, title: 'Title bar', text: "A 32px title bar instead of 42px, with smaller lights. Panels only show the lights for actions they have: red hides the panel (it comes back from Editor Widgets in the menu bar), yellow collapses it to the title bar. Panels can't maximize, so there's no green light. Panel actions like New Group go on the right." },
+      panel({ title: 'Open', caption: 'The title and icon sit centered, just like on windows.', height: 230, rows: [
+        row({ name: 'Main Buttons', group: 'open' }), row({ name: 'Play', icon: 'button', child: true, sel: true }), row({ name: 'Options', icon: 'button', child: true }), row({ name: 'Title Text', icon: 'text' })
+      ] }),
+      panel({ title: 'Collapsed', caption: 'Yellow light or a double-click on the title bar. It works the same way on windows.', height: 230, collapsed: true }),
+      panel({ title: 'Pointer anywhere over the lights', caption: 'Both glyphs show together, the same as on windows.', height: 230, showGlyphs: true, rows: [
+        row({ name: 'Title Text', icon: 'text' }), row({ name: 'Splash Text', icon: 'text' })
+      ] }),
+      { isHeading: true, title: 'Rows', text: "Rows work like a macOS sidebar, and every element type gets its own icon. The eye stays faint until you point at a row. A hidden layer always shows a crossed-out eye, so you can spot it at a glance. Groups open with a chevron and draw a guide line next to their layers." },
+      { isCard: true, isStates: true, title: 'Row states', caption: '', cardStyle: 'display: flex; flex-direction: column; gap: 10px; grid-column: span 2', surfaceStyle: 'padding: 0; background: transparent', rows: [
+        row({ label: 'Default', note: 'Eye stays faint', name: 'Title Text', icon: 'text' }),
+        row({ label: 'Pointer over the row', note: 'Eye becomes clear and clickable', name: 'Title Text', icon: 'text', hov: true }),
+        row({ label: 'Selected', note: 'Same accent as the rest of the UI', name: 'Play', icon: 'button', sel: true }),
+        row({ label: 'Selected, while you work in the layout', note: 'Turns gray so focus is obvious', name: 'Play', icon: 'button', sel: true, dim: true }),
+        row({ label: 'Hidden layer', note: 'Dimmed, with a crossed-out eye that always shows', name: 'Menu Music', icon: 'audio', off: true }),
+        row({ label: 'Group', note: 'Chevron turns when it opens', name: 'Main Buttons', group: 'open' }),
+        row({ label: 'Vanilla Elements', note: 'The arrow moves it above or below your elements', name: 'Vanilla Elements', icon: 'cube', vanilla: true })
+      ] },
+      { isLegend: true },
+      { isHeading: true, title: 'Drag and drop, right-click', text: 'A dragged row lifts off the list and a blue line shows where it will land. Dropping onto a group outlines the whole group row. Right-clicking opens the same menu as everywhere else in FancyMenu.' },
+      panel({ title: 'Reorder', caption: 'The line starts at the depth the row will land in, here inside Main Buttons. The empty spot stays faint until you let go.', height: 280, dropTop: t(2) - 1, dropLeft: 34, rows: [
+        row({ name: 'Main Buttons', group: 'open' }), row({ name: 'Play', icon: 'button', child: true }), row({ name: 'Options', icon: 'button', child: true }), row({ name: 'Quit Game', icon: 'button', child: true }), row({ name: 'Title Text', icon: 'text', ghost: true }), row({ name: 'Splash Text', icon: 'text' }),
+        row({ name: 'Title Text', icon: 'text', lifted: [92, t(2) + 7] })
+      ] }),
+      panel({ title: 'Into a group', caption: 'The whole group row lights up as the target.', height: 280, rows: [
+        row({ name: 'Main Buttons', group: 'closed' }), row({ name: 'Background', group: 'closed', into: true }), row({ name: 'Title Text', icon: 'text' }), row({ name: 'Splash Text', icon: 'text', ghost: true }), sep, row({ name: 'Vanilla Elements', icon: 'cube', vanilla: true }),
+        row({ name: 'Splash Text', icon: 'text', lifted: [92, t(1) + 17] })
+      ] }),
+      panel({ title: 'Right-click menu', caption: 'Same look, keys and search as every other menu and pop-up button.', height: 280, menu: true, rows: [
+        row({ name: 'Main Buttons', group: 'open' }), row({ name: 'Play', icon: 'button', child: true, sel: true }), row({ name: 'Options', icon: 'button', child: true }), row({ name: 'Quit Game', icon: 'button', child: true }), row({ name: 'Title Text', icon: 'text' }), row({ name: 'Splash Text', icon: 'text' })
+      ] })
+    ];
+    return {
+      themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark',
+      matClass: (this.props.material ?? 'Blur') === 'Blur' ? 'mat-blur' : '',
+      cards
+    };
+  }
+}
+</script>
+</body>
+</html>

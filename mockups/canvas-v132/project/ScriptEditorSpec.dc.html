@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Script editor today and proposed</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.pair{display:grid;grid-template-columns:620px minmax(0,1fr);gap:48px;align-items:start}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start}
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;align-items:start}
+.lg-btn{height:20px;display:grid;place-items:center;border:1px solid #3e4042;background:#333}
+.lg-list{flex:1 1 auto;min-width:0;border:1px solid #3e4042;background:#1e1e1e;padding:2px;display:flex;flex-direction:column;gap:2px;font-size:11px;overflow:hidden}
+.lg-e{position:relative;padding:3px 6px;line-height:15px;white-space:nowrap;overflow:hidden}
+.lg-e .v{padding-left:12px;color:#ceDDed}
+.lg-e i{display:inline-block;width:4px;height:4px;margin:0 6px 2px 0;border-radius:50%;background:#b28dd1}
+.lg-e i.y{background:#e5c07b}
+.lg-e .tg{display:inline-block;width:8px;height:8px;margin:0 5px -1px 0;border:1px solid #89709e;background:#24202a;font-size:7px;line-height:6px;text-align:center;color:#ceDDed}
+.lg-e .bar{position:absolute;left:2px;top:0;bottom:0;width:3px;background:rgba(137,112,158,.67)}
+.lg-mini{flex:0 0 52px;border:1px solid rgba(137,112,158,.5);background:rgba(20,16,25,.82);padding:3px;display:flex;flex-direction:column;gap:1px}
+.lg-mini b{display:block;height:5px}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 24px}
+.tl-row{display:flex;align-items:flex-start;gap:10px;font-size:13px;line-height:1.45;color:var(--text-2)}
+.tl-row .se-tile{margin-top:1px}
+.tl-row b{display:block;font-weight:600;color:var(--title)}
+.kr{display:flex;align-items:center;gap:14px;padding:9px 18px;border-bottom:1px solid var(--sep);font-size:12.5px;color:var(--text-2)}
+.kr:last-child{border-bottom:0}
+.kk{flex:0 0 190px;font-family:"Noto Sans Mono",ui-monospace,Menlo,monospace;font-size:12px;color:var(--text)}
+.okchip{color:var(--warn);background:color-mix(in srgb,var(--warn) 16%,transparent)}
+.bugchip{color:var(--err);background:color-mix(in srgb,var(--err) 14%,transparent)}
+.rows-demo{padding:8px;border-radius:10px;background:var(--te-bg);box-shadow:0 0 0 1px var(--group-line)}
+.spec code{font-family:"Noto Sans Mono",ui-monospace,Menlo,monospace;font-size:12px;color:var(--text)}
+</style>
+</helmet>
+<div class="fm spec {{themeClass}}" style="min-height: 6032px">
+
+<header style="display: flex; flex-direction: column; gap: 12px; max-width: 920px">
+<div style="font-size: 12px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; color: var(--text-3)">FancyMenu · UI rework concept · script editor</div>
+<h1 style="margin: 0; font-size: 34px; line-height: 1.15; font-weight: 700; color: var(--title)">A script editor that reads like a sentence</h1>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: var(--text-2)">Every step is one line you can read out loud: Play Audio click.ogg at 80%, If intro_seen is not true. Values and conditions are tokens you click to edit right where they are. Adding happens from one searchable menu, several steps can be selected, copied, wrapped and turned off at once, and problems show up on the step that has them instead of failing silently in game.</p>
+</header>
+
+<section>
+<h2 class="h2">Today and proposed</h2>
+<div class="pair">
+<div><div class="cap">Today</div><div class="lg-win" style="width: 620px">
+<div class="lg-title"><span>Edit Action Script</span><span class="lg-x">×</span></div>
+<div style="padding: 12px 14px 14px">
+<div style="display: flex; align-items: flex-end; margin-bottom: 6px"><span>Script Body</span><span style="margin-left: auto; display: flex; gap: 5px"><span class="lg-btn" style="width: 118px">Cancel</span><span class="lg-btn" style="width: 118px">Done</span></span></div>
+<div style="display: flex; gap: 8px; height: 330px">
+<div class="lg-list">
+<div class="lg-e" style="background: #24202a"><span class="tg">■</span>Comment: The first visit shows the story. After that, Play joins the server.</div>
+<div class="lg-e" style="background: #261f2c"><div><i></i>Play Audio</div><div class="v"><i class="y"></i>Value: {"audioSource":"[source:local]/config/fancymenu/assets/click.ogg","soundChannel":"master","baseVolume":0.8}</div></div>
+<div class="lg-e" style="background: #21293a; padding-left: 10px"><span class="bar"></span><span class="tg">−</span>IF (Is Variable Value (FM Variable))</div>
+<div class="lg-e" style="background: #261f2c; margin-left: 20px"><div><i></i>Set Variable Value (FM Variable)</div><div class="v"><i class="y"></i>Value: intro_seen:true</div></div>
+<div class="lg-e" style="background: #261f2c; margin-left: 20px"><div><i></i>Open Screen or Custom GUI</div><div class="v"><i class="y"></i>Value: intro_story</div></div>
+<div class="lg-e" style="background: #2a213a; padding-left: 10px"><span class="bar"></span><span class="tg">■</span>ELSE-IF (Is Server Online)</div>
+<div class="lg-e" style="background: #261f2c; margin-left: 20px"><div><i></i>Show Toast</div><div class="v"><i class="y"></i>Value: {"title":"Joining Dusk Valley, {\"placeholder\":\"playername\"}!","message":"","durationMs":3000,"width</div></div>
+<div class="lg-e" style="background: #232d42; margin-left: 20px"><span class="tg">−</span>EXECUTE LATER (800 ms)</div>
+<div class="lg-e" style="background: #261f2c; margin-left: 40px"><div><i></i>Join Server</div><div class="v"><i class="y"></i>Value: play.duskvalley.net</div></div>
+<div class="lg-e" style="background: #38281c; padding-left: 10px"><span class="bar"></span><span class="tg">■</span>ELSE</div>
+</div>
+<div class="lg-mini"><b style="background: #3a3340; height: 4px"></b><b style="background: #4a3d55; height: 9px"></b><b style="background: #33405a"></b><b style="background: #4a3d55; height: 9px; margin-left: 4px"></b><b style="background: #4a3d55; height: 9px; margin-left: 4px"></b><b style="background: #45375a"></b><b style="background: #4a3d55; height: 9px; margin-left: 4px"></b><b style="background: #36466a; margin-left: 4px"></b><b style="background: #4a3d55; height: 9px; margin-left: 8px"></b><b style="background: #5a432f"></b></div>
+</div>
+<div style="margin-top: 8px; text-align: center; color: #7f878f">Right-click here or press A to add actions</div>
+</div>
+</div></div>
+<div><div class="cap">What gets in the way</div>
+<ul class="probs">
+<li>Values show how they are stored, not what they do: Play Audio and Show Toast show JSON, Set Variable shows intro_seen:true, Send HTTP Request shows url|||POST|||{…}|||… and long values run off the row.</li>
+<li>Conditions only list requirement names. IF (Is Variable Value (FM Variable)) doesn't say which variable, which value, or that it's negated, and groups lose their and/or.</li>
+<li>Editing a value needs a double-click on its text, which nothing hints at. Actions with their own editor hide the whole script editor while it's open.</li>
+<li>The add menu is one alphabetical list of about 60 actions without descriptions. The full list with search is a separate window. New actions get example values like example.menu.identifier that quietly don't work.</li>
+<li>Adding an If opens the Manage Requirements window first, and cancelling it drops the If.</li>
+<li>One step can be selected at a time. Copy and paste only work for a single action inside the same window, and copying a block flashes a big "not allowed" icon.</li>
+<li>No search, no way to turn a step off for testing without deleting it, no way to put steps into an If or a folder after the fact.</li>
+<li>Full-color rows and two lines per action even without a value (Value: NONE). The minimap shows colored blocks, but no names, problems or search results.</li>
+<li>Nothing says what runs the script, and listener scripts don't show the $$ variables they get.</li>
+</ul></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">What changes</h2>
+<div class="group" style="background: var(--win)">
+<div class="mv head"><div>Today</div><div></div><div>Proposed</div><div>Why</div></div>
+<div class="mv"><div class="from">Two-line colored entries with "Value:"</div><div class="arrow">→</div><div class="to">One line per step: a colored tile, the name and its values as tokens</div><div class="why">A script reads top to bottom like a list of sentences. Color stays on the small tile, where it helps to scan without shouting.</div></div>
+<div class="mv"><div class="from">Raw stored values</div><div class="arrow">→</div><div class="to">Tokens with placeholder chips and color swatches, and short summaries for actions with several variables</div><div class="why">Play Audio click.ogg at 80% instead of a line of JSON. Tokens wrap instead of getting cut off.</div></div>
+<div class="mv"><div class="from">Double-click a value, or open a separate editor</div><div class="arrow">→</div><div class="to">Every variable gets the control of its type: text is edited in place, everything else opens the action's form, like a placeholder chip</div><div class="why">Switches, number fields with steppers, lists of variables, screens and layouts, and sound pickers with a play button, the same controls placeholder variables get. The big editors stay one click away and open on top, without hiding the script.</div></div>
+<div class="mv"><div class="from">IF (Requirement names)</div><div class="arrow">→</div><div class="to">If intro_seen is not true and a screen is open</div><div class="why">Conditions show their values, Is Not and and/or, and can be flipped right from a popover.</div></div>
+<div class="mv"><div class="from">Alphabetical submenu plus the Action Chooser window</div><div class="arrow">→</div><div class="to">One Add menu: Blocks, Favorites, Recently Used, then actions by category</div><div class="why">Search covers names and descriptions, hover help explains every entry, and a star marks favorites.</div></div>
+<div class="mv"><div class="from">One selected step</div><div class="arrow">→</div><div class="to">Shift- and Ctrl-click, Shift+↑/↓, Ctrl+A</div><div class="why">Move, copy, delete, wrap or turn off several steps at once.</div></div>
+<div class="mv"><div class="from">Copy one action, inside one window</div><div class="arrow">→</div><div class="to">Cut, copy, paste and duplicate any steps, blocks included, through the system clipboard</div><div class="why">Steps move between a button, a ticker and a listener, or get shared as text.</div></div>
+<div class="mv"><div class="from">Delete to stop a step from running</div><div class="arrow">→</div><div class="to">A Runs switch (Ctrl+/)</div><div class="why">Turned-off steps stay dimmed with an Off chip, like commenting out code.</div></div>
+<div class="mv"><div class="from">No way to group after the fact</div><div class="arrow">→</div><div class="to">Wrap In Folder, If, While, Delay Gate or Execute Later, and Unwrap</div><div class="why">Turning three steps into a condition is one shortcut, not three drags.</div></div>
+<div class="mv"><div class="from">Mistakes fail silently in game</div><div class="arrow">→</div><div class="to">A warning on the step, a count in the status bar and a list that jumps to each one</div><div class="why">Missing values, empty conditions, unknown placeholders and actions from removed mods.</div></div>
+<div class="mv"><div class="from">No search</div><div class="arrow">→</div><div class="to">Find (Ctrl+F) and Replace in values</div><div class="why">Renaming a variable used in eight steps is one Replace All.</div></div>
+<div class="mv"><div class="from">Minimap of colored blocks</div><div class="arrow">→</div><div class="to">A minimap with folder names, problems, find results and the selection, and a preview on hover</div><div class="why">Long scripts stay easy to get around in, without collapsing anything.</div></div>
+<div class="mv"><div class="from">Nothing about what runs it</div><div class="arrow">→</div><div class="to">"Runs when Play is clicked", and the Listener Variables of listener scripts</div><div class="why">You always know which script you're in and what $$ variables it can use.</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">A step, piece by piece</h2>
+<div class="two">
+<div class="spec-card">
+<div class="k">Tiles say what kind of step it is</div>
+<div class="tiles">
+<div class="tl-row"><span class="se-tile" style="--tile: var(--st-action)"><span class="ms" aria-hidden="true">music_note</span></span><span><b>Actions</b>One color for all actions, with the icon of their category.</span></div>
+<div class="tl-row"><span class="se-tile" style="--tile: var(--st-if)"><span class="ms" aria-hidden="true">alt_route</span></span><span><b>If, Else If, Else</b>The same color for the whole chain, so it reads as one block.</span></div>
+<div class="tl-row"><span class="se-tile" style="--tile: var(--st-while)"><span class="ms" aria-hidden="true">repeat</span></span><span><b>While</b>Repeats, so it gets its own color.</span></div>
+<div class="tl-row"><span class="se-tile" style="--tile: var(--st-time)"><span class="ms" aria-hidden="true">timer</span></span><span><b>Delay Gate, Execute Later</b>Both are about time and share a color.</span></div>
+<div class="tl-row"><span class="se-tile" style="--tile: var(--st-folder)"><span class="ms" aria-hidden="true">folder</span></span><span><b>Folders and unknown actions</b>Gray, because they don't do anything on their own.</span></div>
+<div class="tl-row"><span class="se-tile cmt"><span class="ms" aria-hidden="true">comment</span></span><span><b>Comments</b>No tile and italic text, so notes never look like something that runs.</span></div>
+</div>
+<div class="kd">The colors come from the UI theme fields the script editor already has (actions_entry_background_color_*), now used for the tile instead of the whole row.</div>
+</div>
+<div class="spec-card">
+<div class="k">Tokens read like text and edit like fields</div>
+<ul class="notes">
+<li>A token is the value itself on a soft tint. On hover it gets the field outline. A click on a text variable edits it right there, any other variable opens the action's form with a control for its type.</li><li>Typed variables show what they are: a play button for sounds, the element's icon, On or Off for switches, and units like 80% or 3 s.</li>
+<li>Placeholders show as the same chips as in the text editor, $$ variables as small code chips, and &amp; color codes with a swatch.</li>
+<li>Empty values show what goes in, dashed: <b>URL</b>, <b>Add a condition</b>. A While without a condition is red, because it freezes the game for 3 seconds.</li>
+<li>Long values wrap onto more lines instead of getting cut off.</li>
+<li>The words around the tokens come from the step's row sentence in the current language, like Set Variable {variable} to {value}, so every language can use its own word order. Words after the first token are dimmed, so the values stand out.</li>
+<li>Thin guides connect a block with its steps. Hovering or selecting an If lights up the guides of its whole chain.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Typed variables</h2>
+<p class="kd" style="max-width: 920px; margin: -6px 0 16px; font-size: 13px; color: var(--text-2)">Action variables use the same types and controls as placeholder variables (Keksuccino/FancyMenu#1849, rule 64). Every typed control keeps a { } button to type placeholder text instead, and switching back keeps the value when it still fits the type.</p>
+<div class="two">
+<div class="group" style="background: var(--win)">
+<div class="kr"><span class="kk">TEXT</span><span>Edited right in the row when it's an action's only variable, otherwise a field in the form. { and $$ suggest placeholders and listener variables.</span></div>
+<div class="kr"><span class="kk">BOOLEAN</span><span>A switch. The row says On or Off.</span></div>
+<div class="kr"><span class="kk">INTEGER</span><span>With a range, like Volume 0 to 100%, the slider context menus use. Without one, a number field with its unit and a stepper, like the HTTP timeout. The stepper moves in steps that fit, like 100 ms for times (rule 18).</span></div>
+<div class="kr"><span class="kk">DECIMAL</span><span>With a range, the same slider. Without one, a number field with its unit and a stepper, like Shows for 3 s, stepping by a size that fits the value.</span></div>
+<div class="kr"><span class="kk">CHOICE</span><span>A segmented control for 2 or 3 options (Enable, Disable, Toggle), a pop-up for more (sound channels, HTTP methods).</span></div>
+</div>
+<div class="group" style="background: var(--win)">
+<div class="kr"><span class="kk">LOOKUP</span><span>A field with a list you can still type into: variables with their current value, screens, layouts, keybinds, Minecraft options, schedulers.</span></div>
+<div class="kr"><span class="kk">ELEMENT_ID</span><span>A pop-up of the fitting elements in the layout, with their icon, like Audio elements for Next Track.</span></div>
+<div class="kr"><span class="kk">FILE, FILE_OR_URL</span><span>A path field with a button that opens the file or resource chooser. Sounds get a play button, in the form and in the row.</span></div>
+<div class="kr"><span class="kk">URL</span><span>A field with a link icon.</span></div>
+<div class="kr"><span class="kk">SERVER_ADDRESS</span><span>A host:port field with your server list.</span></div>
+</div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Blocks read like sentences</h2>
+<div class="three">
+<div class="spec-card"><div class="k">If, Else If, Else</div><div class="kd" style="margin: 0">If [condition] and [condition]. Each condition is its own sentence, and Is Not uses its negated one, like intro_seen is not true. Else If works the same, Else has nothing to fill in. Click a condition to flip Is and Is Not or open Manage Conditions for the rest. Each branch collapses on its own.</div></div>
+<div class="spec-card"><div class="k">While</div><div class="kd" style="margin: 0">While [condition]. Its help says it stops after 3 seconds, because it runs all at once and holds the game until then. Without a condition the token turns red.</div></div>
+<div class="spec-card"><div class="k">Delay Gate</div><div class="kd" style="margin: 0">Delay Gate opens after [3000 ms]. Help in one sentence: skips its steps until the time has passed since the script first got here, then runs them every time.</div></div>
+<div class="spec-card"><div class="k">Execute Later</div><div class="kd" style="margin: 0">Execute Later after [800 ms]. Runs its steps once the time has passed, while the rest of the script goes on. Hovering a time shows it in seconds.</div></div>
+<div class="spec-card"><div class="k">Folder</div><div class="kd" style="margin: 0">The folder name in bold. Collapsed folders show how many steps they hold. Double-click or Enter renames, Ctrl+G wraps the selection in a new folder.</div></div>
+<div class="spec-card"><div class="k">Comment</div><div class="kd" style="margin: 0">Italic text with a speech bubble. Comments wrap like any other text and never run.</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Adding steps</h2>
+<div class="two">
+<div class="spec-card"><div class="k">One menu for everything</div><ul class="notes">
+<li>The Add button in the toolbar, A, Add Step in the right-click menu and the empty state all open the same menu.</li>
+<li>Blocks first, then Favorites, then the 3 actions you used last, then all actions by category. Typing searches every action by name and description and shows its category on the right.</li>
+<li>Hover help explains each entry, with an example value where it helps. Hovering an action shows a star: click it to add it to Favorites.</li>
+<li>Actions that can't be used in this layout don't show up, like today.</li>
+</ul></div>
+<div class="spec-card"><div class="k">Where a new step goes, and what happens next</div><ul class="notes">
+<li>Right below the selected step. When a block is selected, at the top of that block. With nothing selected, at the end of the script. Pasted steps follow the same rule, and so does a click on an empty block's "Click to add a step".</li>
+<li>Actions start with real defaults where there is one, like 100% volume, and empty otherwise, with their example as a hint ("like https://example.com") instead of a value that silently doesn't work.</li>
+<li>A single text variable is ready for typing right away, every other action opens its form. An If or While opens its conditions, a folder starts with its name selected.</li>
+</ul></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Minimap</h2>
+<div class="two">
+<div class="spec-card"><div class="k">What it shows</div><ul class="notes">
+<li>The whole script as small bars, one per row the list shows: the step's color, then a bar as long as its text. Blocks get their own color, comments are fainter and steps that are off are dimmed. Collapsed blocks stay collapsed, because the minimap mirrors the list.</li>
+<li>Folder names sit on their rows as small labels, so a long script reads like a table of contents.</li>
+<li>Marks on the right edge for problems and find results, and the selected steps as a band.</li>
+<li>The box shows what's visible in the list right now.</li>
+<li>It fits the whole script as long as the rows stay readable. Longer scripts keep that size and the minimap scrolls along with the list, while the marks then show the whole script.</li>
+</ul></div>
+<div class="spec-card"><div class="k">What you can do with it</div><ul class="notes">
+<li>Hovering shows a preview of that step with the steps around it and where it sits, like Quests › If › Else If. Its block gets outlined in the minimap, and its guide lights up in the list.</li>
+<li>Clicking jumps there and selects the step. Dragging the box scrolls, and so does the mouse wheel over the minimap.</li>
+<li>Dragging steps over the minimap scrolls the list to that spot, so a step can travel from the top of a long script to the bottom in one drag.</li>
+<li>The minimap button at the right end of the toolbar, right above the minimap, hides or shows it, and the editor remembers that. Without it, the marks move into the list's scroll bar.</li>
+</ul></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Special cases it keeps handling</h2>
+<div class="two">
+<div class="spec-card"><ul class="notes">
+<li>Else If and Else belong to their If. They can't be dragged out of the chain, Alt+↑/↓ only reorders Else Ifs, Else always stays last, and Add Else is off when there already is one. Deleting the If deletes its chain.</li>
+<li>Comments can't hold steps, so dropping on a comment puts the step after it.</li>
+<li>Actions from a mod that isn't installed stay in the script as Unknown action with their id and variables. They get skipped and saved back unchanged, while today the next save deletes them (rule 80). Their warning says which mod they come from.</li>
+<li>Deprecated actions show a Deprecated chip in the Add menu and on their step, with what to use instead in the help.</li>
+<li>Values with placeholders stay plain text underneath. Tokens, summaries and forms only change how a value is shown and edited.</li>
+</ul></div>
+<div class="spec-card"><ul class="notes">
+<li>Listener scripts list their Listener Variables, like $$key_name, behind a button in the footer. They also come first in the $$ suggestions. Checkbox and Slider scripts suggest $$value first, labeled Checkbox value or Slider value. It's their current value, so it needs no button of its own.</li>
+<li>Actions with a big editor of their own, like Send HTTP Request, open it as a child window on top. The script editor stays visible behind it, dimmed.</li>
+<li>Dragging near the top or bottom scrolls the list. Holding Alt while dropping copies instead of moving.</li>
+<li>Collapsing is not an edit: it's saved with the script like today, but Undo skips it.</li>
+<li>Cancel and the close button only ask about discarding when something changed.</li>
+</ul></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Keyboard shortcuts</h2>
+<div class="two">
+<div><div class="cap">Kept</div><div class="group" style="background: var(--win)">
+<div class="kr"><span class="kk">↑ ↓</span><span>Select the step above or below</span></div>
+<div class="kr"><span class="kk">Enter</span><span>Edit the variables, conditions, time or name</span></div>
+<div class="kr"><span class="kk">Delete</span><span>Delete the selected steps</span></div>
+<div class="kr"><span class="kk">Ctrl+Z, Ctrl+Y</span><span>Undo and redo</span></div>
+<div class="kr"><span class="kk">Ctrl+C, Ctrl+V</span><span>Copy and paste, now for any steps</span></div>
+<div class="kr"><span class="kk">A</span><span>Add a step, now with the Add menu instead of a separate window</span></div>
+<div class="kr"><span class="kk">Ctrl+S</span><span>Done</span></div>
+</div>
+<div class="cap" style="margin-top: 24px">Changed</div><div class="group" style="background: var(--win)">
+<div class="kr"><span class="kk">Alt+↑ ↓</span><span>Move the selected steps, like moving lines in code editors</span><span class="chip" style="margin-left: auto">Was Shift</span></div>
+<div class="kr"><span class="kk">Shift+↑ ↓</span><span>Select more steps</span><span class="chip" style="margin-left: auto">Was Move</span></div>
+</div></div>
+<div><div class="cap">New</div><div class="group" style="background: var(--win)">
+<div class="kr"><span class="kk">Shift-click, Ctrl-click</span><span>Select a range, or add one step to the selection</span></div>
+<div class="kr"><span class="kk">Ctrl+A</span><span>Select all steps</span></div>
+<div class="kr"><span class="kk">← →</span><span>Collapse or expand a block, ← again jumps to the block it's in</span></div>
+<div class="kr"><span class="kk">Ctrl+X, Ctrl+D</span><span>Cut and duplicate</span></div>
+<div class="kr"><span class="kk">Ctrl+G, Ctrl+Shift+G</span><span>Wrap in a folder, unwrap a block</span></div>
+<div class="kr"><span class="kk">Ctrl+/</span><span>Turn the selected steps off or on</span></div>
+<div class="kr"><span class="kk">Ctrl+F</span><span>Find and replace</span></div>
+<div class="kr"><span class="kk">Ctrl+Shift+Z</span><span>Redo, like in most editors</span></div>
+<div class="kr"><span class="kk">{, $$</span><span>Suggest placeholders and listener variables while editing a value</span></div>
+<div class="kr"><span class="kk">Alt while dropping</span><span>Copy instead of move</span></div>
+<div class="kr"><span class="kk">Esc</span><span>Close the open popup, then the find bar, then clear the selection</span></div>
+</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2" style="display: flex; align-items: center; gap: 10px">Changes beyond the UI <span class="chip" style="font-size: 11px; color: var(--ok); background: color-mix(in srgb, var(--ok) 15%, transparent)">All approved</span></h2>
+<p class="kd" style="max-width: 920px; margin: -6px 0 16px; font-size: 13px; color: var(--text-2)">The editor above already uses these. They change the action API or what gets saved, so each one is a rework rule.</p>
+<div class="two">
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Actions describe their variables <span class="chip" style="color: var(--ok); background: color-mix(in srgb, var(--ok) 15%, transparent)">Approved, rule 64</span></div><div class="kd" style="margin: 0">An action can split its value into variables, each with a type from the same enum placeholders get in #1849, plus a sentence for its row (rule 65). Set Variable gets Variable and New value, Play Audio gets Sound, Volume and Channel. Actions that don't do this keep one text variable with the raw value, and saved values don't change.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Actions get categories <span class="chip" style="color: var(--ok); background: color-mix(in srgb, var(--ok) 15%, transparent)">Covered, rule 65</span></div><div class="kd" style="margin: 0">Actions get a category from the one category list that placeholders, conditions and listeners share, so the Add menu can group them. Addons can add their own categories.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Steps can be turned off <span class="chip" style="color: var(--ok); background: color-mix(in srgb, var(--ok) 15%, transparent)">Approved, rule 70</span></div><div class="kd" style="margin: 0">A Runs switch on every step, and Ctrl+/ for the selected ones. Steps that are off stay dimmed with an Off chip and get skipped. Turning off a block skips everything inside it, and turning off an If skips its whole chain. Each step that's off saves one extra line, so old scripts load with everything on.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">New actions start empty <span class="chip" style="color: var(--ok); background: color-mix(in srgb, var(--ok) 15%, transparent)">Covered, rule 65</span></div><div class="kd" style="margin: 0">getValuePreset() becomes the hint in the empty field instead of the starting value, the same idea as real placeholder defaults in #1851.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Collapsing is view state <span class="chip" style="color: var(--ok); background: color-mix(in srgb, var(--ok) 15%, transparent)">Approved, rule 71</span></div><div class="kd" style="margin: 0">Still saved with the layout, but Undo skips it and it doesn't count as a change. Else If and Else get their own collapse arrow and saved flag, so collapsing an If only hides its own steps. Today collapsing is an undo step, and collapsing an If also hides its Else If and Else.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Listener variables explain themselves <span class="chip" style="color: var(--ok); background: color-mix(in srgb, var(--ok) 15%, transparent)">Covered, rule 65</span></div><div class="kd" style="margin: 0">Listener variables (AbstractListener.CustomVariable) get a short description and an example, so the editor can list them. Today they are only described inside the listener's long description.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Shorter names for the variable actions <span class="chip" style="color: var(--ok); background: color-mix(in srgb, var(--ok) 15%, transparent)">Approved, rule 72</span></div><div class="kd" style="margin: 0">Set Variable Value (FM Variable), Delete Variable (FM Variable), Clear All Variables (FM Variable) and the Is Variable Value (FM Variable) condition become Set Variable, Delete Variable, Clear All Variables and Is Variable Value, matching Get Variable (rule 51). Their identifiers stay the same.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Scripts know what runs them <span class="chip" style="color: var(--ok); background: color-mix(in srgb, var(--ok) 15%, transparent)">Approved, rule 75</span></div><div class="kd" style="margin: 0">The editor gets told who runs the script, for the line at the top like Runs when Play is clicked, and which $$ names come with it, like the Listener Variables of a listener or Checkbox value. Today it only gets the script itself. Plan: <a href="https://github.com/Keksuccino/FancyMenu/issues/1857" target="_blank" rel="noopener" style="color: var(--accent)">Keksuccino/FancyMenu#1857</a>.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Variables know their units <span class="chip" style="color: var(--ok); background: color-mix(in srgb, var(--ok) 15%, transparent)">Approved, rule 79</span></div><div class="kd" style="margin: 0">Number variables get a unit, a step and a display scale, so a volume saved as 0.8 shows as 80% and a time as 3 s. File variables get a media kind, which brings the play button for sounds. Plan: <a href="https://github.com/Keksuccino/FancyMenu/issues/1849" target="_blank" rel="noopener" style="color: var(--accent)">Keksuccino/FancyMenu#1849</a>.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Nothing from a missing mod gets lost <span class="chip" style="color: var(--ok); background: color-mix(in srgb, var(--ok) 15%, transparent)">Approved, rule 80</span></div><div class="kd" style="margin: 0">Actions from a mod that isn&#x27;t installed stay in the script, warn with the name of their mod and get saved back unchanged. Today they&#x27;re left out while loading, so the next save deletes them: <a href="https://github.com/Keksuccino/FancyMenu/issues/1862" target="_blank" rel="noopener" style="color: var(--accent)">Keksuccino/FancyMenu#1862</a>.</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2" style="display: flex; align-items: center; gap: 10px">Bugs found in today's editor <span class="chip bugchip" style="font-size: 11px">Fix during the rework</span></h2>
+<div class="spec-card"><ul class="probs">
+<li>Dragging a step above the top of the list never scrolls up: the check compares the pointer's x with the list's top y (<code>mouseX &lt;= getInnerY()</code> in ActionScriptEditorWindowBody.renderBody). <a href="https://github.com/Keksuccino/FancyMenu/issues/1852" target="_blank" rel="noopener" style="color: var(--accent)">Keksuccino/FancyMenu#1852</a></li>
+<li>Move Up and Move Down do nothing for folders and comments, because moveUp and moveDown only handle actions, If, While, Delay Gate, Execute Later and Else If. <a href="https://github.com/Keksuccino/FancyMenu/issues/1853" target="_blank" rel="noopener" style="color: var(--accent)">Keksuccino/FancyMenu#1853</a></li>
+<li>A While that hits its 3 second timeout once never runs again until the layout reloads: hasTimedOut is only reset after a run that finishes, and a timed-out While returns before it can get there. <a href="https://github.com/Keksuccino/FancyMenu/issues/1854" target="_blank" rel="noopener" style="color: var(--accent)">Keksuccino/FancyMenu#1854</a></li>
+<li>Adding a step to a selected block puts it at the end of the block, dropping one on a block puts it at the start. <a href="https://github.com/Keksuccino/FancyMenu/issues/1855" target="_blank" rel="noopener" style="color: var(--accent)">Keksuccino/FancyMenu#1855</a></li>
+<li>Cancel always asks whether to discard, even when nothing changed. <a href="https://github.com/Keksuccino/FancyMenu/issues/1856" target="_blank" rel="noopener" style="color: var(--accent)">Keksuccino/FancyMenu#1856</a></li>
+</ul></div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"$preview":{"width":1440,"height":6032}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark' };
+  }
+}
+</script>
+</body>
+</html>

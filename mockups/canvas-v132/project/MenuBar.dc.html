@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Menu bar component</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="{{rootCls}}" style="{{rootStyle}}">
+<sc-if value="{{standalone}}" hint-placeholder-val="{{true}}"><div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""></div></sc-if>
+<div class="mb">
+<sc-if value="{{catching}}" hint-placeholder-val="{{false}}"><div class="mb-catch" style="{{catchStyle}}" onClick="{{closeAll}}"></div></sc-if>
+
+<sc-if value="{{expanded}}" hint-placeholder-val="{{true}}">
+<div class="mbar" role="menubar" aria-label="FancyMenu menu bar">
+<span class="mb-logo" role="img" aria-label="FancyMenu"><svg viewBox="3 3 22 22" aria-hidden="true"><path fill="currentColor" d="M13 3h4v1h-4zM7 4h16v1h-16zM6 5h18v1h-18zM6 6h3v1h-3zM13 6h4v1h-4zM21 6h3v1h-3zM6 7h2v1h-2zM22 7h2v1h-2zM6 8h2v1h-2zM22 8h2v1h-2zM6 9h2v1h-2zM22 9h2v1h-2zM6 10h2v1h-2zM22 10h2v1h-2zM5 11h4v1h-4zM21 11h4v1h-4zM5 12h4v1h-4zM13 12h3v1h-3zM21 12h4v1h-4zM5 13h2v1h-2zM11 13h5v1h-5zM21 13h4v1h-4zM9 14h7v1h-7zM21 14h4v1h-4zM7 15h8v1h-8zM22 15h2v1h-2zM5 16h10v1h-10zM22 16h2v1h-2zM3 17h11v1h-11zM22 17h2v1h-2zM4 18h10v1h-10zM22 18h2v1h-2zM6 19h7v1h-7zM15 19h2v1h-2zM21 19h3v1h-3zM8 20h5v1h-5zM15 20h9v1h-9zM8 21h4v1h-4zM14 21h9v1h-9zM9 22h3v1h-3zM14 22h3v1h-3zM9 23h2v1h-2zM10 24h1v1h-1z"></path></svg></span>
+
+<sc-for list="{{menus}}" as="m" hint-placeholder-count="4">
+<div class="mb-item">
+<button class="{{m.cls}}" role="menuitem" aria-haspopup="menu" aria-expanded="{{m.expanded}}" onClick="{{m.click}}" onMouseEnter="{{m.enter}}">{{m.label}}</button>
+<sc-if value="{{m.isOpen}}" hint-placeholder-val="{{false}}">
+<div class="mb-drop" onMouseMove="{{m.track}}">
+<div><dc-import name="ContextMenu" items="{{m.items}}" search="{{m.search}}" focus-on-open="{{yes}}" search-listener="{{m.onQuery}}" escape-listener="{{closeAll}}" standalone="{{no}}" hint-size="auto,420px"></dc-import></div>
+<sc-if value="{{m.hasSub}}" hint-placeholder-val="{{false}}"><div style="{{m.subStyle}}" onMouseEnter="{{m.subEnter}}"><dc-import name="ContextMenu" items="{{m.subItems}}" sub="{{yes}}" search="{{m.subSearch}}" max-height="{{m.subMax}}" escape-listener="{{closeAll}}" standalone="{{no}}" hint-size="auto,260px"></dc-import></div></sc-if>
+</div>
+</sc-if>
+</div>
+</sc-for>
+
+<sc-if value="{{isOverlay}}" hint-placeholder-val="{{true}}">
+<button class="{{centerCls}}" data-tip="{{centerTip}}" aria-label="Copy the identifier of this screen" onClick="{{copyId}}" onMouseLeave="{{uncopy}}">
+<span class="ms" aria-hidden="true">desktop_windows</span>
+<span>Title Screen</span><span class="sid">{{sidText}}</span>
+<sc-if value="{{copied}}" hint-placeholder-val="{{false}}"><span class="ms cp" aria-hidden="true">check</span></sc-if>
+<sc-if value="{{notCopied}}" hint-placeholder-val="{{true}}"><span class="ms cp" aria-hidden="true">content_copy</span></sc-if>
+</button>
+</sc-if>
+<sc-if value="{{isEditor}}" hint-placeholder-val="{{false}}">
+<div class="mb-center" aria-label="Layout you are editing">
+<span class="ms" aria-hidden="true">gallery_thumbnail</span>
+<span>Dusk Valley</span><span class="sub">— Title Screen</span>
+</div>
+</sc-if>
+
+<div class="mb-right">
+<sc-if value="{{isOverlay}}" hint-placeholder-val="{{true}}">
+<button class="{{exitCls}}" data-tip="Close This Screen" aria-label="Close this screen" onClick="{{noop}}"><span class="ms" aria-hidden="true">exit_to_app</span></button>
+</sc-if>
+<sc-if value="{{isEditor}}" hint-placeholder-val="{{false}}">
+<sc-if value="{{unsaved}}" hint-placeholder-val="{{true}}"><button class="mb-save" data-tip="Unsaved changes · Ctrl+S" onClick="{{save}}"><span class="dot" aria-hidden="true"></span>Save</button></sc-if>
+<sc-if value="{{saved}}" hint-placeholder-val="{{false}}"><button class="mb-save saved" data-tip="All changes are saved" onClick="{{noop}}"><span class="ms" aria-hidden="true">check</span>Saved</button></sc-if>
+<button class="mb-ic danger" data-tip="Close Editor" aria-label="Close editor" onClick="{{noop}}"><span class="ms" aria-hidden="true">close</span></button>
+</sc-if>
+<span class="mb-div" aria-hidden="true"></span>
+<button class="mb-ic" data-tip="Collapse Menu Bar" aria-label="Collapse menu bar" onClick="{{collapse}}"><span class="ms" aria-hidden="true">expand_less</span></button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isCollapsed}}" hint-placeholder-val="{{false}}">
+<button class="mb-tab" data-tip="Show Menu Bar" aria-label="Show menu bar" onClick="{{expand}}">
+<svg class="logo" viewBox="3 3 22 22" aria-hidden="true"><path fill="currentColor" d="M13 3h4v1h-4zM7 4h16v1h-16zM6 5h18v1h-18zM6 6h3v1h-3zM13 6h4v1h-4zM21 6h3v1h-3zM6 7h2v1h-2zM22 7h2v1h-2zM6 8h2v1h-2zM22 8h2v1h-2zM6 9h2v1h-2zM22 9h2v1h-2zM6 10h2v1h-2zM22 10h2v1h-2zM5 11h4v1h-4zM21 11h4v1h-4zM5 12h4v1h-4zM13 12h3v1h-3zM21 12h4v1h-4zM5 13h2v1h-2zM11 13h5v1h-5zM21 13h4v1h-4zM9 14h7v1h-7zM21 14h4v1h-4zM7 15h8v1h-8zM22 15h2v1h-2zM5 16h10v1h-10zM22 16h2v1h-2zM3 17h11v1h-11zM22 17h2v1h-2zM4 18h10v1h-10zM22 18h2v1h-2zM6 19h7v1h-7zM15 19h2v1h-2zM21 19h3v1h-3zM8 20h5v1h-5zM15 20h9v1h-9zM8 21h4v1h-4zM14 21h9v1h-9zM9 22h3v1h-3zM14 22h3v1h-3zM9 23h2v1h-2zM10 24h1v1h-1z"></path></svg>
+<span class="ms chev" aria-hidden="true">expand_more</span>
+</button>
+</sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"kind":{"editor":"enum","options":["Overlay","Editor"],"default":"Overlay"},"open":{"editor":"text","default":""},"sub":{"editor":"text","default":""},"unsaved":{"editor":"boolean","default":true},"collapsed":{"editor":"boolean","default":false},"customized":{"editor":"boolean","default":true},"layouts":{"editor":"enum","options":["Few","Many"],"default":"Few"},"hoverTitle":{"editor":"text","default":""},"catchHeight":{"editor":"int","default":0},"frameHeight":{"editor":"int","default":520},"standalone":{"editor":"boolean","default":true},"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1200,"height":520}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const p = this.props;
+    const editor = (p.kind ?? 'Overlay') === 'Editor';
+    const open = s.open !== undefined ? s.open : (p.open || null);
+    const sub = s.sub !== undefined ? s.sub : (p.sub || null);
+    const collapsed = s.collapsed ?? !!p.collapsed;
+    const unsaved = s.unsaved ?? (p.unsaved ?? true);
+    const cust = s.cust ?? (p.customized ?? true);
+    const snap = s.snap ?? true;
+    // anchor overlay colors: empty means "use the UI theme's color"; the row still shows that color like any other value
+    const THEME_BASE = '#25B479', THEME_BORDER = '#114F34';
+    const baseColor = s.baseColor !== undefined ? s.baseColor : '#4FB8FF';
+    const set = (patch) => this.setState(patch);
+    // Submenu hover intent. While a submenu is open and the pointer is heading toward it, crossing other rows
+    // on the way doesn't switch or close it for a short grace time. Entering the submenu cancels the pending
+    // switch; stopping on a row applies it once the grace time is over. Moving straight up or down (not toward
+    // the submenu) still switches instantly, so the menu never feels laggy.
+    const hi = this._hoverIntent || (this._hoverIntent = { pts: [], rect: null, timer: 0 });
+    const GRACE_MS = 350;
+    const cancelIntent = () => { if (hi.timer) { clearTimeout(hi.timer); hi.timer = 0; } };
+    const track = (e) => {
+      hi.pts.push({ x: e.clientX, y: e.clientY });
+      if (hi.pts.length > 4) hi.pts.shift();
+      const subMenu = e.currentTarget.querySelectorAll('.menu.cm')[1];
+      hi.rect = subMenu ? subMenu.getBoundingClientRect() : null;
+    };
+    const headingToSub = () => {
+      const r = hi.rect;
+      if (!r || hi.pts.length < 2) return false;
+      const pt = hi.pts[hi.pts.length - 1], from = hi.pts[0];
+      if (pt.x === from.x && pt.y === from.y) return false;
+      const a = { x: r.left, y: r.top - 8 }, b = { x: r.left, y: r.bottom + 8 };
+      const side = (p1, p2, p3) => (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
+      const d1 = side(pt, from, a), d2 = side(pt, a, b), d3 = side(pt, b, from);
+      return !((d1 < 0 || d2 < 0 || d3 < 0) && (d1 > 0 || d2 > 0 || d3 > 0));
+    };
+    const liveSub = () => { const st = this.state || {}; return st.sub !== undefined ? st.sub : (p.sub || null); };
+    const wantSub = (id) => {
+      cancelIntent();
+      const cur = liveSub();
+      if (cur === id) return;
+      if (cur !== null && headingToSub()) {
+        hi.timer = setTimeout(() => { hi.timer = 0; this.setState({ sub: id }); }, GRACE_MS);
+        return;
+      }
+      set({ sub: id });
+    };
+    const closeAll = () => { cancelIntent(); set({ open: null, sub: null }); };
+
+    // ---------- shared submenus ----------
+    const settings = { items: [
+      { ic: 'power', label: 'Advanced Customization Mode', sw: true, on: false },
+      { sep: true },
+      { ic: 'tune', label: "FancyMenu's UI", sub: true },
+      { sep: true },
+      { ic: 'timer', label: 'Placeholder Caching', val: '30 ms' },
+      { ic: 'timer', label: 'Condition Caching', val: '30 ms' },
+      { sep: true },
+      { ic: 'terminal', label: 'Developer', sub: true }
+    ] };
+
+    // ---------- customization overlay ----------
+    // Layouts of this screen sit right in the menu while there are LAYOUTS_INLINE_MAX or fewer. Bigger setups
+    // (random mode packs easily have 50) collapse into one "All Layouts" row with the count and a searchable submenu.
+    const LAYOUTS_INLINE_MAX = 5;
+    const many = (p.layouts ?? 'Few') === 'Many';
+    const slug = (n) => n.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    const screenNames = many ? ['Dusk Valley', 'Winter Event', 'Spring Bloom', 'Autumn Leaves', 'Starfall'].concat(Array.from({ length: 42 }, (_, i) => 'Title Variant ' + String(i + 1).padStart(2, '0'))) : ['Dusk Valley', 'Winter Event'];
+    const universalNames = many ? ['Watermark', 'Version Badge', 'Seasonal Snow', 'Discord Button', 'Credits Corner'] : ['Watermark'];
+    const offByDefault = ['Winter Event', 'Starfall', 'Seasonal Snow'];
+    const layouts = screenNames.map((name) => ({ name, universal: false })).concat(universalNames.map((name) => ({ name, universal: true })))
+      .map((l) => ({ ...l, id: slug(l.name) }));
+    const layOn = s.layOn ?? Object.fromEntries(layouts.map((l) => [l.id, !offByDefault.includes(l.name)]));
+    const inlineLayouts = layouts.length <= LAYOUTS_INLINE_MAX;
+    const onOff = (id) => (layOn[id] ? 'On' : 'Off');
+    const manage = (id) => ({ items: [
+      { ic: 'edit', label: 'Edit Layout' },
+      { ic: 'toggle', label: 'Enabled', sw: true, on: layOn[id], onToggle: (v) => set({ layOn: { ...layOn, [id]: v } }) },
+      { sep: true },
+      { ic: 'editor', label: 'Rename Layout' },
+      { ic: 'external', label: 'Open in System Text Editor' },
+      { sep: true },
+      { ic: 'trash', label: 'Delete Layout', danger: true }
+    ] });
+    const overlay = [
+      { id: 'customization', label: 'Customization', ctx: true, items: [
+        { head: 'This Screen' },
+        { ic: 'toggle', label: 'Customize This Screen', sw: true, on: cust, onToggle: (v) => set({ cust: v }) },
+        { ic: 'id', label: 'Copy Screen Identifier' },
+        { ic: 'swipe', label: 'Expose Scroll Area Content', sw: true, on: false },
+        { ic: 'link', label: 'Override With Custom GUI' },
+        { head: 'Layouts' },
+        { ic: 'plus', label: 'New Layout', subId: 'newLayout' },
+        ...(inlineLayouts
+          ? layouts.map((l) => ({ ic: l.universal ? 'globe' : 'layout', label: l.name, tag: l.universal ? 'Universal' : '', val: onOff(l.id), subId: 'lay_' + l.id }))
+          : [{ ic: 'layout', label: 'All Layouts', val: String(layouts.length), subId: 'allLayouts' }]),
+        { head: 'Manage' },
+        { ic: 'stack', label: 'Profiles' },
+        { ic: 'tune', label: 'Global Customizations', subId: 'global' },
+        { ic: 'gui', label: 'Custom GUIs', subId: 'guis' },
+        { ic: 'code', label: 'Manage Variables' },
+        { ic: 'ear', label: 'Manage Listeners' },
+        { ic: 'timer', label: 'Manage Schedulers' },
+        { ic: 'check', label: 'Pre-Load Resources' },
+        { head: 'FancyMenu' },
+        { ic: 'gear', label: 'Settings', subId: 'settings' },
+        { ic: 'reload', label: 'Reload FancyMenu', kbd: 'Ctrl+Alt+R' },
+        { ic: 'reload', label: 'Reload Minecraft Resources' },
+        { ic: 'eyeOff', label: 'Hide Menu Bar', kbd: 'Ctrl+Alt+C' },
+        { sep: true },
+        { ic: 'power', label: 'Kill-Switch Screen Customization', danger: true }
+      ], subs: {
+        newLayout: { items: [
+          { ic: 'screen', label: 'For This Screen', disabled: !cust, note: cust ? '' : 'turn on customization first' },
+          { ic: 'globe', label: 'For All Screens', tag: 'Universal' }
+        ] },
+        ...Object.fromEntries(inlineLayouts ? layouts.map((l) => ['lay_' + l.id, manage(l.id)]) : []),
+        allLayouts: { max: 470, search: 'Search layouts', items: [
+          { head: 'This Screen' },
+          ...layouts.filter((l) => !l.universal).map((l) => ({ ic: 'layout', label: l.name, val: onOff(l.id), sub: true })),
+          { head: 'Universal' },
+          ...layouts.filter((l) => l.universal).map((l) => ({ ic: 'globe', label: l.name, val: onOff(l.id), sub: true }))
+        ] },
+        global: { items: [
+          { ic: 'video', label: 'Game Intro', sub: true },
+          { sep: true },
+          { ic: 'image', label: 'Singleplayer World Icons', sw: true, on: true },
+          { ic: 'image', label: 'Multiplayer Server Icons', sw: true, on: true },
+          { ic: 'globe', label: 'Seamless World Loading', sw: true, on: false },
+          { ic: 'sparkle', label: 'Achievement Toasts', sw: true, on: true },
+          { sep: true },
+          { ic: 'image', label: 'Custom Window Icon', sub: true },
+          { ic: 'title', label: 'Custom Window Title', val: 'Dusk Valley' },
+          { sep: true },
+          { ic: 'ruler', label: 'Default GUI Scale', val: 'Auto' },
+          { ic: 'fit', label: 'Force Fullscreen on Launch', sw: true, on: false },
+          { sep: true },
+          { ic: 'button', label: 'Custom Button Textures', sub: true },
+          { ic: 'case', label: 'Button Labels', sub: true },
+          { ic: 'volume', label: 'Custom Button Click Sound', val: 'None' },
+          { ic: 'slider', label: 'Custom Slider Textures', sub: true }
+        ] },
+        guis: { items: [
+          { ic: 'edit', label: 'Manage Custom GUIs' },
+          { ic: 'screen', label: 'Manage Overridden Screens' }
+        ] },
+        settings
+      } },
+      { id: 'tools', label: 'Tools', items: [
+        { ic: 'widgets', label: 'Dummy Screen Instances', subId: 'dummy' },
+        { ic: 'movie', label: 'AFMA Creator' },
+        { sep: true },
+        { ic: 'cube', label: 'Browse Game Resources' },
+        { ic: 'folder', label: 'Open FancyMenu Directory' },
+        { sep: true },
+        { ic: 'terminal', label: 'Debug Overlay', val: 'Off', subId: 'debug' }
+      ], subs: {
+        dummy: { items: [
+          { ic: 'screen', label: 'Connect Screen' },
+          { ic: 'screen', label: 'Dirt Message Screen' },
+          { ic: 'screen', label: 'Level Loading Screen' },
+          { ic: 'screen', label: 'Progress Screen' }
+        ] },
+        debug: { items: [
+          { ic: 'eye', label: 'Show Debug Overlay', sw: true, on: false, kbd: 'Ctrl+Alt+D' },
+          { head: 'Categories' },
+          { ic: 'screen', label: 'Basic Screen', sw: true, on: true },
+          { ic: 'widgets', label: 'Advanced Screen', sw: true, on: false },
+          { ic: 'cube', label: 'Resources', sw: true, on: true },
+          { ic: 'gear', label: 'System', sw: true, on: true }
+        ] }
+      } },
+      { id: 'help', label: 'Help', items: [
+        { ic: 'book', label: 'FancyMenu Docs/Wiki' },
+        { ic: 'chat', label: 'Join the Discord' },
+        { ic: 'bug', label: 'Report a Bug' },
+        { sep: true },
+        { ic: 'search', label: 'Find & Share Layouts on CurseForge' },
+        { sep: true },
+        { ic: 'heart', label: 'Keksuccino on Patreon' },
+        { ic: 'coin', label: 'PayPal Tip Jar' },
+        { sep: true },
+        { ic: 'info', label: 'Credits' }
+      ] }
+    ];
+
+    // ---------- layout editor ----------
+    const elementList = [
+      ['audio', 'Audio'], ['braces', 'Block/Item JSON Model'], ['browser', 'Browser'], ['button', 'Button'], ['checkbox', 'Checkbox'], ['circle', 'Circle Shape'],
+      ['cursor', 'Cursor'], ['move', 'Dragger'], ['keyframe', 'Element Animator'], ['wand', 'GLSL Shader'], ['image', 'Image'], ['cube', 'Item'],
+      ['channel', 'Music Controller'], ['player', 'Player Entity'], ['progress', 'Progress Bar'], ['rect', 'Rectangle Shape'], ['slider', 'Slider'], ['slideshow', 'Slideshow'],
+      ['sparkle', 'Splash Text'], ['title', 'Text'], ['input', 'Text Input Field'], ['ticker', 'Ticker'], ['tooltip', 'Tooltip'], ['video', 'Video']
+    ].map(([ic, label]) => ({ ic, label }));
+    const radios = (labels, cur) => labels.map((label) => ({ radio: true, checked: label === cur, label }));
+    const editorMenus = [
+      { id: 'layout', label: 'Layout', ctx: true, items: [
+        { ic: 'plus', label: 'New' },
+        { ic: 'folder', label: 'Open', subId: 'open' },
+        { sep: true },
+        { ic: 'save', label: 'Save', kbd: 'Ctrl+S', click: () => set({ unsaved: false, open: null, sub: null }) },
+        { ic: 'saveas', label: 'Save As' },
+        { sep: true },
+        { ic: 'settings', label: 'Layout Properties', subId: 'props' },
+        { ic: 'gear', label: 'Settings', subId: 'settings' },
+        { sep: true },
+        { ic: 'close', label: 'Close Editor' }
+      ], subs: {
+        open: { items: [
+          { ic: 'layout', label: 'Dusk Valley', note: 'open now', disabled: true },
+          { ic: 'layout', label: 'Winter Event' },
+          { ic: 'globe', label: 'Watermark', tag: 'Universal' }
+        ] },
+        props: { items: [
+          { ic: 'image', label: 'Menu Backgrounds', val: 'Image', sub: true },
+          { ic: 'sparkle', label: 'Decoration Overlays', sub: true },
+          { ic: 'header', label: 'Header/Footer Customizations', sub: true },
+          { ic: 'title', label: 'Custom Screen Title', val: 'Dusk Valley' },
+          { sep: true },
+          { ic: 'index', label: 'Layout Index', val: '0' },
+          { ic: 'check', label: 'Loading Conditions', val: 'None' },
+          { ic: 'behind', label: 'Custom Elements Behind Vanilla', sw: true, on: false }
+        ] },
+        settings
+      } },
+      { id: 'edit', label: 'Edit', items: [
+        { ic: 'undo', label: 'Undo', kbd: 'Ctrl+Z' },
+        { ic: 'redo', label: 'Redo', kbd: 'Ctrl+Y', disabled: true },
+        { sep: true },
+        { ic: 'copy', label: 'Copy', kbd: 'Ctrl+C' },
+        { ic: 'paste', label: 'Paste', kbd: 'Ctrl+V' },
+        { sep: true },
+        { ic: 'selectAll', label: 'Select All', kbd: 'Ctrl+A' }
+      ] },
+      { id: 'element', label: 'Element', items: [
+        { ic: 'plus', label: 'New Element', subId: 'newElement' },
+        { ic: 'eyeOff', label: 'Deleted Vanilla Elements', val: '2', subId: 'vanilla' }
+      ], subs: {
+        newElement: { items: elementList, search: 'Search elements', max: 312 },
+        vanilla: { items: [
+          { ic: 'button', label: 'Realms Button', note: 'click to restore' },
+          { ic: 'title', label: 'Copyright Text', note: 'click to restore' }
+        ] }
+      } },
+      { id: 'window', label: 'Window', items: [
+        { ic: 'widgets', label: 'Editor Widgets', subId: 'widgets' },
+        { head: 'Grid' },
+        { ic: 'grid', label: 'Show Grid', sw: true, on: true, kbd: 'Ctrl+G' },
+        { ic: 'ruler', label: 'Grid Size', val: '20', subId: 'gridSize' },
+        { ic: 'magnet', label: 'Grid Snapping', sw: true, on: snap, onToggle: (v) => set({ snap: v }) },
+        { ic: 'tune', label: 'Snapping Strength', val: '1.0×', subId: 'strength', disabled: !snap },
+        { head: 'Anchor Overlay' },
+        { ic: 'eye', label: 'Visibility', val: 'Always Visible', subId: 'visibility' },
+        { ic: 'link', label: 'Show All Connections', sw: true, on: false },
+        { ic: 'mouse', label: 'Anchor Area Hovering', sw: true, on: true },
+        { ic: 'cursor', label: 'Anchor Element Hovering', sw: true, on: true },
+        { ic: 'timer', label: 'Hover Charging Time', slider: 1 / 19, sliderText: '2 s' },
+        { ic: 'invert', label: 'Invert Background Colors', sw: true, on: false },
+        { ic: 'palette', label: 'Base Color', swatch: baseColor || THEME_BASE, val: baseColor || THEME_BASE, changed: !!baseColor, onReset: () => set({ baseColor: '' }) },
+        { ic: 'rect', label: 'Border Color', swatch: THEME_BORDER, val: THEME_BORDER },
+        { ic: 'opacity', label: 'Opacity', slider: 0.5 },
+        { ic: 'opacity', label: 'Opacity While Dragging', slider: 0.8 },
+        { head: 'Element Controls' },
+        { ic: 'rotate', label: 'Rotation Controls', sw: true, on: true },
+        { ic: 'tilt', label: 'Tilt Controls', sw: true, on: false }
+      ], subs: {
+        widgets: { items: [{ ic: 'stack', label: 'Layers', sw: true, on: true }] },
+        gridSize: { items: radios(['10', '20', '30', '40', '50', '60', '70', '80', '90', '100'], '20') },
+        strength: { items: radios(['0.5×', '0.75×', '1.0×', '1.5×', '2.0×', '3.0×', '5.0×'], '1.0×') },
+        visibility: { items: radios(['Disabled', 'Always Visible', 'Show On Element Dragging', 'Show On Key Press (O)'], 'Always Visible') }
+      } },
+      overlay[2]
+    ];
+
+    // ---------- wiring ----------
+    const heightOf = (it) => (it.sep || it.head ? 25 : 26);
+    // same rule as ContextMenu: the search field shows from the start in menus with more than 10 entries
+    const searchShown = (items) => items.filter((it) => !it.sep && !it.head).length > 10;
+    // Top-level rows open or close the submenu on hover. Rows inside a submenu only get their click
+    // action: giving them the top-level "close the submenu" hover would close it as soon as the pointer enters it.
+    const wire = (items, inSub) => items.map((it) => {
+      if (it.sep || it.head) return it;
+      const out = { ...it };
+      if (it.subId && !inSub) {
+        out.sub = true;
+        out.hl = sub === it.subId;
+        out.enter = () => wantSub(it.disabled ? null : it.subId);
+        return out;
+      }
+      if (!inSub) out.enter = () => wantSub(null);
+      if (!it.sw && !it.sub && it.slider === undefined && !it.disabled && !it.click) out.click = closeAll;
+      return out;
+    });
+    const menus = (editor ? editorMenus : overlay).map((d) => {
+      const isOpen = open === d.id;
+      const subDef = isOpen && sub && d.subs ? d.subs[sub] : null;
+      let subStyle = '';
+      if (subDef) {
+        let y = 0;
+        for (const it of d.items) {
+          if (it.subId === sub) break;
+          y += heightOf(it);
+        }
+        subStyle = 'margin-top: ' + (6 + (searchShown(d.items) ? 28 : 0) + y - 6) + 'px';
+      }
+      return {
+        label: d.label,
+        cls: 'mb-t' + (d.ctx ? ' ctx' : '') + (isOpen ? ' open' : '') + (!open && p.hoverTitle === d.id ? ' hov' : ''),
+        expanded: isOpen ? 'true' : 'false',
+        click: () => (isOpen ? closeAll() : (cancelIntent(), set({ open: d.id, sub: null }))),
+        enter: () => { if (open && open !== d.id) { cancelIntent(); set({ open: d.id, sub: null }); } },
+        track, subEnter: cancelIntent,
+        onQuery: (v) => { if (v && liveSub() !== null) { cancelIntent(); set({ sub: null }); } },
+        isOpen, items: isOpen ? wire(d.items) : [], search: d.search || '',
+        hasSub: !!subDef, subItems: subDef ? wire(subDef.items, true) : [], subSearch: (subDef && subDef.search) || '', subMax: (subDef && subDef.max) || 0, subStyle
+      };
+    });
+
+    const standalone = p.standalone ?? true;
+    const copied = !!s.copied;
+    const catchH = p.catchHeight || 0;
+    return {
+      rootCls: standalone ? 'fm ' + ((p.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark') + ((p.material ?? 'Blur') === 'Blur' ? ' mat-blur' : '') : '',
+      rootStyle: standalone ? 'position: relative; height: ' + (p.frameHeight || 520) + 'px; overflow: hidden; background: var(--bd)' : 'position: relative',
+      standalone, no: false, yes: true,
+      catching: !!open && catchH > 0, catchStyle: 'height: ' + catchH + 'px', closeAll,
+      expanded: !collapsed, isCollapsed: collapsed,
+      menus,
+      isOverlay: !editor, isEditor: editor,
+      centerCls: 'mb-center' + (copied ? ' copied' : ''), centerTip: copied ? 'Copied' : 'Click to copy the identifier',
+      sidText: copied ? 'copied' : 'title_screen', copied, notCopied: !copied,
+      copyId: () => set({ copied: true }), uncopy: () => { if (copied) set({ copied: false }); },
+      exitCls: 'mb-ic',
+      unsaved, saved: !unsaved, save: () => set({ unsaved: false }),
+      collapse: () => set({ collapsed: true, open: null, sub: null }), expand: () => set({ collapsed: false }),
+      noop: () => {}
+    };
+  }
+}
+</script>
+</body>
+</html>

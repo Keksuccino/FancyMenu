@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Build Custom GUI</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="fm {{themeClass}} {{matClass}}" style="position: relative; width: 1200px; height: 800px; overflow: hidden">
+
+<div class="backdrop" aria-hidden="true">
+<img class="art" src="dusk_valley.png" alt="">
+<div class="dim"></div>
+<div class="gridlines"></div>
+</div>
+
+<div class="win" style="left: 250px; top: 72px; width: 700px">
+<div class="titlebar">
+<div class="tl"><button class="c" aria-label="Close"><span class="ms" aria-hidden="true">close</span></button><button class="m" aria-label="Collapse"><span class="ms" aria-hidden="true">remove</span></button><button class="x" aria-label="Maximize"><span class="ms" aria-hidden="true">open_in_full</span></button></div>
+<div class="wt"><span class="ms" aria-hidden="true">contextual_token</span>Build Custom GUI</div>
+<div></div>
+</div>
+
+<div class="body">
+<div>
+<div class="group lw-104">
+<div class="row" style="align-items: flex-start"><span class="lbl" style="padding-top: 5px">Identifier</span><div class="ctl grow" style="flex-direction: column; align-items: stretch; gap: 5px">
+<div class="{{idField}}"><input type="text" aria-label="Custom GUI identifier" value="{{identifier}}" onChange="{{setIdentifier}}" onInput="{{setIdentifier}}"></div>
+<sc-if value="{{idBad}}" hint-placeholder-val="{{false}}"><div class="err-msg"><span class="ms" aria-hidden="true">error</span>Only lowercase letters, numbers and _ work here</div></sc-if>
+</div></div>
+<div class="row"><span class="lbl">Screen Title<span class="sub">Optional</span></span><div class="ctl grow"><div class="field"><input type="text" aria-label="Screen title" placeholder="Shown at the top of the screen" value="Item Shop"><button class="ib" data-tip="Open in Editor" aria-label="Open in Editor"><span class="ms" aria-hidden="true">edit_note</span></button></div></div></div>
+</div>
+<p class="foot">You'll use the identifier to open this GUI later, so it has to be unique.</p>
+</div>
+
+<div>
+<div class="sec">Behavior</div>
+<div class="group">
+<div class="row"><span class="lbl">Allow ESC to Close<span class="sub">Lets players leave with the Esc key</span></span><div class="ctl"><button class="{{esc.cls}}" role="switch" aria-checked="{{esc.aria}}" aria-label="Allow ESC to Close" onClick="{{esc.toggle}}"></button></div></div>
+<div class="row"><span class="lbl">Pause Game<span class="sub">Stops the world while this GUI is open</span></span><div class="ctl"><button class="{{pause.cls}}" role="switch" aria-checked="{{pause.aria}}" aria-label="Pause Game" onClick="{{pause.toggle}}"></button></div></div>
+<div class="row"><span class="lbl">World Background<span class="sub">Shows the world behind the GUI</span></span><div class="ctl"><button class="{{world.cls}}" role="switch" aria-checked="{{world.aria}}" aria-label="World Background" onClick="{{world.toggle}}"></button></div></div>
+<div class="{{blurRow}}"><span class="lbl">Blur and Tint<span class="sub">Vanilla background effect on top of the world</span></span><div class="ctl"><button class="{{blur.cls}}" role="switch" aria-checked="{{blur.aria}}" aria-label="Blur and Tint" disabled="{{worldOff}}" onClick="{{blur.toggle}}"></button></div></div>
+</div>
+</div>
+
+<div>
+<div class="sec">Popup</div>
+<div class="group">
+<div class="row"><span class="lbl">Popup Mode<span class="sub">Opens on top of the current screen instead of replacing it</span></span><div class="ctl"><button class="{{popup.cls}}" role="switch" aria-checked="{{popup.aria}}" aria-label="Popup Mode" onClick="{{popup.toggle}}"></button></div></div>
+<div class="{{overlayRow}}"><span class="lbl">Background Overlay<span class="sub">Darkens the screen behind the popup</span></span><div class="ctl"><button class="{{overlay.cls}}" role="switch" aria-checked="{{overlay.aria}}" aria-label="Background Overlay" disabled="{{popupOff}}" onClick="{{overlay.toggle}}"></button></div></div>
+</div>
+</div>
+</div>
+
+<div class="footer">
+<button class="btn wide">Cancel</button>
+<button class="btn wide primary" disabled="{{idBad}}">Done</button>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Light"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Solid"},"$preview":{"width":1200,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const sw = (key, fallback) => {
+      const on = s[key] ?? fallback;
+      return { on, cls: on ? 'sw on' : 'sw', aria: on ? 'true' : 'false', toggle: () => this.setState({ [key]: !on }) };
+    };
+    const identifier = s.identifier ?? 'item_shop';
+    const idBad = !/^[a-z0-9_]+$/.test(identifier);
+    const world = sw('world', true);
+    const popup = sw('popup', false);
+    return {
+      themeClass: (this.props.theme ?? 'Light') === 'Light' ? 'theme-light' : 'theme-dark',
+      matClass: (this.props.material ?? 'Solid') === 'Blur' ? 'mat-blur' : '',
+      identifier, idBad, idField: idBad ? 'field mono bad' : 'field mono',
+      setIdentifier: (e) => this.setState({ identifier: e.target.value }),
+      esc: sw('esc', true), pause: sw('pause', true), world, blur: sw('blur', true),
+      worldOff: !world.on, blurRow: world.on ? 'row child' : 'row child off',
+      popup, overlay: sw('overlay', true),
+      popupOff: !popup.on, overlayRow: popup.on ? 'row child' : 'row child off'
+    };
+  }
+}
+</script>
+</body>
+</html>

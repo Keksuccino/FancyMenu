@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Context menu component</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="{{rootCls}}" style="{{rootStyle}}">
+<div class="{{menuCls}}" role="{{menuRole}}" aria-label="{{ariaLabel}}" style="{{menuStyle}}" onMouseEnter="{{focusIn}}">
+
+<sc-if value="{{hasSearch}}" hint-placeholder-val="{{true}}">
+<div class="{{searchCls}}">
+<span class="ms" aria-hidden="true">search</span>
+<span class="msz" data-ph="{{search}}"><input class="msearch-in" type="text" data-fk="{{fk}}" placeholder="{{search}}" aria-label="{{search}}" value="{{q}}" onInput="{{typed}}" onChange="{{typed}}" onKeyDown="{{keyed}}"></span>
+<sc-if value="{{showHint}}" hint-placeholder-val="{{true}}"><span class="kbd-hint">just type</span></sc-if>
+</div>
+</sc-if>
+
+<div class="mrows" style="{{rowsStyle}}">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="10">
+<sc-if value="{{r.isSep}}" hint-placeholder-val="{{false}}"><div class="msep"></div></sc-if>
+<sc-if value="{{r.isHead}}" hint-placeholder-val="{{false}}"><div class="mhead">{{r.head}}</div></sc-if>
+
+<sc-if value="{{r.isCard}}" hint-placeholder-val="{{false}}">
+<div class="mcard" aria-label="{{r.cName}}">
+<sc-if value="{{r.cImg}}" hint-placeholder-val="{{false}}"><div class="mc-img"><img src="{{r.cImg}}" alt=""></div></sc-if>
+<sc-if value="{{r.cNoPreview}}" hint-placeholder-val="{{false}}"><div class="{{r.cNoPreviewCls}}"><span class="ms" aria-hidden="true">{{r.cNoPreviewIcon}}</span>{{r.cNoPreviewText}}</div></sc-if>
+<sc-if value="{{r.cAudio}}" hint-placeholder-val="{{false}}"><div class="mc-audio"><button class="{{r.cPlayCls}}" aria-label="{{r.cPlayTip}}" onClick="{{r.cPlayClick}}"><sc-if value="{{r.cPlaying}}" hint-placeholder-val="{{false}}"><span class="ms fill" aria-hidden="true">stop</span></sc-if><sc-if value="{{r.cNotPlaying}}" hint-placeholder-val="{{true}}"><span class="ms fill" aria-hidden="true">play_arrow</span></sc-if></button><span class="mc-wave"><sc-for list="{{r.cBars}}" as="b" hint-placeholder-count="30"><i style="{{b}}"></i></sc-for></span><span class="mc-dur">{{r.cDur}}</span></div></sc-if>
+<sc-if value="{{r.cVideo}}" hint-placeholder-val="{{false}}"><div class="mc-img mc-video"><img src="{{r.cVideo}}" alt=""><button class="{{r.cVPlayCls}}" aria-label="{{r.cPlayTip}}" onClick="{{r.cPlayClick}}"><sc-if value="{{r.cPlaying}}" hint-placeholder-val="{{false}}"><span class="ms fill" aria-hidden="true">stop</span></sc-if><sc-if value="{{r.cNotPlaying}}" hint-placeholder-val="{{true}}"><span class="ms fill" aria-hidden="true">play_arrow</span></sc-if></button><span class="mc-vdur">{{r.cDur}}</span></div></sc-if>
+<sc-if value="{{r.cHasVol}}" hint-placeholder-val="{{false}}"><div class="mc-vol"><button class="ib" data-tip="{{r.cMuteTip}}" aria-label="{{r.cMuteTip}}" onClick="{{r.cMute}}"><sc-if value="{{r.cMuted}}" hint-placeholder-val="{{false}}"><span class="ms" aria-hidden="true">volume_off</span></sc-if><sc-if value="{{r.cNotMuted}}" hint-placeholder-val="{{true}}"><span class="ms" aria-hidden="true">volume_up</span></sc-if></button><span class="mc-vl" data-tip="Only how loud previews play here. The sound&#39;s volume in the layout stays as it is.">Preview volume</span><span class="mslider" role="slider" aria-label="Preview volume" aria-valuetext="{{r.cVolText}}"><span class="track" onPointerDown="{{r.cVolDown}}" onPointerMove="{{r.cVolMove}}" onPointerUp="{{r.cVolUp}}"><span class="fill" style="{{r.cVolFill}}"></span><span class="knob" style="{{r.cVolKnob}}"></span></span><span class="pct">{{r.cVolText}}</span></span></div></sc-if>
+<div class="mc-name">{{r.cName}}</div>
+<sc-if value="{{r.cMeta}}" hint-placeholder-val="{{true}}"><div class="mc-meta">{{r.cMeta}}</div></sc-if>
+<sc-if value="{{r.cSource}}" hint-placeholder-val="{{true}}"><div class="mc-src"><span class="ms" aria-hidden="true">{{r.cSrcIcon}}</span>{{r.cSource}}</div></sc-if>
+<sc-if value="{{r.cPath}}" hint-placeholder-val="{{true}}"><div class="mc-path">{{r.cPath}}</div></sc-if>
+<sc-if value="{{r.cStatus}}" hint-placeholder-val="{{false}}"><div class="{{r.cStatusCls}}">{{r.cStatus}}</div></sc-if>
+<sc-if value="{{r.cPh}}" hint-placeholder-val="{{false}}"><div class="mc-ph"><div class="mc-phh"><span class="ms" aria-hidden="true">data_object</span>Source with placeholders</div><div class="mc-raw"><sc-for list="{{r.cPhParts}}" as="p" hint-placeholder-count="3"><span class="{{p.cls}}">{{p.text}}</span></sc-for></div><div class="{{r.cPhNoteCls}}">{{r.cPhNote}}</div></div></sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{r.isButton}}" hint-placeholder-val="{{true}}">
+<button class="{{r.cls}}" role="{{r.role}}" aria-checked="{{r.ariaChecked}}" aria-selected="{{r.ariaSel}}" aria-haspopup="{{r.ariaPopup}}" disabled="{{r.disabled}}" onClick="{{r.click}}" onMouseDown="{{r.press}}" onMouseEnter="{{r.enter}}">
+<span class="ico"><span class="ms" aria-hidden="true">{{r.d}}</span></span>
+<span class="lbl-t"><sc-if value="{{r.lic}}" hint-placeholder-val="{{false}}"><span class="ms lic" aria-hidden="true">{{r.lic}}</span></sc-if>{{r.pre}}<mark>{{r.mid}}</mark>{{r.post}}<sc-if value="{{r.tag}}" hint-placeholder-val="{{false}}"><span class="chip mtag">{{r.tag}}</span></sc-if></span>
+<span class="r">
+<sc-if value="{{r.note}}" hint-placeholder-val="{{false}}"><span>{{r.note}}</span></sc-if>
+<sc-if value="{{r.swatch}}" hint-placeholder-val="{{false}}"><span class="swatch" style="{{r.swatchStyle}}"></span></sc-if>
+<sc-if value="{{r.val}}" hint-placeholder-val="{{false}}"><span class="val">{{r.val}}</span></sc-if>
+<sc-if value="{{r.valChip}}" hint-placeholder-val="{{false}}"><span class="mchip mval">{{r.valChip}}</span></sc-if>
+<sc-if value="{{r.hasStar}}" hint-placeholder-val="{{false}}"><span class="{{r.starCls}}" role="button" aria-label="{{r.starTip}}" data-tip="{{r.starTip}}" onClick="{{r.starClick}}"><span class="ms" aria-hidden="true">star</span></span></sc-if>
+<sc-if value="{{r.kbd}}" hint-placeholder-val="{{false}}"><span>{{r.kbd}}</span></sc-if>
+<sc-if value="{{r.hasSw}}" hint-placeholder-val="{{false}}"><span class="{{r.swCls}}" aria-hidden="true"></span></sc-if>
+<sc-if value="{{r.sub}}" hint-placeholder-val="{{false}}"><span class="ms chev-r" aria-hidden="true">chevron_right</span></sc-if>
+</span>
+</button>
+</sc-if>
+
+<sc-if value="{{r.isCmp}}" hint-placeholder-val="{{false}}">
+<div class="{{r.cls}}" role="group" aria-label="{{r.label}}" onMouseEnter="{{r.enter}}">
+<button class="main" role="{{r.role}}" aria-checked="{{r.ariaChecked}}" onClick="{{r.click}}"><span class="ico"><span class="ms" aria-hidden="true">{{r.d}}</span></span><span class="lbl-t">{{r.pre}}<mark>{{r.mid}}</mark>{{r.post}}<sc-if value="{{r.tag}}" hint-placeholder-val="{{false}}"><span class="chip mtag">{{r.tag}}</span></sc-if></span></button>
+<span class="r">
+<sc-if value="{{r.hasReset}}" hint-placeholder-val="{{false}}"><button class="fx rst" data-tip="Reset to default" aria-label="Reset to default" onClick="{{r.reset}}"><span class="ms" aria-hidden="true">undo</span></button></sc-if>
+<sc-if value="{{r.hasFx}}" hint-placeholder-val="{{false}}"><button class="{{r.fxCls}}" data-tip="{{r.fxTip}}" aria-label="{{r.fxTip}}" aria-pressed="{{r.fxPressed}}" onClick="{{r.fx}}"><span class="ms" aria-hidden="true">data_object</span></button></sc-if>
+<sc-if value="{{r.isManual}}" hint-placeholder-val="{{false}}"><button class="{{r.chipCls}}" data-tip="{{r.chipTip}}" aria-label="Edit placeholder text">{{r.manualVal}}</button></sc-if>
+<sc-if value="{{r.showSw}}" hint-placeholder-val="{{false}}"><span class="{{r.swCls}}" aria-hidden="true"></span></sc-if>
+<sc-if value="{{r.showSlider}}" hint-placeholder-val="{{false}}"><span class="mslider"><span class="track"><span class="fill" style="{{r.fillStyle}}"></span><span class="knob" style="{{r.knobStyle}}"></span></span><span class="pct">{{r.pctText}}</span></span></sc-if>
+<sc-if value="{{r.showSwatch}}" hint-placeholder-val="{{false}}"><span class="swatch" style="{{r.swatchStyle}}"></span></sc-if>
+<sc-if value="{{r.hasPlay}}" hint-placeholder-val="{{false}}"><button class="{{r.playCls}}" data-tip="{{r.playTip}}" aria-label="{{r.playTip}}" onClick="{{r.playClick}}"><sc-if value="{{r.playing}}" hint-placeholder-val="{{false}}"><span class="ms fill" aria-hidden="true">stop</span></sc-if><sc-if value="{{r.notPlaying}}" hint-placeholder-val="{{true}}"><span class="ms fill" aria-hidden="true">play_arrow</span></sc-if></button></sc-if>
+<sc-if value="{{r.showThumb}}" hint-placeholder-val="{{false}}"><span class="mthumb"><img src="{{r.thumb}}" alt=""></span></sc-if>
+<sc-if value="{{r.showWarn}}" hint-placeholder-val="{{false}}"><span class="{{r.warnCls}}" data-tip="{{r.warnTip}}"><span class="ms" aria-hidden="true">warning</span></span></sc-if>
+<sc-if value="{{r.isFileChip}}" hint-placeholder-val="{{false}}"><button class="{{r.chipCls}}" data-tip="{{r.chipTip}}" aria-label="Edit the source text">{{r.manualVal}}</button></sc-if>
+<sc-if value="{{r.showVal}}" hint-placeholder-val="{{false}}"><span class="{{r.valCls}}">{{r.val}}</span></sc-if>
+<sc-if value="{{r.showSub}}" hint-placeholder-val="{{false}}"><span class="ms chev-r" aria-hidden="true">chevron_right</span></sc-if>
+</span>
+</div>
+</sc-if>
+
+<sc-if value="{{r.isSeg}}" hint-placeholder-val="{{false}}">
+<div class="mi ctl" role="group" aria-label="{{r.label}}" onMouseEnter="{{r.enter}}">
+<span class="ico"><span class="ms" aria-hidden="true">{{r.d}}</span></span>
+<span class="lbl-t">{{r.pre}}<mark>{{r.mid}}</mark>{{r.post}}<sc-if value="{{r.tag}}" hint-placeholder-val="{{false}}"><span class="chip mtag">{{r.tag}}</span></sc-if></span>
+<span class="r"><span class="seg xs inline" style="{{r.segStyle}}"><span class="thumb" style="{{r.thumbStyle}}"></span><sc-for list="{{r.opts}}" as="o" hint-placeholder-count="2"><button class="{{o.cls}}" aria-pressed="{{o.pressed}}" onClick="{{o.pick}}">{{o.label}}</button></sc-for></span></span>
+</div>
+</sc-if>
+
+<sc-if value="{{r.isSlider}}" hint-placeholder-val="{{false}}">
+<div class="{{r.cls}}" role="group" aria-label="{{r.label}}" onMouseEnter="{{r.enter}}">
+<span class="ico"><span class="ms" aria-hidden="true">{{r.d}}</span></span>
+<span class="lbl-t">{{r.pre}}<mark>{{r.mid}}</mark>{{r.post}}<sc-if value="{{r.tag}}" hint-placeholder-val="{{false}}"><span class="chip mtag">{{r.tag}}</span></sc-if></span>
+<span class="r"><span class="mslider"><span class="track"><span class="fill" style="{{r.fillStyle}}"></span><span class="knob" style="{{r.knobStyle}}"></span></span><span class="pct">{{r.pctText}}</span></span></span>
+</div>
+</sc-if>
+</sc-for>
+</div>
+<sc-if value="{{noResults}}" hint-placeholder-val="{{false}}"><div class="mempty">{{emptyText}}</div></sc-if>
+<sc-if value="{{hasKeys}}" hint-placeholder-val="{{false}}"><div class="mkeys"><sc-for list="{{keys}}" as="k" hint-placeholder-count="3"><span><kbd>{{k.key}}</kbd> {{k.label}}</span></sc-for></div></sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"items":{"editor":null},"maxHeight":{"editor":"int","default":0},"search":{"editor":"text","default":"Search this menu"},"focusOnOpen":{"editor":"boolean","default":false},"mode":{"editor":"enum","options":["Menu","Completion"],"default":"Menu"},"mark":{"editor":"text","default":""},"empty":{"editor":"text","default":""},"minWidth":{"editor":"int","default":0},"label":{"editor":"text","default":"Menu"},"sub":{"editor":"boolean","default":false},"query":{"editor":"text","default":""},"standalone":{"editor":"boolean","default":true},"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Solid"},"$preview":{"width":440,"height":420}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const IC = {
+      plus: 'add',
+      tick: 'check',
+      opacity: 'opacity',
+      timer: 'timer',
+      rotate: 'rotate_right',
+      none: '',
+      paste: 'content_paste',
+      image: 'image',
+      sparkle: 'auto_awesome',
+      header: 'page_header',
+      title: 'text_fields',
+      index: 'format_list_numbered',
+      check: 'checklist',
+      behind: 'flip_to_back',
+      shuffle: 'shuffle',
+      cards: 'cards_stack',
+      once: 'history',
+      fit: 'fit_screen',
+      ruler: 'straighten',
+      volume: 'volume_up',
+      channel: 'speaker',
+      code: 'code',
+      copy: 'content_copy',
+      id: 'id_card',
+      trash: 'delete',
+      up: 'arrow_upward',
+      down: 'arrow_downward',
+      move: 'open_with',
+      eye: 'visibility',
+      file: 'draft',
+      editor: 'edit_note',
+      case: 'match_case',
+      shadow: 'shadow',
+      wrap: 'wrap_text',
+      book: 'menu_book',
+      swipe: 'swipe_vertical',
+      grabber: 'drag_indicator',
+      touch: 'touch_app',
+      ticker: 'notes',
+      slideshow: 'slideshow',
+      video: 'smart_display',
+      audio: 'music_note',
+      wand: 'wand_stars',
+      button: 'smart_button',
+      input: 'text_ad',
+      slider: 'sliders',
+      checkbox: 'check_box',
+      browser: 'web',
+      rect: 'rectangle',
+      circle: 'circle',
+      progress: 'progress_activity',
+      player: 'person',
+      cube: 'deployed_code',
+      braces: 'data_object',
+      keyframe: 'animation',
+      cursor: 'arrow_selector_tool',
+      tooltip: 'tooltip',
+      drive: 'hard_drive',
+      download: 'download',
+      videoOff: 'videocam_off',
+      globe: 'public',
+      screen: 'desktop_windows',
+      layout: 'gallery_thumbnail',
+      toggle: 'toggle_on',
+      stack: 'layers',
+      tune: 'tune',
+      gear: 'settings',
+      gui: 'contextual_token',
+      ear: 'hearing',
+      terminal: 'terminal',
+      reload: 'refresh',
+      power: 'power_settings_new',
+      eyeOff: 'visibility_off',
+      link: 'link',
+      edit: 'edit',
+      external: 'open_in_new',
+      widgets: 'widgets',
+      movie: 'movie',
+      folder: 'folder',
+      chat: 'chat',
+      bug: 'bug_report',
+      search: 'search',
+      heart: 'favorite',
+      coin: 'payments',
+      info: 'info',
+      save: 'save',
+      saveas: 'save_as',
+      close: 'close',
+      undo: 'undo',
+      redo: 'redo',
+      selectAll: 'select_all',
+      grid: 'grid_on',
+      magnet: 'grid_guides',
+      mouse: 'mouse',
+      invert: 'invert_colors',
+      palette: 'palette',
+      tilt: 'filter_tilt_shift'
+    };
+    const tx = (i) => 'translateX(' + (i * 100) + '%)';
+    const sample = [
+      { ic: 'plus', label: 'Action', kbd: 'Ctrl+N' },
+      { ic: 'file', label: 'Opens a dialog', val: 'current value' },
+      { ic: 'sparkle', label: 'Submenu', sub: true, val: 'Fade' },
+      { head: 'Section' },
+      { ic: 'shadow', label: 'On/off setting', sw: true, on: true, fx: true },
+      { ic: 'touch', label: 'Driven by a placeholder', sw: true, fx: true, manual: true, manualVal: 'true' },
+      { ic: 'case', label: '2–3 choices', seg: ['One', 'Two', 'Three'], segIndex: 1 },
+      { ic: 'opacity', label: 'Value', slider: 0.7, fx: true, changed: true },
+      { ic: 'fit', label: 'Not available yet', sw: true, on: false, disabled: true, note: 'needs X' },
+      { sep: true },
+      { ic: 'trash', label: 'Delete', kbd: 'Del', danger: true }
+    ];
+    const allItems = (this.props.items ?? sample).map((it, i) => ({ ...it, __i: i }));
+    // Completion lists, like placeholder suggestions while typing, are the same menu: the text field they complete
+    // does the searching, so they have no search field of their own, mark what was typed, keep the field focused
+    // when a row is picked, and show the keys that work from the field.
+    const completion = (this.props.mode ?? 'Menu') === 'Completion';
+    // Every menu can be searched by typing. Menus with more than SEARCH_AUTO_SHOW entries show the field from the
+    // start; shorter ones keep it hidden until you type or press Ctrl+F. Parents that align submenus to rows use
+    // the same count, so keep both in sync.
+    const SEARCH_AUTO_SHOW = 10;
+    const autoSearch = allItems.filter((it) => !it.sep && !it.head && !it.card).length > SEARCH_AUTO_SHOW;
+    const q = completion ? '' : s.q ?? (this.props.query || '');
+    const ql = q.trim().toLowerCase();
+    const markQ = completion ? (this.props.mark || '').trim().toLowerCase() : ql;
+    let items = allItems;
+    if (ql) {
+      // keep matches; a section header stays only if something in its section matches, separators collapse
+      items = [];
+      let head = null, sep = false;
+      for (const it of allItems) {
+        if (it.head) { head = it; sep = false; continue; }
+        if (it.sep) { sep = true; head = null; continue; }
+        if (!((it.label || '') + ' ' + (it.keys || '')).toLowerCase().includes(ql)) continue;
+        if (head) { items.push(head); head = null; sep = false; } else if (sep && items.length) { items.push({ sep: true }); sep = false; }
+        items.push(it);
+      }
+    }
+    const split = (label) => {
+      const at = markQ ? (label || '').toLowerCase().indexOf(markQ) : -1;
+      return at < 0 ? { pre: label, mid: '', post: '' } : { pre: label.slice(0, at), mid: label.slice(at, at + markQ.length), post: label.slice(at + markQ.length) };
+    };
+    // color rows: the color is layered over a small checkerboard, so transparent colors (#RRGGBBAA) read correctly
+    const swatchBg = (c) => (c ? 'background: linear-gradient(' + c + ', ' + c + '), repeating-conic-gradient(#c9c9c9 0 25%, #ffffff 0 50%) 0 0 / 6px 6px' : '');
+    const rows = items.map((it, idx0) => {
+      const idx = it.__i ?? idx0;
+      if (it.sep) return { isSep: true };
+      if (it.head) return { isHead: true, head: it.head };
+      // choice rows keep the checkmark in the icon column; a choice with its own icon shows it before the label
+      const d = it.radio ? (it.checked ? IC.tick : IC.none) : it.d || IC[it.ic] || it.ic || IC.plus;
+      const lic = it.radio ? it.d || IC[it.ic] || it.ic || '' : '';
+      if (it.seg) {
+        const n = it.seg.length;
+        const cur = (s['seg' + idx] ?? it.segIndex ?? 0);
+        return {
+          isSeg: true, d, label: it.label, ...split(it.label), tag: it.tag || '', enter: it.enter,
+          segStyle: 'width: ' + (it.segWidth || n * 58) + 'px',
+          thumbStyle: 'width: calc((100% - 2px) / ' + n + '); transform: ' + tx(cur),
+          opts: it.seg.map((label, i) => ({ label, cls: i === cur ? 'on' : '', pressed: i === cur ? 'true' : 'false', pick: () => { this.setState({ ['seg' + idx]: i }); if (it.onPick) it.onPick(i); } }))
+        };
+      }
+      if (it.card) {
+        // preview card at the top of a file submenu: what the file is, where it lives (full path, wrapped), and its state
+        const c = it.card;
+        // Preview volume is one persistent setting shared by every sound preview: these cards, the row play buttons
+        // and the file chooser. The mockup keeps it in the browser so it survives reloads and is the same on every board.
+        const readVol = () => { try { const v = parseFloat(localStorage.getItem('fm-preview-volume')); if (v >= 0 && v <= 1) return v; } catch (x) {} return 0.8; };
+        const vol = s.vol ?? readVol();
+        const setVol = (v) => { const nv = Math.round(Math.min(1, Math.max(0, v)) * 100) / 100; try { localStorage.setItem('fm-preview-volume', String(nv)); } catch (x) {} this.setState({ vol: nv }); };
+        const volAt = (e) => { const r = e.currentTarget.getBoundingClientRect(); setVol((e.clientX - r.left) / r.width); };
+        const playing = !!s['cplay' + idx];
+        const bars = c.audio ? Array.from({ length: 34 }, (_, i) => 'height: ' + Math.round(5 + 19 * Math.abs(Math.sin(i * 1.7) * Math.cos(i * .45))) + 'px') : [];
+        const src = { local: IC.folder, web: IC.globe, location: IC.cube }[c.source] || IC.folder;
+        return {
+          isCard: true, cImg: c.img || '', cAudio: !!c.audio, cBars: bars, cDur: c.dur || '',
+          cPlaying: playing, cNotPlaying: !playing, cPlayCls: 'mc-play' + (playing ? ' on' : ''), cPlayTip: playing ? 'Stop' : 'Play',
+          cPlayClick: () => { this.setState({ ['cplay' + idx]: !playing }); if (!playing) setTimeout(() => this.setState({ ['cplay' + idx]: false }), 1800); },
+          cNoPreview: !!c.noPreview, cNoPreviewText: c.noPreviewText || 'No preview', cNoPreviewCls: 'mc-img none' + (c.noPreviewWait ? ' wait' : '') + (c.noPreviewAmber ? ' amber' : ''),
+          cVideo: c.video || '', cVPlayCls: 'mc-play mc-vplay' + (playing ? ' on' : ''), cHasVol: !!(c.audio || c.video),
+          cNoPreviewIcon: c.noPreviewIcon ? IC[c.noPreviewIcon] : c.noPreviewWait ? IC.braces : 'image',
+          cPh: !!c.ph, cPhNote: c.ph ? c.ph.note : '', cPhNoteCls: 'mc-phn' + (c.ph && c.ph.wait ? ' wait' : ''),
+          cPhParts: c.ph ? c.ph.parts.map((pt) => (pt.ph ? { cls: 'mc-tok', text: pt.ph } : { cls: '', text: pt.t.replace(/\//g, '/\u200b') })) : [],
+          // zero-width spaces after slashes let long paths and URLs wrap between folders instead of mid-word
+          cMuted: vol === 0, cNotMuted: vol !== 0, cMuteTip: vol === 0 ? 'Unmute preview' : 'Mute preview',
+          cMute: () => setVol(vol === 0 ? (this._unmuteVol || 0.8) : (this._unmuteVol = vol, 0)),
+          cVolText: Math.round(vol * 100) + '%', cVolFill: 'width: ' + (vol * 100) + '%', cVolKnob: 'left: ' + (vol * 100) + '%',
+          cVolDown: (e) => { try { e.currentTarget.setPointerCapture(e.pointerId); } catch (x) {} this._volDrag = true; volAt(e); },
+          cVolMove: (e) => { if (this._volDrag && (e.buttons & 1)) volAt(e); },
+          cVolUp: () => { this._volDrag = false; },
+          cName: c.name, cMeta: c.meta || '', cSrcIcon: src, cSource: c.sourceLabel || '', cPath: (c.path || '').replace(/\//g, '/\u200b'),
+          cStatus: c.status || '', cStatusCls: 'mc-status' + (c.statusBad ? ' bad' : '') + (c.statusAmber ? ' amber' : '')
+        };
+      }
+      if (it.fx || it.changed || it.file) {
+        const pct = it.slider !== undefined ? Math.round(it.slider * 100) : 0;
+        const on = it.sw ? (s['sw' + idx] ?? !!it.on) : false;
+        const manual = !!it.manual;
+        const toggles = !!it.sw && !manual && !it.disabled;
+        return {
+          isCmp: true, d, label: it.label, ...split(it.label), tag: it.tag || '', enter: it.enter,
+          cls: 'mi ctl cmp' + (it.hl ? ' hl' : '') + (it.disabled ? ' off' : ''),
+          role: toggles ? 'menuitemcheckbox' : 'menuitem', ariaChecked: toggles ? (on ? 'true' : 'false') : null,
+          click: toggles ? () => { this.setState({ ['sw' + idx]: !on }); if (it.onToggle) it.onToggle(!on); } : it.click,
+          hasReset: !!it.changed && !manual, reset: it.onReset,
+          hasFx: !!it.fx, fxCls: 'fx' + (manual ? ' on' : ''), fxPressed: manual ? 'true' : 'false', fx: it.onFx,
+          fxTip: it.file ? (manual ? 'Edit the source text' : 'Type the source, with placeholders') : (manual ? 'Back to a fixed value' : 'Use placeholder text'),
+          chipCls: 'mchip' + (it.manualTone ? ' ' + it.manualTone : ''), chipTip: it.chipTip || '',
+          // file rows put the resolved-name chip after the thumbnail, where the file name normally sits
+          isManual: manual && !it.file, isFileChip: manual && !!it.file, manualVal: it.manualVal || '',
+          showSw: !!it.sw && !manual, swCls: 'sw mini' + (it.mixed ? ' mixed' : on ? ' on' : ''),
+          showSlider: it.slider !== undefined && !manual, fillStyle: 'width: ' + pct + '%', knobStyle: 'left: ' + pct + '%', pctText: it.sliderText || pct + '%',
+          showSwatch: !!it.swatch && !manual, swatchStyle: swatchBg(it.swatch),
+          showVal: !!it.val && !manual, val: it.val || '',
+          valCls: 'val' + (it.file ? ' file' : '') + (it.warn && it.warn !== 'amber' ? ' warn' : ''),
+          showThumb: !!it.thumb && (!manual || !!it.file), thumb: it.thumb || '', showWarn: !!it.warn && (!manual || !!it.file), showSub: !!it.sub,
+          warnCls: 'mwarn' + (it.warn === 'amber' ? ' amber' : ''), warnTip: it.warnTip || '',
+          hasPlay: !!it.play && !manual, playing: !!s['play' + idx], notPlaying: !s['play' + idx],
+          playCls: 'mplay' + (s['play' + idx] ? ' on' : ''), playTip: s['play' + idx] ? 'Stop' : 'Play',
+          playClick: () => { const on2 = !s['play' + idx]; this.setState({ ['play' + idx]: on2 }); if (on2) setTimeout(() => this.setState({ ['play' + idx]: false }), 1800); }
+        };
+      }
+      if (it.slider !== undefined) {
+        const pct = Math.round(it.slider * 100);
+        return { isSlider: true, d, label: it.label, ...split(it.label), tag: it.tag || '', cls: 'mi ctl' + (it.disabled ? ' off' : ''), enter: it.enter, fillStyle: 'width: ' + pct + '%', knobStyle: 'left: ' + pct + '%', pctText: it.disabled ? '–' : it.sliderText || pct + '%' };
+      }
+      const swOn = it.sw ? (s['sw' + idx] ?? !!it.on) : false;
+      const cls = ['mi', it.sw && 'ctl', it.hl && 'hl', it.danger && 'danger', it.disabled && 'off'].filter(Boolean).join(' ');
+      return {
+        isButton: true, d, lic, label: it.label, ...split(it.label), tag: it.tag || '', cls,
+        role: completion ? 'option' : it.sw ? 'menuitemcheckbox' : it.radio ? 'menuitemradio' : 'menuitem', ariaChecked: completion ? null : it.sw ? (swOn ? 'true' : 'false') : it.radio ? (it.checked ? 'true' : 'false') : null,
+        ariaSel: completion ? (it.hl ? 'true' : 'false') : null,
+        ariaPopup: it.sub ? 'menu' : null, disabled: !!it.disabled,
+        // values with placeholders show what they resolve to right now in a chip, like every other placeholder value
+        note: it.note || '', val: it.resolved ? '' : it.val || '', valChip: it.resolved ? it.val : '', kbd: it.kbd || '', sub: !!it.sub,
+        swatch: !!it.swatch, swatchStyle: swatchBg(it.swatch),
+        hasSw: !!it.sw, swCls: 'sw mini' + (it.mixed ? ' mixed' : swOn ? ' on' : ''),
+        hasStar: it.star !== undefined, starCls: 'mstar' + (it.star ? ' on' : ''), starTip: it.star ? 'Remove from Favorites' : 'Add to Favorites',
+        starClick: (e) => { e.stopPropagation(); if (it.onStar) it.onStar(!it.star); },
+        enter: it.enter,
+        click: completion ? null : it.sw ? () => { if (it.disabled) return; this.setState({ ['sw' + idx]: !swOn }); if (it.onToggle) it.onToggle(!swOn); } : it.click,
+        press: completion ? (e) => { e.preventDefault(); if (it.click) it.click(e); } : null
+      };
+    });
+    const standalone = this.props.standalone ?? true;
+    const fk = this._fk || (this._fk = 'cm' + Math.random().toString(36).slice(2, 9));
+    const visible = !completion && (autoSearch || !!s.forced || q !== '');
+    if (this.props.focusOnOpen && !this._focused) {
+      this._focused = true;
+      setTimeout(() => { const el = document.querySelector('[data-fk="' + fk + '"]'); if (el) el.focus({ preventScroll: true }); }, 0);
+    }
+    const setQuery = (v, menuEl) => {
+      if (v === q) return;
+      const patch = { q: v };
+      // keep the width the menu had before searching, so it doesn't jump around while the results change
+      if (!q && v && menuEl) patch.lockW = parseFloat(getComputedStyle(menuEl).width);
+      if (!v) patch.lockW = 0;
+      this.setState(patch);
+      if (this.props.searchListener) this.props.searchListener(v);
+    };
+    const minW = Math.max(s.lockW || 0, this.props.minWidth || 0);
+    return {
+      fk, q, hasSearch: !completion,
+      searchCls: 'field msearch' + (visible ? '' : ' hidden'),
+      showHint: visible && !q,
+      noResults: completion ? items.length === 0 : !!ql && items.length === 0,
+      emptyText: completion ? this.props.empty || 'Nothing matches' : 'No entries match “' + q + '”',
+      hasKeys: completion, keys: [{ key: '↵', label: 'Insert' }, { key: '↑↓', label: 'Choose' }, { key: 'Esc', label: 'Close' }],
+      // top-level menus grow in from their corner (fm-menu-in in .menu.cm); submenus open instantly (.menu.cm.sub)
+      menuStyle: 'position: relative' + (minW ? '; min-width: ' + minW + 'px' : ''),
+      menuRole: completion ? 'listbox' : 'menu',
+      focusIn: (e) => { if (completion) return; const el = e.currentTarget.querySelector('.msearch-in'); if (el && document.activeElement !== el) el.focus({ preventScroll: true }); },
+      typed: (e) => setQuery(e.target.value, e.target.closest('.menu')),
+      keyed: (e) => {
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'f' || e.key === 'F')) {
+          e.preventDefault();
+          if (autoSearch) return;
+          if (s.forced || q) { this.setState({ forced: false, q: '', lockW: 0 }); if (this.props.searchListener) this.props.searchListener(''); } else this.setState({ forced: true });
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          if (this.props.escapeListener) this.props.escapeListener(); else setQuery('', null);
+        }
+      },
+      rootCls: standalone ? 'fm ' + ((this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark') + ((this.props.material ?? 'Solid') === 'Blur' ? ' mat-blur' : '') : '',
+      rootStyle: standalone ? 'padding: 30px; background: var(--bd); min-height: 420px' : '',
+      menuCls: this.props.sub ? 'menu cm sub' : 'menu cm',
+      ariaLabel: this.props.label || 'Menu',
+      search: this.props.search || 'Search this menu',
+      rowsStyle: this.props.maxHeight ? 'max-height: ' + this.props.maxHeight + 'px; overflow-y: auto' : '',
+      rows
+    };
+  }
+}
+</script>
+</body>
+</html>

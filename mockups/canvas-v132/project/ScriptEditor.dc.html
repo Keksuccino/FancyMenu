@@ -1,0 +1,1335 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Script editor component</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="{{rootCls}}" style="{{rootStyle}}" data-se="{{uid}}" onMouseDown="{{activate}}">
+<sc-if value="{{standalone}}" hint-placeholder-val="{{true}}"><div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""><div class="dim"></div></div></sc-if>
+<div class="win te se" role="dialog" aria-label="{{title}}" style="{{winStyle}}">
+
+<div class="titlebar">
+<div class="tl"><button class="c" aria-label="Cancel and close" onClick="{{noop}}"><span class="ms" aria-hidden="true">close</span></button><button class="m" aria-label="Collapse"><span class="ms" aria-hidden="true">remove</span></button><button class="x" aria-label="Maximize"><span class="ms" aria-hidden="true">open_in_full</span></button></div>
+<div class="wt"><span class="ms" aria-hidden="true">{{ic.bolt}}</span>{{title}}</div>
+<div></div>
+</div>
+
+<sc-if value="{{anyPopup}}" hint-placeholder-val="{{false}}"><div class="fb-catch" style="z-index: 4" onClick="{{closePopups}}" onContextMenu="{{closePopupsCtx}}"></div></sc-if>
+
+<div class="te-tool" role="toolbar" aria-label="Script tools">
+<button class="ib" data-tip="Undo (Ctrl+Z)" aria-label="Undo" disabled="{{noUndo}}" onClick="{{undo}}"><span class="ms" aria-hidden="true">{{ic.undo}}</span></button>
+<button class="ib" data-tip="Redo (Ctrl+Shift+Z)" aria-label="Redo" disabled="{{noRedo}}" onClick="{{redo}}"><span class="ms" aria-hidden="true">{{ic.redo}}</span></button>
+<span class="vsep"></span>
+<span style="position: relative; display: inline-flex">
+<button class="{{addBtnCls}}" aria-haspopup="menu" aria-expanded="{{addToolOpen}}" data-tip="Add an action or block below the selected step (A)" onClick="{{toggleAdd}}"><span class="ms" aria-hidden="true">{{ic.plus}}</span>Add<span class="ms" aria-hidden="true">expand_more</span></button>
+<sc-if value="{{addToolOpen}}" hint-placeholder-val="{{false}}">
+<div class="se-addmenu" onMouseMove="{{trackAdd}}">
+<div><dc-import name="ContextMenu" items="{{addItems}}" search="Search actions and blocks" focus-on-open="{{yes}}" search-listener="{{onAddQuery}}" escape-listener="{{closePopups}}" standalone="{{no}}" hint-size="auto,560px"></dc-import></div>
+<sc-if value="{{addHasSub}}" hint-placeholder-val="{{false}}"><div style="{{addSubStyle}}" onMouseEnter="{{addSubEnter}}"><dc-import name="ContextMenu" items="{{addSubItems}}" sub="{{yes}}" search="{{addSubSearch}}" standalone="{{no}}" hint-size="auto,300px"></dc-import></div></sc-if>
+<sc-if value="{{help.show}}" hint-placeholder-val="{{false}}"><div class="help-tag se-help" style="{{help.style}}">{{help.desc}}<sc-if value="{{help.eg}}" hint-placeholder-val="{{true}}"><span class="eg">For example <code>{{help.eg}}</code></span></sc-if></div></sc-if>
+</div>
+</sc-if>
+</span>
+<span class="vsep"></span>
+<button class="{{findBtnCls}}" data-tip="Find and Replace (Ctrl+F)" aria-label="Find and Replace" aria-pressed="{{findOpen}}" onClick="{{toggleFind}}"><span class="ms" aria-hidden="true">{{ic.find}}</span></button>
+<button class="ib" data-tip="{{foldTip}}" aria-label="{{foldTip}}" disabled="{{noBlocks}}" onClick="{{foldAll}}"><span class="ms" aria-hidden="true">{{foldIcon}}</span></button>
+<span class="grow"></span>
+<button class="{{miniBtnCls}}" data-tip="{{miniTip}}" aria-label="{{miniTip}}" aria-pressed="{{miniPressed}}" disabled="{{noMiniToggle}}" onClick="{{toggleMini}}"><span class="ms" aria-hidden="true">{{ic.minimap}}</span></button>
+</div>
+
+<div class="te-main">
+<div class="te-pane se-pane">
+<sc-if value="{{findOpen}}" hint-placeholder-val="{{false}}">
+<div class="te-find" role="search">
+<label class="field"><span class="ms" aria-hidden="true">{{ic.find}}</span><input type="text" placeholder="Find in steps" aria-label="Find in steps" data-find="1" data-fk="{{findFk}}" value="{{fq}}" onInput="{{onFind}}" onKeyDown="{{findKey}}"><button class="{{caseCls}}" data-tip="Match case" aria-label="Match case" aria-pressed="{{matchCase}}" onClick="{{toggleCase}}">Aa</button></label>
+<span class="{{countCls}}">{{countText}}</span>
+<button class="ib" data-tip="Previous match (Shift+Enter)" aria-label="Previous match" disabled="{{noMatches}}" onClick="{{prevHit}}"><span class="ms" aria-hidden="true">expand_less</span></button>
+<button class="ib" data-tip="Next match (Enter)" aria-label="Next match" disabled="{{noMatches}}" onClick="{{nextHit}}"><span class="ms" aria-hidden="true">expand_more</span></button>
+<span class="vsep" style="width: 1px; height: 18px; margin: 0 4px; background: var(--sep)"></span>
+<label class="field"><input type="text" placeholder="Replace in values" aria-label="Replace in values" value="{{rq}}" onInput="{{onReplace}}"></label>
+<button class="btn sm" disabled="{{noValueMatches}}" onClick="{{replaceOne}}">Replace</button>
+<button class="btn sm" disabled="{{noValueMatches}}" onClick="{{replaceAll}}">Replace All</button>
+<span class="grow"></span>
+<button class="ib" data-tip="Close (Esc)" aria-label="Close find" onClick="{{toggleFind}}"><span class="ms" aria-hidden="true">{{ic.close}}</span></button>
+</div>
+</sc-if>
+
+<div class="se-body">
+<div class="se-list" data-sk="{{listSk}}" role="tree" aria-label="Script steps" aria-multiselectable="true" onClick="{{listClick}}" onContextMenu="{{listMenu}}" onScroll="{{onListScroll}}">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="10">
+<sc-if value="{{r.isStep}}" hint-placeholder-val="{{true}}">
+<div class="{{r.cls}}" role="treeitem" aria-level="{{r.level}}" aria-selected="{{r.ariaSel}}" aria-expanded="{{r.ariaExp}}" data-row="{{r.id}}" data-block="{{r.block}}" data-depth="{{r.depth}}" style="{{r.style}}" onClick="{{r.click}}" onMouseDown="{{r.down}}" onContextMenu="{{r.menu}}" onDoubleClick="{{r.dbl}}" onMouseEnter="{{r.enter}}" onMouseLeave="{{r.leave}}">
+<sc-for list="{{r.guides}}" as="gd" hint-placeholder-count="0"><span class="{{gd.cls}}" style="{{gd.style}}"></span></sc-for>
+<sc-if value="{{r.hasChev}}" hint-placeholder-val="{{false}}"><button class="{{r.chevCls}}" aria-label="{{r.chevLabel}}" onClick="{{r.toggle}}"><span class="ms" aria-hidden="true">chevron_right</span></button></sc-if>
+<sc-if value="{{r.noChev}}" hint-placeholder-val="{{true}}"><span class="lspace"></span></sc-if>
+<span class="{{r.tileCls}}" style="{{r.tileStyle}}" aria-hidden="true"><span class="ms" aria-hidden="true">{{r.icon}}</span></span>
+<div class="se-txt">
+<sc-for list="{{r.parts}}" as="pt" hint-placeholder-count="3">
+<sc-if value="{{pt.isW}}" hint-placeholder-val="{{true}}"><span class="{{pt.cls}}"><sc-for list="{{pt.marks}}" as="m" hint-placeholder-count="1"><sc-if value="{{m.hit}}" hint-placeholder-val="{{false}}"><mark>{{m.s}}</mark></sc-if><sc-if value="{{m.plain}}" hint-placeholder-val="{{true}}">{{m.s}}</sc-if></sc-for></span></sc-if>
+<sc-if value="{{pt.isTok}}" hint-placeholder-val="{{false}}"><button class="{{pt.cls}}" data-tok="{{pt.key}}" data-tip="{{pt.tip}}" aria-label="{{pt.aria}}" onClick="{{pt.click}}"><sc-for list="{{pt.pieces}}" as="pc" hint-placeholder-count="1"><sc-if value="{{pc.isNot}}" hint-placeholder-val="{{false}}"><span class="{{pc.notCls}}">{{pc.s}}</span></sc-if><sc-if value="{{pc.isText}}" hint-placeholder-val="{{true}}"><span><sc-for list="{{pc.marks}}" as="m" hint-placeholder-count="1"><sc-if value="{{m.hit}}" hint-placeholder-val="{{false}}"><mark>{{m.s}}</mark></sc-if><sc-if value="{{m.plain}}" hint-placeholder-val="{{true}}">{{m.s}}</sc-if></sc-for></span></sc-if><sc-if value="{{pc.isChip}}" hint-placeholder-val="{{false}}"><span class="{{pc.cls}}">{{pc.s}}</span></sc-if><sc-if value="{{pc.isUnit}}" hint-placeholder-val="{{false}}"><span class="unit">{{pc.s}}</span></sc-if><sc-if value="{{pc.isIc}}" hint-placeholder-val="{{false}}"><span class="ms tic" aria-hidden="true">{{pc.d}}</span></sc-if><sc-if value="{{pc.isPlay}}" hint-placeholder-val="{{false}}"><span class="tplay" role="button" aria-label="Play preview" data-tip="Play preview" onClick="{{pc.play}}"><span class="ms fill" aria-hidden="true">play_arrow</span></span></sc-if><sc-if value="{{pc.isFc}}" hint-placeholder-val="{{false}}"><span class="s-fc"><sc-if value="{{pc.sw}}" hint-placeholder-val="{{true}}"><i style="{{pc.sw}}"></i></sc-if>{{pc.s}}</span></sc-if></sc-for></button></sc-if>
+<sc-if value="{{pt.isEd}}" hint-placeholder-val="{{false}}"><label class="{{pt.cls}}" onClick="{{stop}}" onMouseDown="{{stop}}"><sc-for list="{{pt.pieces}}" as="pc" hint-placeholder-count="1"><sc-if value="{{pc.isText}}" hint-placeholder-val="{{true}}"><span>{{pc.s}}</span></sc-if><sc-if value="{{pc.isChip}}" hint-placeholder-val="{{false}}"><span class="{{pc.cls}}">{{pc.s}}</span></sc-if></sc-for><input type="text" data-ed="1" data-fk="{{edFk}}" aria-label="{{pt.aria}}" placeholder="{{pt.hint}}" value="{{pt.draft}}" onInput="{{pt.onInput}}" onKeyDown="{{pt.onKey}}"><sc-if value="{{pt.unit}}" hint-placeholder-val="{{false}}"><span class="suf">{{pt.unit}}</span></sc-if><sc-if value="{{pt.hasExpand}}" hint-placeholder-val="{{true}}"><button class="ib" data-tip="Open in the text editor" aria-label="Open in the text editor" onClick="{{noop}}"><span class="ms" aria-hidden="true">{{ic.expand}}</span></button></sc-if>
+<sc-if value="{{pt.acOpen}}" hint-placeholder-val="{{false}}"><span class="te-ac" onClick="{{stop}}"><dc-import name="ContextMenu" items="{{pt.ac.items}}" mode="Completion" mark="{{pt.ac.q}}" empty="No placeholder matches" label="Placeholders and values" min-width="280" standalone="{{no}}" hint-size="280px,220px"></dc-import></span></sc-if>
+</label></sc-if>
+</sc-for>
+</div>
+<div class="se-meta">
+<sc-if value="{{r.off}}" hint-placeholder-val="{{false}}"><span class="chip" data-tip="Turned off: kept in the script, but skipped when it runs (Ctrl+/)">Off</span></sc-if>
+<sc-if value="{{r.count}}" hint-placeholder-val="{{false}}"><span>{{r.count}}</span></sc-if>
+<sc-if value="{{r.warn}}" hint-placeholder-val="{{false}}"><button class="{{r.warnCls}}" data-tip="{{r.warnTip}}" aria-label="{{r.warnTip}}" onClick="{{r.warnClick}}"><span class="ms" aria-hidden="true">{{ic.warn}}</span></button></sc-if>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{r.isHole}}" hint-placeholder-val="{{false}}">
+<div class="se-hole" data-hole="{{r.id}}" style="{{r.style}}">
+<sc-for list="{{r.guides}}" as="gd" hint-placeholder-count="0"><span class="{{gd.cls}}" style="{{gd.style}}"></span></sc-for>
+<button class="{{r.boxCls}}" style="background-clip: padding-box; text-align: left" onClick="{{r.click}}"><span class="ms" style="font-size: 13px" aria-hidden="true">{{ic.plus}}</span>{{r.text}}</button>
+</div>
+</sc-if>
+</sc-for>
+<sc-if value="{{dropLine}}" hint-placeholder-val="{{false}}"><div class="drop-line" style="{{dropLineStyle}}"></div></sc-if>
+<sc-if value="{{isEmpty}}" hint-placeholder-val="{{false}}">
+<div class="se-empty"><div class="in empty">
+<div class="t">This script has no steps yet</div>
+<div class="d">Add actions like Open Screen or Play Audio, and blocks like If to decide when they run. Steps run from top to bottom.</div>
+<button class="btn primary" onClick="{{openAddEmpty}}">Add First Step</button>
+<div class="d">Or press <kbd>A</kbd>, right-click here, or paste steps with <kbd>Ctrl+V</kbd>.</div>
+</div></div>
+</sc-if>
+</div>
+<sc-if value="{{miniShow}}" hint-placeholder-val="{{true}}"><div class="se-mini" role="navigation" aria-label="Minimap" onPointerDown="{{miniDown}}" onPointerMove="{{miniMove}}" onPointerLeave="{{miniLeave}}" onWheel="{{miniWheel}}"><div class="mm-track" style="{{mini.trackStyle}}"><sc-for list="{{mini.bars}}" as="b" hint-placeholder-count="0"><i class="{{b.cls}}" style="{{b.style}}"></i></sc-for><sc-if value="{{mini.chain}}" hint-placeholder-val="{{false}}"><span class="mm-chain" style="{{mini.chainStyle}}"></span></sc-if><sc-for list="{{mini.labels}}" as="lb" hint-placeholder-count="0"><span class="mm-label" style="{{lb.style}}">{{lb.s}}</span></sc-for></div><span class="mm-vp" style="{{mini.vpStyle}}"></span><sc-for list="{{mini.marks}}" as="mk" hint-placeholder-count="0"><i class="{{mk.cls}}" style="{{mk.style}}"></i></sc-for></div></sc-if>
+<sc-if value="{{peek.show}}" hint-placeholder-val="{{false}}"><div class="mm-peek" role="tooltip" style="{{peek.style}}"><div class="mm-path">{{peek.path}}</div><sc-for list="{{peek.rows}}" as="pr" hint-placeholder-count="5"><div class="{{pr.cls}}" style="{{pr.style}}"><span class="{{pr.tileCls}}" style="{{pr.tileStyle}}" aria-hidden="true"><span class="ms" aria-hidden="true">{{pr.icon}}</span></span><span class="t">{{pr.text}}</span></div></sc-for><div class="mm-hint">Click to jump there</div></div></sc-if>
+</div>
+<sc-if value="{{rulerShow}}" hint-placeholder-val="{{false}}"><div class="se-ruler" aria-hidden="true" style="{{rulerStyle}}"><sc-for list="{{marks}}" as="mk" hint-placeholder-count="0"><i class="{{mk.cls}}" style="{{mk.style}}"></i></sc-for></div></sc-if>
+
+<div class="te-status" role="status">
+<span class="it" style="font-variant-numeric: tabular-nums">{{stepCount}}</span>
+<sc-if value="{{selText}}" hint-placeholder-val="{{false}}"><span class="it" style="font-variant-numeric: tabular-nums">{{selText}}</span></sc-if>
+<sc-if value="{{probCount}}" hint-placeholder-val="{{false}}"><span style="position: relative; display: inline-flex"><button class="{{probBtnCls}}" aria-haspopup="dialog" aria-expanded="{{probsOpen}}" onClick="{{toggleProbs}}"><span class="ms" aria-hidden="true">{{ic.warn}}</span>{{probCount}}</button></span></sc-if>
+<span class="grow"></span>
+<span class="it">{{rightStatus}}</span>
+</div>
+</div>
+</div>
+
+<div class="footer">
+<span class="lead"><span class="ms" aria-hidden="true">{{ownerIcon}}</span>{{owner}}<sc-if value="{{hasEvents}}" hint-placeholder-val="{{false}}"><button class="{{evBtnCls}}" aria-haspopup="dialog" aria-expanded="{{evOpen}}" onClick="{{toggleEvents}}">{{evLabel}}</button></sc-if></span>
+<button class="btn wide" onClick="{{noop}}">Cancel</button>
+<button class="btn wide primary" onClick="{{noop}}">Done</button>
+</div>
+
+<sc-if value="{{ctxOpen}}" hint-placeholder-val="{{false}}">
+<div class="se-ctx" style="{{ctxStyle}}" onMouseMove="{{trackCtx}}">
+<div><dc-import name="ContextMenu" items="{{ctxItems}}" search="Search this menu" focus-on-open="{{yes}}" escape-listener="{{closePopups}}" standalone="{{no}}" hint-size="auto,520px"></dc-import></div>
+<sc-if value="{{ctxHasSub}}" hint-placeholder-val="{{false}}"><div style="{{ctxSubStyle}}" onMouseEnter="{{ctxSubEnter}}"><dc-import name="ContextMenu" items="{{wrapItems}}" sub="{{yes}}" search="" standalone="{{no}}" hint-size="auto,180px"></dc-import></div></sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{addCtxOpen}}" hint-placeholder-val="{{false}}">
+<div class="se-ctx" style="{{addCtxStyle}}" onMouseMove="{{trackAdd}}">
+<div><dc-import name="ContextMenu" items="{{addItems}}" search="Search actions and blocks" focus-on-open="{{yes}}" search-listener="{{onAddQuery}}" escape-listener="{{closePopups}}" standalone="{{no}}" hint-size="auto,560px"></dc-import></div>
+<sc-if value="{{addHasSub}}" hint-placeholder-val="{{false}}"><div style="{{addSubStyle}}" onMouseEnter="{{addSubEnter}}"><dc-import name="ContextMenu" items="{{addSubItems}}" sub="{{yes}}" search="{{addSubSearch}}" standalone="{{no}}" hint-size="auto,300px"></dc-import></div></sc-if>
+<sc-if value="{{help.show}}" hint-placeholder-val="{{false}}"><div class="help-tag se-help" style="{{help.style}}">{{help.desc}}<sc-if value="{{help.eg}}" hint-placeholder-val="{{true}}"><span class="eg">For example <code>{{help.eg}}</code></span></sc-if></div></sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{fpop.show}}" hint-placeholder-val="{{false}}">
+<div class="te-pop se-pop" role="dialog" aria-label="{{fpop.name}}" style="{{fpop.style}}" onClick="{{stop}}">
+<div class="t"><span class="ms" aria-hidden="true">{{fpop.icon}}</span>{{fpop.name}}<span class="chip">{{fpop.cat}}</span></div>
+<div class="d">{{fpop.desc}}</div>
+<div class="fr">
+<sc-for list="{{fpop.rows}}" as="f" hint-placeholder-count="3">
+<span class="k">{{f.label}}</span>
+<div class="se-fc">
+<sc-if value="{{f.isText}}" hint-placeholder-val="{{true}}"><label class="field"><sc-if value="{{f.hasPlay}}" hint-placeholder-val="{{false}}"><button class="tplay" data-tip="Play preview" aria-label="Play preview" onClick="{{f.play}}"><span class="ms fill" aria-hidden="true">play_arrow</span></button></sc-if><sc-if value="{{f.hasIcon}}" hint-placeholder-val="{{false}}"><span class="ms pre-ic" aria-hidden="true">{{f.icon}}</span></sc-if><input type="text" aria-label="{{f.label}}" data-fk="{{f.fk}}" placeholder="{{f.ph}}" value="{{f.value}}" onInput="{{f.onInput}}"><sc-if value="{{f.innerFx}}" hint-placeholder-val="{{true}}"><button class="fx" data-tip="Insert a placeholder here" aria-label="Insert a placeholder here" onClick="{{noop}}" style="display: grid; opacity: 1">{ }</button></sc-if><sc-if value="{{f.hasBrowse}}" hint-placeholder-val="{{false}}"><button class="ib" data-tip="{{f.browseTip}}" aria-label="{{f.browseTip}}" onClick="{{noop}}" style="width: 22px; height: 22px"><span class="ms" style="font-size: 14px" aria-hidden="true">folder</span></button></sc-if></label></sc-if>
+<sc-if value="{{f.isNested}}" hint-placeholder-val="{{false}}"><span class="field"><span class="val-chips"><sc-for list="{{f.pieces}}" as="fp" hint-placeholder-count="2"><sc-if value="{{fp.text}}" hint-placeholder-val="{{true}}"><span>{{fp.s}}</span></sc-if><sc-if value="{{fp.chip}}" hint-placeholder-val="{{false}}"><span class="{{fp.cls}}">{{fp.s}}</span></sc-if></sc-for></span><button class="fx" data-tip="Insert a placeholder here" aria-label="Insert a placeholder here" onClick="{{noop}}" style="display: grid; opacity: 1">{ }</button></span></sc-if>
+<sc-if value="{{f.isNum}}" hint-placeholder-val="{{false}}"><label class="field num"><input type="text" inputmode="decimal" aria-label="{{f.label}}" data-fk="{{f.fk}}" value="{{f.value}}" onInput="{{f.onInput}}"><sc-if value="{{f.unit}}" hint-placeholder-val="{{true}}"><span class="suf">{{f.unit}}</span></sc-if></label><sc-if value="{{f.hasStepper}}" hint-placeholder-val="{{true}}"><span class="stepper"><button aria-label="{{f.decTip}}" data-tip="{{f.decTip}}" onClick="{{f.dec}}"><span class="ms" aria-hidden="true">remove</span></button><button aria-label="{{f.incTip}}" data-tip="{{f.incTip}}" onClick="{{f.inc}}"><span class="ms" aria-hidden="true">add</span></button></span></sc-if></sc-if>
+<sc-if value="{{f.isSlider}}" hint-placeholder-val="{{false}}"><span class="mslider se-sl" role="slider" aria-label="{{f.label}}" aria-valuetext="{{f.pct}}"><span class="track" onPointerDown="{{f.slDown}}"><span class="fill" style="{{f.fill}}"></span><span class="knob" style="{{f.knob}}"></span></span><span class="pct">{{f.pct}}</span></span></sc-if>
+<sc-if value="{{f.isBool}}" hint-placeholder-val="{{false}}"><button class="{{f.swCls}}" role="switch" aria-checked="{{f.on}}" aria-label="{{f.label}}" onClick="{{f.toggle}}"></button></sc-if>
+<sc-if value="{{f.isSeg}}" hint-placeholder-val="{{false}}"><div class="seg inline" role="radiogroup" aria-label="{{f.label}}" style="flex: 1 1 auto"><span class="thumb" style="{{f.thumb}}"></span><sc-for list="{{f.segOpts}}" as="so" hint-placeholder-count="3"><button class="{{so.cls}}" role="radio" aria-checked="{{so.on}}" onClick="{{so.pick}}">{{so.label}}</button></sc-for></div></sc-if>
+<sc-if value="{{f.isPopup}}" hint-placeholder-val="{{false}}"><span class="se-pu"><button class="{{f.popupCls}}" aria-haspopup="listbox" aria-expanded="{{f.menuOpen}}" onClick="{{f.toggleMenu}}"><span class="pl"><sc-if value="{{f.hasIcon}}" hint-placeholder-val="{{false}}"><span class="ms pre-ic" aria-hidden="true">{{f.icon}}</span></sc-if>{{f.popupLabel}}</span><span class="ms chev" aria-hidden="true">expand_more</span></button><sc-if value="{{f.menuOpen}}" hint-placeholder-val="{{false}}"><span class="pop-menu fill" style="z-index: 50"><dc-import name="ContextMenu" items="{{f.opts}}" label="{{f.label}}" focus-on-open="{{yes}}" escape-listener="{{f.closeMenu}}" standalone="{{no}}" hint-size="auto,140px"></dc-import></span></sc-if></span></sc-if>
+<sc-if value="{{f.isCombo}}" hint-placeholder-val="{{false}}"><span class="se-pu"><label class="field"><input type="text" aria-label="{{f.label}}" data-fk="{{f.fk}}" placeholder="{{f.ph}}" value="{{f.value}}" onInput="{{f.onInput}}"><button class="ib" data-tip="{{f.comboTip}}" aria-label="{{f.comboTip}}" aria-expanded="{{f.menuOpen}}" onClick="{{f.toggleMenu}}" style="width: 22px; height: 22px"><span class="ms chev" style="font-size: 14px" aria-hidden="true">expand_more</span></button></label><sc-if value="{{f.menuOpen}}" hint-placeholder-val="{{false}}"><span class="pop-menu fill" style="z-index: 50"><dc-import name="ContextMenu" items="{{f.opts}}" label="{{f.label}}" focus-on-open="{{yes}}" escape-listener="{{f.closeMenu}}" standalone="{{no}}" hint-size="auto,140px"></dc-import></span></sc-if></span></sc-if>
+<sc-if value="{{f.hasFx}}" hint-placeholder-val="{{true}}"><button class="{{f.fxCls}}" data-tip="{{f.fxTip}}" aria-label="{{f.fxTip}}" aria-pressed="{{f.fxPressed}}" onClick="{{f.toggleFx}}" style="opacity: 1">{ }</button></sc-if>
+</div>
+</sc-for>
+</div>
+<div class="acts"><sc-if value="{{fpop.full}}" hint-placeholder-val="{{false}}"><button class="btn sm" onClick="{{noop}}">Open Full Editor</button></sc-if><span class="grow"></span><button class="btn sm danger" onClick="{{fpop.remove}}">Delete</button></div>
+</div>
+</sc-if>
+
+<sc-if value="{{cpop.show}}" hint-placeholder-val="{{false}}">
+<div class="te-pop se-pop" role="dialog" aria-label="Conditions" style="{{cpop.style}}" onClick="{{stop}}">
+<div class="t"><span class="ms" aria-hidden="true">{{cpop.icon}}</span>{{cpop.title}}<sc-if value="{{cpop.hasAll}}" hint-placeholder-val="{{true}}"><span class="chip">All must be true</span></sc-if></div>
+<div class="d">{{cpop.desc}}</div>
+<sc-if value="{{cpop.hasRows}}" hint-placeholder-val="{{true}}">
+<div class="fr" style="grid-template-columns: 112px minmax(0, 1fr)">
+<sc-for list="{{cpop.rows}}" as="c" hint-placeholder-count="2">
+<div class="seg inline" role="radiogroup" aria-label="{{c.name}}"><span class="thumb" style="{{c.thumb}}"></span><button class="{{c.isCls}}" role="radio" aria-checked="{{c.isOn}}" onClick="{{c.setIs}}">Is</button><button class="{{c.notCls}}" role="radio" aria-checked="{{c.notOn}}" onClick="{{c.setNot}}">Is Not</button></div>
+<div style="min-width: 0"><div style="font-size: 12.5px; color: var(--text)">{{c.name}}</div><div style="margin-top: 1px; font-size: 11.5px; color: var(--text-3)">{{c.value}}</div></div>
+</sc-for>
+</div>
+</sc-if>
+<div class="acts"><button class="btn sm" onClick="{{noop}}">Manage Conditions</button><span class="grow"></span><button class="btn sm primary" onClick="{{closePopups}}">Done</button></div>
+</div>
+</sc-if>
+
+<sc-if value="{{probsOpen}}" hint-placeholder-val="{{false}}">
+<div class="te-pop se-pop" role="dialog" aria-label="Problems" style="left: 12px; top: auto; bottom: 92px; width: 380px" onClick="{{stop}}">
+<div class="t"><span class="ms" style="color: var(--warn)" aria-hidden="true">{{ic.warn}}</span>{{probCount}}</div>
+<div class="d">The script still saves with these. Click one to jump to its step.</div>
+<div class="list"><sc-for list="{{probList}}" as="pr" hint-placeholder-count="3"><button class="item tall li" onClick="{{pr.go}}"><span class="ms {{pr.icCls}}" aria-hidden="true">{{ic.warn}}</span><span><b style="font-weight: 600">{{pr.step}}</b><span class="w">{{pr.text}}</span></span></button></sc-for></div>
+</div>
+</sc-if>
+
+<sc-if value="{{evOpen}}" hint-placeholder-val="{{false}}">
+<div class="te-pop se-pop" role="dialog" aria-label="Listener variables" style="left: 22px; top: auto; bottom: 58px; width: 400px" onClick="{{stop}}">
+<div class="t"><span class="ms" aria-hidden="true">{{ownerIcon}}</span>{{evTitle}}<span class="chip">{{evChip}}</span></div>
+<div class="d">{{evDesc}}</div>
+<div class="list"><sc-for list="{{evList}}" as="ev" hint-placeholder-count="4"><button class="item tall li" data-tip="{{ev.tip}}" onClick="{{ev.use}}"><span style="min-width: 0"><code>{{ev.name}}</code><span class="w">{{ev.desc}}</span></span><span style="margin-left: auto; padding-left: 10px; font-size: 11.5px; color: var(--text-3); white-space: nowrap">{{ev.state}}</span></button></sc-for></div>
+</div>
+</sc-if>
+
+<sc-if value="{{lift.show}}" hint-placeholder-val="{{false}}">
+<div class="se-row lifted" style="{{lift.style}}"><span class="lspace"></span><span class="se-tile" style="{{lift.tileStyle}}" aria-hidden="true"><span class="ms" aria-hidden="true">{{lift.icon}}</span></span><div class="se-txt"><span class="se-name">{{lift.label}}</span></div><sc-if value="{{lift.many}}" hint-placeholder-val="{{false}}"><span class="se-count">{{lift.n}}</span></sc-if></div>
+</sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"scene":{"editor":"enum","options":["Button","Listener","Problems","Empty","Long"],"default":"Button"},"select":{"editor":"text","default":""},"edit":{"editor":"text","default":""},"typing":{"editor":"text","default":""},"add":{"editor":"boolean","default":false},"addSub":{"editor":"text","default":""},"addHelp":{"editor":"text","default":""},"menu":{"editor":"text","default":""},"menuSub":{"editor":"text","default":""},"find":{"editor":"text","default":""},"replace":{"editor":"text","default":""},"drag":{"editor":"text","default":""},"pop":{"editor":"text","default":""},"popMenu":{"editor":"text","default":""},"cond":{"editor":"text","default":""},"problems":{"editor":"boolean","default":false},"values":{"editor":"boolean","default":false},"collapsed":{"editor":"text","default":""},"minimap":{"editor":"boolean","default":true},"miniHover":{"editor":"text","default":""},"scrollTo":{"editor":"text","default":""},"owner":{"editor":"text","default":""},"title":{"editor":"text","default":"Edit Action Script"},"resetKey":{"editor":"int","default":0},"width":{"editor":"int","default":1000},"height":{"editor":"int","default":740},"standalone":{"editor":"boolean","default":true},"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1080,"height":820}}'>
+// ---------- icons (24 px, stroked) ----------
+const IC = {
+  plus: 'add', undo: 'undo', redo: 'redo',
+  find: 'search', close: 'close', warn: 'warning',
+  collapse: 'unfold_less', expandAll: 'unfold_more', expand: 'open_in_full',
+  bolt: 'bolt', cursor: 'arrow_selector_tool',
+  minimap: 'view_sidebar',
+  key: 'keyboard',
+  screen: 'web_asset',
+  // step tiles
+  if: 'alt_route', else: 'subdirectory_arrow_right',
+  while: 'repeat',
+  gate: 'hourglass',
+  later: 'timer',
+  folder: 'folder',
+  comment: 'comment',
+  unknown: 'help',
+  // action categories
+  globe: 'public',
+  variable: 'attach_money',
+  layers: 'layers',
+  audio: 'music_note',
+  video: 'smart_display',
+  sparkle: 'animation',
+  file: 'draft',
+  chat: 'chat',
+  network: 'lan',
+  cube: 'sports_esports',
+  braces: 'data_object',
+  bell: 'notifications', link: 'link',
+  log: 'terminal', clip: 'content_paste',
+  power: 'power_settings_new', input: 'text_ad', servers: 'dns', cut: 'content_cut',
+  dup: 'library_add', wrap: 'format_indent_increase',
+  unwrap: 'format_indent_decrease',
+  editor: 'edit_note', ph: 'data_object'
+};
+
+// ---------- actions (real FancyMenu actions; categories, typed variables and summaries are part of the proposal) ----------
+// fields: what the row shows. pop: the value has several parts and opens a small form. full: there's still a bigger editor for the rest.
+const CATS = ['Screens', 'Worlds and Servers', 'Variables', 'Layouts', 'Audio', 'Video', 'Animations', 'Files', 'Chat and Commands', 'Network', 'Game', 'FancyMenu', 'Other'];
+const CAT_IC = { Screens: 'screen', 'Worlds and Servers': 'globe', Variables: 'variable', Layouts: 'layers', Audio: 'audio', Video: 'video', Animations: 'sparkle', Files: 'file', 'Chat and Commands': 'chat', Network: 'network', Game: 'cube', FancyMenu: 'braces', Other: 'bolt' };
+const ACT = {};
+// Every action variable has a type from the same enum as placeholder variables (#1849): TEXT, BOOLEAN, INTEGER, DECIMAL,
+// CHOICE, LOOKUP, ELEMENT_ID, FILE, FILE_OR_URL, URL, SERVER_ADDRESS and so on. The type picks the control in the variable form.
+// con: the connecting word in front of the field in the row. row: false keeps a field out of the row (form only).
+// def: the real default a new action starts with. full: the action also has a bigger editor for its other settings.
+const def = (id, name, cat, desc, fields, x) => { ACT[id] = Object.assign({ id, name, cat, desc, fields: fields || [], ic: CAT_IC[cat] }, x || {}); };
+const F = (label, type, x) => Object.assign({ label, type, hint: label }, x || {});
+const LOOKUPS = {
+  screens: [['intro_story', 'Custom GUI'], ['quest_log', 'Custom GUI'], ['title_screen', 'Minecraft'], ['join_multiplayer_screen', 'Minecraft'], ['select_world_screen', 'Minecraft'], ['options_screen', 'Minecraft']],
+  variables: [['intro_seen', 'true'], ['plays', '12'], ['last_key', 'J'], ['coins', '250']],
+  layouts: [['halloween_menu', 'On'], ['dusk_valley_title', 'On'], ['winter_menu', 'Off']],
+  worlds: [['Dusk Valley Survival', 'Survival'], ['Creative Test', 'Creative']],
+  options: [['fov', '70'], ['guiScale', '3'], ['renderDistance', '12']],
+  keybinds: [['key.inventory', 'E'], ['key.chat', 'T'], ['key.playerlist', 'Tab']],
+  packs: [['Faithful 32x', 'On'], ['Dusk Valley UI', 'On']],
+  schedulers: [['tip_rotation', 'Running'], ['autosave_hint', 'Stopped']],
+  widgets: [['mc_titlescreen_singleplayer_button', 'Singleplayer'], ['mc_titlescreen_options_button', 'Options']],
+  servers: [['play.duskvalley.net', 'Dusk Valley'], ['mc.example.net:25566', 'Example Server']]
+};
+const ELEMENTS = { audio: ['Menu Music', 'Ambience'], video: ['Intro Video'], animator: ['Logo Bounce'], input: ['Name Field'], background: ['Night Sky'] };
+const CHANNELS = ['Master', 'Music', 'Jukebox/Note Blocks', 'Weather', 'Blocks', 'Hostile Creatures', 'Friendly Creatures', 'Players', 'Ambient/Environment', 'Voice/Speech'];
+const ELF = (kinds, label) => F(label, 'ELEMENT_ID', { kinds, hint: 'Choose an element' });
+const LK = (lookup, label, x) => F(label, 'LOOKUP', Object.assign({ lookup }, x || {}));
+def('open_screen', 'Open Screen or Custom GUI', 'Screens', 'Opens a vanilla screen, a mod screen or a custom GUI you made with FancyMenu.', [LK('screens', 'Screen', { hint: 'Choose a screen' })]);
+def('back_screen', 'Back to Last Screen', 'Screens', 'Opens the screen that was open before this one.');
+def('close_screen', 'Close Screen', 'Screens', 'Closes the screen. Outside a world, the title screen opens instead.');
+def('update_screen', 'Update Screen', 'Screens', 'Rebuilds the current screen, so images, buttons and texts pick up changes.');
+def('enter_world', 'Enter World', 'Worlds and Servers', 'Loads one of your singleplayer worlds.', [LK('worlds', 'World', { hint: 'Choose a world' })]);
+def('join_server', 'Join Server', 'Worlds and Servers', 'Connects to a server.', [F('Server', 'SERVER_ADDRESS', { hint: 'Server address', eg: 'play.example.net:25565' })]);
+def('join_last', 'Enter/Join Last World/Server', 'Worlds and Servers', 'Goes back into the last world or server you played on.');
+def('leave', 'Leave World or Server', 'Worlds and Servers', 'Leaves the world or server and opens a screen after that.', [LK('screens', 'Then open', { con: 'then open', hint: 'Choose a screen' })]);
+def('set_var', 'Set Variable', 'Variables', 'Stores a text in a variable, so placeholders, conditions and other actions can use it.', [LK('variables', 'Variable'), F('New value', 'TEXT', { con: 'to', eg: 'true' })]);
+def('del_var', 'Delete Variable', 'Variables', 'Deletes one variable completely. All others stay.', [LK('variables', 'Variable')]);
+def('clear_vars', 'Clear All Variables', 'Variables', 'Deletes every variable FancyMenu stores. There is no undo for this in the game.');
+def('enable_layout', 'Enable Layout', 'Layouts', 'Turns a layout on.', [LK('layouts', 'Layout', { hint: 'Choose a layout' })]);
+def('disable_layout', 'Disable Layout', 'Layouts', 'Turns a layout off.', [LK('layouts', 'Layout', { hint: 'Choose a layout' })]);
+def('toggle_layout', 'Toggle Layout', 'Layouts', 'Turns a layout on when it is off, and off when it is on.', [LK('layouts', 'Layout', { hint: 'Choose a layout' })]);
+def('play_audio', 'Play Audio', 'Audio', 'Plays a sound once, on the sound channel and at the volume you pick.', [F('Sound', 'FILE_OR_URL', { sound: true, hint: 'Choose a sound' }), F('Volume', 'INTEGER', { con: 'at', unit: '%', def: '100', min: 0, max: 100 }), F('Channel', 'CHOICE', { con: 'on', options: CHANNELS, def: 'Master' })]);
+def('next_track', 'Next Track', 'Audio', 'Skips to the next track in an Audio element.', [ELF('audio', 'Audio element')]);
+def('prev_track', 'Previous Track', 'Audio', 'Goes back to the previous track in an Audio element.', [ELF('audio', 'Audio element')]);
+def('toggle_track', 'Toggle Play/Pause Track', 'Audio', 'Pauses an Audio element, or plays it again.', [ELF('audio', 'Audio element')]);
+def('track_volume', 'Set Track Volume', 'Audio', 'Changes the volume of an Audio element.', [ELF('audio', 'Audio element'), F('Volume', 'INTEGER', { con: 'to', unit: '%', def: '100', min: 0, max: 100 })]);
+def('stop_audio', 'Stop All Action Audios', 'Audio', 'Stops every sound that Play Audio started. Audio elements keep playing.');
+def('video_time', 'Set Video Element Play Time', 'Video', 'Jumps to a time in a Video element.', [ELF('video', 'Video element'), F('Time', 'INTEGER', { con: 'to', unit: 'ms', def: '0', min: 0 })]);
+def('video_volume', 'Set Video Element Volume', 'Video', 'Changes the volume of a Video element.', [ELF('video', 'Video element'), F('Volume', 'INTEGER', { con: 'to', unit: '%', def: '100', min: 0, max: 100 })]);
+def('video_pause', 'Toggle Video Element Paused State', 'Video', 'Pauses a Video element, or plays it again.', [ELF('video', 'Video element')]);
+def('bg_time', 'Set Video Background Play Time', 'Video', 'Jumps to a time in a video menu background.', [ELF('background', 'Video background'), F('Time', 'INTEGER', { con: 'to', unit: 'ms', def: '0', min: 0 })]);
+def('bg_volume', 'Set Video Background Volume', 'Video', 'Changes the volume of a video menu background.', [ELF('background', 'Video background'), F('Volume', 'INTEGER', { con: 'to', unit: '%', def: '100', min: 0, max: 100 })]);
+def('bg_pause', 'Toggle Video Background Paused State', 'Video', 'Pauses a video menu background, or plays it again.', [ELF('background', 'Video background')]);
+def('anim_on', 'Enable Element Animator', 'Animations', 'Turns an Element Animator on and starts its animation again.', [ELF('animator', 'Element Animator')]);
+def('anim_off', 'Disable Element Animator', 'Animations', 'Turns an Element Animator off and stops its animation.', [ELF('animator', 'Element Animator')]);
+def('anim_reset', 'Reset Element Animator', 'Animations', 'Starts the animation of an Element Animator from the beginning.', [ELF('animator', 'Element Animator')]);
+def('anim_toggle', 'Toggle Element Animator', 'Animations', 'Turns an Element Animator on when it is off, and off when it is on.', [ELF('animator', 'Element Animator')]);
+['Copy File/Folder in Game Directory', 'Create File in Game Directory', 'Delete File/Folder in Game Directory', 'Download File to Game Directory', 'Extract ZIP File In Game Directory', 'Move File/Folder in Game Directory', 'Open File/Folder In Game Directory', 'Rename File/Folder in Game Directory', 'Select File', 'Write File in Game Directory'].forEach((n, i) => def('file' + i, n, 'Files', 'Works with files inside the game folder, the folder Minecraft runs from.', [F('Path', 'FILE', { hint: 'Choose a file' })]));
+def('send_msg', 'Send Chat Message/Command', 'Chat and Commands', 'Sends a chat message, or a command when it starts with /.', [F('Message', 'TEXT', { hint: 'Message or /command' })]);
+def('paste_chat', 'Paste to Chat', 'Chat and Commands', 'Puts text into the chat input field without sending it.', [F('Text', 'TEXT')]);
+def('display_chat', 'Display In Chat [Client-Side]', 'Chat and Commands', 'Shows a message only in your own chat, without sending anything to the server. & formatting codes work.', [F('Message', 'TEXT', { eg: '&aWelcome!' })]);
+def('exec_cmd', 'Execute Command As Integrated Server', 'Chat and Commands', 'Runs a command in singleplayer as the server, ignoring permissions and cheats.', [F('Command', 'TEXT')]);
+def('http', 'Send HTTP Request', 'Network', 'Sends a request to a website or API, with the method, headers and body you set.', [F('Method', 'CHOICE', { options: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'], def: 'GET' }), F('URL', 'URL', { eg: 'https://api.example.com' })], { full: true });
+def('connect_remote', 'Connect To Remote Server', 'Network', 'Opens a WebSocket connection to a server.', [F('URL', 'URL')]);
+def('send_remote', 'Send Data To Remote Server', 'Network', 'Sends text to a WebSocket server.', [F('Data', 'TEXT')], { full: true });
+def('close_remote', 'Close Remote Server Connection', 'Network', 'Closes one WebSocket connection.', [F('Request ID', 'TEXT')]);
+def('close_all_remote', 'Close All Remote Server Connections', 'Network', 'Closes every WebSocket connection FancyMenu opened.');
+def('send_fm_data', 'Send FM Data To Server', 'Network', 'Sends text to the server you are connected to, for server-side FancyMenu setups.', [F('Data', 'TEXT')]);
+def('mc_option', 'Set Minecraft Option', 'Game', 'Changes one of Minecraft\'s options, like the FOV or the GUI scale.', [LK('options', 'Option'), F('Value', 'TEXT', { con: 'to' })]);
+def('res_pack', 'Manage Resource Pack', 'Game', 'Turns a resource pack on or off.', [F('Change', 'CHOICE', { options: ['Enable', 'Disable', 'Toggle'], def: 'Enable' }), LK('packs', 'Resource pack'), F('Reload after', 'BOOLEAN', { def: 'true', row: false })]);
+def('reload_packs', 'Reload Resource Packs', 'Game', 'Reloads all resource packs, like pressing F3 + T.');
+def('mimic_key', 'Mimic Keybind', 'Game', 'Acts as if a keybind was pressed, like opening the inventory.', [LK('keybinds', 'Keybind')]);
+def('mimic_button', 'Mimic Vanilla/Mod Button', 'Game', 'Clicks a button of a vanilla or mod screen for you.', [LK('widgets', 'Button')]);
+def('quit', 'Quit Minecraft', 'Game', 'Closes the game, the normal way.');
+def('reload_fm', 'Reload FancyMenu', 'FancyMenu', 'Reloads FancyMenu with all layouts, panoramas and slideshows.');
+def('start_sched', 'Start Scheduler', 'FancyMenu', 'Starts one of your schedulers.', [LK('schedulers', 'Scheduler')]);
+def('stop_sched', 'Stop Scheduler', 'FancyMenu', 'Stops one of your schedulers.', [LK('schedulers', 'Scheduler')]);
+def('set_input', 'Set Text Input Field Value', 'FancyMenu', 'Puts a text into an input field, yours or a vanilla one.', [ELF('input', 'Input field'), F('Text', 'TEXT', { con: 'to' })]);
+def('show_toast', 'Show Toast', 'FancyMenu', 'Shows a small notification in the corner of the screen.', [F('Title', 'TEXT'), F('Message', 'TEXT', { opt: true, row: false, hint: 'Optional' }), F('Shows for', 'DECIMAL', { con: 'for', unit: 's', def: '5', step: 0.5, min: 0 })], { full: true, ic: 'bell' });
+def('open_url', 'Open URL in Browser', 'Other', 'Opens a link in your default browser.', [F('URL', 'URL', { eg: 'https://example.com' })], { ic: 'link' });
+def('clipboard', 'Copy Text to Clipboard', 'Other', 'Copies a text, so you can paste it anywhere.', [F('Text', 'TEXT')], { ic: 'clip' });
+def('log', 'Print to Game Log', 'Other', 'Writes a line to the game log, handy for testing a script.', [F('Text', 'TEXT')], { ic: 'log' });
+// A single text variable is edited right in the row. Everything else opens the variable form, like a placeholder chip does.
+const usesForm = (a) => a.fields.length > 0 && !(a.fields.length === 1 && a.fields[0].type === 'TEXT');
+const BLOCKS = {
+  if: { name: 'If', ic: 'if', tile: '--st-if', desc: 'Runs its steps only when its conditions are true. Add Else If and Else to run something else otherwise.' },
+  elif: { name: 'Else If', ic: 'if', tile: '--st-if', desc: 'Checked when the If above it was false.' },
+  else: { name: 'Else', ic: 'else', tile: '--st-if', desc: 'Runs when no If or Else If above it was true.' },
+  while: { name: 'While', ic: 'while', tile: '--st-while', desc: 'Repeats its steps as long as its conditions are true. To keep the game from freezing, it stops after 3 seconds.' },
+  gate: { name: 'Delay Gate', ic: 'gate', tile: '--st-time', desc: 'Skips its steps until the time has passed since the script first got here. After that, they run every time the script gets here.' },
+  later: { name: 'Execute Later', ic: 'later', tile: '--st-time', desc: 'Runs its steps once the time has passed. The rest of the script doesn\'t wait for them.' },
+  folder: { name: 'Folder', ic: 'folder', tile: '--st-folder', desc: 'Groups steps so a long script stays tidy. Folders don\'t change what runs.' },
+  cmt: { name: 'Comment', ic: 'comment', desc: 'A note for you and others. Comments never run.' }
+};
+const PH = [
+  { id: 'playername', name: 'Player Name', cat: 'Player' }, { id: 'playeruuid', name: 'Player UUID', cat: 'Player' },
+  { id: 'calc', name: 'Calculator', cat: 'Advanced' }, { id: 'getvariable', name: 'Get Variable', cat: 'Advanced' },
+  { id: 'random_number', name: 'Random Number', cat: 'Advanced' }, { id: 'mcversion', name: 'Minecraft Version', cat: 'Client' },
+  { id: 'realtimehour', name: 'Realtime Hour', cat: 'Realtime' }, { id: 'guiscale', name: 'GUI Scale', cat: 'GUI' }
+];
+const PHN = Object.fromEntries(PH.map((x) => [x.id, x.name]));
+const EVENTS = {
+  title: 'On Keyboard Key Pressed', when: 'Runs when a keyboard key is pressed',
+  vals: [
+    { n: 'key_name', d: 'The name of the key, like J or Escape', eg: 'J' },
+    { n: 'key_keycode', d: 'The key code, the same on every keyboard layout', eg: '74' },
+    { n: 'key_scancode', d: 'The code of the physical key on this keyboard', eg: '36' },
+    { n: 'key_modifiers', d: 'Which of Shift, Ctrl and Alt are held, as one number', eg: '0' }
+  ]
+};
+
+// ---------- scripts ----------
+const A = (id, act, vals, x) => Object.assign({ id, k: 'act', act, vals }, x || {});
+const IF = (id, cond, kids, br) => ({ id, k: 'if', cond, kids, br: br || [] });
+const EI = (id, cond, kids) => ({ id, k: 'elif', cond, kids });
+const EL = (id, kids) => ({ id, k: 'else', kids });
+const WH = (id, cond, kids) => ({ id, k: 'while', cond, kids });
+const GATE = (id, ms, kids) => ({ id, k: 'gate', ms, kids });
+const LATER = (id, ms, kids) => ({ id, k: 'later', ms, kids });
+const FOLDER = (id, name, kids, col) => ({ id, k: 'folder', name, kids, col: !!col });
+const CMT = (id, text) => ({ id, k: 'cmt', text });
+// s: the condition's row sentence filled in. sn: its Is Not sentence, where { neg } marks the words that make it negative.
+// Without one, the mockup stands in for the "{x} is [not] {y}" sentence most conditions would get.
+const negOf = (s) => { const out = []; let done = false; (s || []).forEach((x) => { if (!done && typeof x === 'string' && x.includes(' is ')) { const k = x.indexOf(' is ') + 4; out.push(x.slice(0, k), { neg: 'not' }, ' ' + x.slice(k)); done = true; } else out.push(x); }); return done ? out : null; };
+const R = (req, s, val, not, sn) => ({ req, s, val, not: !!not, sn: sn || negOf(s) });
+const startDoc = (scene) => {
+  if (scene === 'Empty') return [];
+  if (scene === 'Listener') return [
+    CMT('c1', 'J opens the quest log, but only while playing.'),
+    IF('i1', [R('Is Text', [{ v: 'key_name' }, ' is J'], '$$key_name equals J'), R('Is Any Screen Open', ['a screen is open'], '', true, [{ neg: 'no' }, ' screen is open'])], [
+      A('a1', 'open_screen', [['quest_log']]),
+      A('a2', 'play_audio', [['page_turn.ogg'], ['100'], ['Master']]),
+      A('a3', 'set_var', [['last_key'], [{ v: 'key_name' }]])
+    ])
+  ];
+  if (scene === 'Long') {
+    // A long hub script, so the minimap has something to show.
+    const quest = (n, key, title) => IF('q' + n, [R('Is Variable Value', ['quest_' + key + ' is 1'], 'quest_' + key + ':1')], [
+      A('q' + n + 'a', 'display_chat', [['&6New quest: ' + title]]),
+      A('q' + n + 'b', 'set_var', [['quest_' + key], ['2']]),
+      A('q' + n + 'c', 'play_audio', [['quest_start.ogg'], ['70'], ['Master']])
+    ], [
+      EI('q' + n + 'e', [R('Is Variable Value', ['quest_' + key + ' is 2'], 'quest_' + key + ':2')], [
+        A('q' + n + 'f', 'show_toast', [['Quest done: ' + title], [], ['4']]),
+        A('q' + n + 'g', 'set_var', [['coins'], [{ ph: 'calc' }]]),
+        A('q' + n + 'h', 'set_var', [['quest_' + key], ['done']])
+      ]),
+      EL('q' + n + 'x', [A('q' + n + 'y', 'log', [['Quest ' + key + ' is not active']])])
+    ]);
+    return [
+      CMT('h0', 'Hub script: music, the daily reward, quests and server checks. Each part has its own folder.'),
+      FOLDER('fm', 'Music and ambience', [
+        A('m1', 'play_audio', [['hub_theme.ogg'], ['60'], ['Music']]),
+        A('m2', 'track_volume', [['Menu Music'], ['60']]),
+        IF('m3', [R('Is Variable Value', ['night_mode is true'], 'night_mode:true')], [
+          A('m4', 'toggle_track', [['Ambience']]),
+          A('m5', 'bg_volume', [['Night Sky'], ['40']])
+        ]),
+        A('m6', 'anim_on', [['Logo Bounce']]),
+        A('m7', 'video_volume', [['Intro Video'], ['0']])
+      ]),
+      FOLDER('fd', 'Daily reward', [
+        IF('d1', [R('Is Variable Value', ['reward_ready is true'], 'reward_ready:true')], [
+          A('d2', 'show_toast', [['Daily reward: 50 coins, ', { ph: 'playername' }, '!'], [], ['4']]),
+          A('d3', 'set_var', [['coins'], [{ ph: 'calc' }]]),
+          A('d4', 'set_var', [['reward_ready'], ['false']]),
+          A('d5', 'play_audio', [['reward.ogg'], ['80'], ['Master']]),
+          IF('d6', [R('Is Number', ['streak is 7 or more'], 'streak>=7')], [
+            A('d7', 'show_toast', [['7-day streak! The bonus chest is open.'], [], ['5']]),
+            A('d8', 'set_var', [['streak'], ['0']]),
+            A('d9', 'enable_layout', [['halloween_menu']])
+          ], [EL('d10', [A('d11', 'set_var', [['streak'], [{ ph: 'calc' }]])])])
+        ], [EL('d12', [A('d13', 'display_chat', [['&7Come back tomorrow for your next reward.']])])]),
+        A('d14', 'start_sched', [['tip_rotation']])
+      ]),
+      FOLDER('fq', 'Quests', [
+        CMT('qc', 'Stage 1 starts a quest, stage 2 hands out the reward.'),
+        quest(1, 'lantern', 'The Lost Lantern'),
+        quest(2, 'bridge', 'Bridge Builder'),
+        quest(3, 'watch', 'Night Watch'),
+        A('q9', 'open_url', [[]]),
+        quest(4, 'ember', 'Ember Trail'),
+        quest(5, 'fisher', 'Fisher\'s Luck'),
+        quest(6, 'crown', 'Crown of Dusk')
+      ]),
+      FOLDER('fs', 'Server checks', [
+        WH('s1', [R('Is Server Online', ['play.duskvalley.net is online'], 'play.duskvalley.net', true, ['play.duskvalley.net is ', { neg: 'not' }, ' online'])], [A('s2', 'log', [['Waiting for the server']])]),
+        GATE('s3', ['3000'], [A('s4', 'show_toast', [['The server is online'], [], ['3']])]),
+        LATER('s5', ['1500'], [A('s6', 'mimic_button', [['mc_titlescreen_singleplayer_button']])]),
+        IF('s7', [R('Is Server Online', ['play.duskvalley.net is online'], 'play.duskvalley.net')], [
+          A('s8', 'join_server', [['play.duskvalley.net']])
+        ], [EL('s9', [A('s10', 'display_chat', [['&cThe server is offline.']])])])
+      ]),
+      FOLDER('fz', 'Stats', [A('z2', 'http', [['POST'], ['https://api.duskvalley.net/hub']]), A('z3', 'set_var', [['hub_visits'], [{ ph: 'calc' }]]), A('z4', 'log', [['Hub visit sent']])], true),
+      A('z1', 'log', [['Hub script finished']], { off: true })
+    ];
+  }
+  if (scene === 'Problems') return [
+    A('p1', 'open_url', [[]]),
+    IF('p2', [], [A('p3', 'show_toast', [['Welcome back, ', { ph: 'plyername', bad: true }, '!'], [], ['3']])]),
+    WH('p4', [], [A('p5', 'log', [['Still waiting for the server']])]),
+    A('p6', '?questbook:open_page', [['chapter_2']]),
+    GATE('p7', ['3000'], [A('p8', 'toggle_layout', [['halloween_menu']])])
+  ];
+  return [
+    CMT('c1', 'The first visit shows the story. After that, Play joins the server.'),
+    A('a1', 'play_audio', [['click.ogg'], ['80'], ['Master']]),
+    IF('i1', [R('Is Variable Value', ['intro_seen is true'], 'intro_seen:true', true, ['intro_seen is ', { neg: 'not' }, ' true'])], [
+      A('a2', 'set_var', [['intro_seen'], ['true']]),
+      A('a3', 'open_screen', [['intro_story']])
+    ], [
+      EI('e1', [R('Is Server Online', ['play.duskvalley.net is online'], 'play.duskvalley.net')], [
+        A('a4', 'show_toast', [['Joining Dusk Valley, ', { ph: 'playername' }, '!'], [], ['3']]),
+        LATER('l1', ['800'], [A('a5', 'join_server', [['play.duskvalley.net']])])
+      ]),
+      EL('e2', [A('a6', 'display_chat', [['&cThe server is offline. Try again in a minute.']])])
+    ]),
+    A('a7', 'log', [['Play clicked by ', { ph: 'playername' }]], { off: true }),
+    FOLDER('f1', 'Stats', [A('a8', 'http', [['POST'], ['https://api.duskvalley.net/plays']]), A('a9', 'set_var', [['plays'], [{ ph: 'calc' }]])], true)
+  ];
+};
+const OWNER = {
+  Button: ['Runs when Play is clicked', 'cursor'], Listener: [EVENTS.when, 'key'], Problems: ['Runs when the Halloween Menu opens', 'screen'], Empty: ['Runs when Options is clicked', 'cursor'], Long: ['Runs when the Dusk Valley hub opens', 'screen']
+};
+
+// ---------- tree helpers ----------
+const clone = (o) => JSON.parse(JSON.stringify(o));
+const isBlock = (st) => !!st.kids;
+const isBranch = (st) => st.k === 'elif' || st.k === 'else';
+const each = (list, cb, parent) => { list.forEach((st, i) => { cb(st, list, i, parent || null); if (st.kids) each(st.kids, cb, st); if (st.br) st.br.forEach((b, j) => { cb(b, st.br, j, st); each(b.kids, cb, b); }); }); };
+const find = (doc, id) => { let r = null; each(doc, (st, list, i, parent) => { if (!r && st.id === id) r = { st, list, i, parent }; }); return r; };
+const parentMap = (doc) => { const m = {}; each(doc, (st, list, i, parent) => { m[st.id] = parent ? parent.id : null; }); return m; };
+const under = (pm, id, anc) => { let q = pm[id]; while (q) { if (q === anc) return true; q = pm[q]; } return false; };
+const tops = (doc, ids) => { const pm = parentMap(doc); return ids.filter((id) => !ids.some((o) => o !== id && under(pm, id, o))); };
+let SEQ = 0;
+const nid = () => 'n' + (++SEQ) + Math.random().toString(36).slice(2, 6);
+const reid = (st) => { st.id = nid(); (st.kids || []).forEach(reid); (st.br || []).forEach(reid); return st; };
+const segText = (segs) => (segs || []).map((x) => typeof x === 'string' ? x : x.ph ? '{' + (PHN[x.ph] || x.ph) + '}' : '$$' + x.v).join('');
+const stepName = (st) => st.k === 'act' ? (ACT[st.act] ? ACT[st.act].name : 'Unknown action') : st.k === 'folder' ? 'Folder ' + st.name : st.k === 'cmt' ? 'Comment' : BLOCKS[st.k].name;
+// ---------- minimap scale ----------
+// The minimap fits the whole script while rows stay at least MM_MIN px per list px. Longer scripts keep that
+// scale and the minimap scrolls along with the list instead, so very long scripts still show readable bars.
+const MINI_W = 84, MM_MAX = 0.16, MM_MIN = 0.06;
+const mmScale = (g) => Math.max(MM_MIN, Math.min(MM_MAX, g.mh / Math.max(1, g.sh)));
+const mmOff = (g, st) => { const over = g.sh * mmScale(g) - g.mh; return over > 0 ? (st / Math.max(1, g.sh - g.ch)) * over : 0; };
+const countSteps = (list) => { let n = 0; each(list, (st) => { if (!isBranch(st)) n++; }); return n; };
+
+class Component extends DCLogic {
+  renderVals() {
+    if ((this.props.resetKey ?? 0) !== (this._rk ?? 0)) { this._rk = this.props.resetKey ?? 0; this.state = {}; this._measured = false; }
+    const p = this.props, s = this.state || {};
+    const scene = p.scene || 'Button';
+    const W = +p.width || 1000, H = +p.height || 740;
+    const standalone = p.standalone ?? true;
+    const uid = this._uid || (this._uid = 'se' + Math.random().toString(36).slice(2, 8));
+    const set = (patch) => this.setState(patch);
+    // Plain text goes straight into the field so it can be selected and replaced; values with chips keep them in front of it.
+    const mkEdit = (id, f, segs) => { const all = (segs || []).every((x) => typeof x === 'string'); return { id, f, segs: all ? [] : clone(segs || []), draft: all ? (segs || []).join('') : '', ac: null }; };
+    const initCol = () => { const d = startDoc(scene); const ids = (p.collapsed || '').split(',').filter(Boolean); if (ids.length) each(d, (st) => { if (ids.includes(st.id)) st.col = true; }); return d; };
+    const doc = s.doc || initCol();
+    const sel = s.sel || (p.select ? p.select.split(',') : p.menu ? p.menu.split(',') : p.edit ? [p.edit.split(':')[0]] : p.cond ? [p.cond] : p.pop ? [p.pop] : (scene === 'Button' ? ['a3'] : scene === 'Problems' ? ['p1'] : []));
+    const hist = s.hist || { u: [], r: [] };
+    const fav = s.fav || ['show_toast'];
+    const recent = s.recent || ['set_var', 'open_screen', 'play_audio'];
+    const clip = s.clip || null;
+    const findOpen = s.findOpen ?? !!p.find;
+    const fq = s.fq ?? (p.find || '');
+    const rq = s.rq ?? (p.replace || '');
+    const matchCase = !!s.matchCase;
+    const edit = s.edit === undefined ? (p.edit ? (() => { const [id, f] = p.edit.split(':'); const fd = find(doc, id); if (!fd) return null; const segs = fd.st.k === 'act' ? fd.st.vals[+f] : fd.st.ms; const draft = p.typing ? '' : ''; return { id, f: f === 'ms' ? 'ms' : +f, segs: clone(segs || []), draft, ac: p.typing ? { at: 0, q: p.typing, sel: 0 } : null }; })() : null) : s.edit;
+    const add = s.add === undefined ? (p.add ? { at: 'tool' } : null) : s.add;
+    const ctx = s.ctx === undefined ? (p.menu ? { pending: true, sub: p.menuSub || null } : null) : s.ctx;
+    const fpopId = s.fpop === undefined ? (p.pop || null) : s.fpop;
+    const cpopId = s.cpop === undefined ? (p.cond || null) : s.cpop;
+    const probsOpen = s.probs ?? !!p.problems;
+    const evOpen = s.ev ?? !!p.values;
+    const drag = s.drag === undefined ? (p.drag ? (() => { const [ids, target, pos] = p.drag.split('|'); return { ids: ids.split(','), target, pos, demo: true }; })() : null) : s.drag;
+    const hov = s.hov || null;
+    const mmHov = s.mmHov !== undefined ? s.mmHov : (p.miniHover || null);
+    const active = s.active ?? true;
+    const anchors = this._anchors || {};
+
+    // ---------- history ----------
+    const commit = (nd, nsel, extra) => {
+      const h = { u: hist.u.concat([{ doc, sel }]).slice(-100), r: [] };
+      this.setState(Object.assign({ doc: nd, sel: nsel || sel, hist: h }, extra || {}));
+    };
+    const undo = () => { if (!hist.u.length) return; const last = hist.u[hist.u.length - 1]; set({ doc: last.doc, sel: last.sel, hist: { u: hist.u.slice(0, -1), r: hist.r.concat([{ doc, sel }]) }, edit: null }); };
+    const redo = () => { if (!hist.r.length) return; const nx = hist.r[hist.r.length - 1]; set({ doc: nx.doc, sel: nx.sel, hist: { u: hist.u.concat([{ doc, sel }]), r: hist.r.slice(0, -1) }, edit: null }); };
+
+    // ---------- problems ----------
+    const problems = [];
+    each(doc, (st) => {
+      if (st.k === 'act') {
+        const a = ACT[st.act];
+        if (!a) { problems.push({ id: st.id, err: false, step: 'Unknown action', text: 'It comes from ' + st.act.slice(1).split(':')[0] + ', which isn\'t installed. It stays in the script, but gets skipped.' }); return; }
+        a.fields.forEach((f, i) => { if (!f.opt && !(st.vals[i] || []).length) problems.push({ id: st.id, err: false, step: a.name, text: 'Missing: ' + f.label.toLowerCase().replace(/^url$/, 'URL') }); });
+        st.vals.forEach((v) => (v || []).forEach((x) => { if (x && x.bad) problems.push({ id: st.id, err: true, step: a.name, text: 'There\'s no placeholder called ' + x.ph + ', so it would show up as plain text.' }); }));
+      }
+      if ((st.k === 'if' || st.k === 'elif') && !st.cond.length) problems.push({ id: st.id, err: false, step: BLOCKS[st.k].name, text: 'No condition yet, so it always counts as true.' });
+      if (st.k === 'while' && !st.cond.length) problems.push({ id: st.id, err: true, step: 'While', text: 'No condition, so it repeats until the 3 second safety stop and freezes the game until then.' });
+    });
+    const probOf = {}; problems.forEach((x) => { (probOf[x.id] = probOf[x.id] || []).push(x); });
+
+    // ---------- find ----------
+    const norm = (x) => matchCase ? x : x.toLowerCase();
+    const needle = fq ? norm(fq) : '';
+    const marks = (str) => {
+      if (!needle || !str) return [{ s: str, plain: true, hit: false }];
+      const out = []; const hay = norm(str); let at = 0, k;
+      while ((k = hay.indexOf(needle, at)) >= 0) { if (k > at) out.push({ s: str.slice(at, k), plain: true, hit: false }); out.push({ s: str.slice(k, k + needle.length), hit: true, plain: false }); at = k + needle.length; }
+      if (at < str.length) out.push({ s: str.slice(at), plain: true, hit: false });
+      return out.length ? out : [{ s: str, plain: true, hit: false }];
+    };
+    const stepText = (st) => {
+      if (st.k === 'act') return (ACT[st.act] ? ACT[st.act].name : st.act) + ' ' + st.vals.map(segText).join(' ');
+      if (st.k === 'cmt') return st.text;
+      if (st.k === 'folder') return st.name;
+      return BLOCKS[st.k].name + ' ' + (st.cond || []).map((c) => segText(c.s)).join(' ') + ' ' + segText(st.ms);
+    };
+    const hits = []; if (needle) each(doc, (st) => { if (norm(stepText(st)).includes(needle)) hits.push(st.id); });
+    const valueHits = []; if (needle) each(doc, (st) => { if (st.k === 'act' && st.vals.some((v) => norm(segText(v)).includes(needle))) valueHits.push(st.id); });
+    const hitIdx = Math.min(s.hit ?? 0, Math.max(0, hits.length - 1));
+
+    // ---------- rows ----------
+    const PAD = 6, IND = 20;
+    const rows = [];
+    const selSet = new Set(sel);
+    const editing = (id, f) => edit && edit.id === id && edit.f === f;
+    const chainOf = {}; each(doc, (st) => { if (st.k === 'if') { chainOf[st.id] = st.id; st.br.forEach((b) => { chainOf[b.id] = st.id; }); } });
+    const keyOf = (id) => chainOf[id] || id;
+    // hovering a step in the minimap highlights the block it belongs to, in the minimap and in the list's guides
+    const mmKey = (() => { if (!mmHov) return null; const fd = find(doc, mmHov); if (!fd) return null; const blk = isBlock(fd.st) ? fd.st.id : (fd.parent ? fd.parent.id : null); return blk ? keyOf(blk) : null; })();
+    const hotKeys = new Set(sel.map(keyOf).concat(hov ? [keyOf(hov)] : [], mmKey ? [mmKey] : []));
+    const dragSet = new Set(drag && !drag.demo ? drag.ids : drag && drag.demo ? drag.ids : []);
+    const tileOf = (st) => st.k === 'act' ? (ACT[st.act] ? '--st-action' : '--st-folder') : (BLOCKS[st.k] && BLOCKS[st.k].tile) || '';
+    const iconOf = (st) => st.k === 'act' ? (ACT[st.act] ? IC[ACT[st.act].ic] : IC.unknown) : IC[BLOCKS[st.k].ic];
+    const MC = { 0: '#000000', 1: '#0000AA', 2: '#00AA00', 3: '#00AAAA', 4: '#AA0000', 5: '#AA00AA', 6: '#FFAA00', 7: '#AAAAAA', 8: '#555555', 9: '#5555FF', a: '#55FF55', b: '#55FFFF', c: '#FF5555', d: '#FF55FF', e: '#FFFF55', f: '#FFFFFF' };
+    const textPieces = (x) => x.split(/(&[0-9a-fk-or])/i).filter(Boolean).map((part) => /^&[0-9a-fk-or]$/i.test(part) ? { isFc: true, s: part, sw: MC[part[1].toLowerCase()] ? 'background: ' + MC[part[1].toLowerCase()] : '' } : { isText: true, marks: marks(part), s: part });
+    const pieces = (segs) => [].concat(...(segs || []).map((x) => typeof x === 'string' ? textPieces(x) : [x.ph ? { isChip: true, s: x.bad ? '{' + x.ph + '}' : PHN[x.ph] || x.ph, cls: 'mchip' + (x.bad ? ' bad' : '') } : { isChip: true, s: '$$' + x.v, cls: 'mchip var' }]));
+    // Typed variables show what they are: a play button for sounds, the element's icon, On or Off for switches, units for numbers.
+    const EL_IC = { audio: 'audio', video: 'video', background: 'video', animator: 'sparkle', input: 'input' };
+    const tokPieces = (f, v) => {
+      if (f.type === 'BOOLEAN') return [{ isText: true, marks: marks(segText(v) === 'true' ? 'On' : 'Off') }];
+      const pre = f.type === 'FILE_OR_URL' && f.sound ? [{ isPlay: true, play: (e) => e.stopPropagation() }] : f.type === 'ELEMENT_ID' ? [{ isIc: true, d: IC[EL_IC[f.kinds]] }] : f.type === 'URL' ? [{ isIc: true, d: IC.link }] : [];
+      return pre.concat(pieces(v), f.unit ? [{ isUnit: true, s: (f.unit === '%' ? '' : ' ') + f.unit }] : []);
+    };
+    const openEdit = (st, f, segs) => (e) => { if (e) e.stopPropagation(); this._focusEd = true; set({ sel: [st.id], edit: mkEdit(st.id, f, segs), ctx: null, add: null }); };
+    const anchorAt = (e) => { const el = e.currentTarget; const w = el.closest('.win.se'); const wr = w.getBoundingClientRect(), r = el.getBoundingClientRect(); const k = wr.width / w.offsetWidth || 1; return { x: (r.left - wr.left) / k, y: (r.bottom - wr.top) / k + 6 }; };
+    const editorPart = (st, f, hint, unit, withAc, aria) => {
+      const ac = edit.ac;
+      const acItems = ac ? (() => {
+        const ql = ac.q.toLowerCase();
+        const evs = scene === 'Listener' ? EVENTS.vals.filter((v) => !ql || v.n.includes(ql)).map((v) => ({ ev: v.n, label: '$$' + v.n, cat: 'Listener variable', icon: IC.key })) : [];
+        const phs = PH.filter((x) => !ql || x.name.toLowerCase().includes(ql) || x.id.includes(ql)).map((x) => ({ ph: x.id, label: x.name, cat: x.cat, icon: IC.ph }));
+        return evs.concat(phs).slice(0, 7);
+      })() : [];
+      const acSel = ac ? Math.min(ac.sel, Math.max(0, acItems.length - 1)) : 0;
+      const pick = (it) => { const ed = this.state.edit || edit; const base = ed.draft.slice(0, ed.ac ? ed.ac.at : ed.draft.length); const segs = ed.segs.concat(base ? [base] : [], [it.ph ? { ph: it.ph } : { v: it.ev }]); this._focusEd = true; set({ edit: Object.assign({}, ed, { segs, draft: '', ac: null }) }); };
+      this._ac = ac ? { items: acItems, sel: acSel, pick } : null;
+      return {
+        isEd: true, cls: 'field focus se-edit' + (f === 'name' || f === 'cmt' ? ' name' : ''), aria, hint: (edit.segs.length || edit.draft) ? '' : hint,
+        pieces: edit.segs.map((x) => typeof x === 'string' ? { isText: true, s: x } : x.ph ? { isChip: true, s: PHN[x.ph] || x.ph, cls: 'mchip' } : { isChip: true, s: '$$' + x.v, cls: 'mchip var' }),
+        draft: edit.ac && p.typing && !s.edit ? '{' + p.typing : edit.draft, unit: unit || '', hasExpand: f !== 'ms' && f !== 'name',
+        onInput: (e) => {
+          const v = e.target.value; const ed = this.state.edit || edit; let ac2 = ed.ac;
+          if (withAc && !ac2) {
+            // { or $$ in what was just typed or pasted starts the suggestions, until a } closes it
+            const kb = v.lastIndexOf('{'), kd = v.lastIndexOf('$$'), k = Math.max(kb, kd);
+            if (k >= 0 && k >= ed.draft.length - 1 && v.indexOf('}', k) < 0) ac2 = { at: k, q: v.slice(k + (k === kd ? 2 : 1)), sel: 0 };
+          }
+          else if (ac2) ac2 = v.length <= ac2.at ? null : { at: ac2.at, q: v.slice(ac2.at).replace(/^(\{|\$\$)/, ''), sel: 0 };
+          set({ edit: Object.assign({}, ed, { draft: v, ac: ac2 }) });
+        },
+        onKey: (e) => {
+          const ed = this.state.edit || edit; const a = this._ac;
+          if (a && ed.ac) {
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const n = a.items.length || 1; set({ edit: Object.assign({}, ed, { ac: Object.assign({}, ed.ac, { sel: (a.sel + (e.key === 'ArrowDown' ? 1 : n - 1)) % n }) }) }); return; }
+            if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); if (a.items[a.sel]) a.pick(a.items[a.sel]); return; }
+            if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); set({ edit: Object.assign({}, ed, { ac: null }) }); return; }
+          }
+          if (e.key === 'Enter') { e.preventDefault(); finishEdit(true); return; }
+          if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); finishEdit(false); return; }
+          if (e.key === 'Backspace' && !ed.draft && ed.segs.length) {
+            e.preventDefault(); const segs = clone(ed.segs); const last = segs[segs.length - 1];
+            if (typeof last === 'string' && last.length > 1) segs[segs.length - 1] = last.slice(0, -1); else segs.pop();
+            set({ edit: Object.assign({}, ed, { segs }) });
+          }
+        },
+        acOpen: !!ac,
+        ac: { q: ac ? ac.q : '', items: acItems.map((it, i) => ({ d: it.icon, label: it.label, note: it.cat, hl: i === acSel, click: () => pick(it) })) }
+      };
+    };
+    const finishEdit = (save) => {
+      const ed = this.state.edit || edit; if (!ed) return;
+      if (!save) { set({ edit: null }); return; }
+      const segs = clone(ed.segs); if (ed.draft) { if (typeof segs[segs.length - 1] === 'string') segs[segs.length - 1] += ed.draft; else segs.push(ed.draft); }
+      const nd = clone(this.state.doc || doc); const fd = find(nd, ed.id); if (!fd) { set({ edit: null }); return; }
+      const txt = segText(segs);
+      if (ed.f === 'name') { if (txt.trim() === fd.st.name) { set({ edit: null }); return; } fd.st.name = txt.trim() || 'New Folder'; }
+      else if (ed.f === 'cmt') { if (txt.trim() === fd.st.text) { set({ edit: null }); return; } fd.st.text = txt.trim() || 'Comment'; }
+      else if (ed.f === 'ms') { if (txt === segText(fd.st.ms)) { set({ edit: null }); return; } fd.st.ms = segs; }
+      else { if (txt === segText(fd.st.vals[ed.f])) { set({ edit: null }); return; } fd.st.vals[ed.f] = segs; }
+      commit(nd, [ed.id], { edit: null });
+    };
+    this._finishEdit = finishEdit;
+    const condParts = (st) => {
+      const out = [];
+      const open = (e) => { e.stopPropagation(); this._anchors = Object.assign({}, this._anchors, { cpop: anchorAt(e) }); set({ sel: [st.id], cpop: st.id, ctx: null, add: null, fpop: null }); };
+      if (!st.cond.length) out.push({ isTok: true, cls: 'sv empty' + (st.k === 'while' ? ' bad' : ''), key: st.id + ':c', tip: null, aria: 'Add a condition', click: open, pieces: [{ isText: true, marks: [{ s: 'Add a condition', plain: true, hit: false }] }] });
+      st.cond.forEach((c, i) => {
+        if (i) out.push({ isW: true, cls: 'se-con', marks: [{ s: 'and', plain: true, hit: false }] });
+        out.push({ isTok: true, cls: 'sv pick', key: st.id + ':c' + i, tip: (c.not ? 'Is Not: ' : '') + c.req, aria: c.req, click: open, pieces: !c.not ? pieces(c.s) : c.sn ? [].concat(...c.sn.map((x) => x && x.neg ? [{ isNot: true, notCls: 'not in', s: x.neg }] : pieces([x]))) : [{ isNot: true, notCls: 'not', s: 'not' }].concat(pieces(c.s)) });
+      });
+      return out;
+    };
+    const W_ = (cls, str) => ({ isW: true, cls, marks: marks(str) });
+    const partsOf = (st) => {
+      if (st.k === 'act') {
+        const a = ACT[st.act];
+        if (!a) return [W_('se-name', 'Unknown action'), { isTok: true, cls: 'sv pick', key: st.id + ':id', tip: 'From ' + st.act.slice(1).split(':')[0] + ', which isn\'t installed', aria: st.act.slice(1), click: (e) => e.stopPropagation(), pieces: [{ isText: true, marks: marks(st.act.slice(1)) }] }, W_('se-con', 'with'), { isTok: true, cls: 'sv pick', key: st.id + ':0', tip: null, aria: 'Variable', click: (e) => e.stopPropagation(), pieces: pieces(st.vals[0]) }];
+        const out = [W_('se-name', a.name)];
+        const form = usesForm(a);
+        a.fields.forEach((f, i) => {
+          if (f.row === false) return;
+          if (f.con) out.push(W_('se-con', f.con));
+          if (editing(st.id, i)) { out.push(editorPart(st, i, f.eg ? f.hint + ', like ' + f.eg : f.hint, f.unit, true, f.label)); return; }
+          const v = st.vals[i] || [];
+          const click = form ? (e) => { e.stopPropagation(); this._anchors = Object.assign({}, this._anchors, { fpop: anchorAt(e) }); this._focusForm = i; set({ sel: [st.id], fpop: st.id, fmenu: null, ctx: null, add: null, cpop: null }); } : openEdit(st, i, v);
+          if (!v.length) out.push({ isTok: true, cls: 'sv empty' + (f.opt ? '' : ' bad'), key: st.id + ':' + i, tip: null, aria: f.label, click, pieces: [{ isText: true, marks: [{ s: f.hint, plain: true, hit: false }] }] });
+          else out.push({ isTok: true, cls: 'sv' + (f.type === 'TEXT' ? '' : ' pick'), key: st.id + ':' + i, tip: null, aria: f.label, click, pieces: tokPieces(f, v) });
+        });
+        return out;
+      }
+      if (st.k === 'cmt') return editing(st.id, 'cmt') ? [editorPart(st, 'cmt', 'Comment', '', false, 'Comment')] : [W_('se-cmt', st.text)];
+      if (st.k === 'folder') return editing(st.id, 'name') ? [editorPart(st, 'name', 'Folder name', '', false, 'Folder name')] : [W_('se-kw', st.name)];
+      const out = [W_('se-kw', BLOCKS[st.k].name)];
+      if (st.k === 'if' || st.k === 'elif' || st.k === 'while') return out.concat(condParts(st));
+      if (st.k === 'gate' || st.k === 'later') {
+        out.push(W_('se-con', st.k === 'gate' ? 'opens after' : 'after'));
+        if (editing(st.id, 'ms')) out.push(editorPart(st, 'ms', 'Time', 'ms', true, 'Time in milliseconds'));
+        else out.push({ isTok: true, cls: 'sv', key: st.id + ':ms', tip: (+segText(st.ms) / 1000) + ' seconds', aria: 'Time in milliseconds', click: openEdit(st, 'ms', st.ms), pieces: pieces(st.ms).concat([{ isUnit: true, s: ' ms' }]) });
+      }
+      return out;
+    };
+    const visible = [];
+    const walk = (list, depth, anc) => {
+      list.forEach((st) => {
+        pushRow(st, depth, anc);
+        if (isBlock(st)) {
+          const kidAnc = anc.concat([st]);
+          if (!st.col) { if (st.kids.length) walk(st.kids, depth + 1, kidAnc); else pushHole(st, depth + 1, kidAnc); }
+          if (st.br) st.br.forEach((b) => { pushRow(b, depth, anc); if (!b.col) { if (b.kids.length) walk(b.kids, depth + 1, anc.concat([b])); else pushHole(b, depth + 1, anc.concat([b])); } });
+        }
+      });
+    };
+    const guidesFor = (anc) => anc.map((a, d) => ({ cls: 'se-guide' + (hotKeys.has(keyOf(a.id)) ? ' hot' : ''), style: 'left: ' + (PAD + d * IND + 9) + 'px; --gc: var(' + (tileOf(a) || '--accent') + ')' }));
+    const pushHole = (st, depth, anc) => rows.push({ isHole: true, isStep: false, id: st.id, depth, style: 'padding-left: ' + (PAD + depth * IND + 24) + 'px', guides: guidesFor(anc), text: 'Empty. Click to add a step, or drag one here.', boxCls: 'box' + (drag && drag.target === st.id && drag.pos === 'hole' ? ' drop-into' : ''), click: (e) => { e.stopPropagation(); this._anchors = Object.assign({}, this._anchors, { add: anchorAt(e) }); set({ sel: [st.id], add: { at: 'ctx', q: '' }, ctx: null }); } });
+    const pushRow = (st, depth, anc) => {
+      const i = visible.length; visible.push(st.id);
+      const block = isBlock(st);
+      const pr = probOf[st.id] || [];
+      const hasErr = pr.some((x) => x.err);
+      const isSel = selSet.has(st.id);
+      const kidsCount = block ? countSteps(st.kids) : 0;
+      rows.push({
+        isStep: true, isHole: false, id: st.id, depth, level: depth + 1, block: block ? '1' : '0', i,
+        sel: isSel, cls: '', style: 'padding-left: ' + (PAD + depth * IND) + 'px',
+        ariaSel: isSel ? 'true' : 'false', ariaExp: block ? (st.col ? 'false' : 'true') : null,
+        guides: guidesFor(anc),
+        hasChev: block, noChev: !block, chevCls: 'lchev' + (st.col ? '' : ' open'), chevLabel: st.col ? 'Expand' : 'Collapse',
+        toggle: (e) => { e.stopPropagation(); const nd = clone(doc); find(nd, st.id).st.col = !st.col; set({ doc: nd }); },
+        tileCls: 'se-tile' + (st.k === 'cmt' ? ' cmt' : ''), tileStyle: tileOf(st) ? '--tile: var(' + tileOf(st) + ')' : '', icon: iconOf(st),
+        parts: partsOf(st),
+        off: !!st.off, count: block && st.col ? (kidsCount === 1 ? '1 step' : kidsCount + ' steps') : '',
+        warn: pr.length > 0, warnCls: 'se-warn' + (hasErr ? ' err' : ''), warnTip: pr.map((x) => x.text).join(' '),
+        warnClick: (e) => { e.stopPropagation(); set({ probs: true, sel: [st.id] }); },
+        hit: hits.includes(st.id), hitNow: hits[hitIdx] === st.id,
+        click: (e) => {
+          e.stopPropagation(); if (this._dragged) { this._dragged = false; return; }
+          if (e.shiftKey && sel.length) { const a0 = visible.indexOf(s.anchor || sel[sel.length - 1]); const b0 = visible.indexOf(st.id); if (a0 >= 0) { const [x, y] = a0 < b0 ? [a0, b0] : [b0, a0]; set({ sel: visible.slice(x, y + 1), ctx: null }); return; } }
+          if (e.metaKey || e.ctrlKey) { set({ sel: isSel ? sel.filter((x) => x !== st.id) : sel.concat([st.id]), anchor: st.id, ctx: null }); return; }
+          set({ sel: [st.id], anchor: st.id, ctx: null });
+        },
+        down: (e) => { if (e.button !== 0) return; this._press = { id: st.id, x: e.clientX, y: e.clientY, sel: isSel ? sel : [st.id] }; },
+        menu: (e) => { e.preventDefault(); e.stopPropagation(); const w = e.currentTarget.closest('.win.se'); const wr = w.getBoundingClientRect(); const k = wr.width / w.offsetWidth || 1; this._anchors = Object.assign({}, this._anchors, { ctx: { x: (e.clientX - wr.left) / k + 2, y: (e.clientY - wr.top) / k + 2 } }); set({ sel: isSel ? sel : [st.id], ctx: { sub: null }, add: null, edit: null }); },
+        dbl: (e) => { e.stopPropagation(); this._focusEd = true; if (st.k === 'folder') set({ edit: mkEdit(st.id, 'name', [st.name]) }); else if (st.k === 'cmt') set({ edit: mkEdit(st.id, 'cmt', [st.text]) }); },
+        enter: () => { if (st.k === 'if' || isBranch(st)) { if (this.state.hov !== st.id) set({ hov: st.id }); } },
+        leave: () => { if (this.state.hov) set({ hov: null }); }
+      });
+    };
+    walk(doc, 0, []);
+    const stepRows = rows.filter((r) => r.isStep);
+    rows.forEach((r, i) => {
+      if (!r.isStep) return;
+      const prev = rows[i - 1], next = rows[i + 1];
+      r.cls = ['se-row', r.sel && 'sel', r.sel && !active && 'dim', r.sel && prev && prev.isStep && prev.sel && 'jt', r.sel && next && next.isStep && next.sel && 'jb', r.off && 'off', dragSet.has(r.id) && 'ghost', r.hitNow && !r.sel && 'hit-now',
+        drag && drag.target === r.id && drag.pos === 'into' && 'drop-into'].filter(Boolean).join(' ');
+    });
+
+    // ---------- operations ----------
+    const selTops = () => tops(doc, sel).filter((id) => find(doc, id));
+    const insertSteps = (steps, nd) => {
+      nd = nd || clone(doc);
+      const target = sel.length ? sel[sel.length - 1] : null;
+      const fd = target ? find(nd, target) : null;
+      if (!fd) nd.push(...steps);
+      else if (isBlock(fd.st) && (!fd.st.col || isBranch(fd.st))) { fd.st.col = false; fd.st.kids.unshift(...steps); }
+      else if (isBranch(fd.st)) fd.st.kids.unshift(...steps);
+      else fd.list.splice(fd.i + 1, 0, ...steps);
+      return nd;
+    };
+    const newStep = (kind) => {
+      if (kind === 'if') return IF(nid(), [], []);
+      if (kind === 'while') return WH(nid(), [], []);
+      if (kind === 'gate') return GATE(nid(), ['1000'], []);
+      if (kind === 'later') return LATER(nid(), ['1000'], []);
+      if (kind === 'folder') return FOLDER(nid(), 'New Folder', []);
+      if (kind === 'cmt') return CMT(nid(), 'Comment');
+      return A(nid(), kind, ACT[kind].fields.map((f) => f.def ? [f.def] : []));
+    };
+    const addStep = (kind) => {
+      const st = newStep(kind);
+      const nd = insertSteps([st]);
+      const rec = ACT[kind] ? [kind].concat(recent.filter((x) => x !== kind)).slice(0, 3) : recent;
+      const firstText = ACT[kind] && ACT[kind].fields.length && !usesForm(ACT[kind]) ? 0 : null;
+      const ed = firstText !== null ? mkEdit(st.id, 0, []) : kind === 'folder' ? mkEdit(st.id, 'name', ['New Folder']) : kind === 'cmt' ? mkEdit(st.id, 'cmt', []) : kind === 'gate' || kind === 'later' ? mkEdit(st.id, 'ms', ['1000']) : null;
+      this._selAll = kind === 'folder' || kind === 'gate' || kind === 'later';
+      this._focusEd = !!ed;
+      commit(nd, [st.id], { add: null, ctx: null, recent: rec, edit: ed, anchor: st.id });
+      if (kind === 'if' || kind === 'while') this._measureNew = { id: st.id, which: 'cpop' };
+      else if (ACT[kind] && usesForm(ACT[kind])) { this._measureNew = { id: st.id, which: 'fpop' }; this._focusForm = 0; }
+    };
+    const del = () => {
+      const ids = selTops(); if (!ids.length) return;
+      const after = visible.slice(visible.indexOf(ids[ids.length - 1]) + 1).find((x) => !ids.includes(x)) || visible.slice(0, visible.indexOf(ids[0])).reverse().find((x) => !ids.includes(x));
+      const nd = clone(doc); ids.forEach((id) => { const fd = find(nd, id); if (fd) fd.list.splice(fd.i, 1); });
+      commit(nd, after && find(nd, after) ? [after] : [], { ctx: null });
+    };
+    const dup = () => {
+      const ids = selTops().filter((id) => { const fd = find(doc, id); return fd && fd.st.k !== 'else'; }); if (!ids.length) return;
+      const nd = clone(doc); const made = [];
+      ids.slice().reverse().forEach((id) => { const fd = find(nd, id); const c = reid(clone(fd.st)); fd.list.splice(fd.i + 1, 0, c); made.unshift(c.id); });
+      commit(nd, made, { ctx: null });
+    };
+    const copy = (cut) => { const ids = selTops().filter((id) => !isBranch(find(doc, id).st)); if (!ids.length) return; const items = ids.map((id) => clone(find(doc, id).st)); if (cut) { const nd = clone(doc); ids.forEach((id) => { const fd = find(nd, id); fd.list.splice(fd.i, 1); }); commit(nd, [], { clip: items, ctx: null }); } else set({ clip: items, ctx: null }); };
+    const paste = () => { if (!clip) return; const steps = clip.map((x) => reid(clone(x))); commit(insertSteps(steps), steps.map((x) => x.id), { ctx: null, add: null }); };
+    const toggleOff = (on) => { const ids = selTops(); if (!ids.length) return; const nd = clone(doc); const val = on === undefined ? !ids.every((id) => find(doc, id).st.off) : !on; ids.forEach((id) => { find(nd, id).st.off = val || undefined; }); commit(nd); };
+    const sameList = (ids) => { const fds = ids.map((id) => find(doc, id)); return fds.every((fd) => fd && fd.list === fds[0].list && !isBranch(fd.st)) ? fds : null; };
+    const canWrap = () => { const ids = selTops(); return ids.length > 0 && !!sameList(ids); };
+    const wrap = (kind) => {
+      const ids = selTops(); if (!sameList(ids)) return;
+      const nd = clone(doc); const fds = ids.map((id) => find(nd, id)).sort((x, y) => x.i - y.i);
+      const list = fds[0].list; const at = fds[0].i; const moved = fds.map((fd) => fd.st);
+      for (let k = fds.length - 1; k >= 0; k--) list.splice(fds[k].i, 1);
+      const b = newStep(kind); b.kids = moved; list.splice(at, 0, b);
+      commit(nd, [b.id], { ctx: null, edit: kind === 'folder' ? mkEdit(b.id, 'name', ['New Folder']) : null, anchor: b.id });
+      this._selAll = kind === 'folder';
+      this._focusEd = kind === 'folder';
+      if (kind === 'if' || kind === 'while') this._measureNew = { id: b.id, which: 'cpop' };
+    };
+    const one = sel.length === 1 ? find(doc, sel[0]) : null;
+    const canUnwrap = !!(one && isBlock(one.st) && !isBranch(one.st) && !(one.st.br && one.st.br.length));
+    const unwrap = () => { if (!canUnwrap) return; const nd = clone(doc); const fd = find(nd, one.st.id); fd.list.splice(fd.i, 1, ...fd.st.kids); commit(nd, fd.st.kids.map((x) => x.id), { ctx: null }); };
+    const chainIf = one ? (one.st.k === 'if' ? one.st : isBranch(one.st) ? one.parent : null) : null;
+    const hasElse = !!(chainIf && chainIf.br.some((b) => b.k === 'else'));
+    const addBranch = (kind) => {
+      if (!chainIf) return; const nd = clone(doc); const ifs = find(nd, chainIf.id).st;
+      const b = kind === 'elif' ? EI(nid(), [], []) : EL(nid(), []);
+      const ei = ifs.br.findIndex((x) => x.k === 'else');
+      if (kind === 'elif' && ei >= 0) ifs.br.splice(ei, 0, b); else if (kind === 'else' && ei < 0) ifs.br.push(b); else if (kind === 'elif') ifs.br.push(b); else return;
+      commit(nd, [b.id], { ctx: null });
+      if (kind === 'elif') this._measureNew = { id: b.id, which: 'cpop' };
+    };
+    const move = (dir) => {
+      const ids = selTops(); if (!ids.length) return;
+      const nd = clone(doc);
+      const fds = ids.map((id) => find(nd, id));
+      if (fds.some((fd) => fd.list !== fds[0].list)) return;
+      fds.sort((x, y) => x.i - y.i);
+      const list = fds[0].list, first = fds[0].i, last = fds[fds.length - 1].i;
+      if (last - first + 1 !== fds.length) return;
+      if (isBranch(fds[0].st)) {
+        if (fds.length !== 1 || fds[0].st.k === 'else') return;
+        const j = first + dir; if (j < 0 || j >= list.length || list[j].k === 'else') return;
+        list.splice(first, 1); list.splice(j, 0, fds[0].st); commit(nd); return;
+      }
+      const parentId = parentMap(nd)[fds[0].st.id];
+      const group = list.splice(first, fds.length);
+      const parent = parentId ? find(nd, parentId) : null;
+      const intoEnd = (b) => { const tgt = b.br && b.br.length ? b.br[b.br.length - 1] : b; tgt.col = false; tgt.kids.push(...group); };
+      if (dir < 0) {
+        if (first > 0) { const prev = list[first - 1]; if (isBlock(prev) && !prev.col && !(prev.br && prev.br.some((x) => x.col))) intoEnd(prev); else list.splice(first - 1, 0, ...group); }
+        else if (parent) {
+          if (isBranch(parent.st)) { const ifs = parent.parent; const bi = ifs.br.indexOf(parent.st); (bi > 0 ? ifs.br[bi - 1] : ifs).kids.push(...group); }
+          else parent.list.splice(parent.i, 0, ...group);
+        } else { list.splice(first, 0, ...group); return; }
+      } else {
+        if (first < list.length) { const next = list[first]; if (isBlock(next) && !next.col) next.kids.unshift(...group); else list.splice(first + 1, 0, ...group); }
+        else if (parent) {
+          if (parent.st.k === 'if' && parent.st.br.length) parent.st.br[0].kids.unshift(...group);
+          else if (isBranch(parent.st)) { const ifs = parent.parent; const bi = ifs.br.indexOf(parent.st); if (bi < ifs.br.length - 1) ifs.br[bi + 1].kids.unshift(...group); else { const fi = find(nd, ifs.id); fi.list.splice(fi.i + 1, 0, ...group); } }
+          else parent.list.splice(parent.i + 1, 0, ...group);
+        } else { list.splice(first, 0, ...group); return; }
+      }
+      commit(nd);
+    };
+    const foldable = []; each(doc, (st) => { if (isBlock(st)) foldable.push(st); });
+    const anyOpen = foldable.some((st) => !st.col);
+    const foldAll = () => { const nd = clone(doc); each(nd, (st) => { if (isBlock(st)) st.col = anyOpen; }); set({ doc: nd }); };
+    const selectRel = (d, extend) => {
+      if (!visible.length) return;
+      const cur = sel.length ? visible.indexOf(extend ? sel[sel.length - 1] : (d > 0 ? sel[sel.length - 1] : sel[0])) : (d > 0 ? -1 : visible.length);
+      const j = Math.max(0, Math.min(visible.length - 1, cur + d)); const id = visible[j];
+      if (extend) { const anc = s.anchor || sel[0] || id; const a0 = visible.indexOf(anc); const [x, y] = a0 < j ? [a0, j] : [j, a0]; set({ sel: visible.slice(x, y + 1), anchor: anc }); }
+      else set({ sel: [id], anchor: id });
+      this._scrollTo = id;
+    };
+    const editFirst = () => {
+      if (!one) return; const st = one.st;
+      if (st.k === 'act' && ACT[st.act]) { if (usesForm(ACT[st.act])) { this._measureNew = { id: st.id, which: 'fpop' }; this._focusForm = 0; set({ measuredAt: Date.now() }); } else if (ACT[st.act].fields.length) { this._focusEd = true; set({ edit: mkEdit(st.id, 0, st.vals[0]) }); } }
+      else if (st.k === 'folder') { this._focusEd = true; set({ edit: mkEdit(st.id, 'name', [st.name]) }); }
+      else if (st.k === 'cmt') { this._focusEd = true; set({ edit: mkEdit(st.id, 'cmt', [st.text]) }); }
+      else if (st.k === 'gate' || st.k === 'later') { this._focusEd = true; set({ edit: mkEdit(st.id, 'ms', st.ms) }); }
+      else if (st.cond) { this._measureNew = { id: st.id, which: 'cpop' }; set({ measuredAt: Date.now() }); }
+    };
+    const fold = (open) => { if (!one) return; const st = one.st; if (isBlock(st) && st.col === open) { const nd = clone(doc); find(nd, st.id).st.col = !open; set({ doc: nd }); } else if (!open) { const pm = parentMap(doc); const pid = pm[st.id]; if (pid) set({ sel: [pid], anchor: pid }); } };
+    const jump = (id) => { const nd = clone(doc); const pm = parentMap(nd); let q = pm[id]; while (q) { const fd = find(nd, q); fd.st.col = false; q = pm[q]; } this._scrollTo = id; set({ doc: nd, sel: [id], anchor: id, probs: false }); };
+    const goHit = (d) => { if (!hits.length) return; const j = (hitIdx + d + hits.length) % hits.length; const id = hits[j]; const nd = clone(doc); const pm = parentMap(nd); let q = pm[id]; while (q) { find(nd, q).st.col = false; q = pm[q]; } this._scrollTo = id; set({ hit: j, doc: nd, sel: [id] }); };
+    const replaceIn = (all) => {
+      if (!needle || !valueHits.length) return;
+      const nd = clone(doc); let done = false;
+      const rx = new RegExp(fq.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), matchCase ? 'g' : 'gi');
+      each(nd, (st) => { if (st.k !== 'act' || (done && !all)) return; if (!all && st.id !== (valueHits.includes(hits[hitIdx]) ? hits[hitIdx] : valueHits[0])) return; st.vals = st.vals.map((v) => (v || []).map((x) => typeof x === 'string' ? x.replace(rx, rq) : x)); done = true; });
+      commit(nd);
+    };
+
+    // ---------- keyboard ----------
+    this._ops = { del, dup, copy, paste, toggleOff, wrap, unwrap, move, selectRel, editFirst, fold, undo, redo, canUnwrap, visible, sel, findOpen, openFind: () => { this._focusFind = true; set({ findOpen: true }); }, openAdd: () => set({ add: { at: 'tool' }, ctx: null }), closeAll: () => set({ add: null, ctx: null, fpop: null, cpop: null, probs: false, ev: false }), anyPop: !!(add || ctx || fpopId || cpopId || probsOpen || evOpen), clearSel: () => set({ sel: [] }), closeFind: () => set({ findOpen: false, fq: '' }), all: () => set({ sel: visible.slice() }) };
+    if (!this._kd) {
+      this._kd = (e) => {
+        if (window.__seActive !== this._uid) return;
+        const o = this._ops; const tag = e.target && e.target.tagName;
+        const inField = /INPUT|TEXTAREA/.test(tag || '');
+        const mod = e.ctrlKey || e.metaKey;
+        if (mod && e.key.toLowerCase() === 'f') { e.preventDefault(); o.openFind(); return; }
+        if (inField || (this.state && this.state.edit)) return;
+        if (e.key === 'Escape') { if (o.anyPop) o.closeAll(); else if (o.findOpen) o.closeFind(); else o.clearSel(); return; }
+        if (o.anyPop) return;
+        const k = e.key;
+        if (mod && k.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? o.redo() : o.undo(); return; }
+        if (mod && k.toLowerCase() === 'y') { e.preventDefault(); o.redo(); return; }
+        if (mod && k.toLowerCase() === 'd') { e.preventDefault(); o.dup(); return; }
+        if (mod && k.toLowerCase() === 'c') { e.preventDefault(); o.copy(false); return; }
+        if (mod && k.toLowerCase() === 'x') { e.preventDefault(); o.copy(true); return; }
+        if (mod && k.toLowerCase() === 'v') { e.preventDefault(); o.paste(); return; }
+        if (mod && k.toLowerCase() === 'a') { e.preventDefault(); o.all(); return; }
+        if (mod && k.toLowerCase() === 'g') { e.preventDefault(); e.shiftKey ? o.unwrap() : o.wrap('folder'); return; }
+        if (mod && k === '/') { e.preventDefault(); o.toggleOff(); return; }
+        if (k === 'Delete' || k === 'Backspace') { e.preventDefault(); o.del(); return; }
+        if (k === 'ArrowUp' || k === 'ArrowDown') { e.preventDefault(); const d = k === 'ArrowUp' ? -1 : 1; if (e.altKey) o.move(d); else o.selectRel(d, e.shiftKey); return; }
+        if (k === 'ArrowLeft' || k === 'ArrowRight') { e.preventDefault(); o.fold(k === 'ArrowRight'); return; }
+        if (k === 'Enter') { e.preventDefault(); o.editFirst(); return; }
+        if (!mod && !e.altKey && k.toLowerCase() === 'a') { e.preventDefault(); o.openAdd(); return; }
+      };
+      window.addEventListener('keydown', this._kd);
+      this._md = (e) => {
+        const ed = this.state && this.state.edit;
+        if (ed && !(e.target.closest && e.target.closest('.se-edit'))) this._finishEdit && this._finishEdit(true);
+      };
+      window.addEventListener('mousedown', this._md, true);
+      // drag and drop: a press that moves more than 4 px lifts the selected steps
+      this._mm = (e) => {
+        const pr = this._press; if (!pr || (e.buttons & 1) === 0) { if (pr) this._press = null; return; }
+        const root = document.querySelector('[data-se="' + this._uid + '"]'); if (!root) return;
+        const st = this.state || {};
+        if (!st.drag && Math.hypot(e.clientX - pr.x, e.clientY - pr.y) < 5) return;
+        const w = root.querySelector('.win.se'); const wr = w.getBoundingClientRect(); const k = wr.width / w.offsetWidth || 1;
+        const list = root.querySelector('.se-list'); const lr = list.getBoundingClientRect();
+        if (e.clientY < lr.top + 26) list.scrollTop -= 10; else if (e.clientY > lr.bottom - 26) list.scrollTop += 10;
+        // dragging steps over the minimap scrolls the list there, so a step can travel through a long script
+        const miniEl = root.querySelector('.se-mini'); const mg = this._geo;
+        if (miniEl && mg) { const mr = miniEl.getBoundingClientRect(); if (e.clientX >= mr.left && e.clientX <= mr.right && e.clientY >= mr.top && e.clientY <= mr.bottom) { const mk = mr.height / miniEl.offsetHeight || 1; const sc = mmScale(mg); const cy = ((e.clientY - mr.top) / mk - 6 + mmOff(mg, list.scrollTop)) / sc; const want = Math.max(0, cy - mg.ch / 2); list.scrollTop += (want - list.scrollTop) * 0.35; if (this._miniSync) this._miniSync(); } }
+        const el = document.elementFromPoint(e.clientX, e.clientY);
+        const rowEl = el && el.closest && el.closest('[data-row], [data-hole]');
+        let target = null, pos = null, top = 0, left = 0;
+        if (rowEl && list.contains(rowEl)) {
+          const r = rowEl.getBoundingClientRect(); const rel = (e.clientY - r.top) / r.height;
+          const depth = +(rowEl.getAttribute('data-depth') || 0);
+          if (rowEl.hasAttribute('data-hole')) { target = rowEl.getAttribute('data-hole'); pos = 'hole'; }
+          else {
+            target = rowEl.getAttribute('data-row');
+            const blockRow = rowEl.getAttribute('data-block') === '1';
+            pos = blockRow && rel > .3 && rel < .7 ? 'into' : rel < .5 ? 'before' : 'after';
+            top = ((pos === 'before' ? r.top : r.bottom) - lr.top) / k + list.scrollTop - 1;
+            left = 8 + 6 + depth * 20 + 18 + (pos === 'after' && blockRow && rowEl.getAttribute('aria-expanded') === 'true' ? 20 : 0);
+          }
+        }
+        if (target && pr.sel.includes(target)) target = null;
+        this._dragged = true;
+        this.setState({ drag: { ids: pr.sel, target, pos, top, left, x: (e.clientX - wr.left) / k, y: (e.clientY - wr.top) / k, alt: e.altKey } });
+      };
+      window.addEventListener('mousemove', this._mm);
+      this._mu = (e) => {
+        const st = this.state || {}; const pr = this._press; this._press = null;
+        if (!st.drag || st.drag.demo) return;
+        const d = st.drag; this.setState({ drag: null });
+        setTimeout(() => { this._dragged = false; }, 0);
+        if (d.target && this._drop) this._drop(d, e.altKey);
+      };
+      window.addEventListener('mouseup', this._mu);
+    }
+    this._drop = (d, copyIt) => {
+      const nd = clone(doc); const ids = tops(doc, d.ids).filter((id) => { const f = find(doc, id); return f && !isBranch(f.st); }); if (!ids.length) return;
+      const pm = parentMap(doc); if (ids.some((id) => id === d.target || under(pm, d.target, id))) return;
+      const moved = ids.map((id) => { const fd = find(nd, id); return copyIt ? reid(clone(fd.st)) : fd.st; });
+      if (!copyIt) ids.forEach((id) => { const fd = find(nd, id); fd.list.splice(fd.i, 1); });
+      const t = find(nd, d.target); if (!t) return;
+      if (d.pos === 'hole' || d.pos === 'into' || (d.pos === 'after' && isBlock(t.st) && !t.st.col) || (isBranch(t.st) && d.pos !== 'before')) { t.st.col = false; t.st.kids.unshift(...moved); }
+      else if (isBranch(t.st) && d.pos === 'before') { const ifs = t.parent; const bi = ifs.br.indexOf(t.st); (bi > 0 ? ifs.br[bi - 1] : ifs).kids.push(...moved); }
+      else t.list.splice(d.pos === 'before' ? t.i : t.i + 1 + (t.st.br ? 0 : 0), 0, ...moved);
+      commit(nd, moved.map((x) => x.id));
+    };
+
+    this._slideTo = (x) => { const sl = this._slide; if (!sl) return; const k = Math.max(0, Math.min(1, (x - sl.left) / sl.width)); const v = Math.round(sl.min + k * (sl.max - sl.min)); const nd = clone(this.state.doc || doc); const fd = find(nd, sl.id); if (!fd) return; fd.st.vals[sl.i] = [String(v)]; this.setState({ doc: nd }); };
+    if (!this._slideWired) {
+      this._slideWired = true;
+      window.addEventListener('pointermove', (e) => { if (this._slide) this._slideTo(e.clientX); });
+      window.addEventListener('pointerup', () => { const sl = this._slide; if (!sl) return; this._slide = null; const st = this.state || {}; const h = st.hist || { u: [], r: [] }; this.setState({ hist: { u: h.u.concat([{ doc: sl.before, sel: st.sel || [] }]).slice(-100), r: [] } }); });
+    }
+    // after-render work: measure anchors for props-driven popovers, focus fields, scroll rows into view
+    setTimeout(() => {
+      const root = document.querySelector('[data-se="' + uid + '"]'); if (!root) return;
+      const w = root.querySelector('.win.se'); if (!w) return;
+      const wr = w.getBoundingClientRect(); const k = wr.width / w.offsetWidth || 1;
+      const below = (el) => { const r = el.getBoundingClientRect(); return { x: (r.left - wr.left) / k, y: (r.bottom - wr.top) / k + 6 }; };
+      if (!this._measured) {
+        this._measured = true; const an = {};
+        if (p.pop) { const el = root.querySelector('[data-tok="' + p.pop + ':0"]'); if (el) an.fpop = below(el); }
+        if (p.cond) { const el = root.querySelector('[data-tok^="' + p.cond + ':c"]'); if (el) an.cpop = below(el); }
+        if (p.menu) { const ids = p.menu.split(','); const el = root.querySelector('[data-row="' + ids[ids.length - 1] + '"]'); if (el) { const r = el.getBoundingClientRect(); an.ctx = { x: (r.left - wr.left) / k + 250, y: (r.top - wr.top) / k + 20 }; } }
+        if (p.drag) { const [ids, target, pos] = p.drag.split('|'); const el = root.querySelector('[data-row="' + target + '"]') || root.querySelector('[data-hole="' + target + '"]'); const list = root.querySelector('.se-list'); if (el && list) { const r = el.getBoundingClientRect(), lr = list.getBoundingClientRect(); const depth = +(el.getAttribute('data-depth') || 0); an.drag = { top: ((pos === 'before' ? r.top : r.bottom) - lr.top) / k + list.scrollTop - 1, left: 8 + 6 + depth * 20 + 18, x: (r.left - wr.left) / k + 150, y: (r.bottom - wr.top) / k + (pos === 'before' ? -18 : 14) }; } }
+        this._anchors = Object.assign({}, this._anchors, an);
+        if (Object.keys(an).length) this.setState({ measuredAt: Date.now() });
+      }
+      if (this._measureNew) {
+        const m = this._measureNew; this._measureNew = null;
+        const el = root.querySelector('[data-tok^="' + m.id + ':"]'); if (el) { const b = below(el); this._anchors = Object.assign({}, this._anchors, { [m.which]: b }); this.setState({ [m.which]: m.id, sel: [m.id] }); }
+      }
+      if (this._focusEd) { const inp = root.querySelector('.se-edit input'); if (inp) { this._focusEd = false; inp.focus(); if (this._selAll) { this._selAll = false; inp.select(); } else { const n = inp.value.length; inp.setSelectionRange(n, n); } } }
+      if (this._focusForm !== undefined && this._focusForm !== null) { const inp = root.querySelector('[data-fk="' + uid + '-f' + this._focusForm + '"]'); if (inp) { this._focusForm = null; inp.focus(); } }
+      if (this._focusFind) { const inp = root.querySelector('[data-find]'); if (inp) { this._focusFind = false; inp.focus(); inp.select(); } }
+      if (this._scrollTo) { const el = root.querySelector('[data-row="' + this._scrollTo + '"]'); this._scrollTo = null; if (el) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+      // minimap: measure the real rows, and render again only when their layout changed
+      const listN = root.querySelector('.se-list'), miniN = root.querySelector('.se-mini');
+      if (listN && miniN) {
+        if (p.scrollTo && !this._didScrollTo) { this._didScrollTo = true; const el = listN.querySelector('[data-row="' + p.scrollTo + '"]'); if (el) listN.scrollTop = el.offsetTop - 8; }
+        const els = listN.querySelectorAll('[data-row], [data-hole]');
+        const g = { sh: listN.scrollHeight, ch: listN.clientHeight, mh: miniN.clientHeight - 12, rows: Array.from(els).map((el) => ({ id: el.getAttribute('data-row') || el.getAttribute('data-hole'), hole: el.hasAttribute('data-hole'), top: el.offsetTop, h: el.offsetHeight })) };
+        const sig = [g.sh, g.ch, g.mh].join(',') + '|' + g.rows.map((r) => r.id + ':' + r.top + ':' + r.h).join(',');
+        this._scrollTop = listN.scrollTop;
+        if (sig !== this._geoSig) { this._geoSig = sig; this._geo = g; this.setState({ geoRev: ((this.state && this.state.geoRev) || 0) + 1 }); }
+        else if (this._miniSync) this._miniSync();
+      }
+    }, 30);
+
+    // ---------- add menu ----------
+    const hi = this._hi || (this._hi = { pts: [], rect: null, timer: 0 });
+    const GRACE_MS = 350;
+    const cancelIntent = () => { if (hi.timer) { clearTimeout(hi.timer); hi.timer = 0; } };
+    const track = (e) => { hi.pts.push({ x: e.clientX, y: e.clientY }); if (hi.pts.length > 4) hi.pts.shift(); const m = e.currentTarget.querySelectorAll('.menu.cm')[1]; hi.rect = m ? m.getBoundingClientRect() : null; };
+    const heading = () => { const r = hi.rect; if (!r || hi.pts.length < 2) return false; const pt = hi.pts[hi.pts.length - 1], from = hi.pts[0]; if (pt.x === from.x && pt.y === from.y) return false; const a = { x: r.left, y: r.top - 8 }, b = { x: r.left, y: r.bottom + 8 }; const side = (p1, p2, p3) => (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y); const d1 = side(pt, from, a), d2 = side(pt, a, b), d3 = side(pt, b, from); return !((d1 < 0 || d2 < 0 || d3 < 0) && (d1 > 0 || d2 > 0 || d3 > 0)); };
+    const addQ = (add && add.q) || '';
+    const addSub = add ? (add.sub !== undefined ? add.sub : (p.add && !s.add ? p.addSub || null : null)) : null;
+    const helpId = add ? (add.help !== undefined ? add.help : (p.add && !s.add ? p.addHelp || null : null)) : null;
+    const liveAdd = () => (this.state && this.state.add) || add;
+    const wantSub = (id, helpKey) => {
+      cancelIntent(); const cur = liveAdd(); if (!cur) return;
+      const curSub = cur.sub !== undefined ? cur.sub : addSub;
+      const hk = helpKey === undefined ? null : helpKey;
+      const apply = () => set({ add: Object.assign({}, liveAdd(), { sub: id, help: hk }) });
+      if (curSub === id) { if (cur.help !== hk) set({ add: Object.assign({}, cur, { help: hk }) }); return; }
+      if (curSub && heading()) { hi.timer = setTimeout(() => { hi.timer = 0; apply(); }, GRACE_MS); return; }
+      apply();
+    };
+    const setHelp = (id) => () => { const cur = liveAdd(); if (cur && cur.help !== id) set({ add: Object.assign({}, cur, { help: id }) }); };
+    const toggleFav = (id) => (on) => set({ fav: on ? fav.concat([id]) : fav.filter((x) => x !== id) });
+    const actItem = (id, showCat) => ({ d: IC[ACT[id].ic], label: ACT[id].name, keys: ACT[id].desc + ' ' + ACT[id].cat, val: showCat ? ACT[id].cat : '', star: fav.includes(id), onStar: toggleFav(id), click: () => addStep(id), enter: setHelp(id) });
+    const blockItem = (k) => ({ d: IC[BLOCKS[k].ic], label: BLOCKS[k].name, keys: BLOCKS[k].desc, click: () => addStep(k), enter: () => wantSub(null, 'b:' + k) });
+    const blockKinds = ['if', 'while', 'gate', 'later', 'folder', 'cmt'];
+    let addItems;
+    if (addQ) addItems = blockKinds.map((k) => Object.assign(blockItem(k), { val: 'Block' })).concat(Object.keys(ACT).map((id) => actItem(id, true)));
+    else addItems = [{ head: 'Blocks' }].concat(blockKinds.map((k) => blockItem(k)),
+      fav.length ? [{ head: 'Favorites' }].concat(fav.filter((id) => ACT[id]).map((id) => Object.assign(actItem(id), { enter: () => wantSub(null, id) }))) : [],
+      [{ head: 'Recently Used' }], recent.map((id) => Object.assign(actItem(id), { enter: () => wantSub(null, id) })),
+      [{ head: 'All Actions' }], CATS.map((c) => ({ d: IC[CAT_IC[c]], label: c, sub: true, hl: addSub === c, enter: () => wantSub(c), click: () => wantSub(c) })));
+    const addSubItems = addSub ? Object.keys(ACT).filter((id) => ACT[id].cat === addSub).map((id) => actItem(id)) : [];
+    const heightOf = (it) => (it.sep || it.head ? 25 : 26);
+    const offsetOf = (pred) => { let y = 0; for (const it of addItems) { if (pred(it)) return y; y += heightOf(it); } return 0; };
+    const listTop = 1 + 5 + 28;
+    const subTop = addSub ? listTop + offsetOf((it) => it.label === addSub && it.sub) - 6 : 0;
+    const helpDef = helpId ? (helpId.startsWith('b:') ? Object.assign({ cat: 'Block' }, BLOCKS[helpId.slice(2)]) : ACT[helpId]) : null;
+    const helpInSub = !!(helpId && addSub && ACT[helpId] && ACT[helpId].cat === addSub);
+    const helpTop = helpDef ? (helpInSub ? subTop + 6 + Object.keys(ACT).filter((id) => ACT[id].cat === addSub).indexOf(helpId) * 26 : listTop + offsetOf((it) => it.label === helpDef.name && !it.sub) - 6) : 0;
+    const help = helpDef && !addQ ? { show: true, name: helpDef.name, cat: helpDef.cat || '', desc: helpDef.desc, eg: helpDef.fields && helpDef.fields[0] && helpDef.fields[0].eg || '', style: 'position: relative; flex: 0 0 auto; width: 250px; margin-top: ' + Math.max(0, helpTop) + 'px; margin-left: 4px' } : { show: false };
+
+    // ---------- context menu ----------
+    const ctxSub = ctx ? ctx.sub : null;
+    const wantCtxSub = (id) => { cancelIntent(); const cur = (this.state && this.state.ctx) || ctx; if (!cur || cur.sub === id) return; if (cur.sub && heading()) { hi.timer = setTimeout(() => { hi.timer = 0; set({ ctx: Object.assign({}, (this.state && this.state.ctx) || ctx, { sub: id }) }); }, GRACE_MS); return; } set({ ctx: Object.assign({}, cur, { sub: id }) }); };
+    const none = sel.length === 0;
+    const editLabel = one ? (one.st.k === 'folder' ? 'Rename' : one.st.k === 'cmt' ? 'Edit Comment' : one.st.cond ? 'Edit Conditions' : one.st.k === 'gate' || one.st.k === 'later' ? 'Edit Time' : (one.st.k === 'act' && ACT[one.st.act] && ACT[one.st.act].fields.length > 1 ? 'Edit Variables' : 'Edit Variable')) : 'Edit Variable';
+    const canEdit = !!(one && (one.st.k !== 'else' && one.st.k !== 'act' || (one.st.k === 'act' && ACT[one.st.act] && ACT[one.st.act].fields.length)));
+    const allOff = sel.length > 0 && selTops().every((id) => find(doc, id).st.off);
+    const anyOff = selTops().some((id) => find(doc, id).st.off);
+    const ctxItems = none ? [
+      { ic: 'plus', label: 'Add Step', kbd: 'A', click: () => set({ ctx: null, add: { at: 'ctx', q: '' } }), enter: () => wantCtxSub(null) },
+      { ic: 'paste', label: 'Paste', kbd: 'Ctrl+V', disabled: !clip, click: paste, enter: () => wantCtxSub(null) }
+    ] : [
+      { ic: 'editor', label: editLabel, kbd: 'Enter', disabled: !canEdit, click: () => { set({ ctx: null }); editFirst(); }, enter: () => wantCtxSub(null) },
+      { sep: true },
+      { ic: 'plus', label: 'Add Step', kbd: 'A', click: () => set({ ctx: null, add: { at: 'ctx', q: '' } }), enter: () => wantCtxSub(null) },
+      { d: IC.wrap, label: 'Wrap In', sub: true, hl: ctxSub === 'wrap', disabled: !canWrap(), enter: () => wantCtxSub('wrap'), click: () => wantCtxSub('wrap') }
+    ].concat(canUnwrap ? [{ d: IC.unwrap, label: 'Unwrap', kbd: 'Ctrl+Shift+G', click: unwrap, enter: () => wantCtxSub(null) }] : [],
+      chainIf ? [{ d: IC.if, label: 'Add Else If', click: () => addBranch('elif'), enter: () => wantCtxSub(null) }, { d: IC.else, label: 'Add Else', disabled: hasElse, note: hasElse ? 'already has one' : '', click: () => addBranch('else'), enter: () => wantCtxSub(null) }] : [],
+      [{ sep: true },
+        { d: IC.cut, label: 'Cut', kbd: 'Ctrl+X', click: () => copy(true), enter: () => wantCtxSub(null) },
+        { ic: 'copy', label: 'Copy', kbd: 'Ctrl+C', click: () => copy(false), enter: () => wantCtxSub(null) },
+        { ic: 'paste', label: 'Paste', kbd: 'Ctrl+V', disabled: !clip, click: paste, enter: () => wantCtxSub(null) },
+        { d: IC.dup, label: 'Duplicate', kbd: 'Ctrl+D', click: dup, enter: () => wantCtxSub(null) },
+        { sep: true },
+        { ic: 'up', label: 'Move Up', kbd: 'Alt+↑', click: () => move(-1), enter: () => wantCtxSub(null) },
+        { ic: 'down', label: 'Move Down', kbd: 'Alt+↓', click: () => move(1), enter: () => wantCtxSub(null) },
+        { d: IC.power, label: 'Runs', kbd: 'Ctrl+/', sw: true, on: !allOff, mixed: anyOff && !allOff, onToggle: (v) => toggleOff(v), enter: () => wantCtxSub(null) },
+        { sep: true },
+        { ic: 'trash', label: 'Delete', kbd: 'Del', danger: true, click: del, enter: () => wantCtxSub(null) }]);
+    const wrapItems = [
+      { d: IC.folder, label: 'Folder', kbd: 'Ctrl+G', click: () => wrap('folder') },
+      { d: IC.if, label: 'If', click: () => wrap('if') },
+      { d: IC.while, label: 'While', click: () => wrap('while') },
+      { d: IC.gate, label: 'Delay Gate', click: () => wrap('gate') },
+      { d: IC.later, label: 'Execute Later', click: () => wrap('later') }
+    ];
+    const ctxCountShown = ctxItems.filter((it) => !it.sep && !it.head).length;
+    const ctxListTop = 1 + 5 + (ctxCountShown > 10 ? 28 : 0);
+    const ctxSubTop = ctxSub === 'wrap' ? (() => { let y = 0; for (const it of ctxItems) { if (it.label === 'Wrap In') break; y += heightOf(it); } return ctxListTop + y - 6; })() : 0;
+    const ctxPos = anchors.ctx || { x: 300, y: 200 };
+    const addPos = anchors.add || ctxPos;
+
+    // ---------- popovers ----------
+    const fst = fpopId ? find(doc, fpopId) : null;
+    const fpopAt = anchors.fpop || { x: 200, y: 200 };
+    const clampX = (x, w) => Math.max(12, Math.min(W - w - 12, x));
+    const fmenu = s.fmenu === undefined ? (p.pop && p.popMenu ? p.pop + ':' + p.popMenu : null) : s.fmenu;
+    const fxOn = s.fx || {};
+    const setRaw = (id, i, val, undoable) => { const nd = clone(this.state.doc || doc); const fd = find(nd, id); fd.st.vals[i] = val === '' ? [] : [val]; if (undoable) commit(nd, null, { fmenu: null }); else set({ doc: nd }); };
+    // The variable form: the same form a placeholder chip opens, with a control for each variable's type.
+    const TEXTUAL = ['TEXT', 'URL', 'FILE', 'FILE_OR_URL'];
+    const fpop = fst && ACT[fst.st.act] && anchors.fpop ? (() => {
+      const st = fst.st, a = ACT[st.act];
+      const rows2 = a.fields.map((f, i) => {
+        const key = st.id + ':' + i, v = st.vals[i] || [], txt = segText(v);
+        const manual = !!fxOn[key], menuOpen = fmenu === key;
+        const r = {
+          label: f.label, fk: uid + '-f' + i, value: txt, ph: f.eg ? 'like ' + f.eg : (f.opt ? 'Optional' : ''), unit: f.unit || '',
+          isText: false, isNested: false, isNum: false, decTip: '', incTip: '', isSlider: false, fill: '', knob: '', pct: '', slDown: () => {}, isBool: false, isSeg: false, isPopup: false, isCombo: false,
+          hasIcon: false, icon: '', hasPlay: false, hasBrowse: false, browseTip: '', hasStepper: false, innerFx: false,
+          hasFx: !TEXTUAL.includes(f.type), fxCls: 'fx' + (manual ? ' on' : ''), fxTip: manual ? 'Back to the normal control' : 'Use placeholder text instead',
+          fxPressed: manual ? 'true' : 'false', toggleFx: () => set({ fx: Object.assign({}, fxOn, { [key]: !manual }), fmenu: null }),
+          menuOpen, popupCls: 'popup' + (menuOpen ? ' open' : ''), popupLabel: txt || f.hint, opts: [], segOpts: [], thumb: '', swCls: '', on: 'false',
+          toggleMenu: (e) => { e.stopPropagation(); set({ fmenu: menuOpen ? null : key }); }, closeMenu: () => set({ fmenu: null }),
+          onInput: (e) => setRaw(st.id, i, e.target.value), toggle: () => {}, dec: () => {}, inc: () => {}, play: () => {}
+        };
+        // the same menu as every pop-up button: a checkmarked choice per row, hints on the right, element icons when picking elements
+        const optRows = (list, d) => list.map(([name, hint]) => ({ radio: true, checked: name === txt, label: name, note: hint || '', d, click: (e) => { e.stopPropagation(); setRaw(st.id, i, name, true); } }));
+        if (manual || f.type === 'TEXT' || f.type === 'URL') {
+          if (v.some((x) => typeof x !== 'string')) { r.isNested = true; r.pieces = v.map((x) => typeof x === 'string' ? { text: true, chip: false, s: x } : { text: false, chip: true, s: x.ph ? (x.bad ? '{' + x.ph + '}' : PHN[x.ph] || x.ph) : '$$' + x.v, cls: 'mchip' + (x.bad ? ' bad' : '') + (x.v ? ' var' : '') }); }
+          else r.isText = true;
+          r.innerFx = true; r.hasIcon = f.type === 'URL' && !manual; r.icon = IC.link;
+        } else if (f.type === 'FILE' || f.type === 'FILE_OR_URL') {
+          r.isText = true; r.innerFx = true; r.hasBrowse = true; r.browseTip = f.sound ? 'Choose a sound' : 'Choose a file';
+          if (f.sound) r.hasPlay = true; else { r.hasIcon = true; r.icon = IC.file; }
+        } else if ((f.type === 'INTEGER' || f.type === 'DECIMAL') && f.min !== undefined && f.max !== undefined) {
+          // A number with a range is a slider, the same one context menus use for volume and opacity.
+          const n = Math.max(f.min, Math.min(f.max, parseFloat(txt) || 0)), pc = (n - f.min) / (f.max - f.min) * 100;
+          r.isSlider = true; r.fill = 'width: ' + pc + '%'; r.knob = 'left: ' + pc + '%'; r.pct = n + f.unit;
+          r.slDown = (e) => { e.preventDefault(); const rc = e.currentTarget.getBoundingClientRect(); this._slide = { id: st.id, i, left: rc.left, width: rc.width, min: f.min, max: f.max, before: doc }; this._slideTo(e.clientX); };
+        } else if (f.type === 'INTEGER' || f.type === 'DECIMAL') {
+          // Numbers without a range: a field with its unit and a stepper. Decimals step by their own step size.
+          r.isNum = true; r.hasStepper = true;
+          const n = parseFloat(txt) || 0, stepN = f.step || (f.unit === 'ms' ? 100 : f.type === 'DECIMAL' ? 0.1 : 1), clampN = (x) => Math.max(f.min ?? -Infinity, Math.min(f.max ?? Infinity, Math.round(x * 1000) / 1000));
+          r.dec = () => setRaw(st.id, i, String(clampN(n - stepN)), true); r.inc = () => setRaw(st.id, i, String(clampN(n + stepN)), true);
+          r.decTip = '−' + stepN + (f.unit ? ' ' + f.unit : ''); r.incTip = '+' + stepN + (f.unit ? ' ' + f.unit : '');
+        } else if (f.type === 'BOOLEAN') {
+          const on = txt === 'true'; r.isBool = true; r.on = on ? 'true' : 'false'; r.swCls = 'sw' + (on ? ' on' : '');
+          r.toggle = () => setRaw(st.id, i, on ? 'false' : 'true', true);
+        } else if (f.type === 'CHOICE' && f.options.length <= 3) {
+          const k = Math.max(0, f.options.indexOf(txt)); r.isSeg = true;
+          r.thumb = 'width: calc((100% - 2px) / ' + f.options.length + '); transform: translateX(' + (k * 100) + '%)';
+          r.segOpts = f.options.map((o, j) => ({ label: o, cls: j === k ? 'on' : '', on: j === k ? 'true' : 'false', pick: () => setRaw(st.id, i, o, true) }));
+        } else if (f.type === 'CHOICE' || f.type === 'ELEMENT_ID') {
+          r.isPopup = true;
+          if (f.type === 'ELEMENT_ID') { r.hasIcon = true; r.icon = IC[EL_IC[f.kinds]]; r.opts = optRows(ELEMENTS[f.kinds].map((x) => [x, '']), r.icon); }
+          else r.opts = optRows(f.options.map((x) => [x, '']));
+        } else {
+          r.isCombo = true;
+          r.opts = optRows(LOOKUPS[f.type === 'SERVER_ADDRESS' ? 'servers' : f.lookup]);
+          r.comboTip = f.type === 'SERVER_ADDRESS' ? 'Your servers' : 'Show the list';
+          if (f.type === 'SERVER_ADDRESS') r.hasFx = false;
+        }
+        return r;
+      });
+      return {
+        show: true, name: a.name, cat: a.cat, icon: IC[a.ic], desc: a.full ? a.desc + ' Open Full Editor has every other setting.' : a.desc, rows: rows2, full: !!a.full,
+        remove: () => { const nd = clone(doc); const fd = find(nd, st.id); fd.list.splice(fd.i, 1); commit(nd, [], { fpop: null, fmenu: null }); },
+        style: 'left: ' + clampX(fpopAt.x, 360) + 'px; top: ' + fpopAt.y + 'px; width: 360px'
+      };
+    })() : { show: false };
+    const cst = cpopId ? find(doc, cpopId) : null;
+    const cpopAt = anchors.cpop || { x: 200, y: 200 };
+    const cpop = cst && cst.st.cond && anchors.cpop ? (() => {
+      const st = cst.st;
+      const setNot = (i, v) => () => { const nd = clone(doc); find(nd, st.id).st.cond[i].not = v; commit(nd); };
+      return {
+        show: true, title: 'Conditions', icon: IC[BLOCKS[st.k].ic], hasAll: st.cond.length > 1,
+        desc: st.cond.length ? (st.k === 'while' ? 'Repeats while these are true.' : 'Runs the steps inside when these are true.') : (st.k === 'while' ? 'A While without a condition repeats until its 3 second safety stop.' : 'Without a condition this always runs.'),
+        hasRows: st.cond.length > 0,
+        rows: st.cond.map((c, i) => ({ name: c.req, value: c.val || segText(c.s), thumb: 'width: calc((100% - 2px) / 2); transform: translateX(' + (c.not ? 100 : 0) + '%)', isCls: c.not ? '' : 'on', notCls: c.not ? 'on' : '', isOn: c.not ? 'false' : 'true', notOn: c.not ? 'true' : 'false', setIs: setNot(i, false), setNot: setNot(i, true) })),
+        style: 'left: ' + clampX(cpopAt.x, 380) + 'px; top: ' + cpopAt.y + 'px; width: 380px'
+      };
+    })() : { show: false };
+
+    // ---------- status, footer, drag preview ----------
+    const nSteps = countSteps(doc);
+    const errs = problems.filter((x) => x.err).length;
+    const [ownerText, ownerIc] = p.owner ? [p.owner, 'cursor'] : OWNER[scene] || OWNER.Button;
+    const dragAn = drag && drag.demo ? anchors.drag : drag;
+    const dropLine = !!(drag && dragAn && drag.target && (drag.pos === 'before' || drag.pos === 'after'));
+    const liftSt = drag ? find(doc, drag.ids[0]) : null;
+    const lift = drag && dragAn && liftSt ? { show: true, label: stepText(liftSt.st).length > 44 ? stepName(liftSt.st) : stepText(liftSt.st), icon: iconOf(liftSt.st), tileStyle: '--tile: var(' + (tileOf(liftSt.st) || '--st-action') + ')', many: drag.ids.length > 1, n: drag.ids.length, style: 'left: ' + ((dragAn.x || 0) - 40) + 'px; top: ' + ((dragAn.y || 0) - 16) + 'px' } : { show: false };
+    const rowCount = Math.max(1, rows.length);
+    const markList = [];
+    rows.forEach((r, i) => { if (!r.isStep) return; const pr = probOf[r.id]; if (pr) markList.push({ cls: pr.some((x) => x.err) ? 'err' : 'bad', style: 'top: calc(' + (i / rowCount * 100).toFixed(2) + '% + 1px)' }); if (r.hit) markList.push({ cls: 'hit', style: 'top: calc(' + (i / rowCount * 100).toFixed(2) + '% + 1px)' }); });
+    const findH = findOpen ? 45 : 0;
+    const anyPopup = !!(add || ctx || fpop.show || cpop.show || probsOpen || evOpen);
+    const closeAll = () => { cancelIntent(); set({ add: null, ctx: null, fpop: null, fmenu: null, cpop: null, probs: false, ev: false }); };
+    const copyEv = (n) => () => { try { navigator.clipboard.writeText('$$' + n); } catch (err) {} set({ copied: n }); };
+
+    // ---------- minimap ----------
+    // Bars come from the real rows measured after each render (this._geo), so wrapped rows and empty blocks keep their true height.
+    const miniOn = s.mini ?? (p.minimap ?? true);
+    const miniShow = miniOn && doc.length > 0;
+    // the same one-line text the row shows, for bar lengths and the hover preview
+    const plainOf = (parts) => parts.map((pt) => pt.isW ? pt.marks.map((m) => m.s).join('') : pt.isTok ? pt.pieces.map((pc) => pc.isNot ? (pc.notCls === 'not' ? pc.s + ' ' : pc.s) : pc.isText ? pc.marks.map((m) => m.s).join('') : (pc.isChip || pc.isUnit || pc.isFc) ? pc.s : '').join('') : '').filter(Boolean).join(' ');
+    const geo = miniShow && this._geo && this._geo.rows.length === rows.length ? this._geo : null;
+    const mini = { bars: [], labels: [], marks: [], chain: false, chainStyle: '', trackStyle: '', vpStyle: 'display: none' };
+    const peek = { show: false, rows: [], path: '', style: '' };
+    if (geo) {
+      const sc = mmScale(geo), st0 = this._scrollTop || 0, off = mmOff(geo, st0), fits = geo.sh * sc <= geo.mh + 0.5;
+      let lastLabel = -99;
+      rows.forEach((r, i) => {
+        const g = geo.rows[i]; const top = g.top * sc; const h = Math.max(1, g.h * sc - Math.max(0.6, sc * 5));
+        const ts = 'top: ' + top.toFixed(2) + 'px; height: ' + h.toFixed(2) + 'px; ';
+        const x = 6 + (r.depth || 0) * 5;
+        if (r.isHole) { mini.bars.push({ cls: 'mm-hole', style: ts + 'left: ' + (x + 5) + 'px; width: 30px' }); return; }
+        const fd = find(doc, r.id); if (!fd) return;
+        const st = fd.st, tile = tileOf(st), offCls = r.off ? ' off' : '';
+        if (r.sel) mini.bars.push({ cls: 'mm-sel', style: 'top: ' + (top - 1).toFixed(2) + 'px; height: ' + (h + 2).toFixed(2) + 'px' });
+        if (st.k !== 'cmt') mini.bars.push({ cls: 'mm-tile' + offCls, style: ts + 'left: ' + x + 'px; --c: var(' + (tile || '--st-action') + ')' });
+        const len = Math.min(70, plainOf(r.parts).length);
+        const w = Math.max(4, Math.min(MINI_W - x - 13, 3 + len * 0.82));
+        mini.bars.push({ cls: 'mm-txt' + (isBlock(st) ? ' kw' : '') + (st.k === 'cmt' ? ' cmt' : '') + (r.hit ? ' hit' : '') + offCls, style: ts + 'left: ' + (x + 5) + 'px; width: ' + w.toFixed(1) + 'px' + (tile ? '; --c: var(' + tile + ')' : '') });
+        if (st.k === 'folder' && top - lastLabel >= 14) { lastLabel = top; mini.labels.push({ s: st.name, style: 'top: ' + (top + h / 2).toFixed(2) + 'px; left: ' + (x + 3) + 'px; max-width: ' + (MINI_W - x - 9) + 'px' }); }
+        // marks sit on their row while everything fits, and become a whole-script overview once the minimap scrolls
+        const markTop = fits ? 6 + top + h / 2 - 1.5 : 6 + (g.top / geo.sh) * geo.mh;
+        const pr = probOf[r.id];
+        if (pr) mini.marks.push({ cls: 'mm-mark ' + (pr.some((x2) => x2.err) ? 'err' : 'bad'), style: 'top: ' + markTop.toFixed(2) + 'px' });
+        if (r.hit) mini.marks.push({ cls: 'mm-mark hit', style: 'top: ' + markTop.toFixed(2) + 'px' });
+      });
+      mini.trackStyle = 'transform: translateY(' + (-off).toFixed(2) + 'px)';
+      if (geo.sh > geo.ch + 1) mini.vpStyle = 'top: ' + (6 + st0 * sc - off).toFixed(2) + 'px; height: ' + Math.max(10, geo.ch * sc).toFixed(2) + 'px';
+      if (mmKey) {
+        const cf = find(doc, mmKey);
+        if (cf) {
+          const ids = new Set(); each([cf.st], (x2) => ids.add(x2.id));
+          let a = -1, b = -1; rows.forEach((r, i) => { if (ids.has(r.id)) { if (a < 0) a = i; b = i; } });
+          if (a >= 0) { const ga = geo.rows[a], gb = geo.rows[b]; mini.chain = true; mini.chainStyle = 'top: ' + (ga.top * sc - 2).toFixed(2) + 'px; height: ' + ((gb.top + gb.h - ga.top) * sc + 3).toFixed(2) + 'px; left: ' + (3 + (rows[a].depth || 0) * 5) + 'px; right: 3px; --c: var(' + (tileOf(cf.st) || '--accent') + ')'; }
+        }
+      }
+      const hi = mmHov ? stepRows.findIndex((r) => r.id === mmHov) : -1;
+      if (hi >= 0) {
+        const win = stepRows.slice(Math.max(0, hi - 2), hi + 3);
+        const minD = Math.min(...win.map((r) => r.depth));
+        const pm = parentMap(doc); const path = []; let q = pm[mmHov];
+        while (q) { const f2 = find(doc, q); if (f2) path.unshift(f2.st.k === 'folder' ? f2.st.name : BLOCKS[f2.st.k].name); q = pm[q]; }
+        const gi = geo.rows[rows.indexOf(stepRows[hi])];
+        const y = 6 + gi.top * sc - off;
+        peek.show = true;
+        peek.path = path.length ? path.join('  ›  ') : 'Top of the script';
+        peek.rows = win.map((r) => { const st = find(doc, r.id).st; return { cls: 'pr' + (r.id === mmHov ? ' cur' : '') + (r.off ? ' off' : ''), style: 'padding-left: ' + (6 + (r.depth - minD) * 14) + 'px', tileCls: 'se-tile' + (st.k === 'cmt' ? ' cmt' : ''), tileStyle: tileOf(st) ? '--tile: var(' + tileOf(st) + ')' : '', icon: iconOf(st), text: plainOf(r.parts) }; });
+        peek.style = 'top: ' + Math.max(6, Math.min(geo.mh + 12 - 186, y - 46)).toFixed(0) + 'px';
+      }
+    }
+    const listEl = () => { const root = document.querySelector('[data-se="' + uid + '"]'); return root ? root.querySelector('.se-list') : null; };
+    const miniY = (e, el) => { const r = el.getBoundingClientRect(); const k = r.height / el.offsetHeight || 1; return (e.clientY - r.top) / k - 6; };
+    this._miniSync = () => {
+      const root = document.querySelector('[data-se="' + uid + '"]'); const g = this._geo; if (!root || !g) return;
+      const list = root.querySelector('.se-list'), el = root.querySelector('.se-mini'); if (!list || !el) return;
+      const sc = mmScale(g), st0 = list.scrollTop, off = mmOff(g, st0); this._scrollTop = st0;
+      const tr = el.querySelector('.mm-track'); if (tr) tr.style.transform = 'translateY(' + (-off).toFixed(2) + 'px)';
+      const vp = el.querySelector('.mm-vp'); if (vp && g.sh > g.ch + 1) { vp.style.display = ''; vp.style.top = (6 + st0 * sc - off).toFixed(2) + 'px'; vp.style.height = Math.max(10, g.ch * sc).toFixed(2) + 'px'; }
+    };
+    // Dragging the visible-area box scrolls the list. Window listeners keep the drag alive while the minimap re-renders.
+    if (!this._mmWired) {
+      this._mmWired = true;
+      window.addEventListener('pointermove', (e) => {
+        const d = this._mmDrag; const g = this._geo; if (!d || !g) return;
+        const root = document.querySelector('[data-se="' + this._uid + '"]'); if (!root) return;
+        const list = root.querySelector('.se-list'), el = root.querySelector('.se-mini'); if (!list || !el) return;
+        const sc = mmScale(g), vpH = Math.max(10, g.ch * sc), span = Math.min(g.mh, g.sh * sc) - vpH;
+        const tt = Math.max(0, Math.min(1, (miniY(e, el) - d.grab) / Math.max(1, span)));
+        list.scrollTop = tt * (g.sh - g.ch); if (this._miniSync) this._miniSync();
+      });
+      window.addEventListener('pointerup', () => { if (this._mmDrag) { this._mmDrag = null; const el = document.querySelector('[data-se="' + this._uid + '"] .se-mini'); if (el) el.classList.remove('drag'); } });
+    }
+    const miniDown = (e) => {
+      if (e.button !== 0) return; const g = this._geo, list = listEl(), el = e.currentTarget; if (!g || !list) return;
+      e.preventDefault(); el.classList.add('drag');
+      const y = miniY(e, el), sc = mmScale(g), off = mmOff(g, list.scrollTop), vpH = Math.max(10, g.ch * sc), vpTop = list.scrollTop * sc - off;
+      if (g.sh > g.ch + 1 && y >= vpTop && y <= vpTop + vpH) { this._mmDrag = { grab: y - vpTop }; return; }
+      // a click outside the box jumps there and selects the step under the pointer; keep dragging to scroll on
+      const cy = (y + off) / sc; const hit = g.rows.find((rw) => !rw.hole && cy >= rw.top && cy < rw.top + rw.h);
+      list.scrollTop = Math.max(0, cy - g.ch / 2); this._miniSync();
+      this._mmDrag = { grab: vpH / 2 };
+      if (hit) set({ sel: [hit.id], anchor: hit.id, ctx: null, mmHov: null });
+    };
+    const miniMove = (e) => {
+      if (this._mmDrag) return; const g = this._geo, list = listEl(); if (!g || !list) return;
+      const cy = (miniY(e, e.currentTarget) + mmOff(g, list.scrollTop)) / mmScale(g);
+      const hit = g.rows.find((rw) => cy >= rw.top && cy < rw.top + rw.h); const id = hit && !hit.hole ? hit.id : null;
+      if (((this.state || {}).mmHov ?? null) !== id || (this.state || {}).mmHov === undefined) set({ mmHov: id });
+    };
+    const miniLeave = () => { if (!this._mmDrag && (this.state || {}).mmHov !== null) set({ mmHov: null }); };
+    const miniWheel = (e) => { const list = listEl(); if (list) { list.scrollTop += e.deltaY; this._miniSync(); } };
+
+    return {
+      uid, ic: IC, edFk: uid + '-ed', findFk: uid + '-find', listSk: uid + '-list', title: p.title || 'Edit Action Script', standalone, yes: true, no: false, noop: () => {}, stop: (e) => e.stopPropagation(),
+      rootCls: standalone ? 'fm ' + ((p.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark') + ((p.material ?? 'Blur') === 'Blur' ? ' mat-blur' : '') : '',
+      rootStyle: standalone ? 'position: relative; width: ' + (W + 80) + 'px; height: ' + (H + 80) + 'px; overflow: hidden; background: var(--bd)' : 'position: relative; width: ' + W + 'px; height: ' + H + 'px',
+      winStyle: (standalone ? 'left: 40px; top: 40px; ' : 'left: 0; top: 0; ') + 'width: ' + W + 'px; height: ' + H + 'px',
+      activate: () => { window.__seActive = uid; if (!active) set({ active: true }); },
+      noUndo: !hist.u.length, noRedo: !hist.r.length, undo, redo,
+      addToolOpen: !!(add && add.at === 'tool'), addCtxOpen: !!(add && add.at === 'ctx'), addBtnCls: 'btn add' + (add && add.at === 'tool' ? ' on' : ''),
+      toggleAdd: () => set({ add: add ? null : { at: 'tool' }, ctx: null }),
+      addItems, addSubItems, addHasSub: !!addSub && !addQ, addSubSearch: 'Search ' + (addSub || ''), addSubStyle: 'margin-top: ' + subTop + 'px', addSubEnter: cancelIntent, trackAdd: track,
+      onAddQuery: (v) => { cancelIntent(); const cur = liveAdd(); set({ add: Object.assign({}, cur, { q: v, sub: v ? null : (cur && cur.sub) || null, help: null }) }); },
+      help, addCtxStyle: 'left: ' + clampX(addPos.x, 300) + 'px; top: ' + Math.min(addPos.y, H - 470) + 'px',
+      ctxOpen: !!ctx && !!anchors.ctx, ctxItems, wrapItems, ctxHasSub: ctxSub === 'wrap', ctxSubStyle: 'margin-top: ' + ctxSubTop + 'px', ctxSubEnter: cancelIntent, trackCtx: track,
+      ctxStyle: 'left: ' + clampX(ctxPos.x, 520) + 'px; top: ' + Math.min(ctxPos.y, H - 520) + 'px',
+      anyPopup, closePopups: closeAll, closePopupsCtx: (e) => { e.preventDefault(); closeAll(); },
+      findOpen, findBtnCls: 'ib' + (findOpen ? ' on' : ''), toggleFind: () => { if (!findOpen) this._focusFind = true; set({ findOpen: !findOpen, fq: findOpen ? '' : fq }); },
+      fq, rq, matchCase, caseCls: 'opt' + (matchCase ? ' on' : ''), toggleCase: () => set({ matchCase: !matchCase }),
+      onFind: (e) => set({ fq: e.target.value, hit: 0 }), onReplace: (e) => set({ rq: e.target.value }),
+      findKey: (e) => { if (e.key === 'Enter') { e.preventDefault(); goHit(e.shiftKey ? -1 : 1); } else if (e.key === 'Escape') { e.preventDefault(); set({ findOpen: false, fq: '' }); } },
+      countText: !fq ? '' : hits.length ? (hitIdx + 1) + ' of ' + hits.length : 'No results', countCls: 'count' + (fq && !hits.length ? ' none' : ''),
+      noMatches: !hits.length, noValueMatches: !valueHits.length, prevHit: () => goHit(-1), nextHit: () => goHit(1), replaceOne: () => replaceIn(false), replaceAll: () => replaceIn(true),
+      foldTip: anyOpen ? 'Collapse All' : 'Expand All', foldIcon: anyOpen ? IC.collapse : IC.expandAll, noBlocks: !foldable.length, foldAll,
+      rows, isEmpty: !doc.length, dropLine, dropLineStyle: dropLine ? 'top: ' + dragAn.top + 'px; left: ' + dragAn.left + 'px' : '',
+      listClick: () => { if (!this._dragged) set({ sel: [], ctx: null }); this._dragged = false; },
+      listMenu: (e) => { e.preventDefault(); const w = e.currentTarget.closest('.win.se'); const wr = w.getBoundingClientRect(); const k = wr.width / w.offsetWidth || 1; this._anchors = Object.assign({}, this._anchors, { ctx: { x: (e.clientX - wr.left) / k + 2, y: (e.clientY - wr.top) / k + 2 }, add: { x: (e.clientX - wr.left) / k + 2, y: (e.clientY - wr.top) / k + 2 } }); set({ sel: [], ctx: { sub: null }, add: null }); },
+      openAddEmpty: (e) => { this._anchors = Object.assign({}, this._anchors, { add: anchorAt(e) }); set({ add: { at: 'ctx', q: '' } }); },
+      rulerStyle: 'top: ' + (findH + 8) + 'px; bottom: 34px', marks: markList,
+      stepCount: nSteps === 1 ? '1 step' : nSteps + ' steps', selText: sel.length > 1 ? sel.length + ' selected' : '',
+      probCount: problems.length ? (problems.length === 1 ? '1 problem' : problems.length + ' problems') : '', probsOpen,
+      probBtnCls: 'it warnc' + (errs ? ' err' : ''), toggleProbs: () => set({ probs: !probsOpen, ev: false }),
+      probList: problems.map((x) => ({ step: x.step, text: x.text, icCls: x.err ? 'err' : '', go: () => jump(x.id) })),
+      rightStatus: drag && !drag.demo ? (drag.alt ? 'Copying. Let go of Alt to move instead.' : 'Hold Alt to copy instead of moving.') : drag && drag.demo ? 'Hold Alt to copy instead of moving.' : '',
+      owner: ownerText, ownerIcon: IC[ownerIc], hasEvents: scene === 'Listener', evOpen, evBtnCls: 'btn sm' + (evOpen ? ' on' : ''), evLabel: EVENTS.vals.length + ' Listener Variables',
+      toggleEvents: () => set({ ev: !evOpen, probs: false }), evTitle: 'Listener variables', evChip: EVENTS.title,
+      evDesc: 'The listener hands these variables to the script. Use them anywhere you type: type $$ to pick one, or click one here to copy it.',
+      evList: EVENTS.vals.map((v) => ({ name: '$$' + v.n, desc: v.d, state: s.copied === v.n ? 'Copied' : 'e.g. ' + v.eg, tip: 'Copy $$' + v.n, use: copyEv(v.n) })),
+      fpop, cpop, lift,
+      miniShow, rulerShow: !miniShow, mini, peek, onListScroll: () => { if (this._miniSync) this._miniSync(); }, miniDown, miniMove, miniLeave, miniWheel,
+      miniBtnCls: 'ib' + (miniOn ? ' on' : ''), miniTip: miniOn ? 'Hide Minimap' : 'Show Minimap', miniPressed: miniOn ? 'true' : 'false', noMiniToggle: !doc.length,
+      toggleMini: () => set({ mini: !miniOn, mmHov: null })
+    };
+  }
+}
+</script>
+</body>
+</html>
