@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Layout editor background menu</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="fm {{themeClass}} {{matClass}}" style="position: relative; width: 1440px; height: 960px; overflow: hidden; background: var(--bd)">
+
+<div class="backdrop" aria-hidden="true" style="background: #15182c">
+<img class="art" src="dusk_valley.png" alt="">
+<div class="gridlines"></div>
+</div>
+<div class="le" aria-hidden="true" style="left: 500px; top: 120px; width: 440px; height: 84px; display: grid; place-items: center; color: #fff; font-size: 52px; font-weight: 700; letter-spacing: 1px; text-shadow: 0 4px 0 rgba(0, 0, 0, .35)">Dusk Valley</div>
+<div class="le le-btn" aria-hidden="true" style="left: 590px; top: 420px; width: 260px; height: 38px">Play</div>
+<div class="le le-btn" aria-hidden="true" style="left: 590px; top: 468px; width: 260px; height: 38px">Options</div>
+<div class="le le-btn" aria-hidden="true" style="left: 590px; top: 516px; width: 260px; height: 38px">Quit Game</div>
+
+<div style="position: absolute; left: 248px; top: 92px; display: flex; align-items: flex-start; gap: 2px" onMouseMove="{{track}}">
+<div><dc-import name="ContextMenu" items="{{rootItems}}" search="Search this menu" focus-on-open="{{yes}}" search-listener="{{onQuery}}" standalone="{{no}}" hint-size="auto,700px"></dc-import></div>
+<sc-if value="{{subNew}}" hint-placeholder-val="{{true}}">
+<div style="{{subStyle}}" onMouseEnter="{{subEnter}}"><dc-import name="ContextMenu" items="{{elementItems}}" sub="{{yes}}" search="Search elements" max-height="312" standalone="{{no}}" hint-size="auto,370px"></dc-import></div>
+</sc-if>
+<sc-if value="{{subAudio}}" hint-placeholder-val="{{false}}">
+<div style="{{subStyle}}" onMouseEnter="{{subEnter}}"><dc-import name="ContextMenu" items="{{audioItems}}" sub="{{yes}}" search="" standalone="{{no}}" hint-size="auto,260px"></dc-import></div>
+</sc-if>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const sub = s.sub !== undefined ? s.sub : 'new';
+    const random = s.random ?? true;
+    // Submenu hover intent, same as in the menu bar: heading toward the open submenu keeps it open for a
+    // short grace time while crossing other rows; moving straight up or down switches instantly.
+    const hi = this._hoverIntent || (this._hoverIntent = { pts: [], rect: null, timer: 0 });
+    const GRACE_MS = 350;
+    const cancelIntent = () => { if (hi.timer) { clearTimeout(hi.timer); hi.timer = 0; } };
+    const track = (e) => {
+      hi.pts.push({ x: e.clientX, y: e.clientY });
+      if (hi.pts.length > 4) hi.pts.shift();
+      const subMenu = e.currentTarget.querySelectorAll('.menu.cm')[1];
+      hi.rect = subMenu ? subMenu.getBoundingClientRect() : null;
+    };
+    const headingToSub = () => {
+      const r = hi.rect;
+      if (!r || hi.pts.length < 2) return false;
+      const pt = hi.pts[hi.pts.length - 1], from = hi.pts[0];
+      if (pt.x === from.x && pt.y === from.y) return false;
+      const a = { x: r.left, y: r.top - 8 }, b = { x: r.left, y: r.bottom + 8 };
+      const side = (p1, p2, p3) => (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
+      const d1 = side(pt, from, a), d2 = side(pt, a, b), d3 = side(pt, b, from);
+      return !((d1 < 0 || d2 < 0 || d3 < 0) && (d1 > 0 || d2 > 0 || d3 > 0));
+    };
+    const liveSub = () => { const st = this.state || {}; return st.sub !== undefined ? st.sub : 'new'; };
+    const wantSub = (id) => {
+      cancelIntent();
+      const cur = liveSub();
+      if (cur === id) return;
+      if (cur !== null && headingToSub()) {
+        hi.timer = setTimeout(() => { hi.timer = 0; this.setState({ sub: id }); }, GRACE_MS);
+        return;
+      }
+      this.setState({ sub: id });
+    };
+    const open = (id) => () => wantSub(id);
+    const close = () => wantSub(null);
+    const rootItems = [
+      { ic: 'plus', label: 'New Element', sub: true, hl: sub === 'new', enter: open('new'), click: open('new') },
+      { ic: 'paste', label: 'Paste', kbd: 'Ctrl+V', enter: close },
+      { head: 'Screen' },
+      { ic: 'image', label: 'Background', val: 'Image', sub: true, enter: close },
+      { ic: 'sparkle', label: 'Decoration Overlays', sub: true, enter: close },
+      { ic: 'header', label: 'Header & Footer', sub: true, enter: close },
+      { ic: 'title', label: 'Screen Title', val: 'Dusk Valley', enter: close },
+      { head: 'Layout' },
+      { ic: 'index', label: 'Layout Index', val: '0', enter: close },
+      { ic: 'check', label: 'Loading Conditions', val: 'None', enter: close },
+      { ic: 'behind', label: 'Custom Elements Behind Vanilla', sw: true, on: false, enter: close },
+      { head: 'Random Mode' },
+      { ic: 'shuffle', label: 'Random Mode', sw: true, on: random, enter: close, onToggle: (v) => this.setState({ random: v }) },
+      { ic: 'cards', label: 'Random Group', val: 'title_screens', disabled: !random, enter: close },
+      { ic: 'once', label: 'Only First Time', sw: true, on: false, disabled: !random, enter: close },
+      { head: 'Scaling' },
+      { ic: 'ruler', label: 'Force GUI Scale', val: 'Off', enter: close },
+      { ic: 'fit', label: 'Auto-Scaling', sw: true, on: false, disabled: true, note: 'needs a GUI scale', enter: close },
+      { head: 'Audio & Scripts' },
+      { ic: 'volume', label: 'Screen Audio', sub: true, hl: sub === 'audio', enter: open('audio'), click: open('audio') },
+      { ic: 'code', label: 'Open Screen Script', enter: close },
+      { ic: 'code', label: 'Close Screen Script', enter: close }
+    ];
+    const audioItems = [
+      { head: 'When the screen opens' },
+      { ic: 'audio', label: 'Audio', val: 'whoosh.ogg' },
+      { ic: 'volume', label: 'Volume', slider: 0.8 },
+      { ic: 'channel', label: 'Sound Channel', val: 'Master', sub: true },
+      { head: 'When it closes' },
+      { ic: 'audio', label: 'Audio', val: 'None' },
+      { ic: 'volume', label: 'Volume', slider: 1, disabled: true },
+      { ic: 'channel', label: 'Sound Channel', val: 'Master', sub: true, disabled: true }
+    ];
+    const heightOf = (it) => (it.sep || it.head ? 25 : 26);
+    const offsetOf = (key) => {
+      let y = 0;
+      for (const it of rootItems) {
+        if (it.label === key) return y;
+        y += heightOf(it);
+      }
+      return 0;
+    };
+    // same rule as ContextMenu: the search field shows from the start in menus with more than 10 entries
+    const listTop = 1 + 5 + (rootItems.filter((it) => !it.sep && !it.head).length > 10 ? 28 : 0);
+    const elementItems = [
+      ['audio', 'Audio'], ['braces', 'Block/Item JSON Model'], ['browser', 'Browser'], ['button', 'Button'], ['checkbox', 'Checkbox'], ['circle', 'Circle Shape'],
+      ['cursor', 'Cursor'], ['move', 'Dragger'], ['keyframe', 'Element Animator'], ['wand', 'GLSL Shader'], ['image', 'Image'], ['cube', 'Item'],
+      ['channel', 'Music Controller'], ['player', 'Player Entity'], ['progress', 'Progress Bar'], ['rect', 'Rectangle Shape'], ['slider', 'Slider'], ['slideshow', 'Slideshow'],
+      ['sparkle', 'Splash Text'], ['title', 'Text'], ['input', 'Text Input Field'], ['ticker', 'Ticker'], ['tooltip', 'Tooltip'], ['video', 'Video']
+    ].map(([ic, label]) => ({ ic, label }));
+    const subTop = listTop + offsetOf(sub === 'new' ? 'New Element' : 'Screen Audio') - 6;
+    return {
+      themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark',
+      matClass: (this.props.material ?? 'Blur') === 'Blur' ? 'mat-blur' : '',
+      no: false, yes: true, track, subEnter: cancelIntent,
+      onQuery: (v) => { if (v && liveSub() !== null) { cancelIntent(); this.setState({ sub: null }); } },
+      rootItems, audioItems, elementItems,
+      subNew: sub === 'new', subAudio: sub === 'audio',
+      subStyle: 'margin-top: ' + subTop + 'px'
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Is Number condition</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="fm {{themeClass}} {{matClass}}" style="position: relative; width: 1200px; height: 800px; overflow: hidden">
+
+<div class="backdrop" aria-hidden="true">
+<img class="art" src="dusk_valley.png" alt="">
+<div class="dim"></div>
+<div class="gridlines"></div>
+<div class="le le-btn" style="left: 470px; top: 600px; width: 260px; height: 36px">Claim Reward</div>
+</div>
+
+<div class="win" style="left: 320px; top: 170px; width: 560px">
+<div class="titlebar">
+<div class="tl"><button class="c" aria-label="Close"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3.6 3.6l4.8 4.8M8.4 3.6l-4.8 4.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg></button><button class="m" aria-label="Collapse"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 6h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg></button><button class="x" aria-label="Maximize"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3.3 3.3h4.2L3.3 7.5zM8.7 8.7H4.5l4.2-4.2z" fill="currentColor"></path></svg></button></div>
+<div class="wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 7h9M5 12h6M5 17h9"></path><path d="M15.5 12.5l2 2 3.5-4"></path></svg>Is Number</div>
+<div></div>
+</div>
+
+<div class="body">
+<div class="group lw-96">
+<div class="row"><span class="lbl">Number</span><div class="ctl grow"><div class="field mono"><input type="text" aria-label="Number" value="$$score"><button class="ib" data-tip="Open in Editor" aria-label="Open in Editor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5h11M4 11h7M4 15.5h4"></path><path d="M12.5 19.5l.7-3 6-6 2.3 2.3-6 6z"></path></svg></button></div></div></div>
+<div class="row" style="z-index: 2"><span class="lbl">Compare</span><div class="ctl" style="margin-left: 0">
+<div class="seg icons inline" role="radiogroup" aria-label="Compare mode">
+<div class="thumb" style="transform: {{opX}}"></div>
+<sc-for list="{{ops}}" as="op" hint-placeholder-count="5">
+<button class="{{op.cls}}" role="radio" aria-checked="{{op.checked}}" data-tip="{{op.name}}" aria-label="{{op.name}}" onClick="{{op.pick}}">{{op.symbol}}</button>
+</sc-for>
+</div>
+</div></div>
+<div class="row"><span class="lbl">Compare To</span><div class="ctl grow"><div class="field mono"><input type="text" aria-label="Compare to number" value="10"><button class="ib" data-tip="Open in Editor" aria-label="Open in Editor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5h11M4 11h7M4 15.5h4"></path><path d="M12.5 19.5l.7-3 6-6 2.3 2.3-6 6z"></path></svg></button></div></div></div>
+</div>
+
+<div style="display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 10px; background: var(--tint); color: var(--text-2)">
+<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: 0 0 auto; color: var(--accent)"><circle cx="12" cy="12" r="8.5"></circle><path d="M8.3 12.3l2.4 2.4 5-5"></path></svg>
+<span>Passes when <code style="font-size: 12px; color: var(--title)">$$score</code> is <strong style="font-weight: 600; color: var(--title)">{{opSentence}}</strong> <code style="font-size: 12px; color: var(--title)">10</code></span>
+</div>
+</div>
+
+<div class="footer">
+<button class="btn wide">Cancel</button>
+<button class="btn wide primary">Done</button>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1200,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const list = [
+      ['=', 'Equals', 'equal to'],
+      ['>', 'Bigger than', 'bigger than'],
+      ['≥', 'Bigger than or equals', 'bigger than or equal to'],
+      ['<', 'Smaller than', 'smaller than'],
+      ['≤', 'Smaller than or equals', 'smaller than or equal to']
+    ];
+    const op = s.op ?? 2;
+    return {
+      themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark',
+      matClass: (this.props.material ?? 'Blur') === 'Blur' ? 'mat-blur' : '',
+      opI: op, opX: 'translateX(' + (op * 100) + '%)',
+      opSentence: list[op][2],
+      ops: list.map(([symbol, name], i) => ({
+        symbol, name, cls: i === op ? 'on' : '', checked: i === op ? 'true' : 'false',
+        pick: () => this.setState({ op: i })
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

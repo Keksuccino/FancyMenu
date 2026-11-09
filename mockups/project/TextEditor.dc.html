@@ -1,0 +1,855 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Text editor component</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="{{rootCls}}" style="{{rootStyle}}">
+<sc-if value="{{standalone}}" hint-placeholder-val="{{true}}"><div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""><div class="dim"></div></div></sc-if>
+<div class="win te" role="dialog" aria-label="{{title}}" style="{{winStyle}}">
+
+<div class="titlebar">
+<div class="tl"><button class="c" aria-label="Cancel and close" onClick="{{noop}}"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3.6 3.6l4.8 4.8M8.4 3.6l-4.8 4.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg></button><button class="m" aria-label="Collapse"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 6h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg></button><button class="x" aria-label="Maximize"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3.3 3.3h4.2L3.3 7.5zM8.7 8.7H4.5l4.2-4.2z" fill="currentColor"></path></svg></button></div>
+<div class="wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{titleIcon}}"></path></svg>{{title}}</div>
+<div></div>
+</div>
+
+<sc-if value="{{anyPopup}}" hint-placeholder-val="{{false}}"><div class="fb-catch" style="z-index: 4" onClick="{{closePopups}}"></div></sc-if>
+<div class="te-tool" role="toolbar" aria-label="Editor tools">
+<button class="ib" data-tip="Undo (Ctrl+Z)" aria-label="Undo" disabled="{{noUndo}}" onClick="{{undo}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11"></path></svg></button>
+<button class="ib" data-tip="Redo (Ctrl+Shift+Z)" aria-label="Redo" disabled="{{noRedo}}" onClick="{{redo}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14l5-5-5-5M20 9H9.5a5.5 5.5 0 0 0 0 11H13"></path></svg></button>
+<span class="vsep"></span>
+<button class="{{findBtnCls}}" data-tip="Find and Replace (Ctrl+F)" aria-label="Find and Replace" aria-pressed="{{findPressed}}" onClick="{{toggleFind}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 4.5a6 6 0 1 0 0 12 6 6 0 1 0 0-12zM15 15l5 5"></path></svg></button>
+<sc-if value="{{fmt}}" hint-placeholder-val="{{true}}">
+<span class="vsep"></span>
+<button class="ib" data-tip="{{boldTip}}" aria-label="Bold" onClick="{{bold}}"><b>B</b></button>
+<button class="ib" data-tip="{{italicTip}}" aria-label="Italic" onClick="{{italic}}"><i style="font-family: Georgia, serif">I</i></button>
+<button class="ib" data-tip="{{strikeTip}}" aria-label="Strikethrough" onClick="{{strike}}"><s>S</s></button>
+<button class="ib" data-tip="{{underlineTip}}" aria-label="Underline" onClick="{{underline}}"><u>U</u></button>
+<sc-if value="{{md}}" hint-placeholder-val="{{true}}"><button class="ib" data-tip="Inline code, adds `" aria-label="Inline code" onClick="{{inlineCode}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 7L3.5 12l5 5M15.5 7l5 5-5 5"></path></svg></button></sc-if>
+<span style="position: relative; display: inline-flex">
+<button class="ib color" data-tip="Text color" aria-label="Text color" aria-haspopup="dialog" aria-expanded="{{colorsOpen}}" onClick="{{toggleColors}}"><b>A</b><span class="cbar"></span></button>
+<sc-if value="{{colorsOpen}}" hint-placeholder-val="{{false}}">
+<div class="help-tag te-colors" role="dialog" aria-label="Text color" style="left: -4px">
+<div class="grid"><sc-for list="{{mcColors}}" as="c" hint-placeholder-count="16"><button style="{{c.style}}" aria-label="{{c.label}}" data-tip="{{c.label}}" onClick="{{c.pick}}"></button></sc-for></div>
+<sc-if value="{{customColors}}" hint-placeholder-val="{{true}}"><div class="te-custom"><div class="cap-s">Custom color</div><div class="crow"><button class="cp-sw" style="{{customSw}}" data-tip="Open the color picker" aria-label="Open the color picker" onClick="{{openPicker}}"></button><label class="{{customFieldCls}}"><input type="text" aria-label="Hex color" value="{{customHex}}" onInput="{{onCustomHex}}" onKeyDown="{{customKey}}"></label><button class="btn" disabled="{{customBad}}" onClick="{{applyCustom}}">Use</button></div></div></sc-if>
+<div class="row2"><button class="btn sm" onClick="{{resetColor}}">Reset Formatting</button></div>
+</div>
+</sc-if>
+</span>
+<sc-if value="{{md}}" hint-placeholder-val="{{true}}">
+<span class="vsep"></span>
+<div class="seg inline icons" role="radiogroup" aria-label="Alignment"><span class="thumb" style="{{alignThumb}}"></span><button class="{{al_left.cls}}" role="radio" aria-checked="{{al_left.on}}" aria-label="Align left" data-tip="Align left" onClick="{{al_left.pick}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 10h10M4 14h16M4 18h10"></path></svg></button><button class="{{al_center.cls}}" role="radio" aria-checked="{{al_center.on}}" aria-label="Center, adds ^^^ around the lines" data-tip="Center, adds ^^^ around the lines" onClick="{{al_center.pick}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M7 10h10M4 14h16M7 18h10"></path></svg></button><button class="{{al_right.cls}}" role="radio" aria-checked="{{al_right.on}}" aria-label="Align right, adds ||| around the lines" data-tip="Align right, adds ||| around the lines" onClick="{{al_right.pick}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M10 10h10M4 14h16M10 18h10"></path></svg></button></div>
+<span class="vsep"></span>
+<span style="position: relative; display: inline-flex"><button class="{{insertBtnCls}}" aria-haspopup="menu" aria-expanded="{{insertOpen}}" onClick="{{toggleInsert}}">Insert<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 10l4 4 4-4"></path></svg></button><sc-if value="{{insertOpen}}" hint-placeholder-val="{{false}}"><div class="te-insert"><dc-import name="ContextMenu" items="{{insertItems}}" search="Search Markdown" standalone="{{no}}" escape-listener="{{closePopups}}" hint-size="auto,560px"></dc-import></div></sc-if></span>
+</sc-if>
+</sc-if>
+<span class="grow"></span>
+<sc-if value="{{phs}}" hint-placeholder-val="{{true}}">
+<div class="seg inline" role="radiogroup" aria-label="Show placeholders as" style="margin-right: 6px">
+<span class="thumb" style="{{viewThumb}}"></span>
+<button class="{{chipsCls}}" role="radio" aria-checked="{{chipsOn}}" data-tip="Placeholders as editable chips" onClick="{{viewChips}}">Chips</button>
+<button class="{{codeCls}}" role="radio" aria-checked="{{codeOn}}" data-tip="Placeholders as their raw code" onClick="{{viewCode}}">Code</button>
+</div>
+</sc-if>
+<button class="{{wrapCls}}" data-tip="Wrap long lines (Alt+Z)" aria-label="Wrap long lines" aria-pressed="{{wrapPressed}}" onClick="{{toggleWrap}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h13a3 3 0 0 1 0 6h-4M15 16l-2 2 2 2M4 18h5"></path></svg></button>
+<sc-if value="{{phs}}" hint-placeholder-val="{{true}}">
+<button class="{{sideBtnCls}}" data-tip="Placeholder list" aria-label="Placeholder list" aria-pressed="{{sidePressed}}" onClick="{{toggleSide}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zM14.5 5v14"></path></svg></button>
+</sc-if>
+</div>
+
+<div class="te-main">
+<div class="te-pane">
+<sc-if value="{{findOpen}}" hint-placeholder-val="{{false}}">
+<div class="te-find" role="search">
+<label class="field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10.5 4.5a6 6 0 1 0 0 12 6 6 0 1 0 0-12zM15 15l5 5"></path></svg><input type="text" placeholder="Find" aria-label="Find" value="{{fq}}" onInput="{{onFind}}" onKeyDown="{{findKey}}"><button class="{{caseCls}}" data-tip="Match case" aria-label="Match case" aria-pressed="{{casePressed}}" onClick="{{toggleCase}}">Aa</button><button class="{{wordCls}}" data-tip="Whole words only" aria-label="Whole words only" aria-pressed="{{wordPressed}}" onClick="{{toggleWord}}">W</button></label>
+<span class="{{countCls}}">{{countText}}</span>
+<button class="ib" data-tip="Previous match (Shift+Enter)" aria-label="Previous match" disabled="{{noMatches}}" onClick="{{prevHit}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg></button>
+<button class="ib" data-tip="Next match (Enter)" aria-label="Next match" disabled="{{noMatches}}" onClick="{{nextHit}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+<span class="vsep" style="width: 1px; height: 18px; margin: 0 4px; background: var(--sep)"></span>
+<label class="field"><input type="text" placeholder="Replace with" aria-label="Replace with" value="{{rq}}" onInput="{{onReplace}}"></label>
+<button class="btn sm" disabled="{{noMatches}}" onClick="{{replaceOne}}">Replace</button>
+<button class="btn sm" disabled="{{noMatches}}" onClick="{{replaceAll}}">Replace All</button>
+<span class="grow"></span>
+<button class="ib" data-tip="Close (Esc)" aria-label="Close find" onClick="{{toggleFind}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"></path></svg></button>
+</div>
+</sc-if>
+
+<div class="{{scrollCls}}" role="textbox" aria-multiline="true" aria-label="{{title}}">
+<div class="te-lines">
+<sc-for list="{{lines}}" as="l" hint-placeholder-count="8">
+<div class="{{l.cls}}">
+<span class="{{l.gutCls}}">{{l.no}}</span>
+<div class="te-code" style="padding-left: 4px"><sc-for list="{{l.guides}}" as="gd" hint-placeholder-count="0"><span class="te-guide" style="{{gd}}"></span></sc-for><sc-for list="{{l.pieces}}" as="g" hint-placeholder-count="3"><sc-if value="{{g.isText}}" hint-placeholder-val="{{true}}"><span class="{{g.cls}}" data-l="{{g.ln}}" data-c="{{g.col}}">{{g.s}}</span></sc-if><sc-if value="{{g.isFc}}" hint-placeholder-val="{{false}}"><span class="{{g.cls}}" data-l="{{g.ln}}" data-c="{{g.col}}"><i style="{{g.sw}}"></i>{{g.s}}</span></sc-if><sc-if value="{{g.isCaret}}" hint-placeholder-val="{{false}}"><span class="te-caret"></span></sc-if><sc-if value="{{g.isInlay}}" hint-placeholder-val="{{false}}"><span class="te-inlay">{{g.s}}</span></sc-if><sc-if value="{{g.isBad}}" hint-placeholder-val="{{false}}"><span class="{{g.cls}}" style="position: relative" onClick="{{toggleProblem}}">{{g.s}}<sc-if value="{{probOpen}}" hint-placeholder-val="{{false}}"><span class="te-prob" role="dialog" aria-label="Problem" onClick="{{stop}}"><span class="help-tag" style="display: block"><span class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4l9 16H3zM12 10v4M12 17h.01"></path></svg>Unknown placeholder</span><span style="display: block; margin-top: 3px">There's no placeholder called <b style="font-family: 'Noto Sans Mono', monospace; font-weight: 500; color: var(--text)">{{prob.id}}</b>, so this part would show up as plain text.</span><sc-if value="{{prob.hasFix}}" hint-placeholder-val="{{true}}"><span class="acts"><button class="btn sm primary" onClick="{{prob.fix}}">Use {{prob.fixName}}</button></span></sc-if></span></span></sc-if></span></sc-if><sc-if value="{{g.isTyped}}" hint-placeholder-val="{{false}}"><span class="te-typed" style="position: relative">{{g.s}}<span class="te-caret"></span><span class="te-ac" onClick="{{stop}}"><span class="menu cm" role="listbox" aria-label="Placeholders" style="display: block"><sc-for list="{{ac.items}}" as="a" hint-placeholder-count="6"><button class="{{a.cls}}" role="option" aria-selected="{{a.ariaSel}}" onMouseEnter="{{a.hover}}" onClick="{{a.pick}}"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{a.icon}}"></path></svg></span><span class="lbl-t"><sc-for list="{{a.parts}}" as="pp" hint-placeholder-count="1"><sc-if value="{{pp.hit}}" hint-placeholder-val="{{false}}"><mark>{{pp.s}}</mark></sc-if><sc-if value="{{pp.plain}}" hint-placeholder-val="{{true}}">{{pp.s}}</sc-if></sc-for></span><span class="r">{{a.cat}}</span></button></sc-for><sc-if value="{{ac.none}}" hint-placeholder-val="{{false}}"><span class="mempty" style="display: flex">No placeholder matches</span></sc-if><span class="keys"><span><kbd>↵</kbd> Insert</span><span><kbd>↑↓</kbd> Choose</span><span><kbd>Esc</kbd> Close</span></span></span><sc-if value="{{ac.hasDetail}}" hint-placeholder-val="{{true}}"><span class="help-tag te-card" style="display: block"><span class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ac.d.icon}}"></path></svg>{{ac.d.name}}<span class="chip">{{ac.d.cat}}</span></span><span class="id" style="display: block">{{ac.d.id}}</span><span class="d" style="display: block">{{ac.d.desc}}</span><sc-if value="{{ac.d.hasVals}}" hint-placeholder-val="{{true}}"><span class="vals"><sc-for list="{{ac.d.vals}}" as="v" hint-placeholder-count="2"><span>{{v}}</span></sc-for></span></sc-if><span class="now"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width: 13px; height: 13px"><path d="M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12zM12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 1 0 0-5z"></path></svg><sc-if value="{{ac.d.ready}}" hint-placeholder-val="{{true}}">Right now: <b>{{ac.d.now}}</b></sc-if><sc-if value="{{ac.d.wait}}" hint-placeholder-val="{{false}}"><span class="wait">{{ac.d.waitText}}</span></sc-if></span></span></sc-if></span></span></sc-if><sc-if value="{{g.isPh}}" hint-placeholder-val="{{false}}"><span class="te-ph" data-l="{{g.ln}}" data-c="{{g.col}}" data-chip="1"><button class="{{g.chipCls}}" aria-haspopup="dialog" aria-expanded="{{g.expanded}}" data-tip="{{g.tip}}" onClick="{{g.open}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{g.icon}}"></path></svg>{{g.name}}<sc-for list="{{g.sum}}" as="sp" hint-placeholder-count="0"><sc-if value="{{sp.dot}}" hint-placeholder-val="{{false}}"><span class="dim">·</span></sc-if><sc-if value="{{sp.text}}" hint-placeholder-val="{{true}}"><span>{{sp.s}}</span></sc-if><sc-if value="{{sp.nest}}" hint-placeholder-val="{{false}}"><span class="{{sp.cls}}">{{sp.s}}</span></sc-if></sc-for></button><sc-if value="{{g.popOpen}}" hint-placeholder-val="{{false}}"><span class="te-pop" role="dialog" aria-label="{{pop.name}}" onClick="{{stop}}"><span class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{pop.icon}}"></path></svg>{{pop.name}}<span class="chip">{{pop.cat}}</span></span><span class="d" style="display: block">{{pop.desc}}</span><sc-if value="{{pop.hasFields}}" hint-placeholder-val="{{true}}"><span class="fr"><sc-for list="{{pop.fields}}" as="f" hint-placeholder-count="2"><span class="k">{{f.label}}</span><sc-if value="{{f.isText}}" hint-placeholder-val="{{true}}"><label class="field"><input type="text" aria-label="{{f.label}}" value="{{f.v}}" placeholder="{{f.ph}}" onInput="{{f.input}}"><button class="fx" data-tip="Insert a placeholder here" aria-label="Insert a placeholder here" onClick="{{noop}}" style="display: grid; opacity: 1">{ }</button></label></sc-if><sc-if value="{{f.isNested}}" hint-placeholder-val="{{false}}"><span class="field"><span class="val-chips"><sc-for list="{{f.parts}}" as="fp" hint-placeholder-count="2"><sc-if value="{{fp.text}}" hint-placeholder-val="{{true}}"><span>{{fp.s}}</span></sc-if><sc-if value="{{fp.chip}}" hint-placeholder-val="{{false}}"><span class="{{fp.cls}}">{{fp.s}}</span></sc-if></sc-for></span><button class="fx" data-tip="Insert a placeholder here" aria-label="Insert a placeholder here" onClick="{{noop}}" style="display: grid; opacity: 1">{ }</button></span></sc-if><sc-if value="{{f.isBool}}" hint-placeholder-val="{{false}}"><span><button class="{{f.swCls}}" role="switch" aria-checked="{{f.on}}" aria-label="{{f.label}}" onClick="{{f.toggle}}"></button></span></sc-if><sc-if value="{{f.isVar}}" hint-placeholder-val="{{false}}"><span style="position: relative"><button class="{{f.popupCls}}" aria-haspopup="listbox" aria-expanded="{{f.menuOpen}}" onClick="{{f.toggleMenu}}" style="min-width: 0; width: 100%"><span>{{f.v}}</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 10l4 4 4-4"></path></svg></button><sc-if value="{{f.menuOpen}}" hint-placeholder-val="{{false}}"><span class="menu" role="listbox" style="display: block; min-width: 100%"><sc-for list="{{f.opts}}" as="o" hint-placeholder-count="3"><button class="mi" role="option" aria-selected="{{o.sel}}" onClick="{{o.pick}}"><span>{{o.check}}</span><span>{{o.name}}</span><span class="hint" style="padding-left: 12px">{{o.val}}</span></button></sc-for></span></sc-if></span></sc-if></sc-for></span></sc-if><span class="now"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width: 13px; height: 13px"><path d="M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12zM12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 1 0 0-5z"></path></svg>Right now: <b>{{pop.now}}</b></span><span class="acts"><button class="btn sm" onClick="{{viewCode}}">Show Code</button><span class="grow"></span><button class="btn sm danger-t" onClick="{{pop.remove}}">Remove</button></span></span></sc-if></span></sc-if></sc-for>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+
+<div class="te-status" role="status">
+<span class="it" style="font-variant-numeric: tabular-nums">{{lnCol}}</span>
+<sc-if value="{{oneLine}}" hint-placeholder-val="{{false}}"><button class="it" data-tip="This value is used as one line. Press Enter to split it up so it's easier to read: line breaks and the spaces at the start of each new line are left out when FancyMenu uses it." aria-label="About one-line values"><span class="chip">One line</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 1 0 0-17zM12 11v5M12 8h.01"></path></svg></button></sc-if>
+<sc-if value="{{kindChip}}" hint-placeholder-val="{{true}}"><span class="it"><span class="chip">{{kindChip}}</span></span></sc-if>
+<sc-if value="{{phCountText}}" hint-placeholder-val="{{true}}"><span class="it">{{phCountText}}</span></sc-if>
+<sc-if value="{{hasProblem}}" hint-placeholder-val="{{false}}"><button class="it bad" onClick="{{toggleProblem}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4l9 16H3zM12 10v4M12 17h.01"></path></svg>1 problem</button></sc-if>
+<span class="grow"></span>
+<span class="it">{{rightStatus}}</span>
+</div>
+</div>
+
+<sc-if value="{{sideOpen}}" hint-placeholder-val="{{true}}">
+<aside class="te-side" aria-label="Placeholders">
+<div class="te-side-top"><label class="field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10.5 4.5a6 6 0 1 0 0 12 6 6 0 1 0 0-12zM15 15l5 5"></path></svg><input type="text" placeholder="Search placeholders" aria-label="Search placeholders" value="{{sq}}" onInput="{{onSide}}"></label></div>
+<div class="te-list" onMouseLeave="{{unhover}}">
+<sc-for list="{{groups}}" as="gr" hint-placeholder-count="3">
+<button class="{{gr.cls}}" aria-expanded="{{gr.expanded}}" onClick="{{gr.toggle}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 6.5l5.5 5.5-5.5 5.5"></path></svg>{{gr.name}}<span class="n">{{gr.n}}</span></button>
+<sc-if value="{{gr.open}}" hint-placeholder-val="{{true}}">
+<sc-for list="{{gr.rows}}" as="r" hint-placeholder-count="3">
+<button class="{{r.cls}}" onMouseEnter="{{r.hover}}" onClick="{{r.insert}}"><span class="nm"><sc-for list="{{r.parts}}" as="pp" hint-placeholder-count="1"><sc-if value="{{pp.hit}}" hint-placeholder-val="{{false}}"><mark>{{pp.s}}</mark></sc-if><sc-if value="{{pp.plain}}" hint-placeholder-val="{{true}}">{{pp.s}}</sc-if></sc-for></span><sc-if value="{{r.chip}}" hint-placeholder-val="{{false}}"><span class="chip">{{r.chip}}</span></sc-if><sc-if value="{{r.val}}" hint-placeholder-val="{{false}}"><span style="margin-left: auto; font-size: 12px; color: var(--text-3)">{{r.val}}</span></sc-if></button>
+</sc-for>
+</sc-if>
+</sc-for>
+<sc-if value="{{sideNone}}" hint-placeholder-val="{{false}}"><div class="fb-empty" style="padding: 24px 8px">No placeholder matches "{{sq}}"</div></sc-if>
+</div>
+<sc-if value="{{hov.show}}" hint-placeholder-val="{{false}}">
+<div class="help-tag te-card te-hover" style="{{hov.style}}">
+<div class="t"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{hov.icon}}"></path></svg>{{hov.name}}<span class="chip">{{hov.cat}}</span></div>
+<div class="id">{{hov.id}}</div>
+<div class="d">{{hov.desc}}</div>
+<sc-if value="{{hov.hasVals}}" hint-placeholder-val="{{true}}"><div class="vals"><sc-for list="{{hov.vals}}" as="v" hint-placeholder-count="2"><span>{{v}}</span></sc-for></div></sc-if>
+<div class="now"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width: 13px; height: 13px"><path d="M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12zM12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 1 0 0-5z"></path></svg><sc-if value="{{hov.ready}}" hint-placeholder-val="{{true}}">Right now: <b>{{hov.now}}</b></sc-if><sc-if value="{{hov.wait}}" hint-placeholder-val="{{false}}"><span class="wait">{{hov.waitText}}</span></sc-if></div>
+</div>
+</sc-if>
+<div class="te-side-hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 1 0 0-17zM12 11v5M12 8h.01"></path></svg><span>Click to insert, or type <b style="font-family: 'Noto Sans Mono', monospace; font-weight: 600; color: var(--text-2)">{</b> in the text</span></div>
+</aside>
+</sc-if>
+</div>
+
+<sc-if value="{{pickerOpen}}" hint-placeholder-val="{{false}}"><div class="fb-catch" style="z-index: 60; background: rgba(0, 0, 0, .18)" onClick="{{pickerCancel}}"></div><div style="{{pickerStyle}}"><dc-import name="ColorPicker" title="Custom Color" color="{{pickerHex}}" original="{{pickerHex}}" live="{{no}}" done-listener="{{pickerDone}}" cancel-listener="{{pickerCancel}}" standalone="{{no}}" hint-size="620px,424px"></dc-import></div></sc-if>
+<div class="footer">
+<sc-if value="{{liveTarget}}" hint-placeholder-val="{{false}}"><span class="lead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12zM12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 1 0 0-5z"></path></svg>Live preview on {{liveTarget}}</span></sc-if>
+<sc-if value="{{noLive}}" hint-placeholder-val="{{true}}"><span class="lead"></span></sc-if>
+<button class="btn wide" onClick="{{noop}}">Cancel</button>
+<button class="btn wide primary" onClick="{{noop}}">Done</button>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"mode":{"editor":"enum","options":["Text","Single line","Code"],"default":"Text"},"format":{"editor":"enum","options":["Auto","Markdown","Formatting codes","None"],"default":"Auto"},"colors":{"editor":"boolean","default":false},"insert":{"editor":"boolean","default":false},"select":{"editor":"text","default":""},"resetKey":{"editor":"int","default":0},"view":{"editor":"enum","options":["Chips","Code"],"default":"Chips"},"sidebar":{"editor":"boolean","default":true},"find":{"editor":"boolean","default":false},"typing":{"editor":"boolean","default":false},"chip":{"editor":"int","default":-1},"problem":{"editor":"boolean","default":false},"title":{"editor":"text","default":""},"liveTarget":{"editor":"text","default":""},"width":{"editor":"int","default":1000},"height":{"editor":"int","default":660},"standalone":{"editor":"boolean","default":true},"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1080,"height":740}}'>
+const ICON = {
+  brace: 'M8 4.5c-1.7 0-2.5.8-2.5 2.5v2.2c0 1.2-.6 1.8-1.8 1.8h-.2v2h.2c1.2 0 1.8.6 1.8 1.8V17c0 1.7.8 2.5 2.5 2.5M16 4.5c1.7 0 2.5.8 2.5 2.5v2.2c0 1.2.6 1.8 1.8 1.8h.2v2h-.2c-1.2 0-1.8.6-1.8 1.8V17c0 1.7-.8 2.5-2.5 2.5',
+  variable: 'M15.5 7.5c-.6-1.3-1.9-2-3.5-2-2 0-3.5 1-3.5 2.7 0 3.8 7.5 2 7.5 6 0 1.8-1.6 3-4 3-1.8 0-3.2-.8-3.8-2.2M12 3.5v17',
+  text: 'M5 6h14M12 6v13M9 19h6',
+  code: 'M8.5 7L3.5 12l5 5M15.5 7l5 5-5 5',
+  warn: 'M12 4l9 16H3zM12 10v4M12 17h.01'
+};
+
+// A small slice of FancyMenu's placeholders, with their real identifiers, categories and variable names.
+// "now" is what the layout editor can show right away; "only" marks placeholders that only resolve somewhere else.
+const CATALOG = [
+  { id: 'calc', name: 'Calculator', cat: 'Advanced', desc: 'Calculates a math expression, like 2 + 2 or $$coins * 10.', vals: [{ k: 'expression' }, { k: 'decimal', type: 'bool' }] },
+  { id: 'getvariable', name: 'Get Variable', cat: 'Advanced', desc: 'The current value of one of your FancyMenu variables. Typing $$ and the variable name does the same.', vals: [{ k: 'name', type: 'var' }] },
+  { id: 'random_number', name: 'Random Number', cat: 'Advanced', desc: 'A random whole number between min and max.', vals: [{ k: 'min' }, { k: 'max' }], now: '17' },
+  { id: 'switch_case', name: 'Switch Case', cat: 'Advanced', desc: 'Shows a different text for each value it can have.', vals: [{ k: 'value' }, { k: 'cases' }, { k: 'default' }], now: 'Gold' },
+  { id: 'local', name: 'Localize Text', cat: 'Advanced', desc: 'Shows a localization key in the language the player uses.', vals: [{ k: 'key' }], now: 'Singleplayer' },
+  { id: 'uppercase_text', name: 'Uppercase Text', cat: 'Advanced', desc: 'Turns a text into UPPERCASE.', vals: [{ k: 'text' }], now: 'HELLO' },
+  { id: 'mcversion', name: 'Minecraft Version', cat: 'Client', desc: 'The Minecraft version the game is running.', vals: [], now: '1.21.11' },
+  { id: 'world_load_progress', name: 'World Loading Progress', cat: 'Client', desc: 'How far the world has loaded, in percent.', vals: [], only: 'Only while a world loads' },
+  { id: 'guiscale', name: 'GUI Scale', cat: 'GUI', desc: 'The GUI scale the game uses right now.', vals: [], now: '3' },
+  { id: 'guiwidth', name: 'Screen Width', cat: 'GUI', desc: 'The width of the screen, in GUI pixels.', vals: [], now: '640' },
+  { id: 'fps', name: 'FPS (Frames Per Second)', cat: 'Other', desc: 'How many frames per second the game renders.', vals: [], now: '144' },
+  { id: 'playername', name: 'Player Name', cat: 'Player', desc: 'The name of the player who is playing.', vals: [], now: 'Steve' },
+  { id: 'playeruuid', name: 'Player UUID', cat: 'Player', desc: 'The unique ID of the player who is playing.', vals: [], now: '8667ba71-b85a-4004-af54-457a9734eed7' },
+  { id: 'realtimehour', name: 'Realtime Hour', cat: 'Realtime', desc: 'The hour of the real-world time.', vals: [{ k: 'twelve_hour_format', type: 'bool' }, { k: 'timezone' }], now: '14' },
+  { id: 'realtimeminute', name: 'Realtime Minute', cat: 'Realtime', desc: 'The minute of the real-world time.', vals: [{ k: 'timezone' }], now: '07' },
+  { id: 'realtimeday', name: 'Realtime Day', cat: 'Realtime', desc: 'The day of the month of the real-world date.', vals: [{ k: 'timezone' }], now: '8' },
+  { id: 'realtimemonth', name: 'Realtime Month', cat: 'Realtime', desc: 'The month of the real-world date.', vals: [{ k: 'timezone' }], now: '11' },
+  { id: 'realtimeyear', name: 'Realtime Year', cat: 'Realtime', desc: 'The year of the real-world date.', vals: [{ k: 'timezone' }], now: '2026' },
+  { id: 'serverplayercount', name: 'Server Player Count', cat: 'Server', desc: 'How many players are online on a server.', vals: [{ k: 'ip' }], now: '87' },
+  { id: 'servermotd', name: 'Server MOTD', cat: 'Server', desc: 'One line of a server\'s message of the day.', vals: [{ k: 'ip' }, { k: 'line' }], now: 'Welcome to Dusk!' },
+  { id: 'serverstatus', name: 'Server Status', cat: 'Server', desc: 'Whether a server is online.', vals: [{ k: 'ip' }], now: 'Online' },
+  { id: 'last_death_message', name: 'Last Death Message', cat: 'World', desc: 'The message from the last time the player died.', vals: [], only: 'Only in a world', chip: 'In world' }
+];
+const BY_ID = Object.fromEntries(CATALOG.map((p) => [p.id, p]));
+const VARS = [{ name: 'coins', v: '1240' }, { name: 'streak', v: '3' }, { name: 'last_login', v: '2026-11-07' }];
+const RECENT = ['playername', 'getvariable', 'calc'];
+const CAT_ORDER = ['Advanced', 'Client', 'GUI', 'Player', 'Realtime', 'Server', 'World', 'Other'];
+const MC_COLORS = [['0', 'Black', '#000000'], ['1', 'Dark Blue', '#0000AA'], ['2', 'Dark Green', '#00AA00'], ['3', 'Dark Aqua', '#00AAAA'], ['4', 'Dark Red', '#AA0000'], ['5', 'Dark Purple', '#AA00AA'], ['6', 'Gold', '#FFAA00'], ['7', 'Gray', '#AAAAAA'], ['8', 'Dark Gray', '#555555'], ['9', 'Blue', '#5555FF'], ['a', 'Green', '#55FF55'], ['b', 'Aqua', '#55FFFF'], ['c', 'Red', '#FF5555'], ['d', 'Light Purple', '#FF55FF'], ['e', 'Yellow', '#FFFF55'], ['f', 'White', '#FFFFFF']];
+
+const T = (s, c) => ({ k: 't', s, c: c || '' });
+const FC = (code) => ({ k: 't', s: code, c: 'fc' });
+const P = (id, vals) => ({ k: 'p', id, vals: vals || {} });
+
+const SHADER = [
+  '#version 150', '', 'uniform float Time;', 'uniform vec2 ScreenSize;', '', 'out vec4 fragColor;', '',
+  '// Soft dusk gradient with drifting fireflies', 'void main() {',
+  '    vec2 uv = gl_FragCoord.xy / ScreenSize;',
+  '    vec3 sky = mix(vec3(0.08, 0.09, 0.17), vec3(0.42, 0.33, 0.55), uv.y);', '',
+  '    float glow = 0.0;', '    for (int i = 0; i < 12; i++) {',
+  '        vec2 p = vec2(fract(float(i) * 0.37 + Time * 0.02), fract(float(i) * 0.61));',
+  '        glow += 0.004 / length(uv - p);', '    }', '',
+  '    fragColor = vec4(sky + glow * vec3(1.0, 0.85, 0.4), 1.0);', '}'
+];
+
+function startDoc(mode, typing, format) {
+  if (mode === 'Text' && format === 'Formatting codes') {
+    return { lines: [
+      [FC('&l'), T('Play'), FC('&r'), T(' with your friends on')],
+      [FC('&6'), T('play.dusk.net'), FC('&r'), T(' with '), P('serverplayercount', { ip: 'play.dusk.net' }), T(' players online')],
+      [FC('&7'), T('Click to join.')]
+    ], caret: { l: 2, i: 2, o: 0 } };
+  }
+  if (mode === 'Code') return { lines: SHADER.map((s) => [T(s)]), caret: { l: 15, i: 0, o: 33 } };
+  if (mode === 'Single line') {
+    return { lines: [[T('coins:'), P('calc', { expression: [T('$$coins + '), P('randon_number', { min: '5', max: '25' })], decimal: 'false' })]], caret: { l: 0, i: 2, o: 0 } };
+  }
+  const lines = [
+    [T('^^^', 'mk')],
+    [T('# ', 'mk'), T('Welcome back, ', 'h'), P('playername'), T('!', 'h')],
+    [T('^^^', 'mk')],
+    [],
+    [T('You have '), T('**', 'mk'), P('getvariable', { name: 'coins' }), T(' coins', 'b'), T('**', 'mk'), T(' and a '), P('getvariable', { name: 'streak' }), T('-day streak.')],
+    [FC('&6'), T('Daily reward'), FC('&r'), T(' in '), P('calc', { expression: '7 - $$streak', decimal: 'false' }), T(' days.')],
+    [],
+    [T('- ', 'li'), T('Players online: '), P('serverplayercount', { ip: 'play.dusk.net' })],
+    [T('- ', 'li'), T('Local time: '), P('realtimehour', { twelve_hour_format: 'false', timezone: '' }), T(':'), P('realtimeminute', { timezone: '' })]
+  ];
+  if (typing) {
+    lines.push([T('- ', 'li'), T('Resets at ')]);
+    return { lines, caret: { l: 9, i: 2, o: 0 } };
+  }
+  return { lines, caret: { l: 5, i: 6, o: 0 } };
+}
+
+const clone = (o) => JSON.parse(JSON.stringify(o));
+const varVal = (n) => { const v = VARS.find((x) => x.name === n); return v ? v.v : ''; };
+const valText = (v) => Array.isArray(v) ? v.map((s) => s.k === 't' ? s.s : '{' + s.id + '}').join('') : (v || '');
+const subVars = (s) => s.replace(/\$\$([a-z_]+)/g, (m, n) => varVal(n) || m);
+
+function resolve(seg) {
+  const def = BY_ID[seg.id];
+  if (!def) return '';
+  if (seg.id === 'getvariable') return varVal(valText(seg.vals.name)) || '';
+  if (seg.id === 'calc') {
+    const ex = Array.isArray(seg.vals.expression) ? null : subVars(seg.vals.expression || '');
+    if (ex == null) return 'between 1245 and 1265';
+    if (!/^[\d\s+\-*/().]+$/.test(ex)) return '?';
+    try { const r = Function('return (' + ex + ')')(); return Number.isFinite(r) ? String(seg.vals.decimal === 'true' ? r : Math.round(r)) : '?'; } catch (e) { return '?'; }
+  }
+  return def.now || '';
+}
+
+function closest(id) {
+  const d = (a, b) => { const m = a.length, n = b.length, t = Array.from({ length: m + 1 }, (_, i) => [i]); for (let j = 1; j <= n; j++) t[0][j] = j; for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) t[i][j] = Math.min(t[i - 1][j] + 1, t[i][j - 1] + 1, t[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); return t[m][n]; };
+  let best = null, bd = 99;
+  for (const p of CATALOG) { const x = d(id, p.id); if (x < bd) { bd = x; best = p; } }
+  return bd <= 3 ? best : null;
+}
+
+// Placeholder JSON, split into syntax-colored pieces. Nested placeholders inside values stay on one line.
+function phJson(seg, out) {
+  const tok = (s, c, extra) => out.push(Object.assign({ s, c }, extra || {}));
+  tok('{', 's-punct'); tok('"placeholder"', 's-type'); tok(':', 's-punct');
+  tok('"' + seg.id + '"', BY_ID[seg.id] ? 's-str' : 's-str s-bad', BY_ID[seg.id] ? null : { bad: seg.id });
+  const keys = Object.keys(seg.vals);
+  if (keys.length) {
+    tok(',', 's-punct'); tok('"vars"', 's-type'); tok(':{', 's-punct');
+    keys.forEach((k, i) => { tok('"' + k + '"', 's-type'); tok(':', 's-punct'); valJson(seg.vals[k], out); if (i < keys.length - 1) tok(',', 's-punct'); });
+    tok('}', 's-punct');
+  }
+  tok('}', 's-punct');
+}
+function valJson(v, out) {
+  if (!Array.isArray(v)) { out.push({ s: '"' + v + '"', c: 's-str' }); return; }
+  out.push({ s: '"', c: 's-str' });
+  v.forEach((s) => { if (s.k === 't') out.push({ s: s.s, c: 's-str' }); else phJson(s, out); });
+  out.push({ s: '"', c: 's-str' });
+}
+
+function glsl(line) {
+  const out = []; const re = /(\/\/.*$)|(#\w+)|(\b\d+\.?\d*\b)|(\b(?:uniform|out|in|void|for|if|else|return|const)\b)|(\b(?:float|int|vec2|vec3|vec4|bool|sampler2D)\b)|(\b(?:mix|fract|length|sin|cos|smoothstep|clamp|dot)\b(?=\())|(\bgl_\w+)/g;
+  let last = 0, m;
+  while ((m = re.exec(line))) {
+    if (m.index > last) out.push({ s: line.slice(last, m.index), c: '' });
+    const c = m[1] ? 's-com' : m[2] ? 's-pre' : m[3] ? 's-num' : m[4] ? 's-kw' : m[5] ? 's-type' : m[6] ? 's-fn' : 's-type';
+    out.push({ s: m[0], c }); last = m.index + m[0].length;
+  }
+  if (last < line.length) out.push({ s: line.slice(last), c: '' });
+  return out;
+}
+
+// Splits text pieces at the given [from, to) ranges (counted over the line's visible text) and adds a class.
+function mark(pieces, ranges, cls, extraFor) {
+  if (!ranges.length) return pieces;
+  const out = []; let pos = 0;
+  for (const p of pieces) {
+    if (p.atom) { out.push(p); continue; }
+    const s = p.s, end = pos + s.length; let cur = 0;
+    for (const r of ranges) {
+      if (r.to <= pos || r.from >= end) continue;
+      const a = Math.max(r.from, pos) - pos, b = Math.min(r.to, end) - pos;
+      const at = (k) => p.col != null ? p.col + k : p.col;
+      if (a > cur) out.push(Object.assign({}, p, { s: s.slice(cur, a), col: at(cur) }));
+      out.push(Object.assign({}, p, { s: s.slice(a, b), col: at(a), c: (p.c ? p.c + ' ' : '') + cls + (extraFor ? extraFor(r) : '') }));
+      cur = b;
+    }
+    if (cur < s.length) out.push(Object.assign({}, p, { s: s.slice(cur), col: p.col != null ? p.col + cur : p.col }));
+    pos = end;
+  }
+  return out;
+}
+
+class Component extends DCLogic {
+  renderVals() {
+    if ((this.props.resetKey ?? 0) !== (this._rk ?? 0)) { this._rk = this.props.resetKey ?? 0; this.state = {}; }
+    const p = this.props, s = this.state || {};
+    const mode = p.mode ?? 'Text';
+    const isCode = mode === 'Code', isSingle = mode === 'Single line', phs = !isCode;
+    const fmtKind = (p.format && p.format !== 'Auto') ? p.format : (mode === 'Text' ? 'Markdown' : 'None');
+    const md = fmtKind === 'Markdown', codes = fmtKind === 'Formatting codes';
+    const doc = s.doc || startDoc(mode, !!p.typing, fmtKind);
+    const view = s.view ?? (p.view ?? (isSingle ? 'Code' : 'Chips'));
+    const codeView = isCode || view === 'Code';
+    const wrap = s.wrap ?? !isCode;
+    const sideOpen = phs && (s.side ?? (p.sidebar ?? true));
+    const findOpen = s.find ?? !!p.find;
+    const fq = s.fq ?? (isCode && p.find ? 'uv' : '');
+    const ac = s.ac === undefined ? (p.typing ? { q: 'rea', sel: 0 } : null) : s.ac;
+    const pop = s.pop === undefined ? (+p.chip >= 0 && p.chip !== '' && p.chip != null ? this.chipAt(doc, +p.chip) : null) : s.pop;
+    const probOpen = s.prob ?? !!p.problem;
+    const hist = s.hist || [], fut = s.fut || [];
+
+    const commit = (nd, extra) => this.setState(Object.assign({ doc: nd, hist: hist.concat([JSON.stringify(doc)]).slice(-100), fut: [], sel: null }, extra || {}));
+    // Selection in columns per line: a text character counts 1, a placeholder chip counts 1. Only in the Chips view.
+    const parseSel = (v) => { let m = /^(\d+):(\d+)-(\d+):(\d+)$/.exec(v || ''); if (m) return { a: { l: +m[1], c: +m[2] }, b: { l: +m[3], c: +m[4] } }; m = /^(\d+):(\d+)-(\d+)$/.exec(v || ''); return m ? { a: { l: +m[1], c: +m[2] }, b: { l: +m[1], c: +m[3] } } : null; };
+    const sel = (isCode || (s.view ?? (p.view ?? (isSingle ? 'Code' : 'Chips'))) === 'Code') ? null : (s.sel === undefined ? parseSel(p.select) : s.sel);
+    const segLen = (g) => g.k === 't' ? g.s.length : 1;
+    const lineStr = (line) => line.map((g) => g.k === 't' ? g.s : '\uFFFC').join('');
+    const toIO = (line, col) => { let c0 = 0; for (let i = 0; i < line.length; i++) { const L = segLen(line[i]); if (line[i].k === 't' && col >= c0 && col <= c0 + L) return { i, o: col - c0 }; if (col <= c0) return { i, o: 0 }; c0 += L; } return { i: line.length, o: 0 }; };
+    const insertAtCol = (line, col, segs) => { const { i, o } = toIO(line, col); const g = line[i]; if (g && g.k === 't' && o > 0 && o < g.s.length) line.splice(i, 1, Object.assign({}, g, { s: g.s.slice(0, o) }), ...segs, Object.assign({}, g, { s: g.s.slice(o) })); else if (g && g.k === 't' && o > 0 && o >= g.s.length) line.splice(i + 1, 0, ...segs); else line.splice(i, 0, ...segs); };
+    const removeCols = (line, from, to) => { let c0 = 0; for (const g of line) { const L = segLen(g); const a = Math.max(from, c0), b = Math.min(to, c0 + L); if (g.k === 't' && a < b) g.s = g.s.slice(0, a - c0) + g.s.slice(b - c0); c0 += L; } for (let i = line.length - 1; i >= 0; i--) if (line[i].k === 't' && !line[i].s) line.splice(i, 1); };
+    const caretTo = (nd, l, col) => { const io = toIO(nd.lines[l], col); nd.caret = { l, i: io.i, o: io.o }; };
+    // Markdown: wrap the selection; the same button on already wrapped text removes the markers again.
+    const wrapSel = (open, close, extra) => {
+      const nd = clone(doc), A = sel.a, B = sel.b, la = nd.lines[A.l], lb = nd.lines[B.l], sa = lineStr(la), sb = lineStr(lb), os = open.s, cs = close.s, same = A.l === B.l;
+      if (sa.slice(A.c - os.length, A.c) === os && sb.slice(B.c, B.c + cs.length) === cs) {
+        removeCols(lb, B.c, B.c + cs.length); removeCols(la, A.c - os.length, A.c);
+        const na = { l: A.l, c: A.c - os.length }, nb = { l: B.l, c: same ? B.c - os.length : B.c }; caretTo(nd, nb.l, nb.c); commit(nd, Object.assign({ sel: { a: na, b: nb } }, extra || {})); return;
+      }
+      if (sa.slice(A.c, A.c + os.length) === os && sb.slice(B.c - cs.length, B.c) === cs && (!same || B.c - A.c >= os.length + cs.length)) {
+        removeCols(lb, B.c - cs.length, B.c); removeCols(la, A.c, A.c + os.length);
+        const nb = { l: B.l, c: B.c - cs.length - (same ? os.length : 0) }; caretTo(nd, nb.l, nb.c); commit(nd, Object.assign({ sel: { a: A, b: nb } }, extra || {})); return;
+      }
+      insertAtCol(lb, B.c, [close]); insertAtCol(la, A.c, [open]);
+      const na = { l: A.l, c: A.c + os.length }, nb = { l: B.l, c: same ? B.c + os.length : B.c }; caretTo(nd, nb.l, nb.c); commit(nd, Object.assign({ sel: { a: na, b: nb } }, extra || {}));
+    };
+    // Formatting codes: the code goes before the selection, &r after it, then the codes that were active before, so the rest keeps its look.
+    const codeWrap = (code, extra) => {
+      const nd = clone(doc), A = sel.a, B = sel.b, la = nd.lines[A.l];
+      const act = []; const re = /&([0-9a-fk-or])/gi; let m; const before = lineStr(la).slice(0, A.c);
+      while ((m = re.exec(before))) { const k = m[1].toLowerCase(); if (k === 'r') act.length = 0; else if (/[0-9a-f]/.test(k)) { act.length = 0; act.push(k); } else if (!act.includes(k)) act.push(k); }
+      // an &r right after the selection already ends the new code, so nothing needs to be added there
+      if (!lineStr(nd.lines[B.l]).slice(B.c).startsWith('&r')) insertAtCol(nd.lines[B.l], B.c, [FC('&r')].concat(act.map((k) => FC('&' + k))));
+      insertAtCol(la, A.c, [FC(code)]);
+      const na = { l: A.l, c: A.c + code.length }, nb = { l: B.l, c: A.l === B.l ? B.c + code.length : B.c }; caretTo(nd, nb.l, nb.c); commit(nd, Object.assign({ sel: { a: na, b: nb } }, extra || {}));
+    };
+    const pairOrWrap = (open, close, extra) => sel ? wrapSel(open, close, extra) : insertPair(open, close, extra);
+    const codeOrWrap = (code, extra) => sel ? codeWrap(code, extra) : insertSeg(FC(code), extra);
+    const selCount = sel ? (sel.a.l === sel.b.l ? sel.b.c - sel.a.c : doc.lines.slice(sel.a.l, sel.b.l + 1).reduce((n, line, k, arr) => n + (k === 0 ? lineStr(line).length - sel.a.c : k === arr.length - 1 ? sel.b.c : lineStr(line).length), 0)) : 0;
+    // Mouse: dragging selects (drawn with the editor's own highlight), a click moves the cursor.
+    this._mouse = { sel, doc, toIO, codeView, isCode };
+    if (!this._mu) {
+      this._mu = (e) => {
+        const ctx = this._mouse; if (!ctx || ctx.codeView) return;
+        const ws = window.getSelection(); if (!ws || !ws.anchorNode) return;
+        const inLines = (n) => { const el = n && (n.nodeType === 3 ? n.parentElement : n); return el && el.closest && el.closest('.te-lines'); };
+        if (!inLines(e.target) && !(inLines(ws.anchorNode) && !ws.isCollapsed)) return;
+        const posOf = (node, off) => { const el = node.nodeType === 3 ? node.parentElement : node; const sp = el && el.closest && el.closest('[data-c]'); if (!sp) return null; const l = +sp.getAttribute('data-l'), c = +sp.getAttribute('data-c'); if (sp.hasAttribute('data-chip')) return { l, c: c + (off > 0 ? 1 : 0) }; return { l, c: c + (node.nodeType === 3 ? off : 0) }; };
+        const a = posOf(ws.anchorNode, ws.anchorOffset), b = posOf(ws.focusNode, ws.focusOffset);
+        if (!a) return;
+        if (ws.isCollapsed || !b || (a.l === b.l && a.c === b.c)) {
+          if (e.target.closest && e.target.closest('.te-ph, .te-pop, .te-ac, .te-prob')) return;
+          const nd = clone(ctx.doc); const io = ctx.toIO(nd.lines[a.l], a.c); nd.caret = { l: a.l, i: io.i, o: io.o };
+          this.setState({ doc: nd, sel: null }); return;
+        }
+        const [x, y] = (a.l < b.l || (a.l === b.l && a.c <= b.c)) ? [a, b] : [b, a];
+        ws.removeAllRanges(); this.setState({ sel: { a: x, b: y } });
+      };
+      window.addEventListener('mouseup', this._mu);
+    }
+    const insertSeg = (seg, extra) => {
+      const nd = clone(doc); const c = nd.caret; const line = nd.lines[c.l];
+      const at = line[c.i];
+      if (at && at.k === 't' && c.o > 0 && c.o < at.s.length) {
+        line.splice(c.i, 1, Object.assign({}, at, { s: at.s.slice(0, c.o) }), seg, Object.assign({}, at, { s: at.s.slice(c.o) }));
+        nd.caret = { l: c.l, i: c.i + 2, o: 0 };
+      } else if (at && at.k === 't' && c.o >= at.s.length) {
+        line.splice(c.i + 1, 0, seg); nd.caret = { l: c.l, i: c.i + 2, o: 0 };
+      } else {
+        line.splice(c.i, 0, seg); nd.caret = { l: c.l, i: c.i + 1, o: 0 };
+      }
+      const idx = nd.caret.i - 1;
+      const def = seg.k === 'p' ? BY_ID[seg.id] : null;
+      commit(nd, Object.assign({ ac: null, pop: def && def.vals.length ? { l: c.l, i: idx } : null }, extra || {}));
+    };
+    const insertPair = (open, close, extra) => {
+      const nd = clone(doc); const c = nd.caret; const line = nd.lines[c.l];
+      const at = line[c.i]; let i = c.i;
+      if (at && at.k === 't' && c.o > 0 && c.o < at.s.length) { line.splice(c.i, 1, Object.assign({}, at, { s: at.s.slice(0, c.o) }), Object.assign({}, at, { s: at.s.slice(c.o) })); i = c.i + 1; }
+      else if (at && at.k === 't' && c.o >= at.s.length) i = c.i + 1;
+      line.splice(i, 0, open, close); nd.caret = { l: c.l, i: i + 1, o: 0 };
+      commit(nd, Object.assign({ ac: null, pop: null }, extra || {}));
+    };
+    const lineText = (line) => line.map((g) => g.k === 't' ? g.s : '').join('').trim();
+    // FancyMenu's alignment blocks: a line with only ^^^ (centered) or ||| (right) starts a block, the next one ends it.
+    const alignAt = []; { let a = 'left', open = -1; doc.lines.forEach((line, i) => { const t = lineText(line); const mk = t === '^^^' ? 'center' : t === '|||' ? 'right' : null; if (mk && a === 'left') { a = mk; open = i; alignAt.push({ a: 'marker', start: true, kind: mk }); } else if (mk && a === mk) { alignAt.push({ a: 'marker', start: false, kind: mk, open }); a = 'left'; } else alignAt.push({ a, open }); }); }
+    const caretAlign = (alignAt[doc.caret.l] && alignAt[doc.caret.l].a !== 'marker') ? alignAt[doc.caret.l].a : 'left';
+    const setAlign = (target) => {
+      if (sel && sel.a.l !== sel.b.l && caretAlign === 'left' && target !== 'left') {
+        const nd = clone(doc); const mk = [T(target === 'center' ? '^^^' : '|||', 'mk')];
+        nd.lines.splice(sel.b.l + 1, 0, mk); nd.lines.splice(sel.a.l, 0, clone(mk)); caretTo(nd, sel.b.l + 1, sel.b.c);
+        commit(nd, { sel: { a: { l: sel.a.l + 1, c: sel.a.c }, b: { l: sel.b.l + 1, c: sel.b.c } } }); return;
+      }
+      if (target === caretAlign) return;
+      const nd = clone(doc); const L = nd.caret.l; const info = alignAt[L];
+      const mark = (k) => [T(k === 'center' ? '^^^' : '|||', 'mk')];
+      if (caretAlign !== 'left') {
+        let end = L + 1; while (end < nd.lines.length && !(alignAt[end] && alignAt[end].a === 'marker' && !alignAt[end].start)) end++;
+        if (target === 'left') { nd.lines.splice(end, 1); nd.lines.splice(info.open, 1); nd.caret = Object.assign({}, nd.caret, { l: L - 1 }); }
+        else { nd.lines[info.open] = mark(target); if (end < nd.lines.length) nd.lines[end] = mark(target); }
+      } else { nd.lines.splice(L + 1, 0, mark(target)); nd.lines.splice(L, 0, mark(target)); nd.caret = Object.assign({}, nd.caret, { l: L + 1 }); }
+      commit(nd);
+    };
+    const prefixLine = (prefix, cls) => {
+      const nd = clone(doc); const L0 = sel ? sel.a.l : nd.caret.l, L1 = sel ? sel.b.l : nd.caret.l;
+      for (let l = L0; l <= L1; l++) nd.lines[l].unshift(T(prefix, cls || 'mk'));
+      nd.caret = Object.assign({}, nd.caret, { i: nd.caret.i + 1 });
+      commit(nd, { insert: false, sel: sel ? { a: { l: sel.a.l, c: sel.a.c + prefix.length }, b: { l: sel.b.l, c: sel.b.c + prefix.length } } : null });
+    };
+    const blockAfter = (rows, at) => { const nd = clone(doc); const base = nd.caret.l + 1; nd.lines.splice(base, 0, ...rows); nd.caret = { l: base + at.l, i: at.i, o: 0 }; commit(nd, { insert: false }); };
+    const insertItems = [
+      { head: 'Text' },
+      { ic: 'title', label: 'Heading 1', kbd: '#', click: () => prefixLine('# ') },
+      { ic: 'title', label: 'Heading 2', kbd: '##', click: () => prefixLine('## ') },
+      { ic: 'title', label: 'Heading 3', kbd: '###', click: () => prefixLine('### ') },
+      { ic: 'chat', label: 'Quote', kbd: '>', click: () => prefixLine('> ') },
+      { ic: 'index', label: 'Bullet List', kbd: '-', click: () => prefixLine('- ', 'li') },
+      { head: 'Blocks' },
+      { ic: 'code', label: 'Code Block', kbd: '```', click: () => { if (!sel) { blockAfter([[T('```', 'mk')], [], [T('```', 'mk')]], { l: 1, i: 0 }); return; } const nd = clone(doc); nd.lines.splice(sel.b.l + 1, 0, [T('```', 'mk')]); nd.lines.splice(sel.a.l, 0, [T('```', 'mk')]); caretTo(nd, sel.b.l + 1, sel.b.c); commit(nd, { insert: false, sel: { a: { l: sel.a.l + 1, c: sel.a.c }, b: { l: sel.b.l + 1, c: sel.b.c } } }); } },
+      { ic: 'braces', label: 'Plain Text, no Markdown', kbd: ';;', click: () => pairOrWrap(T(';;', 'mk'), T(';;', 'mk'), { insert: false }) },
+      { ic: 'ruler', label: 'Separator Line', kbd: '---', click: () => blockAfter([[T('---', 'mk')]], { l: 0, i: 1 }) },
+      { ic: 'grid', label: 'Table', kbd: '|', click: () => blockAfter([[T('| Column | Column |')], [T('| --- | --- |', 'mk')], [T('| Text | Text |')]], { l: 2, i: 1 }) },
+      { head: 'Links and media' },
+      { ic: 'link', label: 'Link', kbd: '[ ]( )', click: () => pairOrWrap(T('[', 'mk'), T('](https://)', 'mk'), { insert: false }) },
+      { ic: 'image', label: 'Image', kbd: '![ ]( )', click: () => pairOrWrap(T('![', 'mk'), T('](https://)', 'mk'), { insert: false }) },
+      { head: 'FancyMenu' },
+      { ic: 'case', label: 'Font', kbd: '%!!', click: () => pairOrWrap(T('%!!minecraft:uniform%', 'mk'), T('%!!%', 'mk'), { insert: false }) },
+      { ic: 'cursor', label: 'Click Event', kbd: 'click:', click: () => pairOrWrap(T('[', 'mk'), T('](click:my_event)', 'mk'), { insert: false }) },
+      { ic: 'tooltip', label: 'Hover Event', kbd: 'hover:', click: () => pairOrWrap(T('[', 'mk'), T('](hover:my_event)', 'mk'), { insert: false }) }
+    ];
+    const insertOpen = s.insert ?? !!p.insert;
+    const newPh = (def) => { const vals = {}; def.vals.forEach((v) => { vals[v.k] = v.type === 'bool' ? 'false' : v.type === 'var' ? 'coins' : ''; }); return P(def.id, vals); };
+    const insertItem = (it) => it.isVar ? insertSeg(T('$$' + it.name, 'var')) : insertSeg(newPh(it.def));
+
+    // ---------- autocomplete ----------
+    const acItems = (q) => {
+      const ql = q.toLowerCase();
+      const ph = CATALOG.filter((d) => !ql || d.name.toLowerCase().includes(ql) || d.id.includes(ql)).sort((a, b) => (b.name.toLowerCase().startsWith(ql) - a.name.toLowerCase().startsWith(ql)) || a.name.localeCompare(b.name)).map((d) => ({ def: d, label: d.name, cat: d.cat, icon: ICON.brace }));
+      const vs = VARS.filter((v) => !ql || v.name.includes(ql)).map((v) => ({ isVar: true, name: v.name, label: '$$' + v.name, cat: 'Variable', icon: ICON.variable, v: v.v }));
+      return ph.concat(vs).slice(0, 8);
+    };
+    const hiParts = (label, q) => {
+      const i = q ? label.toLowerCase().indexOf(q.toLowerCase()) : -1;
+      if (i < 0) return [{ s: label, plain: true, hit: false }];
+      return [{ s: label.slice(0, i), plain: true, hit: false }, { s: label.slice(i, i + q.length), plain: false, hit: true }, { s: label.slice(i + q.length), plain: true, hit: false }].filter((x) => x.s);
+    };
+    const items = ac ? acItems(ac.q) : [];
+    const acSel = ac ? Math.min(ac.sel, Math.max(0, items.length - 1)) : 0;
+    this._ac = ac ? { items, sel: acSel, ac } : null;
+    if (!this._kd) {
+      this._kd = (e) => {
+        const a = this._ac; if (!a) return;
+        if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+        const st = this.state || {};
+        const cur = st.ac === undefined ? a.ac : st.ac; if (!cur) return;
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const n = a.items.length || 1; this.setState({ ac: { q: cur.q, sel: (a.sel + (e.key === 'ArrowDown' ? 1 : n - 1)) % n } }); }
+        else if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); if (a.items[a.sel]) this._insert(a.items[a.sel]); }
+        else if (e.key === 'Escape') { e.preventDefault(); this.setState({ ac: null }); }
+        else if (e.key === 'Backspace') { e.preventDefault(); this.setState({ ac: cur.q ? { q: cur.q.slice(0, -1), sel: 0 } : null }); }
+        else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) { e.preventDefault(); this.setState({ ac: { q: cur.q + e.key, sel: 0 } }); }
+      };
+      window.addEventListener('keydown', this._kd);
+    }
+    this._insert = insertItem;
+    const det = items[acSel];
+    const detail = (it) => {
+      if (!it) return null;
+      if (it.isVar) return { icon: ICON.variable, name: '$$' + it.name, cat: 'Variable', id: 'getvariable · name: ' + it.name, desc: 'One of your FancyMenu variables.', hasVals: false, vals: [], ready: true, now: it.v, wait: false, waitText: '' };
+      const d = it.def;
+      return { icon: ICON.brace, name: d.name, cat: d.cat, id: d.id, desc: d.desc, hasVals: d.vals.length > 0, vals: d.vals.map((v) => v.k), ready: !d.only, now: d.now || resolve(newPh(d)) || '—', wait: !!d.only, waitText: d.only || '' };
+    };
+
+    // ---------- lines ----------
+    const caret = doc.caret;
+    let lnCol = '', phCount = 0, bad = null;
+    const disp = []; // { pieces, no, cont, cur }
+    const caretPiece = () => ac ? { typed: true, atom: true, s: '{' + ac.q } : { caret: true, atom: true, s: '' };
+    doc.lines.forEach((line, li) => {
+      if (isCode) {
+        const raw = line[0].s; let pieces = glsl(raw);
+        if (li === caret.l) {
+          let pos = 0, done = false; const out = [];
+          for (const pc of pieces) { if (!done && pos + pc.s.length > caret.o) { const a = caret.o - pos; if (a > 0) out.push(Object.assign({}, pc, { s: pc.s.slice(0, a) })); out.push({ caret: true, atom: true, s: '' }); out.push(Object.assign({}, pc, { s: pc.s.slice(a) })); done = true; } else out.push(pc); pos += pc.s.length; }
+          if (!done) out.push({ caret: true, atom: true, s: '' });
+          pieces = out; lnCol = 'Ln ' + (li + 1) + ', Col ' + (caret.o + 1);
+        }
+        disp.push({ pieces, no: String(li + 1), cur: li === caret.l, raw, li });
+        return;
+      }
+      let cur = [];
+      const lines = [];
+      const push = (pc) => cur.push(pc);
+      const newLine = () => { lines.push(cur); cur = []; };
+      let colBase = 0;
+      line.forEach((seg, si) => {
+        const atCaret = caret.l === li && caret.i === si;
+        const c0 = colBase; colBase += seg.k === 't' ? seg.s.length : 1;
+        const pos = codeView ? {} : { ln: li, col: c0 };
+        if (seg.k === 't') {
+          if (atCaret && caret.o > 0 && caret.o < seg.s.length) { push(Object.assign({ s: seg.s.slice(0, caret.o), c: 's-' + seg.c, fc: seg.c === 'fc' }, pos)); push(caretPiece()); push(Object.assign({ s: seg.s.slice(caret.o), c: 's-' + seg.c, fc: seg.c === 'fc' }, codeView ? {} : { ln: li, col: c0 + caret.o })); return; }
+          if (atCaret && caret.o === 0) push(caretPiece());
+          push(Object.assign({ s: seg.s, c: seg.c ? 's-' + seg.c : '', fc: seg.c === 'fc' }, pos));
+          if (atCaret && caret.o > 0 && caret.o >= seg.s.length && caret.i < line.length - 1) push(caretPiece());
+          return;
+        }
+        if (atCaret) push(caretPiece());
+        phCount++;
+        const def = BY_ID[seg.id];
+        if (!def) bad = bad || seg.id;
+        Object.values(seg.vals).forEach((v) => { if (Array.isArray(v)) v.forEach((x) => { if (x.k === 'p') { phCount++; if (!BY_ID[x.id]) bad = bad || x.id; } }); });
+        if (codeView) {
+          const toks = [];
+          if (isSingle && Object.keys(seg.vals).length) {
+            // One-line values: this sample keeps the line breaks its author typed between the variables; FancyMenu joins the lines when it uses the value.
+            const keys = Object.keys(seg.vals);
+            toks.push({ s: '{', c: 's-punct' }, { s: '"placeholder"', c: 's-type' }, { s: ':', c: 's-punct' }, { s: '"' + seg.id + '"', c: def ? 's-str' : 's-str s-bad' }, { s: ',', c: 's-punct' }, { s: '"vars"', c: 's-type' }, { s: ':{', c: 's-punct' });
+            toks.forEach(push); newLine();
+            keys.forEach((k, i) => { push({ s: '    ', c: '' }); const o = [{ s: '"' + k + '"', c: 's-type' }, { s: ':', c: 's-punct' }]; valJson(seg.vals[k], o); if (i < keys.length - 1) o.push({ s: ',', c: 's-punct' }); o.forEach(push); newLine(); });
+            push({ s: '}}', c: 's-punct' });
+          } else { phJson(seg, toks); toks.forEach(push); }
+          return;
+        }
+        const nm = def ? def.name : 'Unknown placeholder';
+        const sum = [];
+        const first = def ? def.vals.find((v) => v.type !== 'bool' && valText(seg.vals[v.k])) : null;
+        if (!def) sum.push({ dot: true, text: false, nest: false, s: '' }, { dot: false, text: true, nest: false, s: seg.id });
+        else if (first) {
+          sum.push({ dot: true, text: false, nest: false, s: '' });
+          const v = seg.vals[first.k];
+          if (Array.isArray(v)) v.forEach((x) => x.k === 't' ? sum.push({ dot: false, text: true, nest: false, s: x.s }) : sum.push({ dot: false, text: false, nest: true, s: BY_ID[x.id] ? BY_ID[x.id].name : x.id, cls: BY_ID[x.id] ? 'nest' : 'nest' }));
+          else sum.push({ dot: false, text: true, nest: false, s: v });
+        }
+        const isOpen = !!pop && pop.l === li && pop.i === si;
+        const nestedBad = Object.values(seg.vals).some((v) => Array.isArray(v) && v.some((x) => x.k === 'p' && !BY_ID[x.id]));
+        push({ ph: true, atom: true, s: '', ln: li, col: c0, chipCls: 'mchip' + (!def || nestedBad ? ' bad' : '') + (isOpen ? ' open' : ''), name: nm, sum, icon: def ? ICON.brace : ICON.warn, tip: def ? (def.only ? def.only : 'Right now: ' + (resolve(seg) || '—')) : 'Unknown placeholder', popOpen: isOpen, expanded: isOpen ? 'true' : 'false', open: (e) => { e.stopPropagation(); this.setState({ pop: isOpen ? null : { l: li, i: si }, ac: null, popEdited: false, varMenu: null }); } });
+      });
+      if (caret.l === li && caret.i >= line.length) {
+        push(caretPiece());
+      }
+      if (md && alignAt[li] && alignAt[li].a === 'marker') {
+        const k = alignAt[li].kind, st = alignAt[li].start;
+        push({ inlay: true, atom: true, s: st ? (k === 'center' ? 'Centered from here' : 'Right-aligned from here') : (k === 'center' ? 'End of centered' : 'End of right-aligned') });
+      }
+      lines.push(cur);
+      lines.forEach((pcs, k) => disp.push({ pieces: pcs, no: k === 0 ? String(li + 1) : '↳', cont: k > 0, cur: li === caret.l && (k === lines.length - 1), li }));
+    });
+    if (!isCode) {
+      const ci = disp.findIndex((d) => d.pieces.some((x) => x.caret || x.typed));
+      if (ci >= 0) { let col = 1; for (const x of disp[ci].pieces) { if (x.caret || x.typed) { if (x.typed) col += x.s.length; break; } col += x.ph ? 1 : x.s.length; } lnCol = 'Ln ' + (ci + 1) + ', Col ' + col; disp.forEach((d, i) => { d.cur = i === ci; }); }
+    }
+
+    // ---------- find ----------
+    const matchCase = !!s.mcase, whole = !!s.whole;
+    let total = 0; const allHits = [];
+    if (findOpen && fq) {
+      const esc = fq.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const re = new RegExp(whole ? '\\b' + esc + '\\b' : esc, matchCase ? 'g' : 'gi');
+      disp.forEach((d, di) => {
+        const text = d.pieces.filter((x) => !x.atom).map((x) => x.s).join('');
+        let m; const rs = [];
+        while ((m = re.exec(text))) { if (!m[0].length) { re.lastIndex++; continue; } rs.push({ from: m.index, to: m.index + m[0].length, n: total++ }); }
+        d.hits = rs; allHits.push(...rs.map((r) => ({ di, r })));
+      });
+    }
+    const hitIdx = total ? ((s.hit ?? (isCode && p.find ? 2 : 0)) % total + total) % total : 0;
+    disp.forEach((d) => { if (d.hits && d.hits.length) d.pieces = mark(d.pieces, d.hits, 'hit', (r) => r.n === hitIdx ? ' cur' : ''); });
+    // selection: text pieces inside it get the selection color, chips inside it get selected too
+    if (sel) {
+      disp.forEach((d) => {
+        if (d.li < sel.a.l || d.li > sel.b.l) return;
+        const from = d.li === sel.a.l ? sel.a.c : 0, to = d.li === sel.b.l ? sel.b.c : Infinity;
+        const out = [];
+        for (const x of d.pieces) {
+          if (x.ph && x.col != null) { out.push(x.col >= from && x.col < to ? Object.assign({}, x, { chipCls: x.chipCls + ' sel' }) : x); continue; }
+          if (x.atom || x.col == null) { out.push(x); continue; }
+          const a = Math.max(from, x.col) - x.col, b = Math.min(to, x.col + x.s.length) - x.col;
+          if (b <= a) { out.push(x); continue; }
+          if (a > 0) out.push(Object.assign({}, x, { s: x.s.slice(0, a) }));
+          out.push(Object.assign({}, x, { s: x.s.slice(a, b), col: x.col + a, c: (x.c ? x.c + ' ' : '') + 'sel' }));
+          if (b < x.s.length) out.push(Object.assign({}, x, { s: x.s.slice(b), col: x.col + b }));
+        }
+        d.pieces = out;
+      });
+    }
+    // bracket pair around the caret in code mode (the for loop's braces)
+    if (isCode) {
+      const pairs = [[13, 33], [16, 4]];
+      disp.forEach((d) => { const pr = pairs.find((x) => x[0] === d.li); if (pr) d.pieces = mark(d.pieces, [{ from: pr[1], to: pr[1] + 1 }], 'pair'); });
+    }
+
+    const guidesFor = (raw, li) => {
+      if (!isCode) return [];
+      const ind = (t) => t.trim() ? t.match(/^ */)[0].length : null;
+      let n = ind(raw);
+      if (n == null) { let a = null, b = null; for (let k = li - 1; k >= 0 && a == null; k--) a = ind(SHADER[k] || 'x'); for (let k = li + 1; k < SHADER.length && b == null; k++) b = ind(SHADER[k] || 'x'); n = Math.min(a || 0, b || 0); }
+      const g = []; for (let k = 0; k < Math.floor(n / 4); k++) g.push('left: calc(4px + ' + (k * 4) + 'ch)');
+      return g;
+    };
+
+    const viewLines = disp.map((d) => ({
+      cls: 'te-ln' + (d.cur ? ' cur' : ''),
+      gutCls: 'te-gut' + (d.cont ? ' cont' : ''),
+      no: d.no,
+      guides: guidesFor(d.raw || '', d.li),
+      pieces: d.pieces.filter((x) => x.atom || x.s).map((x) => {
+        if (x.caret) return { isText: false, isFc: false, isCaret: true, isBad: false, isTyped: false, isPh: false, isInlay: false };
+        if (x.inlay) return { isText: false, isFc: false, isCaret: false, isBad: false, isTyped: false, isPh: false, isInlay: true, s: x.s };
+        if (x.typed) return { isText: false, isFc: false, isCaret: false, isBad: false, isTyped: true, isPh: false, s: x.s };
+        if (x.ph) return Object.assign({ isText: false, isFc: false, isCaret: false, isBad: false, isTyped: false, isPh: true }, x, { ln: x.ln ?? null, col: x.col ?? null });
+        const isBadTok = (x.c || '').includes('s-bad');
+        if (isBadTok) return { isText: false, isFc: false, isCaret: false, isBad: true, isTyped: false, isPh: false, s: x.s, cls: x.c };
+        if (x.fc) {
+          const code = (x.s.match(/^&([0-9a-fk-or])$/i) || [])[1], hex = (x.s.match(/^%#([0-9a-fA-F]{6})%$/) || [])[1];
+          const col = MC_COLORS.find((m) => m[0] === code);
+          const sw = hex ? 'background: #' + hex : col ? 'background: ' + col[2] : (code === 'r' || x.s === '%#%') ? 'background: transparent; box-shadow: inset 0 0 0 1px var(--text-3)' : 'display: none';
+          return { isText: false, isFc: true, isCaret: false, isBad: false, isTyped: false, isPh: false, s: x.s, cls: x.c, sw, ln: x.ln ?? null, col: x.col ?? null };
+        }
+        return { isText: true, isFc: false, isCaret: false, isBad: false, isTyped: false, isPh: false, s: x.s, cls: x.c || '', ln: x.ln ?? null, col: x.col ?? null };
+      })
+    }));
+
+    // ---------- placeholder popover ----------
+    let popVals = { name: '', cat: '', desc: '', icon: ICON.brace, hasFields: false, fields: [], now: '', remove: () => {} };
+    if (pop) {
+      const seg = (doc.lines[pop.l] || [])[pop.i];
+      if (seg && seg.k === 'p') {
+        const def = BY_ID[seg.id];
+        const upd = (k, v) => { const nd = clone(doc); nd.lines[pop.l][pop.i].vals[k] = v; this.setState({ doc: nd, hist: s.popEdited ? hist : hist.concat([JSON.stringify(doc)]), fut: [], popEdited: true }); };
+        popVals = {
+          name: def ? def.name : 'Unknown placeholder', cat: def ? def.cat : 'Unknown', desc: def ? def.desc : '', icon: def ? ICON.brace : ICON.warn,
+          hasFields: !!def && def.vals.length > 0,
+          fields: def ? def.vals.map((v) => {
+            const val = seg.vals[v.k];
+            const nested = Array.isArray(val);
+            const menuOpen = s.varMenu === v.k;
+            return {
+              label: v.k.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase()), k: v.k,
+              isText: !nested && !v.type, isNested: nested, isBool: v.type === 'bool', isVar: v.type === 'var',
+              v: nested ? '' : (val || ''), ph: v.k === 'timezone' ? 'Your time zone' : '',
+              input: (e) => upd(v.k, e.target.value),
+              parts: nested ? val.map((x) => x.k === 't' ? { text: true, chip: false, s: x.s } : { text: false, chip: true, s: BY_ID[x.id] ? BY_ID[x.id].name : x.id, cls: 'mchip' + (BY_ID[x.id] ? '' : ' bad') }) : [],
+              swCls: 'sw mini' + (val === 'true' ? ' on' : ''), on: val === 'true' ? 'true' : 'false', toggle: () => upd(v.k, val === 'true' ? 'false' : 'true'),
+              popupCls: 'popup' + (menuOpen ? ' open' : ''), menuOpen, toggleMenu: () => this.setState({ varMenu: menuOpen ? null : v.k }),
+              opts: VARS.map((o) => ({ name: o.name, val: o.v, sel: o.name === val ? 'true' : 'false', check: o.name === val ? '✓' : '', pick: () => { this.setState({ varMenu: null }); upd(v.k, o.name); } }))
+            };
+          }) : [],
+          now: def ? (def.only || resolve(seg) || '—') : 'Shows up as plain text',
+          remove: () => { const nd = clone(doc); nd.lines[pop.l].splice(pop.i, 1); nd.caret = { l: pop.l, i: pop.i, o: 0 }; commit(nd, { pop: null }); }
+        };
+      }
+    }
+
+    // ---------- problem ----------
+    const fixDef = bad ? closest(bad) : null;
+    const prob = { id: bad || '', hasFix: !!fixDef, fixName: fixDef ? fixDef.name : '', fix: () => {
+      const nd = clone(doc);
+      const walk = (segs) => segs.forEach((x) => { if (x.k === 'p') { if (x.id === bad) x.id = fixDef.id; Object.values(x.vals).forEach((v) => { if (Array.isArray(v)) walk(v); }); } });
+      nd.lines.forEach(walk); commit(nd, { prob: false });
+    } };
+
+    // ---------- sidebar ----------
+    const sq = s.sq ?? '';
+    const openGroups = s.groups || { 'Recently used': true, Variables: true, Realtime: true };
+    const rowFor = (it, key) => ({
+      cls: 'te-pr' + (s.hov && s.hov.key === key ? ' hov' : ''),
+      parts: hiParts(it.isVar ? '$$' + it.name : it.def.name, sq),
+      chip: it.isVar ? '' : (it.def.chip || ''), val: it.isVar ? it.v : '',
+      hover: (e) => { const row = e.currentTarget, list = row.parentElement.closest('.te-list'); this.setState({ hov: { key, it, top: row.offsetTop - list.scrollTop + list.offsetTop } }); },
+      insert: () => insertItem(it)
+    });
+    const phItem = (d) => ({ def: d });
+    const varItem = (v) => ({ isVar: true, name: v.name, v: v.v });
+    let groups;
+    if (sq) {
+      const ql = sq.toLowerCase();
+      const hits = CATALOG.filter((d) => d.name.toLowerCase().includes(ql) || d.id.includes(ql) || d.desc.toLowerCase().includes(ql)).map(phItem).concat(VARS.filter((v) => v.name.includes(ql)).map(varItem));
+      groups = hits.length ? [{ name: 'Results', rows: hits.map((it, i) => rowFor(it, 'r' + i)), open: true }] : [];
+    } else {
+      groups = [{ name: 'Recently used', rows: RECENT.map((id) => rowFor(phItem(BY_ID[id]), 'rec' + id)) }, { name: 'Variables', rows: VARS.map((v) => rowFor(varItem(v), 'var' + v.name)) }]
+        .concat(CAT_ORDER.map((c) => ({ name: c, rows: CATALOG.filter((d) => d.cat === c).map((d) => rowFor(phItem(d), 'c' + d.id)) })).filter((g) => g.rows.length));
+      groups.forEach((g) => { g.open = !!openGroups[g.name]; });
+    }
+    groups.forEach((g) => { g.n = String(g.rows.length); g.cls = 'te-grp' + (g.open ? ' open' : ''); g.expanded = g.open ? 'true' : 'false'; g.toggle = () => this.setState({ groups: Object.assign({}, openGroups, { [g.name]: !g.open }) }); });
+    const hv = s.hov && s.hov.it ? detail(s.hov.it) : null;
+
+    // ---------- live preview of the text element (FancyMenu Markdown + formatting codes) ----------
+    if (mode === 'Text' && p.previewListener) {
+      const out = []; let align = null, inBlock = false;
+      doc.lines.forEach((line) => {
+        let txt = line.map((sg) => sg.k === 't' ? sg.s : (resolve(sg) || '')).join('');
+        const t = txt.trim();
+        if (md && t === '^^^') { align = align === 'center' ? null : 'center'; return; }
+        if (md && t === '|||') { align = align === 'right' ? null : 'right'; return; }
+        if (md && t === '```') { inBlock = !inBlock; return; }
+        if (inBlock) { out.push({ kind: 'code', align, parts: [{ s: txt || ' ' }] }); return; }
+        if (md && t === '---') { out.push({ kind: 'sep', align, parts: [] }); return; }
+        let kind = !txt ? 'gap' : 'p';
+        if (md) {
+          const pre = [['### ', 'h3'], ['## ', 'h2'], ['# ', 'h1'], ['> ', 'quote'], ['- ', 'li']].find((x) => txt.startsWith(x[0]));
+          if (pre) { kind = pre[1]; txt = txt.slice(pre[0].length); }
+        }
+        const parts = []; let bold = false, ital = false, strike = false, under = false, code = false, plain = false, col = null, buf = '';
+        const flush = () => { if (buf) parts.push({ s: buf, b: bold, i: ital, st: strike, u: under, code, col }); buf = ''; };
+        for (let i = 0; i < txt.length; i++) {
+          const rest = txt.slice(i);
+          if (md && rest.startsWith(';;')) { flush(); plain = !plain; i++; continue; }
+          if (plain) { buf += txt[i]; continue; }
+          if (md && txt[i] === '`') { flush(); code = !code; continue; }
+          if (code) { buf += txt[i]; continue; }
+          if (md && rest.startsWith('**')) { flush(); bold = !bold; i++; continue; }
+          if (md && txt[i] === '*') { flush(); ital = !ital; continue; }
+          if (md && txt[i] === '~') { flush(); strike = !strike; continue; }
+          if (md && rest.startsWith('%#%')) { flush(); col = null; i += 2; continue; }
+          const hx = md && /^%#([0-9a-fA-F]{6})%/.exec(rest); if (hx) { flush(); col = '#' + hx[1]; i += hx[0].length - 1; continue; }
+          if (md && rest.startsWith('%!!%')) { i += 3; continue; }
+          const fo = md && /^%!![a-z0-9_.:\/-]+%/.exec(rest); if (fo) { i += fo[0].length - 1; continue; }
+          if (md && (rest.startsWith('![') || txt[i] === '[')) { if (rest.startsWith('![')) i++; continue; }
+          if (md && rest.startsWith('](')) { const e = txt.indexOf(')', i); if (e > 0) { i = e; continue; } }
+          if (txt[i] === '&' && /[0-9a-fk-or]/i.test(txt[i + 1] || '')) { flush(); const k = txt[i + 1].toLowerCase(); if (k === 'l') bold = true; else if (k === 'o') ital = true; else if (k === 'm') strike = true; else if (k === 'n') under = true; else if (k === 'r') { col = null; bold = false; ital = false; strike = false; under = false; } else { const c = MC_COLORS.find((m) => m[0] === k); if (c) col = c[2]; } i++; continue; }
+          buf += txt[i];
+        }
+        flush();
+        out.push({ kind, align, parts });
+      });
+      const key = JSON.stringify(out);
+      if (key !== this._pv) { this._pv = key; setTimeout(() => p.previewListener(out), 0); }
+    }
+
+    const chars = doc.lines.map((line) => line.map((sg) => { if (sg.k === 't') return sg.s; const o = []; phJson(sg, o); return o.map((x) => x.s).join(''); }).join('')).join(isSingle ? '' : '\n').length;
+    const standalone = p.standalone ?? true;
+    const W = +p.width || 1000, H = +p.height || 660;
+    const titles = { Text: 'Edit Text Content', 'Single line': 'Edit Action Variable', Code: 'Edit Shader Source' };
+    const replaceIn = (all) => {
+      if (!fq) return;
+      const nd = clone(doc);
+      const esc = fq.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const re = new RegExp(whole ? '\\b' + esc + '\\b' : esc, matchCase ? 'g' : 'gi');
+      const rq = s.rq ?? '';
+      let done = false;
+      nd.lines.forEach((line) => line.forEach((sg) => { if (sg.k !== 't' || (done && !all)) return; if (all) sg.s = sg.s.replace(re, rq); else { const r1 = new RegExp(re.source, re.flags.replace('g', '')); if (r1.test(sg.s)) { sg.s = sg.s.replace(r1, rq); done = true; } } }));
+      commit(nd);
+    };
+
+    return {
+      rootCls: standalone ? 'fm ' + ((p.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark') + ((p.material ?? 'Blur') === 'Blur' ? ' mat-blur' : '') : '',
+      rootStyle: standalone ? 'position: relative; width: ' + (W + 80) + 'px; height: ' + (H + 80) + 'px; overflow: hidden; background: var(--bd)' : 'position: relative; width: ' + W + 'px; height: ' + H + 'px',
+      winStyle: (standalone ? 'left: 40px; top: 40px; ' : 'left: 0; top: 0; ') + 'width: ' + W + 'px; height: ' + H + 'px',
+      standalone, noop: () => {}, stop: (e) => e.stopPropagation(),
+      title: p.title || titles[mode], titleIcon: isCode ? ICON.code : isSingle ? ICON.brace : ICON.text,
+      noUndo: !hist.length, noRedo: !fut.length,
+      undo: () => { if (!hist.length) return; this.setState({ doc: JSON.parse(hist[hist.length - 1]), hist: hist.slice(0, -1), fut: fut.concat([JSON.stringify(doc)]), pop: null, ac: null }); },
+      redo: () => { if (!fut.length) return; this.setState({ doc: JSON.parse(fut[fut.length - 1]), fut: fut.slice(0, -1), hist: hist.concat([JSON.stringify(doc)]), pop: null }); },
+      findBtnCls: 'ib' + (findOpen ? ' on' : ''), findPressed: findOpen ? 'true' : 'false', findOpen,
+      toggleFind: () => this.setState({ find: !findOpen }),
+      fmt: fmtKind !== 'None', phs, md, codes,
+      strikeTip: (md ? 'Strikethrough, adds ~' : 'Strikethrough, adds &m') + (sel ? ' around the selection' : ''),
+      strike: () => md ? pairOrWrap(T('~', 'mk'), T('~', 'mk')) : codeOrWrap('&m'),
+      // Markdown has no underline of its own, but the Markdown renderer reads formatting codes, so &n works in both.
+      underline: () => codeOrWrap('&n'), underlineTip: 'Underline (Ctrl+U), adds &n' + (sel ? ' around the selection' : ''),
+      inlineCode: () => pairOrWrap(T('`', 'mk'), T('`', 'mk')),
+      alignThumb: 'width: 34px; transform: translateX(' + (['left', 'center', 'right'].indexOf(caretAlign) * 34) + 'px)',
+      al_left: { cls: caretAlign === 'left' ? 'on' : '', on: caretAlign === 'left' ? 'true' : 'false', pick: () => setAlign('left') },
+      al_center: { cls: caretAlign === 'center' ? 'on' : '', on: caretAlign === 'center' ? 'true' : 'false', pick: () => setAlign('center') },
+      al_right: { cls: caretAlign === 'right' ? 'on' : '', on: caretAlign === 'right' ? 'true' : 'false', pick: () => setAlign('right') },
+      insertOpen, insertItems, insertBtnCls: 'btn' + (insertOpen ? ' on' : ''), toggleInsert: () => this.setState({ insert: !insertOpen, colors: false }),
+      boldTip: (md ? 'Bold (Ctrl+B), adds **' : 'Bold (Ctrl+B), adds &l') + (sel ? ' around the selection' : ''), italicTip: (md ? 'Italic (Ctrl+I), adds *' : 'Italic (Ctrl+I), adds &o') + (sel ? ' around the selection' : ''),
+      bold: () => md ? pairOrWrap(T('**', 'mk'), T('**', 'mk')) : codeOrWrap('&l'),
+      italic: () => md ? pairOrWrap(T('*', 'mk'), T('*', 'mk')) : codeOrWrap('&o'),
+      customColors: md, customHex: s.customHex ?? '#FF6B9D', customSw: 'background: ' + (/^#?[0-9a-fA-F]{6}$/.test(s.customHex ?? '#FF6B9D') ? '#' + (s.customHex ?? '#FF6B9D').replace('#', '') : 'transparent'),
+      customBad: !/^#?[0-9a-fA-F]{6}$/.test(s.customHex ?? '#FF6B9D'), customFieldCls: 'field mono' + (/^#?[0-9a-fA-F]{6}$/.test(s.customHex ?? '#FF6B9D') ? '' : ' bad'),
+      onCustomHex: (e) => this.setState({ customHex: e.target.value }),
+      customKey: (e) => { if (e.key === 'Enter' && /^#?[0-9a-fA-F]{6}$/.test(s.customHex ?? '#FF6B9D')) { e.preventDefault(); pairOrWrap(FC('%#' + (s.customHex ?? '#FF6B9D').replace('#', '').toUpperCase() + '%'), FC('%#%'), { colors: false }); } },
+      applyCustom: () => pairOrWrap(FC('%#' + (s.customHex ?? '#FF6B9D').replace('#', '').toUpperCase() + '%'), FC('%#%'), { colors: false }),
+      openPicker: () => this.setState({ picker: true }),
+      pickerOpen: !!s.picker, pickerHex: '#' + (s.customHex ?? '#FF6B9D').replace('#', '').toUpperCase(),
+      no: false,
+      pickerStyle: 'position: absolute; z-index: 61; left: ' + Math.round(((+p.width || 1000) - 620) / 2) + 'px; top: ' + Math.round(((+p.height || 660) - 424) / 2) + 'px',
+      pickerDone: (hex) => this.setState({ picker: false, customHex: hex }), pickerCancel: () => this.setState({ picker: false }),
+      colorsOpen: s.colors ?? !!p.colors, toggleColors: () => this.setState({ colors: !(s.colors ?? !!p.colors), insert: false }),
+      mcColors: MC_COLORS.map((m) => ({ style: 'background: ' + m[2], label: m[1] + ' (&' + m[0] + ')', pick: () => codeOrWrap('&' + m[0], { colors: false }) })),
+      resetColor: () => insertSeg(FC('&r'), { colors: false }),
+      anyPopup: !!((s.colors ?? !!p.colors) || insertOpen || pop || ac || (probOpen && bad)),
+      closePopups: () => this.setState({ colors: false, insert: false, pop: null, ac: null, prob: false, varMenu: null }),
+      viewThumb: 'width: calc(50% - 2px); transform: translateX(' + (view === 'Code' ? '100%' : '0') + ')',
+      chipsCls: view === 'Chips' ? 'on' : '', codeCls: view === 'Code' ? 'on' : '', chipsOn: view === 'Chips' ? 'true' : 'false', codeOn: view === 'Code' ? 'true' : 'false',
+      viewChips: () => this.setState({ view: 'Chips' }), viewCode: () => this.setState({ view: 'Code', pop: null }),
+      wrapCls: 'ib' + (wrap ? ' on' : ''), wrapPressed: wrap ? 'true' : 'false', toggleWrap: () => this.setState({ wrap: !wrap }),
+      sideBtnCls: 'ib' + (sideOpen ? ' on' : ''), sidePressed: sideOpen ? 'true' : 'false', sideOpen, toggleSide: () => this.setState({ side: !sideOpen, hov: null }),
+      fq, onFind: (e) => this.setState({ fq: e.target.value, hit: 0 }), findKey: (e) => { if (e.key === 'Enter') { e.preventDefault(); this.setState({ hit: hitIdx + (e.shiftKey ? -1 : 1) }); } else if (e.key === 'Escape') this.setState({ find: false }); },
+      rq: s.rq ?? '', onReplace: (e) => this.setState({ rq: e.target.value }),
+      caseCls: 'opt' + (matchCase ? ' on' : ''), casePressed: matchCase ? 'true' : 'false', toggleCase: () => this.setState({ mcase: !matchCase, hit: 0 }),
+      wordCls: 'opt' + (whole ? ' on' : ''), wordPressed: whole ? 'true' : 'false', toggleWord: () => this.setState({ whole: !whole, hit: 0 }),
+      countCls: 'count' + (fq && !total ? ' none' : ''), countText: !fq ? '' : total ? (hitIdx + 1) + ' of ' + total : 'No matches',
+      noMatches: !total, prevHit: () => this.setState({ hit: hitIdx - 1 }), nextHit: () => this.setState({ hit: hitIdx + 1 }),
+      replaceOne: () => replaceIn(false), replaceAll: () => replaceIn(true),
+      scrollCls: 'te-scroll' + (wrap ? ' wrap' : ''),
+      lines: viewLines,
+      probOpen: probOpen && !!bad, prob, toggleProblem: (e) => { if (e) e.stopPropagation(); this.setState({ prob: !(probOpen && bad), view: bad ? 'Code' : view }); },
+      ac: {
+        items: items.map((it, i) => ({ cls: 'mi' + (i === acSel ? ' hl' : ''), ariaSel: i === acSel ? 'true' : 'false', icon: it.icon, parts: hiParts(it.label, ac ? ac.q : ''), cat: it.cat, hover: () => { if (i !== acSel) this.setState({ ac: { q: ac.q, sel: i } }); }, pick: () => insertItem(it) })),
+        none: !items.length, hasDetail: !!det, d: detail(det) || { icon: '', name: '', cat: '', id: '', desc: '', hasVals: false, vals: [], ready: false, now: '', wait: false, waitText: '' }
+      },
+      pop: popVals,
+      lnCol: lnCol + (sel && selCount ? ' (' + selCount + ' selected)' : ''), oneLine: isSingle,
+      kindChip: isCode ? 'GLSL' : md ? 'Markdown' : codes ? 'Formatting codes' : '',
+      phCountText: phs && phCount ? phCount + (phCount === 1 ? ' placeholder' : ' placeholders') : '',
+      hasProblem: !!bad,
+      rightStatus: isCode ? 'Spaces: 4' : chars.toLocaleString('en-US') + ' characters',
+      sq, onSide: (e) => this.setState({ sq: e.target.value, hov: null }),
+      groups, sideNone: !!sq && !groups.length, unhover: () => { if (s.hov) this.setState({ hov: null }); },
+      hov: hv ? Object.assign({ show: true, style: 'top: ' + Math.max(8, s.hov.top - 8) + 'px' }, hv) : { show: false, style: '', icon: '', name: '', cat: '', id: '', desc: '', hasVals: false, vals: [], ready: false, now: '', wait: false, waitText: '' },
+      liveTarget: p.liveTarget || '', noLive: !p.liveTarget
+    };
+  }
+
+  chipAt(doc, n) {
+    let k = 0;
+    for (let l = 0; l < doc.lines.length; l++) for (let i = 0; i < doc.lines[l].length; i++) if (doc.lines[l][i].k === 'p') { if (k === n) return { l, i }; k++; }
+    return null;
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Profiles states and flows</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="fm spec theme-dark" style="width: 1604px; min-height: 1400px">
+
+<header style="display: flex; flex-direction: column; gap: 10px; max-width: 900px">
+<div style="font-size: 12px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; color: var(--text-3)">FancyMenu · UI rework concept · Profiles</div>
+<h1 style="margin: 0; font-size: 34px; line-height: 1.15; font-weight: 700; color: var(--title)">Profiles: states and flows</h1>
+<p style="margin: 0; font-size: 14.5px; line-height: 1.55; color: var(--text-2)">Long tasks and questions show up as sheets that slide out of the title bar, so the window stays visible behind them. Dropping files turns the whole content area into a drop zone.</p>
+</header>
+
+<div style="display: grid; grid-template-columns: repeat(2, 717px); gap: 40px">
+
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 12px">
+<div class="spec-frame" style="width: 717px; height: 459px"><div style="width: 1280px; height: 820px; transform: scale(.56); transform-origin: 0 0"><dc-import name="Profiles" demo="Loading" hint-size="1280px,820px"></dc-import></div></div>
+<figcaption style="color: var(--text-2); line-height: 1.5"><strong style="color: var(--title); font-weight: 600">Loading a profile.</strong> Progress, size and time left in one sheet, with Cancel right there. It replaces the overlay that used to cover the whole window.</figcaption>
+</figure>
+
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 12px">
+<div class="spec-frame" style="width: 717px; height: 459px"><div style="width: 1280px; height: 820px; transform: scale(.56); transform-origin: 0 0"><dc-import name="Profiles" demo="Drop" material="Blur" hint-size="1280px,820px"></dc-import></div></div>
+<figcaption style="color: var(--text-2); line-height: 1.5"><strong style="color: var(--title); font-weight: 600">Dragging a .fmp file over the window.</strong> The sidebar hint says this is possible before you ever try it. During the drag, the whole content area becomes the target. Blur material shown.</figcaption>
+</figure>
+
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 12px">
+<div class="spec-frame" style="width: 717px; height: 459px"><div style="width: 1280px; height: 820px; transform: scale(.56); transform-origin: 0 0"><dc-import name="Profiles" demo="Wrong file" hint-size="1280px,820px"></dc-import></div></div>
+<figcaption style="color: var(--text-2); line-height: 1.5"><strong style="color: var(--title); font-weight: 600">Dropping something else.</strong> The zone turns red and says what it accepts, together with the existing error beep.</figcaption>
+</figure>
+
+<figure style="margin: 0; display: flex; flex-direction: column; gap: 12px">
+<div class="spec-frame" style="width: 717px; height: 459px"><div style="width: 1280px; height: 820px; transform: scale(.56); transform-origin: 0 0"><dc-import name="Profiles" demo="Conflict" theme="Light" hint-size="1280px,820px"></dc-import></div></div>
+<figcaption style="color: var(--text-2); line-height: 1.5"><strong style="color: var(--title); font-weight: 600">Importing a profile you already have.</strong> A compact alert with the profile's icon. The safe choice, Keep Both, is the default button. Light theme shown.</figcaption>
+</figure>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1604,"height":1400}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Menu bar spec</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.cmp-row{display:grid;grid-template-columns:230px minmax(0,1fr);gap:0;border-bottom:1px solid var(--sep)}
+.cmp-row:last-child{border-bottom:0}
+.cmp-row > div{padding:22px}
+.cmp-col{min-width:0}
+.legacy-bar{border-radius:0}
+.ruler{position:relative;height:44px}
+.brk{position:absolute;top:6px;height:7px;border:1.5px solid var(--text-3);border-top:0;border-radius:0 0 4px 4px}
+.brk::after{content:"";position:absolute;left:50%;top:5px;width:1.5px;height:10px;margin-left:-.75px;background:var(--text-3)}
+.num{position:absolute;top:22px;width:20px;height:20px;display:grid;place-items:center;border-radius:50%;background:var(--accent-fill);color:#fff;font-size:11px;font-weight:700}
+.num.static{position:static;flex:0 0 20px}
+.legend{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:22px;margin-top:10px}
+.lg{display:flex;gap:10px;align-items:flex-start}
+.states{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.spec-card.wide{display:grid;grid-template-columns:230px minmax(0,1fr);gap:24px;align-items:center}
+</style>
+</helmet>
+<div class="fm spec {{themeClass}} mat-blur" style="min-height: 2780px">
+
+<header style="display: flex; flex-direction: column; gap: 12px; max-width: 900px">
+<div style="font-size: 12px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; color: var(--text-3)">FancyMenu · UI rework concept · menu bar</div>
+<h1 style="margin: 0; font-size: 34px; line-height: 1.15; font-weight: 700; color: var(--title)">A menu bar that knows where you are</h1>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: var(--text-2)">The bar stays at the top of every screen and of the layout editor, but now looks and behaves like a macOS menu bar: a translucent strip, rounded highlights, and menus that drop straight down from their title. The first menu, in bold, is the main one, and the middle of the bar names the screen or layout you're working on.</p>
+</header>
+
+<section>
+<h2 class="h2">Today and proposed</h2>
+<div class="group" style="background: var(--win)">
+<div class="cmp-row">
+<div><div class="k">Customization overlay</div><div class="kd">Customization stays the main menu. It now opens with the screen you are on and its layouts, in labeled sections, and the middle of the bar says which screen that is.</div></div>
+<div class="cmp-col"><div class="cap">Today</div><div class="spec-frame" style="height: 28px; width: 100%"><div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""></div><div class="legacy-bar"><span class="i" style="width: 28px"><svg viewBox="0 0 28 28" aria-hidden="true" style="width: 28px; height: 28px; shape-rendering: crispEdges"><path fill="currentColor" d="M13 3h4v1h-4zM7 4h16v1h-16zM6 5h18v1h-18zM6 6h3v1h-3zM13 6h4v1h-4zM21 6h3v1h-3zM6 7h2v1h-2zM22 7h2v1h-2zM6 8h2v1h-2zM22 8h2v1h-2zM6 9h2v1h-2zM22 9h2v1h-2zM6 10h2v1h-2zM22 10h2v1h-2zM5 11h4v1h-4zM21 11h4v1h-4zM5 12h4v1h-4zM13 12h3v1h-3zM21 12h4v1h-4zM5 13h2v1h-2zM11 13h5v1h-5zM21 13h4v1h-4zM9 14h7v1h-7zM21 14h4v1h-4zM7 15h8v1h-8zM22 15h2v1h-2zM5 16h10v1h-10zM22 16h2v1h-2zM3 17h11v1h-11zM22 17h2v1h-2zM4 18h10v1h-10zM22 18h2v1h-2zM6 19h7v1h-7zM15 19h2v1h-2zM21 19h3v1h-3zM8 20h5v1h-5zM15 20h9v1h-9zM8 21h4v1h-4zM14 21h9v1h-9zM9 22h3v1h-3zM14 22h3v1h-3zM9 23h2v1h-2zM10 24h1v1h-1z"></path></svg></span><span class="t">Customization</span><span class="t">Tools</span><span class="t">Help</span><span class="r"><span class="i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 4.5H6A1.5 1.5 0 0 0 4.5 6v12A1.5 1.5 0 0 0 6 19.5h4M14.5 8l4 4-4 4M18.5 12H9.5"></path></svg></span><span class="i" style="width: 16px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width: 14px; height: 14px"><path d="M7 4.5l5 5 5-5M7 19.5l5-5 5 5"></path></svg></span><span style="width: 10px"></span></span></div></div><div class="cap" style="margin-top: 18px">Proposed</div><div class="spec-frame" style="height: 46px; width: 100%"><div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""></div><div style="position: relative"><dc-import name="MenuBar" kind="Overlay" standalone="{{no}}" hint-size="988px,30px"></dc-import></div></div></div>
+</div>
+<div class="cmp-row">
+<div><div class="k">Layout editor</div><div class="kd">The middle names the layout you are editing and its screen. The orange warning text becomes a Save button that also shows whether there is anything to save.</div></div>
+<div class="cmp-col"><div class="cap">Today</div><div class="spec-frame" style="height: 28px; width: 100%"><div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""></div><div class="legacy-bar"><span class="i" style="width: 28px"><svg viewBox="0 0 28 28" aria-hidden="true" style="width: 28px; height: 28px; shape-rendering: crispEdges"><path fill="currentColor" d="M13 3h4v1h-4zM7 4h16v1h-16zM6 5h18v1h-18zM6 6h3v1h-3zM13 6h4v1h-4zM21 6h3v1h-3zM6 7h2v1h-2zM22 7h2v1h-2zM6 8h2v1h-2zM22 8h2v1h-2zM6 9h2v1h-2zM22 9h2v1h-2zM6 10h2v1h-2zM22 10h2v1h-2zM5 11h4v1h-4zM21 11h4v1h-4zM5 12h4v1h-4zM13 12h3v1h-3zM21 12h4v1h-4zM5 13h2v1h-2zM11 13h5v1h-5zM21 13h4v1h-4zM9 14h7v1h-7zM21 14h4v1h-4zM7 15h8v1h-8zM22 15h2v1h-2zM5 16h10v1h-10zM22 16h2v1h-2zM3 17h11v1h-11zM22 17h2v1h-2zM4 18h10v1h-10zM22 18h2v1h-2zM6 19h7v1h-7zM15 19h2v1h-2zM21 19h3v1h-3zM8 20h5v1h-5zM15 20h9v1h-9zM8 21h4v1h-4zM14 21h9v1h-9zM9 22h3v1h-3zM14 22h3v1h-3zM9 23h2v1h-2zM10 24h1v1h-1z"></path></svg></span><span class="t">Layout</span><span class="t">Edit</span><span class="t">Element</span><span class="t">Window</span><span class="t">Help</span><span class="r"><span class="t" style="font-weight: 700; color: #e59b12">* Unsaved Changes! *</span><span class="i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: #da3c1e"><path d="M6.5 6.5l11 11M17.5 6.5l-11 11"></path></svg></span><span class="i" style="width: 16px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width: 14px; height: 14px"><path d="M7 4.5l5 5 5-5M7 19.5l5-5 5 5"></path></svg></span><span style="width: 10px"></span></span></div></div><div class="cap" style="margin-top: 18px">Proposed</div><div class="spec-frame" style="height: 46px; width: 100%"><div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""></div><div style="position: relative"><dc-import name="MenuBar" kind="Editor" unsaved="{{yes}}" standalone="{{no}}" hint-size="988px,30px"></dc-import></div></div></div>
+</div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Anatomy</h2>
+<div class="spec-frame" style="height: 46px; width: 1280px"><div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""></div><div style="position: relative"><dc-import name="MenuBar" kind="Overlay" standalone="{{no}}" hint-size="1280px,30px"></dc-import></div></div>
+<div class="ruler" aria-hidden="true"><div class="brk" style="left: 8px; width: 26px"></div><div class="num" style="left: 11px">1</div><div class="brk" style="left: 40px; width: 108px"></div><div class="num" style="left: 84px">2</div><div class="brk" style="left: 152px; width: 92px"></div><div class="num" style="left: 188px">3</div><div class="brk" style="left: 540px; width: 200px"></div><div class="num" style="left: 630px">4</div><div class="brk" style="left: 1205px; width: 69px"></div><div class="num" style="left: 1229px">5</div></div>
+<div class="legend"><div class="lg"><span class="num static">1</span><div><div class="k">FancyMenu mark</div><div class="kd">Tells players whose bar this is, which helps when a modpack ships with the bar still on. It isn't a menu.</div></div></div><div class="lg"><span class="num static">2</span><div><div class="k">Main menu</div><div class="kd">Bold and always first: Customization in the overlay, Layout in the editor.</div></div></div><div class="lg"><span class="num static">3</span><div><div class="k">Menus</div><div class="kd">Click a title to open its menu. While one is open, moving to another title opens that one right away.</div></div></div><div class="lg"><span class="num static">4</span><div><div class="k">Center title</div><div class="kd">The screen's name and identifier: click it to copy the identifier. In the editor it names the layout and its screen.</div></div></div><div class="lg"><span class="num static">5</span><div><div class="k">Bar controls</div><div class="kd">Close This Screen, then Collapse Menu Bar. In the editor: Save, Close Editor and Collapse. Every icon has a tooltip.</div></div></div></div>
+</section>
+
+<section>
+<h2 class="h2">States</h2>
+<div class="states">
+<div class="spec-card"><div><div class="k">Menu titles</div><div class="kd">At rest, hovered and open. An open title keeps its highlight for as long as its menu is showing.</div></div><div class="spec-frame" style="height: 46px; width: 100%"><div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""></div><div class="mbar"><span class="mb-logo" aria-hidden="true"><svg viewBox="3 3 22 22"><path fill="currentColor" d="M13 3h4v1h-4zM7 4h16v1h-16zM6 5h18v1h-18zM6 6h3v1h-3zM13 6h4v1h-4zM21 6h3v1h-3zM6 7h2v1h-2zM22 7h2v1h-2zM6 8h2v1h-2zM22 8h2v1h-2zM6 9h2v1h-2zM22 9h2v1h-2zM6 10h2v1h-2zM22 10h2v1h-2zM5 11h4v1h-4zM21 11h4v1h-4zM5 12h4v1h-4zM13 12h3v1h-3zM21 12h4v1h-4zM5 13h2v1h-2zM11 13h5v1h-5zM21 13h4v1h-4zM9 14h7v1h-7zM21 14h4v1h-4zM7 15h8v1h-8zM22 15h2v1h-2zM5 16h10v1h-10zM22 16h2v1h-2zM3 17h11v1h-11zM22 17h2v1h-2zM4 18h10v1h-10zM22 18h2v1h-2zM6 19h7v1h-7zM15 19h2v1h-2zM21 19h3v1h-3zM8 20h5v1h-5zM15 20h9v1h-9zM8 21h4v1h-4zM14 21h9v1h-9zM9 22h3v1h-3zM14 22h3v1h-3zM9 23h2v1h-2zM10 24h1v1h-1z"></path></svg></span><button class="mb-t ctx">Customization</button><button class="mb-t hov">Tools</button><button class="mb-t open">Help</button></div></div></div>
+<div class="spec-card"><div><div class="k">Unsaved changes</div><div class="kd">Save turns blue with a dot when there's something to save, and Ctrl+S still works. After saving it settles to a quiet Saved.</div></div><div class="spec-frame" style="height: 30px; width: 100%"><div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""></div><div class="mbar" style="justify-content: flex-end"><div class="mb-right"><button class="mb-save"><span class="dot" aria-hidden="true"></span>Save</button><button class="mb-ic danger" aria-label="Close editor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"></path></svg></button><span class="mb-div"></span><button class="mb-ic" aria-label="Collapse menu bar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 14.5l5-5 5 5"></path></svg></button></div></div></div><div class="spec-frame" style="height: 30px; width: 100%"><div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""></div><div class="mbar" style="justify-content: flex-end"><div class="mb-right"><button class="mb-save saved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"></path></svg>Saved</button><button class="mb-ic danger" aria-label="Close editor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"></path></svg></button><span class="mb-div"></span><button class="mb-ic" aria-label="Collapse menu bar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 14.5l5-5 5 5"></path></svg></button></div></div></div></div>
+<div class="spec-card"><div><div class="k">Collapsed</div><div class="kd">Collapsing leaves a small tab hanging from the top edge, with the FancyMenu mark so players know what it is. Click it to bring the bar back.</div></div><div class="spec-frame" style="height: 64px; width: 100%"><div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""></div><div style="position: relative"><dc-import name="MenuBar" kind="Overlay" collapsed="{{yes}}" standalone="{{no}}" hint-size="360px,28px"></dc-import></div></div></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 20px; margin-top: 20px">
+<div class="spec-card wide"><div><div class="k">Light theme</div><div class="kd">Same layout, light tokens. The material stays translucent so the screen still shows through.</div></div><div class="spec-frame" style="height: 46px"><dc-import name="MenuBar" kind="Overlay" theme="Light" material="Blur" frame-height="46" hint-size="984px,46px"></dc-import></div></div>
+<div class="spec-card wide"><div><div class="k">Solid material</div><div class="kd">With blur turned off in FancyMenu's UI settings, the bar uses the solid window color.</div></div><div class="spec-frame" style="height: 46px"><dc-import name="MenuBar" kind="Editor" theme="Dark" material="Solid" unsaved="{{no}}" frame-height="46" hint-size="984px,46px"></dc-import></div></div>
+<div class="spec-card wide"><div><div class="k">Narrow windows</div><div class="kd">When there isn't room, the center title steps aside first. Menu titles are never cut off.</div></div><div><div class="spec-frame" style="height: 46px; width: 760px"><div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""></div><div style="position: relative"><dc-import name="MenuBar" kind="Editor" unsaved="{{yes}}" standalone="{{no}}" hint-size="760px,30px"></dc-import></div></div></div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Where things moved</h2>
+<div class="group" style="background: var(--win)">
+<div class="mv head"><div>Today</div><div></div><div>Proposed</div><div>Why</div></div>
+<div class="mv"><div class="from">Customization › Current Screen Customization: Enabled</div><div class="arrow" aria-hidden="true">→</div><div class="to">This Screen › Customize This Screen</div><div class="why">A switch, in the section that now opens the menu: the screen you are on.</div></div><div class="mv"><div class="from">Customization › Layouts › (submenu)</div><div class="arrow" aria-hidden="true">→</div><div class="to">Layouts section</div><div class="why">Up to 5 layouts are listed right in the menu, one hover away from Edit Layout. With more, they collapse into an All Layouts row with the count and a searchable submenu, so setups with 50 layouts stay usable. New Layout always comes first.</div></div><div class="mv"><div class="from">Customization › Copy Identifier of Current Screen</div><div class="arrow" aria-hidden="true">→</div><div class="to">This Screen › Copy Screen Identifier</div><div class="why">Or click the center title, which already shows the identifier.</div></div><div class="mv"><div class="from">Customization › Expose Scroll Area Content Of Current Screen</div><div class="arrow" aria-hidden="true">→</div><div class="to">This Screen › Expose Scroll Area Content</div><div class="why">Shorter, since the section already says which screen.</div></div><div class="mv"><div class="from">Customization › Custom GUIs › Override Current with Custom GUI</div><div class="arrow" aria-hidden="true">→</div><div class="to">This Screen › Override With Custom GUI</div><div class="why">It changes this screen, so it sits with the other screen actions.</div></div><div class="mv"><div class="from">Customization › Profiles, Global Customizations, Custom GUIs, Variables, Listeners, Schedulers, Pre-Load Resources</div><div class="arrow" aria-hidden="true">→</div><div class="to">Manage section</div><div class="why">Same entries, now under one label.</div></div><div class="mv"><div class="from">Customization › Settings, Reload FancyMenu, Reload Minecraft Resources, Hide Menu Bar</div><div class="arrow" aria-hidden="true">→</div><div class="to">FancyMenu section</div><div class="why">Everything about FancyMenu itself, in one place.</div></div><div class="mv"><div class="from">Customization › Force-Close Current Screen</div><div class="arrow" aria-hidden="true">→</div><div class="to">Removed</div><div class="why">It did the same as the Close This Screen button on the bar, which stays.</div></div><div class="mv"><div class="from">Customization › Debug Overlay</div><div class="arrow" aria-hidden="true">→</div><div class="to">Tools › Debug Overlay</div><div class="why">It's a tool, and Customization is the longest menu. The row shows whether it's on.</div></div><div class="mv"><div class="from">Customization › Kill-Switch Screen Customization</div><div class="arrow" aria-hidden="true">→</div><div class="to">Last row of Customization, in red</div><div class="why">Destructive actions go at the bottom, like Delete in the context menus.</div></div><div class="mv"><div class="from">Editor bar › * Unsaved Changes! *</div><div class="arrow" aria-hidden="true">→</div><div class="to">Save button on the right</div><div class="why">Shows the save state and saves in one click.</div></div><div class="mv"><div class="from">Editor › Window › Grid: Enabled, Grid Size: 20 and similar rows</div><div class="arrow" aria-hidden="true">→</div><div class="to">Switches and values in three sections</div><div class="why">Grid, Anchor Overlay and Element Controls, so the long menu is easy to scan.</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Behavior</h2>
+<ul class="notes">
+<li>Click a title to open its menu. While a menu is open, moving to another title switches menus without another click.</li>
+<li>The arrow keys move between menus and rows, Esc closes, and typing searches the menu under the pointer. Long menus show their search field right away, like in the context menus.</li>
+<li>Menus are always as wide as their longest label, and nothing in the bar or its menus is ever truncated.</li>
+<li>The bar follows FancyMenu's UI scale, theme and blur setting, like every other window.</li>
+</ul>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"$preview":{"width":1440,"height":2780}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark',
+      no: false, yes: true
+    };
+  }
+}
+</script>
+</body>
+</html>

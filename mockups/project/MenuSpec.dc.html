@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Context menus, today and proposed</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.spec-row{display:grid;grid-template-columns:250px 330px minmax(0,1fr);border-bottom:1px solid var(--sep)}
+.spec-row:last-child{border-bottom:0}
+.spec-row > div{padding:20px}
+.ok-v{color:#31ce05}
+.bad-v{color:#ed4545}
+.hl-v{color:#e59b12}
+</style>
+</helmet>
+<div class="fm spec {{themeClass}}" style="min-height: 2920px">
+
+<header style="display: flex; flex-direction: column; gap: 12px; max-width: 900px">
+<div style="font-size: 12px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; color: var(--text-3)">FancyMenu · UI rework concept · context menus</div>
+<h1 style="margin: 0; font-size: 34px; line-height: 1.15; font-weight: 700; color: var(--title)">Context menus that show their state</h1>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: var(--text-2)">The right-click menus are where most of FancyMenu gets configured, so they get the same controls as the windows: switches, segmented controls and values you can read at a glance. Every menu can be searched by typing, long menus get sections and show their search field right away, the most-used actions move to the top, and placeholder input works in every row that supports it.</p>
+</header>
+
+<div class="group" style="background: var(--win)">
+<div class="spec-row" style="font-size: 12px; font-weight: 600; color: var(--text-3)"><div style="padding-top: 12px; padding-bottom: 12px">Entry</div><div style="padding-top: 12px; padding-bottom: 12px">Today</div><div style="padding-top: 12px; padding-bottom: 12px">Proposed</div></div>
+
+<div class="spec-row">
+<div><div class="k">On or off</div><div class="kd">Clicking still flips it, and the menu stays open. The switch shows the state without you having to read colored text.</div></div>
+<div><div class="legacy-menu"><div class="lr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 5h10v10H5zM9 19h10V9"></path></svg>Text Shadow: <span class="ok-v">Enabled</span></div><div class="lr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 4v16M8.5 7.5L12 4l3.5 3.5M8.5 16.5L12 20l3.5-3.5"></path></svg>Scrolling: <span class="bad-v">Disabled</span></div></div></div>
+<div><dc-import name="ContextMenu" items="{{rowSwitch}}" search="" standalone="{{no}}" hint-size="auto,64px"></dc-import></div>
+</div>
+
+<div class="spec-row">
+<div><div class="k">Manual mode</div><div class="kd">The switch stays the quick way to turn a setting on or off. The faint { } button next to it switches the setting to placeholder text, replacing the third "Manual" click state. The chip shows what the text currently resolves to: click it to edit the text, hover the row to read it in full.</div></div>
+<div><div class="legacy-menu"><div class="lr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9.5 11V5.5a1.5 1.5 0 0 1 3 0V11"></path></svg>Interactable: <span class="hl-v">Manual</span><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9.5 6.5l5.5 5.5-5.5 5.5"></path></svg></div><div class="lr" style="padding-left: 26px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 6.5h14M12 6.5v12"></path></svg>Set As Plain Text</div></div><div class="kd" style="margin-top: 8px">Clicking cycles through Enabled, Manual and Disabled. The text input only exists while the setting is on Manual.</div></div>
+<div style="display: flex; gap: 8px; align-items: flex-start">
+<dc-import name="ContextMenu" items="{{rowManual}}" search="" standalone="{{no}}" hint-size="auto,64px"></dc-import>
+<div class="help-tag" style="position: relative; animation: none">Decided by placeholder text:<span class="code">{"placeholder":"getvariable","vars":{"name":"menu_unlocked"}}</span><span class="res">Right now this is true.</span></div>
+</div>
+</div>
+
+<div class="spec-row">
+<div><div class="k">Values with placeholders</div><div class="kd">Values are changed right in the row: with a slider for ranges, or with the number picker when you click the row. The same { } button switches to placeholder text. A reset arrow appears on hover when the value isn't the default, so the extra submenu goes away.</div></div>
+<div><div class="legacy-menu"><div class="lr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 1 0 0-17M12 3.5v17"></path></svg>Opacity: <span class="hl-v">0.8</span><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9.5 6.5l5.5 5.5-5.5 5.5"></path></svg></div><div class="lr" style="padding-left: 26px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3.5 12h17M12 9a3 3 0 1 0 0 6 3 3 0 1 0 0-6"></path></svg>Set Via Number Picker</div><div class="lr" style="padding-left: 26px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 6.5h14M12 6.5v12"></path></svg>Set As Plain Text</div><div class="lr" style="padding-left: 26px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9.5 6L5 10.5l4.5 4.5M5 10.5h9.5a4.5 4.5 0 0 1 0 9H11"></path></svg>Reset</div><div class="lr" style="padding-left: 26px; opacity: .6">0.8</div></div></div>
+<div><dc-import name="ContextMenu" items="{{rowValues}}" search="" standalone="{{no}}" hint-size="auto,90px"></dc-import></div>
+</div>
+
+<div class="spec-row">
+<div><div class="k">Several elements selected</div><div class="kd">When the selected elements disagree, the switch shows its knob in the middle and values show "Mixed". Clicking the switch turns the setting on for all of them, like today.</div></div>
+<div><div class="legacy-menu"><div class="lr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 5h10v10H5zM9 19h10V9"></path></svg>Text Shadow: <span class="bad-v">Disabled</span></div></div><div class="kd" style="margin-top: 8px">A mixed selection looks exactly like one where everything is off.</div></div>
+<div><dc-import name="ContextMenu" items="{{rowMixed}}" search="" standalone="{{no}}" hint-size="auto,64px"></dc-import></div>
+</div>
+
+<div class="spec-row">
+<div><div class="k">2–3 choices</div><div class="kd">Every option is visible, and one click picks it. This is the issue's segmented control, made smaller to fit a menu row.</div></div>
+<div><div class="legacy-menu"><div class="lr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3.5 17l3.5-9 3.5 9M4.8 14h4.4M16 11.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 1 0 0-5M18.5 11v6"></path></svg>Case Mode: <span class="hl-v">Normal</span></div><div class="lr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6.5 4h7.5l4.5 4.5V20h-12z"></path></svg>Source Mode: <span class="hl-v">Direct</span></div></div></div>
+<div><dc-import name="ContextMenu" items="{{rowSeg}}" search="" standalone="{{no}}" hint-size="auto,64px"></dc-import></div>
+</div>
+
+<div class="spec-row">
+<div><div class="k">Many choices</div><div class="kd">The current value shows on the right. Hovering opens a submenu with every option and a checkmark on the current one.</div></div>
+<div><div class="legacy-menu"><div class="lr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 20V10M12 20v-4M12 12V4M19 20v-7"></path></svg>Sound Channel: <span class="hl-v">Master</span></div></div><div class="kd" style="margin-top: 8px">Takes 11 clicks to see every channel</div></div>
+<div style="display: flex; align-items: flex-start; gap: 2px">
+<dc-import name="ContextMenu" items="{{rowMany}}" search="" standalone="{{no}}" hint-size="auto,40px"></dc-import>
+<div style="margin-top: -6px"><dc-import name="ContextMenu" items="{{rowManySub}}" search="" standalone="{{no}}" hint-size="auto,200px"></dc-import></div>
+</div>
+</div>
+
+<div class="spec-row">
+<div><div class="k">Opens a dialog</div><div class="kd">The current value shows on the right, so you don't have to open the dialog just to check it.</div></div>
+<div><div class="legacy-menu"><div class="lr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6.5h11M4 11h7M4 15.5h4"></path></svg>Text Content</div><div class="lr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3.5 15.5l12-12 5 5-12 12z"></path></svg>Force GUI Scale</div></div></div>
+<div><dc-import name="ContextMenu" items="{{rowDialog}}" search="" standalone="{{no}}" hint-size="auto,64px"></dc-import></div>
+</div>
+
+<div class="spec-row">
+<div><div class="k">Colors</div><div class="kd">A small swatch of the current color sits next to its hex value, so you see the color without opening the picker. Transparent colors show over a checkerboard. Colors whose default comes from the UI theme show that color and its hex the same way, so they look like any other value. With placeholder text, the chip replaces both, like for every other value.</div></div>
+<div><div class="legacy-menu"><div class="lr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3.5a8.5 8.5 0 0 0 0 17c1.2 0 1.8-.8 1.8-1.7 0-1.3-1-1.6-1-2.6 0-.9.7-1.4 1.6-1.4H17a3.5 3.5 0 0 0 3.5-3.5c0-4.3-3.8-7.8-8.5-7.8z"></path></svg>Text Color</div><div class="lr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3.5a8.5 8.5 0 0 0 0 17c1.2 0 1.8-.8 1.8-1.7 0-1.3-1-1.6-1-2.6 0-.9.7-1.4 1.6-1.4H17a3.5 3.5 0 0 0 3.5-3.5c0-4.3-3.8-7.8-8.5-7.8z"></path></svg>Shadow Color</div><div class="lr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3.5a8.5 8.5 0 0 0 0 17c1.2 0 1.8-.8 1.8-1.7 0-1.3-1-1.6-1-2.6 0-.9.7-1.4 1.6-1.4H17a3.5 3.5 0 0 0 3.5-3.5c0-4.3-3.8-7.8-8.5-7.8z"></path></svg>Custom Anchor Overlay Border Color (HEX)</div></div><div class="kd" style="margin-top: 8px">You only see a color after opening its input.</div></div>
+<div><dc-import name="ContextMenu" items="{{rowColor}}" search="" standalone="{{no}}" hint-size="auto,90px"></dc-import></div>
+</div>
+
+<div class="spec-row">
+<div><div class="k">Grouping</div><div class="kd">Small headers name each group, so a long menu reads like sections. Settings that need another one turned on gray out until it is.</div></div>
+<div><div class="legacy-menu"><div class="lr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h3.5c4.5 0 4.5 10 9 10H20M4 17h3.5"></path></svg>Random Mode: <span class="bad-v">Disabled</span></div><div class="lr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 4.5h10v15H7z"></path></svg>Set Random Group</div><div class="lr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 7.5V12l3 2"></path></svg>Randomize Only First Time: <span class="bad-v">Disabled</span></div><div class="lsepl"></div><div class="lr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3.5 15.5l12-12 5 5-12 12z"></path></svg>Force GUI Scale</div></div></div>
+<div><dc-import name="ContextMenu" items="{{rowGroup}}" search="" standalone="{{no}}" hint-size="auto,150px"></dc-import></div>
+</div>
+
+<div class="spec-row">
+<div><div class="k">Help</div><div class="kd">The "i" icon on almost every entry goes away. Hovering a row for a moment shows its help in a card next to the menu, so the card doesn't cover the other entries.</div></div>
+<div><div class="legacy-menu"><div class="lr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9.5 11V5.5a1.5 1.5 0 0 1 3 0V11"></path></svg>Interactable: <span class="ok-v">Enabled</span><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 1 0 0-17M12 11v5M12 8h0"></path></svg></div><div class="lr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 4v16"></path></svg>Scrolling: <span class="bad-v">Disabled</span><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 1 0 0-17M12 11v5M12 8h0"></path></svg></div></div></div>
+<div style="position: relative; display: flex; gap: 8px; align-items: flex-start">
+<dc-import name="ContextMenu" items="{{rowHelp}}" search="" standalone="{{no}}" hint-size="auto,64px"></dc-import>
+<div class="help-tag" style="position: relative; animation: none">If this element should be interactable. Turn it off if clicking elements above or below this text causes problems.</div>
+</div>
+</div>
+
+<div class="spec-row">
+<div><div class="k">Shortcuts and danger</div><div class="kd">Shortcuts that already work in the editor show on the right, as ⌘ on macOS. Delete is red, and so is its highlight.</div></div>
+<div><div class="legacy-menu"><div class="lr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M10 8.5h8v11h-8z"></path></svg>Copy</div><div class="lr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 7h14M7 7l1 12h8l1-12"></path></svg>Delete</div></div></div>
+<div><dc-import name="ContextMenu" items="{{rowDanger}}" search="" standalone="{{no}}" hint-size="auto,64px"></dc-import></div>
+</div>
+
+<div class="spec-row">
+<div><div class="k">Search</div><div class="kd">Every menu and submenu can be searched: just start typing. The text goes to the menu under the pointer, otherwise to the last menu you searched in, otherwise the main menu. Short menus keep the field hidden until you type or press Ctrl+F. Matches are highlighted, section headers stay with their matches, and the menu keeps its width while you type.</div></div>
+<div><div class="legacy-menu"><div class="lr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M10.5 4.5a6 6 0 1 0 0 12 6 6 0 1 0 0-12zM15 15l5 5"></path></svg>sha</div><div class="lsepl"></div><div class="lr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 5h10v10H5zM9 19h10V9"></path></svg>Text Shadow: <span class="ok-v">Enabled</span></div></div><div class="kd" style="margin-top: 8px">Same rules for where the text goes, but the field is hidden in every menu until you type, so it's easy to miss.</div></div>
+<div><dc-import name="ContextMenu" items="{{rowSearch}}" query="sha" standalone="{{no}}" hint-size="auto,130px"></dc-import></div>
+</div>
+
+<div class="spec-row">
+<div><div class="k">Long menus</div><div class="kd">Menus with more than 10 entries show the search field from the start, so filtering is never a hidden feature where it matters most. Each element type's own settings come first. The shared ones (position, visibility, effects) move into three submenus.</div></div>
+<div><div class="kd" style="margin-top: 0">The Text element menu has about 45 entries today. New Element lists 24 types alphabetically, all with the same icon.</div></div>
+<div><div class="kd" style="margin-top: 0; color: var(--text-2)">See the two editor scenes: 19 entries for the Text element, and New Element as a plain list with an icon for each type and a search field on top.</div></div>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"$preview":{"width":1440,"height":2920}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark',
+      no: false,
+      rowManual: [{ ic: 'shadow', label: 'Text Shadow', sw: true, on: true, fx: true }, { ic: 'touch', label: 'Interactable', sw: true, fx: true, manual: true, manualVal: 'true', hl: true }],
+      rowValues: [{ ic: 'opacity', label: 'Opacity', slider: 0.8, fx: true, changed: true, hl: true }, { ic: 'timer', label: 'Appearance Delay', val: '2.5 s', fx: true }, { ic: 'rotate', label: 'Rotation', fx: true, manual: true, manualVal: '45' }],
+      rowMixed: [{ ic: 'shadow', label: 'Text Shadow', sw: true, mixed: true, fx: true }, { ic: 'opacity', label: 'Opacity', val: 'Mixed', fx: true }],
+      rowSwitch: [{ ic: 'shadow', label: 'Text Shadow', sw: true, on: true }, { ic: 'swipe', label: 'Scrolling', sw: true, on: false }],
+      rowSeg: [{ ic: 'case', label: 'Case', seg: ['Normal', 'lower', 'UPPER'], segWidth: 160 }, { ic: 'file', label: 'Source', seg: ['Direct', 'Resource'], segWidth: 136 }],
+      rowMany: [{ ic: 'channel', label: 'Sound Channel', val: 'Master', sub: true, hl: true }],
+      rowManySub: [{ radio: true, checked: true, label: 'Master' }, { radio: true, label: 'Music' }, { radio: true, label: 'Weather' }, { radio: true, label: 'Blocks' }, { radio: true, label: 'Players' }, { radio: true, label: 'Ambient' }, { radio: true, label: 'Voice' }],
+      rowDialog: [{ ic: 'editor', label: 'Text Content', val: 'Welcome back!' }, { ic: 'ruler', label: 'Force GUI Scale', val: 'Off' }],
+      rowGroup: [{ head: 'Random Mode' }, { ic: 'shuffle', label: 'Random Mode', sw: true, on: false }, { ic: 'cards', label: 'Random Group', val: 'title_screens', disabled: true }, { ic: 'once', label: 'Only First Time', sw: true, on: false, disabled: true }, { head: 'Scaling' }, { ic: 'ruler', label: 'Force GUI Scale', val: 'Off' }],
+      rowHelp: [{ ic: 'touch', label: 'Interactable', sw: true, on: true, hl: true }, { ic: 'swipe', label: 'Scrolling', sw: true, on: false }],
+      rowDanger: [{ ic: 'copy', label: 'Copy', kbd: 'Ctrl+C' }, { ic: 'trash', label: 'Delete', kbd: 'Del', danger: true, hl: true }],
+      rowColor: [{ ic: 'palette', label: 'Text Color', swatch: '#ffd166', val: '#FFD166' }, { ic: 'shadow', label: 'Shadow Color', swatch: '#00000080', val: '#00000080', fx: true }, { ic: 'rect', label: 'Border Color', swatch: '#114F34', val: '#114F34' }],
+      rowSearch: [{ head: 'Text' }, { ic: 'shadow', label: 'Text Shadow', sw: true, on: true }, { ic: 'palette', label: 'Shadow Color', swatch: '#1b1b26', val: '#1B1B26' }, { ic: 'case', label: 'Case', val: 'Normal' }, { sep: true }, { ic: 'opacity', label: 'Opacity', slider: 1 }, { ic: 'copy', label: 'Copy', kbd: 'Ctrl+C' }]
+    };
+  }
+}
+</script>
+</body>
+</html>

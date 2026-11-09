@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Choose Image Resource</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="fm {{themeClass}} {{matClass}}" style="position: relative; width: 1200px; height: 800px; overflow: hidden">
+
+<div class="backdrop" aria-hidden="true">
+<img class="art" src="dusk_valley.png" alt="">
+<div class="dim"></div>
+<div class="gridlines"></div>
+<div class="le" style="left: 420px; top: 64px; width: 360px; height: 64px; display: grid; place-items: center; color: #fff; font-size: 40px; font-weight: 700; letter-spacing: 1px; text-shadow: 0 3px 0 rgba(0, 0, 0, .35)">Dusk Valley</div>
+<div class="le le-btn" style="left: 470px; top: 640px; width: 260px; height: 36px">Play</div>
+<div class="le le-btn" style="left: 470px; top: 686px; width: 260px; height: 36px">Options</div>
+<div class="le le-btn" style="left: 470px; top: 732px; width: 260px; height: 36px">Quit Game</div>
+</div>
+
+<div class="win" style="left: 220px; top: 168px; width: 760px">
+<div class="titlebar">
+<div class="tl"><button class="c" aria-label="Close"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3.6 3.6l4.8 4.8M8.4 3.6l-4.8 4.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg></button><button class="m" aria-label="Collapse"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 6h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg></button><button class="x" aria-label="Maximize"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3.3 3.3h4.2L3.3 7.5zM8.7 8.7H4.5l4.2-4.2z" fill="currentColor"></path></svg></button></div>
+<div class="wt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"></rect><circle cx="9" cy="10" r="1.7"></circle><path d="M4 17.5l4.8-4.3 3.4 3 3-2.6 4.8 4.2"></path></svg>Choose Image Resource</div>
+<div></div>
+</div>
+
+<div class="body">
+<div>
+<div class="seg" role="radiogroup" aria-label="Source type">
+<div class="thumb" style="width: calc((100% - 4px) / 3); transform: {{srcX}}"></div>
+<button class="{{srcC.a}}" role="radio" aria-checked="{{srcA.a}}" onClick="{{pick0}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 7.5a2 2 0 0 1 2-2h3.6l2 2h7.4a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"></path></svg>Local</button>
+<button class="{{srcC.b}}" role="radio" aria-checked="{{srcA.b}}" onClick="{{pick1}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.2l7.8 4.4v8.8L12 20.8l-7.8-4.4V7.6z"></path><path d="M4.4 7.7L12 12l7.6-4.3M12 12v8.6"></path></svg>Minecraft Resource</button>
+<button class="{{srcC.c}}" role="radio" aria-checked="{{srcA.c}}" onClick="{{pick2}}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"></circle><path d="M3.5 12h17M12 3.5c2.3 2.4 3.5 5.2 3.5 8.5s-1.2 6.1-3.5 8.5c-2.3-2.4-3.5-5.2-3.5-8.5s1.2-6.1 3.5-8.5z"></path></svg>Web</button>
+</div>
+<p class="foot" style="min-height: 17px">{{desc}}</p>
+</div>
+
+<div class="group lw-64">
+<div class="row">
+<span class="lbl">{{fieldLabel}}</span>
+<div class="ctl grow">
+<div class="field">
+<sc-if value="{{isLocal}}" hint-placeholder-val="{{true}}"><span class="pre">/config/fancymenu/assets/</span></sc-if>
+<input type="text" aria-label="{{fieldLabel}}" value="{{fieldValue}}">
+<button class="ib" data-tip="Edit as text, with placeholders" aria-label="Edit as text, with placeholders"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4.5c-2 0-2 1.5-2 3.5s-1.5 3-2.5 4c1 1 2.5 2 2.5 4s0 3.5 2 3.5M15 4.5c2 0 2 1.5 2 3.5s1.5 3 2.5 4c-1 1-2.5 2-2.5 4s0 3.5-2 3.5"></path></svg></button>
+</div>
+<sc-if value="{{hasButton}}" hint-placeholder-val="{{true}}"><button class="btn">{{buttonLabel}}</button></sc-if>
+</div>
+</div>
+<div class="row" style="padding-top: 12px; padding-bottom: 12px">
+<div class="checker" style="width: 176px; height: 99px; flex: 0 0 auto; border-radius: 6px; overflow: hidden; box-shadow: 0 0 0 1px var(--group-line)"><img src="dusk_valley.png" alt="Preview of dusk_valley.png" style="display: block; width: 100%; height: 100%; object-fit: contain; image-rendering: pixelated"></div>
+<div style="display: flex; flex-direction: column; gap: 3px; min-width: 0">
+<div style="font-weight: 600; color: var(--title); overflow-wrap: anywhere">dusk_valley.png</div>
+<div style="color: var(--text-3); font-size: 12px">128 × 72 · PNG · 2 KB</div>
+<div style="display: flex; align-items: center; gap: 5px; margin-top: 6px; color: var(--ok); font-size: 12px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7"></path></svg>Loaded and ready</div>
+</div>
+</div>
+</div>
+
+<div class="chips" aria-label="Supported formats">
+<span style="font-size: 11.5px; color: var(--text-3); margin-right: 4px">Supported formats</span>
+<span class="chip">JPG</span><span class="chip">JPEG</span><span class="chip">PNG</span><span class="chip">GIF</span><span class="chip">APNG</span><span class="chip">FMA</span><span class="chip">AFMA</span>
+</div>
+</div>
+
+<div class="footer">
+<span class="lead" style="display: flex; align-items: center; gap: 6px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.8 12s3.4-6 9.2-6 9.2 6 9.2 6-3.4 6-9.2 6-9.2-6-9.2-6zM9.4 12a2.6 2.6 0 1 0 5.2 0 2.6 2.6 0 1 0-5.2 0"></path></svg>Live preview on Background</span>
+<button class="btn wide">Cancel</button>
+<button class="btn wide primary">Choose</button>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Dark&quot;,&quot;Light&quot;],&quot;default&quot;:&quot;Dark&quot;},&quot;material&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Solid&quot;,&quot;Blur&quot;],&quot;default&quot;:&quot;Solid&quot;},&quot;source&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Local&quot;,&quot;Minecraft Resource&quot;,&quot;Web&quot;],&quot;default&quot;:&quot;Local&quot;},&quot;$preview&quot;:{&quot;width&quot;:1200,&quot;height&quot;:800}}">
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const names = ['Local', 'Minecraft Resource', 'Web'];
+    const src = s.src ?? Math.max(0, names.indexOf(this.props.source ?? 'Local'));
+    const modes = [
+      { label: 'File', value: 'backgrounds/dusk_valley.png', button: 'Browse Files', desc: 'Loads a file from your Minecraft instance folder. Your FancyMenu assets live in /config/fancymenu/assets/. Placeholders work in every source.' },
+      { label: 'Location', value: 'mypack:textures/gui/dusk_valley.png', button: 'Choose Location', desc: "Uses Minecraft's resource system, so textures from resource packs, mods and vanilla all work." },
+      { label: 'URL', value: 'https://example.com/images/dusk_valley.png', button: '', desc: 'Loads the file from the internet. Use a direct link that ends with the file name, like .png.' }
+    ];
+    const m = modes[src];
+    const keys = ['a', 'b', 'c'];
+    const srcC = {};
+    const srcA = {};
+    keys.forEach((k, i) => { srcC[k] = i === src ? 'on' : ''; srcA[k] = i === src ? 'true' : 'false'; });
+    return {
+      themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark',
+      matClass: (this.props.material ?? 'Solid') === 'Blur' ? 'mat-blur' : '',
+      srcI: src, srcX: 'translateX(' + (src * 100) + '%)', srcC, srcA,
+      pick0: () => this.setState({ src: 0 }), pick1: () => this.setState({ src: 1 }), pick2: () => this.setState({ src: 2 }),
+      desc: m.desc, fieldLabel: m.label, fieldValue: m.value,
+      isLocal: src === 0, hasButton: !!m.button, buttonLabel: m.button
+    };
+  }
+}
+</script>
+</body>
+</html>
