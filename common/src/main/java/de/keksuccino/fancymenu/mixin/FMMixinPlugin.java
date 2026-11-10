@@ -23,9 +23,6 @@ public class FMMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-        if (mixinClassName.endsWith("MixinWatermediaNeoBootstrap")) {
-            return isKonkreteLoaded() && isWatermediaLoaded();
-        }
         return isKonkreteLoaded();
     }
 
@@ -54,10 +51,6 @@ public class FMMixinPlugin implements IMixinConfigPlugin {
             return true;
         } catch (Exception ignore) {}
         return false;
-    }
-
-    private static boolean isWatermediaLoaded() {
-        return FMMixinPlugin.class.getClassLoader().getResource("org/watermedia/api/media/MediaAPI.class") != null;
     }
 
 }
