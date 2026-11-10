@@ -76,7 +76,7 @@ versionRange="[${watermedia_version},)"
 side="CLIENT"
 
 [[dependencies.${mod_id}]]
-modId="wm_binaries"
+modId="watermedia_binaries"
 type="optional"
 ordering="NONE"
 versionRange="[${watermedia_binaries_version},)"
