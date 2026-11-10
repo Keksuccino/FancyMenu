@@ -36,7 +36,7 @@
     "rinku": ">=${rinku_min_version}",
     "fancy_entity_renderer": ">=${fer_version}",
     "watermedia": ">=${watermedia_version}",
-    "wm_binaries": ">=${watermedia_binaries_version}"
+    "watermedia_binaries": ">=${watermedia_binaries_version}"
   },
   "breaks": {
     "rinku": "<${rinku_min_version}",
@@ -45,7 +45,7 @@
     "fmextension_video": "*",
     "rrls": "<4.0.1",
     "watermedia": "<${watermedia_version}",
-    "wm_binaries": "<${watermedia_binaries_version}"
+    "watermedia_binaries": "<${watermedia_binaries_version}"
   },
   "accessWidener": "fancymenu.accesswidener"
 }

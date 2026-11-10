@@ -28,6 +28,8 @@ dependencies {
     include(implementation 'org.joml:joml:1.10.8')
     modImplementation "maven.modrinth:watermedia:${watermedia_version}"
     modImplementation "maven.modrinth:watermedia-binaries:${watermedia_binaries_version}"
+    // Loom strips jar-in-jar libraries from mod dependencies, so WaterMedia's nested config library needs its own dev runtime dependency
+    runtimeOnly "com.github.SrRapero720:waterconfig:${watermedia_waterconfig_version}"
     modImplementation "maven.modrinth:melody:1.0.1-1.19.2-fabric"
     modImplementation "maven.modrinth:konkrete:1.8.0-1.19.1-1.19.2-fabric"
     modImplementation "maven.modrinth:modmenu:4.2.0-beta.2"
