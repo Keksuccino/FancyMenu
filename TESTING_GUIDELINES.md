@@ -12,12 +12,17 @@ JAVA_HOME=$(/usr/libexec/java_home -v 25) sh offscreen_client.sh neoforge
 
 - The script runs the loader's client task (`runClient`, or `Client` for Forge) with the `FANCYMENU_TEST_OFFSCREEN=true` environment variable.
   Extra arguments get passed on to Gradle.
-- It sets `use-cache=false` in `run_client/config/rinku/rinku.properties` for the run, so Rinku's Chromium uses CEF's default profile
+- By default the client uses the `run_client` game directory. To test with a separate, clean game instance, set `FANCYMENU_TEST_RUN_DIR`
+  to a folder name in the project root, for example `FANCYMENU_TEST_RUN_DIR=run_client_test`. The script passes it to the loader build
+  scripts as the `fancymenu_client_run_dir` Gradle property. Rinku keeps its Chromium libraries (~360 MB) in the game directory and
+  rejects a symlinked `rinku-libraries` folder as unsafe, so clone it into the new folder before its first launch:
+  `cp -cR run_client/rinku-libraries <new folder>/` (an APFS clone, which takes no extra space).
+- It sets `use-cache=false` in `<game directory>/config/rinku/rinku.properties` for the run, so Rinku's Chromium uses CEF's default profile
   instead of the user's persistent Rinku profile, and it clears the crash mark a killed test run leaves in that profile.
   Chromium would otherwise open a visible "Restore pages?" window.
 - Off-screen clients of all workspaces run one at a time, guarded by a lock in `$TMPDIR`. A Chromium starting while another one uses
   the same profile makes the running one open a visible "New Tab" window. The script compiles the loader before waiting for the lock.
-- For (Neo)Forge, it also sets `earlyWindowControl = false` in `run_client/config/fml.toml` for the run.
+- For (Neo)Forge, it also sets `earlyWindowControl = false` in `<game directory>/config/fml.toml` for the run.
   The early loading window opens before any mod code runs, so the FML config is the only way to keep it closed.
 - Both files get restored when the script exits.
 - The game log contains `Off-screen test client mode is active!` when the mode works.
