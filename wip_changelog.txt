@@ -2,7 +2,7 @@
 CHANGELOG | FANCYMENU v3.10.0 [ W I P !! Not public yet !! ]
 
 - Added Ukrainian translation (#1817)
-- Added support for the latest WaterMedia (v3.0.1) and WaterMedia Binaries (v3.0.1)
+- Added support for the latest WaterMedia (v3.0.1) and WaterMedia Binaries (v3.0.1) (#1828)
   - FancyMenu now needs WaterMedia 3.0.1+, older versions will not work anymore!
 - Added Profiles, which save your whole FancyMenu setup so you can switch between setups at any time (Customization → Profiles)
   - Profiles can have a title, version, authors, a Markdown description, an issue tracker link, social links and a 64x64 icon
