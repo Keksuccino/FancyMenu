@@ -2,6 +2,7 @@
 # Launches a dev client that never shows a window or takes focus. See TESTING_GUIDELINES.md.
 # Usage: sh offscreen_client.sh <loader module> [additional Gradle arguments]
 # Set JAVA_HOME to the project's Java version before running it.
+# Set FANCYMENU_TEST_RUN_DIR to a folder name in the project root to run a separate game instance instead of run_client.
 
 if [ "$#" -lt 1 ]; then
     echo "Usage: sh offscreen_client.sh <loader module> [additional Gradle arguments]" >&2
@@ -14,8 +15,9 @@ cd "$(dirname "$0")" || exit 1
 # Config overrides for the run, restored when the script exits:
 # - Rinku uses CEF's default Chromium profile instead of the user's persistent Rinku profile (see reset_chromium_crash_mark).
 # - (Neo)Forge opens its early loading window before any mod code runs, so only its FML config can keep it closed.
-RINKU_CONFIG="run_client/config/rinku/rinku.properties"
-FML_CONFIG="run_client/config/fml.toml"
+RUN_DIR="${FANCYMENU_TEST_RUN_DIR:-run_client}"
+RINKU_CONFIG="$RUN_DIR/config/rinku/rinku.properties"
+FML_CONFIG="$RUN_DIR/config/fml.toml"
 CLIENT_LOCK="${TMPDIR:-/tmp}/fancymenu-offscreen-client.lock"
 HOLDS_CLIENT_LOCK=false
 
@@ -108,4 +110,5 @@ if [ "$LOADER" != "fabric" ]; then
     override_config "$FML_CONFIG" earlyWindowControl "earlyWindowControl = false"
 fi
 
-FANCYMENU_TEST_OFFSCREEN=true sh gradlew ":$LOADER:$CLIENT_TASK" "$@"
+# The loader build scripts read the game directory of the client run from this property
+FANCYMENU_TEST_OFFSCREEN=true sh gradlew ":$LOADER:$CLIENT_TASK" "-Pfancymenu_client_run_dir=$RUN_DIR" "$@"
