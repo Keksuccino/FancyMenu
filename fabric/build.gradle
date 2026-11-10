@@ -57,7 +57,8 @@ loom {
             client()
             setConfigName("Fabric Client")
             ideConfigGenerated(true)
-            runDir("../run_client")
+            // offscreen_client.sh can point this to a separate game instance, see TESTING_GUIDELINES.md
+            runDir("../" + (project.findProperty("fancymenu_client_run_dir") ?: "run_client"))
         }
         server {
             server()
