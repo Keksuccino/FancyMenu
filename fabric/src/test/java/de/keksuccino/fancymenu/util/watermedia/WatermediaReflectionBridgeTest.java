@@ -7,22 +7,19 @@ import java.util.Base64;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class WatermediaReflectionBridgeTest {
 
     @Test
-    void createsErrorMrlThroughWatermediaV22StringFactory() {
-        // Malformed input is handled synchronously by MediaAPI#mrl and cannot start network or native media work.
-        Object mrl = WatermediaReflectionBridge.createMrl("https://[");
-
-        assertNotNull(mrl);
-        assertEquals("ERROR", WatermediaReflectionBridge.mrlStatusName(mrl));
-        assertTrue(WatermediaReflectionBridge.isMrlFailed(mrl));
+    void createMrlReturnsNullInsteadOfThrowingBeforeWatermediaStarted() {
+        // PlayerAPI#mrl throws until WaterMedia#start ran, which never happens in unit tests. Malformed input keeps the call free of network work in case it ever gets through.
+        assertNull(WatermediaReflectionBridge.createMrl("https://["));
     }
 
     @Test
-    void decodesImageThroughWatermediaV22CodecsApi() {
+    void decodesImageThroughWatermediaCodecsApi() {
         byte[] png = Base64.getDecoder().decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=");
 
         Object image = WatermediaReflectionBridge.decodeImage(png);
@@ -33,6 +30,9 @@ class WatermediaReflectionBridgeTest {
         assertNotNull(frames);
         assertEquals(1, frames.length);
         assertTrue(frames[0].hasRemaining());
+        long[] delays = WatermediaReflectionBridge.imageDelay(image);
+        assertNotNull(delays);
+        assertEquals(1, delays.length);
     }
 
     @Test

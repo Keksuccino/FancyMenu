@@ -24,7 +24,7 @@ final class WatermediaVulkanContext implements InvocationHandler {
         this.memoryProperties = VkPhysicalDeviceMemoryProperties.calloc();
         VK12.vkGetPhysicalDeviceMemoryProperties(device.vkDevice().getPhysicalDevice(), this.memoryProperties);
         try {
-            Class<?> vkContextClass = Class.forName("org.watermedia.api.media.engines.vk.VKContext", false, WatermediaVulkanContext.class.getClassLoader());
+            Class<?> vkContextClass = Class.forName("org.watermedia.api.player.VKContext", false, WatermediaVulkanContext.class.getClassLoader());
             this.proxy = Proxy.newProxyInstance(vkContextClass.getClassLoader(), new Class<?>[]{vkContextClass}, this);
         } catch (ReflectiveOperationException ex) {
             this.memoryProperties.free();
@@ -66,6 +66,8 @@ final class WatermediaVulkanContext implements InvocationHandler {
             case "queueLock" -> this.device.graphicsQueue().vkQueue();
             case "memoryProperties" -> this.memoryProperties;
             case "hostImportSupported", "ycbcrSampler" -> false;
+            // Minecraft's device creation info is not tracked, so FFmpeg keeps decoding off Vulkan and WaterMedia uploads decoded frames from host memory
+            case "deviceInfo" -> null;
             case "minImportedHostPointerAlignment" -> 0L;
             case "retire" -> {
                 this.retirements.add((Runnable)args[0]);

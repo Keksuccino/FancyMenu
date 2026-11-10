@@ -57,7 +57,7 @@ public class FMMixinPlugin implements IMixinConfigPlugin {
     }
 
     private static boolean isWatermediaLoaded() {
-        return FMMixinPlugin.class.getClassLoader().getResource("org/watermedia/api/media/MediaAPI.class") != null;
+        return FMMixinPlugin.class.getClassLoader().getResource("org/watermedia/api/player/PlayerAPI.class") != null;
     }
 
     private static boolean isWatermediaVulkanMixin(String mixinClassName) {
