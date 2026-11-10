@@ -22,7 +22,8 @@ runs {
         modSource project.sourceSets.main
     }
     client {
-        workingDirectory project.file('../run_client')
+        // offscreen_client.sh can point this to a separate game instance, see TESTING_GUIDELINES.md
+        workingDirectory project.file('../' + (project.findProperty('fancymenu_client_run_dir') ?: 'run_client'))
         systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
     }
     server {
