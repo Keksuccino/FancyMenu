@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Script editor in the layout editor</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="fm {{themeClass}} {{matClass}}" style="position: relative; width: 1440px; height: 900px; overflow: hidden; background: var(--bd)">
+<div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""><div class="gridlines"></div></div>
+<div style="position: absolute; left: 0; right: 0; top: 0"><dc-import name="MenuBar" kind="Editor" unsaved="{{yes}}" standalone="{{no}}" hint-size="1440px,30px"></dc-import></div>
+<sc-if value="{{hasElement}}" hint-placeholder-val="{{true}}">
+<div class="le le-btn" aria-label="{{elementName}} button element" style="left: 76px; top: 412px; width: 248px; height: 38px">{{elementName}}<div class="sel-border" aria-hidden="true" style="left: -2px; top: -2px; width: calc(100% + 4px); height: calc(100% + 4px)"><i style="left: -3px; top: -3px"></i><i style="right: -3px; top: -3px"></i><i style="left: -3px; bottom: -3px"></i><i style="right: -3px; bottom: -3px"></i></div></div>
+</sc-if>
+<div style="position: absolute; left: 400px; top: 64px"><dc-import name="ScriptEditor" scene="{{scene}}" select="{{select}}" edit="{{edit}}" typing="{{typing}}" add="{{add}}" add-sub="{{addSub}}" add-help="{{addHelp}}" menu="{{menu}}" menu-sub="{{menuSub}}" find="{{find}}" replace="{{replace}}" drag="{{drag}}" pop="{{pop}}" pop-menu="{{popMenu}}" cond="{{cond}}" problems="{{problems}}" values="{{values}}" collapsed="{{collapsed}}" minimap="{{minimap}}" mini-hover="{{miniHover}}" scroll-to="{{scrollTo}}" reset-key="{{resetKey}}" width="1000" height="800" standalone="{{no}}" hint-size="1000px,800px"></dc-import></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"scene":{"editor":"enum","options":["Button","Listener","Problems","Empty","Long"],"default":"Button"},"select":{"editor":"text","default":""},"edit":{"editor":"text","default":""},"typing":{"editor":"text","default":""},"add":{"editor":"boolean","default":false},"addSub":{"editor":"text","default":""},"addHelp":{"editor":"text","default":""},"menu":{"editor":"text","default":""},"menuSub":{"editor":"text","default":""},"find":{"editor":"text","default":""},"replace":{"editor":"text","default":""},"drag":{"editor":"text","default":""},"pop":{"editor":"text","default":""},"popMenu":{"editor":"text","default":""},"cond":{"editor":"text","default":""},"problems":{"editor":"boolean","default":false},"values":{"editor":"boolean","default":false},"collapsed":{"editor":"text","default":""},"minimap":{"editor":"boolean","default":true},"miniHover":{"editor":"text","default":""},"scrollTo":{"editor":"text","default":""},"resetKey":{"editor":"int","default":0},"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    const scene = p.scene || 'Button';
+    return {
+      themeClass: (p.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark',
+      matClass: (p.material ?? 'Blur') === 'Blur' ? 'mat-blur' : '',
+      yes: true, no: false,
+      hasElement: scene === 'Button' || scene === 'Empty', elementName: scene === 'Empty' ? 'Options' : 'Play',
+      scene, select: p.select || '', edit: p.edit || '', typing: p.typing || '', add: !!p.add, addSub: p.addSub || '', addHelp: p.addHelp || '',
+      menu: p.menu || '', menuSub: p.menuSub || '', find: p.find || '', replace: p.replace || '', drag: p.drag || '', pop: p.pop || '', popMenu: p.popMenu || '', cond: p.cond || '',
+      problems: !!p.problems, values: !!p.values, collapsed: p.collapsed || '', minimap: p.minimap ?? true, miniHover: p.miniHover || '', scrollTo: p.scrollTo || '', resetKey: +p.resetKey || 0
+    };
+  }
+}
+</script>
+</body>
+</html>

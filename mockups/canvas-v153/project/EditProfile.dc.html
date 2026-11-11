@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Edit Profile</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="fm {{themeClass}} {{matClass}}" style="position: relative; width: 1280px; height: 900px; overflow: hidden">
+
+<div class="backdrop" aria-hidden="true">
+<img class="art" src="dusk_valley.png" alt="">
+<div class="dim"></div>
+</div>
+
+<div class="win" style="left: 290px; top: 40px; width: 700px">
+<div class="titlebar">
+<div class="tl"><button class="c" aria-label="Close"><span class="ms" aria-hidden="true">close</span></button><button class="m" aria-label="Collapse"><span class="ms" aria-hidden="true">remove</span></button><button class="x" aria-label="Maximize"><span class="ms" aria-hidden="true">open_in_full</span></button></div>
+<div class="wt"><span class="ms" aria-hidden="true">edit</span>Edit Profile</div>
+<div></div>
+</div>
+
+<div class="body" style="overflow: visible">
+
+<div class="group" style="display: flex; align-items: stretch">
+<div style="flex: 0 0 132px; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 0 14px; border-right: 1px solid var(--sep)">
+<button class="icon-well" data-tip="PNG, cropped to a square and scaled to 64×64" aria-label="Choose Icon" onClick="{{toggleIcon}}">
+<span class="picon" style="width: 84px; height: 84px; font-size: 38px; background: #3a4a8c"><sc-if value="{{hasIcon}}" hint-placeholder-val="{{true}}"><img src="dusk_valley.png" alt=""></sc-if><sc-if value="{{noIcon}}" hint-placeholder-val="{{false}}">{{initial}}</sc-if></span>
+<span class="hover-cap">Choose</span>
+</button>
+<sc-if value="{{hasIcon}}" hint-placeholder-val="{{true}}"><button class="btn sm" onClick="{{toggleIcon}}">Remove</button></sc-if>
+<sc-if value="{{noIcon}}" hint-placeholder-val="{{false}}"><button class="btn sm" onClick="{{toggleIcon}}">Choose Icon</button></sc-if>
+</div>
+<div class="lw-140" style="flex: 1 1 auto; min-width: 0">
+<div class="row"><span class="lbl">Title</span><div class="ctl grow"><div class="field"><input type="text" aria-label="Title" value="{{title}}" onChange="{{setTitle}}" onInput="{{setTitle}}"></div></div></div>
+<div class="row"><span class="lbl">Version</span><div class="ctl grow"><div class="field" style="flex: 0 0 140px"><input type="text" aria-label="Version" placeholder="e.g. 1.0.0" value="1.4.2"></div></div></div>
+<div class="row"><span class="lbl">Authors<span class="sub">Separate with commas</span></span><div class="ctl grow"><div class="field"><input type="text" aria-label="Authors" placeholder="Your name" value="Lumen Studio"></div></div></div>
+</div>
+</div>
+
+<div>
+<div class="sec">Description</div>
+<div class="field multi textarea">
+<div class="txt">## A cozy pixel-art title screen
+Dusk Valley turns your menus into a calm evening scene with animated fireflies, its own soundtrack and buttons that match.
+
+- Title screen, pause menu and loading screen</div>
+<button class="ib" data-tip="Open in Editor" aria-label="Open in Editor"><span class="ms" aria-hidden="true">edit_note</span></button>
+</div>
+<p class="foot">Supports Markdown, like <code>**bold**</code> text, headlines and lists.</p>
+</div>
+
+<div>
+<div class="sec">Links<span class="end"><button class="btn sm" onClick="{{addLink}}"><span class="ms" aria-hidden="true">add</span>Add Link</button></span></div>
+<sc-if value="{{hasLinks}}" hint-placeholder-val="{{true}}">
+<div class="group">
+<sc-for list="{{links}}" as="l" hint-placeholder-count="3">
+<div class="row" style="{{l.rowStyle}}; gap: 8px">
+<div class="pop">
+<button class="{{l.popCls}}" style="min-width: 142px" aria-haspopup="menu" aria-expanded="{{l.open}}" aria-label="Platform" onClick="{{l.toggle}}">
+<span style="display: flex; align-items: center; gap: 7px">
+<span class="ms" style="font-size: 15px" aria-hidden="true">{{l.icon}}</span>
+{{l.typeName}}
+</span>
+<span class="ms chev" aria-hidden="true">expand_more</span>
+</button>
+<sc-if value="{{l.open}}" hint-placeholder-val="{{false}}"><div class="pop-menu fill"><dc-import name="ContextMenu" items="{{l.types}}" label="Platform" max-height="260" focus-on-open="{{yes}}" escape-listener="{{closeMenu}}" standalone="{{no}}" hint-size="auto,300px"></dc-import></div></sc-if>
+</div>
+<div class="field" style="flex: 0 0 120px"><input type="text" aria-label="Link label" placeholder="Label" value="{{l.label}}"></div>
+<div class="field"><input type="text" aria-label="Link address" placeholder="https://" value="{{l.url}}"></div>
+<button class="ib danger" data-tip="Remove" aria-label="Remove link" onClick="{{l.remove}}"><span class="ms" aria-hidden="true">do_not_disturb_on</span></button>
+</div>
+</sc-for>
+</div>
+</sc-if>
+<p class="foot">Discord, YouTube, Modrinth and more. Pasting a link picks its platform on its own.</p>
+</div>
+
+<div>
+<div class="group lw-140">
+<div class="row"><span class="lbl">Issue Tracker</span><div class="ctl grow"><div class="field"><input type="text" aria-label="Issue Tracker" placeholder="https://" value="https://github.com/lumen/dusk-valley/issues"></div></div></div>
+</div>
+<p class="foot">A website where people can report problems with this profile, like a GitHub issues page. It shows up as “Report an Issue”.</p>
+</div>
+
+</div>
+
+<div class="footer">
+<a class="btn wide" href="Profiles.dc.html">Cancel</a>
+<a class="btn wide primary" href="Profiles.dc.html">Done</a>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Solid"},"menuOpen":{"editor":"boolean","default":false},"$preview":{"width":1280,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const set = (patch) => () => this.setState(patch);
+    // id, name and the platform's icon, the same ones FancyMenu shows for profile links today
+    const types = [
+      ['website', 'Website', 'public'], ['discord', 'Discord', 'forum'], ['youtube', 'YouTube', 'smart_display'], ['x', 'X', 'tag'], ['twitch', 'Twitch', 'live_tv'],
+      ['bluesky', 'Bluesky', 'cloud'], ['github', 'GitHub', 'code'], ['modrinth', 'Modrinth', 'extension'], ['curseforge', 'CurseForge', 'extension'], ['patreon', 'Patreon', 'volunteer_activism'],
+      ['kofi', 'Ko-fi', 'local_cafe'], ['reddit', 'Reddit', 'chat'], ['instagram', 'Instagram', 'photo_camera'], ['tiktok', 'TikTok', 'music_note'], ['other', 'Custom Link', 'link']
+    ];
+    const links = s.links ?? [
+      { type: 'discord', label: 'Our Discord', url: 'https://discord.gg/duskvalley' },
+      { type: 'modrinth', label: '', url: 'https://modrinth.com/modpack/dusk-valley' },
+      { type: 'youtube', label: 'Trailer', url: 'https://youtu.be/dusk-valley' }
+    ];
+    const menuRow = s.menuRow !== undefined ? s.menuRow : (this.props.menuOpen ? 0 : -1);
+    const hasIcon = s.hasIcon ?? true;
+    const title = s.title ?? 'Dusk Valley';
+    return {
+      themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark',
+      matClass: (this.props.material ?? 'Solid') === 'Blur' ? 'mat-blur' : '',
+      hasIcon, noIcon: !hasIcon, initial: (title.trim().charAt(0) || '?').toUpperCase(), toggleIcon: set({ hasIcon: !hasIcon }),
+      title, setTitle: (e) => this.setState({ title: e.target.value }),
+      yes: true, no: false, closeMenu: set({ menuRow: -1 }),
+      hasLinks: links.length > 0,
+      addLink: set({ links: [...links, { type: 'website', label: '', url: '' }], menuRow: -1 }),
+      links: links.map((l, i) => {
+        const t = types.find((x) => x[0] === l.type) || types[0];
+        const open = menuRow === i;
+        return {
+          label: l.label, url: l.url, typeName: t[1], icon: t[2], open,
+          rowStyle: open ? 'z-index: 3' : '',
+          popCls: open ? 'popup open' : 'popup',
+          toggle: set({ menuRow: open ? -1 : i }),
+          remove: set({ links: links.filter((_, j) => j !== i), menuRow: -1 }),
+          types: types.map(([id, name, icon]) => ({
+            radio: true, checked: id === l.type, label: name, ic: icon,
+            click: set({ links: links.map((x, j) => (j === i ? { ...x, type: id } : x)), menuRow: -1 })
+          }))
+        };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>
