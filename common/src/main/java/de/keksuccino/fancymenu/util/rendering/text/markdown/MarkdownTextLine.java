@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.text.markdown;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +23,8 @@ public class MarkdownTextLine implements Renderable {
     /** The X offset the layout gave the line. {@link #offsetX} can differ from it, because centered lines get snapped to the pixel grid when they render. */
     protected float layoutOffsetX;
     protected boolean containsImages = false;
+    /** The position of the line in the lines of its renderer. Set by the layout. */
+    protected int index = 0;
     protected float lineWidth;
     protected float lineHeight;
 
@@ -134,6 +137,18 @@ public class MarkdownTextLine implements Renderable {
 
     public float getLineHeight() {
         return this.lineHeight;
+    }
+
+    @Nullable
+    protected MarkdownTextLine getPreviousLine() {
+        return (this.index > 0) ? this.parent.lines.get(this.index - 1) : null;
+    }
+
+    /**
+     * Returns if the line is inside the visible vertical range of its renderer, which means that it renders.
+     */
+    protected boolean isVisible() {
+        return this.parent.layout.isLineVisible(this);
     }
 
     public boolean isAlignmentAllowed(@NotNull MarkdownRenderer.MarkdownLineAlignment alignment) {
