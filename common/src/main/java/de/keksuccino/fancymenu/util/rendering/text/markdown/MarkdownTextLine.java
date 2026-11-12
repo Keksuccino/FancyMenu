@@ -144,6 +144,11 @@ public class MarkdownTextLine implements Renderable {
         return (this.index > 0) ? this.parent.lines.get(this.index - 1) : null;
     }
 
+    @Nullable
+    protected MarkdownTextLine getNextLine() {
+        return ((this.index + 1) < this.parent.lines.size()) ? this.parent.lines.get(this.index + 1) : null;
+    }
+
     /**
      * Returns if the line is inside the visible vertical range of its renderer, which means that it renders.
      */
