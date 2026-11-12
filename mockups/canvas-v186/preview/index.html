@@ -1,0 +1,208 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>dc preview</title>
+<style>html,body{margin:0;background:#111}</style>
+</head>
+<body>
+<div id="mount"></div>
+<script>
+// Minimal stand-in for the Design canvas runtime: renders a .dc.html with holes, sc-if, sc-for, dc-import and events.
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const params = new URLSearchParams(location.search);
+const base = '/project/';
+const cache = {};
+const headDone = new Set();
+
+let DRAW_QUEUE = Promise.resolve();
+class DCLogic {
+  constructor(props) { this.props = props; this.state = undefined; this.__rerender = () => {}; }
+  // Redraws run one after another: draws are async and share the CTX global, so two overlapping ones (a child and its
+  // parent updating in the same click) would break each other.
+  setState(p) { this.state = Object.assign({}, this.state, typeof p === 'function' ? p(this.state || {}, this.props) : p); DRAW_QUEUE = DRAW_QUEUE.then(() => this.__rerender()).catch((e) => console.error(e)); }
+  forceUpdate() { this.__rerender(); }
+}
+
+async function load(file) {
+  if (cache[file]) return cache[file];
+  const txt = await (await fetch(base + file + '?t=' + Date.now())).text();
+  const doc = new DOMParser().parseFromString(txt, 'text/html');
+  const xdc = doc.querySelector('x-dc');
+  const helmet = xdc.querySelector('helmet');
+  const script = doc.querySelector('script[data-dc-script]');
+  const props = JSON.parse(script.getAttribute('data-props') || '{}');
+  const Cls = new Function('DCLogic', script.textContent + '\n;return Component;')(DCLogic);
+  const heads = [...doc.head.querySelectorAll('link[rel=stylesheet]')];
+  cache[file] = { xdc, helmet, props, Cls, heads };
+  return cache[file];
+}
+
+function lookup(path, scopes) {
+  path = path.trim();
+  if (path === 'true') return true;
+  if (path === 'false') return false;
+  if (/^-?\d+(\.\d+)?$/.test(path)) return Number(path);
+  const parts = path.split('.');
+  for (const sc of scopes) {
+    if (sc && parts[0] in sc) {
+      let v = sc[parts[0]];
+      for (const p of parts.slice(1)) v = v == null ? undefined : v[p];
+      return v;
+    }
+  }
+  return undefined;
+}
+
+const NODE_IDS = new WeakMap();
+let NODE_SEQ = 0;
+let CTX = null;
+const WHOLE = /^\{\{([^}]+)\}\}$/;
+const ANY = /\{\{([^}]+)\}\}/g;
+const interp = (s, scopes) => s.replace(ANY, (_, p) => { const v = lookup(p, scopes); return v == null ? '' : String(v); });
+
+async function renderChildren(node, scopes, out, inSvg) {
+  for (const ch of node.childNodes) await renderNode(ch, scopes, out, inSvg);
+}
+
+async function renderNode(node, scopes, out, inSvg) {
+  if (node.nodeType === 3) { out.appendChild(document.createTextNode(interp(node.nodeValue, scopes))); return; }
+  if (node.nodeType !== 1) return;
+  const tag = node.localName;
+  if (tag === 'helmet') return;
+  if (tag === 'sc-if') {
+    const m = (node.getAttribute('value') || '').match(WHOLE);
+    if (m && lookup(m[1], scopes)) await renderChildren(node, scopes, out, inSvg);
+    return;
+  }
+  if (tag === 'sc-for') {
+    const m = (node.getAttribute('list') || '').match(WHOLE);
+    const list = (m && lookup(m[1], scopes)) || [];
+    const as = node.getAttribute('as') || 'item';
+    for (let i = 0; i < list.length; i++) await renderChildren(node, [{ [as]: list[i], $index: i }, ...scopes], out, inSvg);
+    return;
+  }
+  if (tag === 'dc-import') {
+    const props = {};
+    for (const a of node.attributes) {
+      if (a.name === 'name' || a.name.startsWith('hint-')) continue;
+      const key = a.name.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+      const m = a.value.match(WHOLE);
+      props[key] = m ? lookup(m[1], scopes) : interp(a.value, scopes);
+    }
+    const holder = document.createElement('div');
+    holder.style.display = 'contents';
+    out.appendChild(holder);
+    if (!NODE_IDS.has(node)) NODE_IDS.set(node, ++NODE_SEQ);
+    const key = NODE_IDS.get(node) + ':' + scopes.filter(sc => sc && '$index' in sc).map(sc => sc.$index).join(',');
+    const parent = CTX && CTX.inst;
+    const kids = parent ? (parent.__kids || (parent.__kids = new Map())) : null;
+    if (CTX) CTX.seen.add(key);
+    const reuse = kids && kids.get(key);
+    if (reuse && reuse.__file === node.getAttribute('name')) { reuse.props = Object.assign({}, reuse.__defaults, props); reuse.__holder = holder; holder.__inst = reuse; await reuse.__rerender(); return; }
+    const inst = await mountComponent(node.getAttribute('name') + '.dc.html', holder, props);
+    holder.__inst = inst;
+    inst.__file = node.getAttribute('name');
+    if (kids) kids.set(key, inst);
+    return;
+  }
+  const svg = inSvg || tag === 'svg';
+  const el = svg ? document.createElementNS(SVG_NS, node.tagName.toLowerCase() === node.tagName ? node.localName : node.tagName) : document.createElement(tag);
+  for (const a of node.attributes) {
+    const m = a.value.match(WHOLE);
+    if (a.name.startsWith('on') && m) {
+      const fn = lookup(m[1], scopes);
+      if (typeof fn === 'function') { const ev = a.name.slice(2).toLowerCase(); const t = ev === 'doubleclick' ? 'dblclick' : ev; el.addEventListener(t, fn); (el.__ls || (el.__ls = {}))[t] = fn; }
+      continue;
+    }
+    if (m) {
+      const v = lookup(m[1], scopes);
+      if (v === false || v == null) continue;
+      let sv = v === true ? '' : String(v);
+      if (a.name === 'src' && sv && !/^([a-z]+:|\/|#)/i.test(sv)) sv = base + sv;
+      el.setAttribute(a.name, sv);
+      continue;
+    }
+    let val = interp(a.value, scopes);
+    if ((a.name === 'src' || a.name === 'href') && !/^([a-z]+:|\/|#)/i.test(val)) val = base + val;
+    el.setAttribute(a.name, val);
+  }
+  if ((tag === 'input' || tag === 'textarea') && el.hasAttribute('value')) el.value = el.getAttribute('value');
+  await renderChildren(node, scopes, el, svg);
+  out.appendChild(el);
+}
+
+// Like the canvas runtime (React), a redraw keeps the elements that are still there and only changes what differs, so
+// focus, scroll positions, hover and running CSS animations survive. Children are matched by position.
+function morph(oldParent, newParent) {
+  const oldKids = [...oldParent.childNodes], newKids = [...newParent.childNodes];
+  for (let i = 0; i < newKids.length; i++) {
+    const n = newKids[i], o = oldKids[i];
+    if (!o) { oldParent.appendChild(n); continue; }
+    if (o.nodeType !== n.nodeType || (o.nodeType === 1 && (o.namespaceURI !== n.namespaceURI || o.localName !== n.localName))) { oldParent.replaceChild(n, o); continue; }
+    if (o.nodeType === 3) { if (o.nodeValue !== n.nodeValue) o.nodeValue = n.nodeValue; continue; }
+    if (o.nodeType !== 1) continue;
+    for (const a of [...o.attributes]) if (!n.hasAttribute(a.name)) o.removeAttribute(a.name);
+    for (const a of n.attributes) if (o.getAttribute(a.name) !== a.value) o.setAttribute(a.name, a.value);
+    const ol = o.__ls || {}, nl = n.__ls || {};
+    for (const t in ol) o.removeEventListener(t, ol[t]);
+    for (const t in nl) o.addEventListener(t, nl[t]);
+    o.__ls = nl;
+    if ((o.localName === 'input' || o.localName === 'textarea') && o.value !== n.value) o.value = n.value;
+    if (n.__inst) { n.__inst.__holder = o; o.__inst = n.__inst; }
+    morph(o, n);
+  }
+  for (let i = oldKids.length - 1; i >= newKids.length; i--) oldParent.removeChild(oldKids[i]);
+}
+
+async function mountComponent(file, holder, extraProps) {
+  const c = await load(file);
+  for (const l of c.heads) {
+    const href = l.getAttribute('href');
+    if (!headDone.has(href)) { headDone.add(href); const n = document.createElement('link'); n.rel = 'stylesheet'; n.href = base + href + '?t=' + Date.now(); document.head.appendChild(n); }
+  }
+  if (c.helmet && !headDone.has(file)) {
+    headDone.add(file);
+    for (const ch of c.helmet.children) document.head.appendChild(document.importNode(ch, true));
+  }
+  const props = {};
+  for (const [k, v] of Object.entries(c.props)) if (k !== '$preview' && v && 'default' in v) props[k] = v.default;
+  Object.assign(props, extraProps);
+  const inst = new c.Cls(props);
+  inst.__defaults = Object.assign({}, props);
+  inst.__holder = holder;
+  const draw = async () => {
+    const ae = document.activeElement;
+    const fk = ae && ae.getAttribute && ae.getAttribute('data-fk');
+    const sel = fk && 'selectionStart' in ae ? [ae.selectionStart, ae.selectionEnd] : null;
+    const scrolls = [...document.querySelectorAll('[data-sk]')].map((el) => [el.getAttribute('data-sk'), el.scrollTop, el.scrollLeft]);
+    const vals = inst.renderVals();
+    const frag = document.createDocumentFragment();
+    const prev = CTX;
+    // keep this draw's context locally: another component can redraw while this one awaits and swap the global
+    const ctx = { inst, seen: new Set() };
+    CTX = ctx;
+    await renderChildren(c.xdc, [vals], frag, false);
+    if (inst.__kids) for (const k of [...inst.__kids.keys()]) if (!ctx.seen.has(k)) inst.__kids.delete(k);
+    CTX = prev;
+    morph(inst.__holder, frag);
+    for (const [k, top, left] of scrolls) { const el = document.querySelector('[data-sk="' + k + '"]'); if (el) { el.scrollTop = top; el.scrollLeft = left; } }
+    if (fk) {
+      const el = document.querySelector('[data-fk="' + fk + '"]');
+      if (el && document.activeElement !== el) { el.focus({ preventScroll: true }); if (sel) try { el.setSelectionRange(sel[0], sel[1]); } catch (e) {} }
+    }
+  };
+  inst.__rerender = draw;
+  await draw();
+  return inst;
+}
+
+(async () => {
+  const props = {};
+  for (const [k, v] of params) if (k !== 'f') props[k] = v === 'true' ? true : v === 'false' ? false : v;
+  await mountComponent(params.get('f') || 'Main.dc.html', document.getElementById('mount'), props);
+  document.body.dataset.ready = '1';
+})();
+</script>
+</body>
+</html>

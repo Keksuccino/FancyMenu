@@ -1,0 +1,1034 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Listeners manager</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;family=Noto+Color+Emoji&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="{{rootCls}}" style="{{rootStyle}}" data-ls="{{uid}}" onMouseDown="{{activate}}">
+<sc-if value="{{standalone}}" hint-placeholder-val="{{true}}"><div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""><div class="dim"></div></div></sc-if>
+
+<div class="win vm ls" role="dialog" aria-label="Listeners" style="{{winStyle}}">
+<div class="titlebar">
+<div class="tl"><button class="c" aria-label="Cancel and close" onClick="{{cancelAll}}"><span class="ms" aria-hidden="true">close</span></button><button class="m" aria-label="Collapse"><span class="ms" aria-hidden="true">remove</span></button><button class="x" aria-label="Maximize"><span class="ms" aria-hidden="true">open_in_full</span></button></div>
+<div class="wt"><span class="ms" aria-hidden="true">{{ic.ear}}</span>Listeners</div>
+<div></div>
+</div>
+
+<sc-if value="{{anyPopup}}" hint-placeholder-val="{{false}}"><div class="fb-catch" style="z-index: 42" onClick="{{closePopups}}" onContextMenu="{{closePopupsCtx}}"></div></sc-if>
+
+<div class="split">
+<aside class="sidebar vm-side" aria-label="Listeners list">
+<div class="vm-top">
+<button class="{{newBtnCls}}" data-tip="Ctrl+N" data-anchor="new" aria-haspopup="menu" aria-expanded="{{newExpanded}}" onClick="{{toggleNew}}"><span class="ms" aria-hidden="true">{{ic.plus}}</span>New Listener<span class="ms chev" aria-hidden="true">expand_more</span></button>
+<label class="field vm-search"><span class="ms" aria-hidden="true">{{ic.search}}</span><input type="text" placeholder="{{searchPh}}" aria-label="Search names and what they listen for" data-fk="{{searchFk}}" value="{{q}}" onInput="{{onSearch}}" onKeyDown="{{searchKey}}"><button class="{{filterBtnCls}}" data-tip="Show and sort" aria-label="Show and sort" aria-haspopup="menu" aria-expanded="{{filterExpanded}}" onClick="{{toggleFilter}}"><span class="ms" aria-hidden="true">{{ic.funnel}}</span></button></label>
+<sc-if value="{{filterChip}}" hint-placeholder-val="{{false}}"><div class="chips"><span class="vm-fchip">{{filterChip}}<button aria-label="Show all listeners" data-tip="Show all" onClick="{{clearFilter}}"><span class="ms" aria-hidden="true">{{ic.x}}</span></button></span></div></sc-if>
+</div>
+<div class="plist vm-list" role="listbox" aria-label="Listeners" aria-multiselectable="true">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="8">
+<div class="{{r.cls}}" role="option" aria-selected="{{r.ariaSel}}" onClick="{{r.click}}" onDoubleClick="{{r.dbl}}">
+<span class="{{r.tileCls}}" aria-hidden="true"><span class="{{r.iconCls}}" aria-hidden="true">{{r.icon}}</span></span>
+<span class="ln"><sc-for list="{{r.name}}" as="np" hint-placeholder-count="1"><sc-if value="{{np.hit}}" hint-placeholder-val="{{false}}"><mark>{{np.t}}</mark></sc-if><sc-if value="{{np.plain}}" hint-placeholder-val="{{true}}">{{np.t}}</sc-if></sc-for></span>
+<span class="vic"><sc-if value="{{r.warn}}" hint-placeholder-val="{{false}}"><span class="vb warn" data-tip="{{r.warnTip}}"><span class="ms" aria-hidden="true">{{ic.warn}}</span></span></sc-if></span>
+<button class="{{r.swCls}}" role="switch" aria-checked="{{r.on}}" aria-label="{{r.swTip}}" data-tip="{{r.swTip}}" disabled="{{r.swOff}}" onClick="{{r.toggle}}" onDoubleClick="{{stop}}"></button>
+<span class="{{r.subCls}}"><sc-for list="{{r.sub}}" as="sp" hint-placeholder-count="1"><sc-if value="{{sp.hit}}" hint-placeholder-val="{{false}}"><mark>{{sp.t}}</mark></sc-if><sc-if value="{{sp.plain}}" hint-placeholder-val="{{true}}">{{sp.t}}</sc-if></sc-for></span>
+</div>
+</sc-for>
+<sc-if value="{{noMatch}}" hint-placeholder-val="{{false}}"><div class="vm-nomatch"><span>{{noMatchText}}</span><sc-if value="{{canNewFromQ}}" hint-placeholder-val="{{true}}"><button class="btn sm" onClick="{{newFromQ}}"><span class="ms" aria-hidden="true">{{ic.plus}}</span>New Listener for “{{qText}}”</button></sc-if></div></sc-if>
+</div>
+</aside>
+
+<div class="vm-main">
+<main class="pcontent vm-content ls-content" data-sk="{{contentSk}}">
+
+<sc-if value="{{one}}" hint-placeholder-val="{{true}}">
+<div class="dhead">
+<div class="ls-dtop">
+<button class="{{iconBtnCls}}" data-anchor="icon" data-tip="Change icon" aria-label="Change icon" aria-haspopup="dialog" aria-expanded="{{iconExpanded}}" onClick="{{toggleIcon}}"><span class="{{d.iconCls}}" aria-hidden="true">{{d.icon}}</span><span class="ls-dbadge" aria-hidden="true"><span class="ms">{{ic.pencil}}</span></span></button>
+<div class="ls-dtx">
+<sc-if value="{{notRenaming}}" hint-placeholder-val="{{true}}"><div class="dt vm-name ls-name"><span>{{d.label}}</span><button class="ib" data-tip="Rename (F2)" aria-label="Rename" onClick="{{startRename}}"><span class="ms" aria-hidden="true">{{ic.pencil}}</span></button></div></sc-if>
+<sc-if value="{{renaming}}" hint-placeholder-val="{{false}}"><div class="field vm-rename ls-rename"><input type="text" aria-label="Name" placeholder="{{d.typeName}}" data-fk="{{renameFk}}" value="{{renameDraft}}" onInput="{{onRename}}" onKeyDown="{{renameKey}}"></div><div class="foot vm-rmsg">{{renameMsg}}</div></sc-if>
+<div class="dm">{{d.meta}}</div>
+</div>
+</div>
+<div class="dacts">
+<button class="btn" data-tip="Enter, or double-click the listener" onClick="{{editScript}}"><span class="ms" aria-hidden="true">{{ic.editor}}</span>Edit Script</button>
+<button class="{{runBtnCls}}" disabled="{{d.cantRun}}" data-tip="{{d.runTip}}" data-anchor="run" aria-haspopup="{{d.runPopup}}" aria-expanded="{{runExpanded}}" onClick="{{runNowClick}}"><span class="ms" aria-hidden="true">{{ic.play}}</span>Run Now<sc-if value="{{d.multi}}" hint-placeholder-val="{{false}}"><span class="ms" aria-hidden="true">expand_more</span></sc-if></button>
+<button class="btn" data-tip="Ctrl+D" onClick="{{duplicate}}"><span class="ms" aria-hidden="true">{{ic.dup}}</span>Duplicate</button>
+<button class="btn icon danger" data-tip="Delete" aria-label="Delete {{d.label}}" onClick="{{remove}}"><span class="ms" aria-hidden="true">{{ic.trash}}</span></button>
+</div>
+</div>
+
+<sc-if value="{{d.missing}}" hint-placeholder-val="{{false}}">
+<div class="callout vm-card"><span class="ms" aria-hidden="true">{{ic.warn}}</span><div><b>{{d.missingTitle}}</b><p>{{d.missingText}}</p></div></div>
+</sc-if>
+<sc-if value="{{d.lost}}" hint-placeholder-val="{{false}}">
+<div class="callout vm-card"><span class="ms" aria-hidden="true">{{ic.warn}}</span><div><b>{{d.lostTitle}}</b><p>{{d.lostText}}</p><button class="btn sm" onClick="{{editScript}}">Edit Script</button></div></div>
+</sc-if>
+
+<div>
+<div class="sec">Listens For<sc-if value="{{d.evCount}}" hint-placeholder-val="{{false}}"><span class="end">{{d.evCount}}</span></sc-if></div>
+<div class="group ls-evs">
+<sc-for list="{{d.evs}}" as="ev" hint-placeholder-count="1">
+<div class="row ls-type">
+<span class="{{ev.tileCls}}" aria-hidden="true"><span class="ms" aria-hidden="true">{{ev.icon}}</span></span>
+<span class="{{ev.lblCls}}">{{ev.name}}<span class="sub">{{ev.desc}}</span><sc-if value="{{ev.server}}" hint-placeholder-val="{{false}}"><span class="ls-srv"><span class="ms" aria-hidden="true">{{ic.dns}}</span>Needs FancyMenu on the server, too</span></sc-if></span>
+<div class="ctl"><button class="{{ev.changeCls}}" data-anchor="{{ev.anchor}}" aria-haspopup="menu" aria-expanded="{{ev.changeExpanded}}" onClick="{{ev.toggleChange}}">Change<span class="ms" aria-hidden="true">expand_more</span></button><sc-if value="{{ev.canRemove}}" hint-placeholder-val="{{false}}"><button class="ib" data-tip="{{ev.removeTip}}" aria-label="{{ev.removeTip}}" onClick="{{ev.remove}}"><span class="ms" aria-hidden="true">{{ic.x}}</span></button></sc-if></div>
+</div>
+</sc-for>
+<button class="{{addEvCls}}" data-anchor="add" aria-haspopup="menu" aria-expanded="{{addExpanded}}" onClick="{{toggleAdd}}"><span class="ms" aria-hidden="true">{{ic.plus}}</span>Add Event</button>
+</div>
+</div>
+
+<div>
+<div class="sec">Script<span class="end">{{d.stepCount}}</span></div>
+<sc-if value="{{d.hasSteps}}" hint-placeholder-val="{{true}}">
+<div class="group ls-script" role="list" aria-label="Script steps">
+<sc-for list="{{d.steps}}" as="st" hint-placeholder-count="4">
+<button class="{{st.cls}}" role="listitem" style="{{st.style}}" onClick="{{st.open}}">
+<span class="{{st.tileCls}}" style="{{st.tileStyle}}" aria-hidden="true"><span class="ms" aria-hidden="true">{{st.icon}}</span></span>
+<span class="se-txt">
+<sc-for list="{{st.parts}}" as="pt" hint-placeholder-count="3">
+<sc-if value="{{pt.isW}}" hint-placeholder-val="{{true}}"><span class="{{pt.cls}}">{{pt.s}}</span></sc-if>
+<sc-if value="{{pt.isTok}}" hint-placeholder-val="{{false}}"><span class="{{pt.cls}}"><sc-for list="{{pt.pieces}}" as="pc" hint-placeholder-count="1"><sc-if value="{{pc.isText}}" hint-placeholder-val="{{true}}"><span>{{pc.s}}</span></sc-if><sc-if value="{{pc.isChip}}" hint-placeholder-val="{{false}}"><span class="{{pc.cls}}">{{pc.s}}</span></sc-if><sc-if value="{{pc.isNot}}" hint-placeholder-val="{{false}}"><span class="not in">{{pc.s}}</span></sc-if><sc-if value="{{pc.isUnit}}" hint-placeholder-val="{{false}}"><span class="unit">{{pc.s}}</span></sc-if></sc-for></span></sc-if>
+</sc-for>
+</span>
+<sc-if value="{{st.lost}}" hint-placeholder-val="{{false}}"><span class="se-warn" aria-hidden="true"><span class="ms" aria-hidden="true">{{ic.warn}}</span></span></sc-if>
+<span class="ms ls-go" aria-hidden="true">{{ic.open}}</span>
+</button>
+</sc-for>
+<sc-if value="{{d.moreSteps}}" hint-placeholder-val="{{false}}"><button class="vm-more" onClick="{{editScript}}">{{d.moreSteps}}</button></sc-if>
+</div>
+</sc-if>
+<sc-if value="{{d.noSteps}}" hint-placeholder-val="{{false}}"><div class="group vm-unused ls-nosteps"><span>{{d.noStepsText}}</span><button class="btn sm" onClick="{{editScript}}"><span class="ms" aria-hidden="true">{{ic.plus}}</span>Add Steps</button></div></sc-if>
+</div>
+
+<div>
+<div class="sec">Event Variables<sc-if value="{{d.hasVars}}" hint-placeholder-val="{{true}}"><span class="end"><button class="vm-link" data-tip="{{d.copyAllTip}}" onClick="{{copyAll}}">Copy All</button></span></sc-if></div>
+<sc-if value="{{d.hasVars}}" hint-placeholder-val="{{true}}">
+<div class="group ls-vars">
+<sc-for list="{{d.vgroups}}" as="vg" hint-placeholder-count="1">
+<sc-if value="{{vg.head}}" hint-placeholder-val="{{false}}"><div class="ls-vhead"><span>{{vg.head}}</span><span class="d">{{vg.sub}}</span></div></sc-if>
+<sc-for list="{{vg.vars}}" as="v" hint-placeholder-count="4">
+<div class="ls-vrow"><button class="mchip var" data-tip="{{v.copyTip}}" aria-label="{{v.copyTip}}" onClick="{{v.copy}}">{{v.ref}}</button><span class="d">{{v.d}}</span><span class="{{v.valCls}}">{{v.val}}</span></div>
+</sc-for>
+</sc-for>
+</div>
+<p class="foot">{{d.varsNote}}</p>
+</sc-if>
+<sc-if value="{{d.noVars}}" hint-placeholder-val="{{false}}"><div class="group vm-unused">{{d.noVarsText}}</div></sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{many}}" hint-placeholder-val="{{false}}">
+<div class="dhead">
+<div class="dt">{{m.title}}</div> <div class="dm">{{m.meta}}</div>
+<div class="dacts"><button class="btn" data-tip="Ctrl+D" onClick="{{duplicate}}"><span class="ms" aria-hidden="true">{{ic.dup}}</span>{{m.dupLabel}}</button><button class="btn icon danger" data-tip="{{m.deleteTip}}" aria-label="{{m.deleteTip}}" onClick="{{remove}}"><span class="ms" aria-hidden="true">{{ic.trash}}</span></button></div>
+</div>
+<div>
+<div class="group">
+<div class="row"><span class="lbl">Listening<span class="sub">{{m.onNote}}</span></span><div class="ctl"><button class="{{m.swCls}}" role="switch" aria-checked="{{m.ariaOn}}" aria-label="Listening" onClick="{{m.toggle}}"></button></div></div>
+</div>
+</div>
+<div>
+<div class="sec">Selected</div>
+<div class="group">
+<sc-for list="{{m.rows}}" as="mr" hint-placeholder-count="3">
+<div class="row ls-mrow"><span class="ls-tile" aria-hidden="true"><span class="{{mr.iconCls}}" aria-hidden="true">{{mr.icon}}</span></span><span class="lbl">{{mr.name}}<span class="sub">{{mr.type}}</span></span><div class="ctl"><span class="{{mr.cls}}">{{mr.act}}</span></div></div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{none}}" hint-placeholder-val="{{false}}">
+<div class="vm-empty empty">
+<h3 class="t">No listeners yet</h3>
+<p class="d">A listener runs a script every time its event happens, like a key press, a chat message or the player dying. Listeners aren't tied to one screen, so they keep listening in every menu and while playing.</p>
+<div class="vm-ways">
+<div><b>Keys and clicks</b>Open the quest log with J, or play a sound on every click</div>
+<div><b>The world</b>React when the player dies, joins a server or finds a new biome</div>
+<div><b>FancyMenu itself</b>Run something when a variable changes or a download finishes</div>
+</div>
+<button class="{{emptyBtnCls}}" data-anchor="empty" aria-haspopup="menu" aria-expanded="{{newExpanded}}" onClick="{{toggleNewEmpty}}"><span class="ms" aria-hidden="true">{{ic.plus}}</span>New Listener</button>
+</div>
+</sc-if>
+
+<sc-if value="{{nothingSel}}" hint-placeholder-val="{{false}}"><div class="vm-empty empty"><p class="d">Select a listener to see its script and what it hands over to it.</p></div></sc-if>
+</main>
+<div class="footer line"><span class="lead">{{footLead}}<sc-if value="{{footUndo}}" hint-placeholder-val="{{false}}"> <button class="vm-link" onClick="{{undo}}">Undo</button></sc-if></span><button class="btn wide" onClick="{{cancelAll}}">Cancel</button><button class="btn primary wide" onClick="{{noop}}">Save</button></div>
+</div>
+</div>
+
+<sc-if value="{{menuOpen}}" hint-placeholder-val="{{false}}">
+<div class="ls-menu" style="{{menuStyle}}" onMouseMove="{{trackMenu}}">
+<div><dc-import name="ContextMenu" items="{{menuItems}}" search="Search events and their variables" focus-on-open="{{yes}}" search-listener="{{onMenuQuery}}" escape-listener="{{closePopups}}" label="{{menuLabel}}" standalone="{{no}}" hint-size="auto,520px"></dc-import></div>
+<sc-if value="{{menuHasSub}}" hint-placeholder-val="{{false}}"><div style="{{menuSubStyle}}" onMouseEnter="{{menuSubEnter}}"><dc-import name="ContextMenu" items="{{menuSubItems}}" sub="{{yes}}" search="{{menuSubSearch}}" label="{{menuSub}}" standalone="{{no}}" hint-size="auto,300px"></dc-import></div></sc-if>
+<sc-if value="{{help.show}}" hint-placeholder-val="{{false}}"><div class="help-tag se-help ls-help" style="{{help.style}}">
+<div class="t"><span class="ms" aria-hidden="true">{{help.icon}}</span>{{help.name}}</div>
+{{help.desc}}
+<sc-if value="{{help.server}}" hint-placeholder-val="{{false}}"><span class="note warn">Needs FancyMenu on the server, too.</span></sc-if>
+<span class="hv"><sc-if value="{{help.hasVars}}" hint-placeholder-val="{{true}}"><span class="hl">Hands over</span><sc-for list="{{help.vars}}" as="hv" hint-placeholder-count="3"><span class="chip code">{{hv}}</span></sc-for><sc-if value="{{help.more}}" hint-placeholder-val="{{false}}"><span class="hl">{{help.more}}</span></sc-if></sc-if><sc-if value="{{help.noVars}}" hint-placeholder-val="{{false}}"><span class="hl">Hands over no variables</span></sc-if></span>
+<sc-if value="{{help.note}}" hint-placeholder-val="{{false}}"><span class="{{help.noteCls}}">{{help.note}}</span></sc-if>
+</div></sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{runOpen}}" hint-placeholder-val="{{false}}"><div class="vm-pop" style="{{runStyle}}"><dc-import name="ContextMenu" items="{{runItems}}" escape-listener="{{closePopups}}" label="Run as" standalone="{{no}}" hint-size="auto,140px"></dc-import></div></sc-if>
+
+<sc-if value="{{iconOpen}}" hint-placeholder-val="{{false}}"><div class="ic-pop" style="{{iconStyle}}"><dc-import name="IconChooser" value="{{d.iconValue}}" default-icon="hearing" title="{{iconTitle}}" recent="{{iconRecent}}" query="{{iconQuery}}" on-pick="{{pickIcon}}" on-close="{{closePopups}}" standalone="{{no}}" hint-size="392px,452px"></dc-import></div></sc-if>
+
+<sc-if value="{{filterOpen}}" hint-placeholder-val="{{false}}"><div class="vm-pop" style="{{filterStyle}}"><dc-import name="ContextMenu" items="{{filterItems}}" search="Search this menu" escape-listener="{{closePopups}}" standalone="{{no}}" hint-size="auto,300px"></dc-import></div></sc-if>
+
+<sc-if value="{{sheetAlert}}" hint-placeholder-val="{{false}}">
+<div class="sheet-dim"></div>
+<div class="sheet vm-alert" role="alertdialog" aria-label="{{al.title}}">
+<span class="vm-aicon"><span class="ms" aria-hidden="true">{{al.icon}}</span></span>
+<div class="vm-st" style="margin-top: 12px">{{al.title}}</div>
+<p>{{al.text}}</p>
+<div class="vm-abtns"><sc-for list="{{al.buttons}}" as="b" hint-placeholder-count="2"><button class="{{b.cls}}" onClick="{{b.click}}">{{b.label}}</button></sc-for></div>
+</div>
+</sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"scene":{"editor":"enum","options":["Dusk Valley","Empty"],"default":"Dusk Valley"},"select":{"editor":"text","default":"l1"},"menu":{"editor":"enum","options":["","new","change","add","run"],"default":""},"menuEv":{"editor":"text","default":""},"menuSub":{"editor":"text","default":""},"menuHelp":{"editor":"text","default":""},"filter":{"editor":"enum","options":["all","off","probs","ran","never"],"default":"all"},"filterMenu":{"editor":"boolean","default":false},"iconOpen":{"editor":"boolean","default":false},"iconQuery":{"editor":"text","default":""},"query":{"editor":"text","default":""},"live":{"editor":"boolean","default":true},"room":{"editor":"int","default":0},"onToast":{"editor":null},"width":{"editor":"int","default":940},"height":{"editor":"int","default":760},"standalone":{"editor":"boolean","default":true},"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1020,"height":840}}'>
+// ---------- events: all 93 events FancyMenu's listeners can listen for (rule 103) ----------
+// What they hand over (their Event Variables) are the real ones. Categories, the short descriptions and the examples
+// come from rule 71, and the names without On, like Block Broken or Player Died, from rule 105.
+// A listener keeps the identifiers of the events it listens for, one or more (rule 111).
+const CATS = ['Keyboard and Mouse', 'Screens', 'Player', 'Worlds and Servers', 'Biomes, Structures and Raids', 'Blocks', 'Entities', 'Items', 'Chat and Commands', 'Audio', 'Video and Animations', 'Files', 'Network', 'Game', 'FancyMenu'];
+const CAT_IC = { 'Keyboard and Mouse': 'keyboard', Screens: 'web_asset', Player: 'person', 'Worlds and Servers': 'public', 'Biomes, Structures and Raids': 'landscape', Blocks: 'view_in_ar', Entities: 'pets', Items: 'backpack', 'Chat and Commands': 'chat', Audio: 'music_note', 'Video and Animations': 'smart_display', Files: 'draft', Network: 'lan', Game: 'sports_esports', FancyMenu: 'data_object' };
+const T = {};
+const V = (n, d, eg) => ({ n, d, eg: eg === undefined ? '' : eg });
+// when: finishes "Runs when …", the sentence the script editor shows at the bottom (rule 81)
+const def = (id, name, cat, when, desc, vars, x) => { T[id] = Object.assign({ id, name, cat, when, desc, vars: vars || [], ic: CAT_IC[cat] }, x || {}); };
+const KEYV = [V('key_name', 'The name of the key, like J or Escape', 'J'), V('key_keycode', 'The key code, the same on every keyboard layout', '74'), V('key_scancode', 'The code of the physical key on this keyboard', '36'), V('key_modifiers', 'Which of Shift, Ctrl and Alt are held, as one number', '0')];
+const MOUSEV = (verb) => [V('button', 'Which button was ' + verb + ': left, right or middle', 'left'), V('mouse_pos_x', 'How far the mouse is from the left edge', '412'), V('mouse_pos_y', 'How far the mouse is from the top edge', '236')];
+const POS = (what, p) => ['x', 'y', 'z'].map((a, i) => V((p || '') + 'pos_' + a, a.toUpperCase() + ' position of ' + what, ['128', '64', '-340'][i]));
+const ENT = (what) => [V('entity_key', 'The entity type ' + what + ', like minecraft:fox', 'minecraft:fox'), V('distance_to_player', 'How far it is from the player, in blocks', '6.2')].concat(POS('the entity', 'entity_'), [V('entity_uuid', 'The UUID of the entity', 'a91c…e04f')]);
+const BLOCK = (what) => [V('block_key', 'The block ' + what + ', like minecraft:oak_log', 'minecraft:oak_log')].concat(POS('the block', 'block_'));
+const WORLD = [V('world_name', 'The name of the world', 'Dusk Valley Survival'), V('world_save_path', 'Where the world is saved', '…/saves/Dusk Valley Survival'), V('world_difficulty', 'The difficulty, like normal', 'normal'), V('world_cheats_allowed', 'TRUE when cheats are on', 'FALSE'), V('world_icon_path', 'Where the world icon is', '…/Dusk Valley Survival/icon.png')];
+const PLAYERV = (verb) => [V('player_name', 'The name of the player who ' + verb, 'Alex'), V('player_uuid', 'The UUID of the player who ' + verb, '853c…adae6')];
+const TEXV = [V('texture_source', 'Where the texture comes from: a file, a web address or a resource location', 'images/lantern.gif'), V('texture_source_type', 'Where it\'s from: LOCAL, WEB or RESOURCE_LOCATION', 'LOCAL'), V('texture_will_restart', 'TRUE when it starts over after this', 'TRUE')];
+const TRACKV = [V('track_resource_location', 'The audio file of the track', 'minecraft:music/menu/mutation'), V('track_display_name', 'The name of the track, or UNKNOWN', 'Mutation'), V('track_artist', 'Who made it, or UNKNOWN', 'C418'), V('track_duration_ms', 'How long it is, in milliseconds, or 0', '185000')];
+const FLUID = (verb) => [V('fluid_type', 'The fluid the player ' + verb + ', like minecraft:water', 'minecraft:water')];
+const STRUCT = (verb) => [V('structure_key', 'The structure the player ' + verb + ', like minecraft:village_plains', 'minecraft:village_plains')];
+const ITEM = (verb) => [V('item_key', 'The item that was ' + verb + ', like minecraft:diamond', 'minecraft:diamond')];
+const REMOTE = [V('request_id', 'The ID of the connection', 'lobby'), V('remote_server_url', 'The address of the remote server', 'wss://live.duskvalley.net')];
+
+def('key_pressed', 'Keyboard Key Pressed', 'Keyboard and Mouse', 'a keyboard key is pressed', 'Happens every time a key is pressed, in menus and while playing, and keeps happening while a key is held down.', KEYV);
+def('key_released', 'Keyboard Key Released', 'Keyboard and Mouse', 'a keyboard key is released', 'Happens every time a key is let go, in menus and while playing.', KEYV);
+def('char_typed', 'Keyboard Character Typed in Screen', 'Keyboard and Mouse', 'a character is typed in a screen', 'Happens for every character typed while a screen is open, like each letter of a word.', [V('char', 'The character that was typed', 'a')]);
+def('mouse_moved', 'Mouse Moved in Screen', 'Keyboard and Mouse', 'the mouse moves in a screen', 'Happens whenever the mouse moves while a screen is open. That\'s very often, so keep the scripts of its listeners short.', [V('mouse_pos_x', 'How far the mouse is from the left edge', '412'), V('mouse_pos_y', 'How far the mouse is from the top edge', '236'), V('mouse_move_delta_x', 'How far it moved sideways since the last time', '3'), V('mouse_move_delta_y', 'How far it moved up or down since the last time', '-1')], { ic: 'mouse' });
+def('mouse_clicked', 'Mouse Button Clicked', 'Keyboard and Mouse', 'a mouse button is pressed', 'Happens every time a mouse button is pressed, in menus and while playing.', MOUSEV('pressed'), { ic: 'mouse' });
+def('mouse_released', 'Mouse Button Released', 'Keyboard and Mouse', 'a mouse button is released', 'Happens every time a mouse button is let go, in menus and while playing.', MOUSEV('released'), { ic: 'mouse' });
+def('mouse_scrolled', 'Mouse Scrolled in Screen', 'Keyboard and Mouse', 'the mouse wheel turns in a screen', 'Happens whenever the mouse wheel turns while a screen is open.', [V('scroll_delta_y', 'How far it scrolled. Up is positive, down is negative', '1')], { ic: 'mouse' });
+def('text_clicked', 'Markdown Text Clicked', 'Keyboard and Mouse', 'a click event in a Markdown text is clicked', 'Happens when someone clicks a part of a Markdown text that has a click event.', [V('text_event_id', 'The ID of the click event in the Markdown', 'open_rules')], { ic: 'ads_click' });
+def('text_hovered', 'Markdown Text Hovered', 'Keyboard and Mouse', 'a hover event in a Markdown text is hovered', 'Happens when the mouse moves onto a part of a Markdown text that has a hover event.', [V('text_event_id', 'The ID of the hover event in the Markdown', 'rules_hint')], { ic: 'ads_click' });
+def('open_screen', 'Screen Opened', 'Screens', 'a screen opens', 'Happens right after a screen opens, early enough for Open Screen or Custom GUI to open a different one instead.', [V('screen_identifier', 'The identifier of the screen that opened', 'title_screen')]);
+def('close_screen', 'Screen Closed', 'Screens', 'a screen closes', 'Happens right after a screen closes.', [V('screen_identifier', 'The identifier of the screen that closed', 'options_screen')]);
+def('death', 'Player Died', 'Player', 'the player dies', 'Happens right after the death screen opens.', [V('days_survived', 'In-game days survived since the last death', '4'), V('death_reason_string', 'Why the player died, as text', 'Steve fell from a high place'), V('death_reason_component', 'Why the player died, as component JSON', '{"translate":"death.fell.accident.generic"…}')].concat(POS('where the player died', 'death_')));
+def('damage_taken', 'Damage Taken', 'Player', 'the player takes damage', 'Happens every time the player gets hurt.', [V('damage_amount', 'How much health the hit took', '3.0'), V('damage_type', 'The damage type, like minecraft:fall', 'minecraft:fall'), V('is_fatal_damage', 'TRUE when the hit killed the player', 'FALSE'), V('damage_source', 'The entity type that did it, or NONE', 'minecraft:zombie')]);
+def('jump', 'Player Jumped', 'Player', 'the player jumps', 'Happens every time the player jumps.', []);
+def('started_running', 'Started Running', 'Player', 'the player starts sprinting', 'Happens once when the player starts sprinting.', []);
+def('stopped_running', 'Stopped Running', 'Player', 'the player stops sprinting', 'Happens once when the player stops sprinting.', []);
+def('start_swimming', 'Started Swimming', 'Player', 'the player starts swimming', 'Happens once when the player starts swimming.', FLUID('swims in'));
+def('stop_swimming', 'Stopped Swimming', 'Player', 'the player stops swimming', 'Happens once when the player stops swimming.', FLUID('swam in'));
+def('start_touching_fluid', 'Started Touching Fluid', 'Player', 'the player starts touching a fluid', 'Happens once when the player steps into water or lava.', FLUID('touches'));
+def('stop_touching_fluid', 'Stopped Touching Fluid', 'Player', 'the player stops touching a fluid', 'Happens once when the player gets out of water or lava.', FLUID('touched'));
+def('position_changed', 'Position Changed', 'Player', 'the player moves onto another block', 'Happens every time the player moves onto another block. That\'s often while walking, so keep the scripts of its listeners short.', [V('old_pos_x', 'X position before'), V('old_pos_y', 'Y position before'), V('old_pos_z', 'Z position before'), V('new_pos_x', 'X position now'), V('new_pos_y', 'Y position now'), V('new_pos_z', 'Z position now')]);
+def('experience_changed', 'Experience Changed', 'Player', 'the player\'s experience changes', 'Happens whenever the player gains or loses experience.', [V('new_experience_amount', 'The total experience now', '160'), V('old_experience_amount', 'The total experience before', '152'), V('is_level_up', 'TRUE when the player reached a new level', 'FALSE')]);
+def('effect_gained', 'Effect Gained', 'Player', 'the player gets a status effect', 'Happens once when the player gets a status effect, like Speed.', [V('effect_key', 'The effect, like minecraft:speed', 'minecraft:speed'), V('effect_type', 'What kind it is: positive, negative or neutral', 'positive'), V('effect_duration', 'How many ticks it lasts', '3600')]);
+def('effect_lost', 'Effect Lost', 'Player', 'a status effect ends', 'Happens once when a status effect of the player ends.', [V('effect_key', 'The effect, like minecraft:speed', 'minecraft:speed'), V('effect_type', 'What kind it was: positive, negative or neutral', 'positive')]);
+def('started_burning', 'Started Burning', 'Player', 'the player catches fire', 'Happens once when the player starts burning.', []);
+def('stopped_burning', 'Stopped Burning', 'Player', 'the player stops burning', 'Happens once when the fire on the player goes out.', []);
+def('started_drowning', 'Started Drowning', 'Player', 'the player starts drowning', 'Happens once when the player starts taking drowning damage.', []);
+def('started_freezing', 'Started Freezing', 'Player', 'the player starts freezing', 'Happens once when the player starts freezing in powder snow.', [V('freezing_intensity', 'How frozen the player is, from 0.0 to 1.0', '0.1')]);
+def('stopped_freezing', 'Stopped Freezing', 'Player', 'the player stops freezing', 'Happens once when the player stops freezing.', []);
+def('fully_frozen', 'Fully Frozen', 'Player', 'the player is fully frozen', 'Happens once when the player is fully frozen.', []);
+def('world_entered', 'Singleplayer World Entered', 'Worlds and Servers', 'a singleplayer world finishes loading', 'Happens when a singleplayer world has loaded and the player can move.', WORLD.concat([V('world_is_first_join', 'TRUE on the very first visit after creating it', 'FALSE')]));
+def('world_left', 'Singleplayer World Left', 'Worlds and Servers', 'a singleplayer world closes', 'Happens after a singleplayer world closes and finishes saving.', WORLD);
+def('start_joining_server', 'Started Joining Server', 'Worlds and Servers', 'the game starts connecting to a server', 'Happens when the game starts connecting to a server, before the player is on it.', [V('server_ip', 'The address of the server', 'play.duskvalley.net')]);
+def('server_joined', 'Server Joined', 'Worlds and Servers', 'the player joins a server', 'Happens when the game has finished joining a multiplayer server.', [V('server_ip', 'The address of the server the player joined', 'play.duskvalley.net')]);
+def('server_left', 'Server Left', 'Worlds and Servers', 'the player leaves a server', 'Happens after the game disconnects from a multiplayer server.', [V('server_ip', 'The address of the server the player left', 'play.duskvalley.net')]);
+def('other_joined', 'Other Player Joined World/Server', 'Worlds and Servers', 'another player joins', 'Happens when another player joins the world or server.', PLAYERV('joined'));
+def('other_left', 'Other Player Left World/Server', 'Worlds and Servers', 'another player leaves', 'Happens when another player leaves the world or server.', PLAYERV('left'));
+def('other_died', 'Other Player Died', 'Worlds and Servers', 'another player dies', 'Happens when another player in the same world dies.', PLAYERV('died').concat(POS('where they died', 'death_')));
+def('dimension_entered', 'Dimension Entered', 'Worlds and Servers', 'the player enters a dimension', 'Happens once when the player gets to another dimension, like the Nether.', [V('dimension_key', 'The dimension, like minecraft:the_nether', 'minecraft:the_nether')]);
+def('weather_changed', 'Weather Changed', 'Worlds and Servers', 'the weather changes', 'Happens when the weather turns clear, rainy or stormy, and when it changes around the player, like walking into a desert or a house while it rains.', [V('weather_type', 'The weather now: clear, rain or thunder', 'rain'), V('weather_can_snow', 'TRUE when it snows where the player is', 'FALSE'), V('weather_can_rain', 'TRUE when it rains where the player is', 'TRUE')]);
+def('enter_biome', 'Biome Entered', 'Biomes, Structures and Raids', 'the player enters a biome', 'Happens once when the player walks into a different biome.', [V('biome_key', 'The biome, like minecraft:cherry_grove', 'minecraft:cherry_grove')]);
+def('leave_biome', 'Biome Left', 'Biomes, Structures and Raids', 'the player leaves a biome', 'Happens once when the player walks out of a biome.', [V('biome_key', 'The biome the player left', 'minecraft:plains')]);
+def('enter_structure', 'Structure Entered', 'Biomes, Structures and Raids', 'the player enters a structure', 'Happens once when the player gets into the area of a structure. That area is big, so a mineshaft below the player counts too.', STRUCT('entered'), { server: true });
+def('leave_structure', 'Structure Left', 'Biomes, Structures and Raids', 'the player leaves a structure', 'Happens once when the player leaves the area of a structure.', STRUCT('left'), { server: true });
+def('enter_structure_hp', 'Structure Entered (High Precision)', 'Biomes, Structures and Raids', 'the player steps into a structure', 'Happens once when the player actually steps inside a structure, not just into its area.', STRUCT('entered'), { server: true });
+def('leave_structure_hp', 'Structure Left (High Precision)', 'Biomes, Structures and Raids', 'the player steps out of a structure', 'Happens once when the player steps out of a structure.', STRUCT('left'), { server: true });
+def('raid_started', 'Raid Started', 'Biomes, Structures and Raids', 'a raid starts around the player', 'Happens when a raid starts while the player is in its area. Walking into a raid that\'s already going on is Active Raid Area Entered.', [], { server: true });
+def('enter_raid', 'Active Raid Area Entered', 'Biomes, Structures and Raids', 'the player walks into a raid', 'Happens when the player walks into the area of a raid that\'s already going on.', [], { server: true });
+def('leave_raid', 'Active Raid Area Left', 'Biomes, Structures and Raids', 'the player leaves a raid', 'Happens when the player leaves the area of a raid that\'s going on.', [], { server: true });
+def('raid_finished', 'Raid Finished', 'Biomes, Structures and Raids', 'a raid ends', 'Happens when a raid ends while the player is in its area.', [V('raid_result', 'How it ended: victory or defeat', 'victory')], { server: true });
+def('block_broken', 'Block Broken', 'Blocks', 'the player breaks a block', 'Happens every time the player breaks a block.', BLOCK('that was broken').concat([V('broke_with_item_key', 'The item the player held, or EMPTY', 'minecraft:iron_axe')]));
+def('block_placed', 'Block Placed', 'Blocks', 'the player places a block', 'Happens every time the player places a block.', BLOCK('that was placed'));
+def('block_used', 'Interacted With Block', 'Blocks', 'the player uses a block', 'Happens once when the player uses a block, like opening a chest.', BLOCK('that was used'));
+def('block_stepped', 'Stepped On Block', 'Blocks', 'the player steps onto a block', 'Happens every time the player steps onto a block.', BLOCK('stepped on'));
+def('look_block', 'Started Looking At Block', 'Blocks', 'the crosshair moves onto a block', 'Happens once when the crosshair starts pointing at a block.', BLOCK('looked at').concat([V('distance_to_player', 'How far it is from the player\'s eyes', '3.4')]));
+def('unlook_block', 'Stopped Looking At Block', 'Blocks', 'the crosshair leaves a block', 'Happens once when the crosshair stops pointing at a block.', BLOCK('that was looked at').concat([V('distance_to_player', 'How far it was from the player\'s eyes', '3.4')]));
+def('entity_spawned', 'Entity Spawned', 'Entities', 'an entity spawns', 'Happens whenever an entity spawns anywhere in the world, even far away or in another dimension.', ENT('that spawned').concat([V('dimension_key', 'The dimension it spawned in', 'minecraft:overworld'), V('is_same_dimension_as_player', 'TRUE when it\'s in the player\'s dimension', 'TRUE')]), { server: true });
+def('entity_died', 'Entity Died', 'Entities', 'an entity dies', 'Happens whenever an entity dies anywhere in the world, with what killed it.', ENT('that died').concat([V('dimension_key', 'The dimension it died in', 'minecraft:overworld'), V('damage_type', 'The damage type that killed it', 'minecraft:player_attack'), V('is_same_dimension_as_player', 'TRUE when it\'s in the player\'s dimension', 'TRUE'), V('entity_killed_by_name', 'The name of the killer, or NONE', 'Steve'), V('entity_killed_by_key', 'The killer\'s type, or NONE', 'minecraft:player'), V('entity_killed_by_uuid', 'The killer\'s UUID, or NONE', '853c…adae6')]), { server: true });
+def('entity_seen', 'Entity Came Into Sight', 'Entities', 'an entity comes into view', 'Happens once when an entity shows up in the player\'s view, up to 200 blocks away.', ENT('that came into view'));
+def('entity_unseen', 'Entity Went Out of Sight', 'Entities', 'an entity leaves the view', 'Happens once when an entity the player could see goes out of view or farther than 200 blocks.', ENT('that left the view'));
+def('look_entity', 'Started Looking At Entity', 'Entities', 'the crosshair moves onto an entity', 'Happens once when the crosshair starts pointing at an entity.', ENT('looked at'));
+def('unlook_entity', 'Stopped Looking At Entity', 'Entities', 'the crosshair leaves an entity', 'Happens once when the crosshair stops pointing at an entity.', ENT('that was looked at'));
+def('entity_used', 'Interacted With Entity', 'Entities', 'the player uses an entity', 'Happens once when the player uses an entity, like trading with a villager.', ENT('that was used'));
+def('mounted', 'Entity Mounted', 'Entities', 'the player starts riding', 'Happens once when the player gets on a horse, a boat or anything else to ride.', ENT('being ridden'));
+def('unmounted', 'Entity Unmounted', 'Entities', 'the player stops riding', 'Happens once when the player gets off what they were riding.', ENT('that was ridden'));
+def('item_picked_up', 'Item Picked Up', 'Items', 'the player picks up an item', 'Happens every time the player picks up an item.', ITEM('picked up'));
+def('item_dropped', 'Item Dropped', 'Items', 'the player drops an item', 'Happens every time the player drops an item.', ITEM('dropped'));
+def('item_hovered', 'Item Hovered In Inventory', 'Items', 'an item is hovered in an inventory', 'Happens once when the mouse moves onto an item in any inventory, like a chest.', ITEM('hovered').concat([V('item_display_name_string', 'The item\'s name, as text', 'Diamond'), V('item_display_name_json', 'The item\'s name, as component JSON', '{"translate":"item.minecraft.diamond"}')]));
+def('item_consumed', 'Item Consumed', 'Items', 'the player eats or drinks something', 'Happens once when the player finishes eating or drinking an item.', ITEM('eaten or drunk'));
+def('item_used', 'Item Used', 'Items', 'the player uses an item', 'Happens every time the player uses an item, on a block, an entity or in the air.', ITEM('used').concat([V('used_on_type', 'What it was used on: block, entity, self or none', 'block'), V('used_on_entity_key', 'The entity type it was used on, or empty'), V('used_on_block_key', 'The block it was used on, or empty', 'minecraft:farmland'), V('target_pos_x', 'X position of the target, or -1'), V('target_pos_y', 'Y position of the target, or -1'), V('target_pos_z', 'Z position of the target, or -1')]));
+def('item_broken', 'Item Broken', 'Items', 'an item breaks', 'Happens once when a tool, a piece of armor or another item of the player breaks.', ITEM('broken').concat([V('item_type', 'What kind of item: tool, armor or other', 'tool')]));
+def('chat_received', 'Chat Message Received', 'Chat and Commands', 'a chat message comes in', 'Happens every time a chat message from a player shows up in the chat.', [V('chat_message_string', 'The message, as text', 'anyone up for the raid?'), V('chat_message_component', 'The message, as component JSON'), V('sender_uuid', 'The UUID of the sender, or ERROR', '853c…adae6'), V('sender_name', 'The name of the sender, or ERROR', 'Alex')]);
+def('chat_sent', 'Chat Message Sent', 'Chat and Commands', 'the player sends a chat message', 'Happens every time the player sends a chat message to the server.', [V('chat_message_string', 'The message, as text', '!shop'), V('chat_message_component', 'The message, as component JSON', '{"text":"!shop"}')]);
+def('system_message', 'System Message Received in Chat', 'Chat and Commands', 'a system message shows up in the chat', 'Happens every time the chat shows a system message, like a command\'s answer.', [V('system_message_string', 'The message, as text', 'Teleported Steve to 0, 64, 0'), V('system_message_component', 'The message, as component JSON')]);
+def('music_started', 'Music Track Started', 'Audio', 'a music track starts', 'Happens once when a music track starts playing.', TRACKV);
+def('music_stopped', 'Music Track Stopped', 'Audio', 'a music track stops', 'Happens once when the music stops, at its end or because another track started.', TRACKV);
+def('world_sound', 'World Sound Triggered', 'Audio', 'a sound plays near the player', 'Happens whenever a sound starts playing somewhere near the player.', [V('sound_resource_location', 'The sound file that started', 'minecraft:entity.creeper.primed'), V('sound_display_name', 'Its subtitle, when it has one', 'Creeper hisses'), V('sound_origin_pos_x', 'X position of where it comes from'), V('sound_origin_pos_y', 'Y position of where it comes from'), V('sound_origin_pos_z', 'Z position of where it comes from'), V('sound_origin_distance_to_player', 'How far away it is', '4.8'), V('sound_origin_direction_from_player', 'Its direction in degrees, from where the player looks', '270')]);
+def('video_status', 'Video Playback Status Changed', 'Video and Animations', 'a video starts, stops, pauses or ends', 'Happens every time a video starts playing, stops, pauses or finishes.', [V('video_source', 'Where the video comes from', 'videos/intro.mp4'), V('video_source_type', 'Where it\'s from: LOCAL, WEB or RESOURCE_LOCATION', 'LOCAL'), V('is_looping', 'TRUE when it loops', 'FALSE'), V('new_status', 'What it does now: PLAYING, STOPPED, PAUSED or FINISHED', 'FINISHED')]);
+def('anim_started', 'Animated Texture Started Playing', 'Video and Animations', 'an animated texture starts playing', 'Happens when a GIF, APNG or FMA starts playing, and again every time it loops.', TEXV);
+def('anim_finished', 'Animated Texture Finished Playing', 'Video and Animations', 'an animated texture finishes', 'Happens when a GIF, APNG or FMA gets to its end. When it loops, that\'s right before it starts over.', TEXV);
+def('download_started', 'File Download Started via Action', 'Files', 'Download File to Game Directory starts', 'Happens when Download File to Game Directory starts downloading a file.', [V('download_url', 'The address of the file', 'https://duskvalley.net/pack.zip'), V('target_file_path', 'Where it gets saved', 'downloads/pack.zip')]);
+def('downloaded', 'File Downloaded via Action', 'Files', 'Download File to Game Directory finishes', 'Happens when Download File to Game Directory has finished downloading a file.', [V('download_url', 'The address of the file', 'https://duskvalley.net/pack.zip'), V('target_file_path', 'Where it was saved', 'downloads/pack.zip'), V('download_succeeded', 'true when it worked', 'true')]);
+def('file_selected', 'File Selected', 'Files', 'Select File finishes', 'Happens when the file dialog of Select File closes.', [V('selected_file_path', 'The file that was picked, or empty when cancelled', 'C:/Users/steve/Pictures/skin.png'), V('target_file_path', 'Where it was copied to in the game folder', 'config/skins/skin.png'), V('selection_succeeded', 'true when it was copied', 'true'), V('selection_cancelled', 'true when the dialog was closed without a file', 'false'), V('failure_reason', 'What went wrong, when something did')]);
+def('zip_extracted', 'ZIP Extracted via Action', 'Files', 'Extract ZIP File In Game Directory finishes', 'Happens when Extract ZIP File In Game Directory is done.', [V('source_zip_path', 'The ZIP file', 'downloads/pack.zip'), V('target_folder_path', 'Where it was extracted to', 'resourcepacks/dusk'), V('extract_succeeded', 'true when it worked', 'true'), V('failure_reason', 'What went wrong, or empty')]);
+def('fm_data', 'FM Data Received', 'Network', 'the server sends FM data', 'Happens when the server sends this game data with /fmdata send.', [V('data_identifier', 'The ID the data was sent with', 'quest_update'), V('data', 'The data itself', 'stage=3'), V('sent_by', 'The server\'s address, or integrated_server in singleplayer', 'play.duskvalley.net')]);
+def('remote_connected', 'Remote Server Connected', 'Network', 'a remote server connection opens', 'Happens when Connect To Remote Server has opened a connection.', REMOTE);
+def('remote_data', 'Remote Server Data Received', 'Network', 'a remote server sends text', 'Happens every time a connected remote server sends text.', REMOTE.concat([V('data', 'The text that came in', '{"online":42}')]));
+def('remote_closed', 'Remote Server Connection Closed', 'Network', 'a remote server connection closes', 'Happens when a remote server connection closes, with why it closed.', REMOTE.concat([V('intentionally_closed', 'TRUE when a close action closed it', 'FALSE'), V('crashed', 'TRUE when it crashed', 'FALSE'), V('unknown_close_reason', 'TRUE when it closed without a known reason', 'TRUE')]));
+def('quit', 'Minecraft Closing', 'Game', 'Minecraft starts closing', 'Happens once when the game starts shutting down.', [V('timestamp_millis', 'When it happened, in milliseconds since 1970', '1794480075000'), V('timestamp_iso', 'When it happened, as an ISO-8601 date and time', '2026-11-11T12:41:15Z')], { ic: 'power_settings_new' });
+def('screenshot', 'Screenshot Taken', 'Game', 'a screenshot is saved', 'Happens after a screenshot was taken and saved, like with F2.', [V('screenshot_path', 'Where it was saved, in the game folder', '/screenshots/2026-11-11_12.41.15.png')], { ic: 'photo_camera' });
+def('achievement', 'Achievement Unlocked', 'Game', 'the player unlocks an achievement', 'Happens once when the player unlocks an advancement.', [V('achievement_key', 'The advancement, like minecraft:story/mine_diamond', 'minecraft:story/mine_diamond'), V('achievement_label', 'Its title, in the game\'s language', 'Diamonds!'), V('achievement_description', 'Its description, in the game\'s language', 'Acquire diamonds'), V('achievement_icon_item_key', 'The item its icon shows', 'minecraft:diamond'), V('achievement_type', 'What kind it is: advancement, goal or challenge', 'advancement')], { ic: 'emoji_events' });
+def('variable_updated', 'Variable Updated', 'FancyMenu', 'a variable changes', 'Happens every time a FancyMenu variable is set, by any script, element or command.', [V('var_name', 'The name of the variable', 'coins'), V('old_value', 'Its value before', '115'), V('new_value', 'Its value now', '125')], { ic: 'attach_money' });
+def('element_spawned', 'Element Spawned via Action', 'FancyMenu', 'Spawn Element Instance adds an element', 'Happens when the Spawn Element Instance action adds an element to a screen.', [V('element_type', 'The type of the element', 'image'), V('element_identifier', 'The identifier of the new element', 'firefly_3'), V('target_screen', 'The screen it was added to', 'title_screen')]);
+
+// ---------- script steps: the same rows and sentences as the script editor (rule 71) ----------
+const ACT = {
+  open_screen: ['Open Screen or Custom GUI', 'web_asset', [[]]],
+  play_audio: ['Play Audio', 'music_note', [[], ['at', '%'], ['on']]],
+  set_var: ['Set Variable', 'attach_money', [[], ['to']]],
+  show_toast: ['Show Toast', 'notifications', [[], ['for', ' s']]],
+  display_chat: ['Display In Chat [Client-Side]', 'chat', [[]]],
+  http: ['Send HTTP Request', 'lan', [[], []]],
+  log: ['Print to Game Log', 'terminal', [[]]],
+  start_sched: ['Start Scheduler', 'timer', [[]]]
+};
+const PHN = { calc: 'Calculator', playername: 'Player Name' };
+const cmt = (t) => ({ k: 'cmt', t });
+const iff = (conds, kids) => ({ k: 'if', conds, kids });
+const act = (a, ...vals) => ({ k: 'act', a, vals });
+
+// ---------- seed: the Dusk Valley profile's listeners ----------
+// icon: ms:<Material icon> or em:<emoji> from the icon chooser, empty for the default ear (rule 112)
+// stats: runs since the game started and when the last one was, in seconds relative to when the window opened.
+const seed = () => [
+  { id: 'l1', icon: 'ms:menu_book', events: ['key_pressed'], name: 'Quest Log Key', off: false, steps: [
+    cmt('J opens the quest log, but only while playing.'),
+    iff([[{ v: 'key_name' }, ' is J'], [{ neg: 'no' }, ' screen is open']], [
+      act('open_screen', ['quest_log']),
+      act('play_audio', ['page_turn.ogg'], ['100'], ['Master']),
+      act('set_var', ['last_key'], [{ v: 'key_name' }])
+    ])] },
+  { id: 'l2', icon: '', events: ['server_joined'], name: '', off: false, steps: [
+    act('set_var', ['coins'], [{ ph: 'calc' }]),
+    act('show_toast', ['Welcome back to Dusk Valley!'], ['4']),
+    act('start_sched', ['break_reminder'])] },
+  { id: 'l3', icon: 'em:🪙', events: ['variable_updated'], name: 'Coin Sound', off: false, steps: [
+    iff([[{ v: 'var_name' }, ' is coins']], [act('play_audio', ['coin.ogg'], ['80'], ['Master'])])] },
+  { id: 'l4', icon: 'em:💀', events: ['death'], name: 'Death Counter', off: false, steps: [
+    act('set_var', ['deaths'], [{ ph: 'calc' }]),
+    act('display_chat', ['You made it ', { v: 'days_survived' }, ' days this time.'])] },
+  { id: 'l5', icon: 'ms:storefront', events: ['chat_sent'], name: 'Shop Command', off: false, steps: [
+    iff([[{ v: 'chat_message_string' }, ' is !shop']], [act('open_screen', ['coin_shop']), act('set_var', ['shop_open'], ['true'])])] },
+  { id: 'l6', icon: 'ms:photo_camera', events: ['screenshot'], name: 'Screenshot Toast', off: true, steps: [
+    act('show_toast', ['Screenshot saved'], ['3'])] },
+  { id: 'l7', icon: 'em:🏆', events: ['achievement'], name: 'Achievement Fanfare', off: false, steps: [
+    act('play_audio', ['fanfare.ogg'], ['90'], ['Master']),
+    act('show_toast', [{ v: 'achievement_label' }], ['5'])] },
+  { id: 'l8', icon: 'em:🌸', events: ['enter_biome'], name: 'Cherry Grove Music', off: false, steps: [
+    iff([[{ v: 'biome_key' }, ' is minecraft:cherry_grove']], [act('play_audio', ['cherry_theme.ogg'], ['60'], ['Music'])])] },
+  { id: 'l9', icon: '', events: ['weather_changed'], name: '', off: false, steps: [] },
+  // one script for three events: $$event says which one ran it
+  { id: 'l10', icon: 'ms:logout', events: ['server_left', 'world_left', 'quit'], name: 'Goodbye Stats', off: false, steps: [
+    act('http', ['POST'], ['https://api.duskvalley.net/sessions']),
+    act('log', ['Session ended by ', { v: 'event' }, ' at ', { v: 'timestamp_iso' }])] },
+  // from an addon that isn't installed: kept exactly as it was saved (rule 86)
+  { id: 'l11', icon: '', events: ['questbook:page_turned'], mod: 'QuestBook', name: 'Page Turn Sound', off: false, steps: [
+    act('play_audio', ['page_turn.ogg'], ['70'], ['Master'])] },
+  { id: 'l12', icon: '', events: ['jump'], name: 'Jump Counter', off: false, steps: [
+    act('set_var', ['jumps'], [{ ph: 'calc' }])] },
+  { id: 'l13', icon: 'em:📯', events: ['raid_started', 'enter_raid'], name: 'Raid Horn', off: false, steps: [
+    act('play_audio', ['raid_horn.ogg'], ['100'], ['Master']),
+    act('show_toast', ['A raid is coming!'], ['4'])] }
+];
+const seedStats = () => ({ l1: { n: 14, t: -128 }, l2: { n: 1, t: -74 }, l3: { n: 61, t: -1 }, l7: { n: 2, t: -1500 }, l12: { n: 23, t: -260 } });
+// What each event handed over the last time it happened. Events keep these already, for their listeners' scripts (rule 100).
+const seedTypeVals = () => ({
+  key_pressed: { t: -128, v: { key_name: 'J', key_keycode: '74', key_scancode: '36', key_modifiers: '0' } },
+  server_joined: { t: -74, v: { server_ip: 'play.duskvalley.net' } },
+  variable_updated: { t: -1, v: { var_name: 'seconds_on_menu', old_value: '46', new_value: '47' } },
+  achievement: { t: -1500, v: { achievement_key: 'minecraft:story/mine_diamond', achievement_label: 'Diamonds!', achievement_description: 'Acquire diamonds', achievement_icon_item_key: 'minecraft:diamond', achievement_type: 'advancement' } },
+  jump: { t: -260, v: {} }
+});
+const RECENT = ['key_pressed', 'variable_updated', 'server_joined'];
+// what the icon chooser lists as Recently Used, shared by every window that has it (rule 113)
+const RECENT_ICONS = ['ms:menu_book', 'em:🪙', 'ms:storefront', 'em:🏆', 'em:✨', 'ms:hourglass_top', 'em:🎁', 'em:🌸'];
+
+// ---------- keys: what Keyboard Key Pressed hands over for a real key press in this mockup ----------
+const EVDEV = { Q: 16, W: 17, E: 18, R: 19, T: 20, Y: 21, U: 22, I: 23, O: 24, P: 25, A: 30, S: 31, D: 32, F: 33, G: 34, H: 35, J: 36, K: 37, L: 38, Z: 44, X: 45, C: 46, V: 47, B: 48, N: 49, M: 50 };
+const SPECIAL = { Space: ['Space', 32, 57], Enter: ['Enter', 257, 28], Escape: ['Escape', 256, 1], Backspace: ['Backspace', 259, 14], Tab: ['Tab', 258, 15], Delete: ['Delete', 261, 111], ArrowUp: ['Up Arrow', 265, 103], ArrowDown: ['Down Arrow', 264, 108], ArrowLeft: ['Left Arrow', 263, 105], ArrowRight: ['Right Arrow', 262, 106], ShiftLeft: ['Left Shift', 340, 42], ShiftRight: ['Right Shift', 344, 54], ControlLeft: ['Left Control', 341, 29], ControlRight: ['Right Control', 345, 97], AltLeft: ['Left Alt', 342, 56], AltRight: ['Right Alt', 346, 100], MetaLeft: ['Left Super', 343, 125], MetaRight: ['Right Super', 347, 126], Minus: ['-', 45, 12], Equal: ['=', 61, 13], Comma: [',', 44, 51], Period: ['.', 46, 52], Slash: ['/', 47, 53], Semicolon: [';', 59, 39], Quote: ['\'', 39, 40], BracketLeft: ['[', 91, 26], BracketRight: [']', 93, 27], Backslash: ['\\', 92, 43], Backquote: ['`', 96, 41] };
+const keyInfo = (e) => {
+  const c = e.code || '';
+  let r;
+  if (/^Key[A-Z]$/.test(c)) r = [c.slice(3), c.charCodeAt(3), EVDEV[c.slice(3)]];
+  else if (/^Digit[0-9]$/.test(c)) r = [c.slice(5), c.charCodeAt(5), c[5] === '0' ? 11 : +c[5] + 1];
+  else if (/^F([1-9]|1[0-2])$/.test(c)) { const n = +c.slice(1); r = [c, 289 + n, n <= 10 ? 58 + n : 76 + n]; }
+  else r = SPECIAL[c] || [(e.key || '?').length === 1 ? e.key.toUpperCase() : e.key, 0, 0];
+  const mods = (e.shiftKey ? 1 : 0) | (e.ctrlKey ? 2 : 0) | (e.altKey ? 4 : 0) | (e.metaKey ? 8 : 0);
+  return { key_name: r[0], key_keycode: String(r[1]), key_scancode: String(r[2]), key_modifiers: String(mods) };
+};
+
+class Component extends DCLogic {
+  componentWillUnmount() {
+    if (this._tick) clearInterval(this._tick);
+    if (this._keys) window.removeEventListener('keydown', this._keys, true);
+  }
+
+  renderVals() {
+    const p = this.props, s = this.state || {};
+    const set = (patch) => this.setState(patch);
+    const uid = this._uid || (this._uid = 'ls' + Math.random().toString(36).slice(2, 8));
+    const standalone = p.standalone ?? true;
+    const W = +p.width || 940, H = +p.height || 760;
+    const empty = (p.scene || 'Dusk Valley') === 'Empty';
+    const IC = {
+      ear: 'hearing', plus: 'add', search: 'search', funnel: 'filter_alt', x: 'close', warn: 'warning', pencil: 'edit',
+      editor: 'edit_note', play: 'play_arrow', dup: 'library_add', trash: 'delete', open: 'open_in_new', dns: 'dns',
+      unknown: 'extension_off', if: 'alt_route', cmt: 'comment', copy: 'content_copy', power: 'toggle_on'
+    };
+
+    // ---------- clock: every board starts at the same time, so screenshots stay comparable ----------
+    if (!this._t0) this._t0 = Date.now();
+    const nowT = Math.floor((Date.now() - this._t0) / 1000);
+    const clock = (t) => { const x = 12 * 3600 + 41 * 60 + 15 + t; const two = (n) => String(n).padStart(2, '0'); return two(Math.floor(x / 3600) % 24) + ':' + two(Math.floor(x / 60) % 60) + ':' + two(x % 60); };
+    const agoText = (t) => { const d = nowT - t; return d < 3 ? 'just now' : d < 60 ? d + ' s ago' : d < 3600 ? Math.floor(d / 60) + ' min ago' : Math.floor(d / 3600) + ' h ago'; };
+
+    // ---------- state ----------
+    if (!this._seed) this._seed = empty ? [] : seed();
+    const list = s.list ?? this._seed;
+    const stats = s.stats ?? (empty ? {} : seedStats());
+    const tvals = s.tvals ?? (empty ? {} : seedTypeVals());
+    const byId = (id) => list.find((l) => l.id === id);
+    const selRaw = s.sel ?? (empty ? [] : String(p.select ?? 'l1').split(',').map((x) => x.trim()).filter(Boolean));
+    const sel = selRaw.filter((id) => byId(id));
+    const sheet = s.sheet || '';
+    const filterOpen = s.filterOpen !== undefined ? s.filterOpen : !!p.filterMenu;
+    const filter = s.filter ?? (p.filter || 'all');
+    const sort = s.sort ?? 'name';
+    const q = s.q ?? (p.query || '');
+    const ql = q.trim().toLowerCase();
+    const renaming = !!s.renaming;
+    const menu = s.menu !== undefined ? s.menu : (p.menu ? { kind: p.menu, ev: p.menuEv || null, sub: p.menuSub || null, help: p.menuHelp || null, q: '' } : null);
+    const live = p.live !== false && !empty;
+    const known = (id) => !!T[id];
+    const evName = (id) => (known(id) ? T[id].name : id);
+    // an unnamed listener shows as its first event, and how many more it listens for
+    const eventName = (l) => evName(l.events[0]) + (l.events.length > 1 ? ' and ' + (l.events.length - 1) + ' more' : '');
+    const label = (l) => l.name || eventName(l);
+    // a listener whose events are all missing can't run; one with some of them still runs for the others
+    const dead = (l) => !l.events.some(known);
+
+    // ---------- live events ----------
+    // FancyMenu dispatches an event to every listener that is on and listens for it (rule 99), counts the run (rule 100),
+    // remembers which event it was for $$event (rule 111) and keeps what the event handed over. Listeners that are off
+    // don't run and don't count.
+    const fire = (type, vals) => {
+      const st = this.state || {};
+      const cur = st.list ?? this._seed;
+      const targets = cur.filter((l) => l.events.includes(type) && !l.off);
+      if (!targets.length) return;
+      const t = Math.floor((Date.now() - this._t0) / 1000);
+      const ns = Object.assign({}, st.stats ?? seedStats());
+      targets.forEach((l) => { const o = ns[l.id] || { n: 0 }; ns[l.id] = { n: o.n + 1, t, ev: type }; });
+      const ntv = Object.assign({}, st.tvals ?? seedTypeVals());
+      const prev = ntv[type] ? ntv[type].v : {};
+      ntv[type] = { t, v: vals, prev, flash: (ntv[type] && ntv[type].flash || 0) + 1 };
+      this.setState({ stats: ns, tvals: ntv });
+    };
+    // A Clock ticker element sets seconds_on_menu every second, so Variable Updated happens every second.
+    if (live && !this._tick) {
+      this._sec = 47;
+      this._tick = setInterval(() => {
+        const old = String(this._sec); this._sec += 1;
+        fire('variable_updated', { var_name: 'seconds_on_menu', old_value: old, new_value: String(this._sec) });
+      }, 1000);
+    }
+
+    const snapshot = () => ({ list, sel });
+    const commit = (nl, patch) => set({ list: nl, undoStack: [...(s.undoStack || []), snapshot()].slice(-50), redoStack: [], ...patch });
+    const status = (text, canUndo) => ({ status: { text, undo: !!canUndo } });
+    const fk = (k) => uid + '-' + k;
+    // an icon value is ms:<name> or em:<emoji>; Material icons outside the default set come from the full icon font
+    const iconParts = (v) => (v && v.startsWith('em:') ? { g: v.slice(3), cls: 'em' } : v && v.startsWith('ms:') ? { g: v.slice(3), cls: 'ms all' } : { g: IC.ear, cls: 'ms' });
+    const iconOpen = s.iconOpen !== undefined ? s.iconOpen : !!p.iconOpen;
+    // Boards import this window, so its elements can sit inside shadow roots: look through them too.
+    const deepQuery = (sel0) => { const walk = (r) => { const hit = r.querySelector(sel0); if (hit) return hit; for (const el of r.querySelectorAll('*')) { if (el.shadowRoot) { const x = walk(el.shadowRoot); if (x) return x; } } return null; }; return walk(document); };
+    const focusLater = (key, select) => setTimeout(() => { const el = deepQuery('[data-fk="' + key + '"]'); if (el) { el.focus(); if (select && el.select) el.select(); } }, 0);
+
+    // ---------- scripts ----------
+    const eachStep = (steps, fn, depth) => steps.forEach((st) => { fn(st, depth || 0); if (st.kids) eachStep(st.kids, fn, (depth || 0) + 1); });
+    const countSteps = (steps) => { let n = 0; eachStep(steps, (st) => { if (st.k !== 'cmt') n++; }); return n; };
+    const usedVars = (steps) => { const out = new Set(); const scan = (segs) => (segs || []).forEach((x) => { if (x && typeof x === 'object' && x.v) out.add(x.v); }); eachStep(steps, (st) => { (st.conds || []).forEach(scan); (st.vals || []).forEach(scan); }); return [...out]; };
+    // What a script gets: every name its events hand over, each with the events it comes from, and $$event when there is
+    // more than one event. Names that only some events hand over are empty when another one runs the script (rule 111).
+    const varsOf = (l) => {
+      const out = [];
+      l.events.filter(known).forEach((id) => T[id].vars.forEach((v) => { const o = out.find((x) => x.n === v.n); if (o) o.from.push(id); else out.push(Object.assign({}, v, { from: [id] })); }));
+      if (l.events.length > 1) out.unshift({ n: 'event', d: 'Which event ran the script, like ' + l.events[0], eg: l.events[0], from: l.events.slice(), own: true });
+      return out;
+    };
+    const lostVars = (l) => { if (dead(l)) return []; const have = new Set(varsOf(l).map((v) => v.n)); return usedVars(l.steps).filter((n) => !have.has(n)); };
+    const orText = (arr) => (arr.length < 2 ? arr.join('') : arr.slice(0, -1).join(', ') + ' or ' + arr[arr.length - 1]);
+    const segText = (segs, vals) => (segs || []).map((x) => (typeof x === 'string' ? x : x.v ? (vals && vals[x.v] !== undefined ? vals[x.v] : '$$' + x.v) : x.ph ? PHN[x.ph] || x.ph : x.neg || '')).join('');
+    const pieces = (segs, lost) => (segs || []).map((x) => (typeof x === 'string' ? { isText: true, s: x } : x.neg ? { isNot: true, s: x.neg } : x.ph ? { isChip: true, s: PHN[x.ph] || x.ph, cls: 'mchip' } : { isChip: true, s: '$$' + x.v, cls: 'mchip var' + (lost && lost.includes(x.v) ? ' bad' : '') }));
+    const W_ = (cls, str) => ({ isW: true, isTok: false, cls, s: str });
+    const tok = (segs, unit, lost) => ({ isW: false, isTok: true, cls: 'sv pick', pieces: pieces(segs, lost).concat(unit ? [{ isUnit: true, s: unit }] : []) });
+    const stepRows = (l, lost) => {
+      const rows = [];
+      eachStep(l.steps, (st, depth) => {
+        let parts, icon, tile = '', tileCls = 'se-tile', name;
+        if (st.k === 'cmt') { parts = [W_('se-cmt', st.t)]; icon = IC.cmt; tileCls = 'se-tile cmt'; name = 'the comment'; }
+        else if (st.k === 'if') {
+          parts = [W_('se-kw', 'If')];
+          st.conds.forEach((c, i) => { if (i) parts.push(W_('se-con', 'and')); parts.push(tok(c, '', lost)); });
+          icon = IC.if; tile = '--st-if'; name = 'the If';
+        } else {
+          const a = ACT[st.a];
+          parts = [W_('se-name', a[0])];
+          a[2].forEach((f, i) => { if (f[0]) parts.push(W_('se-con', f[0])); parts.push(tok(st.vals[i], f[1], lost)); });
+          icon = a[1]; tile = '--st-action'; name = a[0];
+        }
+        const isLost = usedVars([Object.assign({}, st, { kids: [] })]).some((n) => lost.includes(n));
+        rows.push({ cls: 'se-row ls-step', style: 'padding-left: ' + (8 + depth * 26) + 'px', tileCls, tileStyle: tile ? '--tile: var(' + tile + ')' : '', icon, parts, lost: isLost, name, tip: null });
+      });
+      return rows;
+    };
+
+    // ---------- list ----------
+    const statOf = (l) => stats[l.id] || { n: 0 };
+    const summaryOf = (l) => { const names = []; eachStep(l.steps, (st) => { const n = st.k === 'if' ? 'If' : st.k === 'act' ? ACT[st.a][0] : ''; if (n && !names.includes(n)) names.push(n); }); return names.join(', '); };
+    const problemOf = (l) => (l.mod ? 'From ' + l.mod + ', which isn\'t installed' : !l.steps.length ? 'No steps yet, so it does nothing' : lostVars(l).length ? 'Its script uses ' + lostVars(l).map((n) => '$$' + n).join(', ') + ', which ' + (l.events.length > 1 ? 'none of its events hand' : eventName(l) + ' doesn\'t hand') + ' over' : '');
+    const lastT = (l) => (statOf(l).n ? statOf(l).t : -Infinity);
+    const fits = (l) => (filter === 'off' ? l.off : filter === 'probs' ? !!problemOf(l) : filter === 'ran' ? statOf(l).n > 0 : filter === 'never' ? !statOf(l).n : true);
+    const hitParts = (text) => {
+      const at = ql ? text.toLowerCase().indexOf(ql) : -1;
+      const P = (t, hit) => ({ t, hit, plain: !hit });
+      return at < 0 ? [P(text, false)] : [P(text.slice(0, at), false), P(text.slice(at, at + ql.length), true), P(text.slice(at + ql.length), false)].filter((x) => x.t);
+    };
+    // the search finds names and what they listen for, also through Event Variables like key_name
+    const matches = (l) => !ql || label(l).toLowerCase().includes(ql) || l.events.some((id) => evName(id).toLowerCase().includes(ql) || (known(id) && T[id].vars.some((v) => v.n.includes(ql))));
+    let shown = list.filter((l) => fits(l) && matches(l));
+    const byName = (a, b) => label(a).localeCompare(label(b));
+    shown = sort === 'recent' ? shown.slice().sort((a, b) => lastT(b) - lastT(a) || byName(a, b)) : sort === 'type' ? shown.slice().sort((a, b) => eventName(a).localeCompare(eventName(b)) || byName(a, b)) : shown.slice().sort(byName);
+    const order = shown.map((l) => l.id);
+
+    const selectRow = (id, e) => {
+      let next;
+      if (e && (e.ctrlKey || e.metaKey)) next = sel.includes(id) ? sel.filter((x) => x !== id) : [...sel, id];
+      else if (e && e.shiftKey && s.anchor && order.includes(s.anchor)) { const a = order.indexOf(s.anchor), b = order.indexOf(id); next = order.slice(Math.min(a, b), Math.max(a, b) + 1); }
+      else next = [id];
+      set({ sel: next, anchor: e && e.shiftKey ? s.anchor : id, renaming: false, filterOpen: false, menu: null });
+    };
+    const ping = (l) => { const st = statOf(l); return st.n && nowT - st.t <= 1 ? (st.n % 2 ? ' ping-a' : ' ping-b') : ''; };
+    const rows = shown.map((l) => {
+      const st = statOf(l);
+      const isSel = sel.includes(l.id);
+      const prob = problemOf(l);
+      // Line two says what the first line doesn't: what a named listener listens for, or what an unnamed one does.
+      const sub = l.mod ? hitParts('From ' + l.mod + ', not installed') : !l.steps.length ? hitParts(l.name ? eventName(l) + ' · no steps yet' : 'No steps yet') : l.name ? hitParts(eventName(l)) : hitParts(summaryOf(l));
+      return {
+        cls: 'item tall lsrow' + (isSel ? ' sel' : '') + (l.off || l.mod ? ' off' : ''), ariaSel: isSel ? 'true' : 'false',
+        tileCls: 'ls-tile' + ping(l), icon: iconParts(l.icon).g, iconCls: iconParts(l.icon).cls,
+        name: hitParts(label(l)), sub, subCls: 'ls-sub' + ((l.mod || !l.steps.length) && !l.off ? ' warn' : ''),
+        warn: !!prob && !l.off, warnTip: prob,
+        swCls: 'sw' + (l.off ? '' : ' on'), on: l.off ? 'false' : 'true', swOff: dead(l),
+        swTip: dead(l) ? 'Can\'t run until ' + l.mod + ' is installed again' : l.off ? 'Turn on (Space)' : 'Turn off (Space)',
+        toggle: (e) => { e.stopPropagation(); toggleOn([l.id], l.off); },
+        click: (e) => selectRow(l.id, e),
+        dbl: () => { selectRow(l.id); openEditor(l); }
+      };
+    });
+
+    // ---------- actions ----------
+    const openEditor = (l, stepName) => { if (!l) return; set({ menu: null, ...status('Opens the script editor for ' + label(l) + (stepName ? ', with ' + stepName + ' selected.' : '.')) }); };
+    const toggleOn = (ids, on) => {
+      const targets = ids.map(byId).filter((l) => l && !dead(l));
+      if (!targets.length) return;
+      const nl = list.map((l) => (targets.includes(l) ? Object.assign({}, l, { off: !on }) : l));
+      const one1 = targets.length === 1;
+      commit(nl, status(on ? 'Turned on ' + (one1 ? label(targets[0]) : targets.length + ' listeners') + '.' : 'Turned off ' + (one1 ? label(targets[0]) : targets.length + ' listeners') + '. ' + (one1 ? 'It stays here, but doesn\'t run.' : 'They stay here, but don\'t run.'), true));
+    };
+    const remove = () => {
+      if (!sel.length) return;
+      const nl = list.filter((l) => !sel.includes(l.id));
+      const idx = Math.max(0, order.indexOf(sel[0]));
+      const rest = order.filter((id) => !sel.includes(id));
+      const nextSel = rest.length ? [rest[Math.min(idx, rest.length - 1)]] : [];
+      // Deleting needs no warning: Undo and Cancel both bring it back until the window closes.
+      commit(nl, { sel: nextSel, renaming: false, ...status(sel.length === 1 ? 'Deleted ' + label(byId(sel[0])) + '.' : 'Deleted ' + sel.length + ' listeners.', true) });
+    };
+    let idN = this._idN || 100;
+    const newId = () => { idN += 1; this._idN = idN; return 'n' + idN; };
+    const copyName = (l) => { const base = label(l) + ' copy'; let n = base, i = 2; while (list.some((x) => label(x) === n)) n = base + ' ' + i++; return n; };
+    const duplicate = () => {
+      if (!sel.length) return;
+      const copies = sel.map(byId).map((l) => Object.assign(JSON.parse(JSON.stringify(l)), { id: newId(), name: copyName(l) }));
+      commit([...list, ...copies], { sel: copies.map((c) => c.id), anchor: copies[0].id, ...status(copies.length === 1 ? 'Made ' + copies[0].name + '. It runs alongside the original.' : 'Made ' + copies.length + ' copies.', true) });
+    };
+    const addListener = (type) => {
+      const l = { id: newId(), events: [type], name: '', off: false, steps: [] };
+      commit([...list, l], { sel: [l.id], anchor: l.id, menu: null, q: '', filter: 'all', recent: [type, ...(s.recent || RECENT).filter((x) => x !== type)].slice(0, 3), ...status('Added a listener for ' + T[type].name + '. Its script opens in the script editor, so you can add the first steps.', true) });
+    };
+    const recentWith = (type) => [type, ...(s.recent || RECENT).filter((x) => x !== type)].slice(0, 3);
+    // an unnamed listener shows as its old event, so the messages don't use that as its name
+    const who = (l) => (l.name ? l.name : 'The listener');
+    const changeEvent = (l, from, type) => {
+      if (!l || from === type) { set({ menu: null }); return; }
+      const events = l.events.map((e) => (e === from ? type : e));
+      const nl = list.map((x) => (x === l ? Object.assign({}, x, { events, mod: events.every(known) ? undefined : x.mod }) : x));
+      commit(nl, { menu: null, recent: recentWith(type), ...status(who(l) + ' now listens for ' + T[type].name + (l.events.length > 1 ? ' instead of ' + evName(from) : '') + '.', true) });
+    };
+    const addEvent = (l, type) => {
+      if (!l || l.events.includes(type)) { set({ menu: null }); return; }
+      const nl = list.map((x) => (x === l ? Object.assign({}, x, { events: [...x.events, type] }) : x));
+      commit(nl, { menu: null, recent: recentWith(type), ...status(who(l) + ' now also listens for ' + T[type].name + '.' + (l.events.length === 1 ? ' $$event says which of them ran the script.' : ''), true) });
+    };
+    const removeEvent = (l, type) => {
+      if (!l || l.events.length < 2) return;
+      const events = l.events.filter((e) => e !== type);
+      const nl = list.map((x) => (x === l ? Object.assign({}, x, { events, mod: events.every(known) ? undefined : x.mod }) : x));
+      commit(nl, { menu: null, ...status(who(l) + ' doesn\'t listen for ' + evName(type) + ' anymore.', true) });
+    };
+    const undo = () => {
+      const u = s.undoStack || [];
+      if (!u.length) return;
+      const last = u[u.length - 1];
+      set({ list: last.list, sel: last.sel, undoStack: u.slice(0, -1), redoStack: [...(s.redoStack || []), snapshot()], renaming: false, status: { text: 'Undone.', undo: false } });
+    };
+    const redo = () => {
+      const r = s.redoStack || [];
+      if (!r.length) return;
+      const last = r[r.length - 1];
+      set({ list: last.list, sel: last.sel, redoStack: r.slice(0, -1), undoStack: [...(s.undoStack || []), snapshot()], status: { text: 'Redone.', undo: false } });
+    };
+    // Changes apply right away (rule 38), so Cancel puts every listener back the way it was when the window opened.
+    // It only asks when there is something to lose (rule 68).
+    const changes = (() => {
+      const orig = this._seed, j = (x) => JSON.stringify(x);
+      const ids = new Set(orig.map((l) => l.id).concat(list.map((l) => l.id)));
+      let n = 0; ids.forEach((id) => { const a = orig.find((l) => l.id === id), b = list.find((l) => l.id === id); if (!a || !b || j(a) !== j(b)) n++; });
+      return n;
+    })();
+    const discard = () => set({ list: this._seed, sel: empty ? [] : [String(p.select ?? 'l1').split(',')[0]], undoStack: [], redoStack: [], renaming: false, sheet: '', menu: null, filterOpen: false, status: { text: 'Your changes were taken back. The window closes now.', undo: false } });
+    const cancelAll = () => { if (changes) set({ sheet: 'discard', menu: null, filterOpen: false }); else set({ menu: null, filterOpen: false, ...status('Nothing changed, so Cancel closes the window without asking.') }); };
+    const startRename = () => { if (sel.length !== 1) return; const l = byId(sel[0]); set({ renaming: true, renameDraft: l.name, menu: null }); focusLater(fk('rename'), true); };
+    const applyRename = (l, draft) => {
+      const name = draft.trim() === eventName(l) ? '' : draft.trim();
+      if (name === l.name) { set({ renaming: false }); return; }
+      commit(list.map((x) => (x === l ? Object.assign({}, x, { name }) : x)), { renaming: false, ...status(name ? 'Renamed it to ' + name + '.' : 'It shows as ' + eventName(l) + ' again.', true) });
+    };
+    const copyText = (txt, msg) => { try { navigator.clipboard && navigator.clipboard.writeText(txt).catch(() => {}); } catch (e) { /* the mockup only says what it copied */ } set(status(msg)); };
+
+    // ---------- details: one listener ----------
+    const one = sel.length === 1 ? byId(sel[0]) : null;
+    const many = sel.length > 1;
+    let d = {};
+    if (one) {
+      const evs = one.events, multi = evs.length > 1, t = known(evs[0]) ? T[evs[0]] : null;
+      const st = statOf(one);
+      const lost = lostVars(one);
+      const steps = stepRows(one, lost);
+      // the last values of a name come from the event that handed it over most recently
+      const tvOf = (ids) => ids.map((id) => tvals[id]).filter(Boolean).sort((a, b) => b.t - a.t)[0] || null;
+      const vars = varsOf(one);
+      const anyTv = evs.some((id) => tvals[id]);
+      const MAX = 8;
+      const nSteps = countSteps(one.steps);
+      const ran = st.n ? 'Ran ' + (st.n === 1 ? 'once' : st.n + ' times') + ' since the game started, last ' + agoText(st.t) : 'Hasn\'t run since the game started';
+      d = {
+        label: label(one), typeName: eventName(one), multi,
+        icon: iconParts(one.icon).g, iconCls: iconParts(one.icon).cls, iconValue: one.icon || '',
+        meta: dead(one) ? 'Can\'t run until ' + one.mod + ' is installed again' : one.off ? 'Turned off, so it doesn\'t run · ' + ran : ran,
+        missing: !!one.mod,
+        missingTitle: one.mod + ' isn\'t installed',
+        missingText: dead(one) ? 'This listener stays exactly as it was saved and runs again once ' + one.mod + ' is back. Until then you can still edit its script, or use Change to pick an event that\'s here.' : 'It keeps listening for its other events, and for ' + evs.filter((id) => !known(id)).join(', ') + ' again once ' + one.mod + ' is back.',
+        lost: lost.length > 0,
+        lostTitle: lost.map((n) => '$$' + n).join(', ') + (lost.length === 1 ? ' isn\'t handed over anymore' : ' aren\'t handed over anymore'),
+        lostText: !dead(one) ? (steps.filter((r) => r.lost).length === 1 ? 'A step' : steps.filter((r) => r.lost).length + ' steps') + ' of the script still use' + (steps.filter((r) => r.lost).length === 1 ? 's ' : ' ') + (lost.length === 1 ? 'it' : 'them') + ', but ' + (multi ? 'none of its events has' : t.name + ' doesn\'t have') + ' ' + (lost.length === 1 ? 'that variable' : 'those variables') + '. The script editor marks those steps.' : '',
+        // Listens for: one row per event, each with Change, and × once there is more than one
+        evCount: multi ? evs.length + ' events' : '',
+        evs: evs.map((id, i) => {
+          const te = T[id], on = !!(menu && menu.kind === 'change' && (menu.ev || evs[0]) === id);
+          return {
+            icon: te ? te.ic : IC.unknown, tileCls: 'ls-tile' + (te ? '' : ' bad'), lblCls: 'lbl' + (te ? '' : ' mono'),
+            name: evName(id), desc: te ? te.desc : 'An event that comes with ' + one.mod + '.', server: !!(te && te.server),
+            anchor: 'change-' + i, changeCls: 'btn sm' + (on ? ' on' : ''), changeExpanded: on ? 'true' : 'false',
+            toggleChange: () => set({ menu: on ? null : { kind: 'change', ev: id, sub: null, help: null, q: '' }, menuAt: null, filterOpen: false }),
+            canRemove: multi, removeTip: 'Stop listening for ' + evName(id), remove: () => removeEvent(one, id)
+          };
+        }),
+        cantRun: dead(one), runPopup: multi ? 'menu' : 'false',
+        runTip: dead(one) ? 'Can\'t run while ' + one.mod + ' is missing' : multi ? 'Runs the script once, as one of its events. F5 runs it as the one that happened last.' : 'Runs the script once, without waiting for the event (F5)',
+        stepCount: nSteps ? nSteps + (nSteps === 1 ? ' step' : ' steps') : '',
+        hasSteps: one.steps.length > 0, noSteps: !one.steps.length,
+        noStepsText: !dead(one) ? 'No steps yet, so nothing happens when ' + orText(evs.filter(known).map((id) => T[id].when)) + '.' : 'No steps yet.',
+        steps: steps.slice(0, MAX).map((r) => Object.assign(r, { open: () => openEditor(one, r.name), tip: null })),
+        moreSteps: steps.length > MAX ? 'Show all ' + steps.length + ' steps in the script editor' : '',
+        hasVars: vars.length > 0, noVars: !vars.length,
+        noVarsText: dead(one) ? 'Unknown until ' + one.mod + ' is installed again.' : t.name + ' hands no variables to its listeners.',
+        copyAllTip: 'Copies all ' + vars.length + ' names with $$, one per line',
+        // With several events, the names are grouped by the events that hand them over.
+        vgroups: (() => {
+          const row = (v) => {
+            const tv = v.own ? null : tvOf(v.from);
+            const has = v.own ? !!st.ev : !!(tv && tv.v && tv.v[v.n] !== undefined);
+            const value = v.own ? st.ev : has ? tv.v[v.n] : '';
+            const fresh = tv && tv.flash && nowT - tv.t <= 1;
+            const changed = has && tv && tv.prev && tv.prev[v.n] !== tv.v[v.n];
+            return {
+              ref: '$$' + v.n, d: v.d, copyTip: 'Copy $$' + v.n,
+              val: has ? (value === '' ? 'empty' : value) : '–',
+              valCls: 'val' + (!has || value === '' ? ' none' : '') + (fresh && changed ? (tv.flash % 2 ? ' chg-a' : ' chg-b') : ''),
+              copy: () => copyText('$$' + v.n, 'Copied $$' + v.n + '. Paste it into any value of this script.')
+            };
+          };
+          if (!multi) return [{ head: '', sub: '', vars: vars.map(row) }];
+          const groups = [];
+          vars.forEach((v) => {
+            const key = v.from.length === evs.length ? '*' : v.from.join(',');
+            let g = groups.find((x) => x.key === key);
+            if (!g) { g = { key, from: v.from, vars: [] }; groups.push(g); }
+            g.vars.push(v);
+          });
+          groups.sort((a, b) => (a.key === '*' ? -1 : b.key === '*' ? 1 : evs.indexOf(a.from[0]) - evs.indexOf(b.from[0])));
+          return groups.map((g) => ({
+            head: g.key === '*' ? 'From every event' : 'Only from ' + orText(g.from.map(evName)),
+            sub: g.key === '*' ? '' : 'Empty when ' + (evs.length - g.from.length === 1 ? orText(evs.filter((e) => !g.from.includes(e)).map(evName)) : 'another event') + ' runs the script',
+            vars: g.vars.map(row)
+          }));
+        })(),
+        varsNote: dead(one) ? '' : multi ? (anyTv ? 'What each event handed over the last time it happened. The values update live while this window is open.' : 'None of its events happened since the game started, so there are no values yet. Run Now uses the examples instead.') : tvals[evs[0]] ? 'What the event handed over the last time, at ' + clock(tvals[evs[0]].t) + '. The values update live while this window is open.' : 'It hasn\'t run since the game started, so there are no values yet. Run Now uses the examples instead.'
+      };
+    }
+    // Run Now runs the script as one of its events: with its last values, or its examples when it hasn't happened yet
+    const runAs = (id) => {
+      const l = one; const t = l && T[id];
+      if (!t) return;
+      const tv = tvals[id];
+      const vals = Object.assign({}, tv ? tv.v : Object.fromEntries(t.vars.map((v) => [v.n, v.eg])), l.events.length > 1 ? { event: id } : {});
+      // Show Toast steps at the top level show their toast on the screen behind the window.
+      const toast = l.steps.find((x) => x.k === 'act' && x.a === 'show_toast');
+      if (toast && typeof p.onToast === 'function') p.onToast(segText(toast.vals[0], vals));
+      const as = l.events.length > 1 ? ' as ' + t.name : '';
+      set({ menu: null, ...status(!l.steps.length ? label(l) + ' has no steps, so running it does nothing.' : 'Ran the script of ' + label(l) + ' once' + as + (!t.vars.length ? '.' : tv ? ', with the values from ' + (as ? 'that event\'s' : 'its') + ' last run.' : ', with the example values, because ' + (as ? 'that event' : 'it') + ' hasn\'t happened yet.')) });
+    };
+    // F5 runs it as the event that ran it last, or its first event
+    const runNow = () => { if (!one) return; const ev = statOf(one).ev; const id = ev && one.events.includes(ev) && known(ev) ? ev : one.events.find(known); if (id) runAs(id); };
+
+    // ---------- details: several listeners ----------
+    let m = {};
+    if (many) {
+      const ls = sel.map(byId);
+      const able = ls.filter((l) => !dead(l));
+      const nOn = able.filter((l) => !l.off).length;
+      const mixed = nOn > 0 && nOn < able.length;
+      m = { title: ls.length + ' listeners', meta: nOn === able.length ? 'All of them are on' : nOn ? nOn + ' of them ' + (nOn === 1 ? 'is' : 'are') + ' on' : 'None of them are on',
+        dupLabel: 'Duplicate ' + ls.length, deleteTip: 'Delete ' + ls.length + ' listeners',
+        swCls: 'sw' + (mixed ? ' mixed' : nOn ? ' on' : ''), ariaOn: mixed ? 'mixed' : nOn ? 'true' : 'false',
+        // a mixed switch turns everything on, like everywhere else (rule 25)
+        toggle: () => toggleOn(able.map((l) => l.id), mixed || !nOn),
+        onNote: mixed ? nOn + ' of them listen, ' + (able.length - nOn) + (able.length - nOn === 1 ? ' is' : ' are') + ' off. The switch turns all of them on.' : nOn ? 'All of them listen.' : 'All of them are off, so none of them run.',
+        rows: ls.map((l) => { const st = statOf(l); return { icon: iconParts(l.icon).g, iconCls: iconParts(l.icon).cls, name: label(l), type: eventName(l), act: dead(l) ? 'Can\'t run' : l.off ? 'Off' : st.n ? 'Ran ' + (st.n === 1 ? 'once' : st.n + ' times') : 'Hasn\'t run yet', cls: 'vm-cnt' + (l.off || !st.n ? ' none' : '') }; })
+      };
+    }
+
+    // ---------- the icon chooser ----------
+    if (iconOpen && !s.iconAt && !this._iconMeasuring) {
+      this._iconMeasuring = true;
+      setTimeout(() => { this._iconMeasuring = false; const el = deepQuery('[data-ls="' + uid + '"] [data-anchor="icon"]'); if (el) this.setState({ iconAt: anchorOf(el) }); }, 0);
+    }
+    const iconAt = s.iconAt || [22, 112, 70];
+    const pickIcon = (v) => {
+      const l = sel.length === 1 ? byId(sel[0]) : null;
+      const recentIcons = v ? [v, ...(s.iconRecent || RECENT_ICONS).filter((y) => y !== v)].slice(0, 20) : (s.iconRecent || RECENT_ICONS);
+      if (!l || (l.icon || '') === v) { set({ iconOpen: false, iconRecent: recentIcons }); return; }
+      const part = iconParts(v);
+      commit(list.map((y) => (y === l ? Object.assign({}, y, { icon: v }) : y)), { iconOpen: false, iconRecent: recentIcons, ...status(v ? label(l) + ' has ' + (part.cls === 'em' ? part.g : 'the ' + part.g.replace(/_/g, ' ') + ' icon') + ' as its icon now.' : label(l) + ' uses the default ear icon again.', true) });
+    };
+
+    // ---------- menus: New Listener and Change ----------
+    // Positions are measured relative to the window, so the menu opens right below the button that opened it.
+    const anchorOf = (el) => { const w = el.closest('.win'); const wr = w.getBoundingClientRect(), r = el.getBoundingClientRect(); const k = wr.width / w.offsetWidth || 1; return [Math.round((r.left - wr.left) / k), Math.round((r.bottom - wr.top) / k + 4), Math.round((r.right - wr.left) / k)]; };
+    if (menu && !s.menuAt && !this._measuring) {
+      this._measuring = true;
+      setTimeout(() => {
+        this._measuring = false;
+        const root = deepQuery('[data-ls="' + uid + '"]');
+        const st = this.state || {};
+        const mk = st.menu !== undefined ? st.menu : menu;
+        if (!mk) return;
+        if (!root) { this.setState({ menuAt: [10, 86, 300] }); return; }
+        const o = (st.sel ?? sel).length === 1 ? byId((st.sel ?? sel)[0]) : null;
+        const anchor = mk.kind === 'change' ? 'change-' + Math.max(0, o ? o.events.indexOf(mk.ev || o.events[0]) : 0) : mk.kind === 'add' || mk.kind === 'run' ? mk.kind : list.length ? 'new' : 'empty';
+        const el = root.querySelector('[data-anchor="' + anchor + '"]');
+        this.setState({ menuAt: el ? anchorOf(el) : [10, 86, 300] });
+      }, 0);
+    }
+    const hi = this._hi || (this._hi = { pts: [], rect: null, timer: 0 });
+    const GRACE_MS = 350;
+    const cancelIntent = () => { if (hi.timer) { clearTimeout(hi.timer); hi.timer = 0; } };
+    const track = (e) => { hi.pts.push({ x: e.clientX, y: e.clientY }); if (hi.pts.length > 4) hi.pts.shift(); const mm = e.currentTarget.querySelectorAll('.menu.cm')[1]; hi.rect = mm ? mm.getBoundingClientRect() : null; };
+    // submenus forgive diagonal moves toward them (rule 28)
+    const heading = () => { const r = hi.rect; if (!r || hi.pts.length < 2) return false; const pt = hi.pts[hi.pts.length - 1], from = hi.pts[0]; if (pt.x === from.x && pt.y === from.y) return false; const a = { x: r.left, y: r.top - 8 }, b = { x: r.left, y: r.bottom + 8 }; const side = (p1, p2, p3) => (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y); const d1 = side(pt, from, a), d2 = side(pt, a, b), d3 = side(pt, b, from); return !((d1 < 0 || d2 < 0 || d3 < 0) && (d1 > 0 || d2 > 0 || d3 > 0)); };
+    const liveMenu = () => { const st = this.state || {}; return st.menu !== undefined ? st.menu : menu; };
+    const wantSub = (c, helpId) => {
+      cancelIntent(); const cur = liveMenu(); if (!cur) return;
+      const hk = helpId === undefined ? null : helpId;
+      const apply = () => set({ menu: Object.assign({}, liveMenu(), { sub: c, help: hk }) });
+      if (cur.sub === c) { if (cur.help !== hk) set({ menu: Object.assign({}, cur, { help: hk }) }); return; }
+      if (cur.sub && heading()) { hi.timer = setTimeout(() => { hi.timer = 0; apply(); }, GRACE_MS); return; }
+      apply();
+    };
+    const setHelp = (id) => () => { const cur = liveMenu(); if (cur && cur.help !== id) set({ menu: Object.assign({}, cur, { help: id }) }); };
+    const forChange = !!(menu && menu.kind === 'change' && one);
+    const forAdd = !!(menu && menu.kind === 'add' && one);
+    // the event Change swaps, which is the one whose row opened it
+    const chEv = forChange ? (menu.ev && one.events.includes(menu.ev) ? menu.ev : one.events[0]) : null;
+    const inOne = (id) => !!(one && one.events.includes(id));
+    const pickType = (id) => (forChange ? changeEvent(one, chEv, id) : forAdd ? addEvent(one, id) : addListener(id));
+    // events the listener has already are checked, and can't be picked twice
+    const typeItem = (id, showCat, enter) => ({ d: T[id].ic, hl: !!menu && menu.help === id, label: T[id].name, keys: T[id].desc + ' ' + T[id].cat + ' ' + T[id].vars.map((v) => v.n).join(' '), val: showCat ? T[id].cat : '', radio: forChange, checked: forChange ? chEv === id : forAdd && inOne(id), disabled: (forChange && id !== chEv && inOne(id)) || (forAdd && inOne(id)), click: () => pickType(id), enter: enter || setHelp(id) });
+    const recent = s.recent || RECENT;
+    // for Change: the names the script uses that only the swapped event hands over
+    const usedNow = forChange ? usedVars(one.steps).filter((n) => known(chEv) && T[chEv].vars.some((v) => v.n === n) && !one.events.some((e) => e !== chEv && known(e) && T[e].vars.some((v) => v.n === n))) : forAdd ? usedVars(one.steps).filter((n) => n !== 'event') : [];
+    // for Change: events of the same category that hand over every one of those names
+    const fitting = forChange && known(chEv) && usedNow.length ? Object.keys(T).filter((id) => id !== chEv && !inOne(id) && T[id].cat === T[chEv].cat && usedNow.every((n) => T[id].vars.some((v) => v.n === n))).slice(0, 4) : [];
+    const mq = (menu && menu.q) || '';
+    const menuSub = menu ? menu.sub : null;
+    const helpId = menu ? menu.help : null;
+    let menuItems = [];
+    if (menu) {
+      if (mq) menuItems = Object.keys(T).map((id) => typeItem(id, true));
+      else {
+        // Change starts with the events that keep every $$ name of the script working, when it uses any
+        const top = fitting.length ? [{ head: 'Hands Over the Same Variables' }].concat(fitting.map((id) => typeItem(id, false, () => wantSub(null, id))))
+          : [{ head: 'Recently Used' }].concat(recent.filter((id) => !(forChange || forAdd) || !inOne(id)).map((id) => typeItem(id, false, () => wantSub(null, id))));
+        menuItems = top.concat([{ head: 'All Events' }], CATS.map((c) => ({ d: CAT_IC[c], label: c, sub: true, radio: forChange, checked: forChange && !!T[chEv] && T[chEv].cat === c, hl: menuSub === c, enter: () => wantSub(c), click: () => wantSub(c) })));
+      }
+    }
+    const subIds = menuSub ? Object.keys(T).filter((id) => T[id].cat === menuSub) : [];
+    const menuSubItems = subIds.map((id) => typeItem(id, false));
+    // The same row heights the ContextMenu uses, so the submenu and the help line up with their rows.
+    const heightOf = (it) => (it.sep || it.head ? 25 : 26);
+    const offsetOf = (pred) => { let y = 0; for (const it of menuItems) { if (pred(it)) return y; y += heightOf(it); } return 0; };
+    const listTop = 1 + 5 + 28;
+    const at = s.menuAt || [10, 86, 300];
+    // A menu that doesn't fit below its button moves up until it does. Its height without a search keeps it in place
+    // while typing, since the search only makes it shorter.
+    const limit = (+p.room || (standalone ? H + 40 : H + 80)) - 8;
+    if (menu && !mq) this._menuH = listTop + menuItems.reduce((a, it) => a + heightOf(it), 0) + 7;
+    const mTop = Math.max(8, Math.min(at[1], limit - (this._menuH || 0)));
+    const room = limit - mTop;
+    const subSearch = subIds.length > 10;
+    const subH = 12 + subIds.length * 26 + (subSearch ? 28 : 0);
+    const subTop0 = menuSub ? listTop + offsetOf((it) => it.label === menuSub && it.sub) - 6 : 0;
+    const subTop = Math.max(0, Math.min(subTop0, room - subH));
+    const hDef = helpId ? T[helpId] : null;
+    const helpInSub = !!(hDef && menuSub && hDef.cat === menuSub && !mq);
+    const helpTop0 = hDef ? (helpInSub ? subTop + 6 + (subSearch ? 28 : 0) + subIds.indexOf(helpId) * 26 : listTop + offsetOf((it) => it.label === hDef.name && !it.sub) - 6) : 0;
+    const helpTop = Math.max(0, Math.min(helpTop0, room - 170));
+    let help = { show: false };
+    if (hDef && !mq) {
+      const others = list.filter((l) => l.events.includes(helpId) && (!(forChange || forAdd) || l !== one));
+      const missing = forChange || forAdd ? usedNow.filter((n) => !hDef.vars.some((v) => v.n === n)) : [];
+      let note = '', noteCls = 'note';
+      if (forChange && helpId === chEv) note = label(one) + ' listens for this now.';
+      else if (forAdd && inOne(helpId)) note = label(one) + ' listens for this already.';
+      else if (forChange && inOne(helpId)) note = label(one) + ' listens for this already, in another row.';
+      else if (forChange && missing.length) { note = 'The script uses ' + missing.map((n) => '$$' + n).join(', ') + ', which this event doesn\'t hand over.'; noteCls = 'note warn'; }
+      else if (forAdd && missing.length) { note = 'The script uses ' + missing.map((n) => '$$' + n).join(', ') + ', which this event doesn\'t hand over, so ' + (missing.length === 1 ? 'it\'s' : 'they\'re') + ' empty when this event runs it.'; noteCls = 'note warn'; }
+      else if ((forChange || forAdd) && usedNow.length) { note = 'Hands over every variable the script uses.'; noteCls = 'note ok'; }
+      else if (others.length) note = (others.length === 1 ? label(others[0]) + ' already listens' : others.length + ' listeners already listen') + ' for this.';
+      help = {
+        show: true, name: hDef.name, icon: hDef.ic, desc: hDef.desc, server: !!hDef.server,
+        hasVars: hDef.vars.length > 0, noVars: !hDef.vars.length,
+        vars: hDef.vars.slice(0, 4).map((v) => '$$' + v.n), more: hDef.vars.length > 4 ? '+' + (hDef.vars.length - 4) + ' more' : '',
+        note, noteCls,
+        style: 'position: relative; flex: 0 0 auto; width: 260px; margin-top: ' + Math.max(0, helpTop) + 'px; margin-' + (forChange || forAdd ? 'right' : 'left') + ': 4px'
+      };
+    }
+    // Run Now on a listener with several events: which one to run it as
+    const runOpen = !!(menu && menu.kind === 'run' && one && one.events.length > 1);
+    const runItems = runOpen ? [{ head: 'Run As' }].concat(one.events.map((id) => ({ d: known(id) ? T[id].ic : IC.unknown, label: evName(id), val: !known(id) ? 'Missing' : tvals[id] ? 'Last values' : 'Examples', disabled: !known(id), click: () => runAs(id) }))) : [];
+
+    // ---------- filter menu ----------
+    const pick = (patch) => () => set({ ...patch, filterOpen: false });
+    const filterItems = [
+      { head: 'Show' },
+      { radio: true, checked: filter === 'all', label: 'All Listeners', click: pick({ filter: 'all' }) },
+      { radio: true, checked: filter === 'off', label: 'Turned Off', click: pick({ filter: 'off' }) },
+      { radio: true, checked: filter === 'probs', label: 'With Problems', click: pick({ filter: 'probs' }) },
+      { radio: true, checked: filter === 'ran', label: 'Ran Since the Game Started', click: pick({ filter: 'ran' }) },
+      { radio: true, checked: filter === 'never', label: 'Haven\'t Run Yet', click: pick({ filter: 'never' }) },
+      { head: 'Sort By' },
+      { radio: true, checked: sort === 'name', label: 'Name', click: pick({ sort: 'name' }) },
+      { radio: true, checked: sort === 'recent', label: 'Last Run', click: pick({ sort: 'recent' }) },
+      { radio: true, checked: sort === 'type', label: 'Event', click: pick({ sort: 'type' }) }
+    ];
+    const FILTER_CHIP = { off: 'Turned off', probs: 'With problems', ran: 'Ran since the game started', never: 'Haven\'t run yet' };
+
+    // ---------- sheets ----------
+    let al = { buttons: [] };
+    if (sheet === 'discard') al = {
+      icon: 'undo', title: changes === 1 ? 'Discard your change?' : 'Discard ' + changes + ' changes?',
+      text: 'Cancel puts every listener back the way it was when you opened this window.',
+      buttons: [{ cls: 'btn primary danger', label: 'Discard Changes', click: discard }, { cls: 'btn', label: 'Keep Editing', click: () => set({ sheet: '' }) }]
+    };
+
+    // ---------- keyboard ----------
+    this._onKey = (e) => {
+      // Every key press reaches Keyboard Key Pressed, also while typing in this window, like in the game.
+      if (window.__lsActive === uid && live) fire('key_pressed', keyInfo(e));
+      if (window.__lsActive !== uid) return;
+      const tag = (e.target && e.target.tagName) || '';
+      const inField = tag === 'INPUT' || tag === 'TEXTAREA';
+      const mod = e.ctrlKey || e.metaKey;
+      const st = this.state || {};
+      const cur = st.sel ?? sel;
+      // the icon chooser handles its own keys, and Esc closes it, after clearing its search
+      if (st.iconOpen ?? iconOpen) { if (e.key === 'Escape' && !(inField && e.target.value)) set({ iconOpen: false }); return; }
+      if (e.key === 'Escape') {
+        if (sheet) set({ sheet: '' });
+        else if (liveMenu()) set({ menu: null });
+        else if (filterOpen) set({ filterOpen: false });
+        else if (renaming) set({ renaming: false });
+        else if (q && !inField) set({ q: '' });
+        // with nothing else to close, Esc is Cancel, like closing the window (rule 38)
+        else if (!inField) cancelAll();
+        return;
+      }
+      if (sheet || liveMenu()) return;
+      if (mod && e.key.toLowerCase() === 'n') { e.preventDefault(); set({ menu: { kind: 'new', sub: null, help: null, q: '' }, menuAt: null, filterOpen: false }); return; }
+      if (mod && e.key.toLowerCase() === 'f') { e.preventDefault(); focusLater(fk('search'), true); return; }
+      // Ctrl+Enter and Ctrl+S both press Save
+      if (mod && (e.key === 'Enter' || e.key.toLowerCase() === 's')) { e.preventDefault(); return; }
+      if (e.key === 'F5') { e.preventDefault(); runNow(); return; }
+      if (inField) return;
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (!order.length) return;
+        const at0 = order.indexOf(cur[cur.length - 1]);
+        const nx = Math.max(0, Math.min(order.length - 1, at0 + (e.key === 'ArrowDown' ? 1 : -1)));
+        if (e.shiftKey && st.anchor) { const a = order.indexOf(st.anchor); set({ sel: order.slice(Math.min(a, nx), Math.max(a, nx) + 1) }); }
+        else set({ sel: [order[nx]], anchor: order[nx], renaming: false });
+        return;
+      }
+      if (e.key === 'Enter' && one) { e.preventDefault(); openEditor(one); return; }
+      if (e.key === 'F2') { e.preventDefault(); startRename(); return; }
+      if (e.key === ' ') { e.preventDefault(); const ls = cur.map(byId).filter((l) => l && !dead(l)); if (ls.length) toggleOn(ls.map((l) => l.id), ls.some((l) => l.off)); return; }
+      if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); remove(); return; }
+      if (mod && e.key.toLowerCase() === 'a') { e.preventDefault(); set({ sel: order.slice() }); return; }
+      if (mod && e.key.toLowerCase() === 'd') { e.preventDefault(); duplicate(); return; }
+      if (mod && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))) { e.preventDefault(); redo(); return; }
+      if (mod && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
+      if (!mod && !e.altKey && e.key.length === 1) { set({ q: q + e.key }); focusLater(fk('search')); }
+    };
+    if (!this._keys) { this._keys = (e) => this._onKey && this._onKey(e); window.addEventListener('keydown', this._keys, true); }
+
+    const stt = s.status;
+    const newOpen = !!(menu && menu.kind === 'new');
+    return {
+      uid, ic: IC, standalone, yes: true, no: false, noop: () => {}, stop: (e) => e.stopPropagation(),
+      rootCls: standalone ? 'fm ' + ((p.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark') + ((p.material ?? 'Blur') === 'Blur' ? ' mat-blur' : '') : '',
+      rootStyle: standalone ? 'position: relative; width: ' + (W + 80) + 'px; height: ' + (H + 80) + 'px; overflow: hidden; background: var(--bd)' : 'position: relative; width: ' + W + 'px; height: ' + H + 'px',
+      winStyle: (standalone ? 'left: 40px; top: 40px; ' : 'left: 0; top: 0; ') + 'width: ' + W + 'px; height: ' + H + 'px',
+      activate: () => { window.__lsActive = uid; },
+      searchFk: fk('search'), renameFk: fk('rename'), contentSk: fk('content') + '-' + (sel[0] || ''),
+      searchPh: 'Search ' + (list.length ? list.length + ' listeners' : 'listeners'), q,
+      onSearch: (e) => set({ q: e.target.value }),
+      searchKey: (e) => {
+        if (e.key === 'Escape') { set({ q: '' }); e.target.blur(); }
+        if ((e.key === 'ArrowDown' || e.key === 'Enter') && order.length) { e.preventDefault(); e.target.blur(); set({ sel: [order[0]], anchor: order[0] }); }
+      },
+      newBtnCls: 'btn tinted' + (newOpen && list.length ? ' on' : ''), emptyBtnCls: 'btn primary' + (newOpen ? ' on' : ''), newExpanded: newOpen ? 'true' : 'false',
+      toggleNew: () => set({ menu: newOpen ? null : { kind: 'new', sub: null, help: null, q: '' }, menuAt: null, filterOpen: false, renaming: false }),
+      toggleNewEmpty: () => set({ menu: newOpen ? null : { kind: 'new', sub: null, help: null, q: '' }, menuAt: null }),
+      filterBtnCls: 'ib' + (filter !== 'all' || sort !== 'name' || filterOpen ? ' on' : ''), filterExpanded: filterOpen ? 'true' : 'false',
+      toggleFilter: (e) => { e.preventDefault(); set({ filterOpen: !filterOpen, filterAt: anchorOf(e.currentTarget), menu: null }); },
+      filterChip: filter !== 'all' ? FILTER_CHIP[filter] : '', clearFilter: () => set({ filter: 'all' }),
+      rows,
+      noMatch: !rows.length && list.length > 0, noMatchText: ql ? 'No listener matches “' + q.trim() + '”.' : 'No listener fits this filter.',
+      canNewFromQ: !!ql, qText: q.trim(), newFromQ: () => set({ menu: { kind: 'new', sub: null, help: null, q: q.trim() }, menuAt: null }),
+      one: !!one, many, none: !list.length, nothingSel: !sel.length && list.length > 0,
+      d, m,
+      notRenaming: !renaming, renaming, renameDraft: s.renameDraft ?? (one ? one.name : ''),
+      renameMsg: (() => {
+        if (!one) return '';
+        const draft = (s.renameDraft ?? one.name).trim();
+        if (!draft) return 'Without a name, it shows as ' + eventName(one) + '. Enter saves, Esc keeps the old name.';
+        if (list.some((l) => l !== one && label(l) === draft)) return 'Another listener is called ' + draft + ' too. That works, but they\'re harder to tell apart.';
+        return 'Enter saves, Esc keeps the old name.';
+      })(),
+      onRename: (e) => set({ renameDraft: e.target.value }),
+      renameKey: (e) => {
+        if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); set({ renaming: false }); return; }
+        if (e.key === 'Enter' && one) { e.preventDefault(); applyRename(one, s.renameDraft ?? one.name); }
+      },
+      startRename, editScript: () => openEditor(one), runNow, duplicate, remove,
+      addEvCls: 'vm-more ls-add' + (forAdd ? ' on' : ''), addExpanded: forAdd ? 'true' : 'false',
+      toggleAdd: () => set({ menu: forAdd ? null : { kind: 'add', sub: null, help: null, q: '' }, menuAt: null, filterOpen: false }),
+      runBtnCls: 'btn' + (runOpen ? ' on' : ''), runExpanded: runOpen ? 'true' : 'false',
+      runNowClick: () => { if (one && one.events.length > 1) set({ menu: runOpen ? null : { kind: 'run' }, menuAt: null, filterOpen: false }); else runNow(); },
+      runOpen, runItems, runStyle: 'left: ' + at[0] + 'px; top: ' + at[1] + 'px; visibility: ' + (s.menuAt || !this._measuring ? 'visible' : 'hidden'),
+      copyAll: () => { if (!one) return; const vs = varsOf(one); if (vs.length) copyText(vs.map((v) => '$$' + v.n).join('\n'), 'Copied all ' + vs.length + ' Event Variables, one per line.'); },
+      footLead: stt ? stt.text : 'Changes apply right away, so you can try them.', footUndo: !!(stt && stt.undo), undo, cancelAll,
+      anyPopup: !!(filterOpen || menu || iconOpen),
+      iconOpen: iconOpen && !!one, iconStyle: 'left: ' + iconAt[0] + 'px; top: ' + iconAt[1] + 'px; visibility: ' + (s.iconAt || !this._iconMeasuring ? 'visible' : 'hidden'),
+      iconTitle: one ? 'Icon for ' + label(one) : 'Icon', iconRecent: s.iconRecent || RECENT_ICONS, iconQuery: p.iconQuery || '', pickIcon,
+      iconBtnCls: 'ls-dicon' + (iconOpen ? ' on' : ''), iconExpanded: iconOpen ? 'true' : 'false',
+      toggleIcon: (e) => set({ iconOpen: !iconOpen, iconAt: anchorOf(e.currentTarget), filterOpen: false, menu: null }),
+      menuOpen: !!menu && menu.kind !== 'run' && ((menu.kind !== 'change' && menu.kind !== 'add') || !!one), menuStyle: (forChange || forAdd ? 'right: ' + (W - at[2]) + 'px; flex-direction: row-reverse; ' : 'left: ' + at[0] + 'px; ') + 'top: ' + mTop + 'px; visibility: ' + (s.menuAt || !this._measuring ? 'visible' : 'hidden'),
+      menuLabel: forChange ? 'Event ' + label(one) + ' listens for instead of ' + evName(chEv) : forAdd ? 'Another event for ' + label(one) : 'Event for the new listener',
+      menuItems, menuHasSub: !!menuSub && !mq, menuSub: menuSub || '', menuSubItems, menuSubSearch: 'Search ' + (menuSub || ''),
+      menuSubStyle: 'position: relative; flex: 0 0 auto; margin-top: ' + subTop + 'px',
+      menuSubEnter: () => cancelIntent(), trackMenu: track,
+      onMenuQuery: (v) => { const cur = liveMenu(); if (cur && (cur.q || '') !== v) set({ menu: Object.assign({}, cur, { q: v, sub: null, help: null }) }); },
+      help,
+      filterOpen, filterItems, filterStyle: 'left: ' + (s.filterAt ? s.filterAt[0] : 252) + 'px; top: ' + (s.filterAt ? s.filterAt[1] : 120) + 'px',
+      closePopups: () => { cancelIntent(); set({ filterOpen: false, menu: null, iconOpen: false }); },
+      closePopupsCtx: (e) => { e.preventDefault(); cancelIntent(); set({ filterOpen: false, menu: null, iconOpen: false }); },
+      sheetAlert: sheet === 'discard', al
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>A message or window on the title screen</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="fm {{themeClass}} {{matClass}}" style="position: relative; width: 1440px; height: 900px; overflow: hidden; background: var(--bd)">
+<div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""></div>
+<div aria-hidden="true" style="position: absolute; left: 500px; top: 150px; width: 440px; height: 84px; display: grid; place-items: center; color: #fff; font-size: 52px; font-weight: 700; letter-spacing: 1px; text-shadow: 0 4px 0 rgba(0, 0, 0, .35)">Dusk Valley</div>
+<div class="mc-btn" aria-hidden="true" style="left: 590px; top: 420px; width: 260px; height: 38px">Play</div>
+<div class="mc-btn" aria-hidden="true" style="left: 590px; top: 468px; width: 260px; height: 38px">Options</div>
+<div class="mc-btn" aria-hidden="true" style="left: 590px; top: 516px; width: 260px; height: 38px">Quit Game</div>
+<div aria-hidden="true" style="position: absolute; left: 16px; bottom: 12px; color: rgba(255, 255, 255, .85); font-size: 12px">Dusk Valley Pack 1.4.2</div>
+<div aria-hidden="true" style="position: absolute; right: 16px; bottom: 12px; color: rgba(255, 255, 255, .85); font-size: 12px">Copyright Mojang AB. Do not distribute!</div>
+<div style="position: absolute; left: 0; right: 0; top: 0"><dc-import name="MenuBar" kind="Overlay" standalone="{{no}}" hint-size="1440px,30px"></dc-import></div>
+<div style="position: absolute; left: 0; right: 0; top: 30px; bottom: 0; display: grid; place-items: center"><dc-import name="SystemWindows" kind="{{kind}}" freeze="{{freeze}}" scroll="{{scroll}}" theme="{{theme}}" on-theme="{{onTheme}}" standalone="{{no}}" hint-size="620px,680px"></dc-import></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"kind":{"editor":"enum","options":["confirm","danger","error","welcome","about"],"default":"confirm"},"freeze":{"editor":"boolean","default":false},"scroll":{"editor":"text","default":""},"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props, s = this.state || {};
+    // Appearance in the Welcome window changes FancyMenu's theme right away, so the menu bar follows too.
+    const theme = s.theme ?? (p.theme ?? 'Dark');
+    return {
+      themeClass: theme === 'Light' ? 'theme-light' : 'theme-dark',
+      matClass: (p.material ?? 'Blur') === 'Blur' ? 'mat-blur' : '',
+      yes: true, no: false, theme,
+      onTheme: (t) => this.setState({ theme: t }),
+      kind: p.kind || 'confirm', freeze: !!p.freeze, scroll: p.scroll || ''
+    };
+  }
+}
+</script>
+</body>
+</html>

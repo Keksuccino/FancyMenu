@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Text element menu</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="fm {{themeClass}} {{matClass}}" style="position: relative; width: 1440px; height: 960px; overflow: hidden; background: var(--bd)">
+
+<div class="backdrop" aria-hidden="true" style="background: #15182c">
+<img class="art" src="dusk_valley.png" alt="">
+<div class="gridlines"></div>
+</div>
+<div class="le le-btn" aria-hidden="true" style="left: 590px; top: 420px; width: 260px; height: 38px">Play</div>
+<div class="le le-btn" aria-hidden="true" style="left: 590px; top: 468px; width: 260px; height: 38px">Options</div>
+<div class="le le-btn" aria-hidden="true" style="left: 590px; top: 516px; width: 260px; height: 38px">Quit Game</div>
+<div aria-hidden="true" style="{{textStyle}}">{{textPreview}}</div>
+<div class="sel-border" aria-hidden="true" style="left: 439px; top: 129px; width: 562px; height: 58px"><i style="left: -3px; top: -3px"></i><i style="right: -3px; top: -3px"></i><i style="left: -3px; bottom: -3px"></i><i style="right: -3px; bottom: -3px"></i></div>
+
+<div style="position: absolute; left: 700px; top: 196px; display: flex; align-items: flex-start; gap: 10px">
+<div><dc-import name="ContextMenu" items="{{items}}" search="Search this menu" focus-on-open="{{yes}}" standalone="{{no}}" hint-size="auto,720px"></dc-import></div>
+<sc-if value="{{help}}" hint-placeholder-val="{{true}}">
+<div class="help-tag" style="{{helpStyle}}">{{help.text}}<sc-if value="{{help.code}}" hint-placeholder-val="{{false}}"><span class="codebox">{{help.code}}</span><span class="res">{{help.res}}</span></sc-if></div>
+</sc-if>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Dark&quot;,&quot;Light&quot;],&quot;default&quot;:&quot;Dark&quot;},&quot;material&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Solid&quot;,&quot;Blur&quot;],&quot;default&quot;:&quot;Solid&quot;},&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:960}}">
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const helpKey = s.help !== undefined ? s.help : 'Interactable';
+    const scroll = s.scroll ?? false;
+    const caseMode = s.caseMode ?? 0;
+    const shadow = s.shadow ?? true;
+    const fromFile = !!s.fromFile;
+    const opacity = s.opacity ?? 0.8;
+    const man = s.man ?? { inter: true };
+    const flip = (key) => () => this.setState({ man: { ...man, [key]: !man[key] } });
+    const variable = (name) => '{"placeholder":"getvariable","vars":{"name":"' + name + '"}}';
+    const helpTexts = {
+      'Source': { text: "Direct: type the text yourself. Resource: load it from a text file, so you can change it without opening the editor." },
+      'Text Content': { text: 'Uses the Player Name placeholder:', code: 'Welcome back, {"placeholder":"playername"}!', res: 'Right now this is Welcome back, Steve!' },
+      'Text Shadow': { text: 'Draws a soft shadow behind the text, like Minecraft does for its own labels.' },
+      'Auto Line Wrapping': { text: 'Breaks long lines so the text never gets wider than the element.' },
+      'Remove HTML Line Breaks': { text: 'Ignores <br> tags in the text, which helps with texts copied from websites.' },
+      'Scrolling': { text: 'Lets players scroll through texts that are taller than the element.' },
+      'Interactable': man.inter
+        ? { text: 'Decided by placeholder text:', code: variable('menu_unlocked'), res: 'Right now this is true.' }
+        : { text: 'If this element should be interactable. Turn it off if clicking elements above or below this text causes problems.' },
+      'Opacity': man.opacity
+        ? { text: 'Decided by placeholder text:', code: variable('title_alpha'), res: 'Right now this is 0.6.' }
+        : { text: 'How see-through the element is. The arrow next to it resets it to 100%.' },
+      'Copy Element ID': { text: 'Copies the ID that actions and placeholders use to find this element.' }
+    };
+    const hover = (label) => () => { if (helpKey !== label) this.setState({ help: helpTexts[label] ? label : null }); };
+    const items = [
+      { head: 'Text' },
+      { ic: 'file', label: 'Source', seg: ['Direct', 'Resource'], segIndex: fromFile ? 1 : 0, segWidth: 136, enter: hover('Source'), onPick: (i) => this.setState({ fromFile: i === 1 }) },
+      fromFile ? { ic: 'file', label: 'Text File', val: 'welcome.txt', enter: hover('') } : { ic: 'editor', label: 'Text Content', val: 'Welcome back, Steve!', resolved: true, enter: hover('Text Content') },
+      { ic: 'case', label: 'Case', seg: ['Normal', 'lower', 'UPPER'], segIndex: caseMode, segWidth: 160, enter: hover(''), onPick: (i) => this.setState({ caseMode: i }) },
+      { ic: 'shadow', label: 'Text Shadow', sw: true, on: shadow, fx: true, manual: !!man.shadow, manualVal: 'true', onFx: flip('shadow'), enter: hover('Text Shadow'), onToggle: (v) => this.setState({ shadow: v }) },
+      { ic: 'wrap', label: 'Auto Line Wrapping', sw: true, on: true, fx: true, manual: !!man.wrap, manualVal: 'true', onFx: flip('wrap'), enter: hover('Auto Line Wrapping') },
+      { ic: 'code', label: 'Remove HTML Line Breaks', sw: true, on: false, fx: true, manual: !!man.html, manualVal: 'false', onFx: flip('html'), enter: hover('Remove HTML Line Breaks') },
+      { ic: 'book', label: 'Markdown', val: 'On', sub: true, enter: hover('') },
+      { ic: 'swipe', label: 'Scrolling', sw: true, on: scroll, fx: true, manual: !!man.scroll, manualVal: 'false', onFx: flip('scroll'), enter: hover('Scrolling'), onToggle: (v) => this.setState({ scroll: v }) },
+      { ic: 'grabber', label: 'Scroll Bar Style', sub: true, disabled: !scroll, enter: hover('') },
+      { ic: 'touch', label: 'Interactable', sw: true, on: true, fx: true, manual: !!man.inter, manualVal: 'true', onFx: flip('inter'), hl: helpKey === 'Interactable', enter: hover('Interactable') },
+      { head: 'Element' },
+      { ic: 'title', label: 'In-Editor Name', val: 'Welcome Text', enter: hover('') },
+      { ic: 'opacity', label: 'Opacity', slider: opacity, fx: true, manual: !!man.opacity, manualVal: '0.6', onFx: flip('opacity'), changed: opacity !== 1, onReset: () => this.setState({ opacity: 1 }), enter: hover('Opacity') },
+      { ic: 'move', label: 'Position & Size', sub: true, val: 'Top Center', enter: hover('') },
+      { ic: 'eye', label: 'Visibility', sub: true, val: 'Always', enter: hover('') },
+      { ic: 'sparkle', label: 'Animation & Effects', sub: true, enter: hover('') },
+      { ic: 'up', label: 'Move Layer Up', enter: hover('') },
+      { ic: 'down', label: 'Move Layer Down', enter: hover('') },
+      { sep: true },
+      { ic: 'copy', label: 'Copy', kbd: 'Ctrl+C', enter: hover('') },
+      { ic: 'id', label: 'Copy Element ID', enter: hover('Copy Element ID') },
+      { ic: 'trash', label: 'Delete', kbd: 'Del', danger: true, enter: hover('') }
+    ];
+    const heightOf = (it) => (it.sep || it.head ? 25 : 26);
+    let y = 0;
+    let helpTop = 0;
+    for (const it of items) {
+      if (it.label === helpKey) helpTop = y;
+      y += heightOf(it);
+    }
+    const listTop = 1 + 5 + 28;
+    const base = 'Welcome back, Steve!';
+    const preview = caseMode === 1 ? base.toLowerCase() : caseMode === 2 ? base.toUpperCase() : base;
+    return {
+      themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark',
+      matClass: (this.props.material ?? 'Blur') === 'Blur' ? 'mat-blur' : '',
+      no: false, yes: true, items,
+      textPreview: preview,
+      textStyle: 'position: absolute; left: 440px; top: 130px; width: 560px; height: 56px; display: grid; place-items: center; color: #fff; font-size: 34px; font-weight: 700; opacity: ' + (man.opacity ? 0.6 : opacity) + (shadow ? '; text-shadow: 0 3px 0 rgba(0, 0, 0, .4)' : ''),
+      help: helpKey && helpTexts[helpKey] ? { code: '', res: '', ...helpTexts[helpKey] } : null,
+      helpStyle: 'position: relative; margin-top: ' + (listTop + helpTop - 4) + 'px'
+    };
+  }
+}
+</script>
+</body>
+</html>

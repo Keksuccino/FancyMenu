@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AFMA Creator spec</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.pair{display:grid;grid-template-columns:600px minmax(0,1fr);gap:48px;align-items:start}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start}
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;align-items:start}
+.kr{display:flex;align-items:center;gap:14px;padding:9px 18px;border-bottom:1px solid var(--sep);font-size:12.5px;color:var(--text-2)}
+.kr:last-child{border-bottom:0}
+.kk{flex:0 0 190px;font-family:"Noto Sans Mono",ui-monospace,Menlo,monospace;font-size:12px;color:var(--text)}
+.spec code{font-family:"Noto Sans Mono",ui-monospace,Menlo,monospace;font-size:12px;color:var(--text)}
+.flow{display:flex;flex-direction:column;gap:10px}
+.flow .step{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;font-size:13px;line-height:1.5;color:var(--text-2)}
+.flow .n{width:22px;height:22px;display:grid;place-items:center;border-radius:50%;font-size:11.5px;font-weight:700;color:var(--accent);background:color-mix(in srgb,var(--accent) 15%,transparent)}
+.flow b{color:var(--title);font-weight:600}
+.propchip{color:var(--warn);background:color-mix(in srgb,var(--warn) 15%,transparent)}
+.okchip2{color:var(--ok);background:color-mix(in srgb,var(--ok) 15%,transparent)}
+/* today's AFMA Creator screen, redrawn at 600 pixels wide: one scrolling panel, inline labels and cycle buttons */
+.lgc{position:relative;width:600px;padding:12px 14px 14px;background:#1f1f1f;border:1px solid #3e4042;color:#ceDDed;font-size:11px}
+.lgc .tt{margin:0 0 9px 2px;font-size:12px;font-weight:600;color:#e8eef4}
+.lgc .pn{padding:10px 12px 12px;border-radius:6px;background:#2a2a2a;display:flex;flex-direction:column;gap:5px}
+.lgc .h{margin:9px 0 1px;color:#e8eef4}
+.lgc .r{display:grid;grid-template-columns:150px minmax(0,1fr) auto;gap:6px;align-items:center}
+.lgc .r2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.lgc .c{display:grid;grid-template-columns:150px minmax(0,1fr);gap:6px;align-items:center}
+.lgc .l{text-align:right;color:#a3acb5;white-space:nowrap;overflow:hidden}
+.lgc .f{height:17px;padding:0 5px;display:flex;align-items:center;border:1px solid #3e4042;background:#1a1a1a;white-space:nowrap;overflow:hidden}
+.lgc .f.e{color:#6f767d}
+.lgc .b{height:17px;padding:0 8px;display:flex;align-items:center;justify-content:center;gap:3px;border:1px solid #3e4042;background:#333;white-space:nowrap}
+.lgc .b .on{color:#3ec06b}
+.lgc .b .off{color:#e26464}
+.lgc .b .pr{color:#e5a33a}
+.lgc .bar{height:6px;margin-top:2px;background:#202020}
+.lgc .bar i{display:block;width:47%;height:100%;background:#3ec06b}
+.lgc .ft{margin-top:10px;display:flex;justify-content:space-between}
+.lgc .ft .b{width:96px}
+</style>
+</helmet>
+<div class="fm spec {{themeClass}}" style="min-height: 4855px">
+
+<header style="display: flex; flex-direction: column; gap: 12px; max-width: 920px">
+<div style="font-size: 12px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; color: var(--text-3)">FancyMenu · UI rework concept · AFMA Creator</div>
+<h1 style="margin: 0; font-size: 34px; line-height: 1.15; font-weight: 700; color: var(--title)">See your animation before you create it</h1>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: var(--text-2)">The AFMA Creator turns folders of PNG frames into one AFMA file. The window now plays the frames the way the file will play them, checks every frame before anything gets created, and puts today&#x27;s 25 settings behind three quality choices, with the expert ones in plain words under Advanced. Creating shows real progress with the time left and ends with what it made, instead of a dialog with a path.</p>
+</header>
+
+<section>
+<h2 class="h2">Today and proposed</h2>
+<div class="pair">
+<div>
+<div class="cap">Today</div>
+<div class="lgc">
+<div class="tt">AFMA Creator</div>
+<div class="pn">
+<div class="r"><span class="l">Main Frames Directory</span><span class="f">config/fancymenu/assets/frames/dusk_valley_loop</span><span class="b">Browse</span></div>
+<div class="r"><span class="l">Intro Frames Directory</span><span class="f">config/fancymenu/assets/frames/dusk_valley_intro</span><span style="display: flex; gap: 4px"><span class="b">Browse</span><span class="b">Clear</span></span></div>
+<div class="r"><span class="l">Output AFMA File</span><span class="f e"></span><span class="b">Browse</span></div>
+<div class="h">Playback</div>
+<div class="r2"><div class="c"><span class="l">Main Frame Time (ms)</span><span class="f">41</span></div><div class="c"><span class="l">Intro Frame Time (ms)</span><span class="f">41</span></div></div>
+<div class="c"><span class="l">Loop Count</span><span class="f">0</span></div>
+<div class="h">Optimization</div>
+<span class="b">Optimization Preset: <span class="pr">Balanced</span></span>
+<div class="c"><span class="l">Keyframe Interval</span><span class="f">90</span></div>
+<div class="r2"><span class="b">Rect-Copy Detection: <span class="on">Enabled</span></span><span class="b">Duplicate-Frame Elision: <span class="on">Enabled</span></span></div>
+<div class="r2"><span class="b">Near-Lossless Temporal Merge: <span class="on">Enabled</span></span><span class="b">Strict Post-Write Validation: <span class="off">Disabled</span></span></div>
+<div class="h">Advanced</div>
+<span class="b">Adaptive Keyframes: <span class="on">Enabled</span></span>
+<div class="r2"><div class="c"><span class="l">Adaptive Max Interval</span><span class="f">180</span></div><div class="c"><span class="l">Adaptive Min Savings (B)</span><span class="f">768</span></div></div>
+<div class="r2"><div class="c"><span class="l">Adaptive Min Savings Ratio</span><span class="f">0.0075</span></div><div class="c"><span class="l">Max Copy Search Distance</span><span class="f">512</span></div></div>
+<div class="r2"><div class="c"><span class="l">Max Axis Offsets</span><span class="f">8</span></div><div class="c"><span class="l">Perceptual Color Delta</span><span class="f">14</span></div></div>
+<div class="r2"><div class="c"><span class="l">Perceptual Alpha Delta</span><span class="f">20</span></div><div class="c"><span class="l">Perceptual Avg Error</span><span class="f">6.0</span></div></div>
+<div style="margin-top: 10px; color: #e8eef4">Job: Analyzing AFMA frames for export...</div>
+<div style="color: #a3acb5">Analyzing main frame 20/72</div>
+<div class="bar"><i></i></div>
+</div>
+<div class="ft"><span class="b">Export</span><span class="b">Close</span></div>
+</div>
+</div>
+<div>
+<div class="cap">What gets in the way</div>
+<ul class="probs">
+<li>Everything sits in one long scrolling panel: 3 paths, 3 timing fields, 6 cycle buttons and 9 number fields, most of them encoder internals with names like Max Axis Offsets or Perceptual Color Delta.</li>
+<li>Nothing shows the frames. Whether they&#x27;re the right ones, in the right order and at the right speed only shows once the export is done and the file is in a layout.</li>
+<li>A frame with a different size only fails in the middle of the export, with an error message that holds the frame&#x27;s full path.</li>
+<li>The output path starts empty, so the first Export fails with Select a valid AFMA output path first. A file that already exists gets replaced without asking.</li>
+<li>Dropped PNG files show up as Ordered PNG List (12 frames): frame_01.png in the path field.</li>
+<li>Frame times only take milliseconds, so 24 frames a second has to be typed as 41.</li>
+<li>The three Perceptual fields stay editable while Near-Lossless is off, even though the export ignores them then.</li>
+<li>Switching the preset overwrites every value you changed, without a word.</li>
+<li>Progress is a thin bar with texts like Analyzing AFMA frames for export..., and the result is a dialog with the path. Nothing says how long it takes or how big the file got.</li>
+<li>Close and Esc stop a running export without asking, and every setting starts over the next time the screen opens.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">What changes</h2>
+<div class="group" style="background: var(--win)">
+<div class="mv head"><div>Today</div><div></div><div>Proposed</div><div>Why</div></div>
+<div class="mv"><div class="from">Main, intro and output paths in text fields</div><div class="arrow">→</div><div class="to">A row for the main frames and one for the intro, each with a thumbnail, the folder&#x27;s name, the number of frames, how long they play and their size</div><div class="why">You see what you picked. Choose Folder opens the shared folder chooser, which takes typed paths too (rule 39).</div></div>
+<div class="mv"><div class="from">(new)</div><div class="arrow">→</div><div class="to">A preview that plays the frames like the file will: the intro once, then the main frames as often as Loops says</div><div class="why">Wrong order, a frame too many or the wrong speed show up before you wait for anything (rule 115).</div></div>
+<div class="mv"><div class="from">(new)</div><div class="arrow">→</div><div class="to">A timeline with a segment per part. Dragging scrubs, and the frame under the pointer shows as a thumbnail with its file name</div><div class="why">Finding one frame in 108 takes a second.</div></div>
+<div class="mv"><div class="from">Frame sizes checked halfway through the export</div><div class="arrow">→</div><div class="to">Every frame checked as soon as it&#x27;s added. Problems show on their row and as a mark on the timeline, and Show jumps there</div><div class="why">Create AFMA only starts what can finish (rule 114).</div></div>
+<div class="mv"><div class="from">Main Frame Time and Intro Frame Time in ms</div><div class="arrow">→</div><div class="to">Speed in ms or frames a second, with the other unit under it. Intro speed stays empty for the same speed</div><div class="why">24.4 frames a second explains 41 ms, and an intro rarely needs its own speed.</div></div>
+<div class="mv"><div class="from">Loop Count, where 0 means endless</div><div class="arrow">→</div><div class="to">Loops: Forever, Once or Several, and how many times</div><div class="why">The same choice as Runs in Schedulers, and nobody has to know what 0 means.</div></div>
+<div class="mv"><div class="from">Optimization Preset as a cycle button</div><div class="arrow">→</div><div class="to">Quality: Best Quality, Balanced or Smallest File, with a sentence about each</div><div class="why">Three options are a segmented control (rule 15), and the sentence says what you trade.</div></div>
+<div class="mv"><div class="from">5 more cycle buttons and 9 number fields</div><div class="arrow">→</div><div class="to">Advanced, closed by default: Full frame every, Reuse Moved Areas, Allow Tiny Color Changes, Store Repeated Frames Once, with switches (rule 16) and plain names</div><div class="why">The expert settings stay, without being in everyone&#x27;s way.</div></div>
+<div class="mv"><div class="from">Values that differ from the preset look like any other</div><div class="arrow">→</div><div class="to">A blue bar and a reset arrow on each changed row, 2 changed next to Advanced, and Reset to Balanced</div><div class="why">You see what you changed and get back with one click (rule 26).</div></div>
+<div class="mv"><div class="from">Switching the preset silently overwrites</div><div class="arrow">→</div><div class="to">The note says how many own settings it replaced, with Undo</div><div class="why">Trying another preset never loses work.</div></div>
+<div class="mv"><div class="from">Perceptual fields active with Near-Lossless off</div><div class="arrow">→</div><div class="to">Color, Transparency and Average only show while Allow Tiny Color Changes is on</div><div class="why">Nothing on screen does nothing.</div></div>
+<div class="mv"><div class="from">An empty output path</div><div class="arrow">→</div><div class="to">Save as: a name, the main folder&#x27;s name until you type one, in the assets folder</div><div class="why">Create works right away, and layouts can use the file without moving it.</div></div>
+<div class="mv"><div class="from">An existing file replaced without asking</div><div class="arrow">→</div><div class="to">Replace in red, and a note under Save as</div><div class="why">The button says what happens (rule 40).</div></div>
+<div class="mv"><div class="from">Strict Post-Write Validation with the compression settings</div><div class="arrow">→</div><div class="to">Check the file after saving, under Save as</div><div class="why">It&#x27;s about the file, not about how it gets compressed.</div></div>
+<div class="mv"><div class="from">A thin bar and an internal task text</div><div class="arrow">→</div><div class="to">A card with the percentage, the frame it works on and the time left, while the preview shows that frame</div><div class="why">You see that it moves and when it&#x27;s done (rule 117).</div></div>
+<div class="mv"><div class="from">A dialog with the path</div><div class="arrow">→</div><div class="to">A card with the size, how much smaller than the frames it is, how long it took, Show in Folder and Copy Path</div><div class="why">The next step is using the file, and Copy Path gets it into a layout.</div></div>
+<div class="mv"><div class="from">Close stops the export without asking</div><div class="arrow">→</div><div class="to">Close asks first, and collapsing the window keeps it going</div><div class="why">A long export never gets lost by accident (rule 116).</div></div>
+<div class="mv"><div class="from">Every setting starts over</div><div class="arrow">→</div><div class="to">The window opens with the frames and settings of the last time</div><div class="why">Making a second version doesn&#x27;t start from zero (rule 116).</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">The window, piece by piece</h2>
+<div class="three">
+<div class="spec-card"><div class="k">The preview</div><div class="kd" style="margin: 0">Plays the frames scaled to fit, with sharp pixels for pixel art, over a checkerboard for transparent frames. The intro plays once, then the main frames as often as Loops says, and Once stops on the last frame like the file does. A click on it plays or pauses. The tag in the corner says the part and the file, like Main, 2 of 3 · frame_0012.png, and turns red on a frame with a problem.</div></div>
+<div class="spec-card"><div class="k">The timeline</div><div class="kd" style="margin: 0">One segment per part, as long as it plays, so a slow intro looks long. The played part is tinted and the playhead follows the preview. Dragging scrubs, the frame under the pointer shows as a thumbnail with its file name, and problems sit on it as red and amber marks. The time on the right counts from the start of the intro to the end of the main frames.</div></div>
+<div class="spec-card"><div class="k">Frames</div><div class="kd" style="margin: 0">A row for the intro and one for the main frames: a stacked thumbnail, the folder&#x27;s name, then the number of frames, how long they play and their size. Choose Another Folder and Remove sit on the right, and a part without frames shows Choose Folder instead. Problems show under the row in red or amber, each with Show. Before the main frames are added, the whole column is one drop area that says what to drop.</div></div>
+<div class="spec-card"><div class="k">Playback</div><div class="kd" style="margin: 0">Speed in milliseconds a frame or frames a second, picked in the field&#x27;s unit menu, with the other unit under the label. Intro speed only shows with an intro and stays empty to play at the main speed. Loops is Forever, Once or Several with a count, and says that the intro plays only once. The preview takes every change right away and stays on the frame it shows.</div></div>
+<div class="spec-card"><div class="k">Quality</div><div class="kd" style="margin: 0">Best Quality keeps every pixel. Balanced lets colors shift a little where nobody notices and is the quickest. Smallest File allows a bit more shift and searches harder. Each one says that under the buttons, and the presets set the same values as today&#x27;s, so a file made with Balanced comes out exactly as big.</div></div>
+<div class="spec-card"><div class="k">Advanced</div><div class="kd" style="margin: 0">Closed by default. Four groups in plain words: full frames, moved areas, tiny color changes and repeated frames. A setting that only matters while another one is on only shows then. A changed value gets a blue bar on the left, its row shows a reset arrow on hover, and the header counts the changes and offers Reset to Balanced.</div></div>
+<div class="spec-card"><div class="k">Save as</div><div class="kd" style="margin: 0">The name, with .afma after it, named after the main folder until you type something else, and the folder, config/fancymenu/assets unless Change picks another. A note says that layouts can use files in the assets folder right away, or that the file already exists and gets replaced. Check the file after saving is here too, off like today.</div></div>
+<div class="spec-card"><div class="k">Creating</div><div class="kd" style="margin: 0">A card at the top of the right column: Creating dusk_valley.afma, the percentage, a bar, the frame it&#x27;s on, like Analyzing main frame 20 of 72, and the time left. The preview shows that frame and the timeline fills up with what&#x27;s done. Every setting stays readable but locked, and Stop takes the main button&#x27;s place.</div></div>
+<div class="spec-card"><div class="k">The footer</div><div class="kd" style="margin: 0">On the left, what will be made, like 108 frames at 1280 × 720, 4.4 s from start to end, or why Create AFMA is off, in red. After a change it says what changed, with Undo. On the right Close and Create AFMA, which turns into a red Replace when the file exists, and into Stop while it creates.</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Create, fix, compare</h2>
+<div class="three">
+<div class="spec-card"><div class="k">An animated background</div><div class="flow">
+<div class="step"><span class="n">1</span><span>Drop the folder <b>dusk_valley_loop</b> on the window, or Choose Folder. The preview starts playing right away.</span></div>
+<div class="step"><span class="n">2</span><span>Drop <b>dusk_valley_intro</b> on the Intro row. The preview plays it once before the loop.</span></div>
+<div class="step"><span class="n">3</span><span>Too fast? Type a speed, or switch the field to frames a second. The preview changes while you type.</span></div>
+<div class="step"><span class="n">4</span><span><b>Create AFMA</b>, then <b>Copy Path</b> and paste it into the background of a layout.</span></div>
+</div></div>
+<div class="spec-card"><div class="k">Frames that don&#x27;t fit</div><div class="flow">
+<div class="step"><span class="n">1</span><span>The Main row says frame_0050.png is 1920 × 1080, and the footer says why Create AFMA is off.</span></div>
+<div class="step"><span class="n">2</span><span><b>Show</b> pauses the preview on that frame, and the red mark on the timeline shows where it is.</span></div>
+<div class="step"><span class="n">3</span><span>Export the frame again at 1280 × 720. The creator checks the folder again when the game gets the focus back, and the problem is gone.</span></div>
+<div class="step"><span class="n">4</span><span>The amber gap in the numbering is only a warning. It can be created like that.</span></div>
+</div></div>
+<div class="spec-card"><div class="k">Another quality</div><div class="flow">
+<div class="step"><span class="n">1</span><span>Create with <b>Balanced</b>. The card says 1.2 MB, 67 % smaller than the frames.</span></div>
+<div class="step"><span class="n">2</span><span>Pick <b>Smallest File</b>. The button turns into a red <b>Replace</b>, because dusk_valley.afma exists now.</span></div>
+<div class="step"><span class="n">3</span><span>The new card says 900 KB, 75 % smaller. Or type another name to keep both.</span></div>
+<div class="step"><span class="n">4</span><span>Undo goes back to Balanced and its settings, like every other change.</span></div>
+</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Special cases it handles</h2>
+<div class="two">
+<div class="spec-card"><ul class="notes">
+<li>Minecraft only learns about dropped files when they&#x27;re dropped, not while they&#x27;re dragged, so the window can&#x27;t light up a target. Where the pointer is at the drop decides instead: on the Intro row they become the intro, on the Main row the main frames, and anywhere else the main frames while there are none, then the intro, like today (rule 118).</li>
+<li>Dropped PNG files instead of a folder show as 12 dropped files, with frame_01.png to frame_12.png under it, in file name order. A dropped .afma file becomes the file to save as.</li>
+<li>An intro alone would play as the main animation, so Create AFMA needs main frames, and the Intro row stays optional.</li>
+<li>Intro frames with another size than the main frames get the same red message on the Intro row, since one file has one size.</li>
+<li>A gap in the numbering, like frame_0041.png followed by frame_0043.png, is only a warning. The frames still play in name order.</li> <li>Color and Transparency are sliders from 0 to 255, because a channel can&#x27;t shift further than that. Average stays a number field with a stepper: the encoder&#x27;s value can reach 1275, since transparency counts double and the three colors once each, but useful values stay below 20, too small a part of a slider to hit.</li>
+</ul></div>
+<div class="spec-card"><ul class="notes">
+<li>The preview and the thumbnails use small copies, decoded in the background, so 300 frames at 4K scrub as smoothly as 30 small ones, and the window never waits for them.</li>
+<li>Changing the speed, the intro speed or the loops keeps the frame that shows and plays on from there, so the preview never jumps or stops early.</li>
+<li>Stop leaves an existing file untouched: the new file gets written next to it and only takes its place at the very end, like today.</li>
+<li>When creating fails anyway, like when the disk is full, the card says so in plain words with Show Details for the full message, and the settings unlock again.</li>
+<li>Closing the window while it creates asks first. Stop and Close saves nothing, and Keep Creating goes back.</li>
+</ul></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Keyboard shortcuts</h2>
+<div class="two">
+<div>
+<div class="cap">Kept</div>
+<div class="group" style="background: var(--win)">
+<div class="kr"><span class="kk">Esc</span><span>Closes the menu or sheet, leaves a field, then closes the window, asking first while it creates</span><span class="chip" style="margin-left: auto; white-space: nowrap">Asks now</span></div>
+<div class="kr"><span class="kk">Dropping files</span><span>Adds frames, now on the row the pointer is on</span></div>
+</div>
+</div>
+<div>
+<div class="cap">New</div>
+<div class="group" style="background: var(--win)">
+<div class="kr"><span class="kk">Space</span><span>Play or pause the preview</span></div>
+<div class="kr"><span class="kk">← →</span><span>Previous or next frame, Shift for 10</span></div>
+<div class="kr"><span class="kk">Home, End</span><span>First frame of the intro, last frame of the main frames</span></div>
+<div class="kr"><span class="kk">↑ ↓ in a number field</span><span>One more or less, Shift for 10</span></div>
+<div class="kr"><span class="kk">Ctrl+Enter</span><span>Create AFMA</span></div>
+<div class="kr"><span class="kk">Ctrl+Z, Ctrl+Y</span><span>Undo and redo, Ctrl+Shift+Z too</span></div>
+</div>
+</div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Changes beyond the UI</h2>
+<p class="kd" style="max-width: 920px; margin: -6px 0 16px; font-size: 13px; color: var(--text-2)">The window above already uses these. They change how the creator reads frames, runs and reports, so each one is a rework rule.</p>
+<div class="two">
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">The AFMA Creator checks frames before it starts <span class="chip propchip">New, rule 114</span></div><div class="kd" style="margin: 0">When frames are added, it reads every PNG&#x27;s size from the start of the file, without decoding it, and the numbers in the names. Frames of another size, an intro that doesn&#x27;t match the main frames and gaps in the numbering show on the rows, localized, instead of an exception halfway through the export.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">The AFMA Creator previews frames <span class="chip propchip">New, rule 115</span></div><div class="kd" style="margin: 0">A background thread decodes the frames into small copies at the preview&#x27;s size and keeps them in a cache. The preview plays them with the window&#x27;s speed, intro and loops, the way AfmaTexture plays the file, and the thumbnails come from the same copies.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">The AFMA Creator is a window that remembers <span class="chip propchip">New, rule 116</span></div><div class="kd" style="margin: 0">AfmaCreatorScreen becomes a window like the other tools, so the menu bar and the screen behind it stay usable. The job keeps going while the window is collapsed, and the frames, settings and file name come back the next time it opens.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">The encoder reports progress and results as data <span class="chip propchip">New, rule 117</span></div><div class="kd" style="margin: 0">AfmaEncodeProgress carries English texts like Analyzing AFMA frames for export... today. It reports the phase, the part and the frame number instead, so the window can say Analyzing main frame 20 of 72 in every language, show that frame and estimate the time left. A finished job also returns the file&#x27;s size and how many frames it stores in full.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Cycle buttons become controls <span class="chip okchip2">Covered, rules 15 and 16</span></div><div class="kd" style="margin: 0">Optimization Preset becomes a segmented control, and the five Enabled and Disabled buttons become switches.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Replacing a file says so <span class="chip okchip2">Added to rule 40</span></div><div class="kd" style="margin: 0">Create AFMA becomes a red Replace while the file under Save as exists.</div></div>
+</div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"$preview":{"width":1440,"height":4855}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark' };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Custom GUIs on the title screen</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="fm {{themeClass}} {{matClass}}" style="position: relative; width: 1440px; height: 900px; overflow: hidden; background: var(--bd)">
+<div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""></div>
+<div aria-hidden="true" style="position: absolute; left: 16px; bottom: 12px; color: rgba(255, 255, 255, .85); font-size: 12px">Dusk Valley Pack 1.4.2</div>
+<div aria-hidden="true" style="position: absolute; right: 16px; bottom: 12px; color: rgba(255, 255, 255, .85); font-size: 12px">Copyright Mojang AB. Do not distribute!</div>
+<sc-if value="{{open}}" hint-placeholder-val="{{false}}">
+<div class="cgb" aria-hidden="true">
+<sc-if value="{{g.pano}}" hint-placeholder-val="{{false}}"><div class="cgb-pano"></div></sc-if>
+<div class="{{g.fxCls}}"></div>
+<div class="cgb-title">{{g.title}}</div>
+<sc-if value="{{g.credits}}" hint-placeholder-val="{{true}}">
+<div class="cgb-col" style="left: 34px"><b>Pack</b><span>Dusk Valley Pack 1.4.2</span><b>Menus</b><span>Made with FancyMenu</span><b>Pixel Art</b><span>Valleys, fireflies and night skies, drawn by hand</span></div>
+<div class="cgb-col" style="left: 1232px"><b>Music</b><span>Evening Fields</span><span>Night Wind</span><b>Thanks</b><span>To everyone who tested the quest log</span></div>
+<div class="mc-btn" style="left: 620px; top: 846px; width: 200px; height: 32px">Back</div>
+</sc-if>
+</div>
+</sc-if>
+<div style="position: absolute; left: 0; right: 0; top: 0"><dc-import name="MenuBar" kind="Overlay" standalone="{{no}}" hint-size="1440px,30px"></dc-import></div>
+<div style="position: absolute; left: 240px; top: 70px"><dc-import name="CustomGuis" scene="{{scene}}" select="{{select}}" sheet="{{sheet}}" rename-to="{{renameTo}}" add="{{add}}" open="{{openId}}" conflict="{{conflict}}" filter="{{filter}}" filter-menu="{{filterMenu}}" query="{{query}}" scroll="{{scroll}}" on-stage="{{onStage}}" width="960" height="760" standalone="{{no}}" hint-size="960px,760px"></dc-import></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"scene":{"editor":"enum","options":["Dusk Valley","Empty"],"default":"Dusk Valley"},"select":{"editor":"text","default":"g1"},"sheet":{"editor":"enum","options":["","rename","delete"],"default":""},"renameTo":{"editor":"text","default":""},"add":{"editor":"boolean","default":false},"open":{"editor":"text","default":""},"conflict":{"editor":"boolean","default":false},"filter":{"editor":"enum","options":["all","popup","repl","unused","probs"],"default":"all"},"filterMenu":{"editor":"boolean","default":false},"query":{"editor":"text","default":""},"scroll":{"editor":"text","default":""},"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props, s = this.state || {};
+    // Open in the window puts the GUI on the screen behind it, and every change to it shows right away.
+    // A popup keeps the title screen, everything else shows the panorama, since no world is loaded here.
+    const st = s.stage || null;
+    return {
+      themeClass: (p.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark',
+      matClass: (p.material ?? 'Blur') === 'Blur' ? 'mat-blur' : '',
+      yes: true, no: false,
+      open: !!st,
+      g: st ? { pano: !st.popup, fxCls: 'cgb-fx' + (st.blur ? ' blur' : '') + (st.dim ? ' dim' : ''), title: st.title, credits: st.id === 'g3' } : {},
+      onStage: (stage) => this.setState({ stage }),
+      scene: p.scene || 'Dusk Valley', select: p.select ?? 'g1', sheet: p.sheet || '', renameTo: p.renameTo || '', add: !!p.add,
+      openId: p.open || '', conflict: !!p.conflict, filter: p.filter || 'all', filterMenu: !!p.filterMenu, query: p.query || '', scroll: p.scroll || ''
+    };
+  }
+}
+</script>
+</body>
+</html>

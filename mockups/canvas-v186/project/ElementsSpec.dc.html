@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Element editors spec</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.pair{display:grid;grid-template-columns:600px minmax(0,1fr);gap:48px;align-items:start}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start}
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;align-items:start}
+.kr{display:flex;align-items:center;gap:14px;padding:9px 18px;border-bottom:1px solid var(--sep);font-size:12.5px;color:var(--text-2)}
+.kr:last-child{border-bottom:0}
+.kk{flex:0 0 190px;font-family:"Noto Sans Mono",ui-monospace,Menlo,monospace;font-size:12px;color:var(--text)}
+.spec code{font-family:"Noto Sans Mono",ui-monospace,Menlo,monospace;font-size:12px;color:var(--text)}
+.flow{display:flex;flex-direction:column;gap:10px}
+.flow .step{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;font-size:13px;line-height:1.5;color:var(--text-2)}
+.flow .n{width:22px;height:22px;display:grid;place-items:center;border-radius:50%;font-size:11.5px;font-weight:700;color:var(--accent);background:color-mix(in srgb,var(--accent) 15%,transparent)}
+.flow b{color:var(--title);font-weight:600}
+.propchip{color:var(--warn);background:color-mix(in srgb,var(--warn) 15%,transparent)}
+.okchip2{color:var(--ok);background:color-mix(in srgb,var(--ok) 15%,transparent)}
+/* today's screens, redrawn at 600 pixels wide: a list of text lines or rows of sliders, and the buttons in a column at the bottom right */
+.lgcs{display:flex;flex-direction:column;gap:14px}
+.lgc{position:relative;width:600px;padding:12px 14px 14px;background:#1f1f1f;border:1px solid #3e4042;color:#ceDDed;font-size:11px}
+.lgc .tt{margin:0 0 9px 2px;font-size:12px;font-weight:600;color:#e8eef4}
+.lgc .bd{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:14px}
+.lgc .lft{display:flex;flex-direction:column;gap:6px;min-width:0}
+.lgc .f{height:17px;padding:0 5px;display:flex;align-items:center;border:1px solid #3e4042;background:#1a1a1a;color:#ceDDed;white-space:nowrap;overflow:hidden}
+.lgc .ls{flex:1 1 auto;padding:5px 6px;border:1px solid #3e4042;background:#262626;display:flex;flex-direction:column;gap:3px;overflow:hidden}
+.lgc .ls div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:1px 3px}
+.lgc .ls .sel{background:#3a4a5e}
+.lgc .rt{display:flex;flex-direction:column;justify-content:flex-end;gap:5px}
+.lgc .b{height:18px;padding:0 8px;display:flex;align-items:center;justify-content:center;border:1px solid #3e4042;background:#333;white-space:nowrap}
+.lgc .gap{height:10px}
+.lgc .lb{margin:3px 0 -2px 1px}
+.lgc .sl{position:relative;height:18px;display:flex;align-items:center;justify-content:center;border:1px solid #3e4042;background:#2a2a2a}
+.lgc .sl i{position:absolute;top:0;bottom:0;width:6px;background:#8a96a3;opacity:.4}
+.lgc .pr{display:grid;grid-template-columns:minmax(0,1fr) 140px;gap:6px}
+</style>
+</helmet>
+<div class="fm spec {{themeClass}}" style="min-height: 2956px">
+
+<header style="display: flex; flex-direction: column; gap: 12px; max-width: 920px">
+<div style="font-size: 12px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; color: var(--text-3)">FancyMenu · UI rework concept · Element editors</div>
+<h1 style="margin: 0; font-size: 34px; line-height: 1.15; font-weight: 700; color: var(--title)">Edit it where you see it</h1>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: var(--text-2)">Three elements send you to their own screen for part of their settings: the Audio element for its tracks, the Player Entity for its pose and the Block/Item JSON Model for its transform. All three move into the Inspector, next to the element&#x27;s other settings, so the canvas stays in view and every change shows on the element right away.</p>
+</header>
+
+<section>
+<h2 class="h2">Today and proposed</h2>
+<div class="pair">
+<div>
+<div class="cap">Today</div>
+<div class="lgcs">
+<div class="lgc">
+<div class="tt">Manage Tracks</div>
+<div class="bd" style="height: 190px">
+<div class="lft">
+<span class="f"></span>
+<div class="ls">
+<div>[Local] /config/fancymenu/assets/sounds/menu_theme.ogg (Weight: 1.0)</div>
+<div class="sel">[Local] /config/fancymenu/assets/sounds/evening_fields.ogg (Weight: 2.0)</div>
+<div>[Local] /config/fancymenu/assets/sounds/dusk_theme.ogg (Weight: 1.0)</div>
+<div>[Local] /config/fancymenu/assets/sounds/night_wind.ogg (Weight: 0.5)</div>
+</div>
+</div>
+<div class="rt">
+<span class="b">Add New</span>
+<span class="gap"></span>
+<span class="b">Remove Selected</span>
+<span class="gap"></span>
+<span class="b">Move Selected UP</span>
+<span class="b">Move Selected DOWN</span>
+<span class="b">Set Weight Of Selected</span>
+<span class="gap"></span>
+<span class="b">Cancel</span>
+<span class="b">Done</span>
+</div>
+</div>
+</div>
+<div class="lgc">
+<div class="tt">Entity Pose</div>
+<div class="bd">
+<div class="lft">
+<span class="lb">Body</span>
+<div class="pr"><span class="sl"><i style="left: 50%"></i>Body X Rotation: 0.0</span><span class="b">Advanced Mode: Disabled</span></div>
+<div class="pr"><span class="sl"><i style="left: 50%"></i>Body Y Rotation: 0.0</span><span class="b">Advanced Mode: Disabled</span></div>
+<div class="pr"><span class="sl"><i style="left: 50%"></i>Body Z Rotation: 0.0</span><span class="b">Advanced Mode: Disabled</span></div>
+<span class="lb">Head</span>
+<div class="pr"><span class="sl"><i style="left: 50%"></i>Head X Rotation: 0.0</span><span class="b">Advanced Mode: Disabled</span></div>
+<div class="pr"><span class="sl"><i style="left: 50%"></i>Head Y Rotation: 0.0</span><span class="b">Advanced Mode: Disabled</span></div>
+<div class="pr"><span class="sl"><i style="left: 48%"></i>Head Z Rotation: -8.0</span><span class="b">Advanced Mode: Disabled</span></div>
+</div>
+<div class="rt">
+<span class="b">Cancel</span>
+<span class="b">Done</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div>
+<div class="cap">What gets in the way</div>
+<ul class="probs">
+<li>Manage Tracks is a full screen that replaces the editor, so you can&#x27;t see the layout while you change its music.</li>
+<li>Its list is plain text: the source type in brackets, the whole path and the weight. Nothing plays a track to check it&#x27;s the right one.</li>
+<li>Tracks move one step at a time with Move Selected UP and DOWN, and Remove Selected asks every time.</li>
+<li>Set Weight Of Selected opens one more full screen for a single slider. Weights only matter in Shuffle mode, and they don&#x27;t work: every track has the same chance, and a weight of 0 still plays.</li>
+<li>Disable Vanilla Music in Screens isn&#x27;t a setting. It opens a note that says where the setting is.</li>
+<li>Entity Pose has 18 sliders in one long list, three for each of six body parts, and an Advanced Mode button next to every one.</li>
+<li>The JSON Model&#x27;s Transform window works the same way, and its ten light settings sit in a submenu.</li>
+<li>Both windows cover the element they change.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">What changes</h2>
+<div class="group" style="background: var(--win)">
+<div class="mv head"><div>Today</div><div></div><div>Proposed</div><div>Why</div></div>
+<div class="mv"><div class="from">Manage Tracks, a full screen</div><div class="arrow">→</div><div class="to">A Tracks section in the Inspector of the Audio element</div><div class="why">The layout stays in view, and tracks sit with Play Mode, Loop and Volume (rule 136).</div></div>
+<div class="mv"><div class="from">[Local] /config/…/menu_theme.ogg (Weight: 1.0)</div><div class="arrow">→</div><div class="to">The file name, a play button and the length. A missing file is red</div><div class="why">Files show what they are (rule 22).</div></div>
+<div class="mv"><div class="from">Move Selected UP, Move Selected DOWN</div><div class="arrow">→</div><div class="to">Drag a track by its handle</div><div class="why">One move instead of many clicks.</div></div>
+<div class="mv"><div class="from">Set Weight Of Selected, on its own screen</div><div class="arrow">→</div><div class="to">In Shuffle mode every track shows its weight as a number to type or drag, like 2× or Never</div><div class="why">Weights only show where they count, and they finally work (rule 137).</div></div>
+<div class="mv"><div class="from">Play Mode: Normal</div><div class="arrow">→</div><div class="to">Play Mode: In Order</div><div class="why">It says what happens.</div></div>
+<div class="mv"><div class="from">Add New, one file at a time</div><div class="arrow">→</div><div class="to">Add Tracks takes several files at once</div><div class="why">A playlist is rarely one file (rule 136).</div></div>
+<div class="mv"><div class="from">Disable Vanilla Music in Screens, a note</div><div class="arrow">→</div><div class="to">Vanilla Menu Music, a switch for the global setting, marked Global</div><div class="why">The setting is where you look for it.</div></div>
+<div class="mv"><div class="from">Entity Pose, a window with 18 sliders</div><div class="arrow">→</div><div class="to">A Pose section: pick a body part on a small figure, and its three rotations show below</div><div class="why">Three sliders instead of eighteen, and the player on the canvas moves with them (rule 138).</div></div>
+<div class="mv"><div class="from">Advanced Mode: Disabled, next to every slider</div><div class="arrow">→</div><div class="to">The { } button every number row has</div><div class="why">Placeholders work the same everywhere (rule 24).</div></div>
+<div class="mv"><div class="from">(new)</div><div class="arrow">→</div><div class="to">Mirror to Left Arm, and Reset Pose</div><div class="why">A pose with both arms up is one click after the first arm.</div></div>
+<div class="mv"><div class="from">Parrot, Parrot On Left Shoulder</div><div class="arrow">→</div><div class="to">Parrot: None, Left or Right</div><div class="why">One control for one choice.</div></div>
+<div class="mv"><div class="from">Transform, a window, and Lighting, a submenu</div><div class="arrow">→</div><div class="to">Transform and Lighting sections in the Inspector of the JSON Model</div><div class="why">The model turns on the canvas while you drag (rule 139).</div></div>
+<div class="mv"><div class="from">(new)</div><div class="arrow">→</div><div class="to">View: Front, Side, Top or Angled</div><div class="why">The common angles are one click, and the sliders fine-tune from there.</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">The sections, piece by piece</h2>
+<div class="three">
+<div class="spec-card"><div class="k">Audio</div><div class="kd" style="margin: 0">Play Mode as In Order or Shuffle, Loop, Volume and Sound Channel like today. Vanilla Menu Music switches Minecraft&#x27;s own menu music for every screen, so it carries the Global tag.</div></div>
+<div class="spec-card"><div class="k">Tracks, in order</div><div class="kd" style="margin: 0">One row per track: a drag handle, the file name, a play button and the length. Hovering shows the preview card with the full path. A missing file says Missing in red, and the element counts as a problem in the status bar. Add Tracks opens the audio chooser.</div></div>
+<div class="spec-card"><div class="k">Tracks, shuffled</div><div class="kd" style="margin: 0">The order doesn&#x27;t matter anymore, so the handle makes room for a note icon, and the length for the weight: 1× is normal, 2× gets picked twice as often, .5× half as often, and 0 shows as Never.</div></div>
+<div class="spec-card"><div class="k">Pose</div><div class="kd" style="margin: 0">A small figure with six parts to click: head, body, both arms and both legs. The picked part is filled, parts that are turned are tinted. Below it, X, Y and Z of that part from -180° to 180°, each with a reset arrow and the { } button.</div></div>
+<div class="spec-card"><div class="k">Whole Body</div><div class="kd" style="margin: 0">Base Pose, like Standing or Crouching, Body Movement, Head Follows Mouse and Body Follows Mouse sit under the part rotations, since they pose the whole figure.</div></div>
+<div class="spec-card"><div class="k">Transform and Lighting</div><div class="kd" style="margin: 0">View sets the rotation to one of four angles. Rotation and Offset have X, Y and Z, Size has Scale, and Model&#x27;s Own GUI Transform is a switch. Lighting has the light color, the light rotation and the two lights.</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Special cases they handle</h2>
+<div class="two">
+<div class="spec-card"><ul class="notes">
+<li>Every change is one undo step in the editor, like any other Inspector change. The old windows changed the element live and saved one step on Done.</li>
+<li>Removing a track doesn&#x27;t ask. Undo brings it back.</li>
+<li>A track whose length isn&#x27;t known yet, like a link that hasn&#x27;t loaded, shows no length.</li>
+<li>Playing a track in the Inspector uses the element&#x27;s Sound Channel and Volume, and stops when another one plays or the selection changes.</li>
+</ul></div>
+<div class="spec-card"><ul class="notes">
+<li>A rotation that holds placeholder text shows its chip instead of the slider, like every number row.</li>
+<li>Mirror copies the picked arm or leg to the other side and flips Y and Z, so the pose comes out symmetric.</li>
+<li>Right and left are the player&#x27;s own sides, like in the old window, so the right arm is on the left of the figure.</li>
+<li>With a rotation that fits none of the four views, View has nothing picked.</li>
+</ul></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Changes beyond the UI</h2>
+<p class="kd" style="max-width: 920px; margin: -6px 0 16px; font-size: 13px; color: var(--text-2)">The sections above already use these, so each one is a rework rule.</p>
+<div class="two">
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Audio tracks sit in the Inspector <span class="chip propchip">New, rule 136</span></div><div class="kd" style="margin: 0">ManageAudiosScreen and SetAudioWeightScreen go away, and the audio chooser can return several files at once for Add Tracks.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Shuffle weights work <span class="chip propchip">New, rule 137</span></div><div class="kd" style="margin: 0">buildShuffleIndexesList builds a weighted pool and then keeps each track once, so the weights do nothing. The next track gets picked from the pool itself, and a weight of 0 leaves a track out.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">A Player Entity&#x27;s pose sits in the Inspector <span class="chip propchip">New, rule 138</span></div><div class="kd" style="margin: 0">PlayerEntityPoseScreen goes away. Mirror and Reset Pose are new, and Parrot becomes one setting in the UI while the layout keeps saving its two values.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">A JSON Model&#x27;s transform sits in the Inspector <span class="chip propchip">New, rule 139</span></div><div class="kd" style="margin: 0">JsonModelTransformScreen goes away, and the four views are new. They only set the three rotations.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">The Inspector is the menu, docked <span class="chip okchip2">Covered, rule 44</span></div><div class="kd" style="margin: 0">The three sections are ordinary Inspector sections, so they show in the element&#x27;s right-click menu too.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Numbers with a range are sliders <span class="chip okchip2">Covered, rule 17</span></div><div class="kd" style="margin: 0">Rotations run from -180° to 180° and get sliders. Offsets have no range and get number fields.</div></div>
+</div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"$preview":{"width":1440,"height":2956}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark' };
+  }
+}
+</script>
+</body>
+</html>

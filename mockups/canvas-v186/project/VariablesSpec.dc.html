@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Variables spec</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.pair{display:grid;grid-template-columns:600px minmax(0,1fr);gap:48px;align-items:start}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start}
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;align-items:start}
+.kr{display:flex;align-items:center;gap:14px;padding:9px 18px;border-bottom:1px solid var(--sep);font-size:12.5px;color:var(--text-2)}
+.kr:last-child{border-bottom:0}
+.kk{flex:0 0 190px;font-family:"Noto Sans Mono",ui-monospace,Menlo,monospace;font-size:12px;color:var(--text)}
+.spec code{font-family:"Noto Sans Mono",ui-monospace,Menlo,monospace;font-size:12px;color:var(--text)}
+.lg-list{border:1px solid #3e4042;background:#1e1e1e;padding:2px;display:flex;flex-direction:column;gap:2px;font-size:11px;height:300px;overflow:hidden}
+.lg-e{padding:4px 6px;line-height:14px;white-space:nowrap;overflow:hidden}
+.lg-e .v{color:#e59b12}
+.lg-field{flex:1 1 auto;height:20px;display:flex;align-items:center;padding:0 6px;border:1px solid #3e4042;background:#1e1e1e;color:#7f878f}
+.lg-btn{height:20px;display:grid;place-items:center;border:1px solid #3e4042;background:#333}
+.flow{display:flex;flex-direction:column;gap:10px}
+.flow .step{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;font-size:13px;line-height:1.5;color:var(--text-2)}
+.flow .n{width:22px;height:22px;display:grid;place-items:center;border-radius:50%;font-size:11.5px;font-weight:700;color:var(--accent);background:color-mix(in srgb,var(--accent) 15%,transparent)}
+.flow b{color:var(--title);font-weight:600}
+.propchip{color:var(--warn);background:color-mix(in srgb,var(--warn) 15%,transparent)}
+.okchip2{color:var(--ok);background:color-mix(in srgb,var(--ok) 15%,transparent)}
+</style>
+</helmet>
+<div class="fm spec {{themeClass}}" style="min-height: 4505px">
+
+<header style="display: flex; flex-direction: column; gap: 12px; max-width: 920px">
+<div style="font-size: 12px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; color: var(--text-3)">FancyMenu · UI rework concept · variables</div>
+<h1 style="margin: 0; font-size: 34px; line-height: 1.15; font-weight: 700; color: var(--title)">Variables you can watch, find and trust</h1>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: var(--text-2)">The Variables window shows every value live, where each variable is used and what changed it last. New variables get their name, value and reset behavior in one sheet, and renaming or deleting is safe, because the window knows every place that uses a name.</p>
+</header>
+
+<section>
+<h2 class="h2">Today and proposed</h2>
+<div class="pair">
+<div><div class="cap">Today</div><div style="position: relative"><div class="lg-win" style="width: 600px">
+<div class="lg-title"><span>Manage Variables</span><span class="lg-x">×</span></div>
+<div style="padding: 12px 14px 14px">
+<div style="margin-bottom: 6px">Variables</div>
+<div style="display: flex; gap: 5px; margin-bottom: 6px"><span class="lg-field">Search variable..</span><span class="lg-btn" style="width: 150px">Done</span></div>
+<div class="lg-list">
+<div class="lg-e">coins<span class="v"> (125)</span></div>
+<div class="lg-e">daily_streak<span class="v"> (3)</span></div>
+<div class="lg-e">intro_seen<span class="v"> (true)</span></div>
+<div class="lg-e">last_server<span class="v"> (play.duskvalley.net)</span></div>
+<div class="lg-e">music_volume<span class="v"> (0.8)</span></div>
+<div class="lg-e">news_json<span class="v"> ({"title":"Lanterns are here","body":"Light up your base with five new lantern colors. Available in the Coin Shop until Sun</span></div>
+<div class="lg-e">old_value<span class="v"> (12)</span></div>
+<div class="lg-e">quest_stage<span class="v"> (2)</span></div>
+<div class="lg-e" style="background: #2c2c2c">seconds_on_menu<span class="v"> (47)</span></div>
+<div class="lg-e">shop_open<span class="v"> (false)</span></div>
+<div class="lg-e">streak_record<span class="v"> (7)</span></div>
+<div class="lg-e">welcome_name<span class="v"> ()</span></div>
+</div>
+</div>
+</div>
+<div class="legacy-menu" style="position: absolute; left: 236px; top: 214px; width: 290px">
+<div class="lr">Create</div>
+<div class="lsepl"></div>
+<div class="lr">Set Value<span class="i">Enter</span></div>
+<div class="lr">Clear Variable on Game Launch: Disabled</div>
+<div class="lr">Delete Variable<span class="i">Delete</span></div>
+<div class="lr">Copy<span class="i">Ctrl+C</span></div>
+<div class="lr">Paste<span class="i">Ctrl+V</span></div>
+<div class="lr">Undo<span class="i">Ctrl+Z</span></div>
+<div class="lr">Redo<span class="i">Ctrl+Y</span></div>
+</div>
+</div></div>
+<div><div class="cap">What gets in the way</div>
+<ul class="probs">
+<li>Values sit in brackets after the name, in warning orange, and long ones like an HTTP answer run off the row.</li>
+<li>Everything happens in a right-click menu, and only the hint in an empty list mentions it. Adding asks for the name in one window, and the value needs a second one.</li>
+<li>The list doesn't change while it's open, so a variable that a ticker counts up keeps showing its old value.</li>
+<li>Nothing says where a variable is used. Deleting one that a layout needs breaks it without a word, and there's no rename at all, only copy, paste and delete.</li>
+<li>Clearing on game launch is a cycle row in the right-click menu, the list doesn't show which variables do it, and they can only go back to empty, not to 0 or false.</li>
+<li>Nothing shows what changed a variable, so a script that sets the wrong value means guessing.</li>
+<li>Copy and Paste only make a copy of a variable inside this window, while $$coins, the thing a text needs, has to be typed by hand.</li>
+<li>Variables from old layouts that $$ reads differently now, like old_value in a listener script, look like any other variable.</li>
+</ul></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">What changes</h2>
+<div class="group" style="background: var(--win)">
+<div class="mv head"><div>Today</div><div></div><div>Proposed</div><div>Why</div></div>
+<div class="mv"><div class="from">name (value) in orange</div><div class="arrow">→</div><div class="to">The name and its value on two lines, updating live with a short highlight</div><div class="why">The values are the point of the window, and seeing them change is how you check that a script works.</div></div>
+<div class="mv"><div class="from">Right-click menu only</div><div class="arrow">→</div><div class="to">A New Variable button, and a details pane with every action for the selected variable: Copy Name, Duplicate and Delete as buttons, the name and value edited where they're shown</div><div class="why">Core actions are visible (rule 41), and nothing is offered twice, so there's no menu to hunt through.</div></div>
+<div class="mv"><div class="from">A window for the name, then one for the value</div><div class="arrow">→</div><div class="to">New Variable adds it right away with its name ready to type over, like New Scheduler and New GUI. The value and the reset choice are set in the details</div><div class="why">Every manager makes new things the same way, and the name is still checked while you type.</div></div>
+<div class="mv"><div class="from">Set Value in a one-line window</div><div class="arrow">→</div><div class="to">The value is edited right in the details: Enter saves, Shift+Enter starts a new line, the text editor is one click away</div><div class="why">Values with line breaks, like an HTTP answer, stay readable.</div></div>
+<div class="mv"><div class="from">Clear Variable on Game Launch: Disabled</div><div class="arrow">→</div><div class="to">When the game starts: Keep value or Reset, with the value to reset to and Reset Now</div><div class="why">Most variables need to go back to 0 or false, not to empty.</div></div>
+<div class="mv"><div class="from">Nothing about where it's used</div><div class="arrow">→</div><div class="to">Used in: every layout, element, listener, scheduler and shader that uses it, with a button to open it</div><div class="why">You know what breaks before you delete or rename something.</div></div>
+<div class="mv"><div class="from">No rename</div><div class="arrow">→</div><div class="to">Rename, which offers to update every place that uses the old name</div><div class="why">Fixing a name doesn't mean hunting through every layout.</div></div>
+<div class="mv"><div class="from">Delete Variable, right away</div><div class="arrow">→</div><div class="to">Deletes right away with Undo when nothing uses it, and asks first when something does</div><div class="why">Safe without getting in the way.</div></div>
+<div class="mv"><div class="from">Nothing about what changed it</div><div class="arrow">→</div><div class="to">Recent changes: when, old → new, and what made the change</div><div class="why">A script that sets the wrong value shows up right there.</div></div>
+<div class="mv"><div class="from">Search names and values</div><div class="arrow">→</div><div class="to">Search with highlighted matches, filters for resetting, unused and recently changed variables, and sorting by last change</div><div class="why">Cleaning up and finding the busy ones takes one click.</div></div>
+<div class="mv"><div class="from">Copy and Paste of a whole variable</div><div class="arrow">→</div><div class="to">One copy action: Copy Name in the details, which copies $$coins with its prefix, also on Ctrl+C. Duplicate makes copies inside the window</div><div class="why">Using a variable in a text is a paste away, and there's only one thing Copy can mean.</div></div>
+<div class="mv"><div class="from">Done</div><div class="arrow">→</div><div class="to">Cancel and Done, with a note that changes show right away</div><div class="why">Changing a value changes the menus behind the window (rule 38), so Cancel can take it all back.</div></div>
+<div class="mv"><div class="from">old_value looks normal</div><div class="arrow">→</div><div class="to">Names that $$ reads differently are marked and explained, with Rename right there</div><div class="why">Ties into rule 74: new variables can't take these names anymore.</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">The window, piece by piece</h2>
+<div class="three">
+<div class="spec-card"><div class="k">The list</div><div class="kd" style="margin: 0">Each row shows the name in monospace and the value below it. Empty values say <i>empty</i>, and values that are too long end with … there, while the details show all of it. A value that changes gets a short blue highlight, so tickers and listeners are easy to watch. A small arrow marks variables that reset when the game starts, and a warning marks names that $$ reads differently. Shift- and Ctrl-click select several, and the search highlights what it found in names and values. When nothing matches, the list offers to create a variable with that name.</div></div>
+<div class="spec-card"><div class="k">The value</div><div class="kd" style="margin: 0">A field that grows with the value, up to eight lines, then scrolls. Enter saves and Shift+Enter starts a new line, Esc takes your typing back, and clicking somewhere else saves too. The value isn't saved while you type, so a listener for the Variable Updated event runs once per change instead of once per letter. If the game changes the value while you type, the note says what it changed to, and Enter replaces it. The button in the field opens the text editor for long values.</div></div>
+<div class="spec-card"><div class="k">When the game starts</div><div class="kd" style="margin: 0">Keep value or Reset. Reset shows the value to go back to, empty by default, and Reset Now sets it right away, which helps while testing. The note says it in one sentence, like Every time Minecraft starts, the variable goes back to false. With several variables selected, a mixed choice shows no selection and the note names which ones reset.</div></div>
+<div class="spec-card"><div class="k">Used in</div><div class="kd" style="margin: 0">Grouped by where: layouts, a custom GUI's own settings like its screen title, global customizations, FancyMenu's settings like the game intro source, listeners, schedulers, and the values and reset values of other variables. Each layout says which screen it's for, like the title screen or the Coin Shop custom GUI, or that it's universal, with the screens it's limited to when it has a list. Below each come the elements or scripts and what they do with the variable, like Click script · Set Variable, Text · $$coins or Shader code · fmVarInt_quest_stage. The open button on hover jumps there, or selects the other variable. Text loaded from files, web addresses or HTTP answers can't be checked, and a note under the list says so. Nothing used yet? It says how to use it, with its $$ name.</div></div>
+<div class="spec-card"><div class="k">Recent changes</div><div class="kd" style="margin: 0">Time, old value → new value, and what made the change: a Set Variable step and the element whose script ran, a slider or input field, an HTTP request, a /fmvariable command from the server, the reset when the game started, or you. The last three show, the rest one click away. Repeated changes from the same source become one row with a count, so a ticker doesn't flood it. It covers the time since the game started and isn't saved.</div></div>
+<div class="spec-card"><div class="k">The footer</div><div class="kd" style="margin: 0">Changes apply right away, so the menus behind the window show them, and the note says so (rule 38). Done closes the window. Cancel and the red light take back only what was changed in this window: values that the game changed meanwhile, like a ticker's, stay. After a delete or a rename, the note turns into what happened with an Undo link.</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">New, rename, delete</h2>
+<div class="three">
+<div class="spec-card"><div class="k">New Variable</div><div class="flow">
+<div class="step"><span class="n">1</span><span><b>New Variable</b>, Ctrl+N, or the offer in an empty search adds the variable right away and selects it, with its name ready to type over.</span></div>
+<div class="step"><span class="n">2</span><span>Capitals turn small and spaces turn into _, and characters that don't work can't be typed.</span></div>
+<div class="step"><span class="n">3</span><span>Taken names are refused right there: an existing variable gets a Show It link, and names that Event Variables or element values use say what uses them (rule 74).</span></div>
+<div class="step"><span class="n">4</span><span><b>Enter</b> keeps the name, Esc keeps new_variable. The value and what happens when the game starts are set in the details.</span></div>
+</div></div>
+<div class="spec-card"><div class="k">Rename</div><div class="flow">
+<div class="step"><span class="n">1</span><span>F2 or the pencil next to the name turns the name into a field, checked the same way as a new name.</span></div>
+<div class="step"><span class="n">2</span><span>Nothing uses it? Enter renames it right away.</span></div>
+<div class="step"><span class="n">3</span><span>Something uses it? A sheet says how many places in which layouts, listeners and schedulers, and offers <b>Rename and Update 4 Places</b>, <b>Only Rename</b> or Cancel.</span></div>
+<div class="step"><span class="n">4</span><span>It also warns that it can't change text loaded from files, web addresses or HTTP answers, or /fmvariable commands on servers.</span></div>
+</div></div>
+<div class="spec-card"><div class="k">Delete</div><div class="flow">
+<div class="step"><span class="n">1</span><span>The delete button in the details or the Delete key, for one variable or several.</span></div>
+<div class="step"><span class="n">2</span><span>Nothing uses them? They're gone right away, and the footer offers Undo.</span></div>
+<div class="step"><span class="n">3</span><span>Something uses them? A sheet says where and what happens: texts that show them go empty, and conditions that check them stop matching. <b>Delete</b> is red.</span></div>
+<div class="step"><span class="n">4</span><span>Undo brings them back until you press Save.</span></div>
+</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Special cases it handles</h2>
+<div class="two">
+<div class="spec-card"><ul class="notes">
+<li>Set Variable and /fmvariable can create names that the name field wouldn't allow, like capitals or spaces. They show as they are, work as they are, and Rename offers the cleaned-up name.</li>
+<li>Variables that a server creates or changes with /fmvariable while the window is open show up live, with the server as the source in Recent changes.</li>
+<li>Values with line breaks show their first line in the list and every line in the field.</li>
+<li>A variable named like an Event Variable or element value, like old_value from an old layout, keeps working: the details explain that $$ picks the other one in those scripts and Get Variable still reads this one, with Rename It right there.</li>
+</ul></div>
+<div class="spec-card"><ul class="notes">
+<li>Duplicating a variable names the copy coins_copy, then coins_copy_2. Today's Paste makes coins_Copy, with a capital the name field doesn't even allow.</li>
+<li>Undo and Cancel never take back changes that the game made meanwhile, only the ones made in this window.</li>
+<li>Usage covers every place that takes a variable name, also the ones in disabled layouts, so a variable isn't marked as unused just because its layout is off.</li>
+<li>Filters show as a chip under the search field, so a shorter list is never a mystery. The chip's × shows everything again.</li>
+</ul></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Keyboard shortcuts</h2>
+<div class="two">
+<div><div class="cap">Kept</div><div class="group" style="background: var(--win)">
+<div class="kr"><span class="kk">↑ ↓</span><span>Select the variable above or below</span></div>
+<div class="kr"><span class="kk">Enter</span><span>Edit the value, now right in the details</span></div>
+<div class="kr"><span class="kk">Delete</span><span>Delete the selected variables, asking first when something uses them</span></div>
+<div class="kr"><span class="kk">Ctrl+C</span><span>Copy the name with its $$ prefix, like $$coins, ready for any text</span><span class="chip" style="margin-left: auto">Was Copy Variable</span></div>
+<div class="kr"><span class="kk">Ctrl+Z, Ctrl+Y</span><span>Undo and redo</span></div>
+<div class="kr"><span class="kk">Typing</span><span>Searches</span></div>
+<div class="kr"><span class="kk">Ctrl+S</span><span>Done</span></div>
+</div></div>
+<div><div class="cap">New</div><div class="group" style="background: var(--win)">
+<div class="kr"><span class="kk">Shift-click, Ctrl-click</span><span>Select a range, or add one variable to the selection</span></div>
+<div class="kr"><span class="kk">Shift+↑ ↓, Ctrl+A</span><span>Select more, or all</span></div>
+<div class="kr"><span class="kk">Ctrl+N</span><span>New variable</span></div>
+<div class="kr"><span class="kk">F2</span><span>Rename</span></div>
+<div class="kr"><span class="kk">Ctrl+D</span><span>Duplicate</span></div>
+<div class="kr"><span class="kk">Ctrl+F</span><span>Search</span></div>
+<div class="kr"><span class="kk">Shift+Enter</span><span>New line in a value</span></div>
+<div class="kr"><span class="kk">Ctrl+Shift+Z</span><span>Redo, like in most editors</span></div>
+<div class="kr"><span class="kk">Ctrl+Enter</span><span>Done, like in the text editor</span></div>
+<div class="kr"><span class="kk">Esc</span><span>Close the sheet or the filter menu, stop renaming, then clear the search</span></div>
+</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2" style="display: flex; align-items: center; gap: 10px">Changes beyond the UI <span class="chip okchip2" style="font-size: 11px">All approved</span></h2>
+<p class="kd" style="max-width: 920px; margin: -6px 0 16px; font-size: 13px; color: var(--text-2)">The window above already uses these. They change how variables get saved or tracked, so each one is a rework rule.</p>
+<div class="two">
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Variables know where they're used <span class="chip okchip2">Approved, rule 87</span></div><div class="kd" style="margin: 0">An index of every place that uses a variable name: layouts (universal and disabled ones too), a custom GUI's own settings, global customizations, FancyMenu's settings, listeners, schedulers, and the values and reset values of other variables. Custom GUIs use ordinary layouts, so theirs count as layouts like any other. It reads the variable definitions of Keksuccino/FancyMenu#1849, where every variable that takes a variable name has the lookup <code>fancymenu:variables</code>, so actions, conditions, placeholders and element settings from addons count too. On top of that come $$ names in texts and the <code>fmVar…_name</code> uniforms in shader code. It's built in the background when the window opens and refreshed per file that changed. Used in, the Not Used filter, rename and the delete warning all read it. Text that gets loaded when it's used, from a file, a web address or an HTTP answer, can't be indexed, because it can change any time.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Renaming updates every place <span class="chip okchip2">Approved, rule 88</span></div><div class="kd" style="margin: 0">With the same index, a rename changes the name in every place that uses it, other variables' values included, and saves those places through their normal save path, as one undo step in this window. $$ names only change where the whole name matches, so renaming coins never touches $$coins_record. Text loaded from files, web addresses or HTTP answers, and a server's /fmvariable commands, can't be changed, and the rename sheet warns about that.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Variables reset to a value <span class="chip okchip2">Approved, rule 89</span></div><div class="kd" style="margin: 0">Next to reset_on_launch, each variable saves the value it goes back to when the game starts. Variables from older versions don't have one, so they go back to empty, like today. This only changes the variables file, not layouts.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Changes remember who made them <span class="chip okchip2">Approved, rule 90</span></div><div class="kd" style="margin: 0">Setting a variable passes where the change comes from: the script and its owner (rule 81), the element, the HTTP request, the server command, the reset on game start or this window. FancyMenu keeps the last 20 changes per variable in memory for Recent changes. Nothing of it gets saved.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Previews of long values end with … <span class="chip okchip2">Approved, rule 10</span></div><div class="kd" style="margin: 0">Rule 10 now says it outright: labels never get cut, but a preview of a long value, like a variable's value under its name in the list, ends with … where it runs out of room, because it can be a whole HTTP answer. Selecting the variable shows all of it.</div></div>
+</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"$preview":{"width":1440,"height":4505}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark' };
+  }
+}
+</script>
+</body>
+</html>

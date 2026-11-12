@@ -1,0 +1,996 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Schedulers manager</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;family=Noto+Color+Emoji&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="{{rootCls}}" style="{{rootStyle}}" data-sc="{{uid}}" onMouseDown="{{activate}}">
+<sc-if value="{{standalone}}" hint-placeholder-val="{{true}}"><div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""><div class="dim"></div></div></sc-if>
+
+<div class="win vm ls sc" role="dialog" aria-label="Schedulers" style="{{winStyle}}">
+<div class="titlebar">
+<div class="tl"><button class="c" aria-label="Cancel and close" onClick="{{cancelAll}}"><span class="ms" aria-hidden="true">close</span></button><button class="m" aria-label="Collapse"><span class="ms" aria-hidden="true">remove</span></button><button class="x" aria-label="Maximize"><span class="ms" aria-hidden="true">open_in_full</span></button></div>
+<div class="wt"><span class="ms" aria-hidden="true">{{ic.timer}}</span>Schedulers</div>
+<div></div>
+</div>
+
+<sc-if value="{{anyPopup}}" hint-placeholder-val="{{false}}"><div class="fb-catch" style="z-index: 42" onClick="{{closePopups}}" onContextMenu="{{closePopupsCtx}}"></div></sc-if>
+
+<div class="split">
+<aside class="sidebar vm-side" aria-label="Schedulers list">
+<div class="vm-top">
+<button class="btn tinted" data-tip="Ctrl+N" onClick="{{addNew}}"><span class="ms" aria-hidden="true">{{ic.plus}}</span>New Scheduler</button>
+<label class="field vm-search"><span class="ms" aria-hidden="true">{{ic.search}}</span><input type="text" placeholder="{{searchPh}}" aria-label="Search names and scripts" data-fk="{{searchFk}}" value="{{q}}" onInput="{{onSearch}}" onKeyDown="{{searchKey}}"><button class="{{filterBtnCls}}" data-tip="Show and sort" aria-label="Show and sort" aria-haspopup="menu" aria-expanded="{{filterExpanded}}" onClick="{{toggleFilter}}"><span class="ms" aria-hidden="true">{{ic.funnel}}</span></button></label>
+<sc-if value="{{filterChip}}" hint-placeholder-val="{{false}}"><div class="chips"><span class="vm-fchip">{{filterChip}}<button aria-label="Show all schedulers" data-tip="Show all" onClick="{{clearFilter}}"><span class="ms" aria-hidden="true">{{ic.x}}</span></button></span></div></sc-if>
+</div>
+<div class="plist vm-list" role="listbox" aria-label="Schedulers" aria-multiselectable="true">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="8">
+<div class="{{r.cls}}" role="option" aria-selected="{{r.ariaSel}}" onClick="{{r.click}}" onDoubleClick="{{r.dbl}}">
+<span class="{{r.tileCls}}" data-since="{{r.tileSince}}" aria-hidden="true"><svg viewBox="0 0 30 30" aria-hidden="true"><circle class="trk" cx="15" cy="15" r="13"></circle><circle class="{{r.arcCls}}" style="{{r.arcStyle}}" data-since="{{r.arcSince}}" cx="15" cy="15" r="13"></circle></svg><span class="{{r.iconCls}}" aria-hidden="true">{{r.icon}}</span></span>
+<span class="ln"><sc-for list="{{r.name}}" as="np" hint-placeholder-count="1"><sc-if value="{{np.hit}}" hint-placeholder-val="{{false}}"><mark>{{np.t}}</mark></sc-if><sc-if value="{{np.plain}}" hint-placeholder-val="{{true}}">{{np.t}}</sc-if></sc-for></span>
+<span class="vic"><sc-if value="{{r.warn}}" hint-placeholder-val="{{false}}"><span class="vb warn" data-tip="{{r.warnTip}}"><span class="ms" aria-hidden="true">{{ic.warn}}</span></span></sc-if></span>
+<button class="{{r.playCls}}" aria-label="{{r.playTip}}" data-tip="{{r.playTip}}" onClick="{{r.toggle}}" onDoubleClick="{{stop}}"><span class="ms" aria-hidden="true">{{r.playIcon}}</span></button>
+<span class="{{r.subCls}}"><sc-for list="{{r.sub}}" as="sp" hint-placeholder-count="1"><sc-if value="{{sp.hit}}" hint-placeholder-val="{{false}}"><mark>{{sp.t}}</mark></sc-if><sc-if value="{{sp.plain}}" hint-placeholder-val="{{true}}">{{sp.t}}</sc-if></sc-for></span>
+</div>
+</sc-for>
+<sc-if value="{{noMatch}}" hint-placeholder-val="{{false}}"><div class="vm-nomatch"><span>{{noMatchText}}</span><sc-if value="{{canNewFromQ}}" hint-placeholder-val="{{true}}"><button class="btn sm" onClick="{{newFromQ}}"><span class="ms" aria-hidden="true">{{ic.plus}}</span>New Scheduler “{{qName}}”</button></sc-if></div></sc-if>
+</div>
+</aside>
+
+<div class="vm-main">
+<main class="pcontent vm-content ls-content" data-sk="{{contentSk}}">
+
+<sc-if value="{{one}}" hint-placeholder-val="{{true}}">
+<div class="dhead">
+<div class="ls-dtop">
+<button class="{{iconBtnCls}}" data-anchor="icon" data-tip="Change icon" aria-label="Change icon" aria-haspopup="dialog" aria-expanded="{{iconExpanded}}" onClick="{{toggleIcon}}"><span class="{{d.iconCls}}" aria-hidden="true">{{d.icon}}</span><span class="ls-dbadge" aria-hidden="true"><span class="ms">{{ic.pencil}}</span></span></button>
+<div class="ls-dtx">
+<sc-if value="{{notRenaming}}" hint-placeholder-val="{{true}}"><div class="dt vm-name"><span>{{d.name}}</span><button class="ib" data-tip="Rename (F2)" aria-label="Rename" onClick="{{startRename}}"><span class="ms" aria-hidden="true">{{ic.pencil}}</span></button></div></sc-if>
+<sc-if value="{{renaming}}" hint-placeholder-val="{{false}}"><div class="{{renameCls}}"><input type="text" aria-label="New name" data-fk="{{renameFk}}" value="{{renameDraft}}" onInput="{{onRename}}" onKeyDown="{{renameKey}}"></div><div class="{{renameMsgCls}}">{{renameMsg}}</div></sc-if>
+<div class="dm">{{d.meta}}</div>
+</div>
+</div>
+<div class="dacts">
+<button class="btn" data-tip="Space" onClick="{{toggleRunSel}}"><span class="ms" aria-hidden="true">{{d.runIcon}}</span>{{d.runLabel}}</button>
+<button class="btn" data-tip="Enter, or double-click the scheduler" onClick="{{editScript}}"><span class="ms" aria-hidden="true">{{ic.editor}}</span>Edit Script</button> <button class="btn" data-tip="Runs the script once, without starting the scheduler · F5" onClick="{{runNow}}"><span class="ms" aria-hidden="true">{{ic.play}}</span>Run Now</button>
+<button class="btn" data-tip="Ctrl+D" onClick="{{duplicate}}"><span class="ms" aria-hidden="true">{{ic.dup}}</span>Duplicate</button>
+<button class="btn icon danger" data-tip="Delete" aria-label="Delete {{d.name}}" onClick="{{askDelete}}"><span class="ms" aria-hidden="true">{{ic.trash}}</span></button>
+</div>
+</div>
+
+<sc-if value="{{d.live}}" hint-placeholder-val="{{true}}">
+<div class="group sc-live">
+<div class="top"><span class="t">{{d.liveT}}</span><span class="r">{{d.liveR}}</span></div>
+<sc-if value="{{d.hasBar}}" hint-placeholder-val="{{true}}"><div class="{{d.barCls}}"><i class="{{d.barFillCls}}" style="{{d.barStyle}}" data-since="{{d.barSince}}"></i></div></sc-if>
+<sc-if value="{{d.hasCells}}" hint-placeholder-val="{{false}}"><div class="sc-cells"><sc-for list="{{d.cells}}" as="c" hint-placeholder-count="10"><span class="{{c.cls}}"><sc-if value="{{c.cur}}" hint-placeholder-val="{{false}}"><i style="{{c.style}}" data-since="{{c.since}}"></i></sc-if></span></sc-for></div></sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{d.unstarted}}" hint-placeholder-val="{{false}}">
+<div class="callout vm-card"><span class="ms" aria-hidden="true">{{ic.warn}}</span><div><b>{{d.unTitle}}</b><p>{{d.unText}}</p><button class="btn sm" onClick="{{launchOn}}">Start with the Game</button></div></div>
+</sc-if>
+
+<div>
+<div class="sec">Schedule</div>
+<div class="group sc-sched">
+<div class="row sc-grow"><span class="lbl">Starts with the Game<span class="sub">Also when FancyMenu reloads, like after switching profiles</span></span><div class="ctl"><button class="{{d.launchSw}}" role="switch" aria-checked="{{d.launchOn}}" aria-label="Starts with the game" onClick="{{toggleLaunch}}"></button></div></div>
+<div class="row"><span class="lbl">Runs</span><div class="ctl">
+<div class="seg" role="radiogroup" aria-label="Runs" style="width: 352px"><div class="thumb" style="{{d.runsThumb}}"></div><button class="{{d.rForeverCls}}" role="radio" aria-checked="{{d.rForever}}" onClick="{{setForever}}">Until Stopped</button><button class="{{d.rOnceCls}}" role="radio" aria-checked="{{d.rOnce}}" onClick="{{setOnce}}">Once</button><button class="{{d.rSeveralCls}}" role="radio" aria-checked="{{d.rSeveral}}" onClick="{{setSeveral}}">Several Times</button></div>
+<sc-if value="{{d.several}}" hint-placeholder-val="{{false}}"><label class="{{fc.cls}}"><input type="text" inputmode="numeric" aria-label="How many times" data-fk="{{fc.fk}}" value="{{fc.text}}" onFocus="{{fc.focus}}" onInput="{{fc.input}}" onKeyDown="{{fc.key}}" onBlur="{{fc.blur}}"></label><div class="stepper"><button aria-label="Less" onClick="{{fc.down}}"><span class="ms" aria-hidden="true">remove</span></button><button aria-label="More" onClick="{{fc.up}}"><span class="ms" aria-hidden="true">add</span></button></div></sc-if>
+</div></div>
+<div class="row"><span class="lbl">First Run</span><div class="ctl">
+<div class="seg" role="radiogroup" aria-label="First run" style="width: 208px"><div class="thumb" style="{{d.waitThumb}}"></div><button class="{{d.wNowCls}}" role="radio" aria-checked="{{d.wNow}}" onClick="{{setNow}}">Right Away</button><button class="{{d.wLaterCls}}" role="radio" aria-checked="{{d.wLater}}" onClick="{{setLater}}">After a Wait</button></div>
+<sc-if value="{{d.hasWait}}" hint-placeholder-val="{{false}}"><label class="{{fw.cls}}"><input type="text" inputmode="decimal" aria-label="Wait before the first run" data-fk="{{fw.fk}}" value="{{fw.text}}" onFocus="{{fw.focus}}" onInput="{{fw.input}}" onKeyDown="{{fw.key}}" onBlur="{{fw.blur}}"><button class="{{fw.unitCls}}" aria-haspopup="menu" aria-expanded="{{fw.unitOpen}}" aria-label="Unit: {{fw.unitName}}" onClick="{{fw.openUnit}}">{{fw.unit}}<span class="ms" aria-hidden="true">expand_more</span></button></label><div class="stepper"><button aria-label="Less" onClick="{{fw.down}}"><span class="ms" aria-hidden="true">remove</span></button><button aria-label="More" onClick="{{fw.up}}"><span class="ms" aria-hidden="true">add</span></button></div></sc-if>
+</div></div>
+<sc-if value="{{d.repeats}}" hint-placeholder-val="{{true}}"><div class="row"><span class="lbl">Then Every<sc-if value="{{d.everySub}}" hint-placeholder-val="{{false}}"><span class="{{d.everySubCls}}">{{d.everySub}}</span></sc-if></span><div class="ctl">
+<label class="{{fe.cls}}"><input type="text" inputmode="decimal" aria-label="Time between runs" data-fk="{{fe.fk}}" value="{{fe.text}}" onFocus="{{fe.focus}}" onInput="{{fe.input}}" onKeyDown="{{fe.key}}" onBlur="{{fe.blur}}"><button class="{{fe.unitCls}}" aria-haspopup="menu" aria-expanded="{{fe.unitOpen}}" aria-label="Unit: {{fe.unitName}}" onClick="{{fe.openUnit}}">{{fe.unit}}<span class="ms" aria-hidden="true">expand_more</span></button></label><div class="stepper"><button aria-label="Less" onClick="{{fe.down}}"><span class="ms" aria-hidden="true">remove</span></button><button aria-label="More" onClick="{{fe.up}}"><span class="ms" aria-hidden="true">add</span></button></div>
+</div></div></sc-if>
+</div>
+<sc-if value="{{fieldErr}}" hint-placeholder-val="{{false}}"><p class="err-msg sc-err"><span class="ms" aria-hidden="true">{{ic.warn}}</span>{{fieldErr}}</p></sc-if>
+</div>
+
+<div>
+<div class="sec">Script<span class="end sc-send"><span>{{d.stepCount}}</span></span></div>
+<sc-if value="{{d.hasSteps}}" hint-placeholder-val="{{true}}">
+<div class="group ls-script" role="list" aria-label="Script steps">
+<sc-for list="{{d.steps}}" as="st" hint-placeholder-count="3">
+<button class="{{st.cls}}" role="listitem" style="{{st.style}}" onClick="{{st.open}}">
+<span class="{{st.tileCls}}" style="{{st.tileStyle}}" aria-hidden="true"><span class="ms" aria-hidden="true">{{st.icon}}</span></span>
+<span class="se-txt">
+<sc-for list="{{st.parts}}" as="pt" hint-placeholder-count="3">
+<sc-if value="{{pt.isW}}" hint-placeholder-val="{{true}}"><span class="{{pt.cls}}">{{pt.s}}</span></sc-if>
+<sc-if value="{{pt.isTok}}" hint-placeholder-val="{{false}}"><span class="{{pt.cls}}"><sc-for list="{{pt.pieces}}" as="pc" hint-placeholder-count="1"><sc-if value="{{pc.isText}}" hint-placeholder-val="{{true}}"><span>{{pc.s}}</span></sc-if><sc-if value="{{pc.isChip}}" hint-placeholder-val="{{false}}"><span class="{{pc.cls}}">{{pc.s}}</span></sc-if><sc-if value="{{pc.isUnit}}" hint-placeholder-val="{{false}}"><span class="unit">{{pc.s}}</span></sc-if></sc-for></span></sc-if>
+</sc-for>
+</span>
+<span class="ms ls-go" aria-hidden="true">{{ic.open}}</span>
+</button>
+</sc-for>
+<sc-if value="{{d.moreSteps}}" hint-placeholder-val="{{false}}"><button class="vm-more" onClick="{{editScript}}">{{d.moreSteps}}</button></sc-if>
+</div>
+</sc-if>
+<sc-if value="{{d.noSteps}}" hint-placeholder-val="{{false}}"><div class="group vm-unused ls-nosteps"><span>No steps yet, so nothing happens when it runs.</span><button class="btn sm" onClick="{{editScript}}"><span class="ms" aria-hidden="true">{{ic.plus}}</span>Add Steps</button></div></sc-if>
+</div>
+
+<div>
+<div class="sec">Used In<span class="end">{{d.useCount}}</span></div>
+<sc-if value="{{d.used}}" hint-placeholder-val="{{true}}">
+<div class="group">
+<sc-for list="{{d.places}}" as="pl" hint-placeholder-count="2">
+<div class="row vm-loc"><span class="ms vm-ui" aria-hidden="true">{{pl.icon}}</span><span class="lbl">{{pl.name}}<sc-if value="{{pl.on}}" hint-placeholder-val="{{true}}"><span class="sub">{{pl.on}}</span></sc-if></span><span class="chip">{{pl.chip}}</span></div>
+<sc-for list="{{pl.uses}}" as="u" hint-placeholder-count="2">
+<div class="row child vm-use"><span class="ms vm-ui" aria-hidden="true">{{u.icon}}</span><span class="lbl">{{u.el}}<span class="sub">{{u.what}}</span></span><div class="ctl"><button class="ib" data-tip="{{u.openTip}}" aria-label="{{u.openTip}}" onClick="{{u.open}}"><span class="ms" aria-hidden="true">{{ic.open}}</span></button></div></div>
+</sc-for>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{d.unused}}" hint-placeholder-val="{{false}}"><div class="group vm-unused">{{d.unusedText}}</div></sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{many}}" hint-placeholder-val="{{false}}">
+<div class="dhead">
+<div class="dt">{{m.title}}</div>
+<div class="dm">{{m.meta}}</div>
+<div class="dacts"><button class="btn" data-tip="Space" onClick="{{toggleRunSel}}"><span class="ms" aria-hidden="true">{{m.runIcon}}</span>{{m.runLabel}}</button><button class="btn" data-tip="Ctrl+D" onClick="{{duplicate}}"><span class="ms" aria-hidden="true">{{ic.dup}}</span>{{m.dupLabel}}</button><button class="btn icon danger" data-tip="{{m.deleteTip}}" aria-label="{{m.deleteTip}}" onClick="{{askDelete}}"><span class="ms" aria-hidden="true">{{ic.trash}}</span></button></div>
+</div>
+<div>
+<div class="group">
+<div class="row"><span class="lbl">Starts with the Game<span class="sub">{{m.launchNote}}</span></span><div class="ctl"><button class="{{m.swCls}}" role="switch" aria-checked="{{m.ariaOn}}" aria-label="Starts with the game" onClick="{{m.toggle}}"></button></div></div>
+</div>
+</div>
+<div>
+<div class="sec">Selected</div>
+<div class="group">
+<sc-for list="{{m.rows}}" as="mr" hint-placeholder-count="3">
+<div class="row ls-mrow"><span class="{{mr.tileCls}}" aria-hidden="true"><span class="{{mr.iconCls}}" aria-hidden="true">{{mr.icon}}</span></span><span class="lbl"><span class="sc-mname">{{mr.name}}</span><span class="sub">{{mr.sub}}</span></span><div class="ctl"><span class="{{mr.cls}}">{{mr.act}}</span></div></div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{none}}" hint-placeholder-val="{{false}}">
+<div class="vm-empty empty">
+<h3 class="t">No schedulers yet</h3>
+<p class="d">A scheduler runs a script on a timer: again and again, like every 6 seconds, a set number of times, or once after a wait. Schedulers aren't tied to one screen, so they keep running in every menu and while playing.</p>
+<div class="vm-ways">
+<div><b>Repeat</b>Replay the firefly animation on the title screen every 6 seconds</div>
+<div><b>Count down</b>Play a tick once a second, 10 times, then stop by itself</div>
+<div><b>Later</b>Hand out a daily reward once, 10 minutes after the game starts</div>
+</div>
+<button class="btn primary" onClick="{{addNew}}"><span class="ms" aria-hidden="true">{{ic.plus}}</span>New Scheduler</button>
+</div>
+</sc-if>
+
+<sc-if value="{{nothingSel}}" hint-placeholder-val="{{false}}"><div class="vm-empty empty"><p class="d">Select a scheduler to see when it runs, its script and where it's used.</p></div></sc-if>
+</main>
+<div class="footer line"><span class="lead">{{footLead}}<sc-if value="{{footUndo}}" hint-placeholder-val="{{false}}"> <button class="vm-link" onClick="{{undo}}">Undo</button></sc-if></span><button class="btn wide" onClick="{{cancelAll}}">Cancel</button><button class="btn primary wide" onClick="{{noop}}">Save</button></div>
+</div>
+</div>
+
+<sc-if value="{{unitOpen}}" hint-placeholder-val="{{false}}"><div class="vm-pop" style="{{unitStyle}}"><dc-import name="ContextMenu" items="{{unitItems}}" escape-listener="{{closePopups}}" label="Unit" standalone="{{no}}" hint-size="auto,170px"></dc-import></div></sc-if>
+
+<sc-if value="{{iconOpen}}" hint-placeholder-val="{{false}}"><div class="ic-pop" style="{{iconStyle}}"><dc-import name="IconChooser" value="{{d.iconValue}}" default-icon="timer" title="{{iconTitle}}" recent="{{iconRecent}}" query="{{iconQuery}}" on-pick="{{pickIcon}}" on-close="{{closePopups}}" standalone="{{no}}" hint-size="392px,452px"></dc-import></div></sc-if>
+
+<sc-if value="{{filterOpen}}" hint-placeholder-val="{{false}}"><div class="vm-pop" style="{{filterStyle}}"><dc-import name="ContextMenu" items="{{filterItems}}" search="Search this menu" escape-listener="{{closePopups}}" standalone="{{no}}" hint-size="auto,300px"></dc-import></div></sc-if>
+
+<sc-if value="{{sheetAlert}}" hint-placeholder-val="{{false}}">
+<div class="sheet-dim"></div>
+<div class="sheet vm-alert" role="alertdialog" aria-label="{{al.title}}">
+<span class="vm-aicon"><span class="ms" aria-hidden="true">{{al.icon}}</span></span>
+<div class="vm-st" style="margin-top: 12px">{{al.title}}</div>
+<p>{{al.text}}</p>
+<div class="vm-abtns"><sc-for list="{{al.buttons}}" as="b" hint-placeholder-count="2"><button class="{{b.cls}}" onClick="{{b.click}}">{{b.label}}</button></sc-for></div>
+</div>
+</sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"scene":{"editor":"enum","options":["Dusk Valley","Empty"],"default":"Dusk Valley"},"select":{"editor":"text","default":"s1"},"sheet":{"editor":"enum","options":["","rename","delete"],"default":""},"renameTo":{"editor":"text","default":""},"add":{"editor":"boolean","default":false},"start":{"editor":"text","default":""},"startAgo":{"editor":"int","default":0},"filter":{"editor":"enum","options":["all","running","stopped","launch","probs"],"default":"all"},"filterMenu":{"editor":"boolean","default":false},"iconOpen":{"editor":"boolean","default":false},"iconQuery":{"editor":"text","default":""},"query":{"editor":"text","default":""},"live":{"editor":"boolean","default":true},"room":{"editor":"int","default":0},"onToast":{"editor":null},"onTwinkle":{"editor":null},"width":{"editor":"int","default":940},"height":{"editor":"int","default":760},"standalone":{"editor":"boolean","default":true},"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1020,"height":840}}'>
+// ---------- timing ----------
+// Every duration is in milliseconds, like scheduler_instances.txt saves it. One tick is 50 ms, and a Then every of 0
+// in an old file loads as one tick, which is what it means today (rule 106). runs 0 means until stopped.
+const TICK = 50;
+const UNITS = { tick: [TICK, 'tick', 'ticks', 'Ticks', '20 a second'], ms: [1, 'ms', 'ms', 'Milliseconds', ''], s: [1000, 's', 's', 'Seconds', ''], min: [60000, 'min', 'min', 'Minutes', ''], h: [3600000, 'h', 'h', 'Hours', ''] };
+const UNIT_ORDER = ['tick', 'ms', 's', 'min', 'h'];
+// The unit a duration reads best in: 3 min instead of 180 s, 2 ticks instead of 100 ms, 1.5 s instead of 30 ticks.
+const autoUnit = (ms) => (ms >= 3600000 && ms % 3600000 === 0 ? 'h' : ms >= 60000 && ms % 60000 === 0 ? 'min' : ms >= 1000 && ms % 100 === 0 ? 's' : ms < 1000 && ms % TICK === 0 ? 'tick' : 'ms');
+const num = (v) => String(Math.round(v * 100) / 100);
+const fmtDur = (ms) => { const u = autoUnit(ms), n = ms / UNITS[u][0]; return u === 'tick' ? (n === 1 ? 'tick' : num(n) + ' ticks') : num(n) + ' ' + UNITS[u][1]; };
+const fmtN = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+const times = (n) => (n === 1 ? 'once' : n === 2 ? 'twice' : fmtN(n) + ' times');
+// how long until something happens, rounded up to whole seconds
+const left = (sec) => { const s0 = Math.max(1, Math.ceil(sec - 1e-6)); if (s0 < 60) return s0 + ' s'; if (s0 < 3600) { const m0 = Math.floor(s0 / 60), r0 = s0 % 60; return m0 + ' min' + (r0 ? ' ' + r0 + ' s' : ''); } const h0 = Math.floor(s0 / 3600), mm = Math.floor((s0 % 3600) / 60); return h0 + ' h' + (mm ? ' ' + mm + ' min' : ''); };
+// what the list's second line says: the schedule in a few words
+const summary = (x) => (x.runs === 1 ? (x.wait ? 'Once, after ' + fmtDur(x.wait) : 'Once, right away') : 'Every ' + fmtDur(x.every) + (x.runs ? ', ' + x.runs + ' times' : ''));
+
+// ---------- script steps: the same rows and sentences as the script editor (rule 71) ----------
+const ACT = {
+  set_var: ['Set Variable', 'attach_money', [[], ['to']]],
+  show_toast: ['Show Toast', 'notifications', [[], ['for', ' s']]],
+  display_chat: ['Display In Chat [Client-Side]', 'chat', [[]]],
+  play_audio: ['Play Audio', 'music_note', [[], ['at', '%'], ['on']]],
+  reset_anim: ['Reset Element Animator', 'animation', [[]]],
+  next_track: ['Next Audio Element Track', 'music_note', [[]]],
+  audio_vol: ['Set Audio Element Volume', 'music_note', [[], ['to', '%']]]
+};
+const PHN = { calc: 'Calculator' };
+const cmt = (t) => ({ k: 'cmt', t });
+const act = (a, ...vals) => ({ k: 'act', a, vals });
+
+// ---------- places that use scheduler names, the same ones the Variables window lists (rule 109) ----------
+const PLACES = {
+  title: { name: 'Dusk Valley Title', kind: 'layout', chip: 'Layout', icon: 'layout', on: 'For the title screen', open: 'Open in the layout editor' },
+  options: { name: 'Dusk Valley Options', kind: 'layout', chip: 'Layout', icon: 'layout', on: 'For the options screen', open: 'Open in the layout editor' },
+  joined: { name: 'Server Joined', kind: 'listener', chip: 'Listener', icon: 'listener', on: '', open: 'Open in Listeners' }
+};
+const KINDS = [['layout', 'a layout', 'layouts'], ['gui', 'a custom GUI', 'custom GUIs'], ['listener', 'a listener', 'listeners'], ['scheduler', 'another scheduler', 'other schedulers']];
+const whereText = (uses) => KINDS.map(([k, one, many]) => { const n = new Set(uses.filter((u) => PLACES[u.at].kind === k).map((u) => u.at)).size; return n ? (n === 1 ? one : n + ' ' + many) : ''; }).filter(Boolean).join(', ').replace(/, ([^,]*)$/, ' and $1');
+
+// ---------- seed: the Dusk Valley profile's schedulers ----------
+// k of a use: start (Start Scheduler), stop (Stop Scheduler) or check (Scheduler Is Running)
+// icon: ms:<Material icon> or em:<emoji> from the icon chooser, empty for the default timer (rule 112)
+const seed = () => [
+  { id: 's1', icon: 'em:✨', n: 'fireflies', launch: true, wait: 0, every: 6000, runs: 0, steps: [
+      cmt('Replays the fireflies on the title screen.'),
+      act('reset_anim', ['Firefly swarm'])],
+    uses: [
+      { at: 'options', el: 'Fireflies checkbox', what: 'Click script · Start Scheduler, Stop Scheduler', k: 'start' },
+      { at: 'title', el: 'Firefly swarm', what: 'Visibility · Scheduler Is Running', k: 'check' }] },
+  { id: 's2', icon: 'ms:shuffle', n: 'music_shuffle', launch: true, wait: 180000, every: 180000, runs: 0, steps: [act('next_track', ['Menu music'])], uses: [] },
+  { id: 's3', icon: 'em:🎁', n: 'daily_reward', launch: true, wait: 600000, every: 1000, runs: 1, steps: [
+      act('set_var', ['daily_streak'], [{ ph: 'calc' }]),
+      act('show_toast', ['Day ', { v: 'daily_streak' }, ' in a row! Your reward is in the Coin Shop.'], ['5'])], uses: [] },
+  { id: 's4', icon: 'ms:hourglass_top', n: 'join_countdown', launch: false, wait: 0, every: 1000, runs: 10, steps: [
+      act('play_audio', ['countdown_tick.ogg'], ['70'], ['Master'])],
+    uses: [
+      { at: 'title', el: 'Play button', what: 'Click script · Start Scheduler', k: 'start' },
+      { at: 'title', el: 'Cancel button', what: 'Click script · Stop Scheduler', k: 'stop' },
+      { at: 'title', el: 'Cancel button', what: 'Visibility · Scheduler Is Running', k: 'check' }] },
+  { id: 's5', icon: 'ms:volume_up', n: 'music_fade_in', launch: false, wait: 0, every: 50, runs: 20, steps: [
+      act('audio_vol', ['Menu music'], [{ ph: 'calc' }], [])],
+    uses: [{ at: 'title', el: 'Music button', what: 'Click script · Start Scheduler', k: 'start' }] },
+  { id: 's6', icon: 'em:☕', n: 'break_reminder', launch: false, wait: 1800000, every: 1800000, runs: 0, steps: [
+      act('display_chat', ['You\'ve been playing for a while. Time for a short break?'])],
+    uses: [{ at: 'joined', el: 'Script', what: 'Start Scheduler', k: 'start' }] },
+  { id: 's7', icon: 'em:🌧️', n: 'rain_ambience', launch: false, wait: 0, every: 20000, runs: 0, steps: [
+      act('play_audio', ['rain_loop.ogg'], ['40'], ['Weather'])],
+    uses: [{ at: 'title', el: 'Weather text', what: 'Visibility · Scheduler Is Running', k: 'check' }] },
+  { id: 's8', icon: '', n: 'boss_music', launch: false, wait: 0, every: 1000, runs: 0, steps: [], uses: [] }
+];
+// What runs since the game started, in seconds relative to when the window opened (12:41:15).
+// The game started at 12:21:03, which started every scheduler that starts with the game.
+const GAME_T = -1212;
+// what the icon chooser lists as Recently Used, shared by every window that has it (rule 113)
+const RECENT_ICONS = ['em:✨', 'ms:hourglass_top', 'em:🎁', 'ms:shuffle', 'em:🌧️', 'ms:menu_book', 'em:🪙', 'ms:storefront'];
+const seedRt = () => ({
+  s1: { on: true, src: 'game', at: GAME_T, from: GAME_T, n0: 0, first: GAME_T },
+  s2: { on: true, src: 'game', at: GAME_T, from: GAME_T, n0: 0, first: GAME_T + 180 },
+  s3: { on: false, fin: true, src: 'game', at: GAME_T, n: 1, last: GAME_T + 600 },
+  s5: { on: false, fin: true, src: 'window', at: -251, n: 20, last: -250.05 }
+});
+
+class Component extends DCLogic {
+  componentWillUnmount() {
+    if (this._tick) clearInterval(this._tick);
+    if (this._keys) window.removeEventListener('keydown', this._keys, true);
+  }
+
+  renderVals() {
+    const p = this.props, s = this.state || {};
+    const set = (patch) => this.setState(patch);
+    const uid = this._uid || (this._uid = 'sc' + Math.random().toString(36).slice(2, 8));
+    const standalone = p.standalone ?? true;
+    const W = +p.width || 940, H = +p.height || 760;
+    const empty = (p.scene || 'Dusk Valley') === 'Empty';
+    const IC = {
+      timer: 'timer', plus: 'add', search: 'search', funnel: 'filter_alt', x: 'close', warn: 'warning', pencil: 'edit',
+      editor: 'edit_note', dup: 'library_add', trash: 'delete', open: 'open_in_new', cmt: 'comment', play: 'play_arrow', go: 'timer_play', stop: 'stop',
+      layout: 'gallery_thumbnail', listener: 'hearing', start: 'bolt', check: 'checklist'
+    };
+
+    // ---------- clock: every board starts at the same time, so screenshots stay comparable ----------
+    if (!this._t0) this._t0 = Date.now();
+    const now = () => (Date.now() - this._t0) / 1000;
+    const nowT = now();
+    const clock = (t) => { const x = 12 * 3600 + 41 * 60 + 15 + Math.floor(t); const two = (n) => String(n).padStart(2, '0'); return two(Math.floor(x / 3600) % 24) + ':' + two(Math.floor(x / 60) % 60) + ':' + two(((x % 60) + 60) % 60); };
+    const agoText = (t) => { const d0 = nowT - t; return d0 < 3 ? 'just now' : d0 < 60 ? Math.floor(d0) + ' s ago' : d0 < 3600 ? Math.floor(d0 / 60) + ' min ago' : Math.floor(d0 / 3600) + ' h ago'; };
+
+    // ---------- state ----------
+    if (!this._seed) this._seed = empty ? [] : seed();
+    if (!this._rt0) {
+      this._rt0 = empty ? {} : seedRt();
+      // a board can show a scheduler that someone started a moment ago
+      if (p.start && !empty) { const x0 = this._seed.find((x) => x.id === p.start); const a0 = -(+p.startAgo || 0); if (x0) this._rt0[x0.id] = { on: true, src: 'window', at: a0, from: a0, n0: 0, first: a0 + x0.wait / 1000 }; }
+    }
+    const list = s.list ?? this._seed;
+    const rt = s.rt ?? this._rt0;
+    const byId = (id) => list.find((x) => x.id === id);
+    const byName = (n) => list.find((x) => x.n === n);
+    const selRaw = s.sel ?? (empty ? [] : String(p.select ?? 's1').split(',').map((x) => x.trim()).filter(Boolean));
+    const sel = selRaw.filter((id) => byId(id));
+    const sheet = s.sheet ?? (p.sheet || '');
+    const filterOpen = s.filterOpen !== undefined ? s.filterOpen : !!p.filterMenu;
+    const filter = s.filter ?? (p.filter || 'all');
+    const sort = s.sort ?? 'name';
+    const q = s.q ?? (p.query || '');
+    const ql = q.trim().toLowerCase();
+    const renaming = !!s.renaming;
+    const unitMenu = s.unitMenu || null;
+    const live = p.live !== false && !empty;
+    const fk = (k) => uid + '-' + k;
+    // an icon value is ms:<name> or em:<emoji>; Material icons outside the default set come from the full icon font
+    const iconParts = (v) => (v && v.startsWith('em:') ? { g: v.slice(3), cls: 'em' } : v && v.startsWith('ms:') ? { g: v.slice(3), cls: 'ms all' } : { g: IC.timer, cls: 'ms' });
+    const iconOpen = s.iconOpen !== undefined ? s.iconOpen : !!p.iconOpen;
+    const deepQuery = (sel0) => { const walk = (r) => { const hit = r.querySelector(sel0); if (hit) return hit; for (const el of r.querySelectorAll('*')) { if (el.shadowRoot) { const x = walk(el.shadowRoot); if (x) return x; } } return null; }; return walk(document); };
+    const focusLater = (key, select) => setTimeout(() => { const el = deepQuery('[data-fk="' + key + '"]'); if (el) { el.focus(); if (select && el.select) el.select(); } }, 0);
+
+    // ---------- running: when runs happen ----------
+    // A running scheduler runs at first, first + every, first + 2 × every … (in seconds), n0 runs counted before that.
+    // Its timing can change while it runs: then n0 keeps what already ran and first moves to the next run (rule 107).
+    const ev = (x) => Math.max(1, x.every) / 1000;
+    const countAt = (x, r, t) => {
+      if (!r) return 0;
+      if (!r.on) return r.n || 0;
+      if (t < r.first) return r.n0;
+      const n = r.n0 + Math.floor((t - r.first) / ev(x) + 1e-9) + 1;
+      return x.runs ? Math.min(n, x.runs) : n;
+    };
+    const lastAt = (x, r, t) => { if (!r) return null; if (!r.on) return r.last ?? null; const c = countAt(x, r, t); return c > r.n0 ? r.first + (c - r.n0 - 1) * ev(x) : (r.lastBefore ?? null); };
+    const nextAt = (x, r, t) => { if (!r || !r.on) return null; const c = countAt(x, r, t); if (x.runs && c >= x.runs) return null; return t < r.first ? r.first : r.first + (c - r.n0) * ev(x); };
+    const endAt = (x, r) => (r && r.on && x.runs ? r.first + (x.runs - r.n0 - 1) * ev(x) : null);
+    const isOn = (x) => !!(rt[x.id] && rt[x.id].on);
+    // Faster than once a second, a scheduler shows a steady pulse instead of a ring per run.
+    const fast = (x) => x.every < 1000;
+    // from: when the wait for the next run began, which is the start, or the last run after a timing change
+    const startRt = (x, src) => ({ on: true, src, at: now(), from: now(), n0: 0, first: now() + x.wait / 1000 });
+    const stopRt = (x, r, extra) => ({ on: false, src: r.src, at: r.at, n: countAt(x, r, now()), last: lastAt(x, r, now()), stoppedAt: now(), ...extra });
+    // A running scheduler takes timing changes right away: the next run is one new interval after the last one,
+    // or right now when that's already past (rule 107).
+    const retime = (oldX, x, r) => {
+      const t = now();
+      const c = countAt(oldX, r, t), last = lastAt(oldX, r, t);
+      // finished by the change: it remembers how it ran, so taking the change back lets it go on
+      if (x.runs && c >= x.runs) return { on: false, fin: true, src: r.src, at: r.at, n: c, last, resume: true };
+      if (c === 0 || last === null) return Object.assign({}, r, { first: Math.max(t, r.at + x.wait / 1000) });
+      return Object.assign({}, r, { n0: c, lastBefore: last, from: last, first: Math.max(t, last + ev(x)) });
+    };
+    // Before r.first a scheduler waits: for its first run (initial), or for the next one after a timing change.
+    const phaseOf = (x, r, t) => { const c = countAt(x, r, t), pre = t < r.first; return { c, pre, initial: pre && c === 0, from: r.from ?? r.at }; };
+    const timingOf = (x) => x.wait + '/' + x.every + '/' + x.runs;
+    // After any change to the list: running schedulers with new timing are retimed, deleted ones stop,
+    // and ones that come back with Undo or Cancel start again when they ran before (rule 107).
+    const syncRt = (oldList, nl, base) => {
+      const out = Object.assign({}, base || rt);
+      nl.forEach((x) => {
+        const r = out[x.id]; const ox = oldList.find((y) => y.id === x.id);
+        if (r && r.on && ox && timingOf(ox) !== timingOf(x)) out[x.id] = retime(ox, x, r);
+        else if (r && r.resume && ox && timingOf(ox) !== timingOf(x) && (!x.runs || x.runs > r.n)) out[x.id] = { on: true, src: r.src, at: r.at, from: r.last, n0: r.n, lastBefore: r.last, first: Math.max(now(), r.last + ev(x)) };
+        if (r && r.del) out[x.id] = startRt(x, r.src);
+      });
+      oldList.forEach((ox) => { if (!nl.some((x) => x.id === ox.id) && out[ox.id] && out[ox.id].on) out[ox.id] = stopRt(ox, out[ox.id], { del: true }); });
+      return out;
+    };
+
+    // ---------- the ticker: rings and bars move with CSS, this only counts runs and refreshes the countdowns ----------
+    if (!this._seen) { this._seen = {}; list.forEach((x) => { this._seen[x.id] = countAt(x, rt[x.id], nowT); }); }
+    this._onTick = () => {
+      const st = this.state || {};
+      const cl = st.list ?? this._seed, cr = st.rt ?? this._rt0;
+      const t = now();
+      let nrt = null, redraw = false;
+      cl.forEach((x) => {
+        const r = cr[x.id];
+        if (!r || !r.on) return;
+        const c = countAt(x, r, t), prev = this._seen[x.id];
+        if (prev !== undefined && c > prev && !fast(x)) {
+          redraw = true;
+          // what the script does shows on the screen behind the window
+          if (x.steps.some((y) => y.k === 'act' && y.a === 'reset_anim') && typeof p.onTwinkle === 'function') p.onTwinkle();
+          const toast = x.steps.find((y) => y.k === 'act' && y.a === 'show_toast');
+          if (toast && typeof p.onToast === 'function') p.onToast(segText(toast.vals[0]), x.n);
+        }
+        if (prev !== undefined && prev === r.n0 && c > r.n0) redraw = true;
+        this._seen[x.id] = c;
+        if (x.runs && c >= x.runs) { nrt = nrt || Object.assign({}, cr); nrt[x.id] = { on: false, fin: true, src: r.src, at: r.at, n: c, last: lastAt(x, r, t) }; }
+      });
+      const sec = Math.floor(t);
+      if (sec !== this._sec) { this._sec = sec; if (cl.some((x) => cr[x.id] && cr[x.id].on)) redraw = true; }
+      if (nrt) this.setState({ rt: nrt }); else if (redraw) this.setState({ tk: t });
+    };
+    if (live && !this._tick) this._tick = setInterval(() => this._onTick && this._onTick(), 200);
+
+    // Rings, bars and pings are CSS animations. After every render, each element with a data-since gets its animation
+    // clock set to the time since that moment, so it shows where the run is now, whether the runtime kept the element
+    // or built a new one.
+    const epoch = (t) => Math.round(this._t0 + t * 1000);
+    const syncAnims = () => {
+      const root = deepQuery('[data-sc="' + uid + '"]');
+      if (!root) return;
+      const t = Date.now();
+      root.querySelectorAll('[data-since]').forEach((el) => el.getAnimations().forEach((a) => { a.currentTime = t - +el.getAttribute('data-since'); }));
+    };
+    clearTimeout(this._syncA); clearTimeout(this._syncB);
+    this._syncA = setTimeout(syncAnims, 0); this._syncB = setTimeout(syncAnims, 60);
+
+    const snapshot = () => ({ list, sel });
+    // Typing into a field coalesces into one undo step per field and focus.
+    const commit = (nl, patch, tag) => {
+      const keep = tag && s.lastTag === tag;
+      set({ list: nl, rt: syncRt(list, nl), undoStack: keep ? (s.undoStack || []) : [...(s.undoStack || []), snapshot()].slice(-50), redoStack: [], lastTag: tag || null, ...patch });
+    };
+    const status = (text, canUndo) => ({ status: { text, undo: !!canUndo } });
+
+    // ---------- scripts ----------
+    const eachStep = (steps, fn, depth) => steps.forEach((st) => { fn(st, depth || 0); if (st.kids) eachStep(st.kids, fn, (depth || 0) + 1); });
+    const countSteps = (steps) => { let n = 0; eachStep(steps, (st) => { if (st.k !== 'cmt') n++; }); return n; };
+    const segText = (segs) => (segs || []).map((x) => (typeof x === 'string' ? x : x.v ? (x.v === 'daily_streak' ? '4' : '$$' + x.v) : x.ph ? PHN[x.ph] || x.ph : '')).join('');
+    const pieces = (segs) => (segs || []).map((x) => (typeof x === 'string' ? { isText: true, s: x } : x.ph ? { isChip: true, s: PHN[x.ph] || x.ph, cls: 'mchip' } : { isChip: true, s: '$$' + x.v, cls: 'mchip var' }));
+    const W_ = (cls, str) => ({ isW: true, isTok: false, cls, s: str });
+    const tok = (segs, unit) => ({ isW: false, isTok: true, cls: 'sv pick', pieces: pieces(segs).concat(unit ? [{ isUnit: true, s: unit }] : []) });
+    const stepRows = (x) => {
+      const rows = [];
+      eachStep(x.steps, (st, depth) => {
+        let parts, icon, tile = '', tileCls = 'se-tile', name;
+        if (st.k === 'cmt') { parts = [W_('se-cmt', st.t)]; icon = IC.cmt; tileCls = 'se-tile cmt'; name = 'the comment'; }
+        else {
+          const a = ACT[st.a];
+          parts = [W_('se-name', a[0])];
+          a[2].forEach((f, i) => { if (!st.vals[i] || !st.vals[i].length) return; if (f[0]) parts.push(W_('se-con', f[0])); parts.push(tok(st.vals[i], f[1])); });
+          icon = a[1]; tile = '--st-action'; name = a[0];
+        }
+        rows.push({ cls: 'se-row ls-step', style: 'padding-left: ' + (8 + depth * 26) + 'px', tileCls, tileStyle: tile ? '--tile: var(' + tile + ')' : '', icon, parts, name });
+      });
+      return rows;
+    };
+    const actNames = (x) => { const names = []; eachStep(x.steps, (st) => { if (st.k === 'act' && !names.includes(ACT[st.a][0])) names.push(ACT[st.a][0]); }); return names; };
+    // the tile shows what the script does, the ring around it when it runs
+    const iconOf = (x) => iconParts(x.icon);
+
+    // ---------- list ----------
+    const starts = (x) => x.launch || x.uses.some((u) => u.k === 'start');
+    const problemOf = (x) => (!x.steps.length ? 'No steps yet, so it does nothing' : !starts(x) ? 'Nothing starts it: it doesn\'t start with the game, and no script starts it' : x.every < TICK && x.runs !== 1 ? 'Faster than a tick, so several runs pile up in every tick' : '');
+    const lastT = (x) => { const r = rt[x.id]; const l = lastAt(x, r, nowT); return l === null ? -Infinity : l; };
+    const fits = (x) => (filter === 'running' ? isOn(x) : filter === 'stopped' ? !isOn(x) : filter === 'launch' ? x.launch : filter === 'probs' ? !!problemOf(x) : true);
+    const hitParts = (text) => {
+      const at = ql ? text.toLowerCase().indexOf(ql) : -1;
+      const P = (t, hit) => ({ t, hit, plain: !hit });
+      return at < 0 ? [P(text, false)] : [P(text.slice(0, at), false), P(text.slice(at, at + ql.length), true), P(text.slice(at + ql.length), false)].filter((y) => y.t);
+    };
+    // the search finds names and what the scripts do, so audio finds every scheduler that plays something
+    const matches = (x) => !ql || x.n.includes(ql) || summary(x).toLowerCase().includes(ql) || actNames(x).some((a) => a.toLowerCase().includes(ql));
+    let shown = list.filter((x) => fits(x) && matches(x));
+    const byN = (a, b) => a.n.localeCompare(b.n);
+    const nextKey = (x) => { const t = nextAt(x, rt[x.id], nowT); return t === null ? Infinity : t; };
+    shown = sort === 'next' ? shown.slice().sort((a, b) => nextKey(a) - nextKey(b) || byN(a, b)) : sort === 'last' ? shown.slice().sort((a, b) => lastT(b) - lastT(a) || byN(a, b)) : shown.slice().sort(byN);
+    const order = shown.map((x) => x.id);
+
+    const selectRow = (id, e) => {
+      let next;
+      if (e && (e.ctrlKey || e.metaKey)) next = sel.includes(id) ? sel.filter((y) => y !== id) : [...sel, id];
+      else if (e && e.shiftKey && s.anchor && order.includes(s.anchor)) { const a = order.indexOf(s.anchor), b = order.indexOf(id); next = order.slice(Math.min(a, b), Math.max(a, b) + 1); }
+      else next = [id];
+      set({ sel: next, anchor: e && e.shiftKey ? s.anchor : id, renaming: false, filterOpen: false, unitMenu: null, edit: null });
+    };
+    // the ring: one sweep per interval, or one over the wait before the first run
+    const ringOf = (x) => {
+      const r = rt[x.id];
+      if (!r || !r.on) return { tile: '', arc: 'arc', style: '', since: null };
+      const ph = phaseOf(x, r, nowT);
+      if (fast(x) && !ph.initial) return { tile: ' run fast', arc: 'arc', style: '', since: null };
+      const dur = ph.pre ? (r.first - ph.from) * 1000 : x.every;
+      const it = ph.pre ? '1' : x.runs ? String(Math.max(0, x.runs - r.n0 - 1)) : 'infinite';
+      return { tile: ph.initial ? ' wait' : ' run', arc: 'arc sweep', style: '--dur: ' + Math.max(1, Math.round(dur)) + 'ms; --it: ' + it, since: epoch(ph.pre ? ph.from : r.first) };
+    };
+    // a ring around the tile for 0.9 s after each run, picked up where it is when a render rebuilds the tile
+    const pingSince = (x) => { const r = rt[x.id]; if (!r || fast(x)) return null; const l = lastAt(x, r, nowT); return l !== null && nowT - l <= 0.9 && nowT >= l ? l : null; };
+    const rows = shown.map((x) => {
+      const isSel = sel.includes(x.id);
+      const prob = problemOf(x);
+      const on = isOn(x);
+      const ring = ringOf(x);
+      const r = rt[x.id];
+      const pl = pingSince(x);
+      return {
+        cls: 'item tall lsrow scrow' + (isSel ? ' sel' : ''), ariaSel: isSel ? 'true' : 'false',
+        tileCls: 'sc-tile' + ring.tile + (pl !== null ? ' ping' : ''), arcCls: ring.arc, arcStyle: ring.style, arcSince: ring.since,
+        // the ping counts from the run, and fast ones breathe on the page clock, so they all breathe in step
+        tileSince: pl !== null ? epoch(pl) : ring.tile.includes('fast') ? 0 : null,
+        icon: iconOf(x).g, iconCls: iconOf(x).cls,
+        name: hitParts(x.n), sub: hitParts(summary(x) + (!x.steps.length ? ' · no steps yet' : !starts(x) ? ' · nothing starts it' : '')),
+        subCls: 'ls-sub' + (prob ? ' warn' : ''),
+        // a problem always shows the warning triangle, like a listener; the second line says what it is
+        warn: !!prob, warnTip: prob,
+        playCls: 'ib sc-play' + (on ? ' on' : ''), playIcon: on ? IC.stop : IC.go, playTip: on ? 'Stop (Space)' : 'Start (Space)',
+        toggle: (e) => { e.stopPropagation(); toggleRun([x.id]); },
+        click: (e) => selectRow(x.id, e),
+        dbl: () => { selectRow(x.id); openEditor(x); }
+      };
+    });
+
+    // ---------- actions ----------
+    const openEditor = (x, stepName) => { if (!x) return; set({ unitMenu: null, ...status('Opens the script editor for ' + x.n + (stepName ? ', with ' + stepName + ' selected.' : '.')) }); };
+    // Start and Stop aren't changes to the list: Undo and Cancel leave them as they are.
+    const toggleRun = (ids) => {
+      const xs = ids.map(byId).filter(Boolean);
+      if (!xs.length) return;
+      const nrt = Object.assign({}, rt);
+      const off = xs.filter((x) => !isOn(x));
+      const one1 = (arr) => arr.length === 1;
+      if (off.length) {
+        off.forEach((x) => { nrt[x.id] = startRt(x, 'window'); this._seen[x.id] = 0; });
+        const x0 = off[0];
+        set({ rt: nrt, ...status(one1(off) ? 'Started ' + x0.n + '. ' + (x0.wait ? 'Its first run is in ' + fmtDur(x0.wait) + '.' : x0.runs === 1 ? 'It runs once, right now.' : 'It ran right away, and runs ' + (x0.runs ? x0.runs - 1 + ' more times' : 'until something stops it') + '.') : 'Started ' + off.length + ' schedulers.') });
+      } else {
+        xs.forEach((x) => { nrt[x.id] = stopRt(x, rt[x.id]); });
+        const x0 = xs[0], n1 = nrt[x0.id].n;
+        set({ rt: nrt, ...status(one1(xs) ? 'Stopped ' + x0.n + (n1 ? ' after ' + (n1 === 1 ? 'one run' : fmtN(n1) + ' runs') + '.' : ' before its first run.') : 'Stopped ' + xs.length + ' schedulers.') });
+      }
+    };
+    const runNow = () => {
+      const x = sel.length === 1 ? byId(sel[0]) : null;
+      if (!x) return;
+      if (x.steps.some((y) => y.k === 'act' && y.a === 'reset_anim') && typeof p.onTwinkle === 'function') p.onTwinkle();
+      const toast = x.steps.find((y) => y.k === 'act' && y.a === 'show_toast');
+      if (toast && typeof p.onToast === 'function') p.onToast(segText(toast.vals[0]), x.n);
+      set(status(!x.steps.length ? x.n + ' has no steps, so running it does nothing.' : 'Ran the script of ' + x.n + ' once. That doesn\'t count as a run, and its schedule stays as it is.'));
+    };
+    const usesOf = (xs) => xs.reduce((a, x) => a + x.uses.length, 0);
+    const doDelete = () => {
+      if (!sel.length) return;
+      const xs = sel.map(byId);
+      const nl = list.filter((x) => !sel.includes(x.id));
+      const idx = Math.max(0, order.indexOf(sel[0]));
+      const rest = order.filter((id) => !sel.includes(id));
+      const nextSel = rest.length ? [rest[Math.min(idx, rest.length - 1)]] : [];
+      const ran = xs.filter((x) => isOn(x));
+      commit(nl, { sel: nextSel, renaming: false, sheet: '', ...status((xs.length === 1 ? 'Deleted ' + xs[0].n : 'Deleted ' + xs.length + ' schedulers') + (ran.length ? (xs.length === 1 ? ' and stopped it.' : ', and stopped the ' + (ran.length === 1 ? 'one that ran.' : ran.length + ' that ran.')) : '.'), true) });
+    };
+    // Deleting asks only when something still uses the name, like variables do. Undo brings it back otherwise.
+    const askDelete = () => { if (!sel.length) return; if (usesOf(sel.map(byId))) set({ sheet: 'delete', unitMenu: null, filterOpen: false }); else doDelete(); };
+    let idN = this._idN || 100;
+    const newId = () => { idN += 1; this._idN = idN; return 'n' + idN; };
+    const freeName = (base) => { let n = base, i = 2; while (list.some((x) => x.n === n)) n = base + '_' + i++; return n; };
+    const cleanName = (v) => v.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9._-]/g, '');
+    const duplicate = () => {
+      if (!sel.length) return;
+      const copies = sel.map(byId).map((x) => Object.assign(JSON.parse(JSON.stringify(x)), { id: newId(), n: freeName(x.n + '_copy'), uses: [] }));
+      commit([...list, ...copies], { sel: copies.map((c) => c.id), anchor: copies[0].id, ...status(copies.length === 1 ? 'Made ' + copies[0].n + '. It isn\'t running, and nothing uses it yet.' : 'Made ' + copies.length + ' copies. They aren\'t running.', true) });
+    };
+    // New Scheduler adds one right away, with a name to type over and a calm default: every second, until stopped.
+    const addNew = (base) => {
+      const n = freeName(typeof base === 'string' && base ? base : 'new_scheduler');
+      const x = { id: newId(), n, launch: false, wait: 0, every: 1000, runs: 0, steps: [], uses: [] };
+      commit([...list, x], { sel: [x.id], anchor: x.id, q: '', filter: 'all', filterOpen: false, unitMenu: null, renaming: true, renameDraft: n, ...status('Added ' + n + '. Type its name, then add steps.', true) });
+      focusLater(fk('rename'), true);
+    };
+    if (p.add && !this._added && !empty) { this._added = true; setTimeout(() => addNew(), 0); }
+    const undo = () => {
+      const u = s.undoStack || [];
+      if (!u.length) return;
+      const last = u[u.length - 1];
+      set({ list: last.list, sel: last.sel, rt: syncRt(list, last.list), undoStack: u.slice(0, -1), redoStack: [...(s.redoStack || []), snapshot()], renaming: false, lastTag: null, edit: null, status: { text: 'Undone.', undo: false } });
+    };
+    const redo = () => {
+      const r = s.redoStack || [];
+      if (!r.length) return;
+      const last = r[r.length - 1];
+      set({ list: last.list, sel: last.sel, rt: syncRt(list, last.list), redoStack: r.slice(0, -1), undoStack: [...(s.undoStack || []), snapshot()], lastTag: null, edit: null, status: { text: 'Redone.', undo: false } });
+    };
+    // Changes apply right away (rule 38), so Cancel puts every scheduler back the way it was when the window opened.
+    // It only asks when there is something to lose (rule 68), and leaves running schedulers running.
+    const changes = (() => {
+      const orig = this._seed, j = (x) => JSON.stringify(x);
+      const ids = new Set(orig.map((x) => x.id).concat(list.map((x) => x.id)));
+      let n = 0; ids.forEach((id) => { const a = orig.find((x) => x.id === id), b = list.find((x) => x.id === id); if (!a || !b || j(a) !== j(b)) n++; });
+      return n;
+    })();
+    const discard = () => set({ list: this._seed, rt: syncRt(list, this._seed), sel: empty ? [] : [String(p.select ?? 's1').split(',')[0]], undoStack: [], redoStack: [], renaming: false, sheet: '', unitMenu: null, filterOpen: false, edit: null, status: { text: 'Your changes were taken back. The window closes now.', undo: false } });
+    const cancelAll = () => { if (changes) set({ sheet: 'discard', unitMenu: null, filterOpen: false }); else set({ unitMenu: null, filterOpen: false, ...status('Nothing changed, so Cancel closes the window without asking.') }); };
+    const startRename = () => { if (sel.length !== 1) return; const x = byId(sel[0]); set({ renaming: true, renameDraft: x.n, unitMenu: null }); focusLater(fk('rename'), true); };
+    const checkName = (draft, x) => {
+      if (!draft) return { ok: false, bad: false, msg: 'Lowercase letters, numbers, . _ and -. Spaces turn into _.' };
+      if (draft !== x.n && byName(draft)) return { ok: false, bad: true, msg: draft + ' already exists.' };
+      return { ok: true, bad: false, msg: 'Enter renames it, Esc keeps the old name.' };
+    };
+    const applyRename = (x, to, update) => {
+      const nl = list.map((y) => (y === x ? Object.assign({}, y, { n: to }) : y));
+      const c = x.uses.length;
+      const runs = isOn(x) ? ' It keeps running.' : '';
+      commit(nl, { renaming: false, sheet: '', ...status(c && update ? 'Renamed it to ' + to + ' and updated ' + (c === 1 ? 'the place' : 'all ' + c + ' places') + ' that use it.' + runs : c ? 'Renamed it to ' + to + '. ' + (c === 1 ? 'The place that uses ' + x.n + ' still says ' + x.n + ', so it' : 'The ' + c + ' places that use ' + x.n + ' still say ' + x.n + ', so they') + ' don\'t find it anymore.' : 'Renamed it to ' + to + '.' + runs, true) });
+    };
+    const tryRename = (x, draft) => {
+      const to = cleanName(draft);
+      const c0 = checkName(to, x);
+      if (to === x.n) { set({ renaming: false }); return; }
+      if (!c0.ok) return;
+      if (x.uses.length) set({ sheet: 'rename', renameTo: to, renaming: false });
+      else applyRename(x, to, false);
+    };
+
+    // ---------- timing fields ----------
+    const patchSel = (fn, msg, tag) => {
+      const x = sel.length === 1 ? byId(sel[0]) : null;
+      if (!x) return;
+      const nx = Object.assign({}, x, fn(x));
+      if (timingOf(nx) === timingOf(x) && nx.launch === x.launch) return;
+      const nl = list.map((y) => (y === x ? nx : y));
+      commit(nl, { ...status(msg(nx, x), true) }, tag);
+    };
+    const runningNote = (nx, x) => {
+      if (!isOn(x)) return '';
+      const r2 = syncRt(list, list.map((y) => (y === x ? nx : y)))[x.id];
+      if (!r2.on) return ' That\'s as many as it already ran, so it finished.';
+      const nt = nextAt(nx, r2, now());
+      return nt === null ? '' : ' It keeps running, and the next run is in ' + left(nt - now()) + '.';
+    };
+    const unitPref = s.units || {};
+    // a unit picked in the menu sticks while the duration reads well in it, so Undo never leaves 0.08 min behind
+    const unitFor = (x, f) => { const ms = f === 'wait' ? x.wait : x.every, u = unitPref[x.id + ':' + f]; const v = u ? (ms / UNITS[u][0]) * 100 : 0; return u && Math.abs(v - Math.round(v)) < 1e-6 ? u : autoUnit(ms); };
+    const edit = s.edit || null;
+    let fieldErr = '';
+    const durField = (x, f) => {
+      const key = x.id + ':' + f;
+      const u = unitFor(x, f);
+      const ms = f === 'wait' ? x.wait : x.every;
+      const editing = edit && edit.key === key;
+      const text = editing ? edit.text : num(ms / UNITS[u][0]);
+      const val = parseFloat(String(text).replace(',', '.'));
+      const bad = editing && !(val > 0);
+      if (bad) fieldErr = f === 'wait' ? 'Type how long it waits before the first run, like 10.' : 'Type how long it waits between runs, like 6.';
+      const apply = (t0, u0) => {
+        const v = parseFloat(String(t0).replace(',', '.'));
+        if (!(v > 0)) return;
+        const nms = Math.max(1, Math.round(v * UNITS[u0][0]));
+        patchSel(() => (f === 'wait' ? { wait: nms } : { every: nms }), (nx, ox) => (f === 'wait' ? 'The first run is ' + fmtDur(nms) + ' after it starts now.' : nx.n + ' runs every ' + fmtDur(nms) + ' now.') + runningNote(nx, ox), 'f:' + key);
+      };
+      const unitOpen = !!(unitMenu && unitMenu.key === key);
+      return {
+        cls: 'field sc-num' + (bad ? ' bad' : ''), fk: fk('f-' + f), text,
+        unit: u === 'tick' ? (val === 1 ? 'tick' : 'ticks') : UNITS[u][1], unitName: UNITS[u][3], unitOpen: unitOpen ? 'true' : 'false',
+        unitCls: 'sc-unit' + (unitOpen ? ' on' : ''),
+        focus: () => set({ edit: { key, text: num(ms / UNITS[u][0]) }, lastTag: null }),
+        input: (e) => { set({ edit: { key, text: e.target.value } }); apply(e.target.value, u); },
+        key: (e) => {
+          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            const step = (e.shiftKey ? 10 : 1) * (e.key === 'ArrowUp' ? 1 : -1);
+            const cur = parseFloat(String(e.target.value).replace(',', '.')) || 0;
+            const nv = Math.max(u === 'tick' || u === 'ms' ? 1 : 0.5, Math.round((cur + step) * 100) / 100);
+            set({ edit: { key, text: num(nv) } }); apply(nv, u);
+          }
+          if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); }
+        },
+        blur: () => set({ edit: null, lastTag: null }),
+        openUnit: (e) => { e.preventDefault(); e.stopPropagation(); set({ unitMenu: unitOpen ? null : { key, f, at: anchorOf(e.currentTarget) }, filterOpen: false }); }
+      };
+    };
+    const countField = (x) => {
+      const key = x.id + ':runs';
+      const editing = edit && edit.key === key;
+      const text = editing ? edit.text : String(x.runs);
+      const v = parseInt(text, 10);
+      const bad = editing && !(v >= 2);
+      if (bad) fieldErr = 'Type how many times it runs, 2 or more. For one run, pick Once.';
+      const apply = (t0) => { const n = parseInt(t0, 10); if (!(n >= 2)) return; patchSel(() => ({ runs: n }), (nx, ox) => nx.n + ' runs ' + n + ' times now.' + runningNote(nx, ox), 'f:' + key); };
+      return {
+        cls: 'field sc-num sc-cnt' + (bad ? ' bad' : ''), fk: fk('f-runs'), text,
+        focus: () => set({ edit: { key, text: String(x.runs) }, lastTag: null }),
+        input: (e) => { const t0 = e.target.value.replace(/[^0-9]/g, ''); set({ edit: { key, text: t0 } }); apply(t0); },
+        key: (e) => {
+          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); const nv = Math.max(2, (parseInt(e.target.value, 10) || 2) + (e.shiftKey ? 10 : 1) * (e.key === 'ArrowUp' ? 1 : -1)); set({ edit: { key, text: String(nv) } }); apply(nv); }
+          if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); }
+        },
+        blur: () => set({ edit: null, lastTag: null })
+      };
+    };
+
+    // ---------- details: one scheduler ----------
+    const one = sel.length === 1 ? byId(sel[0]) : null;
+    const many = sel.length > 1;
+    let d = {}, fw = {}, fe = {}, fc = {};
+    if (one) {
+      const x = one, r = rt[x.id], on = isOn(x);
+      const c = countAt(x, r, nowT), last = lastAt(x, r, nowT), next = nextAt(x, r, nowT);
+      const ph = on ? phaseOf(x, r, nowT) : null;
+      const srcText = r ? (r.src === 'game' ? 'with the game' : 'from this window') : '';
+      const meta = on ? (ph.initial ? 'Started at ' + clock(r.at) + ', ' + srcText : 'Running since ' + clock(r.at) + ', ' + srcText)
+        : r && r.fin ? 'Finished at ' + clock(r.last) + (r.n === 1 ? ' after its only run' : ' after all ' + fmtN(r.n) + ' runs')
+        : r && r.stoppedAt !== undefined ? 'Stopped at ' + clock(r.stoppedAt) + (r.n ? ' after ' + (r.n === 1 ? 'one run' : fmtN(r.n) + ' runs') : ', before its first run')
+        : this._seed.some((y) => y.id === x.id) ? 'Not running · hasn\'t run since the game started' : 'Not running yet';
+      // the status card: the next run, how far along it is, and when it's done
+      let liveT = '', liveR = '', hasBar = false, barCls = 'sc-bar', barFillCls = '', barStyle = '', barSince = null, hasCells = false, cells = [];
+      if (on) {
+        const end = endAt(x, r);
+        const perSec = Math.round(1000 / Math.max(1, x.every));
+        if (ph.initial) liveT = 'First run in ' + left(r.first - nowT);
+        else if (fast(x)) liveT = x.every === TICK ? 'Runs every tick, 20 times a second' : 'Runs ' + perSec + ' times a second';
+        else liveT = 'Next run in ' + left(next - nowT);
+        liveR = ph.initial ? '' : x.runs ? 'Run ' + fmtN(c) + ' of ' + fmtN(x.runs) + (end !== null && end > nowT ? ' · done in ' + left(end - nowT) : '') : 'Ran ' + times(c);
+        const SEGS = x.runs >= 2 && x.runs <= 40 && !fast(x);
+        if (SEGS) {
+          // one block per run: a block fills until its run happens, the first one over the wait
+          hasCells = true;
+          const prevT = c > r.n0 ? last : ph.from;
+          const nT = next;
+          for (let k = 1; k <= x.runs; k++) {
+            const cur = k === c + 1 && nT !== null;
+            cells.push({ cls: k <= c ? 'on' : '', cur, style: cur ? '--dur: ' + Math.max(1, Math.round((nT - prevT) * 1000)) + 'ms' : '', since: cur ? epoch(prevT) : null });
+          }
+        } else if (ph.pre || !fast(x) || x.runs) {
+          hasBar = true;
+          // a finite one fills once from its first run to its last, one that runs until stopped once per interval,
+          // and a wait fills once until the run it waits for
+          let dur, since, it;
+          if (ph.pre) { dur = (r.first - ph.from) * 1000; since = ph.from; it = '1'; if (ph.initial) barCls += ' wait'; }
+          else if (x.runs) { dur = Math.max(1, (end - r.first) * 1000); since = r.first; it = '1'; }
+          else { dur = x.every; since = r.first; it = 'infinite'; }
+          barFillCls = 'fill';
+          barStyle = '--dur: ' + Math.max(1, Math.round(dur)) + 'ms; --it: ' + it; barSince = epoch(since);
+        }
+      }
+      // uses, grouped by place like in the Variables window
+      const places = [];
+      x.uses.forEach((u) => {
+        let g = places.find((y) => y.at === u.at);
+        const P = PLACES[u.at];
+        if (!g) { g = { at: u.at, name: P.name, on: P.on || '', chip: P.chip, icon: IC[P.icon], uses: [] }; places.push(g); }
+        const open = P.kind === 'layout' ? () => set(status('Opens ' + P.name + ' in the layout editor, with ' + u.el + ' selected.')) : () => set(status('Opens ' + P.name + ' in Listeners.'));
+        g.uses.push({ el: u.el, what: u.what, icon: u.k === 'check' ? IC.check : IC.start, openTip: P.open, open });
+      });
+      const nU = x.uses.length;
+      const checks = x.uses.filter((u) => u.k === 'check');
+      const steps = stepRows(x);
+      const MAX = 8;
+      const nSteps = countSteps(x.steps);
+      const runsIdx = x.runs === 0 ? 0 : x.runs === 1 ? 1 : 2;
+      const everySub = x.runs === 1 ? '' : x.every < TICK ? 'Faster than a tick, so ' + Math.round(TICK / x.every) + ' runs pile up in every tick' : x.every < 1000 ? Math.round(1000 / x.every) + ' times a second' : '';
+      d = {
+        name: x.n, meta,
+        runIcon: on ? IC.stop : IC.go, runLabel: on ? 'Stop' : 'Start',
+        live: on, liveT, liveR, hasBar, barCls, barFillCls, barStyle, barSince, hasCells, cells,
+        icon: iconOf(x).g, iconCls: iconOf(x).cls, iconValue: x.icon || '',
+        unstarted: !starts(x) && x.steps.length > 0,
+        unTitle: 'Nothing starts ' + x.n,
+        unText: 'It doesn\'t start with the game, and no script uses Start Scheduler with it, so it only runs when you start it here.' + (checks.length ? ' ' + checks.map((u) => u.el).join(' and ') + ' only check' + (checks.length === 1 ? 's' : '') + ' whether it runs.' : ''),
+        launchSw: 'sw' + (x.launch ? ' on' : ''), launchOn: x.launch ? 'true' : 'false',
+        runsThumb: 'width: calc((100% - 2px) / 3); transform: translateX(' + runsIdx * 100 + '%)',
+        rForeverCls: runsIdx === 0 ? 'on' : '', rOnceCls: runsIdx === 1 ? 'on' : '', rSeveralCls: runsIdx === 2 ? 'on' : '',
+        rForever: runsIdx === 0 ? 'true' : 'false', rOnce: runsIdx === 1 ? 'true' : 'false', rSeveral: runsIdx === 2 ? 'true' : 'false',
+        several: runsIdx === 2, repeats: runsIdx !== 1,
+        waitThumb: 'width: calc((100% - 2px) / 2); transform: translateX(' + (x.wait ? 100 : 0) + '%)',
+        wNowCls: x.wait ? '' : 'on', wLaterCls: x.wait ? 'on' : '', wNow: x.wait ? 'false' : 'true', wLater: x.wait ? 'true' : 'false', hasWait: x.wait > 0,
+        everySub, everySubCls: 'sub' + (x.every < TICK ? ' sc-warn' : ''),
+        stepCount: nSteps ? nSteps + (nSteps === 1 ? ' step' : ' steps') : '',
+        hasSteps: x.steps.length > 0, noSteps: !x.steps.length,
+        steps: steps.slice(0, MAX).map((row) => Object.assign(row, { open: () => openEditor(x, row.name) })),
+        moreSteps: steps.length > MAX ? 'Show all ' + steps.length + ' steps in the script editor' : '',
+        used: nU > 0, unused: nU === 0, places,
+        useCount: nU ? nU + (nU === 1 ? ' place' : ' places') + ' in ' + whereText(x.uses) : '',
+        unusedText: x.launch ? 'Nothing else uses it. It starts with the game, and Stop Scheduler in any script can stop it, or Scheduler Is Running check it.' : 'Nothing uses it yet. Start it with Start Scheduler in any script, stop it with Stop Scheduler, or check it with Scheduler Is Running.'
+      };
+      fw = x.wait > 0 ? durField(x, 'wait') : {};
+      fe = durField(x, 'every');
+      fc = x.runs >= 2 ? countField(x) : {};
+    }
+    const setRuns = (mode) => () => patchSel((x) => ({ runs: mode === 'forever' ? 0 : mode === 'once' ? 1 : (x.runs >= 2 ? x.runs : (this._prevRuns && this._prevRuns[x.id]) || 10) }), (nx, ox) => {
+      if (ox.runs >= 2) { this._prevRuns = Object.assign({}, this._prevRuns, { [ox.id]: ox.runs }); }
+      return (mode === 'forever' ? nx.n + ' runs until something stops it.' : mode === 'once' ? nx.n + ' runs once now, then stops by itself.' : nx.n + ' runs ' + nx.runs + ' times now, then stops by itself.') + runningNote(nx, ox);
+    });
+    const setWait = (later) => () => patchSel((x) => ({ wait: later ? (x.wait || (this._prevWait && this._prevWait[x.id]) || 10000) : 0 }), (nx, ox) => {
+      if (ox.wait) this._prevWait = Object.assign({}, this._prevWait, { [ox.id]: ox.wait });
+      return (later ? 'The first run is ' + fmtDur(nx.wait) + ' after it starts now.' : 'The first run is right when it starts now.') + runningNote(nx, ox);
+    });
+    const toggleLaunch = () => patchSel((x) => ({ launch: !x.launch }), (nx) => (nx.launch ? nx.n + ' starts with the game from now on.' : nx.n + ' doesn\'t start with the game anymore.' + (nx.uses.some((u) => u.k === 'start') ? '' : ' Nothing else starts it now.')));
+
+    // ---------- details: several schedulers ----------
+    let m = {};
+    if (many) {
+      const xs = sel.map(byId);
+      const nOn = xs.filter((x) => x.launch).length;
+      const mixed = nOn > 0 && nOn < xs.length;
+      const nRun = xs.filter(isOn).length;
+      const off = xs.length - nRun;
+      m = {
+        title: xs.length + ' schedulers',
+        meta: nRun === xs.length ? 'All of them are running' : nRun ? nRun + ' of them ' + (nRun === 1 ? 'is' : 'are') + ' running' : 'None of them are running',
+        runIcon: off ? IC.go : IC.stop, runLabel: off ? (off === xs.length ? 'Start ' + off : off === 1 ? 'Start ' + xs.find((x) => !isOn(x)).n : 'Start the Other ' + off) : 'Stop ' + xs.length,
+        dupLabel: 'Duplicate ' + xs.length, deleteTip: 'Delete ' + xs.length + ' schedulers',
+        swCls: 'sw' + (mixed ? ' mixed' : nOn ? ' on' : ''), ariaOn: mixed ? 'mixed' : nOn ? 'true' : 'false',
+        // a mixed switch turns everything on, like everywhere else (rule 25)
+        toggle: () => { const to = mixed || !nOn; commit(list.map((x) => (sel.includes(x.id) ? Object.assign({}, x, { launch: to }) : x)), status(to ? 'All ' + xs.length + ' start with the game from now on.' : 'None of the ' + xs.length + ' start with the game anymore.', true)); },
+        launchNote: mixed ? nOn + ' of them start with the game, ' + (xs.length - nOn) + (xs.length - nOn === 1 ? ' doesn\'t' : ' don\'t') + '. The switch turns it on for all of them.' : nOn ? 'All of them start with the game.' : 'None of them start with the game.',
+        rows: xs.map((x) => { const r = rt[x.id]; const on = isOn(x); return { tileCls: 'sc-tile' + (on ? ' run' : ''), icon: iconOf(x).g, iconCls: iconOf(x).cls, name: x.n, sub: summary(x), act: on ? 'Running' : r && r.fin ? 'Finished' : 'Not running', cls: 'vm-cnt' + (on ? '' : ' none') }; })
+      };
+    }
+
+    // ---------- the icon chooser ----------
+    if (iconOpen && !s.iconAt && !this._iconMeasuring) {
+      this._iconMeasuring = true;
+      setTimeout(() => { this._iconMeasuring = false; const el = deepQuery('[data-sc="' + uid + '"] [data-anchor="icon"]'); if (el) this.setState({ iconAt: anchorOf(el) }); }, 0);
+    }
+    const iconAt = s.iconAt || [22, 112, 70];
+    const pickIcon = (v) => {
+      const x = sel.length === 1 ? byId(sel[0]) : null;
+      const recentIcons = v ? [v, ...(s.iconRecent || RECENT_ICONS).filter((y) => y !== v)].slice(0, 20) : (s.iconRecent || RECENT_ICONS);
+      if (!x || (x.icon || '') === v) { set({ iconOpen: false, iconRecent: recentIcons }); return; }
+      const part = iconParts(v);
+      commit(list.map((y) => (y === x ? Object.assign({}, y, { icon: v }) : y)), { iconOpen: false, iconRecent: recentIcons, ...status(v ? x.n + ' has ' + (part.cls === 'em' ? part.g : 'the ' + part.g.replace(/_/g, ' ') + ' icon') + ' as its icon now.' : x.n + ' uses the default timer icon again.', true) });
+    };
+
+    // ---------- menus: units and the filter ----------
+    const anchorOf = (el) => { const w = el.closest('.win'); const wr = w.getBoundingClientRect(), r0 = el.getBoundingClientRect(); const k = wr.width / w.offsetWidth || 1; return [Math.round((r0.left - wr.left) / k), Math.round((r0.bottom - wr.top) / k + 4), Math.round((r0.right - wr.left) / k)]; };
+    let unitItems = [];
+    if (unitMenu && one) {
+      const f = unitMenu.f, x = one;
+      const cur = unitFor(x, f);
+      const shownNum = parseFloat(num((f === 'wait' ? x.wait : x.every) / UNITS[cur][0]));
+      // Picking a unit keeps the number: 6 s becomes 6 min.
+      unitItems = UNIT_ORDER.map((u) => ({ radio: true, checked: u === cur, label: UNITS[u][3], val: UNITS[u][4], click: () => {
+        const nms = Math.max(1, Math.round(shownNum * UNITS[u][0]));
+        const units = Object.assign({}, unitPref, { [x.id + ':' + f]: u });
+        const nx = Object.assign({}, x, f === 'wait' ? { wait: nms } : { every: nms });
+        if (timingOf(nx) === timingOf(x)) { set({ units, unitMenu: null }); return; }
+        commit(list.map((y) => (y === x ? nx : y)), { units, unitMenu: null, edit: null, ...status((f === 'wait' ? 'The first run is ' + fmtDur(nms) + ' after it starts now.' : x.n + ' runs every ' + fmtDur(nms) + ' now.') + runningNote(nx, x), true) });
+      } }));
+    }
+    const pick = (patch) => () => set({ ...patch, filterOpen: false });
+    const filterItems = [
+      { head: 'Show' },
+      { radio: true, checked: filter === 'all', label: 'All Schedulers', click: pick({ filter: 'all' }) },
+      { radio: true, checked: filter === 'running', label: 'Running', click: pick({ filter: 'running' }) },
+      { radio: true, checked: filter === 'stopped', label: 'Not Running', click: pick({ filter: 'stopped' }) },
+      { radio: true, checked: filter === 'launch', label: 'Start with the Game', click: pick({ filter: 'launch' }) },
+      { radio: true, checked: filter === 'probs', label: 'With Problems', click: pick({ filter: 'probs' }) },
+      { head: 'Sort By' },
+      { radio: true, checked: sort === 'name', label: 'Name', click: pick({ sort: 'name' }) },
+      { radio: true, checked: sort === 'next', label: 'Next Run', click: pick({ sort: 'next' }) },
+      { radio: true, checked: sort === 'last', label: 'Last Run', click: pick({ sort: 'last' }) }
+    ];
+    const FILTER_CHIP = { running: 'Running', stopped: 'Not running', launch: 'Start with the game', probs: 'With problems' };
+
+    // ---------- sheets ----------
+    let al = { buttons: [] };
+    const target = one;
+    if (sheet === 'discard') al = {
+      icon: 'undo', title: changes === 1 ? 'Discard your change?' : 'Discard ' + changes + ' changes?',
+      text: 'Cancel puts every scheduler back the way it was when you opened this window. Schedulers you started or stopped keep running or stay stopped.',
+      buttons: [{ cls: 'btn primary danger', label: 'Discard Changes', click: discard }, { cls: 'btn', label: 'Keep Editing', click: () => set({ sheet: '' }) }]
+    };
+    else if (sheet === 'rename' && target) {
+      const to = s.renameTo ?? (p.renameTo || 'play_countdown');
+      const c = target.uses.length;
+      al = {
+        icon: IC.pencil, title: 'Rename ' + target.n + ' to ' + to + '?',
+        text: target.n + ' is used in ' + c + (c === 1 ? ' place' : ' places') + ', in ' + whereText(target.uses) + '. FancyMenu can change ' + (c === 1 ? 'it' : 'them') + ' to ' + to + ' too, so ' + (c === 1 ? 'it keeps' : 'they keep') + ' working.',
+        buttons: [
+          { cls: 'btn primary', label: c === 1 ? 'Rename and Update It' : 'Rename and Update ' + c + ' Places', click: () => applyRename(target, to, true) },
+          { cls: 'btn', label: 'Only Rename', click: () => applyRename(target, to, false) },
+          { cls: 'btn', label: 'Cancel', click: () => set({ sheet: '' }) }
+        ]
+      };
+    } else if (sheet === 'delete' && sel.length) {
+      const xs = sel.map(byId);
+      const usedXs = xs.filter((x) => x.uses.length);
+      const c = usedXs.reduce((a, x) => a + x.uses.length, 0);
+      const one1 = xs.length === 1;
+      al = {
+        icon: IC.trash, title: one1 ? 'Delete ' + xs[0].n + '?' : 'Delete ' + xs.length + ' schedulers?',
+        text: (one1 ? 'It\'s still used in ' + c + (c === 1 ? ' place.' : ' places.') : usedXs.map((x) => x.n).join(' and ') + (usedXs.length === 1 ? ' is' : ' are') + ' still used in ' + c + ' places.') + ' Start Scheduler and Stop Scheduler there do nothing anymore, and Scheduler Is Running stops matching.',
+        buttons: [{ cls: 'btn primary danger', label: 'Delete', click: doDelete }, { cls: 'btn', label: 'Cancel', click: () => set({ sheet: '' }) }]
+      };
+    }
+
+    // ---------- keyboard ----------
+    this._onKey = (e) => {
+      if (window.__scActive !== uid) return;
+      const tag = (e.target && e.target.tagName) || '';
+      const inField = tag === 'INPUT' || tag === 'TEXTAREA';
+      const mod = e.ctrlKey || e.metaKey;
+      const st = this.state || {};
+      const cur = st.sel ?? sel;
+      // the icon chooser handles its own keys, and Esc closes it, after clearing its search
+      if (st.iconOpen ?? iconOpen) { if (e.key === 'Escape' && !(inField && e.target.value)) set({ iconOpen: false }); return; }
+      if (e.key === 'Escape') {
+        if (sheet) set({ sheet: '' });
+        else if (unitMenu) set({ unitMenu: null });
+        else if (filterOpen) set({ filterOpen: false });
+        else if (renaming) set({ renaming: false });
+        else if (q && !inField) set({ q: '' });
+        // with nothing else to close, Esc is Cancel, like closing the window (rule 38)
+        else if (!inField) cancelAll();
+        return;
+      }
+      if (sheet || unitMenu) return;
+      if (mod && e.key.toLowerCase() === 'n') { e.preventDefault(); addNew(); return; }
+      if (mod && e.key.toLowerCase() === 'f') { e.preventDefault(); focusLater(fk('search'), true); return; }
+      // Ctrl+Enter and Ctrl+S both press Save
+      if (mod && (e.key === 'Enter' || e.key.toLowerCase() === 's')) { e.preventDefault(); return; }
+      if (e.key === 'F5') { e.preventDefault(); runNow(); return; }
+      if (inField) return;
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (!order.length) return;
+        const at0 = order.indexOf(cur[cur.length - 1]);
+        const nx = Math.max(0, Math.min(order.length - 1, at0 + (e.key === 'ArrowDown' ? 1 : -1)));
+        if (e.shiftKey && st.anchor) { const a = order.indexOf(st.anchor); set({ sel: order.slice(Math.min(a, nx), Math.max(a, nx) + 1) }); }
+        else set({ sel: [order[nx]], anchor: order[nx], renaming: false });
+        return;
+      }
+      if (e.key === 'Enter' && one) { e.preventDefault(); openEditor(one); return; }
+      if (e.key === 'F2') { e.preventDefault(); startRename(); return; }
+      if (e.key === ' ') { e.preventDefault(); if (cur.length) toggleRun(cur); return; }
+      if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); askDelete(); return; }
+      if (mod && e.key.toLowerCase() === 'a') { e.preventDefault(); set({ sel: order.slice() }); return; }
+      if (mod && e.key.toLowerCase() === 'd') { e.preventDefault(); duplicate(); return; }
+      if (mod && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))) { e.preventDefault(); redo(); return; }
+      if (mod && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
+      if (!mod && !e.altKey && e.key.length === 1) { set({ q: q + e.key }); focusLater(fk('search')); }
+    };
+    if (!this._keys) { this._keys = (e) => this._onKey && this._onKey(e); window.addEventListener('keydown', this._keys, true); }
+
+    const stt = s.status;
+    const rDraft = s.renameDraft ?? (one ? one.n : '');
+    const rCheck = one ? checkName(cleanName(rDraft), one) : { ok: false, bad: false, msg: '' };
+    const um = unitMenu;
+    const stp = (f) => f && ({ ...f, up: () => f.key({ key: 'ArrowUp', preventDefault() {}, target: { value: f.text, blur() {} } }), down: () => f.key({ key: 'ArrowDown', preventDefault() {}, target: { value: f.text, blur() {} } }) }); return { uid, ic: IC, standalone, yes: true, no: false, noop: () => {}, stop: (e) => e.stopPropagation(),
+      rootCls: standalone ? 'fm ' + ((p.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark') + ((p.material ?? 'Blur') === 'Blur' ? ' mat-blur' : '') : '',
+      rootStyle: standalone ? 'position: relative; width: ' + (W + 80) + 'px; height: ' + (H + 80) + 'px; overflow: hidden; background: var(--bd)' : 'position: relative; width: ' + W + 'px; height: ' + H + 'px',
+      winStyle: (standalone ? 'left: 40px; top: 40px; ' : 'left: 0; top: 0; ') + 'width: ' + W + 'px; height: ' + H + 'px',
+      activate: () => { window.__scActive = uid; },
+      searchFk: fk('search'), renameFk: fk('rename'), contentSk: fk('content') + '-' + (sel[0] || ''),
+      searchPh: 'Search ' + (list.length ? list.length + ' schedulers' : 'schedulers'), q,
+      onSearch: (e) => set({ q: e.target.value }),
+      searchKey: (e) => {
+        if (e.key === 'Escape') { set({ q: '' }); e.target.blur(); }
+        if ((e.key === 'ArrowDown' || e.key === 'Enter') && order.length) { e.preventDefault(); e.target.blur(); set({ sel: [order[0]], anchor: order[0] }); }
+      },
+      addNew: () => addNew(),
+      filterBtnCls: 'ib' + (filter !== 'all' || sort !== 'name' || filterOpen ? ' on' : ''), filterExpanded: filterOpen ? 'true' : 'false',
+      toggleFilter: (e) => { e.preventDefault(); set({ filterOpen: !filterOpen, filterAt: anchorOf(e.currentTarget), unitMenu: null }); },
+      filterChip: filter !== 'all' ? FILTER_CHIP[filter] : '', clearFilter: () => set({ filter: 'all' }),
+      rows,
+      noMatch: !rows.length && list.length > 0, noMatchText: ql ? 'No scheduler matches “' + q.trim() + '”.' : 'No scheduler fits this filter.',
+      canNewFromQ: !!cleanName(q.trim()), qName: cleanName(q.trim()), newFromQ: () => addNew(cleanName(q.trim())),
+      one: !!one, many, none: !list.length, nothingSel: !sel.length && list.length > 0, d, m, fw: stp(fw), fe: stp(fe), fc: stp(fc), fieldErr,
+      notRenaming: !renaming, renaming, renameDraft: rDraft,
+      renameCls: 'field mono vm-rename' + (rCheck.bad ? ' bad' : ''), renameMsgCls: rCheck.bad ? 'err-msg vm-rmsg' : 'foot vm-rmsg',
+      renameMsg: rCheck.msg,
+      onRename: (e) => set({ renameDraft: cleanName(e.target.value) }),
+      renameKey: (e) => {
+        if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); set({ renaming: false }); return; }
+        if (e.key === 'Enter' && one) { e.preventDefault(); tryRename(one, s.renameDraft ?? one.n); }
+      },
+      startRename, editScript: () => openEditor(one), runNow, duplicate, askDelete,
+      toggleRunSel: () => toggleRun(sel),
+      toggleLaunch, launchOn: () => { if (one && !one.launch) toggleLaunch(); },
+      setForever: setRuns('forever'), setOnce: setRuns('once'), setSeveral: setRuns('several'),
+      setNow: setWait(false), setLater: setWait(true),
+      footLead: stt ? stt.text : 'Changes apply right away, also to schedulers that are running.', footUndo: !!(stt && stt.undo), undo, cancelAll,
+      anyPopup: !!(filterOpen || um || iconOpen),
+      iconOpen: iconOpen && !!one, iconStyle: 'left: ' + iconAt[0] + 'px; top: ' + iconAt[1] + 'px; visibility: ' + (s.iconAt || !this._iconMeasuring ? 'visible' : 'hidden'),
+      iconTitle: one ? 'Icon for ' + one.n : 'Icon', iconRecent: s.iconRecent || RECENT_ICONS, iconQuery: p.iconQuery || '', pickIcon,
+      iconBtnCls: 'ls-dicon round' + (iconOpen ? ' on' : ''), iconExpanded: iconOpen ? 'true' : 'false',
+      toggleIcon: (e) => set({ iconOpen: !iconOpen, iconAt: anchorOf(e.currentTarget), filterOpen: false, unitMenu: null }),
+      unitOpen: !!(um && one), unitItems,
+      unitStyle: um ? 'right: ' + (W - um.at[2]) + 'px; top: ' + um.at[1] + 'px' : '',
+      filterOpen, filterItems, filterStyle: 'left: ' + (s.filterAt ? s.filterAt[0] : 252) + 'px; top: ' + (s.filterAt ? s.filterAt[1] : 120) + 'px',
+      closePopups: () => set({ filterOpen: false, unitMenu: null, iconOpen: false }),
+      closePopupsCtx: (e) => { e.preventDefault(); set({ filterOpen: false, unitMenu: null, iconOpen: false }); },
+      sheetAlert: (sheet === 'discard' || sheet === 'rename' || sheet === 'delete') && al.buttons.length > 0, al
+    };
+  }
+}
+</script>
+</body>
+</html>

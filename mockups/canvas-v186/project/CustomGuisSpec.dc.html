@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Custom GUIs spec</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.pair{display:grid;grid-template-columns:600px minmax(0,1fr);gap:48px;align-items:start}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start}
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;align-items:start}
+.kr{display:flex;align-items:center;gap:14px;padding:9px 18px;border-bottom:1px solid var(--sep);font-size:12.5px;color:var(--text-2)}
+.kr:last-child{border-bottom:0}
+.kk{flex:0 0 190px;font-family:"Noto Sans Mono",ui-monospace,Menlo,monospace;font-size:12px;color:var(--text)}
+.spec code{font-family:"Noto Sans Mono",ui-monospace,Menlo,monospace;font-size:12px;color:var(--text)}
+.flow{display:flex;flex-direction:column;gap:10px}
+.flow .step{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;font-size:13px;line-height:1.5;color:var(--text-2)}
+.flow .n{width:22px;height:22px;display:grid;place-items:center;border-radius:50%;font-size:11.5px;font-weight:700;color:var(--accent);background:color-mix(in srgb,var(--accent) 15%,transparent)}
+.flow b{color:var(--title);font-weight:600}
+.propchip{color:var(--warn);background:color-mix(in srgb,var(--warn) 15%,transparent)}
+.okchip2{color:var(--ok);background:color-mix(in srgb,var(--ok) 15%,transparent)}
+/* today's three windows, redrawn at 600 pixels wide: lists of text lines, cycle buttons, and the buttons in a column at the bottom right */
+.lgcs{display:flex;flex-direction:column;gap:14px}
+.lgc{position:relative;width:600px;padding:12px 14px 14px;background:#1f1f1f;border:1px solid #3e4042;color:#ceDDed;font-size:11px}
+.lgc .tt{margin:0 0 9px 2px;font-size:12px;font-weight:600;color:#e8eef4}
+.lgc .bd{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:14px}
+.lgc .lft{display:flex;flex-direction:column;gap:6px;min-width:0}
+.lgc .f{height:17px;padding:0 5px;display:flex;align-items:center;border:1px solid #3e4042;background:#1a1a1a;color:#ceDDed;white-space:nowrap;overflow:hidden}
+.lgc .ls{flex:1 1 auto;padding:5px 6px;border:1px solid #3e4042;background:#262626;display:flex;flex-direction:column;gap:3px;overflow:hidden}
+.lgc .ls div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:1px 3px}
+.lgc .ls .sel{background:#3a4a5e}
+.lgc .ls .hr{height:1px;padding:0;margin:4px 0;background:#3e4042}
+.lgc .ls b{font-weight:700;color:#e8eef4}
+.lgc .rt{display:flex;flex-direction:column;justify-content:flex-end;gap:5px}
+.lgc .b{height:18px;padding:0 8px;display:flex;align-items:center;justify-content:center;border:1px solid #3e4042;background:#333;white-space:nowrap}
+.lgc .b.off{color:#6f767d}
+.lgc .b.warn{color:#e8b65a}
+.lgc .gap{height:10px}
+.lgc .lb{margin:3px 0 -2px 1px}
+</style>
+</helmet>
+<div class="fm spec {{themeClass}}" style="min-height: 4863px">
+
+<header style="display: flex; flex-direction: column; gap: 12px; max-width: 920px">
+<div style="font-size: 12px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; color: var(--text-3)">FancyMenu · UI rework concept · Custom GUIs</div>
+<h1 style="margin: 0; font-size: 34px; line-height: 1.15; font-weight: 700; color: var(--title)">Your own screens, in one window</h1>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: var(--text-2)">A custom GUI is a screen of your own that a layout fills. Manage Custom GUIs, Build or Edit Custom GUI and Manage Overridden Screens become one window: a GUI&#x27;s settings sit next to the list, together with its layouts, the screen it replaces and the places that open it. Open shows a GUI behind the window while you change it, and renaming or deleting one takes its layouts along.</p>
+</header>
+
+<section>
+<h2 class="h2">Today and proposed</h2>
+<div class="pair">
+<div>
+<div class="cap">Today</div>
+<div class="lgcs">
+<div class="lgc">
+<div class="tt">Manage Custom GUIs</div>
+<div class="bd" style="height: 178px">
+<div class="lft">
+<span class="f"></span>
+<div class="ls">
+<div>coin_shop</div>
+<div>credits</div>
+<div>intro_story</div>
+<div class="sel">quest_log</div>
+<div>server_hub</div>
+<div>whats_new</div>
+</div>
+</div>
+<div class="rt">
+<span class="b">New GUI</span>
+<span class="gap"></span>
+<span class="b">Open GUI</span>
+<span class="b">Edit GUI</span>
+<span class="b">Delete GUI</span>
+<span class="gap"></span>
+<span class="b">Cancel</span>
+<span class="b">Done</span>
+</div>
+</div>
+</div>
+<div class="lgc">
+<div class="tt">Build or Edit Custom GUI</div>
+<div class="bd">
+<div class="lft">
+<span class="lb">Custom GUI Identifier:</span>
+<span class="f">quest_log</span>
+<span class="lb">Screen Title (Optional):</span>
+<span class="f">Quest Log</span>
+<span class="gap" style="height: 2px"></span>
+<span class="b">Allow ESC to Close GUI: Enabled</span>
+<span class="b">Pause Game/World: Disabled</span>
+<span class="b">Render World Background: Enabled</span>
+<span class="b">Render World Background Overlay: Enabled</span>
+<span class="gap" style="height: 2px"></span>
+<span class="b">Popup Mode: Disabled</span>
+<span class="b off">Popup Mode Background Overlay: Enabled</span>
+</div>
+<div class="rt">
+<span class="b">Cancel</span>
+<span class="b">Done</span>
+</div>
+</div>
+</div>
+<div class="lgc">
+<div class="tt">Manage Overridden Screens</div>
+<div class="bd">
+<div class="lft">
+<div class="ls">
+<div><b>Screen:</b> join_multiplayer_screen</div>
+<div><b>Overridden With:</b> server_hub</div>
+<span class="b warn">Delete Override Rule</span>
+</div>
+</div>
+<div class="rt">
+<span class="b">Cancel</span>
+<span class="b">Done</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div>
+<div class="cap">What gets in the way</div>
+<ul class="probs">
+<li>Three windows for one job: the list, the settings of one GUI, and the screens that GUIs replace. New GUI and Edit GUI hide the list while their window is open.</li>
+<li>The list shows identifiers and nothing else. It doesn&#x27;t say what a GUI is, whether it has a layout, or what opens it.</li>
+<li>The six settings are cycle buttons with long labels, like Popup Mode Background Overlay: Enabled. Two of them only do something while another one is on.</li>
+<li>A new GUI is an empty screen. To give it a layout you open it, close the window and make the layout from the menu bar.</li>
+<li>Open GUI saves every change in the window first, so Cancel can&#x27;t take them back afterwards.</li>
+<li>Renaming a GUI leaves its layouts and its override rule under the old identifier. It opens empty, stops replacing its screen, and scripts that open it show an error.</li>
+<li>Delete GUI asks every time, says it can&#x27;t be undone, and leaves the GUI&#x27;s layouts and override rule behind.</li>
+<li>A GUI can get the identifier of a real screen, like pause_screen. Both then share their layouts.</li>
+<li>Override rules sit in their own window, apart from the GUI they belong to.</li>
+<li>Cancel throws away every change without asking.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">What changes</h2>
+<div class="group" style="background: var(--win)">
+<div class="mv head"><div>Today</div><div></div><div>Proposed</div><div>Why</div></div>
+<div class="mv"><div class="from">Manage Custom GUIs, Build or Edit Custom GUI, Manage Overridden Screens</div><div class="arrow">→</div><div class="to">Custom GUIs, one window with the list on the left and the selected GUI on the right</div><div class="why">Everything about a GUI is in one place, and the list never hides.</div></div>
+<div class="mv"><div class="from">New GUI opens an empty form</div><div class="arrow">→</div><div class="to">New GUI adds new_gui right away, with its identifier ready to type over</div><div class="why">One click, and it&#x27;s in the list (rule 128).</div></div>
+<div class="mv"><div class="from">Custom GUI Identifier: in a form</div><div class="arrow">→</div><div class="to">The identifier is the name at the top, with Rename next to it</div><div class="why">Like every other detail view (rule 9).</div></div>
+<div class="mv"><div class="from">Six cycle buttons</div><div class="arrow">→</div><div class="to">Switches in two groups, Screen and Behind the GUI, that apply as you flip them</div><div class="why">On or off is a switch (rule 16).</div></div>
+<div class="mv"><div class="from">Render World Background, Render World Background Overlay, Popup Mode, Popup Mode Background Overlay</div><div class="arrow">→</div><div class="to">Show the World with Blur and Dim It, and Popup with Blur the Screen Behind. The second of each pair only shows while the first is on</div><div class="why">Short names that say what you see, and no greyed-out buttons.</div></div>
+<div class="mv"><div class="from">Open GUI saves, then opens</div><div class="arrow">→</div><div class="to">Open shows the GUI behind the window the way the window has it, and every change shows on it right away</div><div class="why">Try a setting and see it, without saving anything (rule 124).</div></div>
+<div class="mv"><div class="from">(new)</div><div class="arrow">→</div><div class="to">Layouts: the GUI&#x27;s layouts, each one click from the layout editor, and New Layout</div><div class="why">A new GUI gets its layout without a detour (rule 129).</div></div>
+<div class="mv"><div class="from">Manage Overridden Screens</div><div class="arrow">→</div><div class="to">Shown Instead Of, on the GUI that replaces the screen, with Stop Replacing</div><div class="why">The rule sits with the GUI it belongs to (rule 130).</div></div>
+<div class="mv"><div class="from">(new)</div><div class="arrow">→</div><div class="to">Used in: the scripts that open the GUI, each with Open</div><div class="why">You see what breaks before you rename or delete (rule 125).</div></div>
+<div class="mv"><div class="from">Renaming leaves layouts and rules behind</div><div class="arrow">→</div><div class="to">Layouts and rules move along, and a sheet offers to update the scripts that open it</div><div class="why">A new identifier never empties a screen (rule 126).</div></div>
+<div class="mv"><div class="from">Delete GUI, with a question every time</div><div class="arrow">→</div><div class="to">Delete asks only when layouts, a replaced screen or scripts are involved, and says what goes with it. Undo is in the footer</div><div class="why">The question only comes when there&#x27;s something to say.</div></div>
+<div class="mv"><div class="from">(new)</div><div class="arrow">→</div><div class="to">Duplicate, with copies of the layouts</div><div class="why">A second shop page starts from the first.</div></div>
+<div class="mv"><div class="from">One GUI at a time</div><div class="arrow">→</div><div class="to">Ctrl and Shift select several, and the switches set all of them</div><div class="why">Turn Pause the Game off for every menu at once (rule 25).</div></div>
+<div class="mv"><div class="from">Search matches identifiers</div><div class="arrow">→</div><div class="to">Search finds identifiers, titles and layout names. The filter shows popups, GUIs that replace a screen, unused ones or ones with problems</div><div class="why">shop finds the Coin Shop however it&#x27;s named.</div></div>
+<div class="mv"><div class="from">Cancel discards without asking</div><div class="arrow">→</div><div class="to">Cancel asks when something changed, and only then</div><div class="why">Work never gets lost by accident (rule 68).</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">The window, piece by piece</h2>
+<div class="three">
+<div class="spec-card"><div class="k">The list</div><div class="kd" style="margin: 0">One row per GUI, sorted by identifier: an icon for a screen or a popup, the identifier, and under it the title, or the screen it replaces. No layout yet shows in amber. An eye marks the GUI that&#x27;s open behind the window.</div></div>
+<div class="spec-card"><div class="k">The header</div><div class="kd" style="margin: 0">The identifier with Rename, and a line that says whether it&#x27;s a screen or a popup, how many layouts it has and which screen it&#x27;s shown instead of. Below: Open, which turns into Close, Duplicate and Delete.</div></div>
+<div class="spec-card"><div class="k">Screen</div><div class="kd" style="margin: 0">Title is drawn at the top of the screen and takes placeholders, <code>$$</code> names and localization keys, so its field opens the text editor too. Close with Esc says that players need a button that closes the GUI while it&#x27;s off. Pause the Game works in singleplayer worlds.</div></div>
+<div class="spec-card"><div class="k">Behind the GUI</div><div class="kd" style="margin: 0">Show the World: in a world, the game shows behind the GUI instead of the panorama. Popup: the screen it opens from stays visible. Each has one switch below it, Blur and Dim It and Blur the Screen Behind, that only shows while it&#x27;s on.</div></div>
+<div class="spec-card"><div class="k">Layouts</div><div class="kd" style="margin: 0">The layouts made for this GUI, with Off on the ones that are turned off. A double-click or the button on the row opens one in the layout editor, and New Layout starts one. A GUI without layouts says that it opens as an empty screen.</div></div>
+<div class="spec-card"><div class="k">Shown Instead Of</div><div class="kd" style="margin: 0">Only there for a GUI that replaces a screen: the screen with its identifier, and Stop Replacing. The line in the header and the second line in the list name the screen too.</div></div>
+<div class="spec-card"><div class="k">Used in</div><div class="kd" style="margin: 0">Every script that opens the GUI, grouped by layout, listener and scheduler like in Variables and Schedulers, each with Open. When nothing opens it, a line says how: Open Screen or Custom GUI in any script, or <code>/openguiscreen</code> with its identifier.</div></div>
+<div class="spec-card"><div class="k">Several selected</div><div class="kd" style="margin: 0">How many, and how many of them are popups, with Duplicate and Delete for all. The six switches set every selected GUI and show a mixed state with a count when they differ. Below, the selected GUIs with their layouts.</div></div>
+<div class="spec-card"><div class="k">The footer</div><div class="kd" style="margin: 0">Which GUI is open behind the window, and that changes show on it right away. After a change, what changed, with Undo. Cancel and Save on the right: Save keeps the changes, Cancel puts everything back.</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Make one, tune one, rename one</h2>
+<div class="three">
+<div class="spec-card"><div class="k">A new screen</div><div class="flow">
+<div class="step"><span class="n">1</span><span><b>New GUI</b> adds new_gui with its identifier selected. Type quest_log and press Enter.</span></div>
+<div class="step"><span class="n">2</span><span>Type its title, and turn <b>Pause the Game</b> off so the world keeps running behind it.</span></div>
+<div class="step"><span class="n">3</span><span><b>New Layout</b> opens the layout editor on the empty GUI. Add the quest list and a Back button.</span></div>
+<div class="step"><span class="n">4</span><span>Pick quest_log in <b>Open Screen or Custom GUI</b> wherever it should open. It shows up under Used in.</span></div>
+</div></div>
+<div class="spec-card"><div class="k">A popup that looks right</div><div class="flow">
+<div class="step"><span class="n">1</span><span>Select credits and press <b>Open</b>. It shows behind the window, on top of the title screen.</span></div>
+<div class="step"><span class="n">2</span><span>Turn <b>Blur the Screen Behind</b> off. The title screen behind it gets sharp right away.</span></div>
+<div class="step"><span class="n">3</span><span>Not better? <b>Undo</b> in the footer, or Ctrl+Z, blurs it again.</span></div>
+<div class="step"><span class="n">4</span><span><b>Save</b> saves it. <b>Cancel</b> puts every GUI back and returns to the title screen.</span></div>
+</div></div>
+<div class="spec-card"><div class="k">A better identifier</div><div class="flow">
+<div class="step"><span class="n">1</span><span>Select quest_log, press <b>F2</b> and type quests.</span></div>
+<div class="step"><span class="n">2</span><span>A sheet says it&#x27;s used in 2 places, in a layout and a listener, and that its 2 layouts move with it.</span></div>
+<div class="step"><span class="n">3</span><span><b>Rename and Update 2 Places</b> changes both scripts to quests, so they keep opening it.</span></div>
+<div class="step"><span class="n">4</span><span>The footer says what happened, with <b>Undo</b>.</span></div>
+</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Special cases it handles</h2>
+<div class="two">
+<div class="spec-card"><ul class="notes">
+<li>Open uses the screen you&#x27;re on as the one the GUI opened from, like today. From the title screen no world is loaded, so a GUI that isn&#x27;t a popup shows the panorama.</li>
+<li>A popup needs a screen to stay on top of. Opened by a key or a command while playing, there is none, and Show the World decides what&#x27;s behind it.</li>
+<li>Without Show the World, the panorama is always blurred and dimmed, so Blur and Dim It has nothing to switch and hides.</li>
+<li>Pause the Game only pauses singleplayer worlds that aren&#x27;t open to LAN, like Minecraft&#x27;s own menus.</li>
+<li>Cancel closes a GUI that Open put behind the window and goes back to the screen you came from. Save leaves it open.</li>
+<li>Deleting the GUI that&#x27;s open behind the window closes it.</li>
+</ul></div>
+<div class="spec-card"><ul class="notes">
+<li>New Layout and opening a layout save the window&#x27;s changes and close it, because the layout editor needs the GUI the way the window shows it.</li>
+<li>A copy gets copies of the layouts. The screen a GUI replaces stays with the original, since only one GUI can replace a screen.</li>
+<li>Override rules get added like today: This Screen › Override With Custom GUI on the screen itself, with Advanced Customization Mode on. Stop Replacing takes effect with Save, like every change here.</li>
+<li>Identifiers take lowercase letters, numbers, . _ and -, like today. Spaces turn into _ while typing.</li>
+<li>A GUI from an old file that has a real screen&#x27;s identifier keeps working. Its row is red, and a card explains what the two share and offers Rename.</li>
+<li>Used in can&#x27;t see <code>/openguiscreen</code> in command blocks or on servers, so a GUI that nothing uses may still be opened from there.</li>
+</ul></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Keyboard shortcuts</h2>
+<div class="two">
+<div>
+<div class="cap">Kept</div>
+<div class="group" style="background: var(--win)">
+<div class="kr"><span class="kk">↑ ↓</span><span>Select the GUI above or below</span></div>
+<div class="kr"><span class="kk">Typing</span><span>Starts a search</span></div>
+<div class="kr"><span class="kk">Enter</span><span>Save</span></div>
+<div class="kr"><span class="kk">Ctrl+S</span><span>Save, Ctrl+Enter too</span></div>
+</div>
+</div>
+<div>
+<div class="cap">New</div>
+<div class="group" style="background: var(--win)">
+<div class="kr"><span class="kk">Ctrl+N</span><span>New GUI</span></div>
+<div class="kr"><span class="kk">Ctrl+F</span><span>Search</span></div>
+<div class="kr"><span class="kk">Space</span><span>Open the selected GUI behind the window, or close it</span></div>
+<div class="kr"><span class="kk">F2</span><span>Rename</span></div>
+<div class="kr"><span class="kk">Ctrl+D</span><span>Duplicate</span></div>
+<div class="kr"><span class="kk">Delete</span><span>Delete the selected GUIs</span></div>
+<div class="kr"><span class="kk">Ctrl+A</span><span>Select every GUI in the list</span></div>
+<div class="kr"><span class="kk">Ctrl+Z, Ctrl+Y</span><span>Undo and redo, Ctrl+Shift+Z too</span></div>
+<div class="kr"><span class="kk">Esc</span><span>Closes the menu or sheet, clears the search, then Cancel</span></div>
+</div>
+</div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Changes beyond the UI</h2>
+<p class="kd" style="max-width: 920px; margin: -6px 0 16px; font-size: 13px; color: var(--text-2)">The window above already uses these. They change how custom GUIs get saved, renamed, deleted and found, so each one is a rework rule.</p>
+<div class="two">
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Open shows a GUI without saving <span class="chip propchip">New, rule 124</span></div><div class="kd" style="margin: 0">Open GUI writes every GUI in the window to custom_gui_screens.txt before it opens one. Open hands the screen the window&#x27;s own copy instead, which a screen can show without it being saved, so nothing gets written before Save and every change shows on the open GUI right away.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Custom GUIs know where they&#x27;re used <span class="chip propchip">New, rule 125</span></div><div class="kd" style="margin: 0">The index of rule 87 also collects screen identifiers: every variable with the lookup fancymenu:screens, like the values of Open Screen or Custom GUI and Disconnect, also from addons. Used in, the Not Used filter, the rename sheet and the delete sheet read it.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">A GUI&#x27;s layouts and override rules follow it <span class="chip propchip">New, rule 126</span></div><div class="kd" style="margin: 0">Layouts and override rules find a GUI by its identifier, and today renaming or deleting a GUI touches neither. Renaming moves both to the new identifier, deleting deletes both once you press Save, and Duplicate copies the layouts.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Custom GUIs can&#x27;t take a screen&#x27;s identifier <span class="chip propchip">New, rule 127</span></div><div class="kd" style="margin: 0">Screens and custom GUIs are found by the same identifier, and custom GUIs get checked first. A GUI named pause_screen shares the pause screen&#x27;s layouts, and scripts that open pause_screen get the GUI. New identifiers like that are refused.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">New GUIs get an identifier to type over <span class="chip propchip">New, rule 128</span></div><div class="kd" style="margin: 0">New GUI adds new_gui, then new_gui_2, right away with today&#x27;s default settings, instead of opening a form with an empty identifier.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Layouts start in the Custom GUIs window <span class="chip propchip">New, rule 129</span></div><div class="kd" style="margin: 0">New Layout makes a layout for the GUI and opens the layout editor on it, without the GUI being open. The editor already takes any screen: Ctrl+Alt+L, which reopens the last edited layout, builds a custom GUI for it the same way.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Override rules sit with their GUI <span class="chip propchip">New, rule 130</span></div><div class="kd" style="margin: 0">Manage Overridden Screens goes away, and Custom GUIs in the menu bar opens the window directly instead of a submenu. Rules are removed on their GUI and still added on the screen itself.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Cancel asks only when something changed <span class="chip okchip2">Added to rule 68</span></div><div class="kd" style="margin: 0">Discard 2 changes? only shows when a GUI changed. Opening one behind the window doesn&#x27;t count.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Mixed selections are visible <span class="chip okchip2">Covered, rule 25</span></div><div class="kd" style="margin: 0">With several GUIs selected, a switch that differs shows the mixed state, and flipping it turns it on for all of them.</div></div>
+</div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"$preview":{"width":1440,"height":4863}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark' };
+  }
+}
+</script>
+</body>
+</html>

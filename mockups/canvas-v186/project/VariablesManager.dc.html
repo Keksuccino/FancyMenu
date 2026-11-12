@@ -1,0 +1,712 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Variables manager</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="{{rootCls}}" style="{{rootStyle}}" data-vm="{{uid}}" onMouseDown="{{activate}}">
+<sc-if value="{{standalone}}" hint-placeholder-val="{{true}}"><div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""><div class="dim"></div></div></sc-if>
+
+<div class="win vm" role="dialog" aria-label="Variables" style="{{winStyle}}">
+<div class="titlebar">
+<div class="tl"><button class="c" aria-label="Cancel and close" onClick="{{cancelAll}}"><span class="ms" aria-hidden="true">close</span></button><button class="m" aria-label="Collapse"><span class="ms" aria-hidden="true">remove</span></button><button class="x" aria-label="Maximize"><span class="ms" aria-hidden="true">open_in_full</span></button></div>
+<div class="wt"><span class="ms" aria-hidden="true">{{ic.var}}</span>Variables</div>
+<div></div>
+</div>
+
+<sc-if value="{{anyPopup}}" hint-placeholder-val="{{false}}"><div class="fb-catch" style="z-index: 42" onClick="{{closePopups}}" onContextMenu="{{closePopupsCtx}}"></div></sc-if>
+
+<div class="split">
+<aside class="sidebar vm-side" aria-label="Variables list">
+<div class="vm-top">
+<button class="btn tinted" data-tip="Ctrl+N" onClick="{{openNew}}"><span class="ms" aria-hidden="true">{{ic.plus}}</span>New Variable</button>
+<label class="field vm-search"><span class="ms" aria-hidden="true">{{ic.search}}</span><input type="text" placeholder="{{searchPh}}" aria-label="Search names and values" data-fk="{{searchFk}}" value="{{q}}" onInput="{{onSearch}}" onKeyDown="{{searchKey}}"><button class="{{filterBtnCls}}" data-tip="Show and sort" aria-label="Show and sort" aria-haspopup="menu" aria-expanded="{{filterExpanded}}" onClick="{{toggleFilter}}"><span class="ms" aria-hidden="true">{{ic.funnel}}</span></button></label>
+<sc-if value="{{filterChip}}" hint-placeholder-val="{{false}}"><div class="chips"><span class="vm-fchip">{{filterChip}}<button aria-label="Show all variables" data-tip="Show all" onClick="{{clearFilter}}"><span class="ms" aria-hidden="true">{{ic.x}}</span></button></span></div></sc-if>
+</div>
+<div class="plist vm-list" role="listbox" aria-label="Variables" aria-multiselectable="true" data-sk="{{listSk}}">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="8">
+<button class="{{r.cls}}" role="option" aria-selected="{{r.ariaSel}}" onClick="{{r.click}}" onDoubleClick="{{r.dbl}}">
+<span class="vn"><sc-for list="{{r.name}}" as="np" hint-placeholder-count="1"><sc-if value="{{np.hit}}" hint-placeholder-val="{{false}}"><mark>{{np.t}}</mark></sc-if><sc-if value="{{np.plain}}" hint-placeholder-val="{{true}}">{{np.t}}</sc-if></sc-for></span>
+<span class="vic"><sc-if value="{{r.resets}}" hint-placeholder-val="{{false}}"><span class="vb" data-tip="{{r.resetTip}}"><span class="ms" aria-hidden="true">{{ic.restart}}</span></span></sc-if><sc-if value="{{r.conflict}}" hint-placeholder-val="{{false}}"><span class="vb warn" data-tip="{{r.conflictTip}}"><span class="ms" aria-hidden="true">{{ic.warn}}</span></span></sc-if></span>
+<span class="{{r.valCls}}"><sc-for list="{{r.val}}" as="vp" hint-placeholder-count="1"><sc-if value="{{vp.hit}}" hint-placeholder-val="{{false}}"><mark>{{vp.t}}</mark></sc-if><sc-if value="{{vp.plain}}" hint-placeholder-val="{{true}}">{{vp.t}}</sc-if></sc-for></span>
+</button>
+</sc-for>
+<sc-if value="{{noMatch}}" hint-placeholder-val="{{false}}"><div class="vm-nomatch"><span>{{noMatchText}}</span><sc-if value="{{canCreateQ}}" hint-placeholder-val="{{true}}"><button class="btn sm" onClick="{{createFromQ}}"><span class="ms" aria-hidden="true">{{ic.plus}}</span>New Variable {{qName}}</button></sc-if></div></sc-if>
+</div>
+</aside>
+
+<div class="vm-main">
+<main class="pcontent vm-content" data-sk="{{contentSk}}">
+
+<sc-if value="{{one}}" hint-placeholder-val="{{true}}">
+<div class="dhead">
+<sc-if value="{{notRenaming}}" hint-placeholder-val="{{true}}"><div class="dt vm-name"><span>{{d.name}}</span><button class="ib" data-tip="Rename (F2)" aria-label="Rename" onClick="{{startRename}}"><span class="ms" aria-hidden="true">{{ic.pencil}}</span></button></div></sc-if>
+<sc-if value="{{renaming}}" hint-placeholder-val="{{false}}"><div class="{{renameCls}}"><span class="pre">$$</span><input type="text" aria-label="New name" data-fk="{{renameFk}}" value="{{renameDraft}}" onInput="{{onRename}}" onKeyDown="{{renameKey}}"></div><div class="{{renameMsgCls}}">{{renameMsg}}</div></sc-if>
+<div class="dm">{{d.meta}}</div>
+<div class="dacts">
+<button class="btn" data-tip="{{d.copyTip}}" onClick="{{copyRef}}"><span class="ms" aria-hidden="true">{{ic.copy}}</span>Copy Name</button>
+<button class="btn" data-tip="Ctrl+D" onClick="{{duplicate}}"><span class="ms" aria-hidden="true">{{ic.dup}}</span>Duplicate</button>
+<button class="btn icon danger" data-tip="Delete" aria-label="Delete {{d.name}}" onClick="{{askDelete}}"><span class="ms" aria-hidden="true">{{ic.trash}}</span></button>
+</div>
+</div>
+
+<sc-if value="{{d.conflict}}" hint-placeholder-val="{{false}}">
+<div class="callout vm-card"><span class="ms" aria-hidden="true">{{ic.warn}}</span><div><b>{{d.conflictTitle}}</b><p>{{d.conflictText}}</p><button class="btn sm" onClick="{{startRename}}">Rename</button></div></div>
+</sc-if>
+
+<div>
+<div class="sec">Value</div>
+<div class="field multi vm-val"><textarea aria-label="Value of {{d.name}}" rows="{{valRows}}" spellcheck="false" placeholder="Empty" data-fk="{{valFk}}" value="{{valText}}" onFocus="{{valFocus}}" onInput="{{valInput}}" onKeyDown="{{valKey}}" onBlur="{{valBlur}}"></textarea><button class="ib" data-tip="Open in Editor" aria-label="Open in Editor" onClick="{{noop}}"><span class="ms" aria-hidden="true">{{ic.editor}}</span></button></div>
+<p class="{{valNoteCls}}">{{valNote}}</p>
+</div>
+
+<div>
+<div class="sec">When the Game Starts</div>
+<div class="seg" role="radiogroup" aria-label="When the game starts">
+<div class="thumb" style="width: calc((100% - 4px) / 2); transform: {{d.resetX}}"></div>
+<button class="{{d.keepCls}}" role="radio" aria-checked="{{d.keepOn}}" onClick="{{setKeep}}">Keep Value</button>
+<button class="{{d.resetCls}}" role="radio" aria-checked="{{d.resetOn}}" onClick="{{setReset}}">Reset</button>
+</div>
+<sc-if value="{{d.resets}}" hint-placeholder-val="{{false}}"><div class="group lw-130" style="margin-top: 10px"><div class="row"><span class="lbl">Reset To</span><div class="ctl grow"><div class="field mono"><input type="text" aria-label="Value after a restart" placeholder="Empty" value="{{d.start}}" onFocus="{{startFocus}}" onInput="{{startInput}}"></div><button class="btn" disabled="{{d.atStart}}" data-tip="Sets the value to this right now" onClick="{{resetNow}}">Reset Now</button></div></div></div></sc-if>
+<p class="foot">{{d.resetNote}}</p>
+</div>
+
+<div>
+<div class="sec">Used In<span class="end">{{d.useCount}}</span></div>
+<sc-if value="{{d.used}}" hint-placeholder-val="{{true}}">
+<div class="group">
+<sc-for list="{{d.places}}" as="pl" hint-placeholder-count="2">
+<div class="row vm-loc"><span class="ms vm-ui" aria-hidden="true">{{pl.icon}}</span><span class="lbl">{{pl.name}}<sc-if value="{{pl.on}}" hint-placeholder-val="{{true}}"><span class="sub">{{pl.on}}</span></sc-if></span><sc-if value="{{pl.chip}}" hint-placeholder-val="{{true}}"><span class="chip">{{pl.chip}}</span></sc-if></div>
+<sc-for list="{{pl.uses}}" as="u" hint-placeholder-count="2">
+<div class="row child vm-use"><span class="ms vm-ui" aria-hidden="true">{{u.icon}}</span><span class="lbl">{{u.el}}<span class="sub">{{u.what}}</span></span><div class="ctl"><button class="ib" data-tip="{{u.openTip}}" aria-label="{{u.openTip}}" onClick="{{u.open}}"><span class="ms" aria-hidden="true">{{ic.open}}</span></button></div></div>
+</sc-for>
+</sc-for>
+</div>
+<sc-if value="{{d.loadedNote}}" hint-placeholder-val="{{true}}"><p class="foot">{{d.loadedNote}}</p></sc-if>
+</sc-if>
+<sc-if value="{{d.unused}}" hint-placeholder-val="{{false}}"><div class="group vm-unused">Nothing uses it yet. Show it with <code>{{d.ref}}</code> in any text, change it with Set Variable in a script, or check it with Is Variable Value.</div></sc-if>
+</div>
+
+<div>
+<div class="sec">Recent Changes<span class="end">Since the game started</span></div>
+<sc-if value="{{d.hasHist}}" hint-placeholder-val="{{true}}">
+<div class="group">
+<sc-for list="{{d.hist}}" as="h" hint-placeholder-count="3">
+<div class="vm-hrow"><span class="t">{{h.time}}</span><span class="c"><span class="{{h.fromCls}}">{{h.from}}</span><span class="ar">→</span><span class="{{h.toCls}}">{{h.to}}</span><sc-if value="{{h.count}}" hint-placeholder-val="{{false}}"><span class="chip">{{h.count}}</span></sc-if></span><span class="src">{{h.src}}</span></div>
+</sc-for>
+<sc-if value="{{d.histMore}}" hint-placeholder-val="{{false}}"><button class="vm-more" onClick="{{showAllHist}}">{{d.histMore}}</button></sc-if>
+</div>
+</sc-if>
+<sc-if value="{{d.noHist}}" hint-placeholder-val="{{false}}"><div class="group vm-unused">Nothing changed it since the game started.</div></sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{many}}" hint-placeholder-val="{{false}}">
+<div class="dhead">
+<div class="dt vm-name" style="font-family: inherit; font-weight: 700">{{m.title}}</div>
+<div class="dm">{{m.meta}}</div>
+<div class="dacts"><button class="btn" data-tip="Ctrl+D" onClick="{{duplicate}}"><span class="ms" aria-hidden="true">{{ic.dup}}</span>{{m.dupLabel}}</button><button class="btn icon danger" data-tip="{{m.deleteTip}}" aria-label="{{m.deleteTip}}" onClick="{{askDelete}}"><span class="ms" aria-hidden="true">{{ic.trash}}</span></button></div>
+</div>
+<div>
+<div class="sec">When the Game Starts</div>
+<div class="seg" role="radiogroup" aria-label="When the game starts">
+<sc-if value="{{m.thumb}}" hint-placeholder-val="{{false}}"><div class="thumb" style="width: calc((100% - 4px) / 2); transform: {{m.resetX}}"></div></sc-if>
+<button class="{{m.keepCls}}" role="radio" aria-checked="{{m.keepOn}}" onClick="{{setKeep}}">Keep Value</button>
+<button class="{{m.resetCls}}" role="radio" aria-checked="{{m.resetOn}}" onClick="{{setReset}}">Reset</button>
+</div>
+<p class="foot">{{m.resetNote}}</p>
+</div>
+<div>
+<div class="sec">Selected</div>
+<div class="group">
+<sc-for list="{{m.uses}}" as="mu" hint-placeholder-count="3">
+<div class="row"><span class="lbl vm-mono">{{mu.name}}</span><div class="ctl"><span class="{{mu.cls}}">{{mu.text}}</span></div></div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{none}}" hint-placeholder-val="{{false}}">
+<div class="vm-empty empty">
+<h3 class="t">No variables yet</h3>
+<p class="d">Variables remember things across menus and game sessions, like how many coins someone has or whether they've already seen the intro.</p>
+<div class="vm-ways">
+<div><b>Change them</b>with Set Variable in any script</div>
+<div><b>Show them</b>with <code>$$name</code> in any text</div>
+<div><b>Check them</b>with Is Variable Value in conditions</div>
+</div>
+<button class="btn primary" onClick="{{openNew}}"><span class="ms" aria-hidden="true">{{ic.plus}}</span>New Variable</button>
+</div>
+</sc-if>
+
+<sc-if value="{{nothingSel}}" hint-placeholder-val="{{false}}"><div class="vm-empty empty"><p class="d">Select a variable to see its value and where it's used.</p></div></sc-if>
+</main>
+<div class="footer line"><span class="lead">{{footLead}}<sc-if value="{{footUndo}}" hint-placeholder-val="{{false}}"> <button class="vm-link" onClick="{{undo}}">Undo</button></sc-if></span><button class="btn wide" onClick="{{cancelAll}}">Cancel</button><button class="btn primary wide" onClick="{{noop}}">Save</button></div>
+</div>
+</div>
+
+<sc-if value="{{filterOpen}}" hint-placeholder-val="{{false}}"><div class="vm-pop" style="{{filterStyle}}"><dc-import name="ContextMenu" items="{{filterItems}}" search="Search this menu" escape-listener="{{closePopups}}" standalone="{{no}}" hint-size="auto,260px"></dc-import></div></sc-if>
+
+
+
+<sc-if value="{{sheetAlert}}" hint-placeholder-val="{{false}}">
+<div class="sheet-dim"></div>
+<div class="sheet vm-alert" role="alertdialog" aria-label="{{al.title}}">
+<span class="vm-aicon"><span class="ms" aria-hidden="true">{{al.icon}}</span></span>
+<div class="vm-st" style="margin-top: 12px">{{al.title}}</div>
+<p>{{al.text}}</p>
+<sc-if value="{{al.warn}}" hint-placeholder-val="{{false}}"><p class="callout vm-awarn">{{al.warn}}</p></sc-if>
+<div class="vm-abtns"><sc-for list="{{al.buttons}}" as="b" hint-placeholder-count="2"><button class="{{b.cls}}" onClick="{{b.click}}">{{b.label}}</button></sc-for></div> </div>
+</sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"scene":{"editor":"enum","options":["Dusk Valley","Empty"],"default":"Dusk Valley"},"select":{"editor":"text","default":"coins"},"sheet":{"editor":"enum","options":["","new","rename","delete"],"default":""},"newName":{"editor":"text","default":""},"renameTo":{"editor":"text","default":""},"filter":{"editor":"enum","options":["all","reset","unused","changed"],"default":"all"},"filterMenu":{"editor":"boolean","default":false},"query":{"editor":"text","default":""},"live":{"editor":"boolean","default":true},"onVars":{"editor":null},"width":{"editor":"int","default":940},"height":{"editor":"int","default":680},"standalone":{"editor":"boolean","default":true},"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1020,"height":760}}'>
+// ---------- seed data: the Dusk Valley profile's variables ----------
+// Places that can use a variable. Every usage points at one of them.
+// Layouts say which screen they're for. Custom GUIs are ordinary screens with ordinary layouts, so only that line says it's one.
+// Besides layouts, listeners and schedulers, a name can sit in a custom GUI's own settings (like its screen title),
+// in global customizations, in FancyMenu's settings (like the game intro source) and in the values of other variables.
+const PLACES = {
+  title: { name: 'Dusk Valley Title', kind: 'layout', chip: 'Layout', icon: 'layout', on: 'For the title screen', open: 'Open in the layout editor' },
+  hud: { name: 'Dusk Valley HUD', kind: 'layout', chip: 'Layout', icon: 'layout', on: 'Universal, for every screen', open: 'Open in the layout editor' },
+  options: { name: 'Dusk Valley Options', kind: 'layout', chip: 'Layout', icon: 'layout', on: 'For the options screen', open: 'Open in the layout editor' },
+  shop: { name: 'Coin Shop', kind: 'layout', chip: 'Layout', icon: 'layout', on: 'For the Coin Shop custom GUI', open: 'Open in the layout editor' },
+  story: { name: 'Intro Story', kind: 'layout', chip: 'Layout', icon: 'layout', on: 'For the Intro Story custom GUI', open: 'Open in the layout editor' },
+  shopgui: { name: 'Coin Shop', kind: 'gui', chip: 'Custom GUI', icon: 'gui', on: 'Its screen settings', open: 'Open in Custom GUIs' },
+  joined: { name: 'Server Joined', kind: 'listener', chip: 'Listener', icon: 'listener', open: 'Open in Listeners' },
+  daily: { name: 'daily_reward', kind: 'scheduler', chip: 'Scheduler', icon: 'clock', open: 'Open in Schedulers' },
+  vars: { name: 'Other variables', kind: 'variable', chip: '', icon: 'var', on: 'Their values and reset values', open: 'Show it here' }
+};
+const KINDS = [['layout', 'a layout', 'layouts'], ['gui', 'a custom GUI', 'custom GUIs'], ['listener', 'a listener', 'listeners'], ['scheduler', 'a scheduler', 'schedulers'], ['variable', 'a variable', 'variables']];
+// "3 layouts, a custom GUI and a listener". Variables count one by one, everything else once per place.
+const whereText = (uses) => KINDS.map(([k, one, many]) => {
+  const n = new Set(uses.filter((u) => PLACES[u.at].kind === k).map((u) => (k === 'variable' ? u.el : u.at))).size;
+  return n ? (n === 1 ? one : n + ' ' + many) : '';
+}).filter(Boolean).join(', ').replace(/, ([^,]*)$/, ' and $1');
+const refRe = (name) => new RegExp('\\$\\$' + name.replace(/[.]/g, '\\.') + '(?![a-z0-9._-])', 'g');
+const NEWS = '{"title":"Lanterns are here","body":"Light up your base with five new lantern colors.\nAvailable in the Coin Shop until Sunday.","posted":"2026-11-08"}';
+const SRC = {
+  play: 'Set Variable · Dusk Valley Title › Play button',
+  joined: 'Set Variable · Server Joined listener',
+  you: 'You, in this window',
+  clock: 'Set Variable · Dusk Valley Title › Clock ticker',
+  start: 'Reset when the game started'
+};
+const seed = () => [
+  { n: 'coins', v: '125', reset: false, start: '0', uses: [
+      { at: 'title', el: 'Play button', what: 'Click script · Set Variable', k: 'script' },
+      { at: 'hud', el: 'Coin counter', what: 'Text · $$coins', k: 'text' },
+      { at: 'shop', el: 'Buy Lantern button', what: 'Visibility · Compare Numbers', k: 'cond' },
+      { at: 'joined', el: 'Script', what: 'Set Variable', k: 'script' },
+      { at: 'shopgui', el: 'Screen title', what: 'Coin Shop · $$coins coins', k: 'text' },
+      { at: 'vars', el: 'shop_greeting', what: 'Value · You have $$coins coins to spend', k: 'var' }],
+    hist: [{ t: -8, from: '115', to: '125', src: SRC.play }, { t: -31, from: '100', to: '115', src: SRC.play }, { t: -74, from: '90', to: '100', src: SRC.joined }, { t: -160, from: '80', to: '90', src: SRC.play }, { t: -305, from: '0', to: '80', src: SRC.you }] },
+  { n: 'daily_streak', v: '3', reset: false, start: '', uses: [
+      { at: 'hud', el: 'Coin counter', what: 'Text · $$daily_streak', k: 'text' },
+      { at: 'daily', el: 'Script', what: 'Set Variable', k: 'script' }],
+    hist: [{ t: -612, from: '2', to: '3', src: 'Set Variable · daily_reward scheduler' }] },
+  { n: 'intro_seen', v: 'true', reset: false, start: '', uses: [
+      { at: 'title', el: 'Play button', what: 'Click script · Is Variable Value', k: 'cond' },
+      { at: 'story', el: 'Continue button', what: 'Click script · Set Variable', k: 'script' }],
+    hist: [{ t: -420, from: 'false', to: 'true', src: 'Set Variable · Intro Story › Continue button' }] },
+  { n: 'last_server', v: 'play.duskvalley.net', reset: false, start: '', uses: [
+      { at: 'title', el: 'Play button', what: 'Click script · Join Server', k: 'script' }], hist: [] },
+  { n: 'music_volume', v: '0.8', reset: false, start: '', uses: [
+      { at: 'options', el: 'Music slider', what: 'Linked variable', k: 'link' }],
+    hist: [{ t: -900, from: '1', to: '0.8', src: 'Dusk Valley Options › Music slider' }] },
+  { n: 'news_json', v: NEWS, reset: false, start: '', uses: [
+      { at: 'title', el: 'News ticker', what: 'Tick script · Send HTTP Request saves the answer here', k: 'http' },
+      { at: 'title', el: 'News text', what: 'Text · JSON Parser', k: 'text' }],
+    hist: [{ t: -95, from: '{"title":"Fireflies are back"…', to: '{"title":"Lanterns are here"…', src: 'Send HTTP Request · Dusk Valley Title › News ticker' }] },
+  { n: 'old_value', v: '12', reset: false, start: '', uses: [], hist: [] },
+  { n: 'quest_stage', v: '2', reset: false, start: '', uses: [
+      { at: 'title', el: 'Quest board', what: 'Text · $$quest_stage', k: 'text' },
+      { at: 'title', el: 'Quest board', what: 'Visibility · Is Variable Value', k: 'cond' },
+      { at: 'title', el: 'Background shader', what: 'Shader code · fmVarInt_quest_stage', k: 'code' }],
+    hist: [{ t: -540, from: '1', to: '2', src: 'Set Variable · Dusk Valley Title › Quest board' }] },
+  { n: 'seconds_on_menu', v: '47', reset: true, start: '0', live: true, uses: [
+      { at: 'title', el: 'Clock ticker', what: 'Tick script · Set Variable', k: 'script' }],
+    hist: [{ t: -1, from: '0', to: '47', count: 47, src: SRC.clock }] },
+  { n: 'shop_greeting', v: 'You have $$coins coins to spend', reset: false, start: '', uses: [
+      { at: 'shop', el: 'Greeting text', what: 'Text · $$shop_greeting', k: 'text' }], hist: [] },
+  { n: 'shop_open', v: 'false', reset: true, start: 'false', uses: [
+      { at: 'title', el: 'Shop button', what: 'Click script · Set Variable', k: 'script' },
+      { at: 'shop', el: 'Layout', what: 'Visibility · Is Variable Value', k: 'cond' }],
+    hist: [{ t: -200, from: 'true', to: 'false', src: 'Set Variable · Coin Shop › Close button' }] },
+  { n: 'streak_record', v: '7', reset: false, start: '', uses: [], hist: [] },
+  { n: 'welcome_name', v: '', reset: true, start: '', uses: [
+      { at: 'title', el: 'Name field', what: 'Linked variable', k: 'link' }],
+    hist: [{ t: -1800, from: 'Steve', to: '', src: SRC.start }] }
+];
+// Names that Event Variables or element values already use (rule "New variables can't take $$ names").
+const TAKEN = {
+  old_value: 'the Variable Updated event hands $$old_value to the scripts of its listeners',
+  new_value: 'the Variable Updated event hands $$new_value to the scripts of its listeners',
+  var_name: 'the Variable Updated event hands $$var_name to the scripts of its listeners',
+  value: 'Checkbox and Slider scripts read their current value as $$value'
+};
+const NAME_OK = /[^a-z0-9._-]/g;
+
+class Component extends DCLogic {
+  componentWillUnmount() {
+    if (this._tick) clearInterval(this._tick);
+    if (this._keys) window.removeEventListener('keydown', this._keys);
+  }
+
+  renderVals() {
+    const p = this.props, s = this.state || {};
+    const set = (patch) => this.setState(patch);
+    const uid = this._uid || (this._uid = 'vm' + Math.random().toString(36).slice(2, 8));
+    const standalone = p.standalone ?? true;
+    const W = +p.width || 940, H = +p.height || 680;
+    const empty = (p.scene || 'Dusk Valley') === 'Empty';
+    const IC = {
+      var: 'attach_money',
+      plus: 'add',
+      search: 'search',
+      funnel: 'filter_alt',
+      x: 'close',
+      restart: 'restart_alt',
+      warn: 'warning',
+      pencil: 'edit',
+      copy: 'content_copy',
+      dup: 'library_add',
+      editor: 'edit_note',
+      trash: 'delete',
+      open: 'open_in_new',
+      gui: 'contextual_token',
+      layout: 'gallery_thumbnail',
+      listener: 'hearing',
+      clock: 'timer',
+      text: 'text_fields',
+      script: 'bolt',
+      cond: 'checklist',
+      link: 'link',
+      http: 'public',
+      code: 'code'
+    };
+
+    // ---------- clock: every board starts at the same time, so screenshots stay comparable ----------
+    if (!this._t0) this._t0 = Date.now();
+    const nowT = Math.floor((Date.now() - this._t0) / 1000);
+    const clock = (t) => { const x = 12 * 3600 + 41 * 60 + 15 + t; const two = (n) => String(n).padStart(2, '0'); return two(Math.floor(x / 3600) % 24) + ':' + two(Math.floor(x / 60) % 60) + ':' + two(x % 60); };
+    const agoText = (t) => { const d = nowT - t; return d < 3 ? 'just now' : d < 60 ? d + ' s ago' : d < 3600 ? Math.floor(d / 60) + ' min ago' : Math.floor(d / 3600) + ' h ago'; };
+
+    // ---------- state ----------
+    if (!this._seed) { this._seed = empty ? [] : seed(); if (p.sheet === 'new') this._seed = [...this._seed, { n: 'new_variable', v: '', reset: false, start: '', uses: [], hist: [] }]; }
+    const vars = s.vars ?? this._seed;
+    const byName = (n) => vars.find((v) => v.n === n);
+    const selRaw = s.sel ?? (p.sheet === 'new' ? ['new_variable'] : empty ? [] : String(p.select ?? 'coins').split(',').map((x) => x.trim()).filter(Boolean));
+    const sel = selRaw.filter((n) => byName(n));
+    const sheet = s.sheet !== undefined ? s.sheet : (p.sheet === 'new' ? '' : (p.sheet || ''));
+    const filterOpen = s.filterOpen !== undefined ? s.filterOpen : !!p.filterMenu;
+    const filter = s.filter ?? (p.filter || 'all');
+    const sort = s.sort ?? 'name';
+    const q = s.q ?? (p.query || '');
+    const ql = q.trim().toLowerCase();
+    const renaming = s.renaming !== undefined ? s.renaming : p.sheet === 'new';
+    const live = p.live !== false && !empty;
+    const popupOpen = !!(sheet || filterOpen);
+
+    // A ticker element counts seconds_on_menu up every second, so the window shows live values.
+    // The mockup pauses it while a sheet or menu is open, so those don't get redrawn mid-animation.
+    if (live && !this._tick) {
+      this._tick = setInterval(() => {
+        const st = this.state || {};
+        if (st.__paused) return;
+        const cur = st.vars ?? this._seed;
+        const t = Math.floor((Date.now() - this._t0) / 1000);
+        const next = cur.map((v) => {
+          if (!v.live) return v;
+          const to = String(+v.v + 1);
+          const h0 = v.hist[0];
+          const hist = h0 && h0.src === SRC.clock ? [{ ...h0, t, to, count: (h0.count || 1) + 1 }, ...v.hist.slice(1)] : [{ t, from: v.v, to, src: SRC.clock }, ...v.hist];
+          return { ...v, v: to, hist, flash: t };
+        });
+        this.setState({ vars: next });
+      }, 1000);
+    }
+    if (!!s.__paused !== popupOpen) setTimeout(() => this.setState({ __paused: popupOpen }), 0);
+
+    const snapshot = () => ({ vars, sel });
+    const notify = (nv) => { if (typeof p.onVars === 'function') p.onVars(Object.fromEntries(nv.map((v) => [v.n, v.v]))); };
+    // Every edit made in this window goes through here, so Undo and Cancel can take it back.
+    const commit = (nv, patch) => {
+      set({ vars: nv, undoStack: [...(s.undoStack || []), snapshot()].slice(-50), redoStack: [], ...patch });
+      notify(nv);
+    };
+    const withHist = (v, to, src) => ({ ...v, v: to, hist: [{ t: nowT, from: v.v, to, src }, ...v.hist].slice(0, 20), flash: nowT });
+    const status = (text, canUndo) => ({ status: { text, undo: !!canUndo } });
+    const focusLater = (fk) => setTimeout(() => { const el = document.querySelector('[data-fk="' + fk + '"]'); if (el) { el.focus(); if (el.select && fk.endsWith('-rename')) el.select(); } }, 0);
+    const fk = (k) => uid + '-' + k;
+
+    // ---------- names ----------
+    const cleanName = (raw) => raw.toLowerCase().replace(/\s+/g, '_').replace(NAME_OK, '');
+    const checkName = (name, except) => {
+      if (!name) return { ok: false, msg: 'Lowercase letters, numbers, . _ and -. Spaces turn into _.', bad: false };
+      if (name !== except && byName(name)) return { ok: false, msg: name + ' already exists.', bad: true, exists: name };
+      if (TAKEN[name]) return { ok: false, msg: name + " is taken: " + TAKEN[name] + '.', bad: true };
+      return { ok: true, msg: 'Use it as $$' + name + ' in any text.', bad: false };
+    };
+    const uniqueName = (base) => { let n = base + '_copy', i = 2; while (byName(n)) n = base + '_copy_' + i++; return n; };
+
+    // ---------- list ----------
+    const lastT = (v) => (v.hist[0] ? v.hist[0].t : -Infinity);
+    const fits = (v) => (filter === 'reset' ? v.reset : filter === 'unused' ? !v.uses.length : filter === 'changed' ? v.hist.length > 0 : true);
+    const flat = (v) => v.replace(/\n/g, ' ');
+    const hitParts = (text) => {
+      const at = ql ? text.toLowerCase().indexOf(ql) : -1;
+      const P = (t, hit) => ({ t, hit, plain: !hit });
+      return at < 0 ? [P(text, false)] : [P(text.slice(0, at), false), P(text.slice(at, at + ql.length), true), P(text.slice(at + ql.length), false)].filter((x) => x.t);
+    };
+    let shown = vars.filter((v) => fits(v) && (!ql || v.n.includes(ql) || v.v.toLowerCase().includes(ql)));
+    shown = sort === 'recent' ? shown.slice().sort((a, b) => lastT(b) - lastT(a) || a.n.localeCompare(b.n)) : shown.slice().sort((a, b) => a.n.localeCompare(b.n));
+    const order = shown.map((v) => v.n);
+
+    const selectRow = (n, e) => {
+      let next;
+      if (e && (e.ctrlKey || e.metaKey)) next = sel.includes(n) ? sel.filter((x) => x !== n) : [...sel, n];
+      else if (e && e.shiftKey && s.anchor && order.includes(s.anchor)) { const a = order.indexOf(s.anchor), b = order.indexOf(n); next = order.slice(Math.min(a, b), Math.max(a, b) + 1); }
+      else next = [n];
+      set({ sel: next, anchor: e && e.shiftKey ? s.anchor : n, draft: null, renaming: false, filterOpen: false, histAll: false });
+    };
+    const resetTip = (v) => (v.start === '' ? 'Goes back to being empty when the game starts' : 'Goes back to ' + v.start + ' when the game starts');
+    const rows = shown.map((v) => ({
+      cls: 'item tall vrow' + (sel.includes(v.n) ? ' sel' : ''), ariaSel: sel.includes(v.n) ? 'true' : 'false',
+      name: hitParts(v.n), val: v.v === '' ? [{ t: 'empty', plain: true, hit: false }] : hitParts(flat(v.v)),
+      valCls: 'vv' + (v.v === '' ? ' none' : '') + (v.flash !== undefined && nowT - v.flash <= 1 ? ' chg' : ''),
+      resets: v.reset, resetTip: resetTip(v),
+      conflict: !!TAKEN[v.n], conflictTip: '$$' + v.n + ' reads something else in some scripts',
+      click: (e) => selectRow(v.n, e),
+      dbl: () => { selectRow(v.n); focusLater(fk('val')); },
+    }));
+
+    // ---------- actions ----------
+    const remove = (names) => {
+      const nv = vars.filter((v) => !names.includes(v.n));
+      const idx = Math.max(0, order.indexOf(names[0]));
+      const rest = order.filter((n) => !names.includes(n));
+      const nextSel = rest.length ? [rest[Math.min(idx, rest.length - 1)]] : [];
+      commit(nv, { sel: nextSel, sheet: '', ...status(names.length === 1 ? 'Deleted ' + names[0] + '.' : 'Deleted ' + names.length + ' variables.', true) });
+    };
+    const askDelete = () => {
+      if (!sel.length) return;
+      const used = sel.some((n) => byName(n).uses.length);
+      if (used) set({ sheet: 'delete' }); else remove(sel);
+    };
+    const duplicate = () => {
+      if (!sel.length) return;
+      const copies = sel.map((n) => { const v = byName(n); return { ...v, n: uniqueName(n), uses: [], hist: [], flash: undefined }; });
+      commit([...vars, ...copies], { sel: copies.map((c) => c.n), ...status(copies.length === 1 ? 'Made ' + copies[0].n + '.' : 'Made ' + copies.length + ' copies.', true) });
+    };
+    // The window's only copy action: $$name, which is how a variable gets used in any text.
+    const copyRef = (n) => set({ ...status('Copied $$' + n + '. Paste it into any text to show the value.') });
+    const startRename = () => { if (sel.length !== 1) return; set({ renaming: true, renameDraft: sel[0], sheet: '' }); focusLater(fk('rename')); };
+    const applyRename = (from, to, update) => {
+      const re = refRe(from);
+      const nv = vars.map((v) => {
+        if (v.n === from) return { ...v, n: to, uses: update ? v.uses.map((u) => ({ ...u, what: u.what.replace(re, '$$$$' + to).split('_' + from).join('_' + to) })) : [] };
+        // other variables whose value mentions it get updated too, as one of the places that use it
+        return update && refRe(from).test(v.v) ? { ...v, v: v.v.replace(refRe(from), '$$$$' + to) } : v;
+      });
+      const count = byName(from).uses.length;
+      commit(nv, { sel: [to], renaming: false, sheet: '', ...status(!count ? 'Renamed ' + from + ' to ' + to + '.' : update ? 'Renamed ' + from + ' to ' + to + ' and updated ' + count + (count === 1 ? ' place.' : ' places.') : 'Renamed ' + from + ' to ' + to + '. ' + count + (count === 1 ? ' place still uses ' : ' places still use ') + from + '.', true) });
+    };
+    const undo = () => {
+      const u = s.undoStack || [];
+      if (!u.length) return;
+      const last = u[u.length - 1];
+      set({ vars: last.vars, sel: last.sel, undoStack: u.slice(0, -1), redoStack: [...(s.redoStack || []), snapshot()], draft: null, renaming: false, status: { text: 'Undone.', undo: false } });
+      notify(last.vars);
+    };
+    const redo = () => {
+      const r = s.redoStack || [];
+      if (!r.length) return;
+      const last = r[r.length - 1];
+      set({ vars: last.vars, sel: last.sel, redoStack: r.slice(0, -1), undoStack: [...(s.undoStack || []), snapshot()], draft: null, status: { text: 'Redone.', undo: false } });
+      notify(last.vars);
+    };
+    // Cancel takes back only what was changed in this window. Values that the game changed meanwhile, like the ticker's, stay.
+    const cancelAll = () => {
+      const orig = this._seed;
+      const liveNow = Object.fromEntries(vars.filter((v) => v.live).map((v) => [v.n, v]));
+      const nv = orig.map((v) => liveNow[v.n] || v);
+      set({ vars: nv, sel: empty ? [] : [String(p.select ?? 'coins').split(',')[0]], undoStack: [], redoStack: [], draft: null, renaming: false, sheet: '', filterOpen: false, status: { text: 'Your changes were taken back.', undo: false } });
+      notify(nv);
+    };
+    // New adds the variable right away and selects it with its name ready to type over, like every manager does.
+    const openNew = (name) => { const base = (typeof name === 'string' && cleanName(name)) || 'new_variable'; let n = base, i = 2; while (byName(n)) n = base + '_' + i++; commit([...vars, { n, v: '', reset: false, start: '', uses: [], hist: [], flash: nowT }], { sel: [n], anchor: n, sheet: '', q: '', filterOpen: false, renaming: true, renameDraft: n, ...status('Added ' + n + '. Type its name, then give it a value.', true) }); focusLater(fk('rename')); };
+    const setResetFor = (names, on) => {
+      const nv = vars.map((v) => (names.includes(v.n) ? { ...v, reset: on } : v));
+      commit(nv, {});
+    };
+
+    // ---------- details: one variable ----------
+    const one = sel.length === 1;
+    const many = sel.length > 1;
+    const dv = one ? byName(sel[0]) : null;
+    let d = {}, valText = '', valNote = '', valNoteCls = 'foot', valRows = 2;
+    if (dv) {
+      const ref = '$$' + dv.n;
+      const places = [];
+      dv.uses.forEach((u) => {
+        let g = places.find((x) => x.at === u.at);
+        const P = PLACES[u.at];
+        if (!g) { g = { at: u.at, name: P.name, on: P.on || '', chip: P.chip, icon: IC[P.icon], uses: [] }; places.push(g); }
+        const open = P.kind === 'variable' ? () => selectRow(u.el)
+          : P.kind === 'layout' ? () => set(status('Opens ' + P.name + ' in the layout editor, with ' + u.el + ' selected.'))
+          : P.kind === 'gui' ? () => set(status('Opens the settings of the ' + P.name + ' custom GUI.'))
+          : () => set(status('Opens ' + P.name + ' in ' + P.open.replace('Open in ', '') + '.'));
+        g.uses.push({ el: u.el, what: u.what, icon: IC[u.k], openTip: P.open, open });
+      });
+      // the same order as the summary: layouts first, other variables last
+      const rank = (g) => KINDS.findIndex((k) => k[0] === PLACES[g.at].kind);
+      places.sort((x, y) => rank(x) - rank(y));
+      const nU = dv.uses.length;
+      const kindText = whereText(dv.uses);
+      const h0 = dv.hist[0];
+      const meta = [nU ? 'Used in ' + nU + (nU === 1 ? ' place' : ' places') : 'Not used anywhere', h0 ? 'Changed ' + agoText(h0.t) + ' by ' + h0.src.split(' · ')[0].replace('You, in this window', 'you') : 'Not changed since the game started'].join(' · ');
+      const short = (x) => (x.length > 30 ? x.slice(0, 29) + '…' : x);
+      const histAll = !!s.histAll;
+      const hist = (histAll ? dv.hist : dv.hist.slice(0, 3)).map((h) => ({
+        time: clock(h.t), from: h.from === '' ? 'empty' : short(h.from), to: h.to === '' ? 'empty' : short(h.to),
+        fromCls: 'o' + (h.from === '' ? ' none' : ''), toCls: h.to === '' ? 'none' : '',
+        count: h.count ? h.count + ' changes' : '', src: h.src
+      }));
+      d = {
+        name: dv.n, ref, meta, conflict: !!TAKEN[dv.n],
+        copyTip: 'Copies ' + ref + ', with the $$ prefix, ready to paste into any text (Ctrl+C)',
+        conflictTitle: ref + ' means something else in some scripts',
+        conflictText: 'This name is taken: ' + (TAKEN[dv.n] || '') + ', and $$ picks that one there. Get Variable still reads this variable everywhere, and FancyMenu doesn\'t let new variables use the name anymore.',
+        resets: dv.reset, start: dv.start, atStart: dv.v === dv.start,
+        resetX: dv.reset ? 'translateX(100%)' : 'translateX(0)',
+        keepCls: dv.reset ? '' : 'on', resetCls: dv.reset ? 'on' : '', keepOn: dv.reset ? 'false' : 'true', resetOn: dv.reset ? 'true' : 'false',
+        resetNote: dv.reset ? (dv.start === '' ? 'Every time Minecraft starts, the variable goes back to being empty.' : 'Every time Minecraft starts, the variable goes back to ' + dv.start + '.') : 'The variable keeps its value when Minecraft restarts.',
+        used: nU > 0, unused: nU === 0, places, useCount: nU ? nU + (nU === 1 ? ' place' : ' places') + ' in ' + kindText : '',
+        // Text loaded from files, web addresses or HTTP answers can change any time, so nothing tries to guess what it holds.
+        loadedNote: 'Not counted: text loaded from files, web addresses or HTTP answers, because it can change any time.',
+        hasHist: dv.hist.length > 0, noHist: dv.hist.length === 0, hist,
+        histMore: !histAll && dv.hist.length > 3 ? 'Show ' + (dv.hist.length - 3) + ' more' : ''
+      };
+      const editing = s.draft !== null && s.draft !== undefined && s.draftFor === dv.n;
+      valText = editing ? s.draft : dv.v;
+      const lines = valText.split('\n').reduce((acc, line) => acc + Math.max(1, Math.ceil(line.length / 72)), 0);
+      valRows = Math.max(2, Math.min(8, lines));
+      if (editing && s.draft !== s.draftBase && dv.v !== s.draftBase) { valNote = 'It changed to ' + (dv.v === '' ? 'empty' : dv.v) + ' while you were typing. Enter replaces that.'; valNoteCls = 'foot amber'; }
+      else if (editing && s.draft !== dv.v) valNote = 'Enter saves, Shift+Enter starts a new line, Esc takes your typing back.';
+      else valNote = 'Saves when you press Enter or click somewhere else. Shift+Enter starts a new line.';
+    }
+    const saveDraft = () => {
+      if (!dv || s.draft === null || s.draft === undefined || s.draftFor !== dv.n) return;
+      if (s.draft === dv.v) { set({ draft: null }); return; }
+      commit(vars.map((v) => (v.n === dv.n ? withHist(v, s.draft, SRC.you) : v)), { draft: null });
+    };
+
+    // ---------- details: several variables ----------
+    let m = {};
+    if (many) {
+      const vs = sel.map(byName);
+      const nReset = vs.filter((v) => v.reset).length;
+      const mixed = nReset > 0 && nReset < vs.length;
+      const used = vs.filter((v) => v.uses.length);
+      m = { title: vs.length + ' variables', meta: used.length === vs.length ? 'All of them are used' : used.length ? used.length + ' of them ' + (used.length === 1 ? 'is' : 'are') + ' used' : 'None of them are used',
+        dupLabel: 'Duplicate ' + vs.length, deleteTip: 'Delete ' + vs.length + ' variables',
+        thumb: !mixed, resetX: nReset ? 'translateX(100%)' : 'translateX(0)',
+        keepCls: !mixed && !nReset ? 'on' : '', resetCls: !mixed && nReset ? 'on' : '',
+        keepOn: !mixed && !nReset ? 'true' : 'false', resetOn: !mixed && nReset ? 'true' : 'false',
+        resetNote: mixed ? (nReset === 1 ? vs.find((v) => v.reset).n + ' resets when the game starts, the other ' + (vs.length - 1) + ' keep their values. Pick one for all of them.' : nReset + ' of them reset when the game starts, the other ' + (vs.length - nReset) + ' keep their values. Pick one for all of them.') : nReset ? 'All of them go back to their reset value when Minecraft starts.' : 'All of them keep their values when Minecraft restarts.',
+        uses: vs.map((v) => ({ name: v.n, text: v.uses.length ? v.uses.length + (v.uses.length === 1 ? ' place' : ' places') : 'Not used anywhere', cls: v.uses.length ? 'vm-cnt' : 'vm-cnt none' }))
+      };
+    }
+
+    // ---------- filter menu ----------
+    // The menu opens right below the button that opened it, measured relative to the window.
+    const anchorBelow = (el) => { const r = el.getBoundingClientRect(), w = el.closest('.win').getBoundingClientRect(); return [Math.round(r.left - w.left), Math.round(r.bottom - w.top + 4)]; };
+    const pick = (patch) => () => set({ ...patch, filterOpen: false });
+    const filterItems = [
+      { head: 'Show' },
+      { radio: true, checked: filter === 'all', label: 'All Variables', click: pick({ filter: 'all' }) },
+      { radio: true, checked: filter === 'reset', label: 'Resets When the Game Starts', click: pick({ filter: 'reset' }) },
+      { radio: true, checked: filter === 'unused', label: 'Not Used Anywhere', click: pick({ filter: 'unused' }) },
+      { radio: true, checked: filter === 'changed', label: 'Changed Since the Game Started', click: pick({ filter: 'changed' }) },
+      { head: 'Sort By' },
+      { radio: true, checked: sort === 'name', label: 'Name', click: pick({ sort: 'name' }) },
+      { radio: true, checked: sort === 'recent', label: 'Last Change', click: pick({ sort: 'recent' }) }
+    ];
+    const FILTER_CHIP = { reset: 'Resets when the game starts', unused: 'Not used anywhere', changed: 'Changed since the game started' };
+
+    // ---------- sheets ----------
+    const nfS = s.nf || { name: p.newName ? cleanName(p.newName) : '', value: '', reset: false, start: '' };
+    const nCheck = checkName(nfS.name, null);
+    const addNew = () => {
+      if (!nCheck.ok) return;
+      const v = { n: nfS.name, v: nfS.value, reset: nfS.reset, start: nfS.start, uses: [], hist: [], flash: nowT };
+      commit([...vars, v], { sel: [v.n], anchor: v.n, sheet: '', nf: null, q: '', ...status('Added ' + v.n + '. Use it as $$' + v.n + ' in any text.', true) });
+    };
+    const nfPatch = (patch) => set({ nf: { ...nfS, ...patch } });
+    const nf = {
+      ...nfS, cls: 'field mono' + (nCheck.bad ? ' bad' : ''), msg: nCheck.msg, msgCls: 'msg' + (nCheck.bad ? ' bad' : ''),
+      canShow: !!nCheck.exists, show: () => set({ sheet: '', nf: null, sel: [nCheck.exists], q: '', filter: 'all' }),
+      invalid: !nCheck.ok, resets: nfS.reset,
+      resetX: nfS.reset ? 'translateX(100%)' : 'translateX(0)', keepCls: nfS.reset ? '' : 'on', resetCls: nfS.reset ? 'on' : '',
+      keepOn: nfS.reset ? 'false' : 'true', resetOn: nfS.reset ? 'true' : 'false',
+      onName: (e) => nfPatch({ name: cleanName(e.target.value) }),
+      onValue: (e) => nfPatch({ value: e.target.value }),
+      onStart: (e) => nfPatch({ start: e.target.value }),
+      keep: () => nfPatch({ reset: false }), reset: () => nfPatch({ reset: true }),
+      key: (e) => { if (e.key === 'Enter') { e.preventDefault(); addNew(); } },
+      add: addNew
+    };
+    const renameTo = s.renameTo ?? (p.renameTo || 'gems');
+    let al = { buttons: [] };
+    const target = sel.length ? byName(sel[0]) : null;
+    if (sheet === 'rename' && target) {
+      const c = target.uses.length;
+      al = {
+        icon: IC.pencil, title: 'Rename ' + target.n + ' to ' + renameTo + '?',
+        text: target.n + ' is used in ' + c + ' places, in ' + whereText(target.uses) + '. FancyMenu can change them to ' + renameTo + ' too, so they keep working.',
+        warn: 'It can\'t change text that gets loaded from files, web addresses or HTTP answers, or /fmvariable commands on servers. If any of those use $$' + target.n + ', change them yourself.',
+        buttons: [
+          { cls: 'btn primary', label: 'Rename and Update ' + c + ' Places', click: () => applyRename(target.n, renameTo, true) },
+          { cls: 'btn', label: 'Only Rename', click: () => applyRename(target.n, renameTo, false) },
+          { cls: 'btn', label: 'Cancel', click: () => set({ sheet: '' }) }
+        ],
+      };
+    } else if (sheet === 'delete' && sel.length) {
+      const vs = sel.map(byName);
+      const usedVs = vs.filter((v) => v.uses.length);
+      const c = usedVs.reduce((a, v) => a + v.uses.length, 0);
+      const one1 = vs.length === 1;
+      al = {
+        icon: IC.trash, title: one1 ? 'Delete ' + vs[0].n + '?' : 'Delete ' + vs.length + ' variables?',
+        text: (one1 ? 'It\'s still used in ' + c + ' places.' : usedVs.map((v) => v.n).join(' and ') + (usedVs.length === 1 ? ' is' : ' are') + ' still used in ' + c + ' places.') + ' Texts that show it go empty, and conditions that check it stop matching.',
+        buttons: [
+          { cls: 'btn primary danger', label: one1 ? 'Delete' : 'Delete ' + vs.length + ' Variables', click: () => remove(sel) },
+          { cls: 'btn', label: 'Cancel', click: () => set({ sheet: '' }) }
+        ],
+        note: 'Undo brings it back until you press Save.'
+      };
+    }
+
+    // ---------- keyboard ----------
+    this._onKey = (e) => {
+      if (window.__vmActive !== uid) return;
+      const tag = (e.target && e.target.tagName) || '';
+      const inField = tag === 'INPUT' || tag === 'TEXTAREA';
+      const mod = e.ctrlKey || e.metaKey;
+      if (e.key === 'Escape') {
+        if (sheet) set({ sheet: '', nf: null });
+        else if (filterOpen) set({ filterOpen: false });
+        else if (renaming) set({ renaming: false });
+        else if (q && !inField) set({ q: '' });
+        return;
+      }
+      if (sheet) return;
+      if (mod && e.key.toLowerCase() === 'n') { e.preventDefault(); openNew(); return; }
+      if (mod && e.key.toLowerCase() === 'f') { e.preventDefault(); focusLater(fk('search')); return; }
+      // Ctrl+Enter and Ctrl+S both press Done, like today's Ctrl+S.
+      if (mod && (e.key === 'Enter' || e.key.toLowerCase() === 's')) { e.preventDefault(); return; }
+      if (inField) return;
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (!order.length) return;
+        const cur = order.indexOf(sel[sel.length - 1]);
+        const nx = Math.max(0, Math.min(order.length - 1, cur + (e.key === 'ArrowDown' ? 1 : -1)));
+        if (e.shiftKey && s.anchor) { const a = order.indexOf(s.anchor); set({ sel: order.slice(Math.min(a, nx), Math.max(a, nx) + 1) }); }
+        else set({ sel: [order[nx]], anchor: order[nx], draft: null, histAll: false });
+        return;
+      }
+      if (e.key === 'Enter' && one) { e.preventDefault(); focusLater(fk('val')); return; }
+      if (e.key === 'F2') { e.preventDefault(); startRename(); return; }
+      if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); askDelete(); return; }
+      if (mod && e.key.toLowerCase() === 'a') { e.preventDefault(); set({ sel: order.slice() }); return; }
+      if (mod && e.key.toLowerCase() === 'd') { e.preventDefault(); duplicate(); return; }
+      if (mod && e.key.toLowerCase() === 'c') { e.preventDefault(); if (one) copyRef(sel[0]); return; }
+      if (mod && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))) { e.preventDefault(); redo(); return; }
+      if (mod && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
+      if (!mod && !e.altKey && e.key.length === 1) { set({ q: q + e.key }); focusLater(fk('search')); }
+    };
+    if (!this._keys) { this._keys = (e) => this._onKey && this._onKey(e); window.addEventListener('keydown', this._keys); }
+
+    if (al.note) al = { ...al, text: al.text + ' ' + al.note, note: '' }; const st = s.status !== undefined ? s.status : p.sheet === 'new' ? { text: 'Added new_variable. Type its name, then give it a value.', undo: true } : undefined;
+    const qName = cleanName(q.trim());
+    return {
+      uid, ic: IC, standalone, yes: true, no: false, noop: () => {},
+      rootCls: standalone ? 'fm ' + ((p.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark') + ((p.material ?? 'Blur') === 'Blur' ? ' mat-blur' : '') : '',
+      rootStyle: standalone ? 'position: relative; width: ' + (W + 80) + 'px; height: ' + (H + 80) + 'px; overflow: hidden; background: var(--bd)' : 'position: relative; width: ' + W + 'px; height: ' + H + 'px',
+      winStyle: (standalone ? 'left: 40px; top: 40px; ' : 'left: 0; top: 0; ') + 'width: ' + W + 'px; height: ' + H + 'px',
+      activate: () => { window.__vmActive = uid; },
+      searchFk: fk('search'), listSk: fk('list'), contentSk: fk('content') + '-' + (sel[0] || ''), valFk: fk('val'), renameFk: fk('rename'), newFk: fk('new'),
+      searchPh: 'Search ' + (vars.length ? vars.length + ' variables' : 'variables'), q,
+      onSearch: (e) => set({ q: e.target.value }),
+      searchKey: (e) => {
+        if (e.key === 'Escape') { set({ q: '' }); e.target.blur(); }
+        if (e.key === 'ArrowDown' && order.length) { e.preventDefault(); e.target.blur(); set({ sel: [order[0]], anchor: order[0] }); }
+        if (e.key === 'Enter' && order.length) { e.target.blur(); set({ sel: [order[0]], anchor: order[0] }); }
+      },
+      filterBtnCls: 'ib' + (filter !== 'all' || sort !== 'name' || filterOpen ? ' on' : ''), filterExpanded: filterOpen ? 'true' : 'false',
+      toggleFilter: (e) => { e.preventDefault(); set({ filterOpen: !filterOpen, filterAt: anchorBelow(e.currentTarget) }); },
+      filterChip: filter !== 'all' ? FILTER_CHIP[filter] : '', clearFilter: () => set({ filter: 'all' }),
+      rows,
+      noMatch: !rows.length && vars.length > 0, noMatchText: ql ? 'No variable matches “' + q.trim() + '”.' : 'No variable fits this filter.',
+      canCreateQ: !!ql && checkName(qName, null).ok, qName, createFromQ: () => openNew(q.trim()),
+      openNew,
+      one: one && !!dv, many, none: !vars.length, nothingSel: !sel.length && vars.length > 0,
+      d, m, valText, valRows, valNote, valNoteCls,
+      valFocus: () => set({ draft: dv ? dv.v : '', draftFor: dv ? dv.n : null, draftBase: dv ? dv.v : '' }),
+      valInput: (e) => set({ draft: e.target.value, draftFor: dv.n }),
+      valKey: (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveDraft(); e.target.blur(); }
+        if (e.key === 'Escape') { e.preventDefault(); set({ draft: null }); e.target.blur(); }
+      },
+      valBlur: () => saveDraft(),
+      notRenaming: !renaming, renaming,
+      renameDraft: s.renameDraft ?? (p.sheet === 'new' && p.newName ? cleanName(p.newName) : dv ? dv.n : ''),
+      ...(() => {
+        const draft = s.renameDraft ?? (p.sheet === 'new' && p.newName ? cleanName(p.newName) : dv ? dv.n : '');
+        const c = checkName(draft, dv ? dv.n : null);
+        return {
+          renameCls: 'field mono vm-rename' + (c.bad ? ' bad' : ''), renameMsgCls: c.bad ? 'err-msg vm-rmsg' : 'foot vm-rmsg',
+          renameMsg: c.bad ? c.msg : 'Enter renames it, Esc keeps the old name.',
+          onRename: (e) => set({ renameDraft: cleanName(e.target.value) }),
+          renameKey: (e) => {
+            if (e.key === 'Escape') { e.preventDefault(); set({ renaming: false }); return; }
+            if (e.key !== 'Enter' || !dv) return;
+            e.preventDefault();
+            if (!c.ok || draft === dv.n) { if (draft === dv.n) set({ renaming: false }); return; }
+            if (dv.uses.length) set({ sheet: 'rename', renameTo: draft, renaming: false }); else applyRename(dv.n, draft, false);
+          }
+        };
+      })(),
+      startRename,
+      copyRef: () => dv && copyRef(dv.n), duplicate, askDelete,
+      setKeep: () => setResetFor(sel, false), setReset: () => setResetFor(sel, true),
+      startFocus: () => set({ undoStack: [...(s.undoStack || []), snapshot()].slice(-50), redoStack: [] }),
+      startInput: (e) => { const val = e.target.value; set({ vars: vars.map((v) => (v.n === dv.n ? { ...v, start: val } : v)) }); },
+      resetNow: () => dv && commit(vars.map((v) => (v.n === dv.n ? withHist(v, v.start, SRC.you) : v)), status('Reset ' + dv.n + ' to ' + (dv.start === '' ? 'empty' : dv.start) + '.', true)),
+      showAllHist: () => set({ histAll: true }),
+      footLead: st ? st.text : 'Changes apply right away, also in your menus.', footUndo: !!(st && st.undo), undo, cancelAll,
+      anyPopup: filterOpen,
+      filterOpen, filterItems, filterStyle: 'left: ' + (s.filterAt ? s.filterAt[0] : 252) + 'px; top: ' + (s.filterAt ? s.filterAt[1] : 120) + 'px',
+      closePopups: () => set({ filterOpen: false }),
+      closePopupsCtx: (e) => { e.preventDefault(); set({ filterOpen: false }); },
+      sheetNew: sheet === 'new', nf, closeSheet: () => set({ sheet: '', nf: null }),
+      sheetAlert: (sheet === 'rename' || sheet === 'delete') && al.buttons.length > 0, al
+    };
+  }
+}
+</script>
+</body>
+</html>

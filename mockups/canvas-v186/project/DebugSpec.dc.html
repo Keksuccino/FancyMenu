@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Debug Overlay spec</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.pair{display:grid;grid-template-columns:600px minmax(0,1fr);gap:48px;align-items:start}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start}
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;align-items:start}
+.kr{display:flex;align-items:center;gap:14px;padding:9px 18px;border-bottom:1px solid var(--sep);font-size:12.5px;color:var(--text-2)}
+.kr:last-child{border-bottom:0}
+.kk{flex:0 0 190px;font-family:"Noto Sans Mono",ui-monospace,Menlo,monospace;font-size:12px;color:var(--text)}
+.spec code{font-family:"Noto Sans Mono",ui-monospace,Menlo,monospace;font-size:12px;color:var(--text)}
+.flow{display:flex;flex-direction:column;gap:10px}
+.flow .step{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;font-size:13px;line-height:1.5;color:var(--text-2)}
+.flow .n{width:22px;height:22px;display:grid;place-items:center;border-radius:50%;font-size:11.5px;font-weight:700;color:var(--accent);background:color-mix(in srgb,var(--accent) 15%,transparent)}
+.flow b{color:var(--title);font-weight:600}
+.propchip{color:var(--warn);background:color-mix(in srgb,var(--warn) 15%,transparent)}
+.okchip2{color:var(--ok);background:color-mix(in srgb,var(--ok) 15%,transparent)}
+/* today's screens, redrawn at 600 pixels wide: a list of text lines or rows of sliders, and the buttons in a column at the bottom right */
+.lgcs{display:flex;flex-direction:column;gap:14px}
+.lgc{position:relative;width:600px;padding:12px 14px 14px;background:#1f1f1f;border:1px solid #3e4042;color:#ceDDed;font-size:11px}
+.lgc .tt{margin:0 0 9px 2px;font-size:12px;font-weight:600;color:#e8eef4}
+.lgc .bd{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:14px}
+.lgc .lft{display:flex;flex-direction:column;gap:6px;min-width:0}
+.lgc .f{height:17px;padding:0 5px;display:flex;align-items:center;border:1px solid #3e4042;background:#1a1a1a;color:#ceDDed;white-space:nowrap;overflow:hidden}
+.lgc .ls{flex:1 1 auto;padding:5px 6px;border:1px solid #3e4042;background:#262626;display:flex;flex-direction:column;gap:3px;overflow:hidden}
+.lgc .ls div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:1px 3px}
+.lgc .ls .sel{background:#3a4a5e}
+.lgc .rt{display:flex;flex-direction:column;justify-content:flex-end;gap:5px}
+.lgc .b{height:18px;padding:0 8px;display:flex;align-items:center;justify-content:center;border:1px solid #3e4042;background:#333;white-space:nowrap}
+.lgc .gap{height:10px}
+.lgc .lb{margin:3px 0 -2px 1px}
+.lgc .sl{position:relative;height:18px;display:flex;align-items:center;justify-content:center;border:1px solid #3e4042;background:#2a2a2a}
+.lgc .sl i{position:absolute;top:0;bottom:0;width:6px;background:#8a96a3;opacity:.4}
+.lgc .pr{display:grid;grid-template-columns:minmax(0,1fr) 140px;gap:6px}
+</style>
+</helmet>
+<div class="fm spec {{themeClass}}" style="min-height: 2932px">
+
+<header style="display: flex; flex-direction: column; gap: 12px; max-width: 920px">
+<div style="font-size: 12px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; color: var(--text-3)">FancyMenu · UI rework concept · Debug Overlay</div>
+<h1 style="margin: 0; font-size: 34px; line-height: 1.15; font-weight: 700; color: var(--title)">Numbers you can read at a glance</h1>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: var(--text-2)">The Debug Overlay tells you what screen you&#x27;re on, how much FancyMenu loaded and how the game runs. Its stack of black text lines becomes one tidy panel with sections that fold, small graphs next to their numbers, and a tag on whatever the pointer is over. It also costs less to draw.</p>
+</header>
+
+<section>
+<h2 class="h2">Today and proposed</h2>
+<div class="pair">
+<div>
+<div class="cap">Today</div>
+<div class="lgcs">
+<div class="lgc" style="background: #2a3050">
+<div style="font-size: 10.5px; color: #fff">
+<div style="display: table; margin-bottom: 2px; padding: 2px 5px; background: #000; white-space: nowrap"><b>Current Screen Identifier:</b> title_screen <span style="color: #ffaa00">(click to copy)</span></div><div style="display: table; margin-bottom: 2px; padding: 2px 5px; background: #000; white-space: nowrap"><b>Screen Size:</b> 1440x900 (Width x Height)</div><div style="display: table; margin-bottom: 2px; padding: 2px 5px; background: #000; white-space: nowrap"><b>Current Screen Enabled Layouts:</b> 2 (1 universal layouts)</div><div style="display: table; margin-bottom: 2px; padding: 2px 5px; background: #000; white-space: nowrap"><b>Current Screen Total Layouts:</b> 3 (1 universal layouts)</div><div style="display: table; margin-bottom: 2px; padding: 2px 5px; background: #000; white-space: nowrap"><b>Current Screen Active Elements:</b> 14</div><div style="height: 6px"></div><div style="display: table; margin-bottom: 2px; padding: 2px 5px; background: #000; white-space: nowrap"><b>Total Loaded Slideshows:</b> 1 (4 images total)</div><div style="height: 6px"></div><div style="display: table; margin-bottom: 2px; padding: 2px 5px; background: #000; white-space: nowrap"><b>FPS:</b> 118</div><div style="width: 150px; height: 26px; margin-bottom: 2px; background: #000; border: 1px solid #555; position: relative"><i style="position: absolute; left: 0; right: 0; bottom: 4px; height: 14px; background: rgba(120, 200, 140, .45); border-top: 1px solid #7fd08f"></i></div><div style="display: table; margin-bottom: 2px; padding: 2px 5px; background: #000; white-space: nowrap"><b>Memory:</b> 1842/4096MB (45%)</div><div style="width: 150px; height: 26px; margin-bottom: 2px; background: #000; border: 1px solid #555; position: relative"><i style="position: absolute; left: 0; right: 0; bottom: 4px; height: 9px; background: rgba(120, 200, 140, .45); border-top: 1px solid #7fd08f"></i></div><div style="display: table; margin-bottom: 2px; padding: 2px 5px; background: #000; white-space: nowrap"><b>CPU Usage (JVM):</b> 12.4%</div><div style="width: 150px; height: 26px; margin-bottom: 2px; background: #000; border: 1px solid #555; position: relative"><i style="position: absolute; left: 0; right: 0; bottom: 4px; height: 4px; background: rgba(120, 200, 140, .45); border-top: 1px solid #7fd08f"></i></div><div style="display: table; margin-bottom: 2px; padding: 2px 5px; background: #000; white-space: nowrap"><b>CPU Usage (OS):</b> 31.0%</div><div style="width: 150px; height: 26px; margin-bottom: 2px; background: #000; border: 1px solid #555; position: relative"><i style="position: absolute; left: 0; right: 0; bottom: 4px; height: 7px; background: rgba(120, 200, 140, .45); border-top: 1px solid #7fd08f"></i></div><div style="display: table; margin-bottom: 2px; padding: 2px 5px; background: #000; white-space: nowrap"><b>CPU:</b> Apple M4 Pro</div><div style="display: table; margin-bottom: 2px; padding: 2px 5px; background: #000; white-space: nowrap"><b>GPU:</b> Apple M4 Pro (OpenGL: 4.1 Metal)</div><div style="height: 6px"></div><div style="display: table; margin-bottom: 2px; padding: 2px 5px; background: #000; white-space: nowrap"><span style="color: #55ffff">Right-click highlighted elements to copy their widget locator and more!</span></div></div>
+</div>
+</div>
+</div>
+<div>
+<div class="cap">What gets in the way</div>
+<ul class="probs">
+<li>Every value is its own black bar, as wide as its text. Together they cover a ragged part of the screen you want to look at.</li>
+<li>Labels are long, like Current Screen Enabled Layouts, and each one explains itself in brackets.</li>
+<li>Four graphs take a full row each, twice as tall as a line of text.</li>
+<li>Categories can only be turned off in a submenu of the menu bar.</li>
+<li>Only vanilla widgets get an outline and a menu. The layout&#x27;s own elements don&#x27;t, though their IDs are needed just as often.</li>
+<li>Nothing says what an outline belongs to until you right-click it.</li>
+<li>Every line gets built and measured again in every frame. Memory and CPU are read twice a frame, once for the number and once for the graph, and the processor and graphics names are asked for again each time.</li>
+<li>A graph takes one sample per frame, so how much time it shows depends on the frame rate.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">What changes</h2>
+<div class="group" style="background: var(--win)">
+<div class="mv head"><div>Today</div><div></div><div>Proposed</div><div>Why</div></div>
+<div class="mv"><div class="from">A stack of black text lines</div><div class="arrow">→</div><div class="to">One panel in the corner, in the same material as menus</div><div class="why">It covers one calm rectangle instead of a ragged edge (rule 145).</div></div>
+<div class="mv"><div class="from">Basic Screen, Advanced Screen, Resources and System, switched in the menu bar</div><div class="arrow">→</div><div class="to">Screen, Resources and System, which fold right in the panel</div><div class="why">You fold what you don&#x27;t need where you see it (rule 145).</div></div>
+<div class="mv"><div class="from">Current Screen Enabled Layouts: 2, Current Screen Total Layouts: 3</div><div class="arrow">→</div><div class="to">Layouts: 2 of 3 on</div><div class="why">One short row instead of two long ones.</div></div>
+<div class="mv"><div class="from">A graph row under every number</div><div class="arrow">→</div><div class="to">A small graph between the label and its number</div><div class="why">Half the height, and the trend sits next to the value.</div></div>
+<div class="mv"><div class="from">Gold and red numbers</div><div class="arrow">→</div><div class="to">The same limits, with the number and its graph in amber or red</div><div class="why">A slow screen stands out at a glance.</div></div>
+<div class="mv"><div class="from">(click to copy) in the line</div><div class="arrow">→</div><div class="to">A copy icon on the Identifier row</div><div class="why">The hint doesn&#x27;t take half the line.</div></div>
+<div class="mv"><div class="from">Outlines on vanilla widgets only</div><div class="arrow">→</div><div class="to">Outlines on the layout&#x27;s own elements too</div><div class="why">Their IDs are one right-click away as well (rule 147).</div></div>
+<div class="mv"><div class="from">(new)</div><div class="arrow">→</div><div class="to">A tag on the element under the pointer: its name, its type, and its ID or locator</div><div class="why">You see what you&#x27;re about to copy.</div></div>
+<div class="mv"><div class="from">(new)</div><div class="arrow">→</div><div class="to">Edit in the Layout Editor in the element&#x27;s menu</div><div class="why">From spotting a problem to fixing it in one click (rule 147).</div></div>
+<div class="mv"><div class="from">(new)</div><div class="arrow">→</div><div class="to">Panoramas and pre-loaded resources under Resources</div><div class="why">Pre-load problems show without opening the window (rule 145).</div></div>
+<div class="mv"><div class="from">(new)</div><div class="arrow">→</div><div class="to">Copy Everything as Text</div><div class="why">All of it lands in a bug report in one click (rule 145).</div></div>
+<div class="mv"><div class="from">Always top left</div><div class="arrow">→</div><div class="to">A button moves the panel to the other side</div><div class="why">It never has to cover the thing you&#x27;re checking.</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">The panel, piece by piece</h2>
+<div class="three">
+<div class="spec-card"><div class="k">The header</div><div class="kd" style="margin: 0">Debug, and three buttons: Copy Everything as Text, move to the other side, and Hide, which is the same as Ctrl+Alt+D.</div></div>
+<div class="spec-card"><div class="k">Screen</div><div class="kd" style="margin: 0">The identifier with its copy icon, the size with the GUI scale, how many of the screen&#x27;s layouts are on and how many of those are universal, and how many elements are active.</div></div>
+<div class="spec-card"><div class="k">Resources</div><div class="kd" style="margin: 0">Slideshows with their images, panoramas, and how many pre-loaded resources loaded. A resource that didn&#x27;t load in time turns the row amber.</div></div>
+<div class="spec-card"><div class="k">System</div><div class="kd" style="margin: 0">FPS, memory and both CPU loads, each with a graph of the last 12 seconds, then the processor and the graphics card with its OpenGL version.</div></div>
+<div class="spec-card"><div class="k">Folded sections</div><div class="kd" style="margin: 0">A folded section shows its most important value in its header, like 118 FPS, in amber or red when something in it is.</div></div>
+<div class="spec-card"><div class="k">Outlines and the tag</div><div class="kd" style="margin: 0">Everything the layout shows gets a thin dashed outline. The one under the pointer gets a solid one and a tag with its name, type and ID. Vanilla widgets show their locator instead.</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Special cases it handles</h2>
+<div class="two">
+<div class="spec-card"><ul class="notes">
+<li>The panel keeps its side and which sections are folded, like the four category switches are kept today.</li>
+<li>With the menu bar hidden, the panel moves up to the top edge.</li>
+<li>Hidden vanilla widgets get no outline, like today.</li>
+<li>The limits for amber and red stay: FPS under 20 and under 10, memory from 60 % and 80 %, CPU over 50 % and from 80 %.</li>
+</ul></div>
+<div class="spec-card"><ul class="notes">
+<li>The menu of a layout element has Copy Element ID and Edit in the Layout Editor. A vanilla widget also has Copy Widget Locator.</li>
+<li>Edit in the Layout Editor opens the layout the element is from with it selected. For a vanilla widget it opens the screen&#x27;s first layout that is on, or a new one.</li>
+<li>Copy Everything as Text copies the rows as plain lines, with the current numbers and without the graphs.</li>
+<li>The tag never covers the element: it sits above it, or below when there&#x27;s no room.</li>
+</ul></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Keyboard shortcuts</h2>
+<div class="two">
+<div>
+<div class="cap">Kept</div>
+<div class="group" style="background: var(--win)">
+<div class="kr"><span class="kk">Ctrl+Alt+D</span><span>Shows and hides the Debug Overlay</span></div>
+</div>
+</div>
+<div>
+<div class="cap">New</div>
+<div class="group" style="background: var(--win)">
+<div class="kr"><span class="kk">Right-click</span><span>The menu of an outlined element</span></div>
+</div>
+</div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Changes beyond the UI</h2>
+<p class="kd" style="max-width: 920px; margin: -6px 0 16px; font-size: 13px; color: var(--text-2)">The panel above already uses these, so each one is a rework rule.</p>
+<div class="two">
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">The Debug Overlay is one panel <span class="chip propchip">New, rule 145</span></div><div class="kd" style="margin: 0">DebugOverlay draws a list of lines that each have their own position and background. It becomes one panel with sections, rows and graphs as data, and the four category options turn into the folded state of three sections.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">The Debug Overlay samples on a clock <span class="chip propchip">New, rule 146</span></div><div class="kd" style="margin: 0">Values get read four times a second into one sample that the number and its graph share. Names that can&#x27;t change, like the processor, get read once, and a row&#x27;s text is only built again when its value changed.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">The Debug Overlay outlines every element <span class="chip propchip">New, rule 147</span></div><div class="kd" style="margin: 0">renderWidgetOverlays only collects vanilla widgets. It collects the layout&#x27;s own elements too, and the menu gets Edit in the Layout Editor.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Pre-loading reports what happened <span class="chip okchip2">Covered, rule 120</span></div><div class="kd" style="margin: 0">The Pre-loaded row reads the results that rule 120 keeps.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Every menu is the same menu <span class="chip okchip2">Covered, rule 27</span></div><div class="kd" style="margin: 0">An element&#x27;s right-click menu is the shared menu.</div></div>
+</div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"$preview":{"width":1440,"height":2932}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark' };
+  }
+}
+</script>
+</body>
+</html>

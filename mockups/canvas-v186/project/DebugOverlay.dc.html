@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Debug Overlay</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="fm {{themeClass}} {{matClass}}" style="position: relative; width: 1440px; height: 900px; overflow: hidden; background: var(--bd)" onContextMenu="{{noCtx}}">
+<div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""></div>
+<div aria-hidden="true" style="position: absolute; left: 500px; top: 150px; width: 440px; height: 84px; display: grid; place-items: center; color: #fff; font-size: 52px; font-weight: 700; letter-spacing: 1px; text-shadow: 0 4px 0 rgba(0, 0, 0, .35)">Dusk Valley</div>
+<div class="mc-btn" aria-hidden="true" style="left: 590px; top: 420px; width: 260px; height: 38px">Play</div>
+<div class="mc-btn" aria-hidden="true" style="left: 590px; top: 468px; width: 260px; height: 38px">Options</div>
+<div class="mc-btn" aria-hidden="true" style="left: 590px; top: 516px; width: 260px; height: 38px">Quit Game</div>
+<div aria-hidden="true" style="position: absolute; left: 16px; bottom: 12px; color: rgba(255, 255, 255, .85); font-size: 12px">Dusk Valley Pack 1.4.2</div>
+<div aria-hidden="true" style="position: absolute; right: 16px; bottom: 12px; color: rgba(255, 255, 255, .85); font-size: 12px">Copyright Mojang AB. Do not distribute!</div>
+
+<sc-for list="{{outs}}" as="o" hint-placeholder-count="6"><button class="{{o.cls}}" style="{{o.style}}" aria-label="{{o.name}}" onMouseEnter="{{o.enter}}" onMouseLeave="{{o.leave}}" onContextMenu="{{o.menu}}"></button></sc-for>
+<sc-if value="{{hasTag}}" hint-placeholder-val="{{true}}"><div class="dbg-tag" style="{{tag.style}}"><span class="t"><span class="ms" aria-hidden="true">{{tag.icon}}</span>{{tag.name}}<span class="ty">{{tag.type}}</span></span><code>{{tag.id}}</code></div></sc-if>
+
+<div style="position: absolute; left: 0; right: 0; top: 0"><dc-import name="MenuBar" kind="Overlay" standalone="{{no}}" hint-size="1440px,30px"></dc-import></div>
+
+<section class="dbg" style="{{panelStyle}}" aria-label="Debug Overlay">
+<div class="dbg-head"><span class="ms" aria-hidden="true">terminal</span>Debug Overlay<span class="sp"></span>
+<button class="ib" data-tip="{{copyTip}}" aria-label="Copy everything as text" onClick="{{copyAll}}"><span class="ms" aria-hidden="true">{{copyIcon}}</span></button>
+<button class="ib" data-tip="{{sideTip}}" aria-label="{{sideTip}}" onClick="{{flip}}"><span class="ms" aria-hidden="true">{{sideIcon}}</span></button>
+<button class="ib" data-tip="Hide · Ctrl+Alt+D" aria-label="Hide the Debug Overlay"><span class="ms" aria-hidden="true">close</span></button>
+</div>
+<sc-for list="{{secs}}" as="sec" hint-placeholder-count="3">
+<button class="{{sec.hcls}}" aria-expanded="{{sec.expanded}}" onClick="{{sec.toggle}}"><span class="ms" aria-hidden="true">chevron_right</span>{{sec.title}}<sc-if value="{{sec.sum}}" hint-placeholder-val="{{false}}"><span class="{{sec.sumCls}}">{{sec.sum}}</span></sc-if></button>
+<sc-if value="{{sec.open}}" hint-placeholder-val="{{true}}">
+<div class="dbg-rows">
+<sc-for list="{{sec.rows}}" as="r" hint-placeholder-count="4">
+<div class="{{r.cls}}" onClick="{{r.click}}">
+<span class="k">{{r.k}}</span>
+<sc-if value="{{r.spark}}" hint-placeholder-val="{{false}}"><svg class="dbg-spark" viewBox="0 0 96 22" preserveAspectRatio="none" aria-hidden="true"><path class="a" d="{{r.area}}"></path><path class="l" d="{{r.line}}"></path></svg></sc-if>
+<span class="{{r.vCls}}">{{r.v}}</span>
+<sc-if value="{{r.copy}}" hint-placeholder-val="{{false}}"><span class="ms cp" aria-hidden="true">{{r.copyIcon}}</span></sc-if>
+</div>
+</sc-for>
+</div>
+</sc-if>
+</sc-for>
+<div class="dbg-foot">Right-click an outlined element to copy its ID or locator.</div>
+</section>
+
+<sc-if value="{{menuOpen}}" hint-placeholder-val="{{false}}">
+<div class="fb-catch" style="z-index: 42" onClick="{{closeMenu}}"></div>
+<div class="vm-pop" style="{{menuStyle}}"><dc-import name="ContextMenu" items="{{menuItems}}" escape-listener="{{closeMenu}}" standalone="{{no}}" hint-size="auto,120px"></dc-import></div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"view":{"editor":"enum","options":["base","menu","slow"],"default":"base"},"side":{"editor":"enum","options":["Left","Right"],"default":"Left"},"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1440,"height":900}}'>
+// What the overlay outlines: the layout's own elements and the vanilla widgets that are shown. A vanilla widget has a
+// locator, which is the screen's identifier and the widget's (WidgetMeta.getLocator).
+const ELEMENTS = [
+  { id: 'title', name: 'Title Text', type: 'Text', icon: 'text_fields', box: [500, 150, 440, 84], eid: '4f1c8a2e-9b53-4d07-8e61-2a7c5d90b3f4-1731402618' },
+  { id: 'play', name: 'Play', type: 'Button', icon: 'smart_button', box: [590, 420, 260, 38], eid: '7c1d2f4e-58a3-4b9e-9d3c-6f0a2b1e8c55-1731402671' },
+  { id: 'options', name: 'Options', type: 'Button', icon: 'smart_button', box: [590, 468, 260, 38], eid: 'b83e6d10-2c4f-47a9-a5d8-91e0f3c7a264-1731402689' },
+  { id: 'quit', name: 'Quit Game', type: 'Button', icon: 'smart_button', box: [590, 516, 260, 38], eid: 'e25a9c73-6d18-4f3b-8b02-c4d7e1f59a80-1731402704' },
+  { id: 'version', name: 'Version Text', type: 'Text', icon: 'text_fields', box: [10, 868, 150, 24], eid: '19d4b7f0-a3c6-4e82-b157-7f2e8c6d0a93-1731402752' },
+  { id: 'copyright', name: 'Copyright', type: 'Vanilla Widget', icon: 'dashboard', box: [1178, 868, 252, 24], eid: 'vanillabtn:mc_titlescreen_copyright_button', loc: 'title_screen:mc_titlescreen_copyright_button' }
+];
+// a seeded walk, so every board draws the same graphs
+const walk = (seed, n, base, spread, lo, hi) => { let x = seed, v = base; const out = []; for (let i = 0; i < n; i++) { x = (x * 1103515245 + 12345) % 2147483648; v += ((x / 2147483648) - .5) * spread; v += (base - v) * .12; out.push(Math.max(lo, Math.min(hi, v))); } return out; };
+const N = 48;
+
+class Component extends DCLogic {
+  componentWillUnmount() { if (this._t) clearInterval(this._t); }
+
+  renderVals() {
+    const p = this.props, s = this.state || {};
+    const set = (patch) => this.setState(patch);
+    const view = p.view || 'base';
+    const slow = view === 'slow';
+    const right = (s.side ?? (p.side || 'Left')) === 'Right';
+
+    // ---------- samples: four a second, one clock for the numbers and their graphs (rule 146) ----------
+    if (!this._data) {
+      this._data = slow
+        ? { fps: walk(7, N, 15, 4, 6, 19), mem: walk(11, N, 86, 2, 80, 92), jvm: walk(13, N, 71, 9, 40, 96), os: walk(17, N, 88, 6, 60, 100) }
+        : { fps: walk(7, N, 118, 9, 90, 144), mem: walk(11, N, 45, 3, 38, 52), jvm: walk(13, N, 12, 6, 3, 30), os: walk(17, N, 31, 8, 12, 55) };
+      this._seed = 99;
+      this._t = setInterval(() => {
+        const D = this._data, base = slow ? { fps: 15, mem: 86, jvm: 71, os: 88 } : { fps: 118, mem: 45, jvm: 12, os: 31 };
+        const step = (k, spread, lo, hi) => { this._seed = (this._seed * 1103515245 + 12345) % 2147483648; const last = D[k][D[k].length - 1]; const v = last + ((this._seed / 2147483648) - .5) * spread + (base[k] - last) * .12; D[k] = D[k].slice(1).concat(Math.max(lo, Math.min(hi, v))); };
+        step('fps', slow ? 4 : 9, slow ? 6 : 90, slow ? 19 : 144); step('mem', 1.2, 30, 96); step('jvm', slow ? 9 : 6, 2, 98); step('os', 7, 8, 100);
+        this.setState({ tk: Date.now() });
+      }, 250);
+    }
+    const D = this._data;
+    const last = (k) => D[k][D[k].length - 1];
+    // each graph scales to what it shows, with some air above and below, so small changes stay visible
+    const spark = (arr) => {
+      const lo0 = Math.min(...arr), hi0 = Math.max(...arr), pad = Math.max(1, (hi0 - lo0) * .25), lo = lo0 - pad, hi = hi0 + pad;
+      const pts = arr.map((v, i) => [(i / (arr.length - 1) * 96).toFixed(1), (21 - (v - lo) / (hi - lo) * 20).toFixed(1)]);
+      const line = 'M' + pts.map((q) => q.join(' ')).join(' L');
+      return { line, area: line + ' L96 22 L0 22 Z' };
+    };
+    // the same limits the overlay colors its numbers with today
+    const tone = { fps: (v) => (v < 10 ? 'err' : v < 20 ? 'warn' : ''), mem: (v) => (v >= 80 ? 'err' : v >= 60 ? 'warn' : ''), cpu: (v) => (v >= 80 ? 'err' : v > 50 ? 'warn' : '') };
+    const fps = Math.round(last('fps')), mem = Math.round(last('mem')), jvm = Math.round(last('jvm')), os = Math.round(last('os'));
+    const copied = s.copied || '';
+    const R = (k, v, o) => Object.assign({ k, v, cls: 'dbg-row', vCls: 'v', spark: false, copy: false, click: null, line: '', area: '', copyIcon: '' }, o || {});
+    const G = (k, key, v, t) => R(k, v, Object.assign({ cls: 'dbg-row spark' + (t ? ' ' + t : ''), spark: true }, spark(D[key])));
+    const coll = s.coll ?? (slow ? { screen: true } : {});
+    const worst = [tone.fps(fps), tone.mem(mem), tone.cpu(jvm), tone.cpu(os)].includes('err') ? 'err' : [tone.fps(fps), tone.mem(mem), tone.cpu(jvm), tone.cpu(os)].includes('warn') ? 'warn' : '';
+    const defs = [
+      { id: 'screen', title: 'Screen', sum: 'title_screen', tone: '', rows: [
+        R('Identifier', copied === 'id' ? 'Copied' : 'title_screen', { cls: 'dbg-row copy', vCls: 'v mono', copy: true, copyIcon: copied === 'id' ? 'check' : 'content_copy', click: () => { set({ copied: 'id' }); setTimeout(() => this.setState({ copied: '' }), 1500); } }),
+        R('Size', '1440 × 900 · GUI scale 2'),
+        R('Layouts', '2 of 3 on · 1 universal'),
+        R('Elements', '14')
+      ] },
+      { id: 'res', title: 'Resources', sum: slow ? '1 problem' : '', tone: slow ? 'warn' : '', rows: [
+        R('Slideshows', '1 · 4 images'),
+        R('Panoramas', '6'),
+        R('Pre-loaded', slow ? '6 of 7 · 1 didn\'t load in time' : '7 of 7', slow ? { cls: 'dbg-row warn' } : null)
+      ] },
+      { id: 'sys', title: 'System', sum: fps + ' FPS', tone: worst, rows: [
+        G('FPS', 'fps', String(fps), tone.fps(fps)),
+        G('Memory', 'mem', Math.round(mem * 40.96).toLocaleString('en-US') + ' MB · ' + mem + ' %', tone.mem(mem)),
+        G('CPU, game', 'jvm', jvm + ' %', tone.cpu(jvm)),
+        G('CPU, system', 'os', os + ' %', tone.cpu(os)),
+        R('Processor', 'Apple M4 Pro'),
+        R('Graphics', 'Apple M4 Pro · OpenGL 4.1')
+      ] }
+    ];
+    const secs = defs.map((d) => {
+      const open = !coll[d.id];
+      return {
+        title: d.title, open, expanded: open ? 'true' : 'false', hcls: 'dbg-sec' + (open ? ' open' : ''), rows: d.rows,
+        // folded, a section says its most important value, in the color of its worst one
+        sum: open ? (d.id === 'res' ? d.sum : '') : d.sum, sumCls: 'sum' + (d.tone ? ' ' + d.tone : ''),
+        toggle: () => set({ coll: Object.assign({}, coll, { [d.id]: open }) })
+      };
+    });
+
+    // ---------- outlines, the tag of the hovered element and its menu ----------
+    const hov = s.hov !== undefined ? s.hov : (view === 'menu' ? 'copyright' : view === 'base' ? 'play' : '');
+    const menuFor = s.menuFor !== undefined ? s.menuFor : (view === 'menu' ? 'copyright' : '');
+    const byId = (id) => ELEMENTS.find((e) => e.id === id);
+    const outs = ELEMENTS.map((e) => ({
+      name: e.name, cls: 'dbg-out' + (hov === e.id || menuFor === e.id ? ' hov' : ''),
+      style: 'left: ' + e.box[0] + 'px; top: ' + e.box[1] + 'px; width: ' + e.box[2] + 'px; height: ' + e.box[3] + 'px',
+      enter: () => set({ hov: e.id }), leave: () => set({ hov: '' }),
+      menu: (ev) => { ev.preventDefault(); ev.stopPropagation(); set({ menuFor: e.id, hov: e.id }); }
+    }));
+    const he = byId(menuFor || hov);
+    let tag = {};
+    if (he) {
+      const below = he.box[1] < 300, onRight = he.box[0] > 900;
+      tag = {
+        icon: he.icon, name: he.name, type: he.type, id: he.loc || he.eid,
+        style: (onRight ? 'right: ' + (1440 - he.box[0] - he.box[2]) + 'px' : 'left: ' + he.box[0] + 'px') + '; ' + (below ? 'top: ' + (he.box[1] + he.box[3] + 8) + 'px' : 'bottom: ' + (900 - he.box[1] + 8) + 'px')
+      };
+    }
+    const me = byId(menuFor);
+    const said = (t) => () => set({ menuFor: '', said: t });
+    const menuItems = me ? [
+      ...(me.loc ? [{ ic: 'content_copy', label: 'Copy Widget Locator', click: said('locator') }] : []),
+      { ic: 'content_copy', label: 'Copy Element ID', click: said('id') },
+      { sep: true },
+      { ic: 'edit', label: 'Edit in the Layout Editor', click: said('edit') }
+    ] : [];
+    const copiedAll = copied === 'all';
+    return {
+      themeClass: (p.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark',
+      matClass: (p.material ?? 'Blur') === 'Blur' ? 'mat-blur' : '',
+      yes: true, no: false, noCtx: (e) => e.preventDefault(),
+      outs, hasTag: !!he, tag, secs,
+      panelStyle: right ? 'right: 8px' : 'left: 8px',
+      sideTip: right ? 'Move to the Left' : 'Move to the Right', sideIcon: right ? 'dock_to_right' : 'dock_to_left', flip: () => set({ side: right ? 'Left' : 'Right' }),
+      copyTip: copiedAll ? 'Copied' : 'Copy Everything as Text', copyIcon: copiedAll ? 'check' : 'content_copy',
+      copyAll: () => { set({ copied: 'all' }); setTimeout(() => this.setState({ copied: '' }), 1500); },
+      menuOpen: !!me, menuItems, closeMenu: () => set({ menuFor: '' }),
+      menuStyle: me ? (me.box[0] > 900 ? 'right: ' + (1440 - me.box[0] - me.box[2] + 20) + 'px' : 'left: ' + (me.box[0] + 40) + 'px') + '; ' + (me.box[1] > 600 ? 'bottom: ' + (900 - me.box[1] + 64) + 'px' : 'top: ' + (me.box[1] + me.box[3] + 60) + 'px') : ''
+    };
+  }
+}
+</script>
+</body>
+</html>
