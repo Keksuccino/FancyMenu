@@ -99,14 +99,18 @@ final class MarkdownInteractions {
     }
 
     /**
-     * Makes all given fragments forget that the mouse was over them, including the fragments in table cells.
+     * Makes all given fragments and all text hover events forget that the mouse was over them.
      */
     void resetHovered(@NotNull List<MarkdownTextFragment> fragments) {
         this.resetHoveredFragments(fragments);
         this.hoveredEventIds.clear();
     }
 
-    private void resetHoveredFragments(@NotNull List<MarkdownTextFragment> fragments) {
+    /**
+     * Makes all given fragments forget that the mouse was over them, including the fragments in table cells.
+     * Text hover events notice that on their own the next time they get updated.
+     */
+    void resetHoveredFragments(@NotNull List<MarkdownTextFragment> fragments) {
         for (MarkdownTextFragment fragment : fragments) {
             fragment.setHovered(false);
             if (fragment.isTable()) {
