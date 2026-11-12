@@ -475,10 +475,15 @@ public class MarkdownParser {
                 }
 
                 //Handle Quote
-                if (isStartOfLine && (c == GREATER_THAN_CHAR) && (builder.quoteContext == null) && (builder.codeBlockContext == null) && !builder.plainText) {
+                if (isStartOfLine && (c == GREATER_THAN_CHAR) && (builder.codeBlockContext == null) && !builder.plainText) {
+                    // The prefix opens a quote, and lines of an open quote that start with it stay part of that quote without showing it
                     if (markdownText.startsWith(FORMATTING_CODE_QUOTE_PREFIX, index)) {
-                        builder.quoteContext = new QuoteContext();
+                        if (builder.quoteContext == null) builder.quoteContext = new QuoteContext();
                         charsToSkip = 1;
+                        continue;
+                    }
+                    // A line with nothing but the quote character is an empty line of the open quote
+                    if ((builder.quoteContext != null) && (remainingLineLength == 1)) {
                         continue;
                     }
                 }
