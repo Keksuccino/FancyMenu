@@ -114,7 +114,7 @@ final class MarkdownLayout {
     /**
      * Measures the real size of the text and positions all lines and their fragments.<br>
      * Lines keep the size they got measured with when they got prepared. Only lines with images get measured again, because an image is never
-     * wider than the text, which makes its size depend on the lines around it.
+     * wider than the text around it, which makes its size depend on all other lines.
      */
     void updateMetrics() {
 
@@ -122,33 +122,40 @@ final class MarkdownLayout {
         List<MarkdownTextLine> lines = renderer.lines;
         boolean containsImages = false;
 
-        // The real width grows line by line here, and an image line gets measured against the width of the lines before it
-        renderer.realWidth = 0;
-        renderer.realHeight = 0;
+        // Images get measured against the real width, so the real width they see has to be the one of all lines without images
+        float maxLineWidth = 0;
         for (MarkdownTextLine line : lines) {
             if (line.containsImages) {
                 containsImages = true;
-                line.updateSize();
+            } else if (line.lineWidth > maxLineWidth) {
+                maxLineWidth = line.lineWidth;
             }
-            if (line.lineWidth > renderer.realWidth) {
-                renderer.realWidth = line.lineWidth;
-            }
-            renderer.realHeight += line.lineHeight + renderer.lineSpacing;
         }
+        renderer.realWidth = maxLineWidth;
         renderer.realWidth += renderer.border + renderer.border;
-        renderer.realHeight += renderer.border + renderer.border;
 
         this.measuredImages.clear();
         if (containsImages) {
-            // Images render against the final real width, so their lines get positioned with that size
             for (MarkdownTextLine line : lines) {
                 if (!line.containsImages) continue;
                 line.updateSize();
+                if (line.lineWidth > maxLineWidth) {
+                    maxLineWidth = line.lineWidth;
+                }
                 for (MarkdownTextFragment f : line.fragments) {
                     if (f.imageSupplier != null) this.measuredImages.add(new MeasuredImage(f));
                 }
             }
+            // An image is never wider than the real width it got measured against, so this doesn't change the size of the images
+            renderer.realWidth = maxLineWidth;
+            renderer.realWidth += renderer.border + renderer.border;
         }
+
+        renderer.realHeight = 0;
+        for (MarkdownTextLine line : lines) {
+            renderer.realHeight += line.lineHeight + renderer.lineSpacing;
+        }
+        renderer.realHeight += renderer.border + renderer.border;
 
         float realInnerWidth = renderer.getRealWidth() - renderer.border - renderer.border;
         float lineOffsetY = renderer.border;
