@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Picking a panorama in the layout editor</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="fm {{themeClass}} {{matClass}}" style="position: relative; width: 1440px; height: 900px; overflow: hidden; background: var(--bd)">
+<div class="backdrop" aria-hidden="true" style="background: #15182c"><dc-import name="PanoCube" sides="{{bg.sides}}" fov="{{bg.fov}}" pitch="{{bg.pitch}}" yaw="{{bg.yaw}}" at="{{bg.at}}" rate="{{bg.rate}}" names="{{no}}" width="1440" height="900" hint-size="1440px,900px"></dc-import><div class="gridlines"></div></div>
+<div class="le" aria-hidden="true" style="left: 640px; top: 44px; width: 160px; height: 22px; display: grid; place-items: center; color: #fff; font-size: 13px">Options</div>
+<div class="le le-btn" aria-hidden="true" style="left: 420px; top: 700px; width: 290px; height: 38px">Resource Packs</div>
+<div class="le le-btn" aria-hidden="true" style="left: 730px; top: 700px; width: 290px; height: 38px">Accessibility Settings</div>
+<div class="le le-btn" aria-hidden="true" style="left: 590px; top: 850px; width: 260px; height: 38px">Done</div>
+<div style="position: absolute; left: 0; right: 0; top: 0"><dc-import name="MenuBar" kind="Editor" unsaved="{{yes}}" layout-name="Dusk Valley Options" screen-name="Options Screen" standalone="{{no}}" hint-size="1440px,30px"></dc-import></div>
+
+<div style="position: absolute; left: 150px; top: 96px; display: flex; align-items: flex-start; gap: 2px">
+<div><dc-import name="ContextMenu" items="{{items}}" search="Search this menu" standalone="{{no}}" hint-size="auto,560px"></dc-import></div>
+<div style="{{subStyle}}"><dc-import name="ContextMenu" items="{{bgItems}}" sub="{{yes}}" search="" standalone="{{no}}" hint-size="auto,330px"></dc-import></div>
+<div style="{{listStyle}}"><dc-import name="ContextMenu" items="{{listItems}}" sub="{{yes}}" search="" standalone="{{no}}" hint-size="auto,250px"></dc-import></div>
+<sc-if value="{{card}}" hint-placeholder-val="{{true}}">
+<div class="help-tag" style="{{cardStyle}}"><span style="position: relative; display: block; width: 192px; height: 108px; margin-bottom: 8px; border-radius: 4px; overflow: hidden"><dc-import name="PanoCube" sides="{{card.sides}}" fov="{{card.fov}}" pitch="{{card.pitch}}" yaw="{{card.yaw}}" at="{{card.at}}" rate="{{card.rate}}" names="{{no}}" width="192" height="108" hint-size="192px,108px"></dc-import></span><b style="display: block; color: var(--title)">{{card.name}}</b>{{card.meta}}</div>
+</sc-if>
+<sc-if value="{{note}}" hint-placeholder-val="{{false}}"><div class="help-tag" style="{{cardStyle}}">{{note}}</div></sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1440,"height":900}}'>
+// the panoramas of the Dusk Valley profile, as the Panoramas window lists them: name, the row of its pictures on
+// pano_faces.png, and its camera
+const PANOS = [
+  { id: 'p1', n: 'Aurora Lake', row: 0, speed: .5, fov: 90, angle: -6, start: 0 },
+  { id: 'p2', n: 'Cherry Blossom Hill', row: 1, speed: 1, fov: 85, angle: 6, start: 330 },
+  { id: 'p3', n: 'Dusk Valley Night', row: 2, speed: 1, fov: 85, angle: 5, start: 0 },
+  { id: 'p4', n: 'Golden Hour', row: 3, speed: .5, fov: 85, angle: 4, start: 340 },
+  { id: 'p5', n: 'Snowy Peaks', row: 4, speed: 1, fov: 85, angle: 0, start: 0 },
+  { id: 'p6', n: 'Starfall Ridge', row: 5, speed: 2, fov: 100, angle: -18, start: 0 }
+];
+// 0.03° per tick, a tick every 20 ms divided by the speed and never more often than every 2 ms, like in the window
+const rateOf = (speed) => (speed > 0 ? 30 / Math.max(2, Math.floor(20 / speed)) : 0);
+const dur = (sec) => { const s0 = Math.round(sec); return s0 < 60 ? s0 + ' s' : Math.floor(s0 / 60) + ' min' + (s0 % 60 ? ' ' + (s0 % 60) + ' s' : ''); };
+
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const t0 = this._t0 || (this._t0 = Date.now());
+    const pick = s.pick ?? 'p3';
+    const hover = s.hover !== undefined ? s.hover : pick;
+    const cur = PANOS.find((x) => x.id === pick);
+    const hov = PANOS.find((x) => x.id === hover);
+    const tell = (note) => () => this.setState({ note, hover: null });
+    const cube = (x) => ({ sides: [0, 1, 2, 3, 4, 5].map((f) => ({ pic: [f, x.row] })), fov: x.fov, pitch: x.angle, yaw: x.start, at: t0, rate: rateOf(x.speed) });
+    const items = [
+      { ic: 'plus', label: 'New Element', sub: true },
+      { ic: 'paste', label: 'Paste', kbd: 'Ctrl+V' },
+      { head: 'Screen' },
+      { ic: 'image', label: 'Background', val: 'Panorama', sub: true, hl: true },
+      { ic: 'sparkle', label: 'Decoration Overlays', sub: true },
+      { ic: 'header', label: 'Header & Footer', sub: true },
+      { ic: 'title', label: 'Screen Title', val: 'Options' },
+      { head: 'Layout' },
+      { ic: 'index', label: 'Layout Index', val: '0' },
+      { ic: 'check', label: 'Loading Conditions', val: 'None' },
+      { ic: 'behind', label: 'Custom Elements Behind Vanilla', sw: true, on: false },
+      { head: 'Random Mode' },
+      { ic: 'shuffle', label: 'Random Mode', sw: true, on: false },
+      { ic: 'cards', label: 'Random Group', val: 'None', disabled: true },
+      { ic: 'shuffle_on', label: 'Only First Time', sw: true, on: false, disabled: true },
+      { head: 'Scaling' },
+      { ic: 'ruler', label: 'Force GUI Scale', val: 'Off' },
+      { ic: 'fit', label: 'Auto-Scaling', sw: true, on: false, disabled: true, note: 'needs a GUI scale' },
+      { head: 'Audio & Scripts' },
+      { ic: 'volume', label: 'Screen Audio', sub: true },
+      { ic: 'code', label: 'Open Screen Script' },
+      { ic: 'code', label: 'Close Screen Script' }
+    ];
+    // Background lists its kinds with a checkmark on the current one (rule 15), and below them what that kind needs:
+    // for a panorama, which one.
+    const bgItems = [
+      ...['Default', 'Browser', 'Color', 'GLSL Shader', 'Image', 'Panorama', 'Slideshow', 'Video'].map((k) => ({ radio: true, checked: k === 'Panorama', label: k })),
+      { head: 'Panorama' },
+      { ic: 'panorama', label: 'Panorama', val: cur.n, sub: true, hl: true }
+    ];
+    // Wherever a panorama gets picked, its submenu also leads to the Panoramas window: the pencil on a row opens it on
+    // that panorama, and the last two rows make a new one or show them all (rule 168).
+    const listItems = [
+      ...PANOS.map((x) => ({
+        radio: true, checked: x.id === pick, label: x.n, hl: x.id === hover,
+        enter: () => { if (hover !== x.id || s.note) this.setState({ hover: x.id, note: '' }); },
+        click: () => this.setState({ pick: x.id, hover: x.id, note: '' }),
+        editTip: 'Edit ' + x.n, onEdit: tell('Opens Panoramas with ' + x.n + ' selected, to change its sides and its camera.')
+      })),
+      { sep: true },
+      { ic: 'plus', label: 'New Panorama', enter: () => this.setState({ hover: null }), click: tell('Opens Panoramas with a new panorama, its name ready to type. Once it\'s saved, it\'s in this list to pick.') },
+      { ic: 'panorama', label: 'Manage Panoramas', enter: () => this.setState({ hover: null }), click: tell('Opens Panoramas, where every panorama can be changed, copied or deleted.') }
+    ];
+    const heightOf = (it) => (it.sep || it.head ? 25 : 26);
+    const offsetOf = (list, key) => { let y = 0; for (const it of list) { if (it.label === key) return y; y += heightOf(it); } return 0; };
+    // same rule as ContextMenu: the search field shows from the start in menus with more than 10 entries
+    const topOf = (list) => 1 + 5 + (list.filter((it) => !it.sep && !it.head).length > 10 ? 28 : 0);
+    const subTop = topOf(items) + offsetOf(items, 'Background') - 6;
+    const listTop = subTop + topOf(bgItems) + offsetOf(bgItems.slice(8), 'Panorama') + 8 * 26 - 6;
+    return {
+      themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark',
+      matClass: (this.props.material ?? 'Blur') === 'Blur' ? 'mat-blur' : '',
+      yes: true, no: false,
+      items, bgItems, listItems, subStyle: 'margin-top: ' + subTop + 'px', listStyle: 'margin-top: ' + listTop + 'px',
+      // the layout's background is the picked panorama, turning behind the menus
+      bg: cube(cur),
+      // hovering a panorama shows it in a preview card next to the menu (rules 22 and 133)
+      card: !s.note && hov ? { name: hov.n, meta: '1024 × 1024 · ' + dur(360 / rateOf(hov.speed)) + ' a turn', ...cube(hov) } : null,
+      note: s.note || '',
+      // the card sits next to the row it belongs to, and what a click did next to the top of the submenu
+      cardStyle: 'position: relative; animation: none; width: 222px; margin: ' + (listTop + 6 + (!s.note && hov ? offsetOf(listItems, hov.n) : 0)) + 'px 0 0 8px'
+    };
+  }
+}
+</script>
+</body>
+</html>

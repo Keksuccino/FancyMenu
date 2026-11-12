@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Color picker component</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="{{rootCls}}" style="{{rootStyle}}">
+<sc-if value="{{standalone}}" hint-placeholder-val="{{true}}"><div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""><div class="dim"></div></div></sc-if>
+<div class="win cp" role="dialog" aria-label="{{title}}" style="{{winStyle}}">
+<div class="titlebar">
+<div class="tl"><button class="c" aria-label="Cancel and close" onClick="{{cancel}}"><span class="ms" aria-hidden="true">close</span></button><button class="m" aria-label="Collapse" disabled><span class="ms" aria-hidden="true">remove</span></button><button class="x" aria-label="Maximize" disabled><span class="ms" aria-hidden="true">open_in_full</span></button></div>
+<div class="wt"><span class="ms" aria-hidden="true">palette</span>{{title}}</div>
+<div></div>
+</div>
+
+<div class="cp-body">
+<div class="cp-left">
+<div class="cp-sv" role="slider" aria-label="Saturation and brightness" aria-valuetext="{{svText}}" style="{{svBg}}" onPointerDown="{{sv.down}}" onPointerMove="{{sv.move}}" onPointerUp="{{sv.up}}"><span class="cp-thumb" style="{{svThumb}}"></span></div>
+<div class="cp-track" role="slider" aria-label="Hue" aria-valuetext="{{hueText}}" style="{{hueBg}}" onPointerDown="{{hue.down}}" onPointerMove="{{hue.move}}" onPointerUp="{{hue.up}}"><span class="cp-knob" style="{{hueKnob}}"></span></div>
+<div class="cp-track" role="slider" aria-label="Alpha" aria-valuetext="{{alphaText}}" style="{{alphaBg}}" onPointerDown="{{alpha.down}}" onPointerMove="{{alpha.move}}" onPointerUp="{{alpha.up}}"><span class="cp-knob" style="{{alphaKnob}}"></span></div>
+</div>
+
+<div class="cp-right">
+<div class="cp-cl"><span>New</span><span>{{origLabel}}</span></div>
+<div class="cp-compare">
+<span class="cp-half" style="{{newBg}}" aria-label="New color"></span>
+<button class="cp-half" style="{{origBg}}" data-tip="{{origTip}}" aria-label="{{origTip}}" disabled="{{origDisabled}}" onClick="{{revert}}"></button>
+</div>
+<div class="cp-row">
+<span class="cp-l">Hex</span>
+<div class="{{hexCls}}"><input type="text" aria-label="Hex color" value="{{hexText}}" onInput="{{hexTyped}}" onChange="{{hexTyped}}" onBlur="{{hexBlur}}"></div>
+<button class="{{dropCls}}" data-tip="Pick a color from the screen" aria-label="Pick a color from the screen" aria-pressed="{{dropPressed}}" onClick="{{pick}}"><span class="ms" aria-hidden="true">dropper_eye</span></button>
+</div>
+<div class="cp-row">
+<span class="cp-l">RGBA</span>
+<div class="cp-ch"><sc-for list="{{rgbaFields}}" as="f" hint-placeholder-count="4"><label class="{{f.cls}}"><span class="pre">{{f.pre}}</span><input type="text" aria-label="{{f.name}}" value="{{f.val}}" onInput="{{f.typed}}" onChange="{{f.typed}}" onBlur="{{f.blur}}"></label></sc-for></div>
+</div>
+<div class="cp-row">
+<span class="cp-l">HSV</span>
+<div class="cp-ch"><sc-for list="{{hsvFields}}" as="f" hint-placeholder-count="3"><label class="{{f.cls}}"><span class="pre">{{f.pre}}</span><input type="text" aria-label="{{f.name}}" value="{{f.val}}" onInput="{{f.typed}}" onChange="{{f.typed}}" onBlur="{{f.blur}}"><span class="suf">{{f.suf}}</span></label></sc-for></div>
+</div>
+<div class="cp-row" style="margin-top: auto">
+<span class="cp-l">Recent</span>
+<div class="cp-recent"><sc-for list="{{recent}}" as="c" hint-placeholder-count="8"><button class="cp-sw" style="{{c.bg}}" data-tip="{{c.hex}}" aria-label="{{c.hex}}" onClick="{{c.use}}"></button></sc-for></div>
+</div>
+</div>
+</div>
+
+<div class="footer">
+<sc-if value="{{hasLead}}" hint-placeholder-val="{{true}}"><span class="lead"><span class="ms" aria-hidden="true">visibility</span>{{leadText}}</span></sc-if><sc-if value="{{noLead}}" hint-placeholder-val="{{false}}"><span class="lead"></span></sc-if>
+<button class="btn wide" onClick="{{cancel}}">Cancel</button>
+<button class="btn wide primary" onClick="{{done}}">Use Color</button>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"title":{"editor":"text","default":"Text Color"},"target":{"editor":"text","default":"Title Text"},"color":{"editor":"text","default":"#FFD166"},"original":{"editor":"text","default":"#FFFFFF"},"mixed":{"editor":"text","default":""},"picking":{"editor":"boolean","default":false},"picked":{"editor":"text","default":""},"hexDraft":{"editor":"text","default":""},"live":{"editor":"boolean","default":true},"standalone":{"editor":"boolean","default":true},"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":700,"height":520}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const p = this.props;
+    const clamp = (x, lo, hi) => Math.min(hi, Math.max(lo, x));
+    // FancyMenu accepts #RGB, #RGBA, #RRGGBB, #RRGGBBAA and basic HTML color names
+    const NAMES = { white: 'ffffff', black: '000000', red: 'ff0000', green: '008000', lime: '00ff00', blue: '0000ff', yellow: 'ffff00', gold: 'ffd700', orange: 'ffa500', purple: '800080', pink: 'ffc0cb', gray: '808080', grey: '808080', cyan: '00ffff', magenta: 'ff00ff', transparent: '00000000' };
+    const parse = (str) => {
+      let t = String(str || '').trim().toLowerCase();
+      if (NAMES[t]) t = NAMES[t];
+      t = t.replace(/^#/, '');
+      if (!/^[0-9a-f]+$/.test(t)) return null;
+      if (t.length === 3 || t.length === 4) t = t.split('').map((c) => c + c).join('');
+      if (t.length === 6) t += 'ff';
+      if (t.length !== 8) return null;
+      return [0, 2, 4, 6].map((i) => parseInt(t.slice(i, i + 2), 16));
+    };
+    const hsvToRgb = (h, sat, v) => {
+      const f = (n) => { const k = (n + h / 60) % 6; return v - v * sat * Math.max(0, Math.min(k, 4 - k, 1)); };
+      return [f(5), f(3), f(1)].map((x) => Math.round(x * 255));
+    };
+    const rgbToHsv = (r, g, b, keepHue) => {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b), d = max - Math.min(r, g, b);
+      let h = keepHue ?? 0;
+      if (d) h = 60 * (max === r ? ((g - b) / d + 6) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4);
+      return { h, s: max ? d / max : 0, v: max };
+    };
+    const hex2 = (n) => n.toString(16).padStart(2, '0').toUpperCase();
+    const rgbOf = (c) => hsvToRgb(c.h, c.s, c.v);
+    const hexOf = (c) => { const [r, g, b] = rgbOf(c); return '#' + hex2(r) + hex2(g) + hex2(b) + (c.a < 255 ? hex2(c.a) : ''); };
+    const fromHex = (str, keepHue) => { const c = parse(str); return c ? { ...rgbToHsv(c[0], c[1], c[2], keepHue), a: c[3] } : null; };
+    const checker = 'repeating-conic-gradient(#c9c9c9 0 25%, #ffffff 0 50%) 0 0 / 10px 10px';
+    const fill = (hex) => 'background: linear-gradient(' + hex + ', ' + hex + '), ' + checker;
+
+    // current color; an eyedropper pick from the parent wins until the next local change
+    const rev = s.rev || 0;
+    let cur = s.hsva || fromHex(p.color) || fromHex('#FFFFFF');
+    const picked = p.picked || '';
+    if (picked && picked !== this._picked) { this._picked = picked; this._pickedRev = rev; this._pickedVal = fromHex(picked.split('|')[0], cur.h); }
+    if (this._pickedVal && rev === this._pickedRev) cur = this._pickedVal;
+    const drafts = s.drafts || (p.hexDraft ? { hex: p.hexDraft } : {});
+    const orig = s.orig ?? p.original ?? '#FFFFFF';
+    const mixed = (p.mixed || '').split(',').map((x) => x.trim()).filter(Boolean);
+    const recentList = s.recent || ['#FFFFFF', '#FFD166', '#4FB8FF', '#25B479', '#FF6B6B', '#1B1B26', '#00000080', '#C792EA'];
+
+    const emit = (c) => { if (p.colorListener) p.colorListener(hexOf(c)); };
+    // any change that doesn't come from typing (dragging, recent colors, revert) also drops unfinished field text
+    const setColor = (c) => { this.setState({ hsva: c, rev: rev + 1, drafts: {} }); emit(c); };
+    const setDraft = (key, text, c) => {
+      const patch = { drafts: { ...drafts, [key]: text } };
+      if (c) { patch.hsva = c; patch.rev = rev + 1; }
+      this.setState(patch);
+      if (c) emit(c);
+    };
+    const dropDraft = (key) => () => { if (key in drafts) { const d = { ...drafts }; delete d[key]; this.setState({ drafts: d }); } };
+
+    // pointer dragging on the square and sliders (pointer capture keeps the drag alive outside the control)
+    const frac = (e) => { const r = e.currentTarget.getBoundingClientRect(); return [clamp((e.clientX - r.left) / r.width, 0, 1), clamp((e.clientY - r.top) / r.height, 0, 1)]; };
+    const drag = (kind, apply) => ({
+      down: (e) => { try { e.currentTarget.setPointerCapture(e.pointerId); } catch (x) {} this._drag = kind; apply(frac(e)); },
+      move: (e) => { if (this._drag === kind && (e.buttons & 1)) apply(frac(e)); },
+      up: () => { this._drag = null; }
+    });
+    const [r, g, b] = rgbOf(cur);
+    const hueHex = hexOf({ h: cur.h, s: 1, v: 1, a: 255 });
+    const opaque = hexOf({ ...cur, a: 255 });
+    const hex = hexOf(cur);
+
+    // channel fields: every format can be typed into; invalid text stays visible (marked red) until it's fixed
+    const field = (key, pre, name, value, max, apply, suf) => {
+      const draft = drafts[key];
+      const text = draft ?? String(value);
+      const ok = (t) => /^\d{1,3}$/.test(t.trim()) && Number(t) <= max;
+      return {
+        pre, name, suf: suf || '', val: text,
+        cls: 'field cp-num' + (draft !== undefined && !ok(draft) ? ' bad' : ''),
+        typed: (e) => { const t = e.target.value; setDraft(key, t, ok(t) ? apply(Number(t)) : null); },
+        blur: dropDraft(key)
+      };
+    };
+    const withRgb = (i) => (n) => { const c = [r, g, b]; c[i] = n; return { ...rgbToHsv(c[0], c[1], c[2], cur.h), a: cur.a }; };
+    const rgbaFields = [
+      field('r', 'R', 'Red', r, 255, withRgb(0)),
+      field('g', 'G', 'Green', g, 255, withRgb(1)),
+      field('b', 'B', 'Blue', b, 255, withRgb(2)),
+      field('a', 'A', 'Alpha', cur.a, 255, (n) => ({ ...cur, a: n }))
+    ];
+    const hsvFields = [
+      field('h', 'H', 'Hue', Math.round(cur.h) % 360, 360, (n) => ({ ...cur, h: n % 360 }), '°'),
+      field('s', 'S', 'Saturation', Math.round(cur.s * 100), 100, (n) => ({ ...cur, s: n / 100 }), '%'),
+      field('v', 'V', 'Value', Math.round(cur.v * 100), 100, (n) => ({ ...cur, v: n / 100 }), '%')
+    ];
+    const hexDraft = drafts.hex;
+    const standalone = p.standalone ?? true;
+    return {
+      rootCls: standalone ? 'fm ' + ((p.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark') + ((p.material ?? 'Blur') === 'Blur' ? ' mat-blur' : '') : '',
+      rootStyle: standalone ? 'position: relative; width: 700px; height: 520px; overflow: hidden; background: var(--bd)' : 'position: relative; width: 620px; height: 424px',
+      winStyle: standalone ? 'left: 40px; top: 48px; width: 620px; height: 424px' : 'left: 0; top: 0; width: 620px; height: 424px',
+      standalone,
+      title: p.title || 'Text Color',
+      leadText: 'Live preview on ' + (p.target || 'Title Text'), hasLead: p.live ?? true, noLead: !(p.live ?? true),
+      svBg: 'background: linear-gradient(to top, #000, rgba(0, 0, 0, 0)), linear-gradient(to right, #fff, ' + hueHex + ')',
+      svThumb: 'left: ' + (cur.s * 100) + '%; top: ' + ((1 - cur.v) * 100) + '%; background: ' + opaque,
+      svText: 'Saturation ' + Math.round(cur.s * 100) + '%, brightness ' + Math.round(cur.v * 100) + '%',
+      hueBg: 'background: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00)',
+      hueKnob: 'left: ' + (cur.h / 360 * 100) + '%; background: ' + hueHex,
+      hueText: Math.round(cur.h) + ' degrees',
+      alphaBg: 'background: linear-gradient(to right, ' + opaque + '00, ' + opaque + '), ' + checker,
+      alphaKnob: 'left: ' + (cur.a / 255 * 100) + '%; background: linear-gradient(' + hex + ', ' + hex + '), ' + checker,
+      alphaText: Math.round(cur.a / 255 * 100) + '% opaque',
+      sv: drag('sv', ([x, y]) => setColor({ ...cur, s: x, v: 1 - y })),
+      hue: drag('hue', ([x]) => setColor({ ...cur, h: Math.min(x * 360, 359.9) })),
+      alpha: drag('alpha', ([x]) => setColor({ ...cur, a: Math.round(x * 255) })),
+      newBg: fill(hex),
+      origLabel: mixed.length ? 'Mixed' : 'Original',
+      origBg: mixed.length
+        ? 'background: linear-gradient(to right, ' + mixed.map((c, i) => c + ' ' + (i * 100 / mixed.length) + '% ' + ((i + 1) * 100 / mixed.length) + '%').join(', ') + '), ' + checker
+        : fill(orig),
+      origTip: mixed.length ? mixed.length + ' different colors right now' : 'Back to the original color',
+      origDisabled: mixed.length > 0,
+      revert: () => { const c = fromHex(orig, cur.h); if (c) setColor(c); },
+      hexCls: 'field mono' + (hexDraft !== undefined && !parse(hexDraft) ? ' bad' : ''),
+      hexText: hexDraft ?? hex,
+      hexTyped: (e) => { const t = e.target.value; setDraft('hex', t, fromHex(t, cur.h)); },
+      hexBlur: dropDraft('hex'),
+      dropCls: 'ib' + (p.picking ? ' on' : ''),
+      dropPressed: p.picking ? 'true' : 'false',
+      pick: () => { if (p.pickListener) p.pickListener(); },
+      rgbaFields, hsvFields,
+      recent: recentList.map((c) => ({ hex: c, bg: fill(c), use: () => { const n = fromHex(c, cur.h); if (n) setColor(n); } })),
+      cancel: () => { const c = fromHex(orig, cur.h); if (c) setColor(c); if (p.cancelListener) p.cancelListener(); },
+      done: () => { this.setState({ orig: hex, recent: [hex, ...recentList.filter((c) => c !== hex)].slice(0, 8), drafts: {} }); if (p.doneListener) p.doneListener(hex); }
+    };
+  }
+}
+</script>
+</body>
+</html>

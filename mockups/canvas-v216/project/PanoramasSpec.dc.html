@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Panoramas, today and proposed</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.pair{display:grid;grid-template-columns:600px minmax(0,1fr);gap:48px;align-items:start}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start}
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;align-items:start}
+.kr{display:flex;align-items:center;gap:14px;padding:9px 18px;border-bottom:1px solid var(--sep);font-size:12.5px;color:var(--text-2)}
+.kr:last-child{border-bottom:0}
+.kk{flex:0 0 190px;font-family:"Noto Sans Mono",ui-monospace,Menlo,monospace;font-size:12px;color:var(--text)}
+.spec code{font-family:"Noto Sans Mono",ui-monospace,Menlo,monospace;font-size:12px;color:var(--text)}
+.flow{display:flex;flex-direction:column;gap:10px}
+.flow .step{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;font-size:13px;line-height:1.5;color:var(--text-2)}
+.flow .n{width:22px;height:22px;display:grid;place-items:center;border-radius:50%;font-size:11.5px;font-weight:700;color:var(--accent);background:color-mix(in srgb,var(--accent) 15%,transparent)}
+.flow b{color:var(--title);font-weight:600}
+.propchip{color:var(--warn);background:color-mix(in srgb,var(--warn) 15%,transparent)}
+.okchip2{color:var(--ok);background:color-mix(in srgb,var(--ok) 15%,transparent)}
+/* today's folder, file and window, redrawn at 600 pixels wide: lists of text lines, and the buttons in a column at the bottom right */
+.lgcs{display:flex;flex-direction:column;gap:14px}
+.lgc{position:relative;width:600px;padding:12px 14px 14px;background:#1f1f1f;border:1px solid #3e4042;color:#ceDDed;font-size:11px}
+.lgc .tt{margin:0 0 9px 2px;font-size:12px;font-weight:600;color:#e8eef4}
+.lgc .bd{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:14px}
+.lgc .lft{display:flex;flex-direction:column;gap:6px;min-width:0}
+.lgc .ls{flex:1 1 auto;padding:5px 6px;border:1px solid #3e4042;background:#262626;display:flex;flex-direction:column;gap:3px;overflow:hidden}
+.lgc .ls div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:1px 3px}
+.lgc .ls .sel{background:#3a4a5e}
+.lgc .rt{display:flex;flex-direction:column;justify-content:flex-end;gap:5px}
+.lgc .b{height:18px;padding:0 8px;display:flex;align-items:center;justify-content:center;border:1px solid #3e4042;background:#333;white-space:nowrap}
+.lgc .gap{height:10px}
+.lgc .lb{margin:3px 0 -2px 1px}
+/* which file is which side: the six boxes of the unfolded cube with the name of the file each one gets */
+.sidemap{display:grid;grid-template-columns:repeat(4,116px);grid-template-rows:repeat(3,58px);gap:4px}
+.sidemap div{display:flex;flex-direction:column;justify-content:center;gap:1px;padding:0 10px;border:1px solid var(--group-line);border-radius:4px;background:var(--group);font-size:12px;font-weight:600;color:var(--title)}
+.sidemap code{font-size:11px;font-weight:400;color:var(--text-3)}
+</style>
+</helmet>
+<div class="fm spec {{themeClass}}" style="min-height: 5079px">
+
+<header style="display: flex; flex-direction: column; gap: 12px; max-width: 920px">
+<div style="font-size: 12px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; color: var(--text-3)">FancyMenu · UI rework concept · Panoramas</div>
+<h1 style="margin: 0; font-size: 34px; line-height: 1.15; font-weight: 700; color: var(--title)">Panoramas without the file explorer</h1>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: var(--text-2)">A panorama is six images on the inside of a cube that slowly turns around you, like the background of Minecraft&#x27;s title screen. Today it&#x27;s a folder you build by hand: six files that need exact names, and a file you write yourself. The Panoramas window makes, changes and deletes them. It shows the cube unfolded, with a box for every side, takes dropped images and folders, and previews the panorama while you set its speed and its camera. It opens from the menu bar and from every place that picks a panorama.</p>
+</header>
+
+<section>
+<h2 class="h2">Today and proposed</h2>
+<div class="pair">
+<div>
+<div class="cap">Today</div>
+<div class="lgcs">
+<div class="lgc">
+<div class="tt">config/fancymenu/panoramas/dusk_valley_night, in the file explorer</div>
+<div class="ls" style="font-family: &quot;Noto Sans Mono&quot;, ui-monospace, Menlo, monospace; font-size: 10.5px">
+<div>panorama/</div>
+<div style="padding-left: 18px">panorama_0.png</div>
+<div style="padding-left: 18px">panorama_1.png</div>
+<div style="padding-left: 18px">panorama_2.png</div>
+<div style="padding-left: 18px">panorama_3.png</div>
+<div style="padding-left: 18px">panorama_4.png</div>
+<div style="padding-left: 18px">panorama_5.png</div>
+<div>overlay.png</div>
+<div class="sel">properties.txt</div>
+</div>
+</div>
+<div class="lgc">
+<div class="tt">properties.txt, in a text editor</div>
+<div class="ls" style="font-family: &quot;Noto Sans Mono&quot;, ui-monospace, Menlo, monospace; font-size: 10.5px; white-space: pre">
+<div>type = panorama</div>
+<div>&nbsp;</div>
+<div>panorama-meta {</div>
+<div style="padding-left: 18px">name = Dusk Valley Night</div>
+<div style="padding-left: 18px">speed = 1.0</div>
+<div style="padding-left: 18px">fov = 85.0</div>
+<div style="padding-left: 18px">angle = 5.0</div>
+<div style="padding-left: 18px">start_rotation = 0</div>
+<div>}</div>
+</div>
+</div>
+<div class="lgc">
+<div class="tt">Choose Panorama</div>
+<div class="bd" style="grid-template-columns: minmax(0, 1fr) 190px">
+<div class="lft">
+<span class="lb">Available Panoramas</span>
+<div class="ls">
+<div>Aurora Lake</div>
+<div>Cherry Blossom Hill</div>
+<div class="sel">Dusk Valley Night</div>
+<div>Golden Hour</div>
+<div>Snowy Peaks</div>
+<div>Starfall Ridge</div>
+</div>
+</div>
+<div class="rt">
+<span class="lb">Panorama Preview</span>
+<span aria-hidden="true" style="display: block; height: 107px; border: 1px solid #3e4042; background: #0b0d18 url(pano_faces.png) 0 -421px / 1140px 1330px no-repeat; image-rendering: pixelated"></span>
+<span class="gap"></span>
+<span class="b">Done</span>
+<span class="b">Cancel</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div>
+<div class="cap">What gets in the way</div>
+<ul class="probs">
+<li>A panorama gets made outside the game: a folder in config/fancymenu/panoramas, a panorama folder inside it, and a properties.txt next to that.</li>
+<li>The six images have to be PNG files called panorama_0.png to panorama_5.png. Nothing in the game says which number is which side.</li>
+<li>One image that&#x27;s missing or misnamed, and the whole panorama shows as the purple and black missing texture. Only the log names the file.</li>
+<li>properties.txt is written by hand. A missing bracket or a missing type line, and the panorama doesn&#x27;t load.</li>
+<li>speed is a factor without a unit: 1 takes four minutes for one turn, and anything above 10 turns like 10.</li>
+<li>angle doesn&#x27;t say which way it tilts. A positive one looks down.</li>
+<li>A new panorama or a changed file only shows up after Reload FancyMenu.</li>
+<li>The name in properties.txt is what layouts ask for. Changing it leaves every background that showed the panorama with the missing texture, without a warning.</li>
+<li>Choose Panorama lists the panoramas and previews one, but it can&#x27;t make, change or delete any.</li>
+</ul>
+<div class="cap" style="margin-top: 26px">Which file is which side</div>
+<div class="sidemap" aria-label="The six sides of the cube, unfolded, with their file names">
+<div style="grid-column: 2; grid-row: 1">Top<code>panorama_4</code></div>
+<div style="grid-column: 1; grid-row: 2">Left<code>panorama_3</code></div>
+<div style="grid-column: 2; grid-row: 2">Front<code>panorama_0</code></div>
+<div style="grid-column: 3; grid-row: 2">Right<code>panorama_1</code></div>
+<div style="grid-column: 4; grid-row: 2">Back<code>panorama_2</code></div>
+<div style="grid-column: 2; grid-row: 3">Bottom<code>panorama_5</code></div>
+</div>
+<p class="kd" style="max-width: 480px; margin-top: 10px">The window shows the sides this way, so nobody has to know the numbers. The top&#x27;s lower edge and the bottom&#x27;s upper edge meet the front, like in Minecraft&#x27;s own panoramas.</p>
+</div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">What changes</h2>
+<div class="group" style="background: var(--win)">
+<div class="mv head"><div>Today</div><div></div><div>Proposed</div><div>Why</div></div>
+<div class="mv"><div class="from">A folder, six renamed files and a properties.txt, made by hand</div><div class="arrow">→</div><div class="to">Panoramas, one window with the list on the left and the selected panorama on the right</div><div class="why">Nobody has to leave the game or learn a file format (rule 165).</div></div>
+<div class="mv"><div class="from">(new)</div><div class="arrow">→</div><div class="to">New Panorama adds one right away, with its name ready to type over</div><div class="why">Every manager makes new things the same way (rule 150).</div></div>
+<div class="mv"><div class="from">Rename six files to panorama_0 to panorama_5</div><div class="arrow">→</div><div class="to">Sides: the cube unfolded, a box per side. An empty box has a plus, and a click on any box opens Choose Image. FancyMenu names the file</div><div class="why">You pick the picture for Front, not for a number (rule 166).</div></div>
+<div class="mv"><div class="from">Copy the files into the panorama folder</div><div class="arrow">→</div><div class="to">Drop images or a whole folder onto the window. Files that are named for a side find it by themselves, and one image dropped right onto a box goes there</div><div class="why">A finished set is in with one drop (rules 118 and 166).</div></div>
+<div class="mv"><div class="from">(new)</div><div class="arrow">→</div><div class="to">For dropped images whose names don&#x27;t say their side, a sheet asks: click the side on the unfolded cube, and the next image is up</div><div class="why">Six screenshots take six clicks, and nothing lands on a guessed side.</div></div>
+<div class="mv"><div class="from">Rename two files to swap them</div><div class="arrow">→</div><div class="to">Drag a side onto another one to swap them</div><div class="why">A mixed-up left and right is the most common mistake, and it&#x27;s one drag to fix.</div></div>
+<div class="mv"><div class="from">speed, a factor</div><div class="arrow">→</div><div class="to">Speed, a slider from 0 to 10, with the time one turn takes under its name</div><div class="why">Every value with a range is a slider, and a time says more than a factor (rule 17).</div></div>
+<div class="mv"><div class="from">fov, angle and start_rotation</div><div class="arrow">→</div><div class="to">Field of View, Angle and Start Rotation as sliders. Angle says up or down, and Start Rotation turns the preview to where the panorama begins</div><div class="why">You see what a number does while you drag (rule 17).</div></div>
+<div class="mv"><div class="from">The preview in Choose Panorama</div><div class="arrow">→</div><div class="to">A preview that turns at the real speed with the real camera, also while sides are still missing. Drag it to look around</div><div class="why">Seams, the top and the bottom can be checked before anything is saved.</div></div>
+<div class="mv"><div class="from">Reload FancyMenu after every change</div><div class="arrow">→</div><div class="to">Changes show right away, also on the screen behind the window</div><div class="why">Try an angle and see it, without reloading (rule 38).</div></div>
+<div class="mv"><div class="from">overlay.png, copied in by hand</div><div class="arrow">→</div><div class="to">Overlay, a seventh box that stands apart from the sides</div><div class="why">It&#x27;s an image like the others, but not a side of the cube.</div></div>
+<div class="mv"><div class="from">(new)</div><div class="arrow">→</div><div class="to">Used in: the backgrounds that show the panorama, Custom Menu Background Panorama and Pre-Load Resources, each with Open</div><div class="why">You see what changes before you rename or delete (rule 167).</div></div>
+<div class="mv"><div class="from">A new name leaves backgrounds with the missing texture</div><div class="arrow">→</div><div class="to">A sheet offers to update the places that use it</div><div class="why">A better name never breaks a menu (rule 167).</div></div>
+<div class="mv"><div class="from">Delete the folder</div><div class="arrow">→</div><div class="to">Delete asks only when images or places are involved, and says what goes with it. Undo is in the footer</div><div class="why">The question only comes when there&#x27;s something to say.</div></div>
+<div class="mv"><div class="from">Choose Panorama, a window that only picks</div><div class="arrow">→</div><div class="to">The panorama submenu, with a pencil on every row, New Panorama and Manage Panoramas</div><div class="why">Making and changing one starts right where it gets picked (rule 168).</div></div>
+<div class="mv"><div class="from">One at a time</div><div class="arrow">→</div><div class="to">Ctrl and Shift select several, and Camera sets all of them</div><div class="why">Give every panorama the same speed at once (rule 25).</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">The window, piece by piece</h2>
+<div class="three">
+<div class="spec-card"><div class="k">The list</div><div class="kd" style="margin: 0">One row per panorama, sorted by name: the middle of its front, the name, and under it the size of its images and how long one turn takes. Sides that still need an image show in amber, and missing files in red.</div></div>
+<div class="spec-card"><div class="k">The header</div><div class="kd" style="margin: 0">The name with Rename, and a line with the size of its images in pixels and on disk. Below: Duplicate, Export as Text and Delete.</div></div>
+<div class="spec-card"><div class="k">Sides</div><div class="kd" style="margin: 0">The first thing in the details. The cube unfolded: Left, Front, Right and Back in a row, Top above Front and Bottom below it, so pictures that belong together sit next to each other. Each box shows its image and its name. A click opens Choose Image, the × that appears on a box takes its image off, and dragging a box onto another swaps them. Choose Images in the header picks several files at once.</div></div>
+<div class="spec-card"><div class="k">The preview</div><div class="kd" style="margin: 0">The cube from the inside, drawn like the game draws it: same field of view, same angle, same speed. A side without an image is dark and shows its name. The line below has Play and Pause and says how long one turn takes. Dragging the preview looks around, and letting go lets the tilt glide back to the panorama&#x27;s angle.</div></div>
+<div class="spec-card"><div class="k">Camera</div><div class="kd" style="margin: 0">Four sliders with their value next to them: Speed with the time one turn takes, Field of View, Angle with up or down, and Start Rotation. Each one changes the preview while it&#x27;s dragged, and a drag is one undo step.</div></div>
+<div class="spec-card"><div class="k">Overlay</div><div class="kd" style="margin: 0">One optional image that&#x27;s drawn over the whole panorama, like a vignette or a logo. Its box stands in the corner, apart from the six sides, and never shows up on the cube.</div></div>
+<div class="spec-card"><div class="k">Dropping files</div><div class="kd" style="margin: 0">Minecraft only reports files once they&#x27;re dropped, so the window can&#x27;t show a target while they hover (rule 118). The note under Sides says up front that dropping works. A drop goes to the selected panorama, or makes a new one when none or several are selected. Right after, the new images are tagged New and the footer says what got set and what got left out, with Undo.</div></div>
+<div class="spec-card"><div class="k">The question sheet</div><div class="kd" style="margin: 0">For dropped images whose names don&#x27;t say their side. The images are listed on the left, the unfolded cube is on the right, and the marked image shows big below it. A click on a side puts the marked image there and marks the next one. Images without a side get left out, and the button says how many sides it sets.</div></div>
+<div class="spec-card"><div class="k">Several selected</div><div class="kd" style="margin: 0">How many, and their size on disk in all, with Duplicate and Delete for all of them. Camera sets every selected panorama, and a value that differs shows as Mixed. Below, the selected panoramas with how many places use each one.</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Make one, bring one in, use one</h2>
+<div class="three">
+<div class="spec-card"><div class="k">From six screenshots</div><div class="flow">
+<div class="step"><span class="n">1</span><span>Drop the six screenshots onto the window. Their names are dates, so the sheet asks.</span></div>
+<div class="step"><span class="n">2</span><span>Click <b>Front</b> for the first image, <b>Right</b> for the second, and so on. <b>Set All 6 Sides</b> makes the panorama.</span></div>
+<div class="step"><span class="n">3</span><span>Type its name. Drag the preview around, and swap two sides if a seam shows.</span></div>
+<div class="step"><span class="n">4</span><span>Set <b>Speed</b> and <b>Angle</b> while the preview turns. <b>Save</b> writes the folder and its files.</span></div>
+</div></div>
+<div class="spec-card"><div class="k">A folder someone made</div><div class="flow">
+<div class="step"><span class="n">1</span><span>Drop the folder sunrise_bay onto the window, with nothing selected.</span></div>
+<div class="step"><span class="n">2</span><span>Its files are called panorama_0 to panorama_5, so every side is set at once and tagged <b>New</b>.</span></div>
+<div class="step"><span class="n">3</span><span>The panorama is called Sunrise Bay, after the folder. The footer says what was left out, with <b>Undo</b>.</span></div>
+<div class="step"><span class="n">4</span><span><b>Save</b> copies the images into FancyMenu&#x27;s own folder.</span></div>
+</div></div>
+<div class="spec-card"><div class="k">Straight from the layout editor</div><div class="flow">
+<div class="step"><span class="n">1</span><span>Right-click the layout and open <b>Background</b>, then <b>Panorama</b>. It lists every panorama.</span></div>
+<div class="step"><span class="n">2</span><span>The pencil on a row opens the window on that panorama. <b>New Panorama</b> opens it with a new one.</span></div>
+<div class="step"><span class="n">3</span><span>Change its sides or its camera. The layout&#x27;s background behind the window follows every change.</span></div>
+<div class="step"><span class="n">4</span><span><b>Save</b> keeps it. A new panorama is in the submenu from then on, and gets picked there like the others.</span></div>
+</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Special cases it handles</h2>
+<div class="two">
+<div class="spec-card"><ul class="notes">
+<li>A side whose file is gone shows as missing, in its box and on the cube. A card at the top says which sides, and a click on one picks a new image.</li>
+<li>A panorama with fewer than six images shows as the missing texture in menus, like today. The note under Sides counts the sides to go, and the preview already shows the ones that are there.</li>
+<li>Sides are square. An image that isn&#x27;t gets stretched onto its side, like today, and its box shows a warning with its size.</li>
+<li>PNG and JPEG work. Other files in a drop get left out, and the footer names them.</li>
+<li>A dropped folder is also searched in its panorama folder, so a whole panorama from another pack works. With nothing selected, its properties.txt brings the name and the camera along.</li>
+<li>Two files in a drop that claim the same side: the first one gets it, and the sheet asks about the other.</li>
+<li>In the sheet, a side that already has an image shows it dimmed, and gets the new one instead.</li>
+</ul></div>
+<div class="spec-card"><ul class="notes">
+<li>Speed ends at 10, because a higher value doesn&#x27;t turn faster today. A file with more keeps its number until the slider is moved.</li>
+<li>With Speed at 0 the panorama stands still, and the preview has nothing to play or pause.</li>
+<li>Looking around in the preview changes nothing. The direction stays where you let go, and the tilt goes back to Angle.</li>
+<li>Removing an image deletes its copy with Save, and deleting a panorama deletes its folder with Save. Until then Undo brings them back.</li>
+<li>The folder is named after the panorama, in lowercase with _ for spaces, and gets renamed with it.</li>
+<li>The window never sets which panorama a place shows. That gets picked in the place itself, in its panorama submenu.</li>
+<li>A copy gets copies of the images. Nothing uses it until it&#x27;s picked somewhere.</li>
+<li>The details have two columns: Sides on the left, the preview with Camera right under it on the right, and Used in below both. The sides, the preview and all four sliders fit on the screen together. In a narrow window the right column moves below Sides.</li>
+</ul></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Keyboard shortcuts</h2>
+<div class="two">
+<div>
+<div class="cap">The list</div>
+<div class="group" style="background: var(--win)">
+<div class="kr"><span class="kk">↑ ↓</span><span>Select the panorama above or below</span></div>
+<div class="kr"><span class="kk">Typing</span><span>Starts a search</span></div>
+<div class="kr"><span class="kk">Ctrl+N</span><span>New Panorama</span></div>
+<div class="kr"><span class="kk">Ctrl+F</span><span>Search</span></div>
+<div class="kr"><span class="kk">F2</span><span>Rename</span></div>
+<div class="kr"><span class="kk">Ctrl+D</span><span>Duplicate</span></div>
+<div class="kr"><span class="kk">Delete</span><span>Delete the selected panoramas</span></div>
+<div class="kr"><span class="kk">Ctrl+A</span><span>Select every panorama in the list</span></div>
+</div>
+</div>
+<div>
+<div class="cap">The panorama</div>
+<div class="group" style="background: var(--win)">
+<div class="kr"><span class="kk">Space</span><span>Play or pause the preview</span></div>
+<div class="kr"><span class="kk">← →</span><span>On a slider: one step, with Shift a bigger one</span></div>
+<div class="kr"><span class="kk">Delete</span><span>On a side: take its image off</span></div>
+<div class="kr"><span class="kk">↑ ↓, Enter</span><span>In the question sheet: mark another image, set the sides</span></div>
+<div class="kr"><span class="kk">Ctrl+Z, Ctrl+Y</span><span>Undo and redo, Ctrl+Shift+Z too</span></div>
+<div class="kr"><span class="kk">Enter</span><span>Save</span></div>
+<div class="kr"><span class="kk">Ctrl+S</span><span>Save, Ctrl+Enter too</span></div>
+<div class="kr"><span class="kk">Esc</span><span>Closes the menu or sheet, clears the search, then Cancel</span></div>
+</div>
+</div>
+</div>
+</section>
+
+<section>
+<h2 class="h2" style="display: flex; align-items: center; gap: 10px">Changes beyond the UI <span class="chip okchip2" style="font-size: 11px">All approved</span></h2>
+<p class="kd" style="max-width: 920px; margin: -6px 0 16px; font-size: 13px; color: var(--text-2)">The window above already uses these. The first four change how panoramas get saved, named and found, so each one is a rework rule of its own. The others are rules that were there before.</p>
+<div class="two">
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Panoramas are made in a window <span class="chip okchip2">Approved, rule 165</span></div><div class="kd" style="margin: 0">The Panoramas window writes the folder in config/fancymenu/panoramas, its properties.txt and its images on Save, so nobody has to. The folder is named after the panorama and gets renamed with it. Old panoramas load as they are, and changes show without Reload FancyMenu.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">FancyMenu names the files of the sides <span class="chip okchip2">Approved, rule 166</span></div><div class="kd" style="margin: 0">An image that gets picked or dropped is copied into the panorama as panorama_0.png to panorama_5.png, or overlay.png, whatever it was called before. A JPEG gets saved as a PNG. Dropped files that already have one of these names find their place, one image dropped onto a box goes there, and a sheet asks about the rest.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Panoramas know where they&#x27;re used <span class="chip okchip2">Approved, rule 167</span></div><div class="kd" style="margin: 0">The index of rule 87 also collects panorama names: the Panorama background of layouts, Custom Menu Background Panorama and Pre-Load Resources. Used in, the Not Used filter, the rename sheet and the delete sheet read it, and renaming a panorama can update those places.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Panoramas are managed where they&#x27;re picked <span class="chip okchip2">Approved, rule 168</span></div><div class="kd" style="margin: 0">The panorama submenu of rule 133 gets a pencil on every row, then New Panorama and Manage Panoramas. All three open the window, and picking stays in the submenu. Customization in the menu bar gets a Panoramas entry in its Manage section.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Dropped files land where the pointer is <span class="chip okchip2">Covered, rule 118</span></div><div class="kd" style="margin: 0">Nothing reacts while files hover. The window says up front that dropping works, an image dropped onto a box goes to that side, and right after a drop the new images are tagged New.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Numbers with a range are sliders <span class="chip okchip2">Covered, rule 17</span></div><div class="kd" style="margin: 0">Speed, Field of View, Angle and Start Rotation all have a range, so each one is a slider with its value next to it, and a drag is one undo step.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Changes show right away <span class="chip okchip2">Covered, rule 38</span></div><div class="kd" style="margin: 0">A screen that shows a panorama follows every change to its sides and its camera, and Cancel puts everything back.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Questions are sheets <span class="chip okchip2">Covered, rules 134 and 140</span></div><div class="kd" style="margin: 0">Which side is each image?, the rename question and the delete question slide down from the title bar, each with a button named after what it does.</div></div>
+</div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"$preview":{"width":1440,"height":5079}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark' };
+  }
+}
+</script>
+</body>
+</html>

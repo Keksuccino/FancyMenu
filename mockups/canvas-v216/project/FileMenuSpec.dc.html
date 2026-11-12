@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>File entries in context menus</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.pair{display:flex;gap:64px;align-items:flex-start}
+.sub-row{display:flex;align-items:flex-start;gap:2px}
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:32px}
+.kinds{display:grid;grid-template-columns:auto minmax(0,1fr);gap:28px;align-items:start}
+.kinds dl{margin:0;display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px 18px;font-size:12.5px}
+.kinds dt{font-weight:600;color:var(--title)}
+.kinds dd{margin:0;color:var(--text-3);line-height:1.45}
+</style>
+</helmet>
+<div class="fm spec {{themeClass}} mat-blur" style="min-height: 4121px">
+
+<header style="display: flex; flex-direction: column; gap: 12px; max-width: 900px">
+<div style="font-size: 12px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; color: var(--text-3)">FancyMenu · UI rework concept · file entries in context menus</div>
+<h1 style="margin: 0; font-size: 34px; line-height: 1.15; font-weight: 700; color: var(--title)">See the file before you open the chooser</h1>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: var(--text-2)">Every menu entry that points to a file, like an image, a sound, a video or a text file, now shows that file on the row itself: its name, a thumbnail or a play button, and a warning when it is missing. Hovering opens a preview card with the full path and where the file comes from. Clicking the row still opens the chooser right away.</p>
+</header>
+
+<section>
+<h2 class="h2">Today and proposed</h2>
+<div class="pair">
+<div><div class="cap">Today</div><div style="display: flex; align-items: flex-start; gap: 2px">
+<div class="legacy-menu" style="width: 210px"><div class="lr"><span class="ms" aria-hidden="true">folder</span>Image Source<span class="ms i" aria-hidden="true">chevron_right</span></div></div>
+<div class="legacy-menu" style="width: 300px"><div class="lr"><span class="ms" aria-hidden="true">draft</span>Choose Resource</div><div class="lr"><span class="ms" aria-hidden="true">undo</span>Reset to Default</div><div class="lsepl"></div><div class="lr"><span class="ms" aria-hidden="true">info</span>Current: <span style="color: #31ce05">..ets/backgrounds/dusk_valley.png</span></div></div>
+</div></div>
+<div><div class="cap">Proposed</div><div class="sub-row"><div><dc-import name="ContextMenu" items="{{rowToday}}" standalone="{{no}}" hint-size="auto,40px"></dc-import></div><div style="margin-top: -6px"><dc-import name="ContextMenu" items="{{cardLocal}}" standalone="{{no}}" hint-size="auto,330px"></dc-import></div></div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Every kind of file</h2>
+<div class="kinds">
+<div><dc-import name="ContextMenu" items="{{kinds}}" standalone="{{no}}" hint-size="auto,200px"></dc-import></div>
+<dl>
+<dt>Images</dt><dd>A small thumbnail of the image, over a checkerboard when it has transparency.</dd>
+<dt>Sounds</dt><dd>A play button that plays the sound once, right in the menu. It turns blue while playing.</dd>
+<dt>Videos</dt><dd>A thumbnail of the first frame.</dd><dt>Videos without Watermedia</dt><dd>An amber warning instead of the thumbnail: the file is fine, but videos can only be previewed and played with Watermedia installed.</dd>
+<dt>Text and other files</dt><dd>Just the file name.</dd>
+<dt>Nothing chosen</dt><dd>None. Clicking the row opens the chooser like always.</dd>
+<dt>Several elements</dt><dd>Mixed, when the selected elements use different files.</dd>
+<dt>Missing file</dt><dd>The name in red with a warning icon. The card explains what happened.</dd>
+</dl>
+</div>
+</section>
+
+<section>
+<h2 class="h2">The preview card</h2>
+<div class="three">
+<div><div class="k">Minecraft resource</div><div class="kd" style="margin-bottom: 12px">Sounds get a waveform with a play button and the preview volume. Resources from Minecraft or a resource pack show their location.</div><dc-import name="ContextMenu" items="{{cardSound}}" standalone="{{no}}" hint-size="auto,280px"></dc-import></div>
+<div><div class="k">Web</div><div class="kd" style="margin-bottom: 12px">The full address, wrapped, and whether it loaded. Open in Browser replaces Show in Folder.</div><dc-import name="ContextMenu" items="{{cardWeb}}" standalone="{{no}}" hint-size="auto,330px"></dc-import></div>
+<div><div class="k">Missing file</div><div class="kd" style="margin-bottom: 12px">The card says the file could not be found, so a broken layout is easy to fix. Show in Folder still opens the folder it was in.</div><dc-import name="ContextMenu" items="{{cardMissing}}" standalone="{{no}}" hint-size="auto,330px"></dc-import></div>
+</div>
+<div class="three" style="margin-top: 32px"><div><div class="k">Video</div><div class="kd" style="margin-bottom: 12px">The first frame with a play button and the length. The video plays right in the card, with the same preview volume as sounds.</div><dc-import name="ContextMenu" items="{{cardVideo}}" standalone="{{no}}" hint-size="auto,400px"></dc-import></div><div><div class="k">Video without Watermedia</div><div class="kd" style="margin-bottom: 12px">FancyMenu can't preview or play videos without Watermedia, so the card says so and offers both downloads. The file itself is kept as it is.</div><dc-import name="ContextMenu" items="{{cardVideoNoWm}}" standalone="{{no}}" hint-size="auto,400px"></dc-import></div></div>
+</section>
+
+<section>
+<h2 class="h2">Placeholders in file sources</h2>
+<p class="kd" style="max-width: 900px; margin: -6px 0 18px; font-size: 13.5px">A source can contain placeholders, so the raw text is not always a valid path, address or resource location. FancyMenu resolves it live, also in the layout editor whenever it can, and only then knows which file it is and where it comes from. The row works like every other placeholder value: the { } button is tinted and a chip shows the result, here the resolved file with its thumbnail.</p>
+<div class="kinds" style="margin-bottom: 28px">
+<div><dc-import name="ContextMenu" items="{{phRows}}" standalone="{{no}}" hint-size="auto,100px"></dc-import></div>
+<dl>
+<dt>Resolves in the editor</dt><dd>The chip shows the resolved file name next to its thumbnail, and the card shows the real file. It can change while the game runs.</dd>
+<dt>Only resolves in game</dt><dd>Placeholders like World Loading Progress have no value in the editor. The chip says in game, in grey: this is expected, not an error.</dd>
+<dt>Resolves to a missing file</dt><dd>The chip turns red with the warning icon, just like a missing file without placeholders.</dd>
+</dl>
+</div>
+<div class="three">
+<div><div class="k">Resolved in the editor</div><div class="kd" style="margin-bottom: 12px">The card shows the resolved file first, then the source text with each placeholder highlighted.</div><dc-import name="ContextMenu" items="{{phCard}}" standalone="{{no}}" hint-size="auto,420px"></dc-import></div>
+<div><div class="k">Only resolves in game</div><div class="kd" style="margin-bottom: 12px">No preview yet, and the card says why. Edit Source as Text and the { } button both open the source text with placeholder support.</div><dc-import name="ContextMenu" items="{{phGameCard}}" standalone="{{no}}" hint-size="auto,380px"></dc-import></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">What changed</h2>
+<div class="group" style="background: var(--win)">
+<div class="mv head"><div>Today</div><div></div><div>Proposed</div><div>Why</div></div>
+<div class="mv"><div class="from">A folder icon on every file entry</div><div class="arrow" aria-hidden="true">→</div><div class="to">The entry&#x27;s own icon</div><div class="why">Image, sound, video or text, so you can tell entries apart before reading the label.</div></div><div class="mv"><div class="from">Value hidden in the submenu</div><div class="arrow" aria-hidden="true">→</div><div class="to">File name on the row</div><div class="why">With a thumbnail for images and videos and a play button for sounds, so you see the file at a glance.</div></div><div class="mv"><div class="from">&quot;Current: ..ets/backgrounds/dusk_valley.png&quot;</div><div class="arrow" aria-hidden="true">→</div><div class="to">Full path in a preview card</div><div class="why">Wrapped between folders and never cut off, together with the source and details like size or length.</div></div><div class="mv"><div class="from">Green path, or a red &quot;---&quot;</div><div class="arrow" aria-hidden="true">→</div><div class="to">The file name, or None</div><div class="why">Missing files and web images that fail to load are flagged in red with a warning, on the row and in the card.</div></div><div class="mv"><div class="from">Reset to Default in the submenu</div><div class="arrow" aria-hidden="true">→</div><div class="to">Reset arrow on the row</div><div class="why">Shows on hover when the value is not the default, like every other value.</div></div><div class="mv"><div class="from">Choose Resource / Choose File</div><div class="arrow" aria-hidden="true">→</div><div class="to">Choose Image, Choose Sound and so on</div><div class="why">Named after what you pick. Clicking the row does the same.</div></div><div class="mv"><div class="from">(new)</div><div class="arrow" aria-hidden="true">→</div><div class="to">Show in Folder, Open in Browser, Copy Path</div><div class="why">Depending on where the file comes from: a local file, a web address or a Minecraft resource.</div></div><div class="mv"><div class="from">Placeholders in a source show nothing special</div><div class="arrow" aria-hidden="true">→</div><div class="to">{ } tinted, resolved file in a chip</div><div class="why">The card shows the source text with highlighted placeholders and says whether it resolved in the editor or only resolves in game.</div></div><div class="mv"><div class="from">Several elements selected: no value</div><div class="arrow" aria-hidden="true">→</div><div class="to">Mixed</div><div class="why">Same as every other entry when the selected elements disagree.</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Behavior</h2>
+<ul class="notes"><li>Clicking the row opens the chooser right away, in the folder of the current file. Hovering opens the preview card and the extra actions.</li><li>The play button plays the sound once without opening anything; clicking it again stops it. The preview volume in the card only changes how loud previews play, never the volume the sound has in the layout. It is one saved setting, shared with the file chooser and every other sound preview, and the speaker button mutes it.</li><li>The row and the card always show the file as it is right now: if it gets moved or deleted, or a web image stops loading, the warning shows up the next time the menu opens.</li><li>Sources with placeholders resolve live in the editor whenever possible, and rows and cards update when the result changes. Choose Image keeps the placeholders when the chooser opens; Edit Source as Text edits them directly.</li><li>File names are never cut off; a long name makes the menu wider. Full paths only show in the card, where they wrap between folders.</li></ul>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"$preview":{"width":1440,"height":4121}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const actions = (choose, src) => [
+      { ic: choose[0], label: choose[1] },
+      { ic: 'braces', label: 'Edit Source as Text' },
+      src === 'web' ? { ic: 'external', label: 'Open in Browser' } : src === 'location' ? null : { ic: 'folder', label: 'Show in Folder' },
+      { ic: 'copy', label: src === 'web' ? 'Copy URL' : src === 'location' ? 'Copy Location' : 'Copy Path' }
+    ].filter(Boolean);
+    return {
+      themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark',
+      no: false,
+      rowToday: [{ ic: 'image', label: 'Image Source', file: true, thumb: 'dusk_valley.png', val: 'dusk_valley.png', changed: true, sub: true, hl: true }],
+      cardLocal: [{ card: { img: 'dusk_valley.png', name: 'dusk_valley.png', meta: 'PNG · 128 × 72 · 2.2 KB', source: 'local', sourceLabel: 'Local file', path: 'config/fancymenu/assets/backgrounds/dusk_valley.png' } }].concat(actions(['image', 'Choose Image'], 'local')),
+      kinds: [
+        { ic: 'image', label: 'Image Source', file: true, thumb: 'dusk_valley.png', val: 'dusk_valley.png', sub: true },
+        { ic: 'volume', label: 'Click Sound', file: true, play: true, val: 'click.ogg', sub: true },
+        { ic: 'video', label: 'Video', file: true, thumb: 'dusk_valley.png', val: 'intro.mp4', sub: true },
+        { ic: 'video', label: 'Video', file: true, warn: 'amber', warnTip: 'Can\'t preview videos: Watermedia is missing', val: 'intro.mp4', sub: true },
+        { ic: 'file', label: 'Text File', file: true, val: 'welcome.txt', sub: true },
+        { ic: 'image', label: 'Hover Background', file: true, val: 'None', sub: true },
+        { ic: 'image', label: 'Normal Background', file: true, val: 'Mixed', sub: true },
+        { ic: 'image', label: 'Inactive Background', file: true, warn: true, val: 'button_off.png', sub: true }
+      ],
+      cardSound: [{ card: { audio: true, dur: '0:01', name: 'click.ogg', meta: 'OGG · 1 second · 9 KB', source: 'location', sourceLabel: 'Minecraft resource', path: 'minecraft:sounds/random/click.ogg' } }].concat(actions(['volume', 'Choose Sound'], 'location')),
+      cardWeb: [{ card: { img: 'dusk_valley.png', name: 'dusk_valley.png', meta: 'PNG · 128 × 72 · 2.2 KB', source: 'web', sourceLabel: 'Web', path: 'https://cdn.duskvalley.net/menu/backgrounds/dusk_valley.png', status: 'Loaded' } }].concat(actions(['image', 'Choose Image'], 'web')),
+      cardVideo: [{ card: { video: 'dusk_valley.png', dur: '0:12', name: 'intro.mp4', meta: 'MP4 · 1920 × 1080 · 12 seconds · 8.4 MB', source: 'local', sourceLabel: 'Local file', path: 'config/fancymenu/assets/videos/intro.mp4' } }].concat(actions(['video', 'Choose Video'], 'local')),
+      cardVideoNoWm: [{ card: { noPreview: true, noPreviewAmber: true, noPreviewIcon: 'videoOff', noPreviewText: 'Can\'t preview videos', name: 'intro.mp4', meta: 'MP4 · 8.4 MB', source: 'local', sourceLabel: 'Local file', path: 'config/fancymenu/assets/videos/intro.mp4', status: 'Watermedia V3 and Watermedia Binaries are needed to play videos.', statusAmber: true } }].concat(actions(['video', 'Choose Video'], 'local'), [{ sep: true }, { ic: 'external', label: 'Download Watermedia V3' }, { ic: 'external', label: 'Download Watermedia Binaries' }]),
+      phRows: [
+        { ic: 'image', label: 'Image Source', file: true, fx: true, manual: true, manualVal: 'dusk_valley.png', thumb: 'dusk_valley.png', sub: true },
+        { ic: 'image', label: 'Loading Image', file: true, fx: true, manual: true, manualVal: 'in game', manualTone: 'wait', sub: true },
+        { ic: 'image', label: 'Hover Background', file: true, fx: true, manual: true, manualVal: 'winter.png', manualTone: 'bad', warn: true, sub: true }
+      ],
+      phCard: [{ card: { img: 'dusk_valley.png', name: 'dusk_valley.png', meta: 'PNG · 128 × 72 · 2.2 KB', source: 'local', sourceLabel: 'Local file', path: 'config/fancymenu/assets/backgrounds/dusk_valley.png', ph: { parts: [{ t: 'config/fancymenu/assets/backgrounds/' }, { ph: 'getvariable: theme' }, { t: '.png' }], note: 'Resolved in the editor, so you see the real file. It changes while the game runs whenever the variable does.' } } }].concat(actions(['image', 'Choose Image'], 'local')),
+      phGameCard: [{ card: { noPreview: true, noPreviewWait: true, noPreviewText: 'Resolves in game', name: 'No file in the editor', meta: 'World Loading Progress only has a value while a world loads.', ph: { wait: true, parts: [{ t: 'config/fancymenu/assets/loading/stage_' }, { ph: 'world_load_progress' }, { t: '.png' }], note: 'This is not an error: the image shows up once the placeholder has a value in game.' } } }, { ic: 'image', label: 'Choose Image' }, { ic: 'braces', label: 'Edit Source as Text' }, { ic: 'copy', label: 'Copy Source Text' }],
+      cardMissing: [{ card: { noPreview: true, name: 'button_off.png', source: 'local', sourceLabel: 'Local file', path: 'config/fancymenu/assets/buttons/button_off.png', status: 'File not found. It may have been moved, renamed or deleted.', statusBad: true } }].concat(actions(['image', 'Choose Image'], 'local'))
+    };
+  }
+}
+</script>
+</body>
+</html>

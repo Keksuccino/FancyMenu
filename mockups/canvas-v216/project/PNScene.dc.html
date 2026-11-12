@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Panoramas on the title screen</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="fm {{themeClass}} {{matClass}}" style="position: relative; width: 1440px; height: 900px; overflow: hidden; background: var(--bd)">
+<div class="backdrop" aria-hidden="true" style="background: #15182c">
+<sc-if value="{{noStage}}" hint-placeholder-val="{{true}}"><img class="art" src="dusk_valley.png" alt=""></sc-if>
+<sc-if value="{{hasStage}}" hint-placeholder-val="{{false}}"><dc-import name="PanoCube" sides="{{st.sides}}" fov="{{st.fov}}" pitch="{{st.pitch}}" yaw="{{st.yaw}}" at="{{st.at}}" rate="{{st.rate}}" names="{{no}}" width="1440" height="900" hint-size="1440px,900px"></dc-import></sc-if>
+<sc-if value="{{inEditor}}" hint-placeholder-val="{{false}}"><div class="gridlines"></div></sc-if>
+</div>
+<sc-if value="{{onScreen}}" hint-placeholder-val="{{true}}">
+<div aria-hidden="true" style="position: absolute; left: 16px; bottom: 12px; color: rgba(255, 255, 255, .85); font-size: 12px">Dusk Valley Pack 1.4.2</div>
+<div aria-hidden="true" style="position: absolute; right: 16px; bottom: 12px; color: rgba(255, 255, 255, .85); font-size: 12px">Copyright Mojang AB. Do not distribute!</div>
+</sc-if>
+<sc-if value="{{inEditor}}" hint-placeholder-val="{{false}}">
+<div class="le" aria-hidden="true" style="left: 640px; top: 44px; width: 160px; height: 22px; display: grid; place-items: center; color: #fff; font-size: 13px">Options</div>
+<div class="le le-btn" aria-hidden="true" style="left: 590px; top: 850px; width: 260px; height: 38px">Done</div>
+</sc-if>
+<div style="position: absolute; left: 0; right: 0; top: 0"><dc-import name="MenuBar" kind="{{barKind}}" unsaved="{{no}}" layout-name="{{usedBy}}" screen-name="Options Screen" standalone="{{no}}" hint-size="1440px,30px"></dc-import></div>
+<div style="position: absolute; left: 120px; top: 64px"><dc-import name="Panoramas" scene="{{scene}}" select="{{select}}" sheet="{{sheet}}" rename-to="{{renameTo}}" add="{{add}}" behind="{{behind}}" dropped="{{dropped}}" asked="{{asked}}" lost="{{lost}}" playing="{{playing}}" filter="{{filter}}" filter-menu="{{filterMenu}}" query="{{query}}" scroll="{{scroll}}" on-stage="{{onStage}}" width="1200" height="772" standalone="{{no}}" hint-size="1200px,772px"></dc-import></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"scene":{"editor":"enum","options":["Dusk Valley","Empty"],"default":"Dusk Valley"},"select":{"editor":"text","default":"p3"},"sheet":{"editor":"enum","options":["","rename","delete"],"default":""},"renameTo":{"editor":"text","default":""},"add":{"editor":"boolean","default":false},"editor":{"editor":"boolean","default":false},"background":{"editor":"text","default":"p3"},"layout":{"editor":"text","default":"Dusk Valley Options"},"dropped":{"editor":"enum","options":["","folder","ask"],"default":""},"asked":{"editor":"text","default":""},"lost":{"editor":"text","default":""},"playing":{"editor":"boolean","default":true},"filter":{"editor":"enum","options":["all","unused","probs"],"default":"all"},"filterMenu":{"editor":"boolean","default":false},"query":{"editor":"text","default":""},"scroll":{"editor":"text","default":""},"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props, s = this.state || {};
+    // Opened from a layout's Background menu, the window sits in the layout editor. background is the panorama that
+    // layout shows: the scene draws it behind the window with every change the window makes to its sides and its camera.
+    const inEditor = !!p.editor;
+    const st = s.stage || null;
+    return {
+      themeClass: (p.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark',
+      matClass: (p.material ?? 'Blur') === 'Blur' ? 'mat-blur' : '',
+      yes: true, no: false,
+      inEditor, onScreen: !inEditor, barKind: inEditor ? 'Editor' : 'Overlay',
+      hasStage: !!st, noStage: !st, st: st || {},
+      onStage: (stage) => this.setState({ stage }),
+      scene: p.scene || 'Dusk Valley', select: p.select ?? 'p3', sheet: p.sheet || '', renameTo: p.renameTo || '', add: !!p.add,
+      behind: inEditor ? p.background ?? 'p3' : '', usedBy: p.layout || 'Dusk Valley Options', dropped: p.dropped || '', asked: p.asked || '', lost: p.lost || '', playing: p.playing ?? true,
+      filter: p.filter || 'all', filterMenu: !!p.filterMenu, query: p.query || '', scroll: p.scroll || ''
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,947 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Panoramas</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="{{rootCls}}" style="{{rootStyle}}" data-pn="{{uid}}" onMouseDown="{{activate}}">
+<sc-if value="{{standalone}}" hint-placeholder-val="{{true}}"><div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""><div class="dim"></div></div></sc-if>
+
+<div class="win vm ls pn" role="dialog" aria-label="Panoramas" style="{{winStyle}}" onDragOver="{{fileOver}}" onDrop="{{fileDrop}}">
+<div class="titlebar">
+<div class="tl"><button class="c" aria-label="Cancel and close" onClick="{{cancelAll}}"><span class="ms" aria-hidden="true">close</span></button><button class="m" aria-label="Collapse"><span class="ms" aria-hidden="true">remove</span></button><button class="x" aria-label="Maximize"><span class="ms" aria-hidden="true">open_in_full</span></button></div>
+<div class="wt"><span class="ms" aria-hidden="true">{{ic.pano}}</span>Panoramas</div>
+<div></div>
+</div>
+
+<sc-if value="{{anyPopup}}" hint-placeholder-val="{{false}}"><div class="fb-catch" style="z-index: 42" onClick="{{closePopups}}" onContextMenu="{{closePopupsCtx}}"></div></sc-if>
+
+<div class="split">
+<aside class="sidebar vm-side" aria-label="Panoramas list">
+<div class="vm-top">
+<button class="btn tinted" data-tip="Ctrl+N" onClick="{{addNew}}"><span class="ms" aria-hidden="true">{{ic.plus}}</span>New Panorama</button>
+<label class="field vm-search"><span class="ms" aria-hidden="true">{{ic.search}}</span><input type="text" placeholder="{{searchPh}}" aria-label="Search names" data-fk="{{searchFk}}" value="{{q}}" onInput="{{onSearch}}" onKeyDown="{{searchKey}}"><button class="{{filterBtnCls}}" data-tip="Show" aria-label="Show" aria-haspopup="menu" aria-expanded="{{filterExpanded}}" onClick="{{toggleFilter}}"><span class="ms" aria-hidden="true">{{ic.funnel}}</span></button></label>
+<sc-if value="{{filterChip}}" hint-placeholder-val="{{false}}"><div class="chips"><span class="vm-fchip">{{filterChip}}<button aria-label="Show all panoramas" data-tip="Show all" onClick="{{clearFilter}}"><span class="ms" aria-hidden="true">{{ic.x}}</span></button></span></div></sc-if>
+</div>
+<div class="plist vm-list" role="listbox" aria-label="Panoramas" aria-multiselectable="true">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
+<div class="{{r.cls}}" role="option" aria-selected="{{r.ariaSel}}" onClick="{{r.click}}">
+<span class="{{r.thCls}}" style="{{r.thStyle}}" aria-hidden="true"><sc-if value="{{r.thIcon}}" hint-placeholder-val="{{false}}"><span class="ms" aria-hidden="true">{{r.thIcon}}</span></sc-if></span>
+<span class="ln"><sc-for list="{{r.name}}" as="np" hint-placeholder-count="1"><sc-if value="{{np.hit}}" hint-placeholder-val="{{false}}"><mark>{{np.t}}</mark></sc-if><sc-if value="{{np.plain}}" hint-placeholder-val="{{true}}">{{np.t}}</sc-if></sc-for></span>
+<span class="{{r.subCls}}">{{r.sub}}</span>
+</div>
+</sc-for>
+<sc-if value="{{noMatch}}" hint-placeholder-val="{{false}}"><div class="vm-nomatch"><span>{{noMatchText}}</span><sc-if value="{{canNewFromQ}}" hint-placeholder-val="{{true}}"><button class="btn sm" onClick="{{newFromQ}}"><span class="ms" aria-hidden="true">{{ic.plus}}</span>New Panorama “{{qName}}”</button></sc-if></div></sc-if>
+</div>
+</aside>
+
+<div class="vm-main">
+<main class="pcontent vm-content ls-content" data-sk="{{contentSk}}">
+
+<sc-if value="{{one}}" hint-placeholder-val="{{true}}">
+<div class="dhead">
+<sc-if value="{{notRenaming}}" hint-placeholder-val="{{true}}"><div class="dt vm-name" style="font-family: inherit"><span>{{d.name}}</span><button class="ib" data-tip="Rename (F2)" aria-label="Rename" onClick="{{startRename}}"><span class="ms" aria-hidden="true">{{ic.pencil}}</span></button></div></sc-if>
+<sc-if value="{{renaming}}" hint-placeholder-val="{{false}}"><div class="{{renameCls}}"><input type="text" aria-label="New name" style="font-family: inherit; font-size: 13px" data-fk="{{renameFk}}" value="{{renameDraft}}" onInput="{{onRename}}" onKeyDown="{{renameKey}}"></div><div class="{{renameMsgCls}}">{{renameMsg}}</div></sc-if>
+<div class="dm">{{d.meta}}</div>
+<div class="dacts">
+<button class="btn" data-tip="Ctrl+D" onClick="{{duplicate}}"><span class="ms" aria-hidden="true">{{ic.dup}}</span>Duplicate</button>
+<button class="btn icon" data-tip="Export as Text" aria-label="Export as Text" onClick="{{noop}}"><span class="ms" aria-hidden="true">ios_share</span></button>
+<button class="btn icon danger" data-tip="Delete" aria-label="Delete {{d.name}}" onClick="{{askDelete}}"><span class="ms" aria-hidden="true">{{ic.trash}}</span></button>
+</div>
+</div>
+
+<sc-if value="{{d.missing}}" hint-placeholder-val="{{false}}">
+<div class="callout vm-card err"><span class="ms" aria-hidden="true">{{ic.err}}</span><div><b>{{d.missTitle}}</b><p>{{d.missText}}</p></div></div>
+</sc-if>
+
+<div class="pn-cols">
+<div class="pn-col pn-parts">
+<div>
+<div class="sec">Sides<span class="end"><button class="vm-link" onClick="{{chooseImages}}">Choose Images</button></span></div>
+<div class="group pn-net" role="group" aria-label="The six sides, unfolded">
+<sc-for list="{{d.sides}}" as="sd" hint-placeholder-count="7">
+<div class="{{sd.cls}}" style="{{sd.at}}" data-side="{{sd.i}}" draggable="{{sd.canDrag}}" onDragStart="{{sd.dragStart}}" onDragOver="{{sd.dragOver}}" onDrop="{{sd.drop}}" onDragEnd="{{dragEnd}}">
+<button class="th" style="{{sd.thStyle}}" aria-label="{{sd.aria}}" data-tip="{{sd.tip}}" data-fk="{{sd.fk}}" onClick="{{sd.click}}"><sc-if value="{{sd.icon}}" hint-placeholder-val="{{false}}"><span class="ms" aria-hidden="true">{{sd.icon}}</span></sc-if><span class="nm">{{sd.name}}</span></button>
+<sc-if value="{{sd.has}}" hint-placeholder-val="{{true}}"><button class="rm" data-tip="Remove" aria-label="{{sd.rmAria}}" onClick="{{sd.remove}}"><span class="ms" aria-hidden="true">{{ic.x}}</span></button></sc-if>
+<sc-if value="{{sd.fresh}}" hint-placeholder-val="{{false}}"><span class="chip ok">New</span></sc-if>
+<sc-if value="{{sd.warn}}" hint-placeholder-val="{{false}}"><span class="pn-warn" data-tip="{{sd.warn}}"><span class="ms" aria-hidden="true">warning</span></span></sc-if>
+</div>
+</sc-for>
+</div>
+<sc-if value="{{d.sideNote}}" hint-placeholder-val="{{false}}"><p class="{{d.sideNoteCls}}">{{d.sideNote}}</p></sc-if>
+<p class="foot">Click a side to pick its image, or drag one onto another to swap them. Drop images or a folder onto the window too: files named <code>panorama_0</code> to <code>panorama_5</code> find their side by themselves, and FancyMenu asks about the rest.</p>
+</div>
+</div>
+<div class="pn-col pn-look">
+<div>
+<div class="sec">Preview</div>
+<div class="group pl-pv">
+<div class="pl-view">
+<div class="{{d.stageCls}}" role="button" tabindex="0" aria-label="{{d.stageLabel}}" onPointerDown="{{lookDown}}" onPointerMove="{{lookMove}}" onPointerUp="{{lookUp}}" onPointerCancel="{{lookUp}}">
+<dc-import name="PanoCube" sides="{{d.cube}}" fov="{{d.fov}}" pitch="{{d.pitch}}" yaw="{{d.yaw}}" at="{{d.at}}" rate="{{d.rate}}" names="{{yes}}" settle="{{d.settle}}" width="384" height="216" hint-size="384px,216px"></dc-import>
+<sc-if value="{{d.bigPlay}}" hint-placeholder-val="{{false}}"><span class="pl-big" aria-hidden="true"><span class="ms fill">play_arrow</span></span></sc-if>
+</div>
+</div>
+<div class="pl-info">
+<sc-if value="{{d.playable}}" hint-placeholder-val="{{true}}"><button class="ib pl-pp" data-tip="{{d.playTip}}" aria-label="{{d.playTip}}" onClick="{{togglePlay}}"><span class="ms fill" aria-hidden="true">{{d.playIcon}}</span></button></sc-if>
+<span class="t">{{d.pvTurn}}</span>
+<span class="sz">Drag to look around</span>
+</div>
+</div>
+</div>
+<div>
+<div class="sec">Camera</div>
+<div class="group pn-cam">
+<sc-for list="{{cam}}" as="c" hint-placeholder-count="4">
+<div class="row"><span class="lbl">{{c.label}}<span class="sub">{{c.sub}}</span></span><div class="ctl grow"><span class="mslider" role="slider" tabindex="0" aria-label="{{c.label}}" aria-valuetext="{{c.text}}" data-fk="{{c.fk}}" onKeyDown="{{c.key}}"><span class="track" onPointerDown="{{c.down}}" onPointerMove="{{c.move}}" onPointerUp="{{c.up}}" onPointerCancel="{{c.up}}"><sc-if value="{{c.known}}" hint-placeholder-val="{{true}}"><span class="fill" style="{{c.fill}}"></span><span class="knob" style="{{c.knob}}"></span></sc-if></span><span class="pct">{{c.text}}</span></span></div></div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{many}}" hint-placeholder-val="{{false}}">
+<div class="dhead">
+<div class="dt">{{m.title}}</div>
+<div class="dm">{{m.meta}}</div>
+<div class="dacts"><button class="btn" data-tip="Ctrl+D" onClick="{{duplicate}}"><span class="ms" aria-hidden="true">{{ic.dup}}</span>{{m.dupLabel}}</button><button class="btn icon" data-tip="Export as Text" aria-label="Export as Text" onClick="{{noop}}"><span class="ms" aria-hidden="true">ios_share</span></button>
+<button class="btn icon danger" data-tip="{{m.deleteTip}}" aria-label="{{m.deleteTip}}" onClick="{{askDelete}}"><span class="ms" aria-hidden="true">{{ic.trash}}</span></button></div>
+</div>
+<div>
+<div class="sec">Camera</div>
+<div class="group pn-cam wide">
+<sc-for list="{{cam}}" as="c" hint-placeholder-count="4">
+<div class="row"><span class="lbl">{{c.label}}<span class="sub">{{c.sub}}</span></span><div class="ctl grow"><span class="mslider" role="slider" tabindex="0" aria-label="{{c.label}}" aria-valuetext="{{c.text}}" data-fk="{{c.fk}}" onKeyDown="{{c.key}}"><span class="track" onPointerDown="{{c.down}}" onPointerMove="{{c.move}}" onPointerUp="{{c.up}}" onPointerCancel="{{c.up}}"><sc-if value="{{c.known}}" hint-placeholder-val="{{true}}"><span class="fill" style="{{c.fill}}"></span><span class="knob" style="{{c.knob}}"></span></sc-if></span><span class="pct">{{c.text}}</span></span></div></div>
+</sc-for>
+</div>
+<p class="foot">{{m.camNote}}</p>
+</div>
+<div>
+<div class="sec">Selected</div>
+<div class="group">
+<sc-for list="{{m.rows}}" as="mr" hint-placeholder-count="3">
+<div class="row ls-mrow ss-mrow"><span class="{{mr.thCls}}" style="{{mr.thStyle}}" aria-hidden="true"><sc-if value="{{mr.thIcon}}" hint-placeholder-val="{{false}}"><span class="ms" aria-hidden="true">{{mr.thIcon}}</span></sc-if></span><span class="lbl">{{mr.name}}<span class="sub">{{mr.sub}}</span></span><div class="ctl"><span class="{{mr.cls}}">{{mr.act}}</span></div></div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{one}}" hint-placeholder-val="{{true}}">
+<div>
+<div class="sec">Used In<span class="end">{{d.useCount}}</span></div>
+<sc-if value="{{d.used}}" hint-placeholder-val="{{true}}">
+<div class="group">
+<sc-for list="{{d.places}}" as="pl" hint-placeholder-count="2">
+<div class="row vm-loc"><span class="ms vm-ui" aria-hidden="true">{{pl.icon}}</span><span class="lbl">{{pl.name}}<sc-if value="{{pl.on}}" hint-placeholder-val="{{true}}"><span class="sub">{{pl.on}}</span></sc-if></span><sc-if value="{{pl.chip}}" hint-placeholder-val="{{true}}"><span class="chip">{{pl.chip}}</span></sc-if></div>
+<sc-for list="{{pl.uses}}" as="u" hint-placeholder-count="1">
+<div class="row child vm-use"><span class="ms vm-ui" aria-hidden="true">{{u.icon}}</span><span class="lbl">{{u.el}}<span class="sub">{{u.what}}</span></span><div class="ctl"><button class="ib" data-tip="{{u.openTip}}" aria-label="{{u.openTip}}" onClick="{{u.open}}"><span class="ms" aria-hidden="true">{{ic.open}}</span></button></div></div>
+</sc-for>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{d.unused}}" hint-placeholder-val="{{false}}"><div class="group vm-unused">Nothing uses it yet. Pick it as the background of a layout, or as Custom Menu Background Panorama in Global Customizations.</div></sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{none}}" hint-placeholder-val="{{false}}">
+<div class="vm-empty empty">
+<h3 class="t">No panoramas yet</h3>
+<p class="d">A panorama is six images on the inside of a cube that slowly turns around you, like the background of Minecraft&#x27;s title screen. Use one as the background of a layout, or behind every menu.</p>
+<div class="vm-ways">
+<div><b>A background</b>The valley at night behind the options screen</div>
+<div><b>Your server</b>The spawn town, turning behind the multiplayer screen</div>
+<div><b>Every menu</b>One panorama instead of Minecraft&#x27;s own</div>
+</div>
+<button class="btn primary" onClick="{{addNew}}"><span class="ms" aria-hidden="true">{{ic.plus}}</span>New Panorama</button>
+<p class="foot" style="margin-top: 12px">Or drop six images or a folder with them onto this window to start one.</p>
+</div>
+</sc-if>
+
+<sc-if value="{{nothingSel}}" hint-placeholder-val="{{false}}"><div class="vm-empty empty"><p class="d">Select a panorama to see its sides, how it turns and where it&#x27;s used.</p></div></sc-if>
+</main>
+<div class="footer line"><span class="lead">{{footLead}}<sc-if value="{{footUndo}}" hint-placeholder-val="{{false}}"> <button class="vm-link" onClick="{{undo}}">Undo</button></sc-if></span><button class="btn wide" onClick="{{cancelAll}}">Cancel</button><button class="btn primary wide" onClick="{{noop}}">Save</button></div>
+</div>
+</div>
+
+<sc-if value="{{filterOpen}}" hint-placeholder-val="{{false}}"><div class="vm-pop" style="{{filterStyle}}"><dc-import name="ContextMenu" items="{{filterItems}}" escape-listener="{{closePopups}}" standalone="{{no}}" hint-size="auto,120px"></dc-import></div></sc-if>
+
+<sc-if value="{{sheetAlert}}" hint-placeholder-val="{{false}}">
+<div class="sheet-dim"></div>
+<div class="sheet vm-alert" role="alertdialog" aria-label="{{al.title}}">
+<span class="vm-aicon"><span class="ms" aria-hidden="true">{{al.icon}}</span></span>
+<div class="vm-st" style="margin-top: 12px">{{al.title}}</div>
+<p>{{al.text}}</p>
+<div class="vm-abtns"><sc-for list="{{al.buttons}}" as="b" hint-placeholder-count="2"><button class="{{b.cls}}" onClick="{{b.click}}">{{b.label}}</button></sc-for></div>
+</div>
+</sc-if>
+
+<sc-if value="{{askOpen}}" hint-placeholder-val="{{false}}">
+<div class="sheet-dim"></div>
+<div class="sheet pn-ask" role="dialog" aria-label="{{ask.title}}">
+<div class="vm-st">{{ask.title}}</div>
+<p class="pn-ask-p">{{ask.text}}</p>
+<div class="pn-ask-b">
+<div class="pn-ask-l" role="listbox" aria-label="Dropped images">
+<sc-for list="{{ask.imgs}}" as="ai" hint-placeholder-count="3">
+<button class="{{ai.cls}}" role="option" aria-selected="{{ai.ariaSel}}" onClick="{{ai.pick}}"><span class="th" style="{{ai.thStyle}}" aria-hidden="true"><span class="no">{{ai.no}}</span></span><span class="fn">{{ai.name}}</span><span class="{{ai.subCls}}">{{ai.sub}}</span></button>
+</sc-for>
+</div>
+<div class="pn-ask-r">
+<div class="pn-net sm" role="group" aria-label="Sides">
+<sc-for list="{{ask.sides}}" as="sb" hint-placeholder-count="6">
+<button class="{{sb.cls}}" style="{{sb.at}}" data-tip="{{sb.tip}}" aria-label="{{sb.aria}}" onClick="{{sb.click}}"><sc-if value="{{sb.pic}}" hint-placeholder-val="{{false}}"><span class="pic" style="{{sb.pic}}" aria-hidden="true"></span></sc-if><span class="nm">{{sb.name}}</span><sc-if value="{{sb.badge}}" hint-placeholder-val="{{false}}"><span class="no" aria-hidden="true">{{sb.badge}}</span></sc-if></button>
+</sc-for>
+</div>
+<sc-if value="{{ask.big}}" hint-placeholder-val="{{true}}"><div class="pn-ask-big"><span class="th" style="{{ask.big.style}}" aria-hidden="true"></span><span><b>{{ask.big.title}}</b><span class="fn">{{ask.big.name}}</span><span>{{ask.big.meta}}</span></span></div></sc-if>
+<sc-if value="{{ask.hint}}" hint-placeholder-val="{{false}}"><p class="foot">{{ask.hint}}</p></sc-if>
+</div>
+</div>
+<div class="pn-ask-f"><span class="{{ask.noteCls}}">{{ask.note}}</span><button class="btn wide" onClick="{{ask.cancel}}">Cancel</button><button class="btn primary wide" disabled="{{ask.off}}" onClick="{{ask.apply}}">{{ask.applyLabel}}</button></div>
+</div>
+</sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"scene":{"editor":"enum","options":["Dusk Valley","Empty"],"default":"Dusk Valley"},"select":{"editor":"text","default":"p3"},"sheet":{"editor":"enum","options":["","rename","delete"],"default":""},"renameTo":{"editor":"text","default":""},"add":{"editor":"boolean","default":false},"behind":{"editor":"text","default":""},"dropped":{"editor":"enum","options":["","folder","ask"],"default":""},"asked":{"editor":"text","default":""},"lost":{"editor":"text","default":""},"playing":{"editor":"boolean","default":true},"filter":{"editor":"enum","options":["all","unused","probs"],"default":"all"},"filterMenu":{"editor":"boolean","default":false},"query":{"editor":"text","default":""},"scroll":{"editor":"text","default":""},"onStage":{"editor":null},"width":{"editor":"int","default":1200},"height":{"editor":"int","default":772},"standalone":{"editor":"boolean","default":true},"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1280,"height":852}}'>
+// ---------- the six sides ----------
+// A panorama is a cube seen from the inside. Its sides are saved as panorama_0.png to panorama_5.png, in this order,
+// and CELL is where each one sits when the cube is unfolded: column and row of a grid 4 wide and 3 high.
+const SIDES = ['Front', 'Right', 'Back', 'Left', 'Top', 'Bottom'];
+const CELL = [[2, 2], [3, 2], [4, 2], [1, 2], [2, 1], [2, 3]];
+const FILE = (i) => 'panorama_' + i + '.png';
+// The sample pictures sit on pano_faces.png: one row per panorama, its six sides across, 96 art pixels each.
+// fm-ui.css sets the sheet and its size per place, so only the spot is set here.
+const ROW = { aurora: 0, cherry: 1, dusk: 2, golden: 3, snowy: 4, starfall: 5, bay: 6 };
+const spot = (im, k) => 'background-position: ' + -im.f * 96 * k + 'px ' + -ROW[im.a] * 96 * k + 'px';
+
+// ---------- places that use a panorama, the same ones Pre-Load Resources lists ----------
+const PLACES = {
+  options: { name: 'Dusk Valley Options', kind: 'layout', chip: 'Layout', icon: 'layout', on: 'For the options screen', open: 'Open in the layout editor' },
+  servers: { name: 'Dusk Valley Servers', kind: 'layout', chip: 'Layout', icon: 'layout', on: 'For the multiplayer screen', open: 'Open in the layout editor' },
+  global: { name: 'Global Customizations', kind: 'global', chip: '', icon: 'tune', on: '', open: 'Show in the menu bar' },
+  preload: { name: 'Pre-Load Resources', kind: 'preload', chip: '', icon: 'preload', on: '', open: 'Open in Pre-Load Resources' }
+};
+const whereText = (uses) => {
+  const lays = new Set(uses.filter((u) => PLACES[u.at].kind === 'layout').map((u) => u.at)).size;
+  const parts = [lays ? (lays === 1 ? 'a layout' : lays + ' layouts') : '', uses.some((u) => u.at === 'global') ? 'Global Customizations' : '', uses.some((u) => u.at === 'preload') ? 'Pre-Load Resources' : ''].filter(Boolean);
+  return parts.length > 2 ? parts.slice(0, -1).join(', ') + ' and ' + parts[parts.length - 1] : parts.join(' and ');
+};
+
+// ---------- how fast a panorama turns ----------
+// FancyMenu turns a panorama by 0.03° per tick, and a tick comes every 20 ms divided by the speed, but never more
+// often than every 2 ms. So speed 1 is 1.5° a second, and anything above 10 turns like 10.
+const tickMs = (speed) => Math.max(2, Math.floor(20 / speed));
+const rateOf = (speed) => (speed > 0 ? 30 / tickMs(speed) : 0);
+const dur = (sec) => { const s0 = Math.round(sec); return s0 < 60 ? s0 + ' s' : Math.floor(s0 / 60) + ' min' + (s0 % 60 ? ' ' + (s0 % 60) + ' s' : ''); };
+const turnText = (speed) => (speed > 0 ? 'One turn takes ' + dur(360 / rateOf(speed)) : 'Stands still');
+const num = (v) => String(Math.round(v * 100) / 100);
+
+// ---------- seed: the Dusk Valley profile's panoramas ----------
+// A side's image: a is its picture's row, f which of the six pictures it is, w and h its size in pixels, kb its size
+// on disk, st is missing for a file that was moved or deleted outside FancyMenu, and from is the name the file had
+// before FancyMenu copied it in. speed, fov, angle and start are the values of properties.txt.
+const im = (a, f, kb, o) => Object.assign({ a, f, w: 1024, h: 1024, kb, st: 'ok', from: '' }, o || {});
+const all6 = (a, kbs) => kbs.map((kb, f) => im(a, f, kb));
+const seed = () => [
+  { id: 'p1', n: 'Aurora Lake', speed: .5, fov: 90, angle: -6, start: 0, sides: all6('aurora', [702, 688, 695, 710, 540, 465]), overlay: null, uses: [] },
+  { id: 'p2', n: 'Cherry Blossom Hill', speed: 1, fov: 85, angle: 6, start: 330, sides: all6('cherry', [860, 842, 851, 870, 505, 772]), overlay: null, uses: [] },
+  { id: 'p3', n: 'Dusk Valley Night', speed: 1, fov: 85, angle: 5, start: 0, sides: all6('dusk', [812, 790, 805, 798, 761, 834]), overlay: null,
+    uses: [{ at: 'options', el: 'Menu background', what: 'Background · Panorama', k: 'bg' }, { at: 'global', el: 'Custom Menu Background Panorama', what: 'Behind menus without a background of their own', k: 'pano' }, { at: 'preload', el: 'Pre-loaded', what: 'Loads while the game starts, so it is there right away', k: 'pre' }] },
+  { id: 'p4', n: 'Golden Hour', speed: .5, fov: 85, angle: 4, start: 340, sides: all6('golden', [884, 861, 872, 880, 512, 790]), overlay: null, uses: [] },
+  { id: 'p5', n: 'Snowy Peaks', speed: 1, fov: 85, angle: 0, start: 0, sides: all6('snowy', [948, 921, 930, 942, 897, 962]), overlay: null,
+    uses: [{ at: 'servers', el: 'Menu background', what: 'Background · Panorama', k: 'bg' }] },
+  { id: 'p6', n: 'Starfall Ridge', speed: 2, fov: 100, angle: -18, start: 0, sides: all6('starfall', [640, 628, 633, 645, 702, 398]), overlay: null, uses: [] }
+];
+// what Choose Image and dropped files bring in this mockup: the six sides of a sunrise over a bay
+const POOL = (i, from) => im('bay', i, 720 + i * 23, { from: from || '' });
+// six screenshots, the way Minecraft names them, as a drop that doesn't say which side each one is
+const SHOTS = ['2026-11-08_18.02.11.png', '2026-11-08_18.02.19.png', '2026-11-08_18.02.26.png', '2026-11-08_18.02.34.png', '2026-11-08_18.02.47.png', '2026-11-08_18.02.58.png'];
+
+class Component extends DCLogic {
+  componentWillUnmount() {
+    if (this._keys) window.removeEventListener('keydown', this._keys, true);
+    if (this._settle) clearTimeout(this._settle);
+  }
+
+  renderVals() {
+    const p = this.props, s = this.state || {};
+    const set = (patch) => this.setState(patch);
+    const uid = this._uid || (this._uid = 'pn' + Math.random().toString(36).slice(2, 8));
+    const standalone = p.standalone ?? true;
+    const W = +p.width || 1200, H = +p.height || 772;
+    const empty = (p.scene || 'Dusk Valley') === 'Empty';
+    const IC = {
+      pano: 'panorama', plus: 'add', search: 'search', funnel: 'filter_alt', x: 'close', err: 'error', pencil: 'edit',
+      dup: 'library_add', trash: 'delete', open: 'open_in_new', broken: 'broken_image',
+      layout: 'gallery_thumbnail', preload: 'checklist', tune: 'tune', bg: 'image', pre: 'checklist'
+    };
+
+    // ---------- state ----------
+    // lost names sides whose files are gone, like "p6:4,5": a board uses it to show that case
+    if (!this._seed) {
+      this._seed = empty ? [] : seed();
+      const m = /^(\w+):([\d,]+)$/.exec(p.lost || '');
+      const x0 = m && this._seed.find((x) => x.id === m[1]);
+      if (x0) m[2].split(',').forEach((i) => { if (x0.sides[+i]) x0.sides[+i] = Object.assign({}, x0.sides[+i], { st: 'missing', kb: 0 }); });
+    }
+    const list = s.list ?? this._seed;
+    const byId = (id) => list.find((x) => x.id === id);
+    const selRaw = s.sel ?? (empty ? [] : String(p.select ?? 'p3').split(',').map((x) => x.trim()).filter(Boolean));
+    const sel = selRaw.filter((id) => byId(id));
+    const sheet = s.sheet ?? (p.sheet || '');
+    const filterOpen = s.filterOpen !== undefined ? s.filterOpen : !!p.filterMenu;
+    const filter = s.filter ?? (p.filter || 'all');
+    const q = s.q ?? (p.query || '');
+    const ql = q.trim().toLowerCase();
+    const renaming = !!s.renaming;
+    const ask = s.ask || null;
+    // behind is the panorama that the screen behind the window shows, like the background of the layout that's open in
+    // the editor. The window only hands the scene its state, so it gets drawn there with every change (rule 38). Which
+    // panorama a place shows gets picked in that place, never in this window.
+    const behind = !empty && p.behind && byId(p.behind) ? p.behind : '';
+    const fk = (k) => uid + '-' + k;
+    const deepQuery = (sel0) => { const walk = (r) => { const hit = r.querySelector(sel0); if (hit) return hit; for (const el of r.querySelectorAll('*')) { if (el.shadowRoot) { const x = walk(el.shadowRoot); if (x) return x; } } return null; }; return walk(document); };
+    const focusLater = (key, select) => setTimeout(() => { const el = deepQuery('[data-fk="' + key + '"]'); if (el) { el.focus(); if (select && el.select) el.select(); } }, 0);
+
+    const snapshot = () => ({ list, sel });
+    // Dragging a slider coalesces into one undo step (rule 17).
+    const commit = (nl, patch, tag) => {
+      const keep = tag && s.lastTag === tag;
+      set({ list: nl, undoStack: keep ? (s.undoStack || []) : [...(s.undoStack || []), snapshot()].slice(-50), redoStack: [], lastTag: tag || null, ...patch });
+    };
+    const status = (text, canUndo) => ({ status: { text, undo: !!canUndo } });
+    const plural = (n, one, many) => (n === 1 ? one : n + ' ' + many);
+    const patchSel = (fn) => list.map((x) => (sel.includes(x.id) ? fn(x) : x));
+    const patchOne = (x, patch) => list.map((y) => (y === x ? Object.assign({}, y, patch) : y));
+    const andList = (xs) => (xs.length > 2 ? xs.slice(0, -1).join(', ') + ' and ' + xs[xs.length - 1] : xs.join(' and '));
+
+    // ---------- what a panorama is ----------
+    const okSides = (x) => x.sides.filter((sd) => sd && sd.st !== 'missing');
+    const lostSides = (x) => x.sides.map((sd, i) => (sd && sd.st === 'missing' ? i : -1)).filter((i) => i >= 0);
+    const openSides = (x) => x.sides.map((sd, i) => (sd ? -1 : i)).filter((i) => i >= 0);
+    const complete = (x) => okSides(x).length === 6;
+    const problemOf = (x) => (lostSides(x).length ? plural(lostSides(x).length, '1 side is missing', 'sides are missing') : !okSides(x).length ? 'No sides yet' : openSides(x).length ? plural(openSides(x).length, '1 side to go', 'sides to go') : '');
+    const kbOf = (x) => okSides(x).reduce((a, sd) => a + sd.kb, 0) + (x.overlay ? x.overlay.kb : 0);
+    const mb = (kb) => (kb >= 1000 ? (Math.round(kb / 100) / 10) + ' MB' : kb + ' KB');
+    const bytes = (x) => mb(kbOf(x));
+    const sizeOf = (x) => { const ds = [...new Set(okSides(x).map((sd) => sd.w + ' × ' + sd.h))]; return ds.length === 1 ? ds[0] : ''; };
+    // what a row in a list says about a panorama: the size of its images, then in short how long one turn takes
+    const summary = (x) => [sizeOf(x) || 'Sizes differ', x.speed > 0 ? dur(360 / rateOf(x.speed)) + ' a turn' : 'stands still'].join(' · ');
+    // the list shows the middle of the front, or of the first side that has an image
+    const thumbOf = (x) => {
+      const first = okSides(x)[0];
+      if (lostSides(x).length) return { thCls: 'pl-th bad', thStyle: '', thIcon: IC.broken };
+      return first ? { thCls: 'pl-th pn-th', thStyle: 'background-position: ' + -first.f * 48 + 'px ' + (-ROW[first.a] * 48 - 10) + 'px', thIcon: '' } : { thCls: 'pl-th ic', thStyle: '', thIcon: IC.pano };
+    };
+    const cubeOf = (x) => x.sides.map((sd) => (!sd ? null : sd.st === 'missing' ? { bad: true } : { pic: [sd.f, ROW[sd.a]] }));
+
+    // ---------- list ----------
+    const fits = (x) => (filter === 'unused' ? !x.uses.length : filter === 'probs' ? !!problemOf(x) : true);
+    const hitParts = (text) => {
+      const at = ql ? text.toLowerCase().indexOf(ql) : -1;
+      const P = (t, hit) => ({ t, hit, plain: !hit });
+      return at < 0 ? [P(text, false)] : [P(text.slice(0, at), false), P(text.slice(at, at + ql.length), true), P(text.slice(at + ql.length), false)].filter((y) => y.t);
+    };
+    const shown = list.filter((x) => fits(x) && (!ql || x.n.toLowerCase().includes(ql))).sort((a, b) => a.n.localeCompare(b.n));
+    const order = shown.map((x) => x.id);
+
+    const selectRow = (id, e) => {
+      let next;
+      if (e && (e.ctrlKey || e.metaKey)) next = sel.includes(id) ? sel.filter((y) => y !== id) : [...sel, id];
+      else if (e && e.shiftKey && s.anchor && order.includes(s.anchor)) { const a = order.indexOf(s.anchor), b = order.indexOf(id); next = order.slice(Math.min(a, b), Math.max(a, b) + 1); }
+      else next = [id];
+      set({ sel: next, anchor: e && e.shiftKey ? s.anchor : id, renaming: false, filterOpen: false, fresh: [], look: null });
+    };
+    const rows = shown.map((x) => {
+      const isSel = sel.includes(x.id);
+      const prob = problemOf(x);
+      const bad = lostSides(x).length > 0;
+      return {
+        cls: 'item tall lsrow plrow' + (isSel ? ' sel' : ''), ariaSel: isSel ? 'true' : 'false', ...thumbOf(x),
+        name: hitParts(x.n), sub: prob || summary(x),
+        subCls: 'ls-sub' + (bad ? ' err' : prob ? ' warn' : ''),
+        click: (e) => selectRow(x.id, e)
+      };
+    });
+
+    // ---------- the clock that turns a panorama ----------
+    // Every panorama that's on screen has a direction at some moment and a rate from then on. Changing the rate, by
+    // pausing, by a new speed or by a sheet that covers the preview, first moves the direction up to now, so the
+    // view never jumps.
+    const now = Date.now();
+    const clocks = this._clocks || (this._clocks = {});
+    const clockOf = (x, rate) => {
+      let c = clocks[x.id];
+      if (!c) c = clocks[x.id] = { yaw: x.start, at: now, rate };
+      if (c.rate !== rate) { c.yaw += c.rate * (now - c.at) / 1000; c.at = now; c.rate = rate; }
+      return c;
+    };
+    const one = sel.length === 1 ? byId(sel[0]) : null;
+    const look = s.look || null;
+    const playing = (s.playing ?? (p.playing ?? true)) && !sheet && !ask;
+    const ux = behind ? byId(behind) : null;
+
+    // ---------- actions ----------
+    const doDelete = () => {
+      if (!sel.length) return;
+      const xs = sel.map(byId);
+      const nl = list.filter((x) => !sel.includes(x.id));
+      const idx = Math.max(0, order.indexOf(sel[0]));
+      const rest = order.filter((id) => !sel.includes(id));
+      const nextSel = rest.length ? [rest[Math.min(idx, rest.length - 1)]] : [];
+      const nI = xs.reduce((a, x) => a + okSides(x).length, 0);
+      commit(nl, { sel: nextSel, renaming: false, sheet: '', ...status((xs.length === 1 ? 'Deleted ' + xs[0].n : 'Deleted ' + xs.length + ' panoramas') + (nI ? ' and ' + plural(nI, 'its image', 'images') + '.' : '.'), true) });
+    };
+    // Deleting asks only when images go with it or something still uses it. Undo brings it back otherwise.
+    const askDelete = () => { if (!sel.length) return; const xs = sel.map(byId); if (xs.some((x) => okSides(x).length || x.uses.length)) set({ sheet: 'delete', filterOpen: false }); else doDelete(); };
+    let idN = this._idN || 100;
+    const newId = () => { idN += 1; this._idN = idN; return 'n' + idN; };
+    const taken = (n, except) => list.some((x) => x !== except && x.n.toLowerCase() === n.toLowerCase());
+    const freeName = (base) => { let n = base, i = 2; while (taken(n)) n = base + ' ' + i++; return n; };
+    const cleanName = (v) => v.replace(/\s+/g, ' ').replace(/^ /, '');
+    // A copy brings copies of the images along. Nothing uses it yet.
+    const duplicate = () => {
+      if (!sel.length) return;
+      const copies = sel.map(byId).map((x) => Object.assign(JSON.parse(JSON.stringify(x)), { id: newId(), n: freeName(x.n + ' Copy'), uses: [] }));
+      commit([...list, ...copies], { sel: copies.map((c) => c.id), anchor: copies[0].id, ...status(copies.length === 1 ? 'Made ' + copies[0].n + (okSides(copies[0]).length ? ', with copies of its images.' : '.') : 'Made ' + copies.length + ' copies, with copies of their images.', true) });
+    };
+    // New Panorama adds one right away, with a name to type over and the camera a panorama has without values in its file today.
+    const blank = (n) => ({ id: newId(), n, speed: 1, fov: 85, angle: 25, start: 0, sides: [null, null, null, null, null, null], overlay: null, uses: [] });
+    const addNew = (base) => {
+      const x = blank(freeName(typeof base === 'string' && base ? base : 'New Panorama'));
+      commit([...list, x], { sel: [x.id], anchor: x.id, q: '', filter: 'all', filterOpen: false, renaming: true, renameDraft: x.n, fresh: [], ...status('Added ' + x.n + '. Type its name, then give its sides their images.', true) });
+      focusLater(fk('rename'), true);
+    };
+    if (p.add && !this._added && !empty) { this._added = true; setTimeout(() => addNew(), 0); }
+    const undo = () => {
+      const u = s.undoStack || [];
+      if (!u.length) return;
+      const last = u[u.length - 1];
+      set({ list: last.list, sel: last.sel, undoStack: u.slice(0, -1), redoStack: [...(s.redoStack || []), snapshot()], renaming: false, lastTag: null, fresh: [], status: { text: 'Undone.', undo: false } });
+    };
+    const redo = () => {
+      const r = s.redoStack || [];
+      if (!r.length) return;
+      const last = r[r.length - 1];
+      set({ list: last.list, sel: last.sel, redoStack: r.slice(0, -1), undoStack: [...(s.undoStack || []), snapshot()], lastTag: null, status: { text: 'Redone.', undo: false } });
+    };
+    // Nothing gets saved before Save, so Cancel only asks when there is something to lose (rule 68).
+    const changes = (() => {
+      const orig = this._seed, j = (x) => JSON.stringify(x);
+      const ids = new Set(orig.map((x) => x.id).concat(list.map((x) => x.id)));
+      let n = 0; ids.forEach((id) => { const a = orig.find((x) => x.id === id), b = list.find((x) => x.id === id); if (!a || !b || j(a) !== j(b)) n++; });
+      return n;
+    })();
+    const discard = () => set({ list: this._seed, sel: empty ? [] : [String(p.select ?? 'p3').split(',')[0]], undoStack: [], redoStack: [], renaming: false, sheet: '', filterOpen: false, fresh: [], status: { text: 'Your changes were taken back. The window closes now.', undo: false } });
+    const cancelAll = () => { if (changes) set({ sheet: 'discard', filterOpen: false }); else set({ filterOpen: false, ...status('Nothing changed, so Cancel closes the window without asking.') }); };
+    const startRename = () => { if (!one) return; set({ renaming: true, renameDraft: one.n }); focusLater(fk('rename'), true); };
+    const checkName = (draft, x) => {
+      const n = draft.trim();
+      if (!n) return { ok: false, bad: false, msg: 'A name people will recognize, like Dusk Valley Night.' };
+      if (taken(n, x)) return { ok: false, bad: true, msg: 'A panorama called ' + n + ' already exists.' };
+      return { ok: true, bad: false, msg: 'Enter renames it, Esc keeps the old name.' };
+    };
+    // Places find a panorama by its name, so renaming one that's used somewhere asks whether they should follow (rule 167).
+    const applyRename = (x, to, update) => {
+      const nl = list.map((y) => (y === x ? Object.assign({}, y, { n: to, uses: update ? y.uses : [] }) : y));
+      const c = x.uses.length;
+      commit(nl, { renaming: false, sheet: '', ...status(c && update ? 'Renamed it to ' + to + ' and updated ' + (c === 1 ? 'the place' : c === 2 ? 'both places' : 'all ' + c + ' places') + ' that use it.' : c ? 'Renamed it to ' + to + '. ' + (c === 1 ? 'The place that uses ' + x.n + ' still says ' + x.n + ', so it goes' : 'The ' + c + ' places that use ' + x.n + ' still say ' + x.n + ', so they go') + ' without a panorama.' : 'Renamed it to ' + to + '.', true) });
+    };
+    const tryRename = (x, draft) => {
+      const to = draft.trim();
+      if (to === x.n) { set({ renaming: false }); return; }
+      if (!checkName(to, x).ok) return;
+      if (x.uses.length) set({ sheet: 'rename', renameTo: to, renaming: false });
+      else applyRename(x, to, false);
+    };
+
+    // ---------- sides: picking, taking off, swapping ----------
+    // An image keeps the name it had only until it's picked: FancyMenu copies it into the panorama under the file
+    // name its side needs, so nobody has to rename anything (rule 166).
+    const setSide = (x, i) => {
+      const had = x.sides[i];
+      // a second pick on the same side brings another picture, so replacing shows
+      const next = had && had.a === 'bay' ? im('cherry', i, 800 + i * 11) : POOL(i);
+      commit(patchOne(x, { sides: x.sides.map((sd, j) => (j === i ? next : sd)) }), { fresh: [], ...status((had ? 'Replaced the image of ' : 'Set the image of ') + SIDES[i] + ', as if picked in Choose Image.', true) });
+    };
+    const clearSide = (x, i) => {
+      const had = x.sides[i];
+      commit(patchOne(x, { sides: x.sides.map((sd, j) => (j === i ? null : sd)) }), { fresh: [], ...status('Took the image off ' + SIDES[i] + '.' + (had && had.st === 'missing' ? '' : ' Its file gets deleted with Save.'), true) });
+    };
+    const moveSide = (x, from, to) => {
+      const sides = x.sides.slice();
+      const a = sides[from], b = sides[to];
+      sides[to] = a; sides[from] = b;
+      commit(patchOne(x, { sides }), { dragFrom: null, dragTo: null, fresh: [], ...status(b ? 'Swapped ' + SIDES[from] + ' and ' + SIDES[to] + '.' : 'Moved the image from ' + SIDES[from] + ' to ' + SIDES[to] + '.', true) });
+    };
+    const setOverlay = (x) => commit(patchOne(x, { overlay: x.overlay ? null : { kb: 96, w: 1920, h: 1080 } }), status(x.overlay ? 'Took the overlay off ' + x.n + '.' : 'Set the overlay, as if picked in Choose Image.', true));
+    // Choose Images picks several files at once and sorts them like a drop does.
+    const chooseImages = () => {
+      if (!one) return;
+      const open = openSides(one);
+      if (!open.length) { set(status('Opens Choose Image, where several files can be picked at once. They get sorted like dropped files.')); return; }
+      commit(patchOne(one, { sides: one.sides.map((sd, i) => sd || POOL(i)) }), { fresh: [], ...status('Set ' + (open.length === 6 ? 'all 6 sides' : andList(open.map((i) => SIDES[i]))) + ', as if ' + plural(open.length, 'a file', 'files') + ' named ' + (open.length === 1 ? FILE(open[0]).replace('.png', '') : 'panorama_0 to panorama_5') + ' got picked in Choose Image.', true) });
+    };
+    const dragFrom = s.dragFrom ?? null;
+    const dragTo = s.dragTo ?? null;
+
+    // ---------- files dropped in from outside ----------
+    // Minecraft only reports files once they're dropped, never while they hover over the window, so nothing here
+    // reacts before a drop (rule 118). A drop lands on the selected panorama, or makes a new one when none or several
+    // are selected. Files named panorama_0 to panorama_5 know their side, one image dropped right onto a side goes
+    // there, and for everything else a sheet asks (rule 166).
+    const sideOfName = (name) => { const m = /^panorama_([0-5])\.(png|jpe?g)$/i.exec(name); return m ? +m[1] : -1; };
+    const isImage = (name) => /\.(png|jpe?g)$/i.test(name);
+    const prettyName = (folder) => folder.replace(/[_-]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+    const place = (x, isNew, picks, note, nameIt) => {
+      // picks: side -> image. One undo step, the new images tagged New (rule 118). A new panorama that couldn't take
+      // its name from a folder gets it ready to type over, like after New Panorama (rule 150).
+      const sides = x.sides.map((sd, i) => (picks[i] ? picks[i] : sd));
+      const idxs = Object.keys(picks).map(Number).sort((a, b) => a - b);
+      const what = idxs.length === 6 ? 'all 6 sides' : andList(idxs.map((i) => SIDES[i]));
+      const nx = Object.assign({}, x, { sides });
+      const nl = isNew ? [...list, nx] : list.map((y) => (y === x ? nx : y));
+      commit(nl, { sel: [nx.id], anchor: nx.id, q: isNew ? '' : q, filter: isNew ? 'all' : filter, fresh: idxs, ask: null, renaming: !!nameIt, renameDraft: nx.n, ...status((isNew ? 'Made ' + nx.n + ' with ' + what : 'Set ' + what + ' of ' + nx.n) + (note || '') + '.' + (nameIt ? ' Type its name.' : ''), true) });
+      if (nameIt) focusLater(fk('rename'), true);
+    };
+    const takeDrop = (names, folder, over) => {
+      const imgs = names.filter(isImage);
+      const other = names.filter((n) => !isImage(n) && n !== 'properties.txt');
+      const skipped = other.length ? ', skipped ' + other[0] + (other.length > 1 ? ' and ' + plural(other.length - 1, '1 more file', 'more files') : '') + ' (not an image)' : '';
+      // a drop without any image gets said out loud instead of doing nothing
+      if (!imgs.length) { set(status(other.length ? other[0] + ' isn\'t a PNG or JPEG image, so nothing was set.' : 'Nothing was set.')); return; }
+      const isNew = !one;
+      const x = one || blank(freeName(folder ? prettyName(folder) : 'New Panorama'));
+      const from = folder ? ' from the folder ' + folder : '';
+      if (imgs.length === 1 && sideOfName(imgs[0]) < 0 && over >= 0 && over < 6) { place(x, isNew, { [over]: POOL(over, imgs[0]) }, skipped, isNew && !folder); return; }
+      const picks = {};
+      const unknown = [];
+      imgs.forEach((n) => { const i = sideOfName(n); if (i >= 0 && !picks[i]) picks[i] = POOL(i, n); else unknown.push(n); });
+      if (!unknown.length) { place(x, isNew, picks, from + skipped, isNew && !folder); return; }
+      // the pictures of images without a side name are the sides nothing in the drop claimed yet, in order
+      const free = [0, 1, 2, 3, 4, 5].filter((i) => !picks[i]);
+      const items = [...Object.keys(picks).map((i) => ({ name: picks[i].from, img: picks[i], side: +i })), ...unknown.map((n, k) => ({ name: n, img: POOL(free[k % free.length], n), side: -1 }))];
+      set({ ask: { pid: isNew ? '' : x.id, draft: isNew ? x : null, items, cur: items.findIndex((it) => it.side < 0), note: from + skipped, nameIt: isNew && !folder }, filterOpen: false });
+    };
+    const hasFiles = (e) => !!(e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files'));
+    const fileOver = (e) => { if (hasFiles(e) && !sheet && !ask) e.preventDefault(); };
+    const fileDrop = (e) => {
+      if (!hasFiles(e) || sheet || ask) return;
+      e.preventDefault();
+      const tile = e.target && e.target.closest ? e.target.closest('[data-side]') : null;
+      const over = tile ? +tile.getAttribute('data-side') : -1;
+      const files = Array.from(e.dataTransfer.files || []);
+      // a dropped folder comes in as one entry: its name becomes the panorama's, and its images get read
+      const entry = e.dataTransfer.items && e.dataTransfer.items[0] && e.dataTransfer.items[0].webkitGetAsEntry ? e.dataTransfer.items[0].webkitGetAsEntry() : null;
+      if (entry && entry.isDirectory) {
+        const names = [];
+        const read = (dir, done) => dir.createReader().readEntries((es) => { let left = es.length; if (!left) done(); es.forEach((en) => { if (en.isFile) { names.push(en.name); if (!--left) done(); } else if (en.name === 'panorama') read(en, () => { if (!--left) done(); }); else if (!--left) done(); }); });
+        read(entry, () => takeDrop(names, entry.name, over));
+        return;
+      }
+      takeDrop(files.map((f) => f.name), '', over);
+    };
+    // a board can show the moment after a drop: a folder with ready-named images, or six screenshots that get asked about
+    if (p.dropped && !this._dropped && !empty) {
+      this._dropped = true;
+      setTimeout(() => {
+        if (p.dropped === 'folder') takeDrop([0, 1, 2, 3, 4, 5].map(FILE).concat(['notes.txt']), 'sunrise_bay', -1);
+        else takeDrop(SHOTS, '', -1);
+      }, 0);
+    }
+    // ...and how far the answers are: "0>0,1>1" puts the first image on Front and the second on Right
+    if (ask && p.asked && !this._asked) {
+      this._asked = true;
+      const items = ask.items.map((it) => Object.assign({}, it));
+      p.asked.split(',').forEach((pair) => { const [a, b] = pair.split('>').map(Number); if (items[a]) items[a].side = b; });
+      setTimeout(() => set({ ask: Object.assign({}, ask, { items, cur: items.findIndex((it) => it.side < 0) }) }), 0);
+    }
+
+    // ---------- details ----------
+    const many = sel.length > 1;
+    const selXs = sel.map(byId);
+    let d = {};
+    if (one) {
+      const x = one, ok = okSides(x), lost = lostSides(x), open = openSides(x);
+      const c = clockOf(x, playing && !look ? rateOf(x.speed) : 0);
+      const groups = [];
+      x.uses.forEach((u) => {
+        let g = groups.find((y) => y.at === u.at);
+        const P = PLACES[u.at];
+        if (!g) { g = { at: u.at, name: P.name, on: P.on || '', chip: P.chip, icon: IC[P.icon], uses: [] }; groups.push(g); }
+        const open0 = P.kind === 'layout' ? () => set(status('Saves first, then opens ' + P.name + ' in the layout editor.')) : P.kind === 'global' ? () => set(status('Saves first, then opens Global Customizations in the menu bar, at Custom Menu Background Panorama.')) : () => set(status('Saves first, then opens Pre-Load Resources with ' + x.n + ' selected.'));
+        g.uses.push({ el: u.el, what: u.what, icon: IC[u.k] || IC.pano, openTip: P.open, open: open0 });
+      });
+      const nU = x.uses.length;
+      const fresh = s.fresh || [];
+      d = {
+        name: x.n,
+        // how many sides a cube has goes without saying, and the note under Sides counts the ones still to go
+        meta: ok.length ? [sizeOf(x), bytes(x)].filter(Boolean).join(' · ') : 'No images yet',
+        missing: lost.length > 0,
+        missTitle: lost.length === 1 ? SIDES[lost[0]] + ' is missing' : andList(lost.map((i) => SIDES[i])) + ' are missing',
+        missText: (lost.length === 1 ? 'Its file was' : 'Their files were') + ' moved or deleted outside FancyMenu. A panorama needs all six sides, so ' + x.n + ' shows as the purple and black missing texture until ' + (lost.length === 1 ? 'that side has' : 'those sides have') + ' an image again. Click ' + (lost.length === 1 ? 'it' : 'one') + ' to pick an image.',
+        // the preview
+        cube: cubeOf(x), fov: x.fov, pitch: Math.max(-90, Math.min(90, x.angle + (look ? look.dpitch : 0))),
+        yaw: c.yaw + (look ? look.dyaw : 0), at: c.at, rate: c.rate, settle: !!s.settle,
+        stageCls: 'pn-stage' + (look ? ' looking' : ''),
+        stageLabel: 'Preview of ' + x.n + '. Drag to look around' + (x.speed > 0 ? ', click to ' + (playing ? 'pause' : 'play') : ''),
+        bigPlay: !playing && x.speed > 0 && !look && !sheet && !ask,
+        playable: x.speed > 0, playIcon: playing ? 'pause' : 'play_arrow', playTip: playing ? 'Pause (Space)' : 'Play (Space)',
+        pvTurn: turnText(x.speed),
+        // the sides, unfolded, and the overlay as a seventh box off to the side
+        sides: [...SIDES.map((name, i) => {
+          const sd = x.sides[i];
+          const bad = !!sd && sd.st === 'missing';
+          const has = !!sd && !bad;
+          const odd = has && sd.w !== sd.h;
+          return {
+            i: String(i), name, has: !!sd, fk: fk('side' + i), fresh: fresh.includes(i),
+            cls: 'pn-side' + (has ? '' : bad ? ' bad' : ' none') + (dragFrom === i ? ' drag' : '') + (dragFrom !== null && dragTo === i ? ' over' : ''),
+            at: 'grid-column: ' + CELL[i][0] + '; grid-row: ' + CELL[i][1],
+            thStyle: has ? spot(sd, 1) : '',
+            icon: has ? '' : bad ? IC.broken : IC.plus,
+            aria: has ? name + ', ' + FILE(i) + '. Choose another image' : bad ? name + ', missing. Choose an image' : name + ', empty. Choose an image',
+            tip: has ? sd.w + ' × ' + sd.h + ' · Click to choose another image' : bad ? FILE(i) + ' is missing. Click to choose an image' : 'Choose the image for ' + name,
+            warn: odd ? sd.w + ' × ' + sd.h + ' isn\'t square, so it gets stretched onto the side' : '',
+            rmAria: 'Take the image off ' + name,
+            click: () => setSide(x, i),
+            remove: (e) => { e.stopPropagation(); clearSide(x, i); },
+            canDrag: has ? 'true' : 'false',
+            dragStart: (e) => { if (!has) { e.preventDefault(); return; } e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', FILE(i)); set({ dragFrom: i, dragTo: null }); },
+            dragOver: (e) => { if (s.dragFrom === null || s.dragFrom === undefined || s.dragFrom === i) return; e.preventDefault(); if (s.dragTo !== i) set({ dragTo: i }); },
+            drop: (e) => { if (s.dragFrom === null || s.dragFrom === undefined || s.dragFrom === i) return; e.preventDefault(); e.stopPropagation(); moveSide(x, s.dragFrom, i); }
+          };
+        }), {
+          i: '6', name: 'Overlay', has: !!x.overlay, fk: fk('side6'), fresh: false,
+          cls: 'pn-side ov' + (x.overlay ? ' set' : ' none'), at: 'grid-column: 4; grid-row: 3', thStyle: '',
+          icon: x.overlay ? 'layers' : IC.plus,
+          aria: x.overlay ? 'Overlay, overlay.png. Choose another image' : 'Overlay, empty. Choose an image',
+          tip: x.overlay ? 'overlay.png · ' + x.overlay.w + ' × ' + x.overlay.h + ' · Click to choose another image' : 'Optional: one image drawn over the panorama, like a vignette or a logo',
+          warn: '', rmAria: 'Take the overlay off',
+          click: () => setOverlay(x), remove: (e) => { e.stopPropagation(); setOverlay(x); },
+          canDrag: 'false', dragStart: (e) => e.preventDefault(), dragOver: () => {}, drop: () => {}
+        }],
+        sideNote: lost.length ? '' : open.length ? plural(open.length, '1 side to go', 'sides to go') + '. Until all six have an image, menus show the purple and black missing texture instead.' : '',
+        sideNoteCls: 'foot amber',
+        used: nU > 0, unused: nU === 0, places: groups,
+        useCount: nU ? plural(nU, '1 place', 'places') + ' in ' + whereText(x.uses) : ''
+      };
+    }
+
+    // ---------- the camera: one builder for one panorama or several ----------
+    // Every value has a range, so every one is a slider with its value next to it (rule 17). Several panoramas that
+    // differ show Mixed and no knob (rule 25), and dragging sets all of them.
+    const who = selXs.length === 1 ? selXs[0].n : 'All ' + selXs.length;
+    const CAM = [
+      { key: 'speed', label: 'Speed', min: 0, max: 10, step: .1, big: 1, text: (v) => num(v) + '×', sub: (v) => turnText(v), mixed: 'How fast it turns',
+        say: (v) => (v > 0 ? who + (selXs.length === 1 ? ' takes ' : ' take ') + dur(360 / rateOf(v)) + ' for one turn now.' : who + (selXs.length === 1 ? ' stands' : ' stand') + ' still now.') },
+      { key: 'fov', label: 'Field of View', min: 30, max: 150, step: 1, big: 10, text: (v) => v + '°', sub: () => 'How much you see', mixed: 'How much you see',
+        say: (v) => who + (selXs.length === 1 ? ' shows ' : ' show ') + v + '° from top to bottom now.' },
+      { key: 'angle', label: 'Angle', min: -90, max: 90, step: 1, big: 10, text: (v) => (v ? Math.abs(v) + '° ' + (v > 0 ? 'down' : 'up') : '0°'), sub: () => 'Looks up or down', mixed: 'Looks up or down',
+        say: (v) => who + (selXs.length === 1 ? ' looks ' : ' look ') + (v ? Math.abs(v) + '° ' + (v > 0 ? 'down' : 'up') : 'straight ahead') + ' now.' },
+      { key: 'start', label: 'Start Rotation', min: 0, max: 359, step: 1, big: 15, text: (v) => v + '°', sub: () => 'Where it looks first', mixed: 'Where it looks first',
+        say: (v) => who + (selXs.length === 1 ? ' starts' : ' start') + ' at ' + v + '° now. The preview shows it.' }
+    ];
+    const cam = sel.length ? CAM.map((c) => {
+      const vals = [...new Set(selXs.map((x) => x[c.key]))];
+      const mixed = vals.length > 1;
+      const cur = mixed ? null : vals[0];
+      const apply = (v) => {
+        const nv = Math.round(Math.max(c.min, Math.min(c.max, Math.round(v / c.step) * c.step)) * 100) / 100;
+        if (!mixed && nv === cur) return;
+        // a new start turns what's on screen to it, so the slider shows where the panorama begins
+        if (c.key === 'start') selXs.forEach((x) => { const ck = clocks[x.id]; if (ck) { ck.yaw = nv; ck.at = Date.now(); } });
+        commit(patchSel((x) => Object.assign({}, x, { [c.key]: nv })), status(c.say(nv), true), 'cam:' + c.key + ':' + sel.join());
+      };
+      const at = (e) => { const r = e.currentTarget.getBoundingClientRect(); apply(c.min + Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * (c.max - c.min)); };
+      const frac = mixed ? 0 : (cur - c.min) / (c.max - c.min);
+      return {
+        label: c.label, fk: fk(c.key), known: !mixed, text: mixed ? 'Mixed' : c.text(cur), sub: mixed ? c.mixed : c.sub(cur),
+        fill: 'width: ' + (frac * 100).toFixed(2) + '%', knob: 'left: ' + (frac * 100).toFixed(2) + '%',
+        down: (e) => { try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {} this._slide = c.key; at(e); },
+        move: (e) => { if (this._slide === c.key && (e.buttons & 1)) at(e); },
+        // the next drag is a step of its own
+        up: () => { this._slide = null; set({ lastTag: null }); },
+        key: (e) => {
+          const dir = e.key === 'ArrowRight' || e.key === 'ArrowUp' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowDown' ? -1 : 0;
+          if (!dir) return;
+          e.preventDefault(); e.stopPropagation();
+          apply((mixed ? Math.min(...vals) : cur) + dir * (e.shiftKey ? c.big : c.step));
+        }
+      };
+    }) : [];
+
+    // ---------- looking around in the preview ----------
+    // Dragging the preview turns and tilts the view to check every side, the top and the bottom too. Letting go keeps
+    // the direction and lets the tilt glide back to the panorama's angle, since the angle is a setting. A click that
+    // doesn't move plays or pauses.
+    const togglePlay = () => { if (one && one.speed > 0) set({ playing: !playing }); };
+    const lookDown = (e) => {
+      if (!one) return;
+      try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {}
+      this._look = { x: e.clientX, y: e.clientY, moved: false };
+    };
+    const lookMove = (e) => {
+      const l = this._look;
+      if (!l || !one || !(e.buttons & 1)) return;
+      const dx = e.clientX - l.x, dy = e.clientY - l.y;
+      if (!l.moved && Math.abs(dx) + Math.abs(dy) < 4) return;
+      l.moved = true;
+      const k = one.fov / 216;
+      set({ look: { dyaw: -dx * k, dpitch: -dy * k }, settle: false });
+    };
+    const lookUp = () => {
+      const l = this._look;
+      this._look = null;
+      if (!l) return;
+      if (!l.moved) { togglePlay(); return; }
+      const c = one && clocks[one.id];
+      if (c && look) { c.yaw += look.dyaw; c.at = Date.now(); }
+      set({ look: null, settle: true });
+      if (this._settle) clearTimeout(this._settle);
+      this._settle = setTimeout(() => this.setState({ settle: false }), 320);
+    };
+
+    // ---------- details: several panoramas ----------
+    let m = {};
+    if (many) {
+      m = {
+        title: selXs.length + ' panoramas', meta: mb(selXs.reduce((a, x) => a + kbOf(x), 0)) + ' in all',
+        dupLabel: 'Duplicate ' + selXs.length, deleteTip: 'Delete ' + selXs.length + ' panoramas',
+        camNote: 'Changes here set all ' + selXs.length + ' panoramas.',
+        rows: selXs.map((x) => { const prob = problemOf(x); return { ...thumbOf(x), name: x.n, sub: prob || summary(x), act: x.uses.length ? plural(x.uses.length, '1 place', 'places') : 'Not used anywhere', cls: 'vm-cnt' + (x.uses.length ? '' : ' none') }; })
+      };
+    }
+
+    // ---------- the filter ----------
+    const anchorOf = (el) => { const w = el.closest('.win'); const wr = w.getBoundingClientRect(), r0 = el.getBoundingClientRect(); const k = wr.width / w.offsetWidth || 1; return [Math.round((r0.left - wr.left) / k), Math.round((r0.bottom - wr.top) / k + 4)]; };
+    const pickF = (patch) => () => set({ ...patch, filterOpen: false });
+    const filterItems = [
+      { head: 'Show' },
+      { radio: true, checked: filter === 'all', label: 'All Panoramas', click: pickF({ filter: 'all' }) },
+      { radio: true, checked: filter === 'unused', label: 'Not Used', click: pickF({ filter: 'unused' }) },
+      { radio: true, checked: filter === 'probs', label: 'With Problems', click: pickF({ filter: 'probs' }) }
+    ];
+    const FILTER_CHIP = { unused: 'Not used', probs: 'With problems' };
+
+    // ---------- sheets ----------
+    let al = { buttons: [] };
+    if (sheet === 'discard') al = {
+      icon: 'undo', title: changes === 1 ? 'Discard your change?' : 'Discard ' + changes + ' changes?',
+      text: 'Cancel puts every panorama back the way it was when you opened this window.',
+      buttons: [{ cls: 'btn primary danger', label: 'Discard Changes', click: discard }, { cls: 'btn', label: 'Keep Editing', click: () => set({ sheet: '' }) }]
+    };
+    else if (sheet === 'rename' && one) {
+      const to = s.renameTo ?? (p.renameTo || 'Dusk Valley');
+      const c = one.uses.length;
+      al = {
+        icon: IC.pencil, title: 'Rename ' + one.n + ' to ' + to + '?',
+        text: one.n + ' is used in ' + plural(c, '1 place', 'places') + ', in ' + whereText(one.uses) + '. FancyMenu can change ' + (c === 1 ? 'it' : 'them') + ' to ' + to + ' too, so ' + (c === 1 ? 'it keeps' : 'they keep') + ' showing it. Its images move with it either way.',
+        buttons: [
+          { cls: 'btn primary', label: c === 1 ? 'Rename and Update It' : 'Rename and Update ' + c + ' Places', click: () => applyRename(one, to, true) },
+          { cls: 'btn', label: 'Only Rename', click: () => applyRename(one, to, false) },
+          { cls: 'btn', label: 'Cancel', click: () => set({ sheet: '' }) }
+        ]
+      };
+    } else if (sheet === 'delete' && sel.length) {
+      const xs = selXs, one1 = xs.length === 1;
+      const nI = xs.reduce((a, x) => a + okSides(x).length, 0);
+      const c = xs.reduce((a, x) => a + x.uses.length, 0);
+      const parts = [];
+      if (nI) parts.push(one1 ? (nI === 1 ? 'Its image gets' : 'Its ' + nI + ' images get') + ' deleted with it.' : (nI === 1 ? 'Their image gets' : 'Their ' + nI + ' images get') + ' deleted with them.');
+      if (c) parts.push((one1 ? 'It\'s' : 'They\'re') + ' still used in ' + plural(c, '1 place', 'places') + ', which ' + (c === 1 ? 'goes' : 'go') + ' without a panorama from then on.');
+      parts.push('Undo brings everything back until you press Save.');
+      al = {
+        icon: IC.trash, title: one1 ? 'Delete ' + xs[0].n + '?' : 'Delete ' + xs.length + ' panoramas?',
+        text: parts.join(' '),
+        buttons: [{ cls: 'btn primary danger', label: nI ? (one1 ? 'Delete Panorama and Images' : 'Delete ' + xs.length + ' Panoramas and Images') : 'Delete', click: doDelete }, { cls: 'btn', label: 'Cancel', click: () => set({ sheet: '' }) }]
+      };
+    }
+
+    // ---------- the sheet that asks which side an image is ----------
+    // The list holds every dropped image, the ones with a side name already on their side. A click on a side puts the
+    // marked image there and marks the next one without a side, so six screenshots take six clicks.
+    let av = { imgs: [], sides: [] };
+    if (ask) {
+      const tx = ask.pid ? byId(ask.pid) : ask.draft;
+      const items = ask.items;
+      const cur = ask.cur >= 0 && ask.cur < items.length ? ask.cur : -1;
+      const open = items.filter((it) => it.side < 0).length;
+      const done = items.length - open;
+      const setItems = (next, c) => set({ ask: Object.assign({}, ask, { items: next, cur: c }) });
+      const nextOpen = (next, from) => { for (let k = 1; k <= next.length; k++) { const i = (from + k) % next.length; if (next[i].side < 0) return i; } return from; };
+      const put = (side) => {
+        if (cur < 0) return;
+        const next = items.map((it) => Object.assign({}, it));
+        if (next[cur].side === side) { next[cur].side = -1; setItems(next, cur); return; }
+        next.forEach((it) => { if (it.side === side) it.side = -1; });
+        next[cur].side = side;
+        setItems(next, nextOpen(next, cur));
+      };
+      const unknown = items.filter((it) => sideOfName(it.name) < 0).length;
+      av = {
+        title: unknown === 1 ? 'Which side is this image?' : 'Which side is each image?',
+        text: (unknown === items.length ? (items.length === 1 ? 'Its name doesn\'t' : 'Their names don\'t') : plural(unknown, '1 name doesn\'t', 'names don\'t')) + ' say which side of ' + (tx ? tx.n : 'the panorama') + ' ' + (unknown === 1 ? 'it is' : 'they are') + '. Click the side the marked image belongs on, and the next one gets marked.',
+        imgs: items.map((it, i) => ({
+          no: String(i + 1), name: it.name.replace(/([_.-])/g, '$1​'),
+          cls: 'pn-ask-i' + (i === cur ? ' cur' : '') + (it.side >= 0 ? ' done' : ''), ariaSel: i === cur ? 'true' : 'false',
+          thStyle: spot(it.img, 40 / 96),
+          sub: it.side >= 0 ? SIDES[it.side] : 'No side yet', subCls: 'sd' + (it.side >= 0 ? ' on' : ''),
+          pick: () => setItems(items, i)
+        })),
+        sides: SIDES.map((name, i) => {
+          const k = items.findIndex((it) => it.side === i);
+          const old = tx && tx.sides[i] && tx.sides[i].st !== 'missing' ? tx.sides[i] : null;
+          return {
+            name, badge: k >= 0 ? String(k + 1) : '',
+            cls: 'pn-sb' + (k >= 0 ? ' set' : old ? ' old' : ' none') + (cur >= 0 && items[cur].side === i ? ' cur' : ''),
+            at: 'grid-column: ' + CELL[i][0] + '; grid-row: ' + CELL[i][1],
+            pic: k >= 0 ? spot(items[k].img, 64 / 96) : old ? spot(old, 64 / 96) : '',
+            tip: k >= 0 ? items[k].name : old ? 'Has an image that gets replaced' : '',
+            aria: name + (k >= 0 ? ', image ' + (k + 1) : old ? ', has an image' : ', empty'),
+            click: () => put(i)
+          };
+        }),
+        // the marked image, big enough to tell a left from a right
+        big: cur >= 0 ? { style: spot(items[cur].img, 1), title: 'Image ' + (cur + 1), name: items[cur].name.replace(/([_.-])/g, '$1\u200b'), meta: items[cur].img.w + ' × ' + items[cur].img.h + (items[cur].side >= 0 ? ' · ' + SIDES[items[cur].side] : '') } : null,
+        hint: tx && tx.sides.some((sd) => sd && sd.st !== 'missing') ? 'A side that already has an image shows it dimmed, and gets the new one instead.' : '',
+        note: open ? plural(open, '1 image has', 'images have') + ' no side yet and ' + (open === 1 ? 'gets' : 'get') + ' left out.' : 'Every image has its side.',
+        noteCls: 'foot' + (open ? ' amber' : ''),
+        off: !done, applyLabel: done === 6 ? 'Set All 6 Sides' : 'Set ' + plural(done, '1 Side', 'Sides'),
+        cancel: () => set({ ask: null, ...status('Nothing was set.') }),
+        apply: () => {
+          if (!done) return;
+          const picks = {};
+          items.forEach((it) => { if (it.side >= 0) picks[it.side] = Object.assign({}, it.img, { f: it.img.f, from: it.name }); });
+          place(tx, !ask.pid, picks, (open ? ', left out ' + plural(open, '1 image', 'images') : '') + ask.note, ask.nameIt);
+        }
+      };
+    }
+
+    // ---------- the place behind the window ----------
+    // The scene draws the panorama that the place behind the window shows, so every change to it shows right away (rule 38).
+    const stage = ux && complete(ux) ? (() => { const c = clockOf(ux, one && ux.id === one.id ? (playing && !look ? rateOf(ux.speed) : 0) : rateOf(ux.speed)); return { id: ux.id, n: ux.n, sides: cubeOf(ux), fov: ux.fov, pitch: ux.angle, yaw: c.yaw + (look && one && ux.id === one.id ? look.dyaw : 0), at: c.at, rate: c.rate }; })() : null;
+    const stageKey = JSON.stringify(stage);
+    if (stageKey !== this._stageKey) { this._stageKey = stageKey; if (typeof p.onStage === 'function') setTimeout(() => p.onStage(stage), 0); }
+
+    // ---------- keyboard ----------
+    this._onKey = (e) => {
+      if (window.__pnActive !== uid) return;
+      const tag = (e.target && e.target.tagName) || '';
+      const inField = tag === 'INPUT' || tag === 'TEXTAREA';
+      const mod = e.ctrlKey || e.metaKey;
+      const st = this.state || {};
+      const cur = st.sel ?? sel;
+      if (e.key === 'Escape') {
+        if (ask) set({ ask: null, ...status('Nothing was set.') });
+        else if (sheet) set({ sheet: '' });
+        else if (filterOpen) set({ filterOpen: false });
+        else if (renaming) set({ renaming: false });
+        else if (q && !inField) set({ q: '' });
+        // with nothing else to close, Esc is Cancel, like closing the window
+        else if (!inField) cancelAll();
+        return;
+      }
+      if (ask) {
+        // in the sheet, the arrow keys mark another image and Enter sets what has a side
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const n = ask.items.length; set({ ask: Object.assign({}, ask, { cur: (Math.max(0, ask.cur) + (e.key === 'ArrowDown' ? 1 : n - 1)) % n }) }); }
+        if (e.key === 'Enter') { e.preventDefault(); av.apply(); }
+        return;
+      }
+      if (sheet) return;
+      if (mod && e.key.toLowerCase() === 'n') { e.preventDefault(); addNew(); return; }
+      if (mod && e.key.toLowerCase() === 'f') { e.preventDefault(); focusLater(fk('search'), true); return; }
+      // Enter, Ctrl+Enter and Ctrl+S press Save
+      if (mod && (e.key === 'Enter' || e.key.toLowerCase() === 's')) { e.preventDefault(); return; }
+      if (inField) return;
+      // while a side has the focus, Delete belongs to it instead of the panorama, and a slider keeps its arrow keys
+      const tile = e.target && e.target.closest ? e.target.closest('[data-side]') : null;
+      const ti = tile && one ? +tile.getAttribute('data-side') : -1;
+      if (ti >= 0 && (e.key === 'Delete' || e.key === 'Backspace')) { e.preventDefault(); if (ti === 6) { if (one.overlay) setOverlay(one); } else if (one.sides[ti]) clearSide(one, ti); return; }
+      if (e.target && e.target.closest && e.target.closest('.mslider') && e.key.startsWith('Arrow')) return;
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (!order.length) return;
+        const at0 = order.indexOf(cur[cur.length - 1]);
+        const nx = Math.max(0, Math.min(order.length - 1, at0 + (e.key === 'ArrowDown' ? 1 : -1)));
+        if (e.shiftKey && st.anchor) { const a = order.indexOf(st.anchor); set({ sel: order.slice(Math.min(a, nx), Math.max(a, nx) + 1) }); }
+        else set({ sel: [order[nx]], anchor: order[nx], renaming: false, fresh: [] });
+        return;
+      }
+      if (e.key === 'Enter') { e.preventDefault(); return; }
+      if (e.key === 'F2') { e.preventDefault(); startRename(); return; }
+      if (e.key === ' ') { if (tag === 'BUTTON') return; e.preventDefault(); togglePlay(); return; }
+      if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); askDelete(); return; }
+      if (mod && e.key.toLowerCase() === 'a') { e.preventDefault(); set({ sel: order.slice() }); return; }
+      if (mod && e.key.toLowerCase() === 'd') { e.preventDefault(); duplicate(); return; }
+      if (mod && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))) { e.preventDefault(); redo(); return; }
+      if (mod && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
+      if (!mod && !e.altKey && e.key.length === 1) { set({ q: q + e.key }); focusLater(fk('search')); }
+    };
+    if (!this._keys) { this._keys = (e) => this._onKey && this._onKey(e); window.addEventListener('keydown', this._keys, true); }
+    // a board can show the lower part of the details
+    if (p.scroll && !this._scrolled) { this._scrolled = true; setTimeout(() => { const el = deepQuery('[data-pn="' + uid + '"] .pcontent'); if (el) el.scrollTop = p.scroll === 'end' ? el.scrollHeight : +p.scroll || 0; }, 80); }
+
+    const stt = s.status;
+    const rDraft = s.renameDraft ?? (one ? one.n : '');
+    const rCheck = one ? checkName(rDraft, one) : { ok: false, bad: false, msg: '' };
+    const qName = q.trim();
+    return {
+      uid, ic: IC, standalone, yes: true, no: false, noop: () => {},
+      rootCls: standalone ? 'fm ' + ((p.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark') + ((p.material ?? 'Blur') === 'Blur' ? ' mat-blur' : '') : '',
+      rootStyle: standalone ? 'position: relative; width: ' + (W + 80) + 'px; height: ' + (H + 80) + 'px; overflow: hidden; background: var(--bd)' : 'position: relative; width: ' + W + 'px; height: ' + H + 'px',
+      winStyle: (standalone ? 'left: 40px; top: 40px; ' : 'left: 0; top: 0; ') + 'width: ' + W + 'px; height: ' + H + 'px',
+      activate: () => { window.__pnActive = uid; },
+      searchFk: fk('search'), renameFk: fk('rename'), contentSk: fk('content') + '-' + (sel[0] || ''),
+      searchPh: 'Search ' + (list.length ? plural(list.length, '1 panorama', 'panoramas') : 'panoramas'), q,
+      onSearch: (e) => set({ q: e.target.value }),
+      searchKey: (e) => {
+        if (e.key === 'Escape') { set({ q: '' }); e.target.blur(); }
+        if ((e.key === 'ArrowDown' || e.key === 'Enter') && order.length) { e.preventDefault(); e.stopPropagation(); e.target.blur(); set({ sel: [order[0]], anchor: order[0] }); }
+      },
+      addNew: () => addNew(),
+      filterBtnCls: 'ib' + (filter !== 'all' || filterOpen ? ' on' : ''), filterExpanded: filterOpen ? 'true' : 'false',
+      toggleFilter: (e) => { e.preventDefault(); set({ filterOpen: !filterOpen, filterAt: anchorOf(e.currentTarget) }); },
+      filterChip: filter !== 'all' ? FILTER_CHIP[filter] : '', clearFilter: () => set({ filter: 'all' }),
+      rows,
+      noMatch: !rows.length && list.length > 0, noMatchText: ql ? 'No panorama matches “' + qName + '”.' : 'No panorama fits this filter.',
+      canNewFromQ: !!qName && !taken(qName), qName, newFromQ: () => addNew(qName),
+      one: !!one, many, none: !list.length, nothingSel: !sel.length && list.length > 0,
+      d, m, cam,
+      notRenaming: !renaming, renaming, renameDraft: rDraft,
+      renameCls: 'field vm-rename' + (rCheck.bad ? ' bad' : ''), renameMsgCls: rCheck.bad ? 'err-msg vm-rmsg' : 'foot vm-rmsg',
+      renameMsg: rCheck.msg,
+      onRename: (e) => set({ renameDraft: cleanName(e.target.value) }),
+      renameKey: (e) => {
+        if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); set({ renaming: false }); return; }
+        if (e.key === 'Enter' && one) { e.preventDefault(); e.stopPropagation(); tryRename(one, s.renameDraft ?? one.n); }
+      },
+      startRename, duplicate, askDelete, togglePlay, chooseImages, lookDown, lookMove, lookUp,
+      dragEnd: () => set({ dragFrom: null, dragTo: null }),
+      fileOver, fileDrop,
+      footLead: stt ? stt.text : 'Changes show right away wherever a panorama is on screen.', footUndo: !!(stt && stt.undo), undo, cancelAll,
+      anyPopup: !!filterOpen,
+      filterOpen, filterItems, filterStyle: 'left: ' + (s.filterAt ? s.filterAt[0] : 252) + 'px; top: ' + (s.filterAt ? s.filterAt[1] : 120) + 'px',
+      closePopups: () => set({ filterOpen: false }),
+      closePopupsCtx: (e) => { e.preventDefault(); set({ filterOpen: false }); },
+      sheetAlert: (sheet === 'discard' || sheet === 'rename' || sheet === 'delete') && al.buttons.length > 0, al,
+      askOpen: !!ask, ask: av
+    };
+  }
+}
+</script>
+</body>
+</html>

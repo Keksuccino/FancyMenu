@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Slideshows on the title screen</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="fm {{themeClass}} {{matClass}}" style="position: relative; width: 1440px; height: 900px; overflow: hidden; background: var(--bd)">
+<div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""><sc-if value="{{inEditor}}" hint-placeholder-val="{{false}}"><div class="gridlines"></div></sc-if></div>
+<sc-if value="{{onScreen}}" hint-placeholder-val="{{true}}">
+<div aria-hidden="true" style="position: absolute; left: 16px; bottom: 12px; color: rgba(255, 255, 255, .85); font-size: 12px">Dusk Valley Pack 1.4.2</div>
+<div aria-hidden="true" style="position: absolute; right: 16px; bottom: 12px; color: rgba(255, 255, 255, .85); font-size: 12px">Copyright Mojang AB. Do not distribute!</div>
+</sc-if>
+<sc-if value="{{inEditor}}" hint-placeholder-val="{{false}}">
+<div class="le ss-el" aria-label="{{elLabel}}" style="{{elStyle}}"><sc-for list="{{layers}}" as="ly" hint-placeholder-count="1"><span class="{{ly.cls}}" style="{{ly.style}}"></span></sc-for></div>
+<div class="sel-border" aria-hidden="true" style="left: 26px; top: 118px; width: 388px; height: 220px"><i style="left: -3px; top: -3px"></i><i style="right: -3px; top: -3px"></i><i style="left: -3px; bottom: -3px"></i><i style="right: -3px; bottom: -3px"></i></div>
+</sc-if>
+<div style="position: absolute; left: 0; right: 0; top: 0"><dc-import name="MenuBar" kind="{{barKind}}" unsaved="{{no}}" standalone="{{no}}" hint-size="1440px,30px"></dc-import></div>
+<div style="{{winAt}}"><dc-import name="Slideshows" scene="{{scene}}" select="{{select}}" sheet="{{sheet}}" rename-to="{{renameTo}}" add="{{add}}" behind="{{behind}}" dropped="{{dropped}}" drag="{{drag}}" playing="{{playing}}" filter="{{filter}}" filter-menu="{{filterMenu}}" query="{{query}}" scroll="{{scroll}}" on-stage="{{onStage}}" width="960" height="760" standalone="{{no}}" hint-size="960px,760px"></dc-import></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"scene":{"editor":"enum","options":["Dusk Valley","Empty"],"default":"Dusk Valley"},"select":{"editor":"text","default":"s2"},"sheet":{"editor":"enum","options":["","rename","delete"],"default":""},"renameTo":{"editor":"text","default":""},"add":{"editor":"boolean","default":false},"editor":{"editor":"boolean","default":false},"shows":{"editor":"text","default":"s4"},"element":{"editor":"text","default":"Winter gallery"},"dropped":{"editor":"int","default":0},"drag":{"editor":"text","default":""},"playing":{"editor":"boolean","default":true},"filter":{"editor":"enum","options":["all","unused","probs"],"default":"all"},"filterMenu":{"editor":"boolean","default":false},"query":{"editor":"text","default":""},"scroll":{"editor":"text","default":""},"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1440,"height":900}}'>
+// the pictures on preload_art.png that a slideshow's images stand for, in art pixels, like in the Slideshows window
+const ART = {
+  night1: [0, 0], night2: [128, 0], night3: [256, 0], night4: [384, 0],
+  snow1: [0, 72], snow2: [128, 72], snow3: [256, 72], snow4: [384, 72],
+  spring: [0, 144], summer: [128, 144], autumn: [256, 144], winter: [384, 144]
+};
+
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props, s = this.state || {};
+    // Opened from a Slideshow element's menu, the window sits in the layout editor. shows is the slideshow that element
+    // plays: the scene draws it behind the window with every change the window makes to it.
+    const inEditor = !!p.editor;
+    const st = s.stage || null;
+    return {
+      themeClass: (p.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark',
+      matClass: (p.material ?? 'Blur') === 'Blur' ? 'mat-blur' : '',
+      yes: true, no: false,
+      inEditor, onScreen: !inEditor, barKind: inEditor ? 'Editor' : 'Overlay',
+      winAt: 'position: absolute; left: ' + (inEditor ? 448 : 240) + 'px; top: 70px',
+      elLabel: (p.element || 'Winter gallery') + ', a Slideshow element', elStyle: 'left: 28px; top: 120px; width: 384px; height: 216px; --fade: ' + (st ? st.fade : 1) + 's',
+      layers: st ? st.arts.map((a, i) => ({ cls: 'ss-ly' + (i === st.i ? ' on' : '') + (i === st.prev ? ' out' : ''), style: 'background-position: ' + -ART[a][0] * 3 + 'px ' + -ART[a][1] * 3 + 'px' })) : [],
+      onStage: (stage) => this.setState({ stage }),
+      scene: p.scene || 'Dusk Valley', select: p.select ?? 's2', sheet: p.sheet || '', renameTo: p.renameTo || '', add: !!p.add,
+      behind: inEditor ? p.shows ?? 's4' : '', dropped: +p.dropped || 0, drag: p.drag || '', playing: p.playing ?? true,
+      filter: p.filter || 'all', filterMenu: !!p.filterMenu, query: p.query || '', scroll: p.scroll || ''
+    };
+  }
+}
+</script>
+</body>
+</html>

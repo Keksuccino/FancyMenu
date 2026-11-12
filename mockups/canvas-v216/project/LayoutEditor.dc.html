@@ -1,0 +1,1348 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Layout editor component</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="{{rootCls}}" tabindex="-1" onKeyDown="{{onKey}}">
+
+<sc-if value="{{showChrome}}" hint-placeholder-val="{{true}}"><div class="le-mbh"><dc-import name="MenuBar" kind="Editor" open="{{mbOpen}}" sub="{{mbSub}}" unsaved="{{yes}}" catch-height="{{mbCatch}}" standalone="{{no}}" hint-size="1440px,30px"></dc-import></div></sc-if>
+
+<sc-if value="{{showChrome}}" hint-placeholder-val="{{true}}">
+<div class="te-tool le-tool" role="toolbar" aria-label="Editor tools">
+<span class="{{editGroupCls}}" style="display: flex; align-items: center; gap: 4px">
+<span class="pop"><button class="{{addBtnCls}}" aria-haspopup="menu" aria-expanded="{{addOpen}}" data-tip="Add an element · Shift+A" onClick="{{toggleAdd}}"><span class="ms" aria-hidden="true">add</span>Add Element<span class="ms chev" aria-hidden="true">expand_more</span></button>
+<sc-if value="{{addOpen}}" hint-placeholder-val="{{false}}"><div class="pop-menu"><dc-import name="ContextMenu" items="{{addItems}}" search="Search 23 elements" max-height="760" focus-on-open="{{yes}}" escape-listener="{{closeMenu}}" label="Add Element" standalone="{{no}}" hint-size="auto,420px"></dc-import></div></sc-if>
+</span>
+<span class="vsep"></span>
+<button class="ib" data-tip="{{undoTip}}" aria-label="{{undoTip}}"><span class="ms" aria-hidden="true">undo</span></button>
+<button class="ib" data-tip="Redo · Ctrl+Shift+Z" aria-label="Redo" disabled="{{yes}}" style="opacity: .4"><span class="ms" aria-hidden="true">redo</span></button>
+<span class="vsep"></span>
+<div class="seg icons inline" role="radiogroup" aria-label="Tool">
+<div class="thumb" style="{{toolThumb}}"></div>
+<button class="{{selToolCls}}" role="radio" aria-checked="{{selToolOn}}" data-tip="Select · V" aria-label="Select" onClick="{{pickSelect}}"><span class="ms" aria-hidden="true">arrow_selector_tool</span></button>
+<button class="{{handToolCls}}" role="radio" aria-checked="{{handToolOn}}" data-tip="Hand · H, or hold Space" aria-label="Hand" onClick="{{pickHand}}"><span class="ms" aria-hidden="true">pan_tool</span></button>
+</div>
+<span class="vsep"></span>
+<button class="{{gridCls}}" aria-pressed="{{gridOn}}" data-tip="Grid · Shift+G" aria-label="Grid" onClick="{{toggleGrid}}"><span class="ms" aria-hidden="true">grid_on</span></button>
+<button class="{{snapCls}}" aria-pressed="{{snapOn}}" data-tip="Snapping to the grid, elements and screen edges · Shift+S" aria-label="Snapping" onClick="{{toggleSnap}}"><span class="ms" aria-hidden="true">grid_guides</span></button>
+</span>
+<span class="pop le-sizewrap" style="{{sizeWrapStyle}}"><button class="{{sizeBtnCls}}" aria-haspopup="menu" aria-expanded="{{sizeOpen}}" data-tip="The window size and GUI scale to lay out for" onClick="{{toggleSize}}"><span class="ms" aria-hidden="true">desktop_windows</span><span>{{sizeLabel}}</span><span class="dim">{{sizeNote}}</span><span class="ms chev" aria-hidden="true">expand_more</span></button>
+<sc-if value="{{sizeOpen}}" hint-placeholder-val="{{false}}"><div class="pop-menu fill"><dc-import name="ContextMenu" items="{{sizeItems}}" focus-on-open="{{yes}}" escape-listener="{{closeMenu}}" label="Screen Size" standalone="{{no}}" hint-size="auto,260px"></dc-import></div></sc-if>
+</span>
+<span class="grow"></span>
+<button class="{{previewBtnCls}}" aria-pressed="{{previewOn}}" data-tip="{{previewTip}}" onClick="{{togglePreview}}"><span class="ms fill" aria-hidden="true">{{previewIcon}}</span>{{previewLabel}}</button>
+<span class="vsep"></span>
+<span class="{{panelGroupCls}}" style="display: flex; align-items: center; gap: 4px">
+<button class="{{leftBtnCls}}" aria-pressed="{{leftOn}}" data-tip="Layers" aria-label="Layers" onClick="{{toggleLeft}}"><span class="ms" aria-hidden="true">left_panel_open</span></button>
+<button class="{{tlBtnCls}}" aria-pressed="{{tlOn}}" data-tip="Timeline" aria-label="Timeline" onClick="{{toggleTl}}"><span class="ms" aria-hidden="true">bottom_panel_open</span></button>
+<button class="{{rightBtnCls}}" aria-pressed="{{rightOn}}" data-tip="Inspector" aria-label="Inspector" onClick="{{toggleRight}}"><span class="ms" aria-hidden="true">right_panel_open</span></button>
+</span>
+</div>
+</sc-if>
+
+<div class="le-main">
+
+<sc-if value="{{showLeft}}" hint-placeholder-val="{{true}}">
+<aside class="dock left" aria-label="Layers">
+<div class="dock-h"><span class="ms ico" aria-hidden="true">layers</span><span class="t">Layers</span><button class="ib" data-tip="New Group · Ctrl+G" aria-label="New Group"><span class="ms" aria-hidden="true">create_new_folder</span></button></div>
+<label class="field msearch"><span class="ms" aria-hidden="true">search</span><input class="msearch-in" type="text" placeholder="{{layerSearchPh}}" aria-label="Search layers" value="{{lq}}" onInput="{{typedLayers}}"></label>
+<div class="plist" role="tree" aria-label="Layers">
+<sc-for list="{{layerRows}}" as="r" hint-placeholder-count="12">
+<sc-if value="{{r.isSep}}" hint-placeholder-val="{{false}}"><div class="lsep"></div></sc-if>
+<sc-if value="{{r.isRow}}" hint-placeholder-val="{{true}}">
+<div class="{{r.cls}}" role="treeitem" aria-selected="{{r.ariaSel}}">
+<sc-if value="{{r.isGroup}}" hint-placeholder-val="{{false}}"><button class="{{r.chevCls}}" aria-label="{{r.chevLabel}}" onClick="{{r.toggleGroup}}"><span class="ms" aria-hidden="true">chevron_right</span></button></sc-if>
+<sc-if value="{{r.noChev}}" hint-placeholder-val="{{true}}"><span class="lspace"></span></sc-if>
+<button class="lmain" onClick="{{r.select}}"><span class="ms" aria-hidden="true">{{r.icon}}</span><span class="lname">{{r.name}}</span><sc-if value="{{r.count}}" hint-placeholder-val="{{false}}"><span class="lcount">{{r.count}}</span></sc-if></button>
+<sc-if value="{{r.warn}}" hint-placeholder-val="{{false}}"><span class="ms lwarn" data-tip="The sound file is missing" aria-label="The sound file is missing" role="img">warning</span></sc-if>
+<sc-if value="{{r.hasLock}}" hint-placeholder-val="{{true}}"><button class="{{r.lockCls}}" data-tip="{{r.lockTip}}" aria-label="{{r.lockTip}}" onClick="{{r.toggleLock}}"><span class="ms" aria-hidden="true">{{r.lockIcon}}</span></button></sc-if>
+<sc-if value="{{r.hasEye}}" hint-placeholder-val="{{true}}"><button class="leye" data-tip="{{r.eyeTip}}" aria-label="{{r.eyeTip}}" onClick="{{r.toggleEye}}"><span class="ms" aria-hidden="true">{{r.eyeIcon}}</span></button></sc-if>
+</div>
+</sc-if>
+</sc-for>
+<sc-if value="{{noLayers}}" hint-placeholder-val="{{false}}"><div class="mempty">No layers match “{{lq}}”</div></sc-if>
+</div>
+</aside>
+</sc-if>
+
+<div class="le-center">
+<div class="le-canvas" aria-label="Canvas">
+<sc-if value="{{showRulers}}" hint-placeholder-val="{{true}}">
+<div class="le-rul-c" aria-hidden="true"></div>
+<div class="le-rul top" style="{{rulTopStyle}}" aria-hidden="true">
+<sc-if value="{{bandX}}" hint-placeholder-val="{{false}}"><span class="band" style="{{bandXStyle}}"></span></sc-if>
+<sc-for list="{{rulX}}" as="n" hint-placeholder-count="8"><span class="n" style="{{n.style}}">{{n.v}}</span></sc-for>
+</div>
+<div class="le-rul left" style="{{rulLeftStyle}}" aria-hidden="true">
+<sc-if value="{{bandY}}" hint-placeholder-val="{{false}}"><span class="band" style="{{bandYStyle}}"></span></sc-if>
+<sc-for list="{{rulY}}" as="n" hint-placeholder-count="5"><span class="n" style="{{n.style}}">{{n.v}}</span></sc-for>
+</div>
+</sc-if>
+
+<div class="le-art" style="{{artStyle}}">
+<div class="scr" style="{{scrStyle}}">
+<img class="art" src="dusk_valley.png" alt="">
+<sc-for list="{{fireflies}}" as="f" hint-placeholder-count="5"><span class="ff" style="{{f}}"></span></sc-for>
+<sc-for list="{{drawn}}" as="e" hint-placeholder-count="7"><div class="{{e.cls}}" style="{{e.style}}">{{e.text}}</div></sc-for>
+<sc-for list="{{figs}}" as="g" hint-placeholder-count="0"><div class="{{g.cls}}" style="{{g.style}}"><sc-for list="{{g.parts}}" as="pt" hint-placeholder-count="6"><i class="{{pt.cls}}" style="{{pt.style}}"></i></sc-for></div></sc-for>
+</div>
+</div>
+<sc-if value="{{showArtLabel}}" hint-placeholder-val="{{true}}"><div class="le-art-label" style="{{labelStyle}}">Title Screen<span class="dim">{{sizeDims}}</span></div></sc-if>
+<sc-if value="{{showGrid}}" hint-placeholder-val="{{true}}"><div class="le-grid" style="{{gridStyle}}" aria-hidden="true"></div></sc-if>
+
+<div class="le-ov">
+<button class="le-hit" style="left: 0; top: 0; right: 0; bottom: 0" aria-label="{{bgLabel}}" onClick="{{bgClick}}"></button>
+<sc-for list="{{outlines}}" as="o" hint-placeholder-count="7"><div class="{{o.cls}}" style="{{o.style}}"></div></sc-for>
+<sc-for list="{{ghosts}}" as="g" hint-placeholder-count="1"><div class="{{g.cls}}" style="{{g.style}}"><span class="ms" aria-hidden="true">{{g.icon}}</span><span class="gn">{{g.name}}</span></div></sc-for>
+<sc-for list="{{hits}}" as="h" hint-placeholder-count="7"><button class="le-hit" style="{{h.style}}" aria-label="{{h.name}}" onClick="{{h.click}}" onMouseEnter="{{h.enter}}" onMouseLeave="{{h.leave}}"></button></sc-for>
+<sc-for list="{{smart}}" as="l" hint-placeholder-count="0"><span class="le-smart" style="{{l}}"></span></sc-for>
+<sc-for list="{{gaps}}" as="g" hint-placeholder-count="0"><span class="le-gap" style="{{g.style}}">{{g.v}}</span></sc-for>
+<sc-if value="{{showAnc}}" hint-placeholder-val="{{false}}">
+<span class="le-aline" style="{{ancLineStyle}}"></span>
+<span class="le-anc" style="{{ancDotStyle}}"></span>
+</sc-if>
+<sc-for list="{{ancCands}}" as="a" hint-placeholder-count="0"><span class="{{a.cls}}" style="{{a.style}}"></span></sc-for>
+<sc-if value="{{showSel}}" hint-placeholder-val="{{true}}">
+<div class="{{selCls}}" style="{{selStyle}}"><sc-if value="{{showRotH}}" hint-placeholder-val="{{true}}"><i class="rh" data-tip="Drag to rotate · Shift snaps to 15°"></i></sc-if><i class="h c" style="left: 0; top: 0"></i><i class="h mx" style="left: 50%; top: 0"></i><i class="h c" style="left: 100%; top: 0"></i><i class="h my" style="left: 0; top: 50%"></i><i class="h my" style="left: 100%; top: 50%"></i><i class="h c" style="left: 0; top: 100%"></i><i class="h mx" style="left: 50%; top: 100%"></i><i class="h c" style="left: 100%; top: 100%"></i></div>
+</sc-if>
+<sc-if value="{{showBadge}}" hint-placeholder-val="{{false}}"><span class="le-badge" style="{{badgeStyle}}">{{badgeText}}</span></sc-if>
+<sc-if value="{{showTag}}" hint-placeholder-val="{{false}}"><span class="{{tagCls}}" style="{{tagStyle}}">{{tagText}}</span></sc-if>
+</div>
+
+<sc-if value="{{toast}}" hint-placeholder-val="{{false}}"><div class="le-toast" role="status"><b>{{toastHead}}</b> · {{toastText}}<sc-if value="{{toastBtn}}" hint-placeholder-val="{{false}}"><button class="btn sm" onClick="{{toastClick}}">{{toastBtn}}</button></sc-if></div></sc-if>
+</div>
+
+<sc-if value="{{showTl}}" hint-placeholder-val="{{false}}">
+<section class="tml" aria-label="Timeline">
+<div class="tml-h">
+<span class="pop"><button class="popup" aria-haspopup="menu" aria-expanded="{{animsOpen}}" data-tip="Animations of this layout" onClick="{{toggleAnims}}"><span class="ms" aria-hidden="true">animation</span>Intro<span class="ms chev" aria-hidden="true">expand_more</span></button>
+<sc-if value="{{animsOpen}}" hint-placeholder-val="{{false}}"><div class="pop-menu up"><dc-import name="ContextMenu" items="{{animItems}}" focus-on-open="{{yes}}" escape-listener="{{closeMenu}}" label="Animations" standalone="{{no}}" hint-size="auto,120px"></dc-import></div></sc-if>
+</span>
+<span class="pop"><button class="ib" aria-haspopup="menu" aria-expanded="{{animAddOpen}}" data-tip="Animate an Element" aria-label="Animate an element" onClick="{{toggleAnimAdd}}"><span class="ms" aria-hidden="true">add</span></button>
+<sc-if value="{{animAddOpen}}" hint-placeholder-val="{{false}}"><div class="pop-menu up"><dc-import name="ContextMenu" items="{{animAddItems}}" focus-on-open="{{yes}}" escape-listener="{{closeMenu}}" label="Animate an Element" standalone="{{no}}" hint-size="auto,120px"></dc-import></div></sc-if>
+</span>
+<span class="vsep"></span>
+<button class="ib" data-tip="Go to Start · Home" aria-label="Go to start" onClick="{{toStart}}"><span class="ms" aria-hidden="true">skip_previous</span></button>
+<button class="ib play" data-tip="{{playTip}}" aria-label="{{playTip}}" onClick="{{togglePlay}}"><span class="ms fill" aria-hidden="true">{{playIcon}}</span></button>
+<button class="{{repCls}}" aria-pressed="{{repOn}}" data-tip="Repeat Playback · only while editing" aria-label="Repeat playback while editing" onClick="{{toggleRep}}"><span class="ms" aria-hidden="true">repeat</span></button>
+<span class="time">{{timeText}}<span class="of"> / 2.00 s</span></span>
+<span class="vsep"></span>
+<button class="{{akCls}}" aria-pressed="{{akOn}}" data-tip="Changing an element adds a keyframe at the playhead" onClick="{{toggleAk}}"><span class="ms" aria-hidden="true">motion_photos_auto</span>Auto-Key</button>
+<span class="grow"></span>
+<button class="ib" data-tip="Zoom Out · Ctrl+Scroll" aria-label="Zoom out" onClick="{{tlZoomOut}}"><span class="ms" aria-hidden="true">zoom_out</span></button>
+<button class="ib" data-tip="Zoom In · Ctrl+Scroll" aria-label="Zoom in" onClick="{{tlZoomIn}}"><span class="ms" aria-hidden="true">zoom_in</span></button>
+</div>
+<div class="tml-b">
+<div class="tml-tracks">
+<div class="tml-ruler">{{trackCount}}</div>
+<sc-for list="{{tracks}}" as="tr" hint-placeholder-count="8">
+<div class="{{tr.cls}}">
+<sc-if value="{{tr.isEl}}" hint-placeholder-val="{{true}}"><button class="{{tr.chevCls}}" aria-label="{{tr.chevLabel}}" onClick="{{tr.toggle}}"><span class="ms" aria-hidden="true">chevron_right</span></button><span class="ms ico" aria-hidden="true">{{tr.icon}}</span></sc-if>
+<sc-if value="{{tr.isProp}}" hint-placeholder-val="{{false}}"><button class="{{tr.kfCls}}" data-tip="{{tr.kfTip}}" aria-label="{{tr.kfAria}}" onClick="{{tr.kfToggle}}"></button></sc-if>
+<button class="nm" onClick="{{tr.select}}">{{tr.name}}</button>
+<sc-if value="{{tr.isProp}}" hint-placeholder-val="{{false}}"><span class="v">{{tr.v}}</span></sc-if>
+</div>
+</sc-for>
+</div>
+<div class="tml-keys" style="{{keysStyle}}">
+<div class="tml-ruler" onClick="{{rulerClick}}"><sc-for list="{{tmarks}}" as="m" hint-placeholder-count="5"><span class="{{m.cls}}" style="{{m.style}}">{{m.v}}</span></sc-for><span class="tml-endh" style="{{endStyle}}" role="slider" tabindex="0" aria-label="Animation length" aria-valuemin="0.1" aria-valuemax="60" aria-valuenow="2" aria-valuetext="2.00 s" data-tip="Drag to change the length · 2.00 s"></span></div>
+<sc-for list="{{tracks}}" as="tr" hint-placeholder-count="8">
+<div class="{{tr.kcls}}">
+<sc-for list="{{tr.bars}}" as="b" hint-placeholder-count="1"><span class="tml-bar" style="{{b}}"></span></sc-for>
+<sc-for list="{{tr.segs}}" as="g" hint-placeholder-count="1"><span class="tml-seg" style="{{g}}"></span></sc-for>
+<sc-for list="{{tr.kfs}}" as="d" hint-placeholder-count="2"><button class="{{d.cls}}" style="{{d.style}}" aria-label="{{d.label}}" onClick="{{d.pick}}"></button></sc-for>
+</div>
+</sc-for>
+<div class="tml-end" style="{{endStyle}}"></div>
+<div class="tml-ph" style="{{phStyle}}"></div>
+<div class="tml-ph-h" style="{{phHStyle}}">{{timeShort}}</div>
+</div>
+</div>
+</section>
+</sc-if>
+</div>
+
+<sc-if value="{{showRight}}" hint-placeholder-val="{{true}}">
+<aside class="dock right" aria-label="Inspector">
+<div class="dock-h insp-h">
+<span class="ms ico" aria-hidden="true">{{inspIcon}}</span>
+<span class="nm" data-tip="{{headTip}}">{{inspName}}</span>
+<sc-if value="{{inspChip}}" hint-placeholder-val="{{true}}"><span class="chip">{{inspChip}}</span></sc-if>
+<span class="sp"></span>
+<span class="pop"><button class="ib" data-tip="More" aria-label="More actions" aria-haspopup="menu" aria-expanded="{{moreOpen}}" onClick="{{toggleMore}}"><span class="ms" aria-hidden="true">more_horiz</span></button>
+<sc-if value="{{moreOpen}}" hint-placeholder-val="{{false}}"><div class="pop-menu right"><dc-import name="ContextMenu" items="{{moreItems}}" focus-on-open="{{yes}}" escape-listener="{{closeMenu}}" label="More" standalone="{{no}}" hint-size="auto,260px"></dc-import></div></sc-if>
+</span>
+</div>
+<label class="field msearch"><span class="ms" aria-hidden="true">search</span><input class="msearch-in" type="text" placeholder="{{searchPh}}" aria-label="Search settings" value="{{q}}" onInput="{{typed}}"></label>
+<div class="insp-b">
+<sc-for list="{{sections}}" as="sec" hint-placeholder-count="4">
+<section class="insp-sec" aria-label="{{sec.title}}">
+<button class="{{sec.hcls}}" aria-expanded="{{sec.expanded}}" onClick="{{sec.toggle}}"><span class="ms" aria-hidden="true">chevron_right</span>{{sec.title}}</button>
+<sc-if value="{{sec.open}}" hint-placeholder-val="{{true}}">
+
+<sc-if value="{{sec.showAlign}}" hint-placeholder-val="{{false}}">
+<div class="insp-align" role="toolbar" aria-label="Align">
+<button class="ib" data-tip="Align Left Edges" aria-label="Align left edges"><span class="ms" aria-hidden="true">align_horizontal_left</span></button>
+<button class="ib" data-tip="Align Centers" aria-label="Align horizontal centers"><span class="ms" aria-hidden="true">align_horizontal_center</span></button>
+<button class="ib" data-tip="Align Right Edges" aria-label="Align right edges"><span class="ms" aria-hidden="true">align_horizontal_right</span></button>
+<span class="vsep"></span>
+<button class="ib" data-tip="Align Top Edges" aria-label="Align top edges"><span class="ms" aria-hidden="true">align_vertical_top</span></button>
+<button class="ib" data-tip="Align Middles" aria-label="Align vertical centers"><span class="ms" aria-hidden="true">align_vertical_center</span></button>
+<button class="ib" data-tip="Align Bottom Edges" aria-label="Align bottom edges"><span class="ms" aria-hidden="true">align_vertical_bottom</span></button>
+<span class="vsep"></span>
+<button class="ib" data-tip="Same Space Across" aria-label="Distribute horizontally"><span class="ms" aria-hidden="true">horizontal_distribute</span></button>
+<button class="ib" data-tip="Same Space Down" aria-label="Distribute vertically"><span class="ms" aria-hidden="true">vertical_distribute</span></button>
+</div>
+</sc-if>
+
+<sc-if value="{{sec.showTf}}" hint-placeholder-val="{{false}}">
+<div class="insp-pad">
+<div class="anc-row">
+<div class="anc-grid" role="radiogroup" aria-label="Anchor point">
+<sc-for list="{{ancDots}}" as="a" hint-placeholder-count="9"><button class="{{a.cls}}" role="radio" aria-checked="{{a.on}}" aria-label="{{a.label}}" data-tip="{{a.label}}" onClick="{{a.pick}}"></button></sc-for>
+</div>
+<div class="anc-side">
+<span class="anc-name" data-tip="X and Y are measured from the anchor">{{ancName}}</span>
+<sc-if value="{{ancBtnShow}}" hint-placeholder-val="{{true}}"><button class="{{ancBtnCls}}" aria-pressed="{{ancBtnOn}}" data-tip="{{ancBtnTip}}" onClick="{{ancBtnClick}}"><span class="ms" aria-hidden="true">{{ancBtnIcon}}</span>{{ancBtnLabel}}</button></sc-if>
+</div>
+</div>
+<div class="{{tfGridCls}}">
+<sc-if value="{{tf.kf}}" hint-placeholder-val="{{false}}"><button class="{{tf.posKf}}" data-tip="{{tf.posKfTip}}" aria-label="{{tf.posKfTip}}" onClick="{{tf.posKfClick}}"></button></sc-if>
+<label class="{{tf.xCls}}"><span class="pre">X</span><input type="text" value="{{tf.x}}" placeholder="{{tf.xph}}" aria-label="X, from the anchor"><button class="fx" data-tip="Use placeholder text" aria-label="Use placeholder text"><span class="ms" aria-hidden="true">data_object</span></button></label>
+<label class="{{tf.yCls}}"><span class="pre">Y</span><input type="text" value="{{tf.y}}" placeholder="{{tf.yph}}" aria-label="Y, from the anchor"><button class="fx" data-tip="Use placeholder text" aria-label="Use placeholder text"><span class="ms" aria-hidden="true">data_object</span></button></label>
+<sc-if value="{{tf.kf}}" hint-placeholder-val="{{false}}"><button class="{{tf.sizeKf}}" data-tip="{{tf.sizeKfTip}}" aria-label="{{tf.sizeKfTip}}" onClick="{{tf.sizeKfClick}}"></button></sc-if>
+<label class="{{tf.wCls}}"><span class="pre">W</span><input type="text" value="{{tf.w}}" placeholder="{{tf.wph}}" aria-label="Width"><button class="fx" data-tip="Use placeholder text" aria-label="Use placeholder text"><span class="ms" aria-hidden="true">data_object</span></button></label>
+<label class="{{tf.hCls}}"><span class="pre">H</span><input type="text" value="{{tf.h}}" placeholder="{{tf.hph}}" aria-label="Height"><button class="fx" data-tip="Use placeholder text" aria-label="Use placeholder text"><span class="ms" aria-hidden="true">data_object</span></button></label>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{sec.showPose}}" hint-placeholder-val="{{false}}">
+<div class="insp-pad">
+<div class="anc-row">
+<div class="pose-doll" role="radiogroup" aria-label="Body part">
+<sc-for list="{{poseView.parts}}" as="pp" hint-placeholder-count="6"><button class="{{pp.cls}}" role="radio" aria-checked="{{pp.on}}" aria-label="{{pp.name}}" data-tip="{{pp.name}}" onClick="{{pp.pick}}"></button></sc-for>
+</div>
+<div class="anc-side">
+<span class="anc-name">{{poseView.name}}</span>
+<sc-if value="{{poseView.canMirror}}" hint-placeholder-val="{{true}}"><button class="btn sm" data-tip="Gives the other side the same pose, mirrored" onClick="{{poseView.mirror}}"><span class="ms" aria-hidden="true">flip</span>{{poseView.mirrorLabel}}</button></sc-if>
+<button class="btn sm" data-tip="Every part back to 0°" onClick="{{poseView.reset}}"><span class="ms" aria-hidden="true">restart_alt</span>Reset Pose</button>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{sec.hasRows}}" hint-placeholder-val="{{true}}"><dc-import name="ContextMenu" items="{{sec.items}}" docked="{{yes}}" query="{{sec.query}}" label="{{sec.title}}" standalone="{{no}}" hint-size="282px,180px"></dc-import></sc-if>
+
+<sc-if value="{{sec.showEase}}" hint-placeholder-val="{{false}}">
+<div class="ease-wrap">
+<div class="ease-box" aria-label="{{kfv.curveLabel}}" role="img">
+<svg viewBox="0 0 270 112" preserveAspectRatio="none" aria-hidden="true">
+<path d="{{kfv.guides}}" stroke-width="1" style="stroke: var(--sep)" fill="none"></path>
+<path d="{{kfv.h1}}" stroke-width="1" fill="none" style="stroke: var(--text-3)"></path>
+<path d="{{kfv.h2}}" stroke-width="1" fill="none" style="stroke: var(--text-3)"></path>
+<path d="{{kfv.curve}}" stroke-width="2.5" fill="none" stroke-linecap="round" style="stroke: var(--accent)"></path>
+<circle cx="{{kfv.p1x}}" cy="{{kfv.p1y}}" r="4.5" style="fill: var(--win); stroke: var(--accent)" stroke-width="2"></circle>
+<circle cx="{{kfv.p2x}}" cy="{{kfv.p2y}}" r="4.5" style="fill: var(--win); stroke: var(--accent)" stroke-width="2"></circle>
+</svg>
+</div>
+<p class="ease-cap">{{kfv.span}}. Drag the handles for a custom curve.</p>
+</div>
+</sc-if>
+</sc-if>
+</section>
+</sc-for>
+<sc-if value="{{noMatch}}" hint-placeholder-val="{{false}}"><div class="mempty">No settings match “{{q}}”</div></sc-if>
+</div>
+</aside>
+</sc-if>
+</div>
+
+<sc-if value="{{showChrome}}" hint-placeholder-val="{{true}}">
+<footer class="te-status" style="position: relative; z-index: 5">
+<span class="it">{{statusPos}}</span>
+<sc-if value="{{showDrop}}" hint-placeholder-val="{{true}}"><span class="it"><span class="ms" aria-hidden="true">upload_file</span>Drop images, sounds or videos on the canvas to add them</span></sc-if>
+<span class="grow"></span>
+<span class="pop"><button class="it warnc err" data-tip="Show problems" aria-haspopup="menu" aria-expanded="{{probsOpen}}" onClick="{{toggleProbs}}"><span class="ms" aria-hidden="true">error</span>1 problem</button>
+<sc-if value="{{probsOpen}}" hint-placeholder-val="{{false}}"><div class="pop-menu up right"><dc-import name="ContextMenu" items="{{probItems}}" focus-on-open="{{yes}}" escape-listener="{{closeMenu}}" label="Problems" standalone="{{no}}" hint-size="auto,80px"></dc-import></div></sc-if>
+</span>
+<span class="pop"><button class="it" data-tip="Zoom · Ctrl+Scroll on the canvas" aria-label="{{zoomAria}}" aria-haspopup="menu" aria-expanded="{{zoomOpen}}" onClick="{{toggleZoom}}">{{zoomText}}<span class="ms" aria-hidden="true">expand_less</span></button>
+<sc-if value="{{zoomOpen}}" hint-placeholder-val="{{false}}"><div class="pop-menu up right"><dc-import name="ContextMenu" items="{{zoomItems}}" focus-on-open="{{yes}}" escape-listener="{{closeMenu}}" label="Zoom" standalone="{{no}}" hint-size="auto,200px"></dc-import></div></sc-if>
+</span>
+</footer>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"sel":{"editor":"text","default":"play"},"audio":{"editor":"enum","options":["In Order","Shuffle"],"default":"In Order"},"extra":{"editor":"enum","options":["","player","model"],"default":""},"fold":{"editor":"text","default":""},"part":{"editor":"enum","options":["head","body","rarm","larm","rleg","lleg"],"default":"rarm"},"hover":{"editor":"text","default":""},"menu":{"editor":"enum","options":["","add","size","anchor","more","zoom","probs"],"default":""},"size":{"editor":"enum","options":["window","xga","hd","fhd","big"],"default":"window"},"timeline":{"editor":"boolean","default":false},"time":{"editor":"text","default":""},"kf":{"editor":"text","default":""},"moving":{"editor":"boolean","default":false},"preview":{"editor":"boolean","default":false},"focus":{"editor":"boolean","default":false},"zoom":{"editor":"text","default":""},"mbOpen":{"editor":"text","default":""},"mbSub":{"editor":"text","default":""},"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const p = this.props;
+    const set = (patch) => () => this.setState(patch);
+    const stop = (e) => { if (e && e.stopPropagation) e.stopPropagation(); };
+    const cur = () => this.state || {};
+
+    // ---------- the screen being edited ----------
+    // Positions are GUI pixels: an anchor point plus an offset to the element's top-left corner, like FancyMenu saves them.
+    // A screen size is a window size plus a GUI scale; the canvas, rulers and Inspector use the resulting GUI pixels.
+    const SIZES = [
+      { id: 'window', label: 'This Window', win: '1440 × 900', pw: 1440, ph: 900, scale: 2 },
+      { id: 'xga', label: '1024 × 768', pw: 1024, ph: 768, scale: 2 },
+      { id: 'hd', label: '1280 × 720', pw: 1280, ph: 720, scale: 2 },
+      { id: 'fhd', label: '1920 × 1080', pw: 1920, ph: 1080, scale: 3 },
+      { id: 'big', label: '2560 × 1440', pw: 2560, ph: 1440, scale: 2 }
+    ];
+    const sizeId = s.size ?? (p.size || 'window');
+    const S0 = SIZES.find((z) => z.id === sizeId) || SIZES[0];
+    // the largest GUI scale vanilla allows for a window: at least 320 × 240 GUI pixels must remain
+    const maxScale = (z) => { let m = 1; while (z.pw / (m + 1) >= 320 && z.ph / (m + 1) >= 240) m++; return m; };
+    const gsOver = s.gs || {};
+    const gScale = Math.min(gsOver[sizeId] ?? S0.scale, maxScale(S0));
+    const S = Object.assign({}, S0, { scale: gScale, w: Math.floor(S0.pw / gScale), h: Math.floor(S0.ph / gScale) });
+    const ANCHORS = [
+      ['tl', 'Top Left', 0, 0], ['tc', 'Top Center', .5, 0], ['tr', 'Top Right', 1, 0],
+      ['ml', 'Middle Left', 0, .5], ['c', 'Center', .5, .5], ['mr', 'Middle Right', 1, .5],
+      ['bl', 'Bottom Left', 0, 1], ['bc', 'Bottom Center', .5, 1], ['br', 'Bottom Right', 1, 1]
+    ];
+    // Vanilla widgets sit where the screen puts them (anchor "vanilla"): vpos is that spot as a fraction of the
+    // screen plus a pixel offset, the way the title screen lays out its buttons.
+    const BASE = [
+      { id: 'title', name: 'Title Text', icon: 'text_fields', type: 'Text', anchor: 'tc', x: -110, y: 75, w: 220, h: 42 },
+      { id: 'splash', name: 'Splash Text', icon: 'flare', type: 'Splash Text', anchor: 'el:title', x: 173, y: 38, w: 98, h: 15, rot: -12 },
+      { id: 'play', name: 'Play', icon: 'smart_button', type: 'Button', anchor: 'c', x: -65, y: -15, w: 130, h: 19 },
+      { id: 'options', name: 'Options', icon: 'smart_button', type: 'Button', anchor: 'c', x: -65, y: 9, w: 130, h: 19 },
+      { id: 'quit', name: 'Quit Game', icon: 'smart_button', type: 'Button', anchor: 'c', x: -65, y: 33, w: 130, h: 19 },
+      { id: 'version', name: 'Version Text', icon: 'text_fields', type: 'Text', anchor: 'bl', x: 8, y: -17, w: 85, h: 11 },
+      { id: 'music', name: 'Menu Music', icon: 'music_note', type: 'Audio', anchor: 'tr', x: -100, y: 8, w: 92, h: 16, ghost: true, missing: true },
+      { id: 'copyright', name: 'Copyright', icon: 'dashboard', type: 'Vanilla Widget', label: 'Copyright Mojang AB. Do not distribute!', anchor: 'vanilla', vpos: [1, 1, -198, -12], x: 0, y: 0, w: 196, h: 10, vanilla: true, fixed: true },
+      { id: 'van0', name: 'Singleplayer', icon: 'smart_button', type: 'Vanilla Widget', label: 'Singleplayer', anchor: 'vanilla', vpos: [.5, .25, -100, 48], x: 0, y: 0, w: 200, h: 20, vanilla: true },
+      { id: 'van1', name: 'Multiplayer', icon: 'smart_button', type: 'Vanilla Widget', label: 'Multiplayer', anchor: 'vanilla', vpos: [.5, .25, -100, 72], x: 0, y: 0, w: 200, h: 20, vanilla: true },
+      { id: 'van2', name: 'Minecraft Realms', icon: 'smart_button', type: 'Vanilla Widget', label: 'Minecraft Realms', anchor: 'vanilla', vpos: [.5, .25, -100, 96], x: 0, y: 0, w: 200, h: 20, vanilla: true },
+      { id: 'van3', name: 'Options', icon: 'smart_button', type: 'Vanilla Widget', label: 'Options', anchor: 'vanilla', vpos: [.5, .25, -100, 132], x: 0, y: 0, w: 98, h: 20, vanilla: true },
+      { id: 'van4', name: 'Quit Game', icon: 'smart_button', type: 'Vanilla Widget', label: 'Quit Game', anchor: 'vanilla', vpos: [.5, .25, 2, 132], x: 0, y: 0, w: 98, h: 20, vanilla: true },
+      { id: 'van5', name: 'Language', icon: 'language', type: 'Vanilla Widget', label: '', anchor: 'vanilla', vpos: [.5, .25, -124, 132], x: 0, y: 0, w: 20, h: 20, vanilla: true },
+      { id: 'van6', name: 'Accessibility Settings', icon: 'accessibility_new', type: 'Vanilla Widget', label: '', anchor: 'vanilla', vpos: [.5, .25, 104, 132], x: 0, y: 0, w: 20, h: 20, vanilla: true }
+    ];
+    // Boards about a single element type put one more element on the screen: a Player Entity or a JSON Model.
+    const EXTRA = {
+      player: { id: 'player', name: 'Player Entity', icon: 'person', type: 'Player Entity', anchor: 'ml', x: 72, y: -70, w: 64, h: 128 },
+      model: { id: 'model', name: 'Chest', icon: 'view_in_ar', type: 'Block/Item JSON Model', anchor: 'ml', x: 64, y: -56, w: 96, h: 96 }
+    };
+    if (EXTRA[p.extra]) BASE.unshift(EXTRA[p.extra]);
+    // A Player Entity's pose is X, Y and Z in degrees for six parts. Right and left are the figure's own sides.
+    const PARTS = [['head', 'Head'], ['body', 'Body'], ['rarm', 'Right Arm'], ['larm', 'Left Arm'], ['rleg', 'Right Leg'], ['lleg', 'Left Leg']];
+    const pose = s.pose ?? { head: [0, 0, -8], body: [0, 0, 0], rarm: [-12, 0, 148], larm: [0, 0, -10], rleg: [0, 0, 0], lleg: [0, 0, 0] };
+    const part = s.part ?? (p.part || 'rarm');
+    // A JSON Model's rotation, and the four views its Inspector offers.
+    const VIEWS = [['Front', [0, 0, 0]], ['Side', [0, -90, 0]], ['Top', [-90, 0, 0]], ['Angled', [-24, -38, 0]]];
+    const mrot = s.mrot ?? VIEWS[3][1];
+    const VANILLA_IDS = BASE.filter((b) => b.vanilla).map((b) => b.id);
+    const GROUP = ['play', 'options', 'quit'];
+    // elements added with Add Element show as labeled boxes until they have content
+    const added = s.added || [];
+    const ALL = added.concat(BASE);
+    const ancOver = s.anc || {};
+    const byId = {};
+    ALL.forEach((b) => { byId[b.id] = Object.assign({}, b, ancOver[b.id] || {}); });
+    // Anchors resolve recursively, so an element can anchor to any other one. A broken or circular chain falls back
+    // to the screen's top-left corner, like FancyMenu does for a missing anchor element.
+    const rects = {};
+    const resolve = (id, seen) => {
+      if (rects[id]) return rects[id];
+      const e = byId[id];
+      let ax = 0, ay = 0;
+      if (e.anchor.startsWith('el:')) {
+        const pid = e.anchor.slice(3);
+        if (byId[pid] && !seen.has(pid)) { const pr = resolve(pid, new Set(seen).add(pid)); ax = pr.x; ay = pr.y; }
+      } else if (e.anchor === 'vanilla') {
+        ax = Math.round(S.w * e.vpos[0]) + e.vpos[2]; ay = Math.round(S.h * e.vpos[1]) + e.vpos[3];
+      } else {
+        const a = ANCHORS.find((q) => q[0] === e.anchor);
+        ax = Math.round(S.w * a[2]); ay = Math.round(S.h * a[3]);
+      }
+      rects[id] = { x: ax + e.x, y: ay + e.y, w: e.w, h: e.h, ax, ay };
+      return rects[id];
+    };
+    ALL.forEach((b) => resolve(b.id, new Set([b.id])));
+    // true when id's anchor chain runs through target, so anchoring target to id would make a circle
+    const dependsOn = (id, target) => { let e = byId[id]; for (let i = 0; e && e.anchor.startsWith('el:') && i < 32; i++) { const pid = e.anchor.slice(3); if (pid === target) return true; e = byId[pid]; } return false; };
+    const ancLabel = (key) => (key === 'vanilla' ? 'Placed by the screen' : key.startsWith('el:') ? byId[key.slice(3)].name + ', top-left corner' : ANCHORS.find((a) => a[0] === key)[1] + ' of the screen');
+
+    // ---------- the Intro animation ----------
+    // Tracks animate single properties. Values are relative to the element's resting position (Move From Resting
+    // Position is on), so an animation that ends at rest ends exactly where the element sits in the layout.
+    const DUR = 2.0;
+    const EASES = {
+      linear: { name: 'Linear', f: (x) => x, b: [0, 0, 1, 1] },
+      in: { name: 'Ease In', f: (x) => x * x * x, b: [.55, .055, .675, .19] },
+      out: { name: 'Ease Out', f: (x) => 1 - Math.pow(1 - x, 3), b: [.215, .61, .355, 1] },
+      inout: { name: 'Ease In and Out', f: (x) => (x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2), b: [.645, .045, .355, 1] },
+      back: { name: 'Overshoot', f: (x) => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); }, b: [.34, 1.56, .64, 1] },
+      hold: { name: 'Hold', f: (x) => (x < 1 ? 0 : 1), b: [1, 0, 1, 0] }
+    };
+    const PROPS = [['pos', 'Position'], ['size', 'Size'], ['rot', 'Rotation'], ['tiltv', 'Vertical Tilt'], ['tilth', 'Horizontal Tilt'], ['op', 'Opacity']];
+    const TRACKS0 = [
+      { el: 'title', props: [
+        { k: 'pos', kfs: [{ t: 0, v: [0, -40] }, { t: .8, v: [0, 0], e: 'out' }] },
+        { k: 'op', kfs: [{ t: 0, v: 0 }, { t: .6, v: 1, e: 'linear' }] }] },
+      { el: 'splash', props: [
+        { k: 'rot', kfs: [{ t: .9, v: -40 }, { t: 1.4, v: 0, e: 'back' }] },
+        { k: 'op', kfs: [{ t: .9, v: 0 }, { t: 1.1, v: 1, e: 'linear' }] }] },
+      { el: 'play', props: [
+        { k: 'pos', kfs: [{ t: .4, v: [-24, 0] }, { t: .9, v: [0, 0], e: 'out' }] },
+        { k: 'op', kfs: [{ t: .4, v: 0 }, { t: .9, v: 1, e: 'linear' }] }] },
+      { el: 'options', props: [
+        { k: 'pos', kfs: [{ t: .5, v: [-24, 0] }, { t: 1.0, v: [0, 0], e: 'out' }] },
+        { k: 'op', kfs: [{ t: .5, v: 0 }, { t: 1.0, v: 1, e: 'linear' }] }] },
+      { el: 'quit', props: [
+        { k: 'pos', kfs: [{ t: .6, v: [-24, 0] }, { t: 1.1, v: [0, 0], e: 'out' }] },
+        { k: 'op', kfs: [{ t: .6, v: 0 }, { t: 1.1, v: 1, e: 'linear' }] }] }
+    ];
+    const TR = s.trk || TRACKS0;
+    const propName = (k2) => PROPS.find((x) => x[0] === k2)[1];
+    const valAt = (kfs, tt) => {
+      if (tt <= kfs[0].t) return kfs[0].v;
+      for (let i = 1; i < kfs.length; i++) {
+        if (tt <= kfs[i].t) {
+          const a = kfs[i - 1], b = kfs[i];
+          const f = EASES[b.e || 'linear'].f((tt - a.t) / (b.t - a.t));
+          return Array.isArray(a.v) ? a.v.map((v, j) => v + (b.v[j] - v) * f) : a.v + (b.v - a.v) * f;
+        }
+      }
+      return kfs[kfs.length - 1].v;
+    };
+
+    // ---------- view state ----------
+    const preview = s.preview ?? !!p.preview;
+    const focus = s.focus ?? !!p.focus;
+    const chrome = !focus;
+    // while previewing, the panels step aside so the screen gets the room
+    const showTl = chrome && !preview && (s.tl ?? !!p.timeline);
+    const leftOn = chrome && !preview && (s.left ?? true);
+    const rightOn = chrome && !preview && (s.right ?? true);
+    const t = s.t ?? (p.time ? parseFloat(p.time) : 0);
+    const animated = showTl || preview;
+    const menu = s.menu !== undefined ? s.menu : (p.menu || '');
+    const moving = !!p.moving && !preview;
+    const kfSel = showTl ? (s.kf ?? (p.kf || '')) : '';
+    const selRaw = s.sel ?? (p.sel ?? 'play');
+    const sel = preview ? [] : selRaw.split(',').filter((id) => byId[id]);
+    const single = sel.length === 1 ? byId[sel[0]] : null;
+    const picking = menu === 'anchor' && sel.length > 0 && !sel.some((id) => byId[id].vanilla);
+    const hovId = preview ? '' : (s.hov ?? (p.hover || ''));
+    const hidden = s.hidden ?? {};
+    const locked = s.locked ?? {};
+    // vanilla widgets hidden in game: the title screen's own buttons, which this layout replaces
+    const vhid = s.vhid ?? { van0: true, van1: true, van2: true, van3: true, van4: true, van5: true, van6: true };
+    const grid = s.grid ?? true;
+    const snap = s.snap ?? true;
+    const tool = s.tool ?? 'select';
+    const q = s.q || '';
+    const lq = s.lq || '';
+    const rep = !!s.rep;
+    const ak = !!s.ak;
+    const vals = s.vals || {};
+    const animLoop = !!vals['anim|Loop'];
+    const last = s.last || '';
+    const shown = (id) => !hidden[id] && !(byId[id].vanilla && vhid[id]);
+
+    // live values at the playhead (or while previewing)
+    const live = {};
+    ALL.forEach((b) => { live[b.id] = { dx: 0, dy: 0, op: 1, rot: 0 }; });
+    if (animated) TR.forEach((tr) => tr.props.forEach((pr) => {
+      const L = live[tr.el];
+      if (!L) return;
+      const v = valAt(pr.kfs, t);
+      if (pr.k === 'pos') { L.dx = v[0]; L.dy = v[1]; } else if (pr.k === 'op') L.op = v; else if (pr.k === 'rot') L.rot = v;
+    }));
+    const rotOf = (id) => (byId[id].rot || 0) + live[id].rot;
+    // In the editor, an element that is fully transparent at the playhead still shows faintly, so it can be grabbed.
+    const ghostOp = (op) => (preview ? op : Math.max(op, .18));
+
+    // ---------- geometry: docks, canvas, zoom ----------
+    const CW = 1440 - (leftOn ? 248 : 0) - (rightOn ? 300 : 0);
+    const CH = focus ? 900 : 900 - 30 - 48 - 26 - (showTl ? 252 : 0);
+    const rul = chrome ? 20 : 0;
+    const vw = CW - rul, vh = CH - rul;
+    const zFit = Math.min(1, (vw - 80) / (S.w * 2), (vh - 84) / (S.h * 2));
+    const zoomProp = s.zoomP !== undefined ? s.zoomP : (p.zoom ? parseFloat(p.zoom) / 100 : 0);
+    const z = focus ? Math.min(1, CW / (S.w * 2), CH / (S.h * 2)) : zoomProp || Math.floor(zFit * 100) / 100;
+    const k = 2 * z;
+    const artW = Math.round(S.w * k), artH = Math.round(S.h * k);
+    // zoomed in, the view centres on the selection (or the screen's middle)
+    const selC = (() => { const ids = sel.filter((id) => shown(id)); if (!ids.length) return [S.w / 2, S.h / 2]; const rs = ids.map((id) => rects[id]); return [(Math.min(...rs.map((r) => r.x)) + Math.max(...rs.map((r) => r.x + r.w))) / 2, (Math.min(...rs.map((r) => r.y)) + Math.max(...rs.map((r) => r.y + r.h))) / 2]; })();
+    const artL = focus ? Math.round((CW - artW) / 2) : zoomProp ? Math.round(rul + vw / 2 - selC[0] * k) : Math.round(rul + (vw - artW) / 2);
+    const artT = focus ? Math.round(Math.max(0, (CH - artH) / 2)) : zoomProp ? Math.round(rul + vh / 2 - selC[1] * k) : Math.round(rul + 30 + (vh - 30 - artH) / 2);
+    const X = (gx) => artL + gx * k, Y = (gy) => artT + gy * k;
+    const box = (r) => 'left: ' + X(r.x).toFixed(1) + 'px; top: ' + Y(r.y).toFixed(1) + 'px; width: ' + (r.w * k).toFixed(1) + 'px; height: ' + (r.h * k).toFixed(1) + 'px';
+    const liveRect = (id) => { const r = rects[id], L = live[id]; return { x: r.x + L.dx, y: r.y + L.dy, w: r.w, h: r.h }; };
+    const rotCss = (id) => { const r = rotOf(id); return r ? '; transform: rotate(' + r.toFixed(1) + 'deg)' : ''; };
+
+    // rulers in GUI pixels: a tick every 10, a number every 100 (every 50 when zoomed in); numbers that would be cut
+    // by the end of a ruler are left out
+    const step = 10 * k;
+    const labelEvery = k > 1.6 ? 50 : 100;
+    const rulX = [], rulY = [];
+    for (let v = 0; v <= S.w; v += labelEvery) { const px = X(v) - rul; if (px >= -2 && px <= vw - 30) rulX.push({ v: String(v), style: 'left: ' + px.toFixed(1) + 'px' }); }
+    for (let v = 0; v <= S.h; v += labelEvery) { const py = Y(v) - rul; if (py >= -2 && py <= vh - 30) rulY.push({ v: String(v), style: 'top: ' + py.toFixed(1) + 'px' }); }
+    const tick = (dir) => 'background-image: linear-gradient(' + dir + ', var(--ruler-tick) 1px, transparent 1px); background-size: ' + (dir === '90deg' ? step.toFixed(2) + 'px 5px' : '5px ' + step.toFixed(2) + 'px');
+    const rulTopStyle = tick('90deg') + '; background-position: ' + ((X(0) - rul) % step).toFixed(2) + 'px bottom';
+    const rulLeftStyle = tick('180deg') + '; background-position: right ' + ((Y(0) - rul) % step).toFixed(2) + 'px';
+
+    // ---------- drawn screen ----------
+    const sc = (r) => 'left: ' + r.x * 2 + 'px; top: ' + r.y * 2 + 'px; width: ' + r.w * 2 + 'px; height: ' + r.h * 2 + 'px';
+    const fx = (id) => {
+      const L = live[id];
+      const rot = rotOf(id);
+      return '; transform: translate(' + (L.dx * 2).toFixed(1) + 'px, ' + (L.dy * 2).toFixed(1) + 'px)' + (rot ? ' rotate(' + rot.toFixed(1) + 'deg)' : '') + '; opacity: ' + ghostOp(L.op).toFixed(3);
+    };
+    const LOOK = {
+      title: { text: 'Dusk Valley', css: 'display: grid; place-items: center; color: #fff; font-size: 52px; font-weight: 700; letter-spacing: 1px; text-shadow: 0 4px 0 rgba(0, 0, 0, .35)' },
+      splash: { text: 'Now with fireflies!', css: 'display: grid; place-items: center; color: #ffe066; font-size: 17px; font-weight: 700; white-space: nowrap; text-shadow: 0 2px 0 rgba(0, 0, 0, .4)' },
+      play: { text: 'Play', btn: true }, options: { text: 'Options', btn: true }, quit: { text: 'Quit Game', btn: true },
+      version: { text: 'Dusk Valley Pack 1.4.2', css: 'display: flex; align-items: center; padding: 0 6px; color: rgba(255, 255, 255, .85); font-size: 12px; white-space: nowrap' },
+      copyright: { text: 'Copyright Mojang AB. Do not distribute!', css: 'display: flex; align-items: center; justify-content: flex-end; color: rgba(255, 255, 255, .85); font-size: 12px; white-space: nowrap' }
+    };
+    // vanilla widgets draw behind the layout's own elements; the hidden ones aren't drawn at all
+    const drawOrder = VANILLA_IDS.concat(['title', 'splash', 'play', 'options', 'quit', 'version']);
+    const drawn = drawOrder.filter((id) => shown(id) || (hidden[id] && !byId[id].vanilla)).map((id) => {
+      const look = LOOK[id] || { text: byId[id].label, btn: true };
+      return { cls: 'el' + (look.btn ? ' btn-mc' : '') + (hidden[id] ? ' hide' : ''), style: sc(rects[id]) + (look.css ? '; ' + look.css : '') + fx(id), text: look.text };
+    });
+    // A Player Entity is drawn from six parts that turn around their joints, a JSON Model as a cube with its three
+    // textures, so both follow their Inspector live.
+    const figs = [];
+    if (byId.player && shown('player')) {
+      const r = rects.player, u = r.w * 2 / 16;
+      const PL = { head: [4, 0, 8, 8, '50% 100%'], body: [4, 8, 8, 12, '50% 50%'], rarm: [0, 8, 4, 12, '50% 8%'], larm: [12, 8, 4, 12, '50% 8%'], rleg: [4, 20, 4, 12, '50% 0'], lleg: [8, 20, 4, 12, '50% 0'] };
+      figs.push({ cls: 'el fig-pl', style: sc(r) + '; --u: ' + u.toFixed(2) + 'px' + fx('player'), parts: ['rleg', 'lleg', 'body', 'larm', 'rarm', 'head'].map((k) => {
+        const [x, y, w, h, org] = PL[k], a = pose[k];
+        return { cls: 'pp ' + k, style: 'left: ' + x * u + 'px; top: ' + y * u + 'px; width: ' + w * u + 'px; height: ' + h * u + 'px; transform-origin: ' + org + '; transform: rotate(' + a[2] + 'deg) scaleY(' + Math.cos(a[0] * Math.PI / 180).toFixed(3) + ')' };
+      }) });
+    }
+    if (byId.model && shown('model')) {
+      const r = rects.model;
+      figs.push({ cls: 'el fig-md', style: sc(r) + '; --h: ' + (r.w * 2 * .31).toFixed(1) + 'px; transform: perspective(900px) rotateX(' + mrot[0] + 'deg) rotateY(' + mrot[1] + 'deg) rotateZ(' + mrot[2] + 'deg)',
+        parts: ['front', 'back', 'right', 'left', 'top', 'bottom'].map((k) => ({ cls: 'cf ' + k, style: '' })) });
+    }
+    const fireflies = [[156, 305], [201, 334], [502, 320], [560, 350], [119, 360]].map(([fx2, fy]) => 'left: ' + (fx2 * S.w / 720 * 2).toFixed(0) + 'px; top: ' + (fy * S.h / 450 * 2).toFixed(0) + 'px');
+
+    // ---------- canvas overlays ----------
+    const visibleIds = ALL.map((b) => b.id).filter(shown);
+    // what the selection can be anchored to: shown, drawn, not vanilla, not selected, and no circles
+    const canAnchorTo = (id) => !sel.includes(id) && !byId[id].vanilla && !byId[id].ghost && shown(id) && !sel.some((sid) => dependsOn(id, sid));
+    const outlines = preview ? [] : visibleIds.filter((id) => !byId[id].ghost).map((id) => ({
+      cls: 'le-out' + (byId[id].vanilla ? ' van' : '') + ((hovId === id && !sel.includes(id) && !picking) || (picking && canAnchorTo(id)) ? ' hov' : ''),
+      style: box(liveRect(id)) + rotCss(id)
+    }));
+    // boxes for elements that draw nothing; too small for their name, they keep just the icon
+    const ghosts = preview ? [] : visibleIds.filter((id) => byId[id].ghost).map((id) => ({
+      cls: 'le-ghost' + (byId[id].missing ? ' bad' : '') + (rects[id].w * k < byId[id].name.length * 5.6 + 26 ? ' compact' : ''),
+      style: box(liveRect(id)), icon: byId[id].icon, name: byId[id].name
+    }));
+    const groupOf = (id) => (GROUP.includes(id) ? 'buttons' : VANILLA_IDS.includes(id) ? 'vanilla' : '');
+    const lcoll = s.lcoll ?? (() => {
+      // a selected element inside a group shows up in Layers, so the group starts open
+      const c = { buttons: false, vanilla: true };
+      sel.forEach((id) => { const g = groupOf(id); if (g) c[g] = false; });
+      return c;
+    })();
+    const reveal = (ids) => { const c = Object.assign({}, lcoll); ids.forEach((id) => { const g = groupOf(id); if (g) c[g] = false; }); return c; };
+    const select = (ids, extra) => this.setState(Object.assign({ sel: ids.join(','), menu: '', kf: '', selGroup: '', lcoll: reveal(ids) }, extra || {}));
+    // picks an element: on the canvas locked elements can't be picked, in Layers they can
+    const pickEl = (id, fromLayers) => (e) => {
+      stop(e);
+      if (picking) {
+        if (!canAnchorTo(id)) return;
+        // anchoring to another element keeps the elements where they are: only the offsets change
+        const pr = rects[id];
+        const next = Object.assign({}, ancOver);
+        sel.forEach((sid) => { const r = rects[sid]; next[sid] = { anchor: 'el:' + id, x: r.x - pr.x, y: r.y - pr.y }; });
+        this.setState({ menu: '', anc: next, last: 'Anchor to ' + byId[id].name });
+        return;
+      }
+      if (locked[id] && !fromLayers) return;
+      const add = e && (e.shiftKey || e.ctrlKey || e.metaKey);
+      select(add ? (sel.includes(id) ? sel.filter((x) => x !== id) : sel.concat(id)) : [id]);
+    };
+    const hits = preview ? [] : visibleIds.filter((id) => !locked[id]).map((id) => ({
+      name: picking ? (canAnchorTo(id) ? 'Anchor to ' + byId[id].name : byId[id].name + ', can’t be anchored to') : 'Select ' + byId[id].name, style: box(liveRect(id)),
+      click: pickEl(id, false), enter: () => { if (cur().hov !== id) this.setState({ hov: id }); }, leave: () => this.setState({ hov: '' })
+    }));
+    const selVis = sel.filter((id) => shown(id));
+    const union = (ids) => {
+      const rs = ids.map(liveRect);
+      const x1 = Math.min(...rs.map((r) => r.x)), y1 = Math.min(...rs.map((r) => r.y));
+      const x2 = Math.max(...rs.map((r) => r.x + r.w)), y2 = Math.max(...rs.map((r) => r.y + r.h));
+      return { x: x1, y: y1, w: x2 - x1, h: y2 - y1 };
+    };
+    const selBox = selVis.length ? union(selVis) : null;
+    const selRot = selVis.length === 1 ? rotOf(selVis[0]) : 0;
+    const fmtN = (n) => (Math.round(n) === n ? String(n) : n.toFixed(1)).replace('-', '−');
+
+    // the anchor: where the selected element is measured from, and a dashed line to its corner
+    let showAnc = false, ancLineStyle = '', ancDotStyle = '';
+    if (single && shown(single.id) && !single.vanilla && !moving && !picking) {
+      const r = rects[single.id];
+      const ax = X(r.ax), ay = Y(r.ay), ex = X(r.x + live[single.id].dx), ey = Y(r.y + live[single.id].dy);
+      const len = Math.hypot(ex - ax, ey - ay), ang = Math.atan2(ey - ay, ex - ax) * 180 / Math.PI;
+      showAnc = true;
+      ancLineStyle = 'left: ' + ax.toFixed(1) + 'px; top: ' + ay.toFixed(1) + 'px; width: ' + len.toFixed(1) + 'px; height: 0; border-top-width: 1px; transform-origin: 0 0; transform: rotate(' + ang.toFixed(2) + 'deg)';
+      ancDotStyle = 'left: ' + ax.toFixed(1) + 'px; top: ' + ay.toFixed(1) + 'px';
+    }
+    // while dragging, the nine screen anchors show (the anchor overlay's "While Dragging" mode)
+    const ancCands = moving ? ANCHORS.map((a) => ({ cls: 'le-anc cand', style: 'left: ' + X(S.w * a[2]).toFixed(1) + 'px; top: ' + Y(S.h * a[3]).toFixed(1) + 'px; opacity: .7' })) : [];
+
+    // smart guides while dragging Options: lined up with the buttons above and below, and the same gap to each
+    const smart = [], gaps = [];
+    if (moving) {
+      const pr = rects.play, or = rects.options, qr = rects.quit;
+      smart.push('left: ' + X(or.x).toFixed(1) + 'px; top: ' + Y(pr.y).toFixed(1) + 'px; width: 1px; height: ' + ((qr.y + qr.h - pr.y) * k).toFixed(1) + 'px');
+      smart.push('left: ' + X(or.x + or.w).toFixed(1) + 'px; top: ' + Y(pr.y).toFixed(1) + 'px; width: 1px; height: ' + ((qr.y + qr.h - pr.y) * k).toFixed(1) + 'px');
+      const gx = X(or.x + or.w * .78);
+      [[pr.y + pr.h, or.y], [or.y + or.h, qr.y]].forEach(([a, b]) => {
+        smart.push('left: ' + gx.toFixed(1) + 'px; top: ' + Y(a).toFixed(1) + 'px; width: 1px; height: ' + ((b - a) * k).toFixed(1) + 'px');
+        gaps.push({ v: String(b - a), style: 'left: ' + (gx + 13).toFixed(1) + 'px; top: ' + Y((a + b) / 2).toFixed(1) + 'px' });
+      });
+    }
+    // small selections drop the handles that would crowd each other
+    // a vanilla widget at its original position can't be moved or resized, so it gets no handles
+    const selCls = 'le-sel' + (selVis.length > 1 ? ' multi' : '') + (selVis.length === 1 && byId[selVis[0]].anchor === 'vanilla' ? ' fixed' : '') + (selBox && selBox.w * k < 40 ? ' nmx' : '') + (selBox && selBox.h * k < 26 ? ' nmy' : '');
+    const rotHandles = s.rotH ?? true;
+
+    // the hover tag sits above an element, or below it when something else is right above
+    let tagCls = 'le-tag', tagStyle = '';
+    const showTag = !!hovId && !!byId[hovId] && shown(hovId) && !sel.includes(hovId) && (!picking || canAnchorTo(hovId));
+    if (showTag) {
+      const r = liveRect(hovId);
+      const above = { x: r.x, y: r.y - 22 / k, w: Math.max(r.w, 90 / k), h: 22 / k };
+      const blocked = visibleIds.some((id) => id !== hovId && !byId[id].vanilla && (() => { const o = liveRect(id); return o.x < above.x + above.w && o.x + o.w > above.x && o.y < above.y + above.h && o.y + o.h > above.y; })());
+      tagCls = 'le-tag' + (blocked ? ' below' : '');
+      tagStyle = 'left: ' + X(r.x).toFixed(1) + 'px; top: ' + Y(blocked ? r.y + r.h : r.y).toFixed(1) + 'px';
+    }
+
+    // ---------- layers ----------
+    const ql = lq.trim().toLowerCase();
+    const hitL = (name) => !ql || name.toLowerCase().includes(ql);
+    const layerRows = [];
+    const row = (id, child, extra) => {
+      const e = byId[id];
+      const isSel = sel.includes(id);
+      const off = !!hidden[id];
+      const van = !!e.vanilla;
+      // For vanilla widgets the eye is whether the game shows them (rule 94): it's the only way they can be hidden.
+      const gone = van && !!vhid[id];
+      return Object.assign({
+        isRow: true, isGroup: false, noChev: true, name: e.name, icon: e.icon, count: '', warn: !!e.missing,
+        cls: 'item lrow' + (child ? ' child' : '') + (isSel ? ' sel' : '') + (off || gone ? ' off' : '') + (hovId === id && !isSel ? ' hov' : ''),
+        ariaSel: isSel ? 'true' : 'false',
+        select: pickEl(id, true),
+        hasLock: !van, lockCls: 'llock' + (locked[id] ? ' on' : ''), lockIcon: locked[id] ? 'lock' : 'lock_open', lockTip: (locked[id] ? 'Unlock' : 'Lock') + ' · Ctrl+Shift+L',
+        toggleLock: (e2) => { stop(e2); this.setState({ locked: Object.assign({}, locked, { [id]: !locked[id] }), last: (locked[id] ? 'Unlock ' : 'Lock ') + e.name }); },
+        hasEye: !e.fixed,
+        eyeIcon: off || gone ? 'visibility_off' : 'visibility',
+        eyeTip: van ? (gone ? 'Hidden in game · Show it again' : 'Hide in game') : (off ? 'Show in the editor' : 'Hide in the editor') + ' · Ctrl+Shift+H',
+        toggleEye: (e2) => {
+          stop(e2);
+          if (van) this.setState({ vhid: Object.assign({}, vhid, { [id]: !gone }), last: (gone ? 'Show ' : 'Hide ') + e.name });
+          else this.setState({ hidden: Object.assign({}, hidden, { [id]: !off }), last: (off ? 'Show ' : 'Hide ') + e.name });
+        },
+        isSep: false
+      }, extra || {});
+    };
+    const group = (id, name, icon, kids, extra) => {
+      const open = ql ? true : !lcoll[id];
+      const allLocked = kids.every((c) => locked[c]), allHidden = kids.every((c) => hidden[c]);
+      const isSel = s.selGroup === id && kids.every((c) => sel.includes(c)) && sel.length === kids.length;
+      return Object.assign({
+        isRow: true, isGroup: true, noChev: false, name, icon, count: String(kids.length), warn: false,
+        cls: 'item lrow' + (isSel ? ' sel' : '') + (allHidden ? ' off' : ''), ariaSel: isSel ? 'true' : 'false',
+        chevCls: open ? 'lchev open' : 'lchev', chevLabel: open ? 'Collapse group' : 'Expand group',
+        toggleGroup: (e2) => { stop(e2); this.setState({ lcoll: Object.assign({}, lcoll, { [id]: open }) }); },
+        select: (e2) => { stop(e2); select(kids, { selGroup: id }); },
+        hasLock: true, lockCls: 'llock' + (allLocked ? ' on' : ''), lockIcon: allLocked ? 'lock' : 'lock_open', lockTip: (allLocked ? 'Unlock' : 'Lock') + ' · Ctrl+Shift+L',
+        toggleLock: (e2) => { stop(e2); const n = Object.assign({}, locked); kids.forEach((c) => { n[c] = !allLocked; }); this.setState({ locked: n, last: (allLocked ? 'Unlock ' : 'Lock ') + name }); },
+        hasEye: true, eyeIcon: allHidden ? 'visibility_off' : 'visibility', eyeTip: (allHidden ? 'Show in the editor' : 'Hide in the editor') + ' · Ctrl+Shift+H',
+        toggleEye: (e2) => { stop(e2); const n = Object.assign({}, hidden); kids.forEach((c) => { n[c] = !allHidden; }); this.setState({ hidden: n, last: (allHidden ? 'Show ' : 'Hide ') + name }); },
+        isSep: false, open
+      }, extra || {});
+    };
+    // the element a board adds sits on top, like everything Add Element adds
+    if (EXTRA[p.extra] && hitL(EXTRA[p.extra].name)) layerRows.push(row(EXTRA[p.extra].id, false));
+    added.forEach((a) => { if (hitL(a.name)) layerRows.push(row(a.id, false)); });
+    const gKids = GROUP.filter((id) => hitL(byId[id].name));
+    if (gKids.length || hitL('Main Buttons')) {
+      const g = group('buttons', 'Main Buttons', 'folder', GROUP);
+      layerRows.push(g);
+      if (g.open) (hitL('Main Buttons') ? GROUP : gKids).forEach((id) => layerRows.push(row(id, true)));
+    }
+    ['title', 'splash', 'version', 'music'].forEach((id) => { if (hitL(byId[id].name)) layerRows.push(row(id, false)); });
+    const vKids = VANILLA_IDS.filter((id) => hitL(byId[id].name));
+    if (vKids.length || hitL('Vanilla Widgets')) {
+      if (layerRows.length) layerRows.push({ isSep: true, isRow: false });
+      const g = group('vanilla', 'Vanilla Widgets', 'dashboard', VANILLA_IDS, { hasLock: false, hasEye: false, cls: 'item lrow', ariaSel: 'false', select: (e2) => { stop(e2); this.setState({ lcoll: Object.assign({}, lcoll, { vanilla: !lcoll.vanilla }) }); } });
+      layerRows.push(g);
+      if (g.open) (hitL('Vanilla Widgets') ? VANILLA_IDS : vKids).forEach((id) => layerRows.push(row(id, true)));
+    }
+
+    // ---------- inspector ----------
+    const closeMenu = () => this.setState({ menu: '' });
+    const toggleMenu = (id) => (e) => { stop(e); this.setState({ menu: menu === id ? '' : id }); };
+    const coll = s.coll ?? Object.fromEntries(String(p.fold || '').split(',').filter(Boolean).map((k) => [k, true]));
+    const pct = (v) => Math.round(v * 100) + '%';
+    const trackOf = (id) => TR.find((x) => x.el === id);
+    const propOf = (id, key) => { const tr = trackOf(id); return tr && tr.props.find((x) => x.k === key); };
+    // a property's keyframe state at the playhead: on (a keyframe here), anim (animated elsewhere), off (not animated)
+    const kfState = (id, key) => {
+      if (!showTl) return undefined;
+      const pr = propOf(id, key);
+      if (!pr) return 'off';
+      return pr.kfs.some((f) => Math.abs(f.t - t) < .005) ? 'on' : 'anim';
+    };
+    const kfClass = (st) => 'kfb' + (st === 'on' ? ' on' : st === 'anim' ? ' anim' : '');
+    const liveVal = (id, key) => { const pr = propOf(id, key); return pr && animated ? valAt(pr.kfs, t) : null; };
+    // adds the property's keyframe at the playhead, or removes the one that's there
+    const toggleKf = (el, key) => {
+      const tt = Math.round((cur().t ?? t) * 100) / 100;
+      const next = (cur().trk || TRACKS0).map((tr) => ({ el: tr.el, props: tr.props.map((pr) => ({ k: pr.k, kfs: pr.kfs.slice() })) }));
+      let tr = next.find((x) => x.el === el);
+      if (!tr) { tr = { el, props: [] }; next.push(tr); }
+      let pr = tr.props.find((x) => x.k === key);
+      if (!pr) { pr = { k: key, kfs: [] }; tr.props.push(pr); tr.props.sort((a, b) => PROPS.findIndex((x) => x[0] === a.k) - PROPS.findIndex((x) => x[0] === b.k)); }
+      const at = pr.kfs.findIndex((f) => Math.abs(f.t - tt) < .005);
+      const L = live[el];
+      if (at >= 0) pr.kfs.splice(at, 1);
+      else { pr.kfs.push({ t: tt, v: key === 'pos' ? [L.dx, L.dy] : key === 'op' ? L.op : key === 'rot' ? L.rot : key === 'size' ? [0, 0] : 0, e: 'linear' }); pr.kfs.sort((a, b) => a.t - b.t); }
+      tr.props = tr.props.filter((x) => x.kfs.length);
+      this.setState({ trk: next.filter((x) => x.props.length), kf: '', tex: Object.assign({}, cur().tex ?? { title: true, play: true }, { [el]: true }), last: (at >= 0 ? 'Delete ' : 'Add ') + propName(key) + ' Keyframe' });
+    };
+    const kfTip = (st) => (st === 'on' ? 'Delete the keyframe at the playhead' : 'Add a keyframe at the playhead');
+    const animRow = (e, key, row) => {
+      // an animated row shows the value at the playhead, in amber, with its keyframe diamond
+      const st = e ? kfState(e.id, key) : undefined;
+      return Object.assign(row, { kf: st, anim: !!(e && animated && propOf(e.id, key)), onKf: e && st ? () => toggleKf(e.id, key) : undefined });
+    };
+    const sections = [];
+    let inspIcon = 'gallery_thumbnail', inspName = 'Layout', inspChip = '', headTip = 'Settings of the whole layout';
+    let tf = { x: '', y: '', w: '', h: '', xph: '', yph: '', wph: '', hph: '', kf: false, posKf: 'kfb', sizeKf: 'kfb', xCls: 'field num', yCls: 'field num', wCls: 'field num', hCls: 'field num' };
+    let kfv = {};
+    const kfParts = kfSel ? kfSel.split('.') : null;
+    const posRows = (e) => {
+      const rot = e ? rotOf(e.id) : 0;
+      return [
+        { ic: 'fit_screen', label: 'Stay on Screen', sw: true, on: true },
+        { ic: 'push_pin', label: 'Sticky Anchor', sw: true, on: false },
+        { ic: 'open_in_full', label: 'Auto-Sizing', sw: true, on: false },
+        { ic: 'width', label: 'Stretch', val: 'None', sub: true },
+        animRow(e, 'rot', { ic: 'rotate_right', label: 'Rotation', signed: true, slider: (rot + 180) / 360, sliderText: fmtN(Math.round(rot * 10) / 10) + '°' }),
+        animRow(e, 'tiltv', { ic: 'height', label: 'Vertical Tilt', signed: true, slider: .5, sliderText: '0°' }),
+        animRow(e, 'tilth', { ic: 'arrow_range', label: 'Horizontal Tilt', signed: true, slider: .5, sliderText: '0°' })
+      ];
+    };
+    const buttonRows = (e, mixed) => [
+      { ic: 'title', label: 'Label', val: mixed ? 'Mixed' : e.name, field: true, dim: mixed },
+      { ic: 'title', label: 'Hover Label', val: 'Same as Label', field: true },
+      { ic: 'code', label: 'Click Script', val: mixed ? 'Mixed' : e.id === 'quit' ? 'Quit Game' : e.id === 'options' ? 'Open Screen' : 'Join Server' },
+      { ic: 'tooltip', label: 'Tooltip', val: 'None' },
+      { ic: 'check', label: 'Active When', val: 'Always' },
+      { ic: 'keyboard', label: 'Keyboard Navigation', sw: true, on: true },
+      { ic: 'image', label: 'Background', val: 'Default', sub: true },
+      { ic: 'image', label: 'Icon', val: 'None', sub: true },
+      { ic: 'format_size', label: 'Label Style', val: 'Shadow', sub: true },
+      { ic: 'volume', label: 'Sounds', val: 'Default', sub: true },
+      { ic: 'cards', label: 'Template', val: 'None', sub: true }
+    ];
+    const lookRows = (e) => {
+      const op = e ? liveVal(e.id, 'op') ?? 1 : 1;
+      return [
+        animRow(e, 'op', { ic: 'opacity', label: 'Opacity', slider: op, sliderText: pct(op) }),
+        { ic: 'transition_fade', label: 'Fade In', val: 'No Fading', sub: true },
+        { ic: 'transition_fade', label: 'Fade Out', val: 'No Fading', sub: true },
+        { ic: 'timer', label: 'Appear After', val: 'No Delay', sub: true },
+        { ic: 'timer', label: 'Disappear After', val: 'No Delay', sub: true },
+        { ic: '3d', label: 'Parallax', sw: true, on: false },
+        { ic: 'sparkle', label: 'Affected by Decoration Overlays', sw: true, on: false }
+      ];
+    };
+    const visRows = [
+      { ic: 'check', label: 'Loading Conditions', val: 'None' },
+      { ic: 'once', label: 'Load Once Per Session', sw: true, on: false }
+    ];
+    // Locked and Hidden in Editor are the same state as the lock and eye in Layers
+    const editorRows = (ids) => {
+      const allL = ids.every((id) => locked[id]), anyL = ids.some((id) => locked[id]);
+      const allH = ids.every((id) => hidden[id]), anyH = ids.some((id) => hidden[id]);
+      return [
+        { ic: 'lock', label: 'Locked', kbd: '', sw: true, on: allL, mixed: anyL && !allL, onToggle: (v) => { const n = Object.assign({}, cur().locked || {}); ids.forEach((id) => { n[id] = v; }); this.setState({ locked: n, last: (v ? 'Lock' : 'Unlock') }); } },
+        { ic: 'visibility_off', label: 'Hidden in Editor', sw: true, on: allH, mixed: anyH && !allH, onToggle: (v) => { const n = Object.assign({}, cur().hidden || {}); ids.forEach((id) => { n[id] = v; }); this.setState({ hidden: n, last: (v ? 'Hide' : 'Show') }); } }
+      ];
+    };
+    const tfFields = (e) => {
+      const pos = liveVal(e.id, 'pos');
+      const animPos = !!pos;
+      // at its original position a vanilla widget is placed by the screen, so the fields only show where that is
+      const lock = e.anchor === 'vanilla' ? ' lock' : '';
+      const ps = kfState(e.id, 'pos'), ss = kfState(e.id, 'size');
+      tf = Object.assign(tf, {
+        x: lock ? fmtN(rects[e.id].x) : fmtN(e.x + (pos ? Math.round(pos[0]) : 0)), y: lock ? fmtN(rects[e.id].y) : fmtN(e.y + (pos ? Math.round(pos[1]) : 0)), w: fmtN(e.w), h: fmtN(e.h),
+        xCls: 'field num' + (animPos ? ' anim' : '') + lock, yCls: 'field num' + (animPos ? ' anim' : '') + lock, wCls: 'field num' + lock, hCls: 'field num' + lock,
+        kf: showTl && !e.vanilla, posKf: kfClass(ps), sizeKf: kfClass(ss), posKfTip: kfTip(ps) + ' · Position', sizeKfTip: kfTip(ss) + ' · Size',
+        posKfClick: () => toggleKf(e.id, 'pos'), sizeKfClick: () => toggleKf(e.id, 'size')
+      });
+    };
+    // which elements (or 'layout' / 'anim') the Inspector's switches and choices belong to
+    const owners = kfParts ? ['anim'] : sel.length ? sel : ['layout'];
+    const setVals = (key, v, label) => {
+      const n = Object.assign({}, cur().vals || {});
+      owners.forEach((o) => { n[o + '|' + key] = v; });
+      this.setState({ vals: n, last: 'Change ' + label });
+    };
+    // Inspector rows are controlled: every switch and choice reads and writes its value per element, so a row never
+    // shows another element's value
+    const wire = (items) => items.map((it) => {
+      if (it.onToggle || it.onPick || it.disabled) return it;
+      const key = it.key || it.label;
+      if (it.sw) {
+        const vs = owners.map((o) => vals[o + '|' + key] ?? !!it.on);
+        const on = vs.every(Boolean);
+        return Object.assign({}, it, { on, mixed: !on && vs.some(Boolean), onToggle: (v) => setVals(key, v, it.label) });
+      }
+      if (it.seg) return Object.assign({}, it, { segIndex: vals[owners[0] + '|' + key] ?? it.segIndex ?? 0, onPick: (i) => setVals(key, i, it.label) });
+      return it;
+    });
+
+    if (kfParts) {
+      const tr = trackOf(kfParts[0]);
+      const pr = tr.props.find((x) => x.k === kfParts[1]);
+      const i = +kfParts[2];
+      const f = pr.kfs[i], prev = pr.kfs[i - 1];
+      const E = EASES[f.e || 'linear'];
+      inspIcon = 'line_curve'; inspName = 'Keyframe'; inspChip = byId[tr.el].name + ' · ' + propName(pr.k); headTip = 'A keyframe of the Intro animation';
+      if (prev) {
+        // the graph stretches to fit curves that overshoot, so both handles always stay inside it
+        const b = E.b;
+        const lo = Math.min(0, b[1], b[3]), hi = Math.max(1, b[1], b[3]);
+        const bx = (v) => 14 + v * 242, by = (v) => 100 - (v - lo) / (hi - lo) * 82;
+        kfv = {
+          guides: 'M14 ' + by(0).toFixed(1) + 'H256M14 ' + by(1).toFixed(1) + 'H256',
+          curve: 'M' + bx(0) + ' ' + by(0).toFixed(1) + ' C' + bx(b[0]).toFixed(1) + ' ' + by(b[1]).toFixed(1) + ', ' + bx(b[2]).toFixed(1) + ' ' + by(b[3]).toFixed(1) + ', ' + bx(1) + ' ' + by(1).toFixed(1),
+          h1: 'M' + bx(0) + ' ' + by(0).toFixed(1) + ' L' + bx(b[0]).toFixed(1) + ' ' + by(b[1]).toFixed(1),
+          h2: 'M' + bx(1) + ' ' + by(1).toFixed(1) + ' L' + bx(b[2]).toFixed(1) + ' ' + by(b[3]).toFixed(1),
+          p1x: bx(b[0]).toFixed(1), p1y: by(b[1]).toFixed(1), p2x: bx(b[2]).toFixed(1), p2y: by(b[3]).toFixed(1),
+          span: E.name + ' from ' + prev.t.toFixed(2) + ' s to ' + f.t.toFixed(2) + ' s',
+          curveLabel: E.name + ' curve, from the keyframe before to this one'
+        };
+      }
+      const valueRows = pr.k === 'pos'
+        ? [{ ic: 'open_with', label: 'Offset X', val: fmtN(f.v[0]) + ' px', field: true }, { ic: 'open_with', label: 'Offset Y', val: fmtN(f.v[1]) + ' px', field: true }]
+        : pr.k === 'op' ? [{ ic: 'opacity', label: 'Opacity', slider: f.v, sliderText: pct(f.v) }]
+        : pr.k === 'rot' ? [{ ic: 'rotate_right', label: 'Rotation', signed: true, slider: (f.v + 180) / 360, sliderText: fmtN(f.v) + '°' }]
+        : [{ ic: 'tune', label: propName(pr.k), val: String(f.v), field: true }];
+      // the first keyframe has nothing before it, so it has no easing
+      sections.push({ id: 'kf', title: 'Keyframe', isEase: !!prev, items: [
+        { ic: 'schedule', label: 'Time', val: f.t.toFixed(2) + ' s', field: true },
+        ...valueRows
+      ].concat(prev ? [{ ic: 'line_curve', label: 'Easing', val: E.name, sub: true }] : []) });
+      sections.push({ id: 'anim', title: 'Animation', items: [
+        { ic: 'drive_file_rename_outline', label: 'Name', val: 'Intro', field: true },
+        { ic: 'timer', label: 'Length', val: '2.00 s', field: true },
+        { ic: 'play_arrow', label: 'Plays', val: 'On Screen Open', sub: true },
+        { ic: 'check', label: 'Plays Only When', val: 'Always' },
+        { ic: 'hourglass_top', label: 'Start Delay', val: '0.00 s', field: true },
+        { ic: 'repeat', label: 'Loop', sw: true, on: false },
+        { ic: 'swap_horiz', label: 'Reverse Every Other Loop', sw: true, on: false, disabled: !animLoop },
+        { ic: 'last_page', label: 'At the End', seg: ['Hold', 'Snap Back'], segIndex: 0, segWidth: 150 },
+        { ic: 'open_with', label: 'Move From Resting Position', sw: true, on: true }
+      ] });
+    } else if (sel.length > 1) {
+      const types = [...new Set(sel.map((id) => byId[id].type))];
+      inspIcon = 'select_all'; inspName = sel.length + ' Elements'; inspChip = types.length === 1 ? types[0] + 's' : 'Mixed'; headTip = sel.map((id) => byId[id].name).join(', ');
+      sections.push({ id: 'align', title: 'Align', isAlign: true });
+      const xs = sel.map((id) => byId[id].x), ys = sel.map((id) => byId[id].y), ws = sel.map((id) => byId[id].w), hs = sel.map((id) => byId[id].h);
+      const same = (arr) => arr.every((v) => v === arr[0]);
+      tf = Object.assign(tf, {
+        x: same(xs) ? fmtN(xs[0]) : '', xph: same(xs) ? '' : 'Mixed', y: same(ys) ? fmtN(ys[0]) : '', yph: same(ys) ? '' : 'Mixed',
+        w: same(ws) ? fmtN(ws[0]) : '', wph: same(ws) ? '' : 'Mixed', h: same(hs) ? fmtN(hs[0]) : '', hph: same(hs) ? '' : 'Mixed'
+      });
+      sections.push({ id: 'tf', title: 'Position & Size', isTf: true, items: posRows(null) });
+      if (types.length === 1 && types[0] === 'Button') sections.push({ id: 'type', title: 'Button', items: buttonRows(byId[sel[0]], true) });
+      sections.push({ id: 'look', title: 'Appearance', items: lookRows(null) });
+      sections.push({ id: 'vis', title: 'Visibility', items: visRows });
+      sections.push({ id: 'ed', title: 'Editor', items: editorRows(sel) });
+    } else if (single) {
+      const e = single;
+      inspIcon = e.icon; inspName = e.name; inspChip = e.type + (locked[e.id] ? ' · Locked' : ''); headTip = 'Double-click to rename · F2';
+      tfFields(e);
+      // elements that draw nothing keep only their box on the canvas, so rotation and tilt don't apply
+      sections.push({ id: 'tf', title: 'Position & Size', isTf: true, items: e.vanilla ? posRows(e).slice(0, 1) : e.ghost ? posRows(e).slice(0, 4) : posRows(e) });
+      // An Audio element's tracks: name, length in seconds or '' while unknown, missing, and the shuffle weight (0 to 5).
+      const aMode = s.aMode ?? ((p.audio || 'In Order') === 'Shuffle' ? 1 : 0);
+      const aTracks = s.aTracks ?? [['menu_theme.ogg', '2:48', false, 1], ['evening_fields.ogg', '3:12', false, 2], ['dusk_theme.ogg', '', true, 1], ['night_wind.ogg', '4:05', false, .5]];
+      const dropTrack = (t) => () => this.setState({ aTracks: aTracks.filter((x) => x !== t), last: 'Remove ' + t[0] });
+      const TYPE = {
+        Button: buttonRows(e, false),
+        Text: [
+          { ic: 'file', label: 'Source', seg: ['Direct', 'Resource'], segIndex: 0, segWidth: 136 },
+          { ic: 'editor', label: 'Text Content', val: e.id === 'title' ? 'Dusk Valley' : 'Dusk Valley Pack 1.4.2' },
+          { ic: 'case', label: 'Case', seg: ['Normal', 'lower', 'UPPER'], segIndex: 0, segWidth: 160 },
+          { ic: 'shadow', label: 'Text Shadow', sw: true, on: true },
+          { ic: 'palette', label: 'Text Color', swatch: '#FFFFFF', val: '#FFFFFF' },
+          { ic: 'format_size', label: 'Scale', slider: e.id === 'title' ? .6 : .2, sliderText: e.id === 'title' ? '3.0×' : '1.0×' },
+          { ic: 'wrap', label: 'Auto Line Wrapping', sw: true, on: true },
+          { ic: 'book', label: 'Markdown', val: 'On', sub: true }
+        ],
+        'Splash Text': [
+          { ic: 'file', label: 'Source', seg: ['Direct', 'File', 'Vanilla'], segIndex: 0, segWidth: 180 },
+          { ic: 'editor', label: 'Text', val: 'Now with fireflies!', field: true },
+          { ic: 'palette', label: 'Color', swatch: '#FFE066', val: '#FFE066' },
+          { ic: 'bolt', label: 'Bouncing', sw: true, on: true },
+          { ic: 'refresh', label: 'New Text Every Time', sw: true, on: false }
+        ],
+        Audio: [
+          { ic: 'shuffle', label: 'Play Mode', seg: ['In Order', 'Shuffle'], segIndex: aMode, segWidth: 150, onPick: (i) => this.setState({ aMode: i }) },
+          { ic: 'repeat', label: 'Loop', sw: true, on: true },
+          { ic: 'volume', label: 'Volume', slider: .7, sliderText: '70%' },
+          { ic: 'speaker', label: 'Sound Channel', val: 'Music', sub: true },
+          // the switch for Minecraft's own menu music, which used to be a note that says where to find it
+          { ic: 'music_off', label: 'Vanilla Menu Music', tag: 'Global', sw: true, on: false }
+        ],
+        'Player Entity': [
+          { ic: 'person', label: 'Copy Client Player', sw: true, on: false },
+          { ic: 'title', label: 'Player Name', val: 'Mira', field: true },
+          { ic: 'badge', label: 'Show Player Name', sw: true, on: false },
+          { ic: 'rotate_right', label: 'Nametag Rotation', sw: true, on: false },
+          { ic: 'image', label: 'Skin', val: 'From the name', sub: true },
+          { ic: 'image', label: 'Cape', val: 'None', sub: true },
+          { ic: 'checkroom', label: 'Armor and Tools', val: 'None', sub: true },
+          { ic: 'child_care', label: 'Baby', sw: true, on: false },
+          { ic: 'raven', label: 'Parrot', seg: ['None', 'Left', 'Right'], segIndex: 0, segWidth: 150 }
+        ],
+        'Block/Item JSON Model': [
+          { ic: 'file', label: 'Model', val: 'reward_chest.json', sub: true },
+          { ic: 'image', label: 'Custom Texture', val: 'None', sub: true },
+          { ic: 'opacity', label: 'Render Translucent', sw: true, on: false }
+        ],
+        'Vanilla Widget': [
+          { ic: 'title', label: 'Label', val: e.label || 'Icon only', field: true },
+          e.fixed
+            ? { ic: 'visibility_off', label: 'Hidden in Game', sw: true, on: false, disabled: true, note: 'always shown' }
+            : { ic: 'visibility_off', label: 'Hidden in Game', sw: true, on: !!vhid[e.id], onToggle: (v) => this.setState({ vhid: Object.assign({}, cur().vhid ?? vhid, { [e.id]: v }), last: (v ? 'Hide ' : 'Show ') + e.name }) }
+        ]
+      };
+      if (TYPE[e.type]) sections.push({ id: 'type', title: e.type, items: TYPE[e.type] });
+      // The tracks sit right in the Inspector instead of in a Manage Tracks screen. In order, a row shows the track's
+      // length and drags to its place. Shuffled, its number says how much more or less often the track gets picked.
+      if (e.type === 'Audio') sections.push({ id: 'tracks', title: 'Tracks', items: [
+        ...aTracks.map((t) => (t[2]
+          ? { ic: aMode ? 'music_note' : 'drag_indicator', label: t[0], val: 'Missing', warn: true, warnTip: 'sounds/' + t[0] + ' is missing', removeTip: 'Remove Track', onRemove: dropTrack(t) }
+          : aMode
+            ? { ic: 'music_note', label: t[0], val: t[3] ? String(t[3]).replace(/^0\./, '.') + '×' : 'Never', field: true, play: true, removeTip: 'Remove Track', onRemove: dropTrack(t) }
+            : { ic: 'drag_indicator', label: t[0], play: true, val: t[1], removeTip: 'Remove Track', onRemove: dropTrack(t) })),
+        { ic: 'plus', label: 'Add Tracks' }
+      ] });
+      // The pose sits in the Inspector instead of in an Entity Pose window with 18 sliders: pick a part on the
+      // figure, and its three rotations show below. The { } button on a row is what Advanced Mode used to be.
+      if (e.type === 'Player Entity') {
+        const cur3 = pose[part], pName = PARTS.find((x) => x[0] === part)[1];
+        const setPart = (v) => this.setState({ pose: Object.assign({}, pose, { [part]: v }), last: 'Pose ' + pName });
+        const axis = (i, n) => ({ ic: 'rotate_right', label: n, signed: true, slider: (cur3[i] + 180) / 360, sliderText: cur3[i] + '°', fx: true, changed: cur3[i] !== 0, onReset: () => setPart(cur3.map((v, j) => (j === i ? 0 : v))) });
+        sections.push({ id: 'pose', title: 'Pose', isPose: true, items: [
+          { head: pName + ' Rotation' },
+          axis(0, 'X'), axis(1, 'Y'), axis(2, 'Z'),
+          { head: 'Whole Body' },
+          { ic: 'accessibility_new', label: 'Base Pose', val: 'Standing', sub: true },
+          { ic: 'directions_walk', label: 'Body Movement', sw: true, on: false },
+          { ic: 'mouse', label: 'Head Follows Mouse', sw: true, on: true },
+          { ic: 'mouse', label: 'Body Follows Mouse', sw: true, on: false }
+        ] });
+      }
+      // The same for a JSON Model's Transform window: its rows, plus four views that set the rotation in one click.
+      if (e.type === 'Block/Item JSON Model') {
+        const vi = VIEWS.findIndex((v) => v[1].join() === mrot.join());
+        const rot = (i, n) => ({ ic: 'rotate_right', label: n, signed: true, slider: (mrot[i] + 180) / 360, sliderText: mrot[i] + '°', fx: true, changed: mrot[i] !== 0, onReset: () => this.setState({ mrot: mrot.map((v, j) => (j === i ? 0 : v)), last: 'Rotate Chest' }) });
+        sections.push({ id: 'mtf', title: 'Transform', items: [
+          { ic: 'view_in_ar', label: 'View', seg: VIEWS.map((v) => v[0]), segIndex: vi, segWidth: 204, onPick: (i) => this.setState({ mrot: VIEWS[i][1], last: 'Rotate Chest' }) },
+          { head: 'Rotation' },
+          rot(0, 'X'), rot(1, 'Y'), rot(2, 'Z'),
+          { head: 'Offset' },
+          { ic: 'open_with', label: 'X', val: '0', field: true, fx: true },
+          { ic: 'open_with', label: 'Y', val: '0', field: true, fx: true },
+          { ic: 'open_with', label: 'Z', val: '0', field: true, fx: true },
+          { head: 'Size' },
+          { ic: 'format_size', label: 'Scale', slider: .25, sliderText: '1.0×', fx: true },
+          { ic: 'deployed_code', label: 'Model\u2019s Own GUI Transform', sw: true, on: false }
+        ] });
+        sections.push({ id: 'mlight', title: 'Lighting', items: [
+          { ic: 'palette', label: 'Light Color', swatch: '#FFFFFF', val: '#FFFFFF' },
+          { ic: 'rotate_right', label: 'Light Rotation', val: '0°, 0°, 0°', sub: true },
+          { ic: 'light_mode', label: 'Light 1', val: '0.2, −1, 1', sub: true },
+          { ic: 'light_mode', label: 'Light 2', val: '−0.2, −1, 0', sub: true }
+        ] });
+      }
+      if (!e.vanilla) {
+        if (!e.ghost || e.fresh) sections.push({ id: 'look', title: 'Appearance', items: lookRows(e) });
+        sections.push({ id: 'vis', title: 'Visibility', items: visRows });
+        const tr = trackOf(e.id);
+        if (!showTl) sections.push({ id: 'anim', title: 'Animation', items: tr
+          ? [{ ic: 'animation', label: 'Intro', val: tr.props.map((pp) => propName(pp.k)).join(', '), click: () => this.setState({ tl: true }) }]
+          : [{ ic: 'plus', label: 'Animate', click: () => this.setState({ tl: true }) }] });
+        sections.push({ id: 'ed', title: 'Editor', items: editorRows([e.id]) });
+      }
+    } else {
+      sections.push({ id: 'screen', title: 'Screen', items: [
+        { ic: 'image', label: 'Menu Background', val: 'Image', sub: true },
+        { ic: 'sparkle', label: 'Decoration Overlays', val: 'Fireflies', sub: true },
+        { ic: 'header', label: 'Header & Footer', val: 'None', sub: true },
+        { ic: 'title', label: 'Screen Title', val: 'Dusk Valley', field: true }
+      ] });
+      sections.push({ id: 'layout', title: 'Layout', items: [
+        { ic: 'index', label: 'Layout Index', val: '0', field: true },
+        { ic: 'check', label: 'Loading Conditions', val: 'None' },
+        { ic: 'shuffle', label: 'Random Mode', sw: true, on: false },
+        { ic: 'behind', label: 'Custom Elements Behind Vanilla', sw: true, on: false }
+      ] });
+      sections.push({ id: 'scale', title: 'Scaling', items: [
+        { ic: 'ruler', label: 'Force GUI Scale', val: 'Auto', sub: true },
+        { ic: 'fit', label: 'Auto-Scaling', sw: true, on: false, disabled: true, note: 'needs a GUI scale' }
+      ] });
+      sections.push({ id: 'audio', title: 'Audio & Scripts', items: [
+        { ic: 'volume', label: 'Opening Sound', val: 'None', sub: true },
+        { ic: 'volume', label: 'Closing Sound', val: 'None', sub: true },
+        { ic: 'code', label: 'When the Screen Opens', val: '1 action' },
+        { ic: 'code', label: 'When the Screen Closes', val: 'None' }
+      ] });
+      sections.push({ id: 'anims', title: 'Animations', items: [
+        { ic: 'animation', label: 'Intro', val: 'On Screen Open', click: () => this.setState({ tl: true }) },
+        { ic: 'plus', label: 'New Animation', click: () => this.setState({ tl: true }) }
+      ] });
+    }
+    // Search goes by setting name or section name. Blocks that aren't rows match their own field names.
+    const sq = q.trim().toLowerCase();
+    const startsWord = (words) => words.split(' ').some((w) => w.startsWith(sq));
+    const shownSections = sections.map((sec) => {
+      const titleHit = !!sq && sec.title.toLowerCase().includes(sq);
+      const items = wire(sec.items || []);
+      const rowHit = items.some((it) => (it.label || '').toLowerCase().includes(sq));
+      const showTf = !!sec.isTf && (!sq || titleHit || startsWord('anchor point position size width height'));
+      const showAlign = !!sec.isAlign && (!sq || titleHit || startsWord('align distribute space'));
+      const showEase = !!sec.isEase && (!sq || titleHit || startsWord('easing curve'));
+      const showPose = !!sec.isPose && (!sq || titleHit || startsWord('pose head body arm leg part mirror'));
+      const match = !sq || titleHit || rowHit || showTf || showAlign || showEase || showPose;
+      // a section's fold state is kept per kind of element, so folding Button doesn't fold Text
+      const ck = sec.id === 'type' ? 'type:' + sec.title : sec.id;
+      const open = sq ? true : !coll[ck];
+      return Object.assign({}, sec, {
+        match, open, expanded: open ? 'true' : 'false', hcls: 'item te-grp' + (open ? ' open' : ''),
+        showTf, showAlign, showEase, showPose,
+        hasRows: items.length > 0 && (!sq || titleHit || rowHit),
+        items, query: titleHit ? '' : q,
+        toggle: () => this.setState({ coll: Object.assign({}, coll, { [ck]: !coll[ck] }) })
+      });
+    }).filter((sec) => sec.match);
+
+    const selAnchors = [...new Set(sel.map((id) => byId[id].anchor))];
+    const curAnchor = selAnchors.length === 1 ? selAnchors[0] : '';
+    // a dot moves the anchor of everything selected; changing the anchor keeps elements where they are
+    const ancDots = ANCHORS.map((a) => ({
+      cls: curAnchor === a[0] ? 'on' : '', on: curAnchor === a[0] ? 'true' : 'false', label: a[1],
+      pick: () => {
+        if (!sel.length) return;
+        const nx = Math.round(S.w * a[2]), ny = Math.round(S.h * a[3]);
+        const next = Object.assign({}, ancOver);
+        sel.forEach((id) => { const r = rects[id]; next[id] = { anchor: a[0], x: r.x - nx, y: r.y - ny }; });
+        this.setState({ anc: next, last: 'Change Anchor' });
+      }
+    }));
+    const ancName = !curAnchor ? 'Mixed anchors' : ancLabel(curAnchor);
+    // the body part picker of the Pose section: the picked part is filled, parts that are turned are tinted
+    const OTHER = { rarm: 'larm', larm: 'rarm', rleg: 'lleg', lleg: 'rleg' };
+    const partName = (k) => PARTS.find((x) => x[0] === k)[1];
+    const poseView = {
+      name: partName(part),
+      parts: PARTS.map(([k, n]) => ({ cls: k + (k === part ? ' on' : pose[k].some((v) => v !== 0) ? ' set' : ''), on: k === part ? 'true' : 'false', name: n, pick: () => this.setState({ part: k }) })),
+      canMirror: !!OTHER[part], mirrorLabel: OTHER[part] ? 'Mirror to ' + partName(OTHER[part]) : '',
+      mirror: () => { const a = pose[part]; this.setState({ pose: Object.assign({}, pose, { [OTHER[part]]: [a[0], -a[1], -a[2]] }), last: 'Mirror ' + partName(part) }); },
+      reset: () => this.setState({ pose: Object.fromEntries(PARTS.map(([k]) => [k, [0, 0, 0]])), last: 'Reset Pose' })
+    };
+
+    // ---------- timeline ----------
+    const tex = s.tex ?? { title: true, play: true };
+    const PPS = s.pps ?? 220, T0 = 16;
+    const ZOOMS_TL = [120, 160, 220, 300, 400];
+    const tx2 = (tt) => T0 + tt * PPS;
+    const playing = !!this._iv;
+    const stopPlay = () => { if (this._iv) { clearInterval(this._iv); this._iv = null; } };
+    // Playing runs the animation like in game: once, unless it loops. Repeat Playback keeps it going while editing.
+    const startPlay = (from) => {
+      if (this._iv) return;
+      this.setState({ t: from });
+      this._iv = setInterval(() => {
+        const st = cur();
+        let nt = (st.t ?? 0) + 1 / 30;
+        if (nt >= DUR) {
+          if ((st.rep && !st.preview) || (st.vals || {})['anim|Loop']) nt = 0;
+          else { clearInterval(this._iv); this._iv = null; nt = DUR; }
+        }
+        this.setState({ t: nt });
+      }, 1000 / 30);
+    };
+    const tracks = [];
+    TR.forEach((tr) => {
+      const el = byId[tr.el];
+      const open = !!tex[tr.el];
+      const allT = [...new Set(tr.props.flatMap((pp) => pp.kfs.map((f) => f.t)))].sort((a, b) => a - b);
+      const isSelEl = sel.includes(tr.el);
+      tracks.push({
+        isEl: true, isProp: false, name: el.name, icon: el.icon,
+        cls: 'tml-row el' + (isSelEl ? ' sel' : ''), kcls: 'tml-row el' + (isSelEl ? ' sel' : ''),
+        chevCls: open ? 'lchev open' : 'lchev', chevLabel: (open ? 'Collapse ' : 'Expand ') + el.name,
+        toggle: (e) => { stop(e); this.setState({ tex: Object.assign({}, tex, { [tr.el]: !open }) }); },
+        select: () => select([tr.el]),
+        bars: allT.length > 1 ? ['left: ' + tx2(allT[0]).toFixed(1) + 'px; width: ' + (tx2(allT[allT.length - 1]) - tx2(allT[0])).toFixed(1) + 'px'] : [],
+        segs: [],
+        kfs: allT.map((tt) => ({ cls: 'kfd sum', style: 'left: ' + tx2(tt).toFixed(1) + 'px', label: el.name + ' keyframes at ' + tt.toFixed(2) + ' s', pick: (e) => { stop(e); stopPlay(); this.setState({ t: tt, kf: '' }); } }))
+      });
+      if (!open) return;
+      tr.props.forEach((pr) => {
+        const v = valAt(pr.kfs, t);
+        const at = pr.kfs.some((f) => Math.abs(f.t - t) < .005);
+        tracks.push({
+          isEl: false, isProp: true, name: propName(pr.k), icon: '',
+          v: pr.k === 'pos' || pr.k === 'size' ? fmtN(Math.round(v[0])) + ', ' + fmtN(Math.round(v[1])) : pr.k === 'op' ? pct(v) : fmtN(Math.round(v)) + '°',
+          kfCls: 'kfb' + (at ? ' on' : ' anim'), kfTip: kfTip(at ? 'on' : 'anim'), kfAria: (at ? 'Remove the ' : 'Add a ') + el.name + ' ' + propName(pr.k) + ' keyframe at the playhead',
+          kfToggle: (e) => { stop(e); toggleKf(tr.el, pr.k); },
+          cls: 'tml-row prop', kcls: 'tml-row prop', select: () => select([tr.el]),
+          bars: [],
+          segs: pr.kfs.slice(1).map((f, i) => 'left: ' + tx2(pr.kfs[i].t).toFixed(1) + 'px; width: ' + (tx2(f.t) - tx2(pr.kfs[i].t)).toFixed(1) + 'px'),
+          kfs: pr.kfs.map((f, i) => {
+            const id = tr.el + '.' + pr.k + '.' + i;
+            return { cls: 'kfd' + (kfSel === id ? ' sel' : ' fill'), style: 'left: ' + tx2(f.t).toFixed(1) + 'px', label: el.name + ' ' + propName(pr.k) + ' keyframe at ' + f.t.toFixed(2) + ' s',
+              pick: (e) => { stop(e); stopPlay(); this.setState({ kf: id, t: f.t, sel: tr.el, menu: '' }); } };
+          })
+        });
+      });
+    });
+    // ruler numbers step aside for the playhead's time chip
+    const tmarks = [];
+    for (let tt = 0; tt <= 3.0001; tt += .5) {
+      const dx = (tt - t) * PPS;
+      tmarks.push({ v: (tt === 0 ? '0' : tt.toFixed(1)) + ' s', cls: 'n' + (dx > -54 && dx < 22 ? ' hid' : ''), style: 'left: ' + tx2(tt).toFixed(1) + 'px' });
+    }
+    const kfDelete = () => {
+      if (!kfParts) return;
+      const pr = propOf(kfParts[0], kfParts[1]);
+      const f = pr && pr.kfs[+kfParts[2]];
+      if (!f) return;
+      this.setState({ t: f.t, menu: '' });
+      setTimeout(() => toggleKf(kfParts[0], kfParts[1]), 0);
+    };
+
+    // ---------- menus ----------
+    let addN = (s.addN ?? 0);
+    const addEl = (ic, label) => () => {
+      addN += 1;
+      const n = added.filter((a) => a.type === label).length;
+      const el = { id: 'new' + addN, name: label + (n ? ' ' + (n + 1) : ''), icon: ic, type: label, anchor: 'c', x: -50, y: -10, w: 100, h: 20, ghost: true, fresh: true };
+      this.setState({ added: [el].concat(added), addN, sel: el.id, menu: '', kf: '', selGroup: '', last: 'Add ' + label });
+    };
+    const ADD = [
+      { head: 'Basics' }, ['text_fields', 'Text'], ['image', 'Image'], ['smart_button', 'Button'], ['rectangle', 'Rectangle'], ['circle', 'Circle'],
+      { head: 'Media' }, ['music_note', 'Audio'], ['smart_display', 'Video'], ['slideshow', 'Slideshow'], ['speaker', 'Music Controller'],
+      { head: 'Interactive' }, ['sliders', 'Slider'], ['check_box', 'Checkbox'], ['text_ad', 'Text Input Field'], ['open_with', 'Dragger'], ['web', 'Browser'],
+      { head: 'Game' }, ['deployed_code', 'Item'], ['person', 'Player Entity'], ['view_in_ar', 'Block/Item JSON Model'],
+      { head: 'More' }, ['flare', 'Splash Text'], ['tooltip', 'Tooltip'], ['linear_scale', 'Progress Bar'], ['arrow_selector_tool', 'Cursor'], ['timer', 'Ticker'], ['wand_stars', 'GLSL Shader']
+    ].map((it) => (Array.isArray(it) ? { ic: it[0], label: it[1], click: addEl(it[0], it[1]) } : it));
+    const sizeItems = [{ head: 'Window' }].concat(SIZES.map((z2) => ({ radio: true, checked: z2.id === sizeId, label: z2.win ? z2.label + ' (' + z2.win + ')' : z2.label, click: () => this.setState({ size: z2.id, menu: '' }) })))
+      .concat([{ head: 'GUI Scale' }])
+      .concat(Array.from({ length: maxScale(S0) }, (_, i) => i + 1).map((n) => ({ radio: true, checked: n === S.scale, label: String(n), val: Math.floor(S0.pw / n) + ' × ' + Math.floor(S0.ph / n), click: () => this.setState({ gs: Object.assign({}, gsOver, { [sizeId]: n }), menu: '' }) })))
+      .concat([{ sep: true }, { ic: 'edit', label: 'Custom Size' }]);
+    const vanSel = !!(single && single.vanilla);
+    const moreItems = kfParts ? [
+      { ic: 'copy', label: 'Copy Keyframe', kbd: 'Ctrl+C', click: closeMenu }, { ic: 'paste', label: 'Paste Keyframe', kbd: 'Ctrl+V', click: closeMenu }, { ic: 'library_add', label: 'Duplicate Keyframe', kbd: 'Ctrl+D', click: closeMenu },
+      { sep: true }, { ic: 'trash', label: 'Delete Keyframe', kbd: 'Del', danger: true, click: kfDelete }
+    ] : vanSel ? [
+      { ic: 'id', label: 'Copy Widget Locator', click: closeMenu },
+      { ic: 'restart_alt', label: 'Reset Position and Size', click: () => this.setState({ anc: Object.assign({}, ancOver, { [single.id]: { anchor: 'vanilla', x: 0, y: 0 } }), menu: '', last: 'Reset ' + single.name }) }
+    ] : sel.length ? [
+      { ic: 'id', label: 'Copy Element ID', click: closeMenu },
+      { sep: true },
+      { ic: 'cut', label: 'Cut', kbd: 'Ctrl+X', click: closeMenu }, { ic: 'copy', label: 'Copy', kbd: 'Ctrl+C', click: closeMenu }, { ic: 'paste', label: 'Paste', kbd: 'Ctrl+V', click: closeMenu }, { ic: 'library_add', label: 'Duplicate', kbd: 'Ctrl+D', click: closeMenu },
+      { sep: true },
+      { ic: 'flip_to_front', label: 'Bring to Front', kbd: 'Ctrl+Shift+Up', click: closeMenu }, { ic: 'up', label: 'Bring Forward', kbd: 'Ctrl+Up', click: closeMenu },
+      { ic: 'down', label: 'Send Backward', kbd: 'Ctrl+Down', click: closeMenu }, { ic: 'behind', label: 'Send to Back', kbd: 'Ctrl+Shift+Down', click: closeMenu },
+      { sep: true },
+      { ic: 'trash', label: 'Delete', kbd: 'Del', danger: true, click: closeMenu }
+    ] : [
+      { ic: 'paste', label: 'Paste', kbd: 'Ctrl+V', click: closeMenu },
+      { sep: true },
+      { ic: 'saveas', label: 'Save As', kbd: 'Ctrl+Shift+S', click: closeMenu }, { ic: 'external', label: 'Open in System Text Editor', click: closeMenu }
+    ];
+    // zoom levels the status bar steps through; Zoom to Fit is the default
+    const ZOOMS = [.25, .33, .5, .67, .75, 1, 1.5, 2, 3, 4];
+    const setZoom = (v) => this.setState({ zoomP: v, menu: '' });
+    const zoomItems = [
+      { ic: 'zoom_in', label: 'Zoom In', kbd: 'Ctrl+Plus', click: () => setZoom(ZOOMS.find((v) => v > z + .001) || 4) },
+      { ic: 'zoom_out', label: 'Zoom Out', kbd: 'Ctrl+Minus', click: () => setZoom([...ZOOMS].reverse().find((v) => v < z - .001) || .25) },
+      { sep: true },
+      { radio: true, checked: !zoomProp, label: 'Zoom to Fit', kbd: 'Shift+1', click: () => setZoom(0) },
+      { radio: true, checked: zoomProp === .5, label: '50%', click: () => setZoom(.5) },
+      { radio: true, checked: zoomProp === 1, label: '100%', kbd: 'Ctrl+0', click: () => setZoom(1) },
+      { radio: true, checked: zoomProp === 2, label: '200%', click: () => setZoom(2) }
+    ];
+    const probItems = [{ ic: 'error', label: 'Menu Music: sounds/dusk_theme.ogg is missing', click: () => select(['music']) }];
+    const animItems = [
+      { radio: true, checked: true, label: 'Intro', val: 'On Screen Open', click: closeMenu },
+      { sep: true },
+      { ic: 'plus', label: 'New Animation', click: closeMenu },
+      { ic: 'drive_file_rename_outline', label: 'Rename Intro', click: closeMenu }
+    ];
+    const notAnimated = ALL.filter((b) => !b.vanilla && !TR.some((tr) => tr.el === b.id));
+    const animAddItems = notAnimated.length ? notAnimated.map((b) => ({ ic: b.icon, label: byId[b.id].name, click: () => { this.setState({ menu: '', sel: b.id, kf: '' }); setTimeout(() => toggleKf(b.id, 'pos'), 0); } }))
+      : [{ ic: 'check', label: 'Every element is animated', disabled: true }];
+
+    // ---------- keys ----------
+    const stopPreview = () => { stopPlay(); this.setState({ preview: false, t: cur().tPrev ?? 0 }); };
+    const startPreview = () => { stopPlay(); this.setState({ preview: true, menu: '', tPrev: t }); startPlay(0); };
+    const togglePreview = () => (preview ? stopPreview() : startPreview());
+    // Esc steps back one thing at a time. Tab hides the panels only while the canvas has the keyboard; everywhere
+    // else it moves focus as usual.
+    const onKey = (e) => {
+      const host = e.currentTarget && e.currentTarget.getRootNode ? e.currentTarget.getRootNode() : null;
+      const refocus = () => requestAnimationFrame(() => { const r = host && host.querySelector && host.querySelector('.le-ws'); if (r) r.focus(); });
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        if (menu) closeMenu(); else if (preview) stopPreview(); else if (sel.length || kfSel) this.setState({ sel: '', kf: '', selGroup: '' });
+        refocus();
+      } else if (e.key === 'Tab' && !e.ctrlKey && !e.altKey && !e.metaKey && !preview) {
+        const onCanvas = focus || (e.target && e.target.closest && (e.target.closest('.le-canvas') || e.target.classList.contains('le-ws')));
+        if (!onCanvas) return;
+        e.preventDefault();
+        this.setState({ focus: !focus, menu: '' });
+        refocus();
+      } else if (e.key === 'F5') {
+        e.preventDefault(); togglePreview(); refocus();
+      }
+    };
+
+    const mbOpen = p.mbOpen || '';
+    const theme = (p.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark';
+    const mat = (p.material ?? 'Blur') === 'Blur' ? ' mat-blur' : '';
+    const pickWho = sel.length > 1 ? sel.length + ' elements' : single ? single.name : '';
+    const toastHead = preview ? 'Previewing' : picking ? 'Anchor ' + pickWho : focus ? 'Panels hidden' : '';
+    const toastText = preview ? 'actions that reach beyond this screen only say what they would do · Esc stops' : picking ? 'click the element to anchor ' + (sel.length > 1 ? 'them' : 'it') + ' to · Esc cancels' : focus ? 'Tab brings them back' : '';
+    // the pointer readout follows what the board shows: the dragged element, the hovered one, or empty space
+    const ptr = moving ? [rects.options.x + rects.options.w * .55, rects.options.y + rects.options.h * .5]
+      : hovId && rects[hovId] ? [liveRect(hovId).x + rects[hovId].w * .62, liveRect(hovId).y + rects[hovId].h * .55]
+      : [S.w * .78, S.h * .67];
+    const z100 = Math.round(z * 100);
+    return {
+      rootCls: 'fm ' + theme + mat + ' le-ws' + (focus ? ' focus' : ''), yes: true, no: false, onKey,
+      mbOpen, mbSub: p.mbSub || '', mbCatch: mbOpen ? 900 : 0,
+      showChrome: chrome, focus, preview,
+      // toolbar
+      editGroupCls: preview ? 'inert' : '', panelGroupCls: preview ? 'inert' : '',
+      addOpen: menu === 'add', addBtnCls: 'btn' + (menu === 'add' ? ' open' : ''), toggleAdd: toggleMenu('add'), addItems: ADD, closeMenu,
+      undoTip: 'Undo' + (last ? ' ' + last : '') + ' · Ctrl+Z',
+      toolThumb: 'width: 34px; transform: translateX(' + (tool === 'hand' ? 100 : 0) + '%)',
+      selToolCls: tool === 'select' ? 'on' : '', handToolCls: tool === 'hand' ? 'on' : '', selToolOn: tool === 'select' ? 'true' : 'false', handToolOn: tool === 'hand' ? 'true' : 'false',
+      pickSelect: set({ tool: 'select' }), pickHand: set({ tool: 'hand' }),
+      gridCls: 'ib' + (grid ? ' on' : ''), gridOn: grid ? 'true' : 'false', toggleGrid: set({ grid: !grid }),
+      snapCls: 'ib' + (snap ? ' on' : ''), snapOn: snap ? 'true' : 'false', toggleSnap: set({ snap: !snap }),
+      // the screen size sits over the middle of the canvas, whatever else the toolbar shows
+      sizeWrapStyle: 'left: ' + ((leftOn ? 248 : 0) + CW / 2) + 'px',
+      sizeOpen: menu === 'size', sizeBtnCls: 'popup le-size' + (menu === 'size' ? ' open' : ''), toggleSize: toggleMenu('size'), sizeItems,
+      sizeLabel: S.label, sizeNote: (S.win ? S.win + ' · ' : '') + 'GUI Scale ' + S.scale, sizeDims: S.w + ' × ' + S.h,
+      previewOn: preview ? 'true' : 'false', previewBtnCls: 'btn' + (preview ? ' primary' : ''), previewIcon: preview ? 'stop' : 'play_arrow', previewLabel: preview ? 'Stop Preview' : 'Preview',
+      previewTip: preview ? 'Back to editing · Esc' : 'Run the screen like in game · F5',
+      togglePreview,
+      leftOn: leftOn ? 'true' : 'false', rightOn: rightOn ? 'true' : 'false', tlOn: showTl ? 'true' : 'false',
+      leftBtnCls: 'ib' + (leftOn ? ' on' : ''), rightBtnCls: 'ib' + (rightOn ? ' on' : ''), tlBtnCls: 'ib' + (showTl ? ' on' : ''),
+      toggleLeft: set({ left: !leftOn }), toggleRight: set({ right: !rightOn }), toggleTl: () => { stopPlay(); this.setState({ tl: !showTl, kf: '' }); },
+      // docks
+      showLeft: leftOn, showRight: rightOn, layerRows, lq, layerSearchPh: 'Search ' + (ALL.length) + ' layers', typedLayers: (e) => this.setState({ lq: e.target.value }),
+      noLayers: !!ql && layerRows.length === 0,
+      // canvas
+      showRulers: chrome, rulX, rulY, rulTopStyle, rulLeftStyle,
+      bandX: !!selBox, bandY: !!selBox,
+      bandXStyle: selBox ? 'left: ' + (X(selBox.x) - rul).toFixed(1) + 'px; width: ' + (selBox.w * k).toFixed(1) + 'px' : '',
+      bandYStyle: selBox ? 'top: ' + (Y(selBox.y) - rul).toFixed(1) + 'px; height: ' + (selBox.h * k).toFixed(1) + 'px' : '',
+      artStyle: 'left: ' + artL + 'px; top: ' + artT + 'px; width: ' + artW + 'px; height: ' + artH + 'px',
+      scrStyle: 'width: ' + S.w * 2 + 'px; height: ' + S.h * 2 + 'px; transform: scale(' + z + ')',
+      fireflies, drawn,
+      showArtLabel: chrome, labelStyle: 'left: ' + artL + 'px; top: ' + (artT - 24) + 'px',
+      showGrid: grid && !preview && !focus,
+      // the grid starts at the screen's top-left corner, like the rulers; the screen's middle keeps its own lines
+      gridStyle: 'left: ' + artL + 'px; top: ' + artT + 'px; width: ' + artW + 'px; height: ' + artH + 'px; background-image: linear-gradient(var(--grid-c), var(--grid-c)), linear-gradient(90deg, var(--grid-c), var(--grid-c)), linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size: 100% 1px, 1px 100%, ' + step.toFixed(2) + 'px ' + step.toFixed(2) + 'px, ' + step.toFixed(2) + 'px ' + step.toFixed(2) + 'px; background-repeat: no-repeat, no-repeat, repeat, repeat; background-position: 0 ' + (S.h / 2 * k).toFixed(1) + 'px, ' + (S.w / 2 * k).toFixed(1) + 'px 0, 0 0, 0 0; opacity: .55',
+      outlines, ghosts, hits, smart, gaps,
+      // while picking an anchor element, clicking empty space only stops picking
+      bgLabel: picking ? 'Stop picking' : 'Select nothing',
+      bgClick: () => (picking ? closeMenu() : this.setState({ sel: '', menu: '', kf: '', selGroup: '' })),
+      showAnc, ancLineStyle, ancDotStyle, ancCands,
+      showSel: !!selBox, selCls, selStyle: selBox ? box(selBox) + (selRot ? '; transform: rotate(' + selRot.toFixed(1) + 'deg)' : '') : '',
+      showRotH: !!selBox && selVis.length === 1 && rotHandles && !moving && !picking && !byId[selVis[0]].vanilla && !byId[selVis[0]].ghost,
+      // the position badge only shows while moving, beside the selection so it covers nothing
+      showBadge: moving && !!selBox, badgeText: moving ? 'X ' + fmtN(byId.options.x) + '  Y ' + fmtN(byId.options.y) : '',
+      badgeStyle: selBox ? 'left: ' + (X(selBox.x + selBox.w) + 12).toFixed(1) + 'px; top: ' + (Y(selBox.y + selBox.h / 2) - 9).toFixed(1) + 'px; transform: none' : '',
+      showTag, tagCls, tagStyle, tagText: showTag ? (picking ? 'Anchor to ' : '') + byId[hovId].name : '',
+      toast: !!toastHead, toastHead, toastText,
+      toastBtn: focus ? 'Show Panels' : '', toastClick: () => this.setState({ focus: false }),
+      // Minecraft can't tell when files are dragged over it, so the drop hint stays in the status bar, where it covers nothing
+      showDrop: !preview,
+      // timeline
+      showTl, tracks, tmarks, trackCount: TR.length + ' animated element' + (TR.length === 1 ? '' : 's'),
+      // zoomed in, the keyframe area grows past the panel and scrolls sideways
+      keysStyle: 'min-width: ' + Math.round(tx2(DUR) + 40) + 'px',
+      animsOpen: menu === 'anims', toggleAnims: toggleMenu('anims'), animItems,
+      animAddOpen: menu === 'animadd', toggleAnimAdd: toggleMenu('animadd'), animAddItems,
+      playIcon: playing && !preview ? 'pause' : 'play_arrow', playTip: playing && !preview ? 'Pause · Space' : 'Play · Space',
+      togglePlay: () => { if (this._iv) { stopPlay(); this.setState({}); } else startPlay(t >= DUR ? 0 : t); },
+      toStart: () => { stopPlay(); this.setState({ t: 0 }); },
+      repCls: 'ib' + (rep ? ' on' : ''), repOn: rep ? 'true' : 'false', toggleRep: set({ rep: !rep }),
+      akCls: 'btn sm' + (ak ? ' on primary' : ''), akOn: ak ? 'true' : 'false', toggleAk: set({ ak: !ak }),
+      tlZoomIn: () => this.setState({ pps: ZOOMS_TL.find((v) => v > PPS) || PPS }),
+      tlZoomOut: () => this.setState({ pps: [...ZOOMS_TL].reverse().find((v) => v < PPS) || PPS }),
+      timeText: t.toFixed(2) + ' s', timeShort: t.toFixed(2),
+      phStyle: 'left: ' + tx2(t).toFixed(1) + 'px', phHStyle: 'left: ' + tx2(t).toFixed(1) + 'px',
+      endStyle: 'left: ' + tx2(DUR).toFixed(1) + 'px',
+      rulerClick: (e) => { const r = e.currentTarget.getBoundingClientRect(); const sx = r.width / e.currentTarget.offsetWidth || 1; const nt = Math.max(0, Math.min(DUR, ((e.clientX - r.left) / sx - T0) / PPS)); stopPlay(); this.setState({ t: Math.round(nt * 100) / 100, kf: '' }); },
+      // inspector
+      inspIcon, inspName, inspChip, headTip,
+      moreOpen: menu === 'more', toggleMore: toggleMenu('more'), moreItems,
+      searchPh: kfParts ? 'Search keyframe settings' : sel.length ? 'Search settings' : 'Search layout settings',
+      q, typed: (e) => this.setState({ q: e.target.value }),
+      sections: shownSections, noMatch: !!sq && shownSections.length === 0,
+      tf, kfv, ancDots, ancName, figs, poseView, tfGridCls: 'tf-grid' + (tf.kf ? ' kf' : ''),
+      // vanilla widgets get Original Position instead of Anchor to Element: where the screen itself places them
+      ...(() => {
+        const van = vanSel;
+        const atOrigin = van && curAnchor === 'vanilla';
+        return {
+          ancBtnShow: !atOrigin, ancBtnOn: picking ? 'true' : 'false', ancBtnCls: 'btn sm' + (picking ? ' on' : ''),
+          ancBtnLabel: van ? 'Original Position' : picking ? 'Click an Element' : 'Anchor to Element',
+          ancBtnIcon: van ? 'restart_alt' : 'link',
+          ancBtnTip: van ? 'Let the screen place it again, like without a layout' : picking ? 'Stop picking · Esc' : 'Click an element on the canvas to anchor to it',
+          ancBtnClick: van ? () => this.setState({ anc: Object.assign({}, ancOver, { [single.id]: { anchor: 'vanilla', x: 0, y: 0 } }), last: 'Reset ' + single.name }) : toggleMenu('anchor')
+        };
+      })(),
+      // status bar
+      statusPos: preview ? '' : 'Pointer ' + Math.round(ptr[0]) + ', ' + Math.round(ptr[1]),
+      probsOpen: menu === 'probs', toggleProbs: toggleMenu('probs'), probItems,
+      zoomOpen: menu === 'zoom', toggleZoom: toggleMenu('zoom'), zoomItems, zoomText: z100 + '%', zoomAria: 'Zoom, ' + z100 + '%'
+    };
+  }
+}
+</script>
+</body>
+</html>

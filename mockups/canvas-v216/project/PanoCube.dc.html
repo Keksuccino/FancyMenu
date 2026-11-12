@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Panorama cube</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="pn-cube" style="{{boxStyle}}" aria-hidden="true">
+<div class="{{tiltCls}}" style="{{tiltStyle}}">
+<div class="pn-spin" data-pn-spin="{{uid}}" style="{{spinStyle}}">
+<sc-for list="{{faces}}" as="fc" hint-placeholder-count="6"><div class="{{fc.cls}}" style="{{fc.style}}"><sc-if value="{{fc.name}}" hint-placeholder-val="{{false}}"><span style="{{nameStyle}}">{{fc.name}}</span></sc-if></div></sc-for>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"sides":{"editor":null},"fov":{"editor":"int","default":85},"pitch":{"editor":"int","default":0},"yaw":{"editor":"int","default":0},"at":{"editor":null},"rate":{"editor":null},"names":{"editor":"boolean","default":true},"settle":{"editor":"boolean","default":false},"width":{"editor":"int","default":384},"height":{"editor":"int","default":216},"$preview":{"width":384,"height":216}}'>
+// A panorama the way FancyMenu draws it: six pictures on the inside of a cube, seen from its middle. The sides come in
+// the order of the files panorama_0 to panorama_5, and TURN puts each one where LocalTexturePanoramaRenderer has it:
+// the top's lower edge and the bottom's upper edge meet the front, and going right from the front come right, back, left.
+const TURN = ['', 'rotateY(-90deg) ', 'rotateY(180deg) ', 'rotateY(90deg) ', 'rotateX(-90deg) ', 'rotateX(90deg) '];
+const NAMES = ['Front', 'Right', 'Back', 'Left', 'Top', 'Bottom'];
+// the pictures sit on pano_faces.png, 6 sides across and 7 panoramas down
+const COLS = 6, ROWS = 7;
+// The turn moves in half-second steps that the browser draws as one even motion. STEP is how often a step starts and
+// GLIDE how long it takes: a bit longer, so the next step starts before the last one ends and the turn never stops.
+const STEP = 500, GLIDE = 600;
+
+class Component extends DCLogic {
+  componentWillUnmount() {
+    if (this._tick) clearInterval(this._tick);
+  }
+
+  renderVals() {
+    const p = this.props;
+    const uid = this._uid || (this._uid = 'pc' + Math.random().toString(36).slice(2, 8));
+    const W = +p.width || 384, H = +p.height || 216;
+    // fov is the angle from the top to the bottom of the view, like the fov of a panorama's properties
+    const fov = Math.max(5, Math.min(170, +p.fov || 85));
+    const P = (H / 2) / Math.tan(fov * Math.PI / 360);
+    const S = 2 * P;
+    // pitch looks down for positive values, like angle. yaw turns to the right: it is the direction at the time `at`,
+    // and `rate` is how many degrees it turns per second from then on.
+    const pitch = Math.max(-90, Math.min(90, +p.pitch || 0));
+    const rate = +p.rate || 0, yaw0 = +p.yaw || 0, at = +p.at || Date.now();
+    const yawAt = (t) => yaw0 + rate * (t - at) / 1000;
+
+    const deepQuery = (sel0) => { const walk = (r) => { const hit = r.querySelector(sel0); if (hit) return hit; for (const el of r.querySelectorAll('*')) { if (el.shadowRoot) { const x = walk(el.shadowRoot); if (x) return x; } } return null; }; return walk(document); };
+    this._step = () => {
+      const el = deepQuery('[data-pn-spin="' + uid + '"]');
+      if (!el) return;
+      const now = Date.now();
+      if (!rate) { el.style.transition = 'none'; el.style.transform = 'rotateY(' + yaw0.toFixed(3) + 'deg)'; return; }
+      el.style.transition = 'transform ' + GLIDE + 'ms linear';
+      el.style.transform = 'rotateY(' + yawAt(now + GLIDE).toFixed(3) + 'deg)';
+    };
+    if (!this._tick) this._tick = setInterval(() => this._step && this._step(), STEP);
+    // a new render puts the cube where it is right now, and the next step goes on from there at once
+    setTimeout(() => this._step && this._step(), 0);
+
+    const sides = p.sides || [];
+    const names = p.names ?? true;
+    const faces = NAMES.map((name, i) => {
+      const sd = sides[i];
+      const pic = sd && sd.pic;
+      // the sides reach a little into each other, so no line of the background shows where two of them meet
+      const box = 'left: ' + (-P).toFixed(2) + 'px; top: ' + (-P).toFixed(2) + 'px; width: ' + S.toFixed(2) + 'px; height: ' + S.toFixed(2) + 'px; transform: ' + TURN[i] + 'translateZ(' + (-(P - .6)).toFixed(2) + 'px)';
+      return {
+        cls: 'pn-face' + (pic ? ' pic' : sd && sd.bad ? ' bad' : ''),
+        style: box + (pic ? '; background-size: ' + (S * COLS).toFixed(2) + 'px ' + (S * ROWS).toFixed(2) + 'px; background-position: ' + (-pic[0] * S).toFixed(2) + 'px ' + (-pic[1] * S).toFixed(2) + 'px' : ''),
+        name: pic || !names ? '' : name
+      };
+    });
+    return {
+      uid, faces,
+      boxStyle: 'width: ' + W + 'px; height: ' + H + 'px; perspective: ' + P.toFixed(2) + 'px',
+      // settle lets the view glide back, like after looking around with the mouse
+      tiltCls: 'pn-tilt' + (p.settle ? ' settle' : ''),
+      tiltStyle: 'transform: translateZ(' + P.toFixed(2) + 'px) rotateX(' + (-pitch).toFixed(2) + 'deg)',
+      spinStyle: 'transform: rotateY(' + yawAt(Date.now()).toFixed(3) + 'deg)',
+      nameStyle: 'font-size: ' + Math.max(9, S / 13).toFixed(1) + 'px'
+    };
+  }
+}
+</script>
+</body>
+</html>

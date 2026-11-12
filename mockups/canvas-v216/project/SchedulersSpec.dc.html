@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Schedulers spec</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.pair{display:grid;grid-template-columns:600px minmax(0,1fr);gap:48px;align-items:start}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start}
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;align-items:start}
+.kr{display:flex;align-items:center;gap:14px;padding:9px 18px;border-bottom:1px solid var(--sep);font-size:12.5px;color:var(--text-2)}
+.kr:last-child{border-bottom:0}
+.kk{flex:0 0 190px;font-family:"Noto Sans Mono",ui-monospace,Menlo,monospace;font-size:12px;color:var(--text)}
+.spec code{font-family:"Noto Sans Mono",ui-monospace,Menlo,monospace;font-size:12px;color:var(--text)}
+.flow{display:flex;flex-direction:column;gap:10px}
+.flow .step{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;font-size:13px;line-height:1.5;color:var(--text-2)}
+.flow .n{width:22px;height:22px;display:grid;place-items:center;border-radius:50%;font-size:11.5px;font-weight:700;color:var(--accent);background:color-mix(in srgb,var(--accent) 15%,transparent)}
+.flow b{color:var(--title);font-weight:600}
+.propchip{color:var(--warn);background:color-mix(in srgb,var(--warn) 15%,transparent)}
+.okchip2{color:var(--ok);background:color-mix(in srgb,var(--ok) 15%,transparent)}
+/* today's Manage Schedulers window, redrawn at 600 of its 640 pixels, and its Scheduler Settings window at the same scale */
+.lgs{position:relative;width:600px;height:446px}
+.lgt{position:relative;width:488px;height:338px;margin-top:20px}
+.lgs .lg-title,.lgt .lg-title{position:absolute;left:0;right:0;top:0}
+.lgs .a,.lgt .a{position:absolute}
+.lg-field{display:flex;align-items:center;padding:0 6px;border:1px solid #3e4042;background:#1e1e1e;color:#7f878f;height:18px}
+.lg-field.v{color:#ceDDed}
+.lg-list{border:1px solid #3e4042;background:#1e1e1e;padding:4px 2px;display:flex;flex-direction:column;gap:1px;overflow:hidden}
+.lg-e{padding:2px 6px;line-height:14px;white-space:nowrap;overflow:hidden}
+.lg-e.sel{background:#3a3a3a}
+.lg-desc{border:1px solid #3e4042;background:#1e1e1e;padding:5px 8px;overflow:hidden;font-size:11px;line-height:14px;color:#ceDDed}
+.lg-desc b{font-weight:700}
+.lg-desc .g{color:#3ec06b}
+.lg-btn{height:19px;display:grid;place-items:center;border:1px solid #3e4042;background:#333;font-size:11.5px}
+.lg-tip{font-size:10px;line-height:13px;color:#8a8f96;text-align:right}
+.lg-lbl{font-size:11.5px;color:#ceDDed}
+</style>
+</helmet>
+<div class="fm spec {{themeClass}}" style="min-height: 5244px">
+
+<header style="display: flex; flex-direction: column; gap: 12px; max-width: 920px">
+<div style="font-size: 12px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; color: var(--text-3)">FancyMenu · UI rework concept · schedulers</div>
+<h1 style="margin: 0; font-size: 34px; line-height: 1.15; font-weight: 700; color: var(--title)">Schedulers you can watch run</h1>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: var(--text-2)">The Schedulers window gives every scheduler a clock with its own icon that fills up until its next run, and a status card with the next run, the runs so far and the time left. Its schedule reads in plain words, Runs, First run and Then every, in ticks, seconds, minutes or hours, right in the details instead of a second window. Start, Stop and Run Now work in the window, Used in lists every place that starts, stops or checks a scheduler, and renaming one updates those places. Changes reach a running scheduler right away, and Cancel takes them back.</p>
+</header>
+
+<section>
+<h2 class="h2">Today and proposed</h2>
+<div class="pair">
+<div><div class="cap">Today</div><div class="lg-win lgs">
+<div class="lg-title"><span>Manage Schedulers</span><span class="lg-x">×</span></div>
+<div class="a lg-field" style="left: 19px; top: 85px; width: 249px">Search...</div>
+<div class="a lg-list" style="left: 19px; top: 109px; width: 262px; height: 318px">
+<div class="lg-e">boss_music</div>
+<div class="lg-e">break_reminder</div>
+<div class="lg-e">daily_reward</div>
+<div class="lg-e sel">fireflies</div>
+<div class="lg-e">join_countdown</div>
+<div class="lg-e">music_fade_in</div>
+<div class="lg-e">music_shuffle</div>
+<div class="lg-e">rain_ambience</div>
+</div>
+<div class="a lg-desc" style="left: 319px; top: 85px; width: 262px; height: 124px">
+<b>Scheduler Settings</b><br><br>ID: fireflies<br>Start Delay: 0 ms<br>Tick Delay: 6000 ms<br>Ticks to Run: Permanent<br>Start on Launch: Enabled<br>Status: <span class="g">Running</span><br><br><br><b>Action Script</b>
+</div>
+<div class="a lg-tip" style="left: 319px; top: 214px; width: 262px">Rename schedulers by double-clicking their ID.<br><br>Right-click schedulers to quick-edit their actions.</div>
+<div class="a lg-btn" style="left: 440px; top: 284px; width: 141px">Add Scheduler</div>
+<div class="a lg-btn" style="left: 440px; top: 307px; width: 141px">Edit Actions</div>
+<div class="a lg-btn" style="left: 440px; top: 330px; width: 141px">Stop Now</div>
+<div class="a lg-btn" style="left: 440px; top: 353px; width: 141px">Edit Settings</div>
+<div class="a lg-btn" style="left: 440px; top: 376px; width: 141px">Remove Scheduler</div>
+<div class="a lg-btn" style="left: 440px; top: 408px; width: 141px">Done</div>
+</div>
+<div class="cap" style="margin-top: 20px">Edit Settings opens this on top</div>
+<div class="lg-win lgt">
+<div class="lg-title"><span>Scheduler Settings</span><span class="lg-x">×</span></div>
+<div class="a lg-lbl" style="left: 19px; top: 40px">Scheduler ID</div>
+<div class="a lg-field v" style="left: 19px; top: 58px; width: 280px">fireflies</div>
+<div class="a lg-lbl" style="left: 19px; top: 90px">Start Delay (ms)</div>
+<div class="a lg-field v" style="left: 19px; top: 108px; width: 280px">0</div>
+<div class="a lg-lbl" style="left: 19px; top: 140px">Tick Delay (ms)</div>
+<div class="a lg-field v" style="left: 19px; top: 158px; width: 280px">6000</div>
+<div class="a lg-lbl" style="left: 19px; top: 190px">Ticks to Run</div>
+<div class="a lg-field v" style="left: 19px; top: 208px; width: 280px">0</div>
+<div class="a lg-btn" style="left: 19px; top: 244px; width: 294px">Start on Launch: Enabled</div>
+<div class="a lg-btn" style="left: 328px; top: 278px; width: 141px">Cancel</div>
+<div class="a lg-btn" style="left: 328px; top: 301px; width: 141px">Done</div>
+</div></div>
+<div><div class="cap">What gets in the way</div>
+<ul class="probs">
+<li>The list only shows IDs. Nothing says which schedulers run, how often, when they run next or whether one already finished.</li>
+<li>The timing sits in a second window behind Edit Settings, in milliseconds only, so ten minutes is 600000.</li>
+<li>Tick Delay and Ticks to Run count runs of the script, not game ticks, and a Tick Delay of 0 secretly means every 50 ms.</li>
+<li>The status is Running or Not Running. A scheduler that finished looks like one that never ran.</li>
+<li>Changed settings don't reach a running scheduler until it's started again, and nothing says so.</li>
+<li>Renaming stops a running scheduler, and Start Scheduler actions with the old ID silently stop working.</li>
+<li>Add Scheduler opens the script editor first, and the scheduler only gets added when that script is saved, with an ID like scheduler_3f2a9c1e-… that nobody remembers.</li>
+<li>Nothing shows where a scheduler gets started, stopped or checked, or warns that nothing starts one at all.</li>
+<li>Start Now and Stop Now both say that a scheduler can't be started again until it finishes.</li>
+<li>Everything applies right away and there's no Cancel, while Remove Scheduler warns that it can't be undone.</li>
+<li>A script can't be tried without starting the scheduler and waiting for its first run.</li>
+<li>A wrong number or ID only shows up as a dialog after Done in the settings window.</li>
+</ul></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">What changes</h2>
+<div class="group" style="background: var(--win)">
+<div class="mv head"><div>Today</div><div></div><div>Proposed</div><div>Why</div></div>
+<div class="mv"><div class="from">Start Delay, Tick Delay and Ticks to Run in milliseconds</div><div class="arrow">→</div><div class="to">Runs: Until stopped, Once or Several times. First run: Right away or After a wait. Then every, in ticks, ms, s, min or h</div><div class="why">Every 3 minutes reads 3 min, not 180000, and nobody has to know what 0 means (rule 106).</div></div>
+<div class="mv"><div class="from">Edit Settings in its own window</div><div class="arrow">→</div><div class="to">Schedule in the details, applied as you type</div><div class="why">One window, and a running scheduler picks the change up right away (rule 107).</div></div>
+<div class="mv"><div class="from">IDs only</div><div class="arrow">→</div><div class="to">Rows with a clock: the scheduler's icon, and a ring that fills until the next run. Then the schedule in a few words, and Start or Stop</div><div class="why">You see what runs, how fast and what it does at a glance.</div></div>
+<div class="mv"><div class="from">Nothing but IDs to tell them apart</div><div class="arrow">→</div><div class="to">An icon of its own, picked in the icon chooser from every emoji and Material icon FancyMenu ships. The timer until one is picked</div><div class="why">✨ for the fireflies finds them faster than reading every name (rules 112 and 113).</div></div>
+<div class="mv"><div class="from">Running or Not Running</div><div class="arrow">→</div><div class="to">A status card with the next run, the runs so far, or Run 4 of 10 with the time left, and one block per run for short countdowns</div><div class="why">Progress you can read, instead of one word (rule 108).</div></div>
+<div class="mv"><div class="from">Start Now and Stop Now, with the same wrong tooltip</div><div class="arrow">→</div><div class="to">Start and Stop in the details and on every row, and Space for the selected ones</div><div class="why">Starting one takes one click, also for several at once.</div></div>
+<div class="mv"><div class="from">No way to try a script</div><div class="arrow">→</div><div class="to">Run Now and F5: the script runs once, without starting the scheduler</div><div class="why">Trying daily_reward without waiting 10 minutes (rule 101).</div></div>
+<div class="mv"><div class="from">Nothing about where it's used</div><div class="arrow">→</div><div class="to">Used in: every Start Scheduler, Stop Scheduler and Scheduler Is Running, with a button to open it, and a warning when nothing starts it</div><div class="why">You know what breaks before you rename or delete it (rule 109).</div></div>
+<div class="mv"><div class="from">Renaming stops it and breaks the places that use it</div><div class="arrow">→</div><div class="to">It keeps running, and Rename and Update 3 Places changes those places too</div><div class="why">The same as renaming a variable (rule 88).</div></div>
+<div class="mv"><div class="from">scheduler_ and a UUID, added once the script is saved</div><div class="arrow">→</div><div class="to">New Scheduler adds new_scheduler right away, with its name ready to type over</div><div class="why">The name comes first, the script when you're ready (rule 110).</div></div>
+<div class="mv"><div class="from">Right-click to edit, double-click to rename</div><div class="arrow">→</div><div class="to">Start, Edit Script, Duplicate and Delete as buttons. Double-click and Enter open the script, F2 and the pencil rename</div><div class="why">Like in Listeners and Variables, and core actions are easy to find (rule 41).</div></div>
+<div class="mv"><div class="from">No Cancel, and Remove can't be undone</div><div class="arrow">→</div><div class="to">Changes apply right away, Cancel takes them back and only asks when something changed. Delete has Undo, and only asks when the name is still used</div><div class="why">Trying a change is safe (rules 38, 68 and 102).</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">The window, piece by piece</h2>
+<div class="three">
+<div class="spec-card"><div class="k">The list</div><div class="kd" style="margin: 0">Every row has a clock: the scheduler's own icon, and a ring that fills until the next run. Each run draws a short ring around it. A dashed ring is the wait before the first run, and schedulers that run more than once a second breathe instead. The second line is the schedule in a few words, like Every 6 s or Once, after 10 min, and turns amber for a scheduler without steps or one that nothing starts. The button on the right starts and stops it. The search finds names and what the scripts do, so audio finds every scheduler that plays something. Filters show the ones that run, don't run, start with the game or have problems, sorted by name, next run or last run.</div></div>
+<div class="spec-card"><div class="k">The status card</div><div class="kd" style="margin: 0">Shows while the scheduler runs: Next run in 3 s, and how often it ran since it started, or Run 4 of 10 · done in 7 s for one with a set number of runs. The bar fills until the next run, so its speed is the schedule. A countdown of up to 40 runs gets one block per run instead, each filling until its run happens. Before the first run it says First run in 8 s over a lighter bar, and fast ones say Runs every tick, 20 times a second. The icon left of the name opens the icon chooser, and Default goes back to the timer. The line under the name says when and how it started, like Running since 12:21:03, with the game, or how it ended: Stopped at 12:39:10 after 14 runs, or Finished at 12:31:03 after its only run.</div></div>
+<div class="spec-card"><div class="k">Schedule</div><div class="kd" style="margin: 0">Starts with the game replaces Start on Launch, and says that it also starts after FancyMenu reloads. Runs is Until stopped, Once or Several times, with how many. First run is Right away or After a wait, with how long, and Then every is gone for Once. Durations have a unit menu with Ticks, Milliseconds, Seconds, Minutes and Hours. A pick keeps the number, so 6 s becomes 6 min, and ↑ ↓ step it, Shift by 10. Under one tick, Then every says in amber that runs pile up in every tick. Every change applies right away, also while it runs, and the footer says when the next run is now.</div></div>
+<div class="spec-card"><div class="k">Script</div><div class="kd" style="margin: 0">The steps in the script editor's own rows and sentences, read-only, like in Listeners. A click on a step opens the script editor with that step selected. Run Now and F5 run the script once, without starting the scheduler, so a Reset Element Animator replays the fireflies behind the window and a Show Toast shows its toast. A script without steps says that nothing happens when it runs, with Add Steps.</div></div>
+<div class="spec-card"><div class="k">Used in</div><div class="kd" style="margin: 0">Every place that uses the name, grouped by layout, custom GUI, listener and other schedulers like in the Variables window: Start Scheduler and Stop Scheduler in scripts, and Scheduler Is Running in conditions, each with a button that opens it there. A scheduler that doesn't start with the game and that no script starts gets a callout: Nothing starts rain_ambience, with what only checks it and Start With the Game right there.</div></div>
+<div class="spec-card"><div class="k">The footer</div><div class="kd" style="margin: 0">Changes apply to the schedulers right away, also to running ones, and the note says so (rule 38). Save writes scheduler_instances.txt. Cancel, the red Close button and Esc put every scheduler back the way it was when the window opened, and only ask when something changed (rule 68). Starting and stopping aren't changes, so Cancel leaves them, and its sheet says so. After a change the note says what happened, with Undo.</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">New, start, rename</h2>
+<div class="three">
+<div class="spec-card"><div class="k">New Scheduler</div><div class="flow">
+<div class="step"><span class="n">1</span><span><b>New Scheduler</b> or Ctrl+N adds new_scheduler, every second until stopped, and selects its name.</span></div>
+<div class="step"><span class="n">2</span><span>Typing names it. Spaces turn into _ and capitals into small letters, and a name that's taken turns the field red.</span></div>
+<div class="step"><span class="n">3</span><span><b>Add Steps</b> opens its script in the script editor.</span></div>
+<div class="step"><span class="n">4</span><span><b>Start</b> tries it, and Starts with the game makes it start with every launch.</span></div>
+</div></div>
+<div class="spec-card"><div class="k">Start, stop, try</div><div class="flow">
+<div class="step"><span class="n">1</span><span><b>Start</b>, the row's button or Space start it. Without a wait, the first run is right away.</span></div>
+<div class="step"><span class="n">2</span><span>The clock and the status card count down to the next run, and every run draws a ring around the tile.</span></div>
+<div class="step"><span class="n">3</span><span><b>Stop</b> stops it. One with a set number of runs stops by itself, and the line under its name says when it finished.</span></div>
+<div class="step"><span class="n">4</span><span><b>Run Now</b> runs the script once and leaves the schedule as it is.</span></div>
+</div></div>
+<div class="spec-card"><div class="k">Rename</div><div class="flow">
+<div class="step"><span class="n">1</span><span>F2 or the pencil, a new name, and Enter.</span></div>
+<div class="step"><span class="n">2</span><span>When something uses the name, a sheet offers <b>Rename and Update 3 Places</b>, Only Rename or Cancel.</span></div>
+<div class="step"><span class="n">3</span><span>A running scheduler keeps running under its new name.</span></div>
+<div class="step"><span class="n">4</span><span>Undo, Ctrl+Z or Cancel take the name and the updated places back.</span></div>
+</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Special cases it handles</h2>
+<div class="two">
+<div class="spec-card"><ul class="notes">
+<li>Start Scheduler does nothing for a scheduler that runs already, so pressing Play twice doesn't restart its countdown. Stop, then Start, restarts it.</li>
+<li>Deleting a running scheduler stops it, and Delete only asks when the name is still used somewhere. Undo brings it back and starts it again.</li>
+<li>A change that leaves fewer runs than it already did, like Once after 7 runs, finishes it. Undo lets it go on from there.</li>
+<li>Intervals under one tick work like today: several runs pile up in every tick, and Then every says so in amber. When the game lags, runs can pile up in one tick too, because the timer runs beside the game.</li>
+<li>Duplicating names the copy fireflies_copy, then fireflies_copy_2. Copies don't run, and nothing uses them yet.</li>
+</ul></div>
+<div class="spec-card"><ul class="notes">
+<li>Switching profiles or reloading FancyMenu stops every scheduler and starts the ones that start with the game again, so their runs count from zero.</li>
+<li>Schedulers run in every menu and while playing, also with the window closed. The window shows what they did since the game started.</li>
+<li>With several selected, one button starts or stops all of them, and Start rain_ambience or Start the Other 2 starts the ones that don't run. Starts with the game shows its knob in the middle when they disagree (rule 25).</li>
+<li>Filters show as a chip under the search field, so a shorter list is never a mystery. The chip's × shows everything again.</li>
+<li>A duration that isn't a number above 0 turns its field red and says what it needs, like Type how long it waits between runs, like 6. The scheduler keeps the last good value until then.</li>
+</ul></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Keyboard shortcuts</h2>
+<div class="two">
+<div><div class="cap">Kept</div><div class="group" style="background: var(--win)">
+<div class="kr"><span class="kk">Typing</span><span>Searches, now also through what the scripts do</span></div>
+<div class="kr"><span class="kk">Esc</span><span>Closes the menu or sheet, stops renaming, clears the search, then cancels, asking only when something changed</span></div>
+<div class="kr"><span class="kk">Double-click</span><span>Opens the script</span><span class="chip" style="margin-left: auto">Was Rename</span></div>
+</div></div>
+<div><div class="cap">New</div><div class="group" style="background: var(--win)">
+<div class="kr"><span class="kk">↑ ↓</span><span>Select the scheduler above or below</span></div>
+<div class="kr"><span class="kk">Shift-click, Ctrl-click</span><span>Select a range, or add one scheduler to the selection</span></div>
+<div class="kr"><span class="kk">Shift+↑ ↓, Ctrl+A</span><span>Select more, or all</span></div>
+<div class="kr"><span class="kk">Enter</span><span>Edit Script</span></div>
+<div class="kr"><span class="kk">F2</span><span>Rename</span></div>
+<div class="kr"><span class="kk">Space</span><span>Start or stop the selected schedulers</span></div>
+<div class="kr"><span class="kk">F5</span><span>Run Now</span></div>
+<div class="kr"><span class="kk">↑ ↓ in a duration</span><span>One more or less, Shift for 10</span></div>
+<div class="kr"><span class="kk">Delete</span><span>Delete, with Undo</span></div>
+<div class="kr"><span class="kk">Ctrl+N</span><span>New scheduler</span></div>
+<div class="kr"><span class="kk">Ctrl+D</span><span>Duplicate</span></div>
+<div class="kr"><span class="kk">Ctrl+F</span><span>Search</span></div>
+<div class="kr"><span class="kk">Ctrl+Z, Ctrl+Y</span><span>Undo and redo, Ctrl+Shift+Z too</span></div>
+<div class="kr"><span class="kk">Ctrl+S, Ctrl+Enter</span><span>Save</span></div>
+</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Changes beyond the UI</h2>
+<p class="kd" style="max-width: 920px; margin: -6px 0 16px; font-size: 13px; color: var(--text-2)">The window above already uses these. They change how schedulers get saved, run, named or found, so each one is a rework rule.</p>
+<div class="two">
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Scheduler timing speaks plainly <span class="chip propchip">New, rule 106</span></div><div class="kd" style="margin: 0">Start Delay, Tick Delay, Ticks to Run and Start on Launch become First run, Then every, Runs and Starts with the game, in every language file. scheduler_instances.txt keeps saving milliseconds. A Then every of 0 loads as one tick, 50 ms, which is what it means today, and gets saved as 50 (rule 55). The unit only changes how the window shows it.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Running schedulers take changes right away <span class="chip propchip">New, rule 107</span></div><div class="kd" style="margin: 0">startScheduler reads the delays once, so a running scheduler keeps its old timing until it starts again. It reads them for every run instead: the next run comes one new interval after the last one, or right away when that's past, and the runs so far count toward a new Several times. Renaming moves the run state to the new name, so it keeps running. Today both ways of renaming stop it, because stopScheduler only finds it under the old name.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Schedulers report how they run <span class="chip propchip">New, rule 108</span></div><div class="kd" style="margin: 0">Every run state keeps when it started, what started it (the game, the Schedulers window or a script), how many runs it did and when the next one is due. A scheduler that finished remembers that and when, so it doesn't look like one that never ran. In memory only, for the window, like the runs of listeners (rule 100).</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Schedulers know where they're used <span class="chip propchip">New, rule 109</span></div><div class="kd" style="margin: 0">The index of rule 87 also collects scheduler names: every variable whose definition has the lookup fancymenu:schedulers, like the values of Start Scheduler, Stop Scheduler and Scheduler Is Running, also from addons. Used in, the With Problems filter, the rename sheet and the delete warning read it, and renaming updates those places the way rule 88 does for variables.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">New schedulers get a name to type over <span class="chip propchip">New, rule 110</span></div><div class="kd" style="margin: 0">New Scheduler adds new_scheduler, then new_scheduler_2, instead of scheduler_ and a UUID. It's added right away without steps, instead of once its script was saved in the script editor, and it runs every second until stopped, instead of every tick.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Listeners, schedulers, custom GUIs and variables have icons <span class="chip propchip">New, rule 112</span></div><div class="kd" style="margin: 0">Every scheduler saves an icon, a Material icon or an emoji, in one more line of scheduler_instances.txt. New ones start with the timer, the icon of Manage Schedulers in the menu bar, and old files load with it.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">One icon chooser <span class="chip propchip">New, rule 113</span></div><div class="kd" style="margin: 0">The same chooser as in Listeners, Custom GUIs and Variables, with every emoji of the bundled Noto Color Emoji and every icon of the bundled Material icon font, and a Recently Used row all four windows share.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Scripts run on demand <span class="chip okchip2">Added to rule 101</span></div><div class="kd" style="margin: 0">Run Now in the Schedulers window runs the scheduler's script once, without starting it, counting a run or moving its next run.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Cancel takes back every change <span class="chip okchip2">Added to rule 102</span></div><div class="kd" style="margin: 0">Manage Schedulers applies every change to the running schedulers and the file right away, and has no Cancel. It works like Manage Listeners now: on copies, applied as you go, with the originals back on Cancel. Save writes scheduler_instances.txt. Starting and stopping aren't changes, so Cancel leaves them as they are.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">The script editor knows the scheduler <span class="chip okchip2">Covered, rule 81</span></div><div class="kd" style="margin: 0">Edit Script opens the editor with Runs every 6 seconds while fireflies runs at the bottom, so the script says where it belongs.</div></div>
+</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"$preview":{"width":1440,"height":5244}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark' };
+  }
+}
+</script>
+</body>
+</html>

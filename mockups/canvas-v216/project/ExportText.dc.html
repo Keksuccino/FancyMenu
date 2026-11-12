@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Export as Text</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="{{rootCls}}" style="{{rootStyle}}">
+<sc-if value="{{standalone}}" hint-placeholder-val="{{true}}"><div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""><div class="dim"></div></div></sc-if>
+
+<div class="win xt" role="dialog" aria-label="Export as Text" style="{{winStyle}}">
+<div class="titlebar">
+<div class="tl"><button class="c" aria-label="Close" onClick="{{noop}}"><span class="ms" aria-hidden="true">close</span></button><button class="m" aria-label="Collapse"><span class="ms" aria-hidden="true">remove</span></button><button class="x" aria-label="Maximize"><span class="ms" aria-hidden="true">open_in_full</span></button></div>
+<div class="wt"><span class="ms" aria-hidden="true">ios_share</span>Export as Text</div>
+<div></div>
+</div>
+
+<div class="split">
+<aside class="xt-side" aria-label="What the text holds">
+<sc-if value="{{hasHead}}" hint-placeholder-val="{{true}}">
+<div class="group"><div class="row xt-what"><span class="ls-tile" aria-hidden="true"><span class="ms" aria-hidden="true">{{head.icon}}</span></span><span class="lbl">{{head.name}}<span class="sub">{{head.kind}}</span></span></div></div>
+</sc-if>
+<div>
+<div class="sec">{{secLabel}}</div>
+<div class="group">
+<sc-for list="{{toggles}}" as="t" hint-placeholder-count="2">
+<div class="row"><span class="lbl">{{t.label}}<sc-if value="{{t.sub}}" hint-placeholder-val="{{true}}"><span class="sub">{{t.sub}}</span></sc-if></span><div class="ctl"><span class="n">{{t.n}}</span><button class="{{t.cls}}" role="switch" aria-checked="{{t.aria}}" aria-label="{{t.label}}" onClick="{{t.toggle}}"></button></div></div>
+</sc-for>
+</div>
+</div>
+</aside>
+
+<div class="vm-main">
+<sc-if value="{{hasText}}" hint-placeholder-val="{{true}}">
+<div class="xt-text" role="textbox" aria-readonly="true" aria-multiline="true" aria-label="The text that gets exported" tabindex="0">
+<sc-for list="{{lines}}" as="l" hint-placeholder-count="14"><div class="{{l.cls}}" style="{{l.style}}">{{l.t}}</div></sc-for>
+</div>
+</sc-if>
+<sc-if value="{{noText}}" hint-placeholder-val="{{false}}"><div class="xt-none empty"><p class="d">Turn on what the text should hold.</p></div></sc-if>
+<div class="footer line"><span class="lead">{{lead}}</span><button class="btn wide" disabled="{{noText}}" onClick="{{noop}}">Save as File</button><button class="btn primary wide" disabled="{{noText}}" onClick="{{copy}}">Copy</button></div>
+</div>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"from":{"editor":"enum","options":["Listener","Script","Variable","Setup"],"default":"Listener"},"copied":{"editor":"boolean","default":false},"width":{"editor":"int","default":860},"height":{"editor":"int","default":560},"standalone":{"editor":"boolean","default":true},"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":940,"height":640}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props, s = this.state || {};
+    const set = (o) => this.setState(o);
+    const standalone = p.standalone ?? true;
+    const W = p.width ?? 860, H = p.height ?? 560;
+    const from = p.from || 'Listener';
+
+    // ---------- the sample setup, the same one the other boards show ----------
+    // Placeholders stand in the text the way they are saved, not as the chips the editors draw.
+    const PLAYER = '{"placeholder":"playername"}';
+    const calc = (v) => '{"placeholder":"calc","vars":{"expression":"$$' + v + ' + 1","decimal":"false"}}';
+    const VERSIONS = 'FancyMenu 3.10.0, Minecraft 1.21.11, Fabric';
+    const ind = (n, arr) => arr.map((l) => (l === '' ? '' : ' '.repeat(n) + l));
+
+    const playSteps = [
+      '# The first visit shows the story. After that, Play joins the server.',
+      'Play Audio: click.ogg at 80% on Master',
+      'If intro_seen is not true',
+      '  Set Variable: intro_seen to true',
+      '  Open Screen or Custom GUI: intro_story',
+      'Else If play.duskvalley.net is online',
+      '  Show Toast: Joining Dusk Valley, ' + PLAYER + '! for 3 s',
+      '  Execute Later after 800 ms',
+      '    Join Server: play.duskvalley.net',
+      'Else',
+      '  Display In Chat [Client-Side]: &cThe server is offline. Try again in a minute.',
+      '(off) Print to Game Log: Play clicked by ' + PLAYER,
+      'Folder: Stats',
+      '  Send HTTP Request: POST https://api.duskvalley.net/plays',
+      '  Set Variable: plays to ' + calc('plays')
+    ];
+    const questSteps = [
+      '# J opens the quest log, but only while playing.',
+      'If $$key_name is J and no screen is open',
+      '  Open Screen or Custom GUI: quest_log',
+      '  Play Audio: page_turn.ogg at 100% on Master',
+      '  Set Variable: last_key to $$key_name'
+    ];
+    const GUI = {
+      quest_log: 'quest_log: title "Quest Log", closes with Esc, doesn\'t pause the game',
+      coin_shop: 'coin_shop: title "Coin Shop · $$coins coins", closes with Esc, pauses the game',
+      credits: 'credits: title "Credits", closes with Esc, pauses the game, opens as a pop-up',
+      intro_story: 'intro_story: no title, doesn\'t close with Esc, pauses the game',
+      server_hub: 'server_hub: title "Dusk Valley Servers", closes with Esc, pauses the game'
+    };
+
+    const variables = [
+      'coins = 125',
+      'daily_streak = 3',
+      'intro_seen = true',
+      'last_server = play.duskvalley.net',
+      'music_volume = 0.8',
+      'news_json = {"title":"Lanterns are here","body":"Light up your island with the new lanterns."}',
+      'old_value = 12',
+      'quest_stage = 2',
+      'seconds_on_menu = 47, resets when the game starts',
+      'shop_greeting = You have $$coins coins to spend',
+      'shop_open = false, resets when the game starts',
+      'streak_record = 7',
+      'welcome_name = (empty), resets when the game starts'
+    ];
+    const listeners = [
+      '"Achievement Fanfare": on, listens for Achievement Unlocked, ran 2 times since the game started',
+      '  Play Audio: fanfare.ogg at 90% on Master',
+      '  Show Toast: $$achievement_label for 5 s',
+      '"Cherry Grove Music": on, listens for Biome Entered, never ran since the game started',
+      '  If $$biome_key is minecraft:cherry_grove',
+      '    Play Audio: cherry_theme.ogg at 60% on Music',
+      '"Coin Sound": on, listens for Variable Updated, ran 31 times since the game started',
+      '  If $$var_name is coins',
+      '    Play Audio: coin.ogg at 80% on Master',
+      '"Death Counter": on, listens for Player Died, ran once since the game started',
+      '  Set Variable: deaths to ' + calc('deaths'),
+      '  Display In Chat [Client-Side]: You made it $$days_survived days this time.',
+      '"Goodbye Stats": on, listens for Server Left, Singleplayer World Left, Minecraft Closing, never ran since the game started',
+      '  Send HTTP Request: POST https://api.duskvalley.net/sessions',
+      '  Print to Game Log: Session ended by $$event at $$timestamp_iso',
+      '"Jump Counter": on, listens for Player Jumped, ran 412 times since the game started',
+      '  Set Variable: jumps to ' + calc('jumps'),
+      '"Page Turn Sound": on, listens for questbook:page_turned, never ran since the game started',
+      '  ! The event is from QuestBook, which isn\'t installed.',
+      '  Play Audio: page_turn.ogg at 70% on Master',
+      '"Quest Log Key": on, listens for Keyboard Key Pressed, ran 14 times since the game started',
+      ...ind(2, questSteps),
+      '"Raid Horn": on, listens for Raid Started, Active Raid Area Entered, never ran since the game started',
+      '  Play Audio: raid_horn.ogg at 100% on Master',
+      '  Show Toast: A raid is coming! for 4 s',
+      '"Screenshot Toast": off, listens for Screenshot Taken',
+      '  Show Toast: Screenshot saved for 3 s',
+      '(no name): on, listens for Server Joined, ran once since the game started',
+      '  Set Variable: coins to ' + calc('coins'),
+      '  Show Toast: Welcome back to Dusk Valley! for 4 s',
+      '  Start Scheduler: break_reminder',
+      '"Shop Command": on, listens for Chat Message Sent, ran 3 times since the game started',
+      '  If $$chat_message_string is !shop',
+      '    Open Screen or Custom GUI: coin_shop',
+      '    Set Variable: shop_open to true',
+      '(no name): on, listens for Weather Changed, ran 5 times since the game started',
+      '  ! It has no steps.'
+    ];
+    const schedulers = [
+      'boss_music: not running, every 1 s, until stopped',
+      '  ! It has no steps.',
+      'break_reminder: running, first run after 30 min, then every 30 min, until stopped, never ran yet',
+      '  Display In Chat [Client-Side]: You\'ve been playing for a while. Time for a short break?',
+      'daily_reward: done, starts with the game, once after 10 min, ran once',
+      '  Set Variable: daily_streak to ' + calc('daily_streak'),
+      '  Show Toast: Day $$daily_streak in a row! Your reward is in the Coin Shop. for 5 s',
+      'fireflies: running, starts with the game, every 6 s, until stopped, ran 203 times',
+      '  # Replays the fireflies on the title screen.',
+      '  Reset Element Animator: Firefly swarm',
+      'join_countdown: not running, every 1 s, 10 times',
+      '  Play Audio: countdown_tick.ogg at 70% on Master',
+      'music_fade_in: not running, every tick, 20 times',
+      '  Set Audio Element Volume: Menu music to {"placeholder":"calc","vars":{"expression":"$$music_volume / 20","decimal":"true"}}',
+      'music_shuffle: running, starts with the game, first run after 3 min, then every 3 min, until stopped, ran 6 times',
+      '  Next Audio Element Track: Menu music',
+      'rain_ambience: not running, every 20 s, until stopped',
+      '  ! Nothing starts it.',
+      '  Play Audio: rain_loop.ogg at 40% on Weather'
+    ];
+    const screenLayouts = [
+      '"Dusk Valley Title": on, for Title Screen (title_screen)',
+      '  Button "Play": mid-centered, x -100, y 28, 200 × 20',
+      '    label: Play',
+      '    on click:',
+      ...ind(6, playSteps),
+      '  Button "Cancel": mid-centered, x -100, y 54, 200 × 20',
+      '    label: Cancel',
+      '    shown when: join_countdown is running',
+      '    on click:',
+      '      Stop Scheduler: join_countdown',
+      '  Image "Firefly swarm": bottom-left, x 0, y 0, 480 × 270',
+      '    source: fireflies.apng',
+      '    shown when: fireflies is running',
+      '  Text "Weather text": top-right, x -12, y 40, 160 × 12',
+      '    text: It\'s raining in Dusk Valley.',
+      '    shown when: rain_ambience is running',
+      '"Dusk Valley HUD": on, for every screen',
+      '  Text "Coin counter": top-left, x 22, y 50, 220 × 16',
+      '    text: $$coins coins · $$daily_streak-day streak',
+      '"Halloween Menu": off, for Title Screen (title_screen)',
+      '  Image "Pumpkin": mid-centered, x -32, y -90, 64 × 64',
+      '    source: pumpkin.png'
+    ];
+    const otherLayouts = [
+      '"Dusk Valley Options": on, for Options (options_screen)',
+      '  Checkbox "Fireflies": mid-centered, x -100, y 80, 200 × 20',
+      '    label: Fireflies on the title screen',
+      '    on click:',
+      '      If fireflies is running',
+      '        Stop Scheduler: fireflies',
+      '      Else',
+      '        Start Scheduler: fireflies',
+      '"Coin Shop": on, for the custom GUI coin_shop',
+      '  Text "Greeting": top-centered, x 0, y 24, 240 × 12',
+      '    text: $$shop_greeting',
+      '  Button "Buy Lantern": mid-centered, x -60, y 20, 120 × 20',
+      '    label: Buy Lantern (50 coins)',
+      '    shown when: $$coins is at least 50',
+      '    on click:',
+      '      Set Variable: coins to {"placeholder":"calc","vars":{"expression":"$$coins - 50","decimal":"false"}}',
+      '      Play Audio: coin.ogg at 80% on Master',
+      '"Intro Story": on, for the custom GUI intro_story',
+      '  Button "Continue": bottom-centered, x -60, y -32, 120 × 20',
+      '    label: Continue',
+      '    on click:',
+      '      Set Variable: intro_seen to true',
+      '      Close Screen'
+    ];
+
+    // ---------- what each way in exports: the thing itself, then the parts that can be switched off ----------
+    const SOURCES = {
+      Listener: {
+        head: { icon: 'hearing', name: 'Quest Log Key', kind: 'Listener' },
+        main: ['Listener "Quest Log Key": on, listens for Keyboard Key Pressed, ran 14 times since the game started', ...ind(2, questSteps)],
+        parts: [
+          { id: 'vars', label: 'Variables It Uses', sub: 'last_key', n: '', on: true, lines: ['Variables it uses', '  last_key = J'] },
+          { id: 'guis', label: 'Custom GUIs It Opens', sub: 'quest_log', n: '', on: true, lines: ['Custom GUIs it opens', '  ' + GUI.quest_log] }
+        ]
+      },
+      Script: {
+        head: { icon: 'bolt', name: 'Play', kind: 'Click script of a button' },
+        main: ['Script: runs when the button "Play" is clicked, layout "Dusk Valley" for Title Screen (title_screen)', ...ind(2, playSteps)],
+        parts: [
+          { id: 'vars', label: 'Variables It Uses', sub: 'intro_seen, plays', n: '', on: true, lines: ['Variables it uses', '  intro_seen = true', '  plays = 12'] },
+          { id: 'guis', label: 'Custom GUIs It Opens', sub: 'intro_story', n: '', on: true, lines: ['Custom GUIs it opens', '  ' + GUI.intro_story] }
+        ]
+      },
+      Variable: {
+        head: { icon: 'attach_money', name: 'coins', kind: 'Variable' },
+        main: ['Variable coins = 125'],
+        glue: true,
+        parts: [
+          { id: 'uses', label: 'Where It\'s Used', sub: '6 places', n: '', on: true, lines: [
+            '  used in:',
+            '    layout "Dusk Valley Title": button "Play", click script, Set Variable',
+            '    layout "Dusk Valley HUD": text "Coin counter", text, $$coins',
+            '    layout "Coin Shop": button "Buy Lantern", shown when, Compare Numbers',
+            '    listener (no name), listens for Server Joined: Set Variable',
+            '    custom GUI coin_shop: title, Coin Shop · $$coins coins',
+            '    variable shop_greeting: value, You have $$coins coins to spend'
+          ] }
+        ]
+      },
+      Setup: {
+        head: null,
+        main: [],
+        parts: [
+          { id: 'vars', label: 'Variables', sub: '', n: '13', on: true, lines: ['Variables', ...ind(2, variables)] },
+          { id: 'lis', label: 'Listeners', sub: '', n: '13', on: true, lines: ['Listeners', ...ind(2, listeners)] },
+          { id: 'sch', label: 'Schedulers', sub: '', n: '8', on: true, lines: ['Schedulers', ...ind(2, schedulers)] },
+          { id: 'guis', label: 'Custom GUIs', sub: '', n: '5', on: false, lines: ['Custom GUIs', ...ind(2, Object.keys(GUI).sort().map((k) => GUI[k]))] },
+          { id: 'here', label: 'Layouts on This Screen', sub: 'Title Screen', n: '3', on: true, lines: ['Layouts on Title Screen (title_screen)', ...ind(2, screenLayouts)] },
+          { id: 'rest', label: 'All Other Layouts', sub: '', n: '3', on: false, lines: ['Other layouts', ...ind(2, otherLayouts)] }
+        ]
+      }
+    };
+    const src = SOURCES[from] || SOURCES.Listener;
+    const on = (pt) => (s.on && pt.id in s.on ? s.on[pt.id] : pt.on);
+
+    // One blank line between blocks. A part marked glue belongs to the thing above it, so no blank line there.
+    const out = [];
+    if (src.main.length) out.push(src.main);
+    src.parts.forEach((pt) => {
+      if (!on(pt)) return;
+      if (src.glue && out.length) out[out.length - 1] = out[out.length - 1].concat(pt.lines);
+      else out.push(pt.lines);
+    });
+    const all = out.length ? [VERSIONS, ...out.flatMap((b) => ['', ...b])] : [];
+    const text = all.join('\n');
+
+    // The preview keeps the text exactly, and only shows wrapped lines indented under their own start.
+    const lines = all.map((raw, i) => {
+      const t = raw.trimStart(), n = raw.length - t.length;
+      const cls = i === 0 ? 'v' : t.startsWith('# ') ? 'c' : t.startsWith('(off) ') ? 'o' : t.startsWith('! ') ? 'w' : n === 0 && t ? 'h' : '';
+      return { t, cls, style: 'padding-left: ' + (n + 2) + 'ch; text-indent: -2ch' };
+    });
+
+    const copiedNow = s.copied ?? !!p.copied;
+    const count = text.length.toLocaleString('en-US') + ' characters';
+    const copy = () => {
+      if (!text) return;
+      // Copy puts the text between code block marks, so a chat app shows it as typed.
+      try { navigator.clipboard.writeText('```\n' + text + '\n```'); } catch (e) {}
+      set({ copied: true });
+    };
+
+    return {
+      rootCls: standalone ? 'fm ' + ((p.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark') + ((p.material ?? 'Blur') === 'Blur' ? ' mat-blur' : '') : '',
+      rootStyle: standalone ? 'position: relative; width: ' + (W + 80) + 'px; height: ' + (H + 80) + 'px; overflow: hidden; background: var(--bd)' : 'position: relative; width: ' + W + 'px; height: ' + H + 'px',
+      winStyle: (standalone ? 'left: 40px; top: 40px; ' : 'left: 0; top: 0; ') + 'width: ' + W + 'px; height: ' + H + 'px',
+      standalone, noop: () => {},
+      hasHead: !!src.head, head: src.head || { icon: '', name: '', kind: '' },
+      secLabel: src.head ? 'Also Include' : 'Include',
+      toggles: src.parts.map((pt) => ({
+        label: pt.label, sub: pt.sub, n: pt.n,
+        cls: 'sw' + (on(pt) ? ' on' : ''), aria: on(pt) ? 'true' : 'false',
+        toggle: () => set({ on: { ...(s.on || {}), [pt.id]: !on(pt) }, copied: false })
+      })),
+      hasText: !!text, noText: !text, lines,
+      lead: !text ? 'Nothing to export yet' : copiedNow ? 'Copied ' + count + '.' : count,
+      copy
+    };
+  }
+}
+</script>
+</body>
+</html>

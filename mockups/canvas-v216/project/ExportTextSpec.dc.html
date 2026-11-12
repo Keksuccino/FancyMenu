@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Export as Text, today and proposed</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start}
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;align-items:start}
+.kr{display:flex;align-items:baseline;gap:14px;padding:11px 18px;border-bottom:1px solid var(--sep);font-size:12.5px;line-height:1.45;color:var(--text-2)}
+.kr:last-child{border-bottom:0}
+.kk{flex:0 0 400px;font-weight:600;color:var(--title)}
+.propchip{color:var(--warn);background:color-mix(in srgb,var(--warn) 15%,transparent)}
+.okchip2{color:var(--ok);background:color-mix(in srgb,var(--ok) 15%,transparent)}
+.spec .codebox{margin:0;line-height:1.6}
+.spec .codebox.old{color:var(--text-3)}
+.spec .len{margin-top:8px;font-size:12px;color:var(--text-3)}
+</style>
+</helmet>
+<div class="fm spec {{themeClass}}" style="min-height: 3597px">
+
+<header style="display: flex; flex-direction: column; gap: 12px; max-width: 920px">
+<div style="font-size: 12px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; color: var(--text-3)">FancyMenu · UI rework concept · Export as Text</div>
+<h1 style="margin: 0; font-size: 34px; line-height: 1.15; font-weight: 700; color: var(--title)">Your setup, as text a helper can read</h1>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: var(--text-2)">When something doesn&#x27;t work, the fastest help comes from showing what you built. Export as Text writes a variable, a listener, a scheduler, a layout or a whole script as short, plain text: every setting and every step, the way the editors show them. It&#x27;s made for Alice, the support bot on the Discord, and for the people there, so they know the logic on your client without guessing.</p>
+</header>
+
+<section>
+<h2 class="h2">Today and proposed</h2>
+<div class="two">
+<div>
+<div class="cap">Today: the saved file</div>
+<div class="codebox xt-lines old"><sc-for list="{{todayL}}" as="l" hint-placeholder-count="6"><div style="{{l.style}}">{{l.t}}</div></sc-for></div>
+<div class="len">{{todayLen}} in listener_instances.txt, and that&#x27;s one listener out of 13</div>
+</div>
+<div>
+<div class="cap">Proposed: Export as Text</div>
+<div class="codebox xt-lines"><sc-for list="{{listenerL}}" as="l" hint-placeholder-count="6"><div style="{{l.style}}">{{l.t}}</div></sc-for></div>
+<div class="len">{{listenerLen}}</div>
+<div class="cap" style="margin-top: 26px">What gets in the way today</div>
+<ul class="probs">
+<li>To show what a listener does, you send its file. Every step is a line with one or two long IDs, and the order of the steps stands in yet another line.</li>
+<li>A condition is spread over three lines that find each other by ID.</li>
+<li>Actions and conditions show their internal names and raw values, not what the editor shows.</li>
+<li>Nothing says how things are right now: what a variable holds, whether a scheduler runs, how often a listener ran.</li>
+<li>The file holds every listener, so a question about one means sending all of them, and its variables and GUIs are in other files.</li>
+<li>An AI helper can only read so much at once, and most of it goes to IDs.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Where it opens from</h2>
+<div class="group" style="background: var(--win)">
+<div class="kr"><span class="kk">Variables, Listeners, Schedulers, Custom GUIs</span><span>The export button before Delete in the action bar. It exports the selected one, or all selected ones.</span></div>
+<div class="kr"><span class="kk">Script editor</span><span>The same button in the toolbar, next to the minimap button. It exports the open script and says what runs it.</span></div>
+<div class="kr"><span class="kk">Layout editor · Layout › Export as Text</span><span>The layout with all its elements, their conditions and their scripts.</span></div>
+<div class="kr"><span class="kk">Layout editor · an element&#x27;s menu › Export as Text</span><span>The selected elements.</span></div>
+<div class="kr"><span class="kk">Help › Export Setup as Text</span><span>A switch for each kind. Variables, listeners, schedulers and the layouts of the screen you&#x27;re on start turned on.</span></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">The window, piece by piece</h2>
+<div class="three">
+<div class="spec-card"><div class="k">What the text holds</div><div class="kd" style="margin: 0">On the left: the thing you opened it from, then a switch for each kind of thing it uses, with their names. From the Help menu there&#x27;s a switch for each kind of thing instead.</div></div>
+<div class="spec-card"><div class="k">The text</div><div class="kd" style="margin: 0">On the right, read-only, and exactly what gets copied. It changes the moment a switch does. Long lines wrap under their own start, so the levels stay readable.</div></div>
+<div class="spec-card"><div class="k">The footer</div><div class="kd" style="margin: 0">How long the text is, then Save as File and Copy. Copy says Copied and the window stays open, so you can save the file too. Nothing in this window changes your setup.</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">How each kind reads</h2>
+<div class="two">
+<div style="display: flex; flex-direction: column; gap: 24px">
+<div class="spec-card"><div class="k">An action script</div><div class="codebox xt-lines"><sc-for list="{{scriptL}}" as="l" hint-placeholder-count="6"><div style="{{l.style}}">{{l.t}}</div></sc-for></div><div class="kd" style="margin: 0">The first line says what runs it (rule 81). A step is the sentence of its row in the script editor: the action, a colon, then its values with the same words between them.</div></div>
+<div class="spec-card"><div class="k">A layout and its elements</div><div class="codebox xt-lines"><sc-for list="{{layoutL}}" as="l" hint-placeholder-count="6"><div style="{{l.style}}">{{l.t}}</div></sc-for></div><div class="kd" style="margin: 0">An element names its kind, its In-Editor Name, its anchor, place and size. Then come only the settings that differ from a new element of its kind, its conditions and its scripts.</div></div>
+<div class="spec-card"><div class="k">A custom GUI</div><div class="codebox xt-lines"><sc-for list="{{guiL}}" as="l" hint-placeholder-count="6"><div style="{{l.style}}">{{l.t}}</div></sc-for></div></div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 24px">
+<div class="spec-card"><div class="k">A variable</div><div class="codebox xt-lines"><sc-for list="{{variableL}}" as="l" hint-placeholder-count="6"><div style="{{l.style}}">{{l.t}}</div></sc-for></div><div class="kd" style="margin: 0">Its value right now. Resets when the game starts is only there when it does.</div></div>
+<div class="spec-card"><div class="k">A scheduler</div><div class="codebox xt-lines"><sc-for list="{{schedulerL}}" as="l" hint-placeholder-count="6"><div style="{{l.style}}">{{l.t}}</div></sc-for></div><div class="kd" style="margin: 0">Whether it runs, its timing in the words of the Schedulers window (rule 106), and how often it ran (rule 108).</div></div>
+<div class="spec-card"><div class="k">Several of one kind</div><div class="codebox xt-lines"><sc-for list="{{severalL}}" as="l" hint-placeholder-count="6"><div style="{{l.style}}">{{l.t}}</div></sc-for></div><div class="kd" style="margin: 0">One thing starts with its kind. Several of one kind stand under one heading, and where they&#x27;re used is left out. A blank line parts the kinds.</div></div>
+</div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">What the text follows</h2>
+<div class="two">
+<div class="spec-card"><ul class="notes">
+<li>It&#x27;s always English, whatever language the game is in, so every helper can read it.</li>
+<li>The first line names the versions of FancyMenu, Minecraft and the mod loader.</li>
+<li>Two spaces deeper is one level deeper: the steps of a block, the settings of an element, the script under its trigger.</li>
+<li>A condition is the sentence of its chip, like <code>intro_seen is not true</code>. Several are joined with and. A group that needs only one of them is written (… or …).</li>
+<li><code>#</code> starts a comment, <code>(off)</code> a step that&#x27;s turned off, and <code>!</code> a problem FancyMenu found, like a scheduler nothing starts.</li>
+<li>Placeholders stand the way they&#x27;re saved, and $$ names stay names.</li>
+</ul></div>
+<div class="spec-card"><ul class="notes">
+<li>Folded blocks and folders export all their steps.</li>
+<li>Left out: internal IDs, icons, colors, what&#x27;s folded, and settings that still have their default.</li>
+<li>A line break inside a value is written as <code>\n</code>, so a value never breaks the levels.</li>
+<li>Something from an addon that isn&#x27;t installed exports its saved name and values, with a <code>!</code> line that says so (rule 86).</li>
+<li>Copy wraps the text in a code block, three backticks before and after, so Discord shows it as typed instead of reading # and _ as formatting. The file has none.</li>
+<li>Save as File opens the Save browser with a .txt named after the thing, like export-quest-log-key.txt.</li>
+</ul></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Changes beyond the UI</h2>
+<p class="kd" style="max-width: 920px; margin: -6px 0 16px; font-size: 13px; color: var(--text-2)">The window above already uses these, so each one is a rework rule.</p>
+<div class="two">
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Export as Text <span class="chip propchip">New, rule 155</span></div><div class="kd" style="margin: 0">Everything that holds logic can be exported as plain text that says what it does, to ask Alice or the people on the Discord for help. One window does it for every kind.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Export opens where the thing is <span class="chip propchip">New, rule 156</span></div><div class="kd" style="margin: 0">A button in the action bars of the managers and in the script editor, an entry in the Layout menu and in an element&#x27;s menu, and Export Setup as Text in the Help menu.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">The text holds what matters, and nothing else <span class="chip propchip">New, rule 157</span></div><div class="kd" style="margin: 0">All settings, every step, the state right now and the problems FancyMenu found. What it uses can be added. IDs and everything only the UI needs stay out.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">One way to write each kind <span class="chip propchip">New, rule 158</span></div><div class="kd" style="margin: 0">English, the versions first, two spaces a level, and a step is the sentence of its row in the script editor.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Everything writes its own export text <span class="chip propchip">New, rule 159</span></div><div class="kd" style="margin: 0">Each kind writes its text in one place. Actions, conditions and elements build it from what they already describe about themselves, so addons export without extra work.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Used In comes from one index <span class="chip okchip2">Covered, rules 87, 109 and 125</span></div><div class="kd" style="margin: 0">What a script uses and where a thing is used both come from the index the managers already read.</div></div>
+</div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"$preview":{"width":1440,"height":3597}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const VERSIONS = 'FancyMenu 3.10.0, Minecraft 1.21.11, Fabric';
+    const PLAYER = '{"placeholder":"playername"}';
+    const len = (t) => t.length.toLocaleString('en-US') + ' characters';
+    // Lines of a sample, each with its indent as padding, so a wrapped line stays under its own start.
+    const L = (t) => t.split('\n').map((raw) => { const s = raw.trimStart(); return { t: s, style: 'padding-left: ' + (raw.length - s.length + 2) + 'ch; text-indent: -2ch' }; });
+    // The way FancyMenu saves this listener today: every block, step and condition is a line of its own, tied together by IDs.
+    const A = '5b0e7c1a-93d4-4f6e-8a21-c7d90e3b5f42-1762941180333', B = 'e41a9d07-2c6b-4b8f-b1f3-08d5a7c2e96d-1762941180334';
+    const C = '9f2c44b1-6e0a-4d37-a5c8-3b7e1d90f6a2-1762941193021', D = 'c80d15e3-4a7f-4e92-9b06-d2f3a8c471be-1762941201877';
+    const E = '2ad7f913-0b5c-4e1d-87a6-f4c29d6e0b38-1762941201878', F = 'b6c1e04a-7d92-4a3f-9c58-1e0f7b2d6a95-1762941215402';
+    const G = '4e88a2d6-1f3b-4c70-b9e5-6a0d3c8f1e27-1762941230116', H = '71be3c9f-5a04-4d82-a6f1-9e2b7c0d4a63-1762941242750';
+    const I = 'a3d95e21-8c6f-4b17-90d4-2f7a1e6c3b08-1762941256391', J = '16f0b7d4-3e9a-4c25-8f61-d0a4c7e92b53-1762941268024';
+    const today = [
+      'listener_instance {',
+      '  listener_instance_identifier = ' + A,
+      '  listener_provider_identifier = keyboard_key_pressed',
+      '  listener_instance_action_script_identifier = ' + B,
+      '  listener_instance_display_name = Quest Log Key',
+      '  [executable_block:' + B + '][type:generic] = [executables:' + C + ';' + D + ';]',
+      '  [executable_block:' + C + '][type:comment] = [executables:]',
+      '  [comment_executable_block_value:' + C + '] = J opens the quest log, but only while playing.',
+      '  [executable_block:' + D + '][type:if] = [executables:' + H + ';' + I + ';' + J + ';]',
+      '  [if_executable_block_body:' + D + '] = ' + E,
+      '  [if_executable_block_collapsed:' + D + '] = false',
+      '  [loading_requirement_container_meta:' + E + '] = [groups:][instances:' + F + ';' + G + ';]',
+      '  [loading_requirement:fancymenu_visibility_requirement_is_text][requirement_mode:if][req_id:' + F + '] = ["mode":"equals","text":"$$key_name","compare_with":"J"]$',
+      '  [loading_requirement:is_any_screen_open][requirement_mode:if_not][req_id:' + G + '] = ',
+      '  [executable_action_instance:' + H + '][action_type:opengui] = quest_log',
+      '  [executable_action_instance:' + I + '][action_type:play_audio] = …',
+      '  [executable_action_instance:' + J + '][action_type:set_variable] = last_key:$$key_name',
+      '}'
+    ].join('\n');
+    const listener = [
+      VERSIONS,
+      '',
+      'Listener "Quest Log Key": on, listens for Keyboard Key Pressed, ran 14 times since the game started',
+      '  # J opens the quest log, but only while playing.',
+      '  If $$key_name is J and no screen is open',
+      '    Open Screen or Custom GUI: quest_log',
+      '    Play Audio: page_turn.ogg at 100% on Master',
+      '    Set Variable: last_key to $$key_name',
+      '',
+      'Variables it uses',
+      '  last_key = J',
+      '',
+      'Custom GUIs it opens',
+      '  quest_log: title "Quest Log", closes with Esc, doesn\'t pause the game'
+    ].join('\n');
+    const script = [
+      'Script: runs when the button "Play" is clicked, layout "Dusk Valley" for Title Screen (title_screen)',
+      '  # The first visit shows the story. After that, Play joins the server.',
+      '  Play Audio: click.ogg at 80% on Master',
+      '  If intro_seen is not true',
+      '    Set Variable: intro_seen to true',
+      '    Open Screen or Custom GUI: intro_story',
+      '  Else If play.duskvalley.net is online',
+      '    Show Toast: Joining Dusk Valley, ' + PLAYER + '! for 3 s',
+      '    Execute Later after 800 ms',
+      '      Join Server: play.duskvalley.net',
+      '  Else',
+      '    Display In Chat [Client-Side]: &cThe server is offline. Try again in a minute.',
+      '  (off) Print to Game Log: Play clicked by ' + PLAYER,
+      '  Folder: Stats',
+      '    Send HTTP Request: POST https://api.duskvalley.net/plays',
+      '    Set Variable: plays to {"placeholder":"calc","vars":{"expression":"$$plays + 1","decimal":"false"}}'
+    ].join('\n');
+    const variable = [
+      'Variable coins = 125',
+      '  used in:',
+      '    layout "Dusk Valley Title": button "Play", click script, Set Variable',
+      '    layout "Dusk Valley HUD": text "Coin counter", text, $$coins',
+      '    layout "Coin Shop": button "Buy Lantern", shown when, Compare Numbers',
+      '    listener (no name), listens for Server Joined: Set Variable',
+      '    custom GUI coin_shop: title, Coin Shop · $$coins coins',
+      '    variable shop_greeting: value, You have $$coins coins to spend'
+    ].join('\n');
+    const scheduler = [
+      'Scheduler fireflies: running, starts with the game, every 6 s, until stopped, ran 203 times',
+      '  # Replays the fireflies on the title screen.',
+      '  Reset Element Animator: Firefly swarm',
+      '  used in:',
+      '    layout "Dusk Valley Options": checkbox "Fireflies", click script, Start Scheduler, Stop Scheduler',
+      '    layout "Dusk Valley Title": image "Firefly swarm", shown when, Scheduler Is Running'
+    ].join('\n');
+    const gui = [
+      'Custom GUI quest_log: title "Quest Log", closes with Esc, doesn\'t pause the game',
+      '  layouts: "Quest Log" (on)',
+      '  used in:',
+      '    listener "Quest Log Key": Open Screen or Custom GUI',
+      '    layout "Pause Menu": button "Quests", click script, Open Screen or Custom GUI'
+    ].join('\n');
+    const layout = [
+      'Layout "Dusk Valley Title": on, for Title Screen (title_screen)',
+      '  Button "Cancel": mid-centered, x -100, y 54, 200 × 20',
+      '    label: Cancel',
+      '    shown when: join_countdown is running',
+      '    on click:',
+      '      Stop Scheduler: join_countdown',
+      '  Image "Firefly swarm": bottom-left, x 0, y 0, 480 × 270',
+      '    source: fireflies.apng',
+      '    shown when: fireflies is running',
+      '  Text "Weather text": top-right, x -12, y 40, 160 × 12',
+      '    text: It\'s raining in Dusk Valley.',
+      '    shown when: rain_ambience is running'
+    ].join('\n');
+    const several = [
+      'Variables',
+      '  coins = 125',
+      '  seconds_on_menu = 47, resets when the game starts',
+      '  welcome_name = (empty), resets when the game starts',
+      '',
+      'Schedulers',
+      '  boss_music: not running, every 1 s, until stopped',
+      '    ! It has no steps.',
+      '  rain_ambience: not running, every 20 s, until stopped',
+      '    ! Nothing starts it.',
+      '    Play Audio: rain_loop.ogg at 40% on Weather'
+    ].join('\n');
+    return {
+      themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark',
+      todayL: L(today), todayLen: len(today), listenerL: L(listener), listenerLen: len(listener), scriptL: L(script), variableL: L(variable), schedulerL: L(scheduler), guiL: L(gui), layoutL: L(layout), severalL: L(several)
+    };
+  }
+}
+</script>
+</body>
+</html>

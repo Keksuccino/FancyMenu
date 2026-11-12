@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Is Number condition</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="fm {{themeClass}} {{matClass}}" style="position: relative; width: 1200px; height: 800px; overflow: hidden">
+
+<div class="backdrop" aria-hidden="true">
+<img class="art" src="dusk_valley.png" alt="">
+<div class="dim"></div>
+<div class="gridlines"></div>
+<div class="le le-btn" style="left: 470px; top: 600px; width: 260px; height: 36px">Claim Reward</div>
+</div>
+
+<div class="win" style="left: 320px; top: 170px; width: 560px">
+<div class="titlebar">
+<div class="tl"><button class="c" aria-label="Close"><span class="ms" aria-hidden="true">close</span></button><button class="m" aria-label="Collapse" disabled><span class="ms" aria-hidden="true">remove</span></button><button class="x" aria-label="Maximize" disabled><span class="ms" aria-hidden="true">open_in_full</span></button></div>
+<div class="wt"><span class="ms" aria-hidden="true">calculate</span>Is Number</div>
+<div></div>
+</div>
+
+<div class="body">
+<div class="group lw-96">
+<div class="row"><span class="lbl">Number</span><div class="ctl grow"><div class="field mono"><input type="text" aria-label="Number" value="$$score"><button class="ib" data-tip="Open in Editor" aria-label="Open in Editor"><span class="ms" aria-hidden="true">edit_note</span></button></div></div></div>
+<div class="row" style="z-index: 2"><span class="lbl">Compare</span><div class="ctl" style="margin-left: 0">
+<div class="seg icons inline" role="radiogroup" aria-label="Compare mode">
+<div class="thumb" style="transform: {{opX}}"></div>
+<sc-for list="{{ops}}" as="op" hint-placeholder-count="5">
+<button class="{{op.cls}}" role="radio" aria-checked="{{op.checked}}" data-tip="{{op.name}}" aria-label="{{op.name}}" onClick="{{op.pick}}">{{op.symbol}}</button>
+</sc-for>
+</div>
+</div></div>
+<div class="row"><span class="lbl">Compare To</span><div class="ctl grow"><div class="field mono"><input type="text" aria-label="Compare to number" value="10"><button class="ib" data-tip="Open in Editor" aria-label="Open in Editor"><span class="ms" aria-hidden="true">edit_note</span></button></div></div></div>
+</div>
+
+<div style="display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 10px; background: var(--tint); color: var(--text-2)">
+<span class="ms" style="font-size: 16px; flex: 0 0 auto; color: var(--accent)" aria-hidden="true">check_circle</span>
+<span>Passes when <code style="font-size: 12px; color: var(--title)">$$score</code> is <strong style="font-weight: 600; color: var(--title)">{{opSentence}}</strong> <code style="font-size: 12px; color: var(--title)">10</code></span>
+</div>
+</div>
+
+<div class="footer">
+<button class="btn wide">Cancel</button>
+<button class="btn wide primary">Save</button>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1200,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const list = [
+      ['=', 'Equals', 'equal to'],
+      ['>', 'Bigger than', 'bigger than'],
+      ['≥', 'Bigger than or equals', 'bigger than or equal to'],
+      ['<', 'Smaller than', 'smaller than'],
+      ['≤', 'Smaller than or equals', 'smaller than or equal to']
+    ];
+    const op = s.op ?? 2;
+    return {
+      themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark',
+      matClass: (this.props.material ?? 'Blur') === 'Blur' ? 'mat-blur' : '',
+      opI: op, opX: 'translateX(' + (op * 100) + '%)',
+      opSentence: list[op][2],
+      ops: list.map(([symbol, name], i) => ({
+        symbol, name, cls: i === op ? 'on' : '', checked: i === op ? 'true' : 'false',
+        pick: () => this.setState({ op: i })
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Layout editor spec</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.pair{display:grid;grid-template-columns:repeat(2,619px);gap:42px}
+.shot{position:relative;width:619px;height:387px;overflow:hidden;border-radius:10px;box-shadow:0 0 0 1px var(--win-outline)}
+.shot>.in{position:absolute;left:0;top:0;width:1440px;height:900px;transform:scale(.43);transform-origin:0 0}
+.lgw{position:absolute;background:#282828;border:2px solid #3e4042;color:#ceDDed;font-size:16px}
+.lgw .tb{height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;background:#1f1f1f;border-bottom:2px solid #3e4042}
+.lgw .row{display:flex;align-items:center;gap:10px;height:34px;padding:0 12px}
+.lgw .row.sel{background:#147fd0;color:#fff}
+.lgw .row .ms{font-size:18px}
+.lgm{position:absolute;width:420px;padding:3px 0;border:2px solid #3e4042;background:#282828;color:#ceDDed;font-size:16px}
+.lgm .lr{height:30px;display:flex;align-items:center;gap:9px;padding:0 12px}
+.lgm .lr .ms{font-size:17px;color:#fff}
+.lgm .lr .i{margin-left:auto;opacity:.7}
+.lgm .lr.hl{background:#147fd0;color:#fff}
+.lgm .lsepl{height:2px;margin:3px 0;background:#3e4042}
+.lgm .more{height:30px;display:flex;align-items:center;padding:0 12px;color:#8a9097;font-style:italic}
+.lgb{display:inline-flex;align-items:center;height:40px;padding:0 14px;border:2px solid #3e4042;background:#333;color:#e2e2e2;font-size:18px;white-space:nowrap}
+.lgb .v{color:#e59b12}
+.lgrow{position:absolute;left:100px;display:flex;gap:10px}
+.lginfo{position:absolute;color:#e8e8e8;font-size:18px;line-height:1.5}
+.lglab{position:absolute;font-size:13px;color:#fff;background:rgba(0,0,0,.55);padding:1px 4px;white-space:nowrap}
+.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:0 40px}
+.kr{display:flex;align-items:center;gap:12px;padding:9px 2px;border-bottom:1px solid var(--sep);font-size:13px;color:var(--text)}
+.kr kbd{flex:0 0 150px;font-family:inherit;font-size:12px;font-weight:600;color:var(--title)}
+.spec .mv .from b{font-weight:600;color:var(--text)}
+</style>
+</helmet>
+<div class="fm spec {{themeClass}} mat-blur" style="min-height: 5573px">
+
+<header style="display: flex; flex-direction: column; gap: 12px; max-width: 900px">
+<div style="font-size: 12px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; color: var(--text-3)">FancyMenu · UI rework concept · layout editor</div>
+<h1 style="margin: 0; font-size: 34px; line-height: 1.15; font-weight: 700; color: var(--title)">Edit the screen like in a design tool</h1>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: var(--text-2)">The layout editor becomes a canvas editor. The screen sits on an artboard you can zoom, with rulers, smart guides and previews for other screen sizes. Layers and a new Inspector dock beside the screen instead of covering it, and the Element Animator turns into a timeline under the canvas. Settings that took a right-click, a submenu and a window are one click away now.</p>
+</header>
+
+<section>
+<h2 class="h2">Today and proposed</h2>
+<div class="pair">
+<div><div class="cap">Today</div><div class="shot"><div class="in">
+<div class="fm theme-dark" style="position: relative; width: 1440px; height: 900px; overflow: hidden">
+<div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""><div class="gridlines"></div></div>
+<div class="le" style="left: 500px; top: 150px; width: 440px; height: 84px; display: grid; place-items: center; color: #fff; font-size: 52px; font-weight: 700; text-shadow: 0 4px 0 rgba(0, 0, 0, .35)">Dusk Valley</div>
+<div class="le" style="left: 846px; top: 226px; padding: 2px 8px; color: #ffe066; font-size: 17px; font-weight: 700; transform: rotate(-12deg)">Now with fireflies!</div>
+<div class="le le-btn" style="left: 590px; top: 420px; width: 260px; height: 38px">Play</div>
+<div class="le le-btn" style="left: 590px; top: 468px; width: 260px; height: 38px">Options</div>
+<div class="le le-btn" style="left: 590px; top: 516px; width: 260px; height: 38px">Quit Game</div>
+<div class="sel-border" style="left: 589px; top: 419px; width: 262px; height: 40px"><i style="left: -3px; top: -3px"></i><i style="right: -3px; top: -3px"></i><i style="left: -3px; bottom: -3px"></i><i style="right: -3px; bottom: -3px"></i></div>
+<span class="lglab" style="left: 590px; top: 398px">anchor: center   X: 590   width: 260</span>
+<span class="lglab" style="left: 760px; top: 461px">Y: 420   height: 38</span>
+<div class="legacy-bar" style="position: absolute; left: 0; right: 0; top: 0; height: 30px; font-size: 15px"><span class="t">FancyMenu</span><span class="t">Layout</span><span class="t">Edit</span><span class="t">Element</span><span class="t">Window</span><span class="t">Help</span><span class="r"><span class="t" style="font-weight: 700">* Unsaved Changes! *</span><span class="i"><span class="ms" aria-hidden="true">close</span></span></span></div>
+<div class="lgw" style="right: 20px; top: 48px; width: 260px; height: 320px"><div class="tb"><span>Layers</span><span style="display: flex; gap: 6px"><span class="ms" aria-hidden="true" style="font-size: 18px">add</span><span class="ms" aria-hidden="true" style="font-size: 18px">expand_more</span><span class="ms" aria-hidden="true" style="font-size: 18px">close</span></span></div><div class="row"><span class="ms">layers</span>Main Buttons</div><div class="row sel"><span class="ms">layers</span>Play</div><div class="row"><span class="ms">layers</span>Options</div><div class="row"><span class="ms">layers</span>Quit Game</div><div class="row"><span class="ms">layers</span>Title Text</div><div class="row"><span class="ms">layers</span>Splash Text</div><div class="row" style="color: #e59b12">Vanilla Widgets</div></div>
+<div class="lgm" style="left: 870px; top: 300px">
+<div class="lr"><span class="ms">mouse</span>Pick Element<span class="i">›</span></div><div class="lr"><span class="ms">content_copy</span>Copy Element ID</div><div class="lr"><span class="ms">text_fields</span>In-Editor Display Name</div><div class="lr"><span class="ms">auto_awesome</span>Affected By Decoration Overlays: Disabled</div><div class="lsepl"></div>
+<div class="lr hl"><span class="ms">anchor</span>Anchor Point<span class="i">›</span></div><div class="lr"><span class="ms">fit_screen</span>Stay On Screen: Enabled</div><div class="lr"><span class="ms">open_with</span>Advanced Positioning<span class="i">›</span></div><div class="lr"><span class="ms">straighten</span>Advanced Sizing<span class="i">›</span></div><div class="lr"><span class="ms">swap_horiz</span>Stretch Horizontally: Disabled</div><div class="lr"><span class="ms">swap_vert</span>Stretch Vertically: Disabled</div><div class="lsepl"></div>
+<div class="lr"><span class="ms">checklist</span>Loading Requirements</div><div class="lr"><span class="ms">history</span>Load Once Per Session: Disabled</div><div class="lsepl"></div>
+<div class="lr"><span class="ms">arrow_upward</span>Move One Layer Up</div><div class="lr"><span class="ms">arrow_downward</span>Move One Layer Down</div>
+<div class="more">… 20 more entries, then the button's own settings</div>
+</div>
+<div class="lgw" style="left: 120px; top: 560px; width: 400px; height: 220px"><div class="tb"><span>Opacity</span><span style="display: flex; gap: 6px"><span class="ms" aria-hidden="true" style="font-size: 18px">crop_square</span><span class="ms" aria-hidden="true" style="font-size: 18px">close</span></span></div><div style="padding: 22px 20px; display: flex; flex-direction: column; gap: 16px"><div style="height: 34px; border: 2px solid #3e4042; background: #1e1e1e; display: flex; align-items: center; padding: 0 10px">1.0</div><div style="height: 8px; background: #3e4042; position: relative"><span style="position: absolute; right: 0; top: -6px; width: 12px; height: 20px; background: #ddd"></span></div><div style="display: flex; justify-content: flex-end; gap: 10px"><span class="lgb" style="height: 32px; font-size: 16px">Cancel</span><span class="lgb" style="height: 32px; font-size: 16px">Done</span></div></div></div>
+</div>
+</div></div></div>
+<div><div class="cap">Proposed</div><div class="shot"><div class="in"><dc-import name="LayoutEditor" hover="title" theme="{{theme}}" material="Blur" hint-size="1440px,900px"></dc-import></div></div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">The animator, today and proposed</h2>
+<div class="pair">
+<div><div class="cap">Today · Keyframe Editor, a full screen of its own</div><div class="shot"><div class="in">
+<div class="fm theme-dark" style="position: relative; width: 1440px; height: 900px; overflow: hidden; background: #1d1d1d">
+<div class="backdrop" aria-hidden="true" style="background: #1d1d1d"><div class="gridlines"></div></div>
+<span class="lgb" style="position: absolute; left: 20px; top: 20px">Cancel</span><span class="lgb" style="position: absolute; left: 140px; top: 20px">Done</span>
+<div class="lginfo" style="left: 20px; top: 84px"><b>Selected Keyframe:</b><br>Time: 1.2s<br>Position: (290, 210)<br>Size: 130x19<br>Anchor: top-left<br>Sticky: No</div>
+<div class="lginfo" style="right: 66px; top: 26px; color: #ff5555; font-weight: 700">Recording</div>
+<span style="position: absolute; right: 16px; top: 22px; width: 36px; height: 36px; background: #e02424"></span>
+<div style="position: absolute; left: 670px; top: 390px; width: 100px; height: 100px; background: rgba(224, 36, 36, .45); border: 2px solid #ff5555"></div>
+<div class="lgrow" style="top: 610px"><span class="lgb">Undo</span><span class="lgb">Redo</span><span class="lgb">Anchor Point: <span class="v">top-left</span></span><span class="lgb">Sticky Anchor: Disabled</span><span class="lgb">Edit Timestamp</span></div>
+<div class="lgrow" style="top: 660px"><span class="lgb">Pause</span><span class="lgb">Stop Recording</span><span class="lgb">Recording Speed: 100%</span><span class="lgb">Add Keyframe</span><span class="lgb">Delete Keyframe</span></div>
+<div class="lgrow" style="top: 710px"><span class="lgb">Distance Smoothing</span><span class="lgb">Offset Mode: Disabled</span><span class="lgb">Arrow Keys Move Preview: Disabled</span></div>
+<div style="position: absolute; left: 100px; top: 772px; width: 1240px; height: 70px; background: linear-gradient(90deg, #2f6ed8 0 62%, #1d3f7a 62%)">
+<span style="position: absolute; left: 0; top: 5px; width: 4px; height: 60px; background: #fff"></span><span style="position: absolute; left: 30%; top: 5px; width: 4px; height: 60px; background: #fff"></span><span style="position: absolute; left: 62%; top: 5px; width: 4px; height: 60px; background: #fff"></span>
+<span style="position: absolute; left: 38%; top: 0; width: 4px; height: 70px; background: #ff3030"></span>
+</div>
+<div class="lginfo" style="left: 100px; top: 852px">Time: 1.20s / 3.20s</div>
+</div>
+</div></div></div>
+<div><div class="cap">Proposed · the timeline under the canvas</div><div class="shot"><div class="in"><dc-import name="LayoutEditor" sel="title" timeline="{{yes}}" time="0.8" kf="title.pos.1" theme="{{theme}}" material="Blur" hint-size="1440px,900px"></dc-import></div></div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Where today's windows go</h2>
+<div class="group" style="background: var(--win)">
+<div class="mv head"><div>Today</div><div></div><div>Proposed</div><div>Why</div></div>
+<div class="mv"><div class="from">Number picker for every number, like opacity, rotation and delays</div><div class="arrow" aria-hidden="true">→</div><div class="to">Fields and sliders in the Inspector</div><div class="why">Values change where you see them, and the canvas follows while you drag. Every field still takes placeholders with its { } button.</div></div>
+<div class="mv"><div class="from">Text input for names, and for the element ID an Element anchor points to</div><div class="arrow" aria-hidden="true">→</div><div class="to">Rename right in Layers or the Inspector header, pick the anchor element on the canvas</div><div class="why">No more copying an element's ID just to anchor something to it.</div></div>
+<div class="mv"><div class="from">Layout Properties menu</div><div class="arrow" aria-hidden="true">→</div><div class="to">The Inspector when nothing is selected</div><div class="why">Background, screen title, index, scaling, sounds and scripts are always one click away. The menu stays and shows the same rows.</div></div>
+<div class="mv"><div class="from">Keyframe Editor and Manage Target Elements, both full screens</div><div class="arrow" aria-hidden="true">→</div><div class="to">The Timeline under the canvas</div><div class="why">Animations get edited on the real screen, with every element in place, instead of on a plain box.</div></div>
+<div class="mv"><div class="from">Manage Audios, a full screen</div><div class="arrow" aria-hidden="true">→</div><div class="to">The Tracks section in the Inspector, with the list right in it</div><div class="why">It doesn't replace the editor or close the windows that are open.</div></div>
+<div class="mv"><div class="from">Auto-Scaling, a full screen</div><div class="arrow" aria-hidden="true">→</div><div class="to">The Scaling section in the Inspector</div><div class="why">Base size and GUI scale are two rows; Screen Size shows the result right away.</div></div>
+<div class="mv"><div class="from">Window menu: grid, snapping, anchor overlay, handles</div><div class="arrow" aria-hidden="true">→</div><div class="to">The toolbar and the View menu</div><div class="why">Grid and snapping are one click in the toolbar. Everything else about the canvas is grouped in View.</div></div>
+<div class="mv"><div class="from">Element › Deleted Vanilla Widgets</div><div class="arrow" aria-hidden="true">→</div><div class="to">Vanilla Widgets group in Layers</div><div class="why">Every vanilla widget is listed. Hidden ones show a crossed-out eye that shows them again, and the Inspector's Hidden in Game switch does the same. They were only ever hidden, never deleted.</div></div>
+<div class="mv"><div class="from">Submenus inside submenus, like Background › Set Background › Slider Textures</div><div class="arrow" aria-hidden="true">→</div><div class="to">Pages inside the Inspector</div><div class="why">A row with › opens its page in place, with a back arrow at the top. Deep settings stop needing a stack of menus.</div></div>
+<div class="mv"><div class="from">Text editor, script editor, conditions, color picker, file choosers, Save As, and element editors like the player pose or model transform</div><div class="arrow" aria-hidden="true">→</div><div class="to">Stay windows</div><div class="why">Big editors still open as windows, from the row that shows their value. They are non-modal, so the canvas stays usable behind them.</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">What changed</h2>
+<div class="group" style="background: var(--win)">
+<div class="mv head"><div>Today</div><div></div><div>Proposed</div><div>Why</div></div>
+<div class="mv"><div class="from">The canvas is the whole window</div><div class="arrow" aria-hidden="true">→</div><div class="to">The screen is an artboard with zoom, panning and rulers</div><div class="why">Docked panels never cover the screen, and the zoom refits when one opens or closes. Tab hides all of them and the menu bar, and shows the screen at its real size, like the editor looks today.</div></div>
+<div class="mv"><div class="from">A floating Layers panel on top of the screen</div><div class="arrow" aria-hidden="true">→</div><div class="to">Layers and the Inspector docked beside it, the Timeline below</div><div class="why">Docked panels never cover the screen, and the toolbar shows or hides each one.</div></div>
+<div class="mv"><div class="from">Settings in a 30-entry right-click menu, the element's own ones at the bottom</div><div class="arrow" aria-hidden="true">→</div><div class="to">The Inspector, with the element's own settings right after Position &amp; Size</div><div class="why">The right-click menu stays, with the same rows. Sections fold away and the search finds any setting.</div></div>
+<div class="mv"><div class="from">Grid snapping only with the grid visible and one element selected</div><div class="arrow" aria-hidden="true">→</div><div class="to">Snapping to the grid, other elements and the screen, while moving and resizing</div><div class="why">Smart guides show what lines up and equal gaps. Holding Alt moves freely and shows distances instead.</div></div>
+<div class="mv"><div class="from">No alignment tools</div><div class="arrow" aria-hidden="true">→</div><div class="to">Align and distribute</div><div class="why">In the Inspector with several elements selected, and in the Element menu. One element aligns to the screen.</div></div>
+<div class="mv"><div class="from">Only one element resizes at a time</div><div class="arrow" aria-hidden="true">→</div><div class="to">Several elements resize together</div><div class="why">They scale inside the selection box. Each one keeps its anchor, and only offsets and sizes change.</div></div>
+<div class="mv"><div class="from">Anchors change in a right-click submenu or by hovering while dragging; an Element anchor needs a typed ID</div><div class="arrow" aria-hidden="true">→</div><div class="to">A nine-point anchor picker in the Inspector, and Anchor to Element picks on the canvas</div><div class="why">The dashed line on the canvas shows what X and Y are measured from. Vanilla widgets get Original Position instead, where the screen itself places them. Hover charging stays for dragging.</div></div>
+<div class="mv"><div class="from">Ctrl+click adds to the selection</div><div class="arrow" aria-hidden="true">→</div><div class="to">Shift+click or Ctrl+click</div><div class="why">Shift is what every other editor uses; Ctrl keeps working.</div></div>
+<div class="mv"><div class="from">Selected elements jump to the top</div><div class="arrow" aria-hidden="true">→</div><div class="to">Elements keep their real stacking order</div><div class="why">Only the selection's outline and handles draw on top, so what you see is what the screen shows.</div></div>
+<div class="mv"><div class="from">Layouts only show at the window's size</div><div class="arrow" aria-hidden="true">→</div><div class="to">Screen Size previews other window sizes and GUI scales</div><div class="why">Anchors and auto-scaling can be checked without resizing Minecraft. When the layout forces a GUI scale, Screen Size shows the forced one.</div></div>
+<div class="mv"><div class="from">No way to try the screen without leaving the editor</div><div class="arrow" aria-hidden="true">→</div><div class="to">Preview runs it inside the editor</div><div class="why">Fades, delays, conditions, animations and actions on the screen itself work. Actions that would change files, settings, variables, other screens or the game don't run; the note over the canvas says what they would have done.</div></div>
+<div class="mv"><div class="from">One Vanilla Widgets row</div><div class="arrow" aria-hidden="true">→</div><div class="to">Every vanilla widget in Layers</div><div class="why">Each can be selected and hidden in game on its own.</div></div>
+<div class="mv"><div class="from">Universal layouts edit on a blank screen</div><div class="arrow" aria-hidden="true">→</div><div class="to">Universal layouts pick a screen to preview on</div><div class="why">The artboard says Universal Layout, the screen lists get their own Screens section, and rows only screens have go away.</div></div>
+<div class="mv"><div class="from">Only the layout being edited shows</div><div class="arrow" aria-hidden="true">→</div><div class="to">View › Show Other Active Layouts draws the rest, dimmed and locked</div><div class="why">Layouts that stack on the same screen, universal ones included, can be lined up with each other.</div></div>
+<div class="mv"><div class="from">Paste puts copies exactly on top of the originals</div><div class="arrow" aria-hidden="true">→</div><div class="to">Paste offsets by 10 px, or lands at the pointer from the right-click menu</div><div class="why">Plus Cut, Duplicate (Ctrl+D) and the system clipboard, so copies survive restarts and move between game instances. Copies that anchor to each other keep doing so.</div></div>
+<div class="mv"><div class="from">Arrow keys move 1 px, and each press is an undo step</div><div class="arrow" aria-hidden="true">→</div><div class="to">Shift+arrows move 10 px, and a burst of presses is one undo step</div><div class="why">Nudging stops filling the undo history.</div></div>
+<div class="mv"><div class="from">The grid is in window pixels and starts at the screen's center, so it changes with the GUI scale</div><div class="arrow" aria-hidden="true">→</div><div class="to">The grid is in GUI pixels and starts at the top-left corner, like the rulers</div><div class="why">Grid lines meet the ruler ticks at every screen size. The screen's middle keeps its own lines, and snapping to it works through the smart guides. X and Y stay measured from the anchor.</div></div>
+<div class="mv"><div class="from">Undo and redo drop the selection</div><div class="arrow" aria-hidden="true">→</div><div class="to">The selection stays</div><div class="why">Undo a move and keep adjusting the same element.</div></div>
+<div class="mv"><div class="from">Labels around the element with absolute pixels, deprecation notes and warnings</div><div class="arrow" aria-hidden="true">→</div><div class="to">A position badge beside the selection while moving, the numbers in the Inspector, notes in Problems</div><div class="why">The canvas stays readable, and the numbers match what gets saved.</div></div>
+<div class="mv"><div class="from">Element Animator element with a full-screen editor</div><div class="arrow" aria-hidden="true">→</div><div class="to">Layout animations on a timeline</div><div class="why">See Animations below.</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Animations</h2>
+<ul class="notes">
+<li>Animations belong to the layout, not to an extra element. A layout can have several, like Intro and Idle, picked from the menu at the left of the timeline.</li>
+<li>An animation has a track per element, with a row per animated property: Position, Size, Rotation, Vertical Tilt, Horizontal Tilt and Opacity. Only properties with keyframes animate, so an element can fade without moving. Every animatable row in the Inspector has its keyframe diamond.</li>
+<li>Every keyframe has its own easing, for the stretch that ends at it: Linear, Ease In, Ease Out, Ease In and Out, Overshoot, Hold, or a custom curve with two handles. Positions move in fractions of a GUI pixel, rounded to real screen pixels, so motion is smooth and pixel art stays sharp. Clicks and layout keep using whole pixels.</li>
+<li>Values are offsets from the element's resting position by default, so an animation that ends at rest ends exactly where the element sits, at any screen size. With Move From Resting Position off, every keyframe keeps its own anchor and position, like today's keyframes. At the End holds the last keyframe or snaps back to rest.</li>
+<li>An animation plays when the screen opens, or when an action starts it, and Plays Only When adds conditions. It can wait a start delay, loop, and reverse every other loop. Its length is set by dragging the end marker on the ruler, or in the Inspector.</li>
+<li>Animated opacity multiplies with the element's own opacity and fades. Stay On Screen only holds the resting position, so elements can slide in from outside the screen. Elements anchored to an animated element follow its position.</li>
+<li>Keyframes get added with the diamond next to a property, in the timeline or in the Inspector, with K, or by themselves with Auto-Key while you move or change elements. There is no recording mode anymore.</li>
+<li>While the timeline is open, the canvas and the Inspector show the screen at the playhead, and animated values show in amber. Dragging on the ruler scrubs, clicking it jumps. Keyframes can be box-selected, dragged, copied and pasted, and snap to each other and to the playhead. Space Evenly in their right-click menu spreads them out, like Distance Smoothing today. Play runs the animation once, like in game, unless it loops; Repeat Playback in the timeline keeps it going while you work.</li>
+<li>Deleting an element deletes its tracks in the same undo step, and copies of an element take their tracks along.</li>
+<li>Element Animators turn into layout animations when a layout opens, in memory only. The file changes when you save, after a backup of the original. Each animation keeps the animator's ID, so the four animator actions, the saved play state and the animator's loading conditions keep working. Targets keep their per-keyframe anchors, timing offsets become a start offset per track, random ones stay random, and At the End is Snap Back, like today. Targets in other layouts show as greyed tracks.</li>
+</ul>
+</section>
+
+<section>
+<h2 class="h2">Shortcuts</h2>
+<div class="keys">
+<div class="kr"><kbd>V</kbd>Select tool</div><div class="kr"><kbd>H, or hold Space</kbd>Hand tool, to pan</div><div class="kr"><kbd>Ctrl+Scroll</kbd>Zoom at the pointer</div>
+<div class="kr"><kbd>Ctrl+Plus, Ctrl+Minus</kbd>Zoom in and out</div><div class="kr"><kbd>Shift+1</kbd>Zoom to fit</div><div class="kr"><kbd>Ctrl+0</kbd>Actual size</div>
+<div class="kr"><kbd>Shift+G</kbd>Grid</div><div class="kr"><kbd>Shift+R</kbd>Rulers</div><div class="kr"><kbd>Shift+S</kbd>Snapping</div>
+<div class="kr"><kbd>Alt</kbd>Skip snapping, show distances</div><div class="kr"><kbd>Arrows</kbd>Move 1 px</div><div class="kr"><kbd>Shift+Arrows</kbd>Move 10 px</div>
+<div class="kr"><kbd>Ctrl+Z, Ctrl+Shift+Z</kbd>Undo and redo</div><div class="kr"><kbd>Ctrl+S</kbd>Save</div><div class="kr"><kbd>Esc</kbd>One step back</div>
+<div class="kr"><kbd>Ctrl+X, C, V</kbd>Cut, copy, paste</div><div class="kr"><kbd>Ctrl+D</kbd>Duplicate</div><div class="kr"><kbd>Del or Backspace</kbd>Delete</div>
+<div class="kr"><kbd>Ctrl+A</kbd>Select all</div><div class="kr"><kbd>Ctrl+G</kbd>Group</div><div class="kr"><kbd>Ctrl+Shift+G</kbd>Ungroup</div>
+<div class="kr"><kbd>Ctrl+Up, Ctrl+Down</kbd>Forward and backward</div><div class="kr"><kbd>Ctrl+Shift+Up, Down</kbd>To the front and back</div><div class="kr"><kbd>Ctrl+Shift+L, H</kbd>Lock, hide in the editor</div>
+<div class="kr"><kbd>F2</kbd>Rename</div><div class="kr"><kbd>Shift+A</kbd>Add element at the pointer</div><div class="kr"><kbd>Tab</kbd>Hide or show all panels</div>
+<div class="kr"><kbd>F5</kbd>Preview</div><div class="kr"><kbd>Space in the timeline</kbd>Play or pause</div><div class="kr"><kbd>K</kbd>Keyframe at the playhead</div>
+</div>
+<p class="foot" style="margin-top: 12px">On macOS every Ctrl is Cmd, and menus and tooltips say so, with the key names of your keyboard layout. Every shortcut works without AltGr, and Ctrl+Y still redoes, like today. Ctrl+G used to show the grid; the grid moves to Shift+G so Group gets the shortcut every editor uses.</p>
+<p class="foot" style="margin-top: 6px">Keys go to what you clicked last: the canvas, a panel or a field. Text fields keep their own keys, and single letters only work on the canvas, so typing to search a menu never triggers them. Tab hides the panels only while the canvas has the keyboard; everywhere else it moves focus, like always. Esc closes a popover, then leaves a field, then stops Preview, then selects none.</p>
+</section>
+
+<section>
+<h2 class="h2">Behavior</h2>
+<ul class="notes">
+<li>Selecting on the canvas, in Layers or in the timeline selects in all three. Layers opens the group the selection is in and scrolls to it.</li>
+<li>The Inspector shows the selection's settings. With several elements selected it shows the settings they share, Mixed where they differ. With nothing selected it shows the layout's settings, and with a keyframe selected, the keyframe's.</li>
+<li>Search in the Inspector filters every section at once, by setting name or section name.</li>
+<li>Double-clicking plain text without rotation or tilt edits it right on the canvas; other text opens the text editor. Double-clicking a layer or the Inspector header, or F2, renames in place.</li>
+<li>With a placeholder in X or Y, that axis becomes an absolute screen position: the field says so, shows the resolved value, and dragging stops moving that axis. With Auto-Sizing or Stretch, W and H show the size it resolves to.</li>
+<li>Anchoring to an element measures from its top-left corner. Deleting an element offers to keep the elements anchored to it where they are. Moving several elements skips the ones whose anchor element moves along.</li>
+<li>Vanilla widgets can't be cut, duplicated, grouped or restacked, so those rows are greyed out for them. Dragging one off its original position gives it the nearest screen anchor.</li>
+<li>Dropping image, sound or video files onto the canvas copies them into the assets folder and adds them where they land. A file with a taken name gets a number. The hint in the status bar is always there, since Minecraft can't tell when files are dragged over it.</li>
+<li>Locked elements can't be picked or moved on the canvas, only selected in Layers. Hidden elements stay hidden in the editor only. Both are saved with the layout and can be undone, like hiding is today. For vanilla widgets the eye in Layers hides them in game instead, since that's the only way they can be hidden.</li>
+<li>Zoom, the playhead, Screen Size, Auto-Key and the panels are never undo steps and never make the layout unsaved. Undo rebuilds only the elements that changed, so videos and sounds keep playing. Settings that reopen the screen, like Force GUI Scale, apply when the slider is let go.</li>
+<li>Non-modal windows belong to their element and close if it goes away. Cancel undoes only that window's changes.</li>
+<li>Elements that draw nothing, like audio, tickers and cursors, show as labeled boxes on the canvas, red when something they need is missing.</li>
+<li>The Problems item in the status bar lists missing files, broken anchors, deprecated elements, elements outside the screen at the chosen screen size and placeholders that don't resolve. Clicking a problem selects its element.</li>
+<li>Rows a Custom GUI sets in its own settings, like Screen Title, are greyed out and link there.</li>
+<li>In small windows, like Minecraft's default 854 × 480, Layers turns into a popover from the toolbar, the Inspector slides over the canvas edge, and the timeline caps its height, so the canvas keeps most of the window.</li>
+<li>The editor stays how you left it, even after restarting the game. Which panels are shown and their sizes, folded Inspector sections and timeline tracks, the View settings like grid, rulers and snapping, and the zoom of each layout are saved for you in FancyMenu's config, never in the layout file. Tab and Preview always start off, and a layout opens fit to the window the first time.</li>
+</ul>
+</section>
+
+<section>
+<h2 class="h2">Under the hood</h2>
+<ul class="notes">
+<li>The artboard is the real screen drawn into an offscreen target at the previewed window size and GUI scale, then shown zoomed, with sharp pixels at whole zoom levels. Pointer input maps back through the same transform, so models, entities and scissor areas look exactly like in game.</li>
+<li>Elements read the screen size and GUI scale from a virtual window instead of the real one, which is what makes Screen Size work. Vanilla widgets come from running the screen's init at that size.</li>
+<li>Preview runs on its own runtime layer, with separate element memory. Variables get restored afterwards, schedulers stop, and presses on vanilla widgets are swallowed, so nothing carries over to the real menu.</li>
+<li>Docking is new: panels dock to the window edges with draggable splits. They no longer float.</li>
+</ul>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"$preview":{"width":1440,"height":5573}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark', theme: this.props.theme ?? 'Dark', yes: true, no: false };
+  }
+}
+</script>
+</body>
+</html>

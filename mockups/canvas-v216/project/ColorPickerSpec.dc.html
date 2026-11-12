@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Color picker spec</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.pair{display:flex;gap:40px;align-items:flex-start}
+.grid2{display:grid;grid-template-columns:repeat(2,620px);gap:40px}
+.card{display:flex;flex-direction:column;gap:14px}
+.lg-win{width:540px}
+.lg-panel{padding:8px;border:1px solid #3e4042;border-radius:4px;background:#2d2d2d}
+.lg-sv{width:210px;height:180px;background:linear-gradient(to top,#000,transparent),linear-gradient(to right,#fff,#ffb100)}
+.lg-lab{margin-top:8px;margin-bottom:3px}
+.lg-hue{height:10px;background:linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)}
+.lg-alpha{height:10px;background:linear-gradient(to right,rgba(255,209,102,0),#ffd166),repeating-conic-gradient(#999 0 25%,#ddd 0 50%) 0 0/8px 8px}
+.lg-swatch{width:56px;height:56px;border:1px solid #3e4042}
+.lg-val{color:#ffffff}
+.lg-grid{display:grid;grid-template-columns:12px 52px 12px 52px;gap:5px 6px;align-items:center}
+.lg-grid i{font-style:normal;padding:2px 4px;border:1px solid #3e4042;background:#1e1e1e}
+.lg-btns{display:flex;justify-content:center;gap:10px;padding:0 0 14px}
+.lg-btns span{width:96px;height:20px;display:grid;place-items:center;border:1px solid #3e4042;background:#333}
+</style>
+</helmet>
+<div class="fm spec {{themeClass}} mat-blur" style="min-height: 2865px">
+
+<header style="display: flex; flex-direction: column; gap: 12px; max-width: 900px">
+<div style="font-size: 12px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; color: var(--text-3)">FancyMenu · UI rework concept · color picker</div>
+<h1 style="margin: 0; font-size: 34px; line-height: 1.15; font-weight: 700; color: var(--title)">Pick, type or sample any color</h1>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: var(--text-2)">The color picker keeps its job and its live preview, but every color format can now be typed into: Hex, RGBA and HSV stay in sync while you edit any of them. The window names the color it edits, compares it with the original in one swatch, and adds an eyedropper and recent colors for the colors you use again and again.</p>
+</header>
+
+<section>
+<h2 class="h2">Today and proposed</h2>
+<div class="pair">
+<div><div class="cap">Today</div><div class="lg-win">
+<div class="lg-title"><span>Color Picker</span><span class="lg-x">×</span></div>
+<div class="lg-body">
+<div class="lg-panel" style="width: 228px">
+<div class="lg-sv"></div>
+<div class="lg-lab">Hue</div><div class="lg-hue"></div>
+<div class="lg-lab">Alpha</div><div class="lg-alpha"></div>
+</div>
+<div class="lg-panel" style="flex: 1">
+<div style="display: flex; gap: 10px"><div><div class="lg-lab" style="margin-top: 0">Preview</div><div class="lg-swatch" style="background: #ffd166"></div></div><div><div class="lg-lab" style="margin-top: 0">Original</div><div class="lg-swatch" style="background: #ffffff"></div></div></div>
+<div class="lg-lab">HEX</div><div class="lg-val">#ffd166ff</div>
+<div class="lg-lab">RGBA</div>
+<div class="lg-grid"><span>R</span><i>255</i><span>G</span><i>209</i><span>B</span><i>102</i><span>A</span><i>255</i></div>
+<div class="lg-lab">HSV</div><div class="lg-val">H: 42  S: 60%  V: 100%</div>
+</div>
+</div>
+<div class="lg-btns"><span>Cancel</span><span>Done</span></div>
+</div></div>
+<div><div class="cap">Proposed</div><div style="position: relative; width: 620px; height: 424px"><dc-import name="ColorPicker" title="Text Color" target="Title Text" color="#FFD166" original="#FFFFFF" standalone="{{no}}" hint-size="620px,424px"></dc-import></div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">States</h2>
+<div class="grid2">
+<div class="card"><div><div class="k">Several elements selected</div><div class="kd">The title says how many elements change. When their colors differ, Original shows all of them side by side, and the new color goes to every element once you click Done.</div></div><div style="position: relative; width: 620px; height: 424px"><dc-import name="ColorPicker" title="Text Color · 3 elements" target="3 elements" color="#FFFFFF" original="#FFFFFF" mixed="#FFFFFF,#FFD166,#FF6B6B" standalone="{{no}}" hint-size="620px,424px"></dc-import></div></div>
+<div class="card"><div><div class="k">Eyedropper</div><div class="kd">Click the eyedropper next to Hex, then anywhere on the screen. The magnifier shows the pixels under the pointer and the hex value you will get. Esc stops without picking.</div></div><div class="spec-frame" style="position: relative; width: 560px; height: 300px">
+<div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""></div>
+<div class="cp-hint" style="top: auto; bottom: 12px">Click anywhere to pick a color · Esc cancels</div>
+<svg viewBox="0 0 24 24" aria-hidden="true" style="position: absolute; z-index: 63; left: 354px; top: 150px; width: 20px; height: 20px"><path d="M2 2v18l5-5h10z" fill="#fff" stroke="#000" stroke-width="1.2" stroke-linejoin="round"></path></svg>
+<div class="cp-loupe" style="left: 380px; top: -6px"><div class="cp-lz"><img src="dusk_valley.png" alt="" style="width: 2560.0px; left: -1574.0px; top: -677.0px"><span class="cp-lc" style="left: 46.0px; top: 43.0px; width: 20.0px; height: 20.0px"></span></div><div class="cp-lhex"><i style="background: #FFD593"></i>#FFD593</div></div>
+</div></div>
+<div class="card"><div><div class="k">Typing a value</div><div class="kd">Text that is not a valid color yet stays in the field and marks it red, so nothing jumps around while you type. The other fields keep the last valid color.</div></div><div style="position: relative; width: 620px; height: 424px"><dc-import name="ColorPicker" title="Text Color" target="Title Text" color="#FFD166" original="#FFFFFF" hex-draft="#FFD16G" standalone="{{no}}" hint-size="620px,424px"></dc-import></div></div>
+<div class="card"><div><div class="k">Light theme</div><div class="kd">Same layout with the light tokens.</div></div><div class="fm theme-light mat-blur spec-frame" style="position: relative; width: 620px; height: 424px; background: #15182c"><div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""></div><dc-import name="ColorPicker" title="Shadow Color" target="Title Text" color="#1B1B2680" original="#000000A0" standalone="{{no}}" hint-size="620px,424px"></dc-import></div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">What changed</h2>
+<div class="group" style="background: var(--win)">
+<div class="mv head"><div>Today</div><div></div><div>Proposed</div><div>Why</div></div>
+<div class="mv"><div class="from">Title says &quot;Color Picker&quot;</div><div class="arrow" aria-hidden="true">→</div><div class="to">Title names the color you are editing</div><div class="why">For example Text Color or Shadow Color, so it is clear what the window changes. With several elements selected it says how many.</div></div><div class="mv"><div class="from">HEX is shown, not editable</div><div class="arrow" aria-hidden="true">→</div><div class="to">Hex field you can type into</div><div class="why">Takes #RGB, #RGBA, #RRGGBB, #RRGGBBAA and color names like gold, the same formats FancyMenu already reads everywhere else.</div></div><div class="mv"><div class="from">HSV is shown as text</div><div class="arrow" aria-hidden="true">→</div><div class="to">H, S and V fields you can type into</div><div class="why">Every format is editable, and typing in one updates the other formats, the square and the sliders right away.</div></div><div class="mv"><div class="from">RGBA in a 2×2 grid</div><div class="arrow" aria-hidden="true">→</div><div class="to">R, G, B and A in one row</div><div class="why">Four equal columns, with HSV lined up underneath.</div></div><div class="mv"><div class="from">Preview and Original as two squares</div><div class="arrow" aria-hidden="true">→</div><div class="to">One split swatch: New and Original</div><div class="why">Clicking Original goes back to it. With a mixed selection it shows every current color side by side.</div></div><div class="mv"><div class="from">Hue and Alpha with labels above</div><div class="arrow" aria-hidden="true">→</div><div class="to">Sliders without labels under the square</div><div class="why">The rainbow and the checkerboard explain themselves, and the square gets more room.</div></div><div class="mv"><div class="from">(new)</div><div class="arrow" aria-hidden="true">→</div><div class="to">Eyedropper</div><div class="why">Picks any color from the screen, with a magnifier and the hex value under the pointer.</div></div><div class="mv"><div class="from">(new)</div><div class="arrow" aria-hidden="true">→</div><div class="to">Recent colors</div><div class="why">The last 8 colors confirmed with Use Color, shared across all of FancyMenu, one click to reuse.</div></div><div class="mv"><div class="from">Live preview was invisible</div><div class="arrow" aria-hidden="true">→</div><div class="to">Footer says what previews live</div><div class="why">&quot;Live preview on Title Text&quot; makes it clear that the element changes while you pick and that Cancel puts it back.</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Behavior</h2>
+<ul class="notes"><li>Every change shows on the element right away. Cancel, the red Close button and Esc put the original color back; Use Color or Enter keeps the new one as one undo step.</li><li>Dragging keeps working when the pointer leaves the square or a slider, so small or fast moves never get cut off.</li><li>Text that is not a valid value yet stays in the field and turns the field red, instead of being replaced while you type. Leaving the field shows the current value again.</li><li>Arrow keys nudge the selected handle by 1 step, Shift+arrow by 10.</li><li>The window can be resized: the square grows with it, the right column keeps its width.</li></ul>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"$preview":{"width":1440,"height":2865}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark', no: false };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pre-Load Resources spec</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.pair{display:grid;grid-template-columns:600px minmax(0,1fr);gap:48px;align-items:start}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start}
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;align-items:start}
+.kr{display:flex;align-items:center;gap:14px;padding:9px 18px;border-bottom:1px solid var(--sep);font-size:12.5px;color:var(--text-2)}
+.kr:last-child{border-bottom:0}
+.kk{flex:0 0 190px;font-family:"Noto Sans Mono",ui-monospace,Menlo,monospace;font-size:12px;color:var(--text)}
+.spec code{font-family:"Noto Sans Mono",ui-monospace,Menlo,monospace;font-size:12px;color:var(--text)}
+.flow{display:flex;flex-direction:column;gap:10px}
+.flow .step{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;font-size:13px;line-height:1.5;color:var(--text-2)}
+.flow .n{width:22px;height:22px;display:grid;place-items:center;border-radius:50%;font-size:11.5px;font-weight:700;color:var(--accent);background:color-mix(in srgb,var(--accent) 15%,transparent)}
+.flow b{color:var(--title);font-weight:600}
+.propchip{color:var(--warn);background:color-mix(in srgb,var(--warn) 15%,transparent)}
+.okchip2{color:var(--ok);background:color-mix(in srgb,var(--ok) 15%,transparent)}
+/* today's window, redrawn at 600 pixels wide: a search bar over a list of text lines, the buttons in a column at the bottom right */
+.lgc{position:relative;width:600px;padding:12px 14px 14px;background:#1f1f1f;border:1px solid #3e4042;color:#ceDDed;font-size:11px}
+.lgc .tt{margin:0 0 9px 2px;font-size:12px;font-weight:600;color:#e8eef4}
+.lgc .bd{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:14px;height:300px}
+.lgc .lft{display:flex;flex-direction:column;gap:6px;min-width:0}
+.lgc .f{height:17px;padding:0 5px;display:flex;align-items:center;border:1px solid #3e4042;background:#1a1a1a;color:#6f767d;white-space:nowrap;overflow:hidden}
+.lgc .ls{flex:1 1 auto;padding:5px 6px;border:1px solid #3e4042;background:#262626;display:flex;flex-direction:column;gap:3px;overflow:hidden}
+.lgc .ls div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:1px 3px}
+.lgc .ls .sel{background:#3a4a5e}
+.lgc .rt{display:flex;flex-direction:column;justify-content:flex-end;gap:5px}
+.lgc .b{height:18px;padding:0 8px;display:flex;align-items:center;justify-content:center;border:1px solid #3e4042;background:#333;white-space:nowrap}
+.lgc .gap{height:10px}
+</style>
+</helmet>
+<div class="fm spec {{themeClass}}" style="min-height: 4401px">
+
+<header style="display: flex; flex-direction: column; gap: 12px; max-width: 920px">
+<div style="font-size: 12px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; color: var(--text-3)">FancyMenu · UI rework concept · Pre-Load Resources</div>
+<h1 style="margin: 0; font-size: 34px; line-height: 1.15; font-weight: 700; color: var(--title)">Ready the moment a menu opens</h1>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: var(--text-2)">Pre-loading loads big resources while the game starts, so menus don&#x27;t wait for them. The window now shows each resource with a preview, how long it took at the last game start and where it&#x27;s used, and flags the ones that failed or held the start up. Added resources load right away, and the game start no longer freezes while it waits.</p>
+</header>
+
+<section>
+<h2 class="h2">Today and proposed</h2>
+<div class="pair">
+<div>
+<div class="cap">Today</div>
+<div class="lgc">
+<div class="tt">Manage Resources for Pre-Loading</div>
+<div class="bd">
+<div class="lft">
+<span class="f"></span>
+<div class="ls">
+<div>/config/fancymenu/assets/dusk_valley_loop.afma</div>
+<div>[Cubic Panorama] Dusk Valley Night</div>
+<div class="sel">/config/fancymenu/assets/music/menu_theme.ogg</div>
+<div>https://cdn.duskvalley.net/news/winter_update.png</div>
+<div>https://cdn.duskvalley.net/video/intro_cinematic.mp4</div>
+<div>[Slideshow] Seasons</div>
+<div>/config/fancymenu/assets/old_logo.png</div>
+</div>
+</div>
+<div class="rt">
+<span class="b">Add Resource</span>
+<span class="b">Add Cubic Panorama</span>
+<span class="b">Add Slideshow</span>
+<span class="gap"></span>
+<span class="b">Remove Selected</span>
+<span class="gap"></span>
+<span class="b">Cancel</span>
+<span class="b">Done</span>
+</div>
+</div>
+</div>
+</div>
+<div>
+<div class="cap">What gets in the way</div>
+<ul class="probs">
+<li>The window is called Manage Resources for Pre-Loading, while the menu that opens it says Pre-Load Resources.</li>
+<li>The list is plain text: paths and links, with [Cubic Panorama] or [Slideshow] in front of the names. Nothing says what a file is, how big it is or what it looks like.</li>
+<li>Three Add buttons sit in a column at the bottom right, and each one hides this window while its chooser is open.</li>
+<li>Adding something that&#x27;s already in the list does nothing, without a word.</li>
+<li>Remove works on one resource at a time, asks every time, and can&#x27;t be undone.</li>
+<li>Nothing says whether a resource loaded. A deleted file, a typo in a link, a deleted panorama or a slow download only show up in the log.</li>
+<li>A new resource only loads at the next game start or resource reload, and nothing says so.</li>
+<li>Pre-loading waits for one resource after the other, up to 2 minutes each, on the game&#x27;s main thread. The loading screen freezes while a slow download runs.</li>
+<li>Nothing shows where a resource is used.</li>
+<li>Cancel throws away every change without asking.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">What changes</h2>
+<div class="group" style="background: var(--win)">
+<div class="mv head"><div>Today</div><div></div><div>Proposed</div><div>Why</div></div>
+<div class="mv"><div class="from">Manage Resources for Pre-Loading</div><div class="arrow">→</div><div class="to">Pre-Load Resources, like the menu entry</div><div class="why">One name for one thing.</div></div>
+<div class="mv"><div class="from">A text line per resource</div><div class="arrow">→</div><div class="to">A row with a thumbnail, the name, the kind and size, and the load time on the right</div><div class="why">You see what each one is and which ones are slow (rule 22).</div></div>
+<div class="mv"><div class="from">Add Resource, Add Cubic Panorama, Add Slideshow</div><div class="arrow">→</div><div class="to">One Add Resource button with a menu: File or Link, then every panorama and slideshow that isn&#x27;t in the list yet</div><div class="why">Panoramas and slideshows get picked right in the menu, without a second window.</div></div>
+<div class="mv"><div class="from">Choosers hide the window</div><div class="arrow">→</div><div class="to">Choose Resource opens on top, and the window stays</div><div class="why">You never lose your place.</div></div>
+<div class="mv"><div class="from">A resource that&#x27;s in the list already gets ignored</div><div class="arrow">→</div><div class="to">Its row gets selected and flashes, and the footer says it&#x27;s pre-loaded already</div><div class="why">Nothing happens without a word.</div></div>
+<div class="mv"><div class="from">Remove Selected, with a question every time</div><div class="arrow">→</div><div class="to">Remove, also for several at once, with Undo in the footer</div><div class="why">Undo is quicker than a question and saves just as well.</div></div>
+<div class="mv"><div class="from">(new)</div><div class="arrow">→</div><div class="to">A preview: images, animations and videos with sharp pixels, panoramas that pan around, slideshows that fade through their images, and sounds as a waveform to play and seek</div><div class="why">You see that the right file is in the list.</div></div>
+<div class="mv"><div class="from">Failures only in the log</div><div class="arrow">→</div><div class="to">A red or amber line in the list, and a card that says what happened and offers the fix, like Choose Another File</div><div class="why">Problems show where you look (rule 120).</div></div>
+<div class="mv"><div class="from">Loads at the next game start</div><div class="arrow">→</div><div class="to">Added resources load right away, with the percentage, a bar and the time left</div><div class="why">Ready without a restart, and a broken link shows now (rule 122).</div></div>
+<div class="mv"><div class="from">(new)</div><div class="arrow">→</div><div class="to">Reload</div><div class="why">A file you exported again shows up without a restart.</div></div>
+<div class="mv"><div class="from">One resource after the other, up to 2 minutes each, on the main thread</div><div class="arrow">→</div><div class="to">All of them at once, 30 seconds at most in all, and the loading screen keeps moving</div><div class="why">A slow server can&#x27;t freeze the game start (rule 119).</div></div>
+<div class="mv"><div class="from">(new)</div><div class="arrow">→</div><div class="to">Used in: the layouts and scripts that use the resource, each with Open</div><div class="why">Resources nothing uses anymore stand out, so they can go (rule 121).</div></div>
+<div class="mv"><div class="from">(new)</div><div class="arrow">→</div><div class="to">The footer says how long the last game start waited, and for which resource</div><div class="why">What pre-loading costs stays visible.</div></div>
+<div class="mv"><div class="from">Search matches the text line</div><div class="arrow">→</div><div class="to">Search finds names, folders, links, kinds and the places that use a resource. The filter shows kinds or problems and sorts by name, type or load time</div><div class="why">title finds everything the title screen uses, and the slowest come first with one click.</div></div>
+<div class="mv"><div class="from">Cancel discards without asking</div><div class="arrow">→</div><div class="to">Cancel asks when something changed, and only then</div><div class="why">Work never gets lost by accident (rule 68).</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">The window, piece by piece</h2>
+<div class="three">
+<div class="spec-card"><div class="k">The list</div><div class="kd" style="margin: 0">One row per resource: a thumbnail, or the kind&#x27;s icon for sounds, the name, and the kind with its size, or from the web for links. On the right the time it took at the last game start, or the percentage while it loads. A problem replaces the size in amber or red, like didn&#x27;t load in time or file not found. Ctrl and Shift select several.</div></div>
+<div class="spec-card"><div class="k">Add Resource</div><div class="kd" style="margin: 0">A menu, searchable like every menu: File or Link opens the shared Choose Resource window for an image, sound, video or text, from the game folder, a resource pack or the web. Below it, every panorama and every slideshow FancyMenu loaded, the same ones Choose Panorama and Choose Slideshow list, sorted by name. Ones that are in the list already aren&#x27;t shown, and a heading with nothing left under it disappears (rule 123).</div></div>
+<div class="spec-card"><div class="k">The preview</div><div class="kd" style="margin: 0">The same stage as the AFMA Creator, on a checkerboard for transparency. Animations play their intro once, then loop. Panoramas pan around, slideshows fade from image to image like in a layout, videos wait on a poster frame with a play button. Sounds show a waveform: click it to jump there. A bar under it has play and pause and the details, like 1280 × 720 or 0:45 of 2:48, and the size.</div></div>
+<div class="spec-card"><div class="k">Loading</div><div class="kd" style="margin: 0">While a resource loads or downloads, a card at the top shows the percentage, a bar, the time left and what it&#x27;s at, like 896 KB of 1.4 MB or Image 4 of 6. Once it&#x27;s done, the preview takes its place. How long it took at the last game start sits on its row in the list, and only problems get a card.</div></div>
+<div class="spec-card"><div class="k">Problems</div><div class="kd" style="margin: 0">A card over the preview says what went wrong in plain words and offers the fix. A missing file gets Choose Another File, and says whether anything still uses it. A download that held the start up says that a copy in the game folder loads in a moment. Reload in the header tries again.</div></div>
+<div class="spec-card"><div class="k">Used in</div><div class="kd" style="margin: 0">Every layout, global customization and script that uses the resource, grouped by place like in Variables and Schedulers, each with Open. When nothing uses it, a line says that pre-loading it only makes the game start slower and takes memory.</div></div>
+<div class="spec-card"><div class="k">Several selected</div><div class="kd" style="margin: 0">The number and their size together, and Reload and Remove for all of them. Below, the selected rows with their times or problems.</div></div>
+<div class="spec-card"><div class="k">The footer</div><div class="kd" style="margin: 0">How long the last game start waited for pre-loading, and for which resource when one held it up. After a change, what changed, with Undo. Cancel and Save on the right: Save keeps the list, Cancel puts it back.</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Speed up, fix, clean up</h2>
+<div class="three">
+<div class="spec-card"><div class="k">A menu that pops in</div><div class="flow">
+<div class="step"><span class="n">1</span><span>The multiplayer screen opens, and its Snowy Peaks background shows up a moment later.</span></div>
+<div class="step"><span class="n">2</span><span><b>Add Resource</b> lists every panorama that isn&#x27;t pre-loaded yet. Pick <b>Snowy Peaks</b>.</span></div>
+<div class="step"><span class="n">3</span><span>It shows up in the list and loads right away: Image 4 of 6, then the panorama pans around and its row says 1 s.</span></div>
+<div class="step"><span class="n">4</span><span><b>Save</b>. From the next game start on, the multiplayer screen opens with its background there.</span></div>
+</div></div>
+<div class="spec-card"><div class="k">A slow download</div><div class="flow">
+<div class="step"><span class="n">1</span><span>The footer says the last game start waited 30 s for intro_cinematic.mp4, and its row says didn&#x27;t load in time.</span></div>
+<div class="step"><span class="n">2</span><span>The card says the server sends it slower than the game start waits, and that it popped in later.</span></div>
+<div class="step"><span class="n">3</span><span>Put the video in the game folder and use it in the layout. <b>Open</b> under Used in jumps right to the Intro video element.</span></div>
+<div class="step"><span class="n">4</span><span>Add the copy with <b>File or Link</b> and remove the link. It loads from the disk now, in a moment.</span></div>
+</div></div>
+<div class="spec-card"><div class="k">A file that&#x27;s gone</div><div class="flow">
+<div class="step"><span class="n">1</span><span>old_logo.png shows a broken image and file not found in red. Filter by <b>With Problems</b> to see all of them.</span></div>
+<div class="step"><span class="n">2</span><span>The card says nothing uses it anymore, and Used in is empty.</span></div>
+<div class="step"><span class="n">3</span><span>Press <b>Delete</b>. The footer says it won&#x27;t load at the next game start, with <b>Undo</b>.</span></div>
+<div class="step"><span class="n">4</span><span>Still used somewhere? <b>Choose Another File</b> points it to where the file is now.</span></div>
+</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Special cases it handles</h2>
+<div class="two">
+<div class="spec-card"><ul class="notes">
+<li>Removing a resource doesn&#x27;t unload it. Places that use it keep it until the game closes, and it just doesn&#x27;t load at the next game start.</li>
+<li>Cancel puts the list back. What was only loaded for this window gets released again, unless something on the screen uses it.</li>
+<li>A download that isn&#x27;t done has no thumbnail and no preview yet, only the kind&#x27;s icon and the loading card. Removing it stops the download.</li>
+<li>Panoramas and slideshows count their images while they load, since they&#x27;re several files.</li>
+<li>Resource reloads, like F3+T or turning on a resource pack, pre-load everything again, like today, and update the times.</li>
+</ul></div>
+<div class="spec-card"><ul class="notes">
+<li>The 30 seconds count for all resources together, since they load side by side, so ten slow ones can&#x27;t add up to five minutes.</li>
+<li>When the game start stops waiting, the resource keeps loading, and the menu that uses it shows it once it&#x27;s there.</li>
+<li>A sound played in the preview uses the Master channel at the game&#x27;s volume, and stops when another resource gets selected or the window closes.</li>
+<li>A panorama or slideshow deleted from its folder shows panorama not found or slideshow not found, like a missing file.</li>
+</ul></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Keyboard shortcuts</h2>
+<div class="two">
+<div>
+<div class="cap">Kept</div>
+<div class="group" style="background: var(--win)">
+<div class="kr"><span class="kk">↑ ↓</span><span>Select the resource above or below</span></div>
+<div class="kr"><span class="kk">Typing</span><span>Starts a search</span></div>
+<div class="kr"><span class="kk">Enter</span><span>Save</span></div>
+<div class="kr"><span class="kk">Ctrl+S</span><span>Save, Ctrl+Enter too</span></div>
+</div>
+</div>
+<div>
+<div class="cap">New</div>
+<div class="group" style="background: var(--win)">
+<div class="kr"><span class="kk">Ctrl+N</span><span>Opens Add Resource</span></div>
+<div class="kr"><span class="kk">Ctrl+F</span><span>Search</span></div>
+<div class="kr"><span class="kk">Space</span><span>Play or pause the preview</span></div>
+<div class="kr"><span class="kk">Delete</span><span>Remove the selected resources</span></div>
+<div class="kr"><span class="kk">F5</span><span>Reload</span></div>
+<div class="kr"><span class="kk">Ctrl+A</span><span>Select every resource in the list</span></div>
+<div class="kr"><span class="kk">Ctrl+Z, Ctrl+Y</span><span>Undo and redo, Ctrl+Shift+Z too</span></div>
+<div class="kr"><span class="kk">Esc</span><span>Closes the menu, clears the search, then Cancel</span></div>
+</div>
+</div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Changes beyond the UI</h2>
+<p class="kd" style="max-width: 920px; margin: -6px 0 16px; font-size: 13px; color: var(--text-2)">The window above already uses these. They change how pre-loading runs, saves and reports, so each one is a rework rule.</p>
+<div class="two">
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Pre-loading never freezes the game start <span class="chip propchip">New, rule 119</span></div><div class="kd" style="margin: 0">Today ResourcePreLoader.preLoadAll runs in FancyMenu&#x27;s reload listener, on the main thread, and waits up to 120 s for each resource in turn. It becomes its own reload step: it starts every resource at once and hands Minecraft a future that completes when all of them are done, or after 30 s in all, so the loading screen keeps drawing.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Pre-loading reports what happened <span class="chip propchip">New, rule 120</span></div><div class="kd" style="margin: 0">Every entry keeps its last result: loaded, failed with a reason like file not found or panorama not found, or still loading when the start stopped waiting, plus how long it took and its size. The pre-loader times them itself, since it waits for them anyway, so nothing else gets timed.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Resources know where they&#x27;re used <span class="chip propchip">New, rule 121</span></div><div class="kd" style="margin: 0">The index of rule 87 also collects resource sources: element settings that hold a file (rule 79), backgrounds, global customizations, and action values like Play Audio&#x27;s, also from addons. Used in and the Unused note read it.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Pre-load changes take effect right away <span class="chip propchip">New, rule 122</span></div><div class="kd" style="margin: 0">Adding a resource loads it at once, Reload releases it and loads it again, and Cancel releases what was only loaded for the window. The list itself still gets saved with Save, like today.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Add Resource lists what&#x27;s left to add <span class="chip propchip">New, rule 123</span></div><div class="kd" style="margin: 0">The menu lists every panorama from config/fancymenu/panoramas and every slideshow from config/fancymenu/slideshows that FancyMenu loaded, by the name in its properties.txt and sorted by name, leaving out the ones in the list.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Rows show what their file is <span class="chip okchip2">Covered, rule 22</span></div><div class="kd" style="margin: 0">Thumbnails, the kind&#x27;s icon for sounds, and missing files in red with a broken image.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Cancel asks only when something changed <span class="chip okchip2">Added to rule 68</span></div><div class="kd" style="margin: 0">Discard 2 changes? only shows when the list changed. Reload and playing a preview don&#x27;t count.</div></div>
+</div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"$preview":{"width":1440,"height":4401}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark' };
+  }
+}
+</script>
+</body>
+</html>

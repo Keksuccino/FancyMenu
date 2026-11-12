@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Messages, Welcome and About</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="{{rootCls}}" style="{{rootStyle}}" data-sw="{{uid}}">
+<sc-if value="{{standalone}}" hint-placeholder-val="{{true}}"><div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""><div class="dim"></div></div></sc-if>
+
+<sc-if value="{{isMsg}}" hint-placeholder-val="{{true}}">
+<div class="win md" role="alertdialog" aria-label="{{m.title}}" style="position: relative">
+<div class="titlebar">
+<div class="tl"><button class="c" aria-label="Close" onClick="{{m.cancel}}"><span class="ms" aria-hidden="true">close</span></button><button class="m" aria-label="Collapse" disabled><span class="ms" aria-hidden="true">remove</span></button><button class="x" aria-label="Maximize" disabled><span class="ms" aria-hidden="true">open_in_full</span></button></div>
+<div class="wt"><span class="ms" aria-hidden="true">{{m.kindIcon}}</span>{{m.kind}}</div>
+<div></div>
+</div>
+<div class="md-body">
+<span class="{{m.iconCls}}"><span class="ms" aria-hidden="true">{{m.icon}}</span></span>
+<div class="vm-st" style="margin-top: 12px">{{m.title}}</div>
+<p>{{m.text}}</p>
+<sc-if value="{{m.detail}}" hint-placeholder-val="{{false}}"><div class="md-detail">{{m.detail}}</div></sc-if>
+<div class="vm-abtns"><sc-for list="{{m.buttons}}" as="b" hint-placeholder-count="2"><button class="{{b.cls}}" disabled="{{b.dis}}" onClick="{{b.click}}"><sc-if value="{{b.waits}}" hint-placeholder-val="{{false}}"><i class="md-fill" style="{{b.fill}}"></i></sc-if><span>{{b.label}}</span></button></sc-for></div>
+<sc-if value="{{m.note}}" hint-placeholder-val="{{false}}"><p class="foot" style="margin-top: 12px">{{m.note}}</p></sc-if>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isWelcome}}" hint-placeholder-val="{{false}}">
+<div class="win wl" role="dialog" aria-label="Welcome to FancyMenu" style="position: relative">
+<div class="titlebar">
+<div class="tl"><button class="c" aria-label="Close"><span class="ms" aria-hidden="true">close</span></button><button class="m" aria-label="Collapse" disabled><span class="ms" aria-hidden="true">remove</span></button><button class="x" aria-label="Maximize" disabled><span class="ms" aria-hidden="true">open_in_full</span></button></div>
+<div class="wt"><span class="ms" aria-hidden="true">waving_hand</span>Welcome</div>
+<div></div>
+</div>
+<div class="wl-body">
+<div class="wl-hero">
+<span class="wl-logo" aria-hidden="true"></span>
+<h2>Welcome to FancyMenu</h2>
+<p>Thanks for trying it. Four things help you get started:</p>
+</div>
+<div class="wl-steps">
+<div><span class="n">1</span><b>The menu bar</b><span>It sits at the top of every screen. Ctrl+Alt+C hides it and brings it back.</span></div>
+<div><span class="n">2</span><b>Your first layout</b><span>Go to the screen you want to change, then pick Customization › New Layout.</span></div>
+<div><span class="n">3</span><b>The docs</b><span>They explain every step, from the first button to animated menus.</span></div>
+<div><span class="n">4</span><b>The Discord</b><span>Join it to get support from the community.</span></div>
+</div>
+<div class="group">
+<div class="row"><span class="lbl">Appearance<span class="sub">For FancyMenu&#x27;s own windows and menus</span></span><div class="ctl"><div class="seg" role="radiogroup" aria-label="Appearance" style="width: 150px"><div class="thumb" style="{{w.thumb}}"></div><button class="{{w.darkCls}}" role="radio" aria-checked="{{w.dark}}" onClick="{{w.setDark}}">Dark</button><button class="{{w.lightCls}}" role="radio" aria-checked="{{w.light}}" onClick="{{w.setLight}}">Light</button></div></div></div>
+</div>
+</div>
+<div class="footer"><button class="btn wide" onClick="{{noop}}">Join the Discord</button><button class="btn wide" onClick="{{noop}}">Open the Docs</button><button class="btn primary wide" onClick="{{noop}}">Start Customizing</button></div>
+</div>
+</sc-if>
+
+<sc-if value="{{isAbout}}" hint-placeholder-val="{{false}}">
+<div class="win cr" role="dialog" aria-label="About" style="position: relative">
+<div class="titlebar">
+<div class="tl"><button class="c" aria-label="Close"><span class="ms" aria-hidden="true">close</span></button><button class="m" aria-label="Collapse" disabled><span class="ms" aria-hidden="true">remove</span></button><button class="x" aria-label="Maximize" disabled><span class="ms" aria-hidden="true">open_in_full</span></button></div>
+<div class="wt"><span class="ms" aria-hidden="true">info</span>About</div>
+<div></div>
+</div>
+<div class="cr-body">
+<div class="cr-head">
+<span class="wl-logo" aria-hidden="true"></span>
+<div class="tx"><div class="dt">FancyMenu</div><div class="dm">{{c.version}}</div></div>
+<button class="btn" data-tip="For bug reports" onClick="{{c.copy}}"><span class="ms" aria-hidden="true">{{c.copyIcon}}</span>{{c.copyLabel}}</button>
+</div>
+<div class="cr-mem">In memory of UwUCookies</div>
+
+<div>
+<div class="sec">Lead Developer</div>
+<div class="group cr-names"><span>Keksuccino</span></div>
+</div>
+<div>
+<div class="sec">Patreon Supporters</div>
+<div class="group cr-names"><sc-for list="{{c.patrons}}" as="n" hint-placeholder-count="9"><span>{{n}}</span></sc-for></div>
+</div>
+<div>
+<div class="sec">Alpha &amp; Beta Testers</div>
+<div class="group cr-names"><sc-for list="{{c.testers}}" as="t" hint-placeholder-count="11"><span>{{t.n}}<small>{{t.h}}</small></span></sc-for></div>
+</div>
+<div>
+<div class="sec">Special Thanks</div>
+<div class="group">
+<sc-for list="{{c.thanks}}" as="t" hint-placeholder-count="4"><div class="row"><span class="lbl">{{t.n}}<span class="sub">{{t.t}}</span></span></div></sc-for>
+</div>
+</div>
+<div>
+<div class="sec">Buddy&#x27;s Assets</div>
+<div class="group">
+<div class="row"><span class="lbl">Skin and Items<span class="sub">By masocarai, @masocarai on Discord</span></span></div>
+<div class="row"><span class="lbl">GUI<span class="sub">By Kumo, @kumoooo00 on Discord</span></span></div>
+</div>
+</div>
+<div>
+<div class="sec">Fonts</div>
+<div class="group">
+<sc-for list="{{c.fonts}}" as="f" hint-placeholder-count="7"><div class="row"><span class="lbl">{{f.n}}<span class="sub">{{f.c}}</span></span><button class="btn sm cr-lic" data-tip="Opens the SIL Open Font License 1.1" onClick="{{noop}}">OFL 1.1<span class="ms" aria-hidden="true">open_in_new</span></button></div></sc-for>
+</div>
+</div>
+<div>
+<div class="sec">Copyright</div>
+<div class="group">
+<sc-for list="{{c.rights}}" as="r" hint-placeholder-count="4"><div class="row"><span class="lbl">{{r.n}}<span class="sub">{{r.t}}</span></span><button class="btn sm cr-lic" data-tip="{{r.tip}}" onClick="{{noop}}">{{r.l}}<span class="ms" aria-hidden="true">open_in_new</span></button></div></sc-for>
+</div>
+</div>
+</div>
+<div class="footer line"><button class="btn primary wide" onClick="{{noop}}">Close</button></div>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"kind":{"editor":"enum","options":["confirm","danger","error","welcome","about"],"default":"confirm"},"freeze":{"editor":"boolean","default":false},"scroll":{"editor":"text","default":""},"onTheme":{"editor":null},"standalone":{"editor":"boolean","default":true},"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":720,"height":760}}'>
+// A message is a title, a text and buttons named after what they do (rule 140). kind is the word in the title bar.
+const WAIT_MS = 2000;
+const MESSAGES = {
+  // asked by This Screen > Override With Custom GUI, with the 2 seconds its question waits today
+  confirm: {
+    kind: 'Warning', icon: 'warning', tone: 'warn', wait: true,
+    title: 'Show quest_log instead of the title screen?',
+    text: 'From then on the game opens quest_log every time it would open the title screen. That can break things, so only do it when a layout can\'t do the job.',
+    main: 'Override', other: ['Cancel']
+  },
+  // asked by Clear Tracks in the menu bar, which has no window to slide a sheet from
+  danger: {
+    kind: 'Warning', icon: 'delete', tone: 'err', danger: true,
+    title: 'Clear all 3 tracks?',
+    text: 'This removes every custom menu music track from the list. The sound files stay where they are.',
+    main: 'Clear Tracks', other: ['Cancel']
+  },
+  // an action that failed says what ran it, since scripts know that (rule 81)
+  error: {
+    kind: 'Error', icon: 'error', tone: 'err',
+    title: 'Couldn\'t open quest_logg',
+    text: 'No screen or custom GUI has this identifier. The Quests button in Dusk Valley Pause ran Open Screen or Custom GUI with it.',
+    detail: 'Dusk Valley Pause › Quests button › Click script, step 1',
+    main: 'Close', other: ['Show Script', 'Copy Details']
+  }
+};
+const FONTS = [
+  ['Noto Sans', '© 2022 The Noto Project Authors'], ['Noto Sans Japanese', '© 2014 to 2021 Adobe'], ['Noto Sans Korean', '© 2014 to 2021 Adobe'],
+  ['Noto Sans Traditional Chinese', '© 2014 to 2021 Adobe'], ['Noto Sans Simplified Chinese', '© 2014 to 2021 Adobe'],
+  ['Noto Color Emoji', '© 2022 Google Inc.'], ['Noto Emoji', '© 2013 Google LLC']
+];
+
+class Component extends DCLogic {
+  componentWillUnmount() { if (this._t) clearInterval(this._t); }
+
+  renderVals() {
+    const p = this.props, s = this.state || {};
+    const uid = this._uid || (this._uid = 'sw' + Math.random().toString(36).slice(2, 8));
+    const standalone = p.standalone ?? true;
+    const kind = p.kind || 'confirm';
+    const isMsg = !!MESSAGES[kind];
+    const light = s.light ?? ((p.theme ?? 'Dark') === 'Light');
+
+    // ---------- a message ----------
+    let m = { buttons: [] };
+    if (isMsg) {
+      const M = MESSAGES[kind];
+      // A question that waits counts down on its own button. A board can hold it at 1.3 seconds.
+      if (M.wait && !p.freeze && !this._t0) {
+        this._t0 = Date.now();
+        this._t = setInterval(() => { if (Date.now() - this._t0 >= WAIT_MS) { clearInterval(this._t); this._t = null; } this.setState({ tk: Date.now() }); }, 100);
+      }
+      const gone = M.wait ? (p.freeze ? 700 : Math.min(WAIT_MS, Date.now() - (this._t0 || Date.now()))) : WAIT_MS;
+      const waiting = M.wait && gone < WAIT_MS;
+      const said = s.said || '';
+      m = {
+        kind: M.kind, kindIcon: M.kind === 'Error' ? 'error' : 'warning', icon: M.icon, iconCls: 'vm-aicon' + (M.tone ? ' ' + M.tone : ''), title: M.title, text: M.text, detail: M.detail || '',
+        note: said,
+        cancel: () => this.setState({ said: 'Closing the window answers Cancel.' }),
+        buttons: [{
+          cls: 'btn primary' + (M.danger ? ' danger' : '') + (waiting ? ' md-wait' : ''), dis: waiting, waits: waiting,
+          fill: 'width: ' + Math.round(gone / WAIT_MS * 100) + '%',
+          label: waiting ? M.main + ' in ' + Math.ceil((WAIT_MS - gone) / 1000) + ' s' : M.main,
+          click: () => this.setState({ said: kind === 'error' ? 'OK closes the message.' : M.main + ' goes ahead and closes the message.' })
+        }].concat(M.other.map((label) => ({
+          cls: 'btn', dis: false, waits: false, fill: '', label,
+          click: () => this.setState({ said: label === 'Copy Details' ? 'Copied what failed, where and the log lines that belong to it.' : label === 'Show Script' ? 'Opens the script editor with that step selected.' : 'Cancel changes nothing and closes the message.' })
+        })))
+      };
+    }
+
+    // a board can show the lower part of About
+    if (p.scroll && !this._scrolled) {
+      this._scrolled = true;
+      const walk = (r) => { const hit = r.querySelector('[data-sw="' + uid + '"] .cr-body'); if (hit) return hit; for (const el of r.querySelectorAll('*')) { if (el.shadowRoot) { const x = walk(el.shadowRoot); if (x) return x; } } return null; };
+      setTimeout(() => { const el = walk(document); if (el) el.scrollTop = p.scroll === 'end' ? el.scrollHeight : +p.scroll || 0; }, 80);
+    }
+
+    const setLight = (v) => () => { this.setState({ light: v }); if (typeof p.onTheme === 'function') p.onTheme(v ? 'Light' : 'Dark'); };
+    const copied = !!s.copied;
+    return {
+      uid, standalone, noop: () => {},
+      rootCls: standalone ? 'fm ' + (light ? 'theme-light' : 'theme-dark') + ((p.material ?? 'Blur') === 'Blur' ? ' mat-blur' : '') : '',
+      rootStyle: standalone ? 'position: relative; width: 720px; height: 760px; overflow: hidden; display: grid; place-items: center; background: var(--bd)' : 'position: relative',
+      isMsg, isWelcome: kind === 'welcome', isAbout: kind === 'about', m,
+      w: {
+        thumb: 'width: calc((100% - 4px) / 2); transform: translateX(' + (light ? 100 : 0) + '%)',
+        darkCls: light ? '' : 'on', lightCls: light ? 'on' : '', dark: light ? 'false' : 'true', light: light ? 'true' : 'false',
+        setDark: setLight(false), setLight: setLight(true)
+      },
+      c: {
+        version: 'Version 3.10.0 · Minecraft 1.21.11 · NeoForge',
+        copyIcon: copied ? 'check' : 'content_copy', copyLabel: copied ? 'Copied' : 'Copy Version Info',
+        copy: () => { this.setState({ copied: true }); setTimeout(() => this.setState({ copied: false }), 1600); },
+        patrons: ['Infidel', 'OtakuGamer', 'Andreas Grewe', 'Jolihan', 'JJ', 'Kreezxil', 'caela.uk', 'Mavontay Hamilton', '생이 남'],
+        testers: [['ankiolyne', 'rainyatrium'], ['༄ᵘˢ᭄✿ᴋᴀɪ＿カイ࿐', 'Kai＿カイ#9782'], ['Aaby', 'aabyy'], ['Bee', 'kompreya'], ['SrRapero720', 'jrap'], ['JetpackCat', '.jetpackcat'], ['Jolihan', 'jolihan'], ['Mowzy', 'mowzy'], ['UwUCookies', 'cookiesred_29'], ['хлифи', 'xllifi'], ['caela', 'caela.uk']].map(([n, h]) => ({ n, h })),
+        thanks: [
+          ['xllifi', 'For tons of great looking icons for context menus'],
+          ['Mondaze', 'For designing FancyMenu\'s beautiful logos'],
+          ['All alpha and beta testers', 'For finding bugs and helping polish features'],
+          ['FancyMenu\'s community', 'This mod wouldn\'t be what it is today without you. Thank you!']
+        ].map(([n, t]) => ({ n, t })),
+        fonts: FONTS.map(([n, c]) => ({ n, c })),
+        rights: [
+          ['FancyMenu', '© 2020 to 2026 Keksuccino', 'DSMSLv3', 'Opens LICENSE.md'],
+          ['Japng', '© A. Ellerton', 'Apache 2.0', 'Opens the Apache License 2.0'],
+          ['Animated GIF library for Java', '© Roberto Tyley, Kevin Weiner', 'Apache 2.0', 'Opens the Apache License 2.0'],
+          ['Material Icons', '© Google LLC', 'Apache 2.0', 'Opens the Apache License 2.0']
+        ].map(([n, t, l, tip]) => ({ n, t, l, tip }))
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

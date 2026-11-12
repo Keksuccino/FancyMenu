@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Color picker editing a text color in the layout editor</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="fm cpb {{themeClass}} {{matClass}}" style="position: relative; width: 1440px; height: 900px; overflow: hidden; background: var(--bd)">
+<div class="backdrop" aria-hidden="true" style="background: #15182c">
+<img class="art" src="dusk_valley.png" alt="">
+<div class="gridlines"></div>
+</div>
+<div class="le" aria-hidden="true" style="{{titleStyle}}">Dusk Valley</div>
+<div class="le" aria-hidden="true" style="left: 846px; top: 226px; padding: 2px 8px; color: #ffe066; font-size: 17px; font-weight: 700; transform: rotate(-12deg); text-shadow: 0 2px 0 rgba(0, 0, 0, .4)">Now with fireflies!</div>
+<div class="le le-btn" aria-hidden="true" style="left: 590px; top: 420px; width: 260px; height: 38px">Play</div>
+<div class="le le-btn" aria-hidden="true" style="left: 590px; top: 468px; width: 260px; height: 38px">Options</div>
+<div class="le le-btn" aria-hidden="true" style="left: 590px; top: 516px; width: 260px; height: 38px">Quit Game</div>
+<div class="sel-border" aria-hidden="true" style="left: 499px; top: 149px; width: 442px; height: 86px"><i style="left: -3px; top: -3px"></i><i style="right: -3px; top: -3px"></i><i style="left: -3px; bottom: -3px"></i><i style="right: -3px; bottom: -3px"></i></div>
+<div style="position: absolute; left: 0; right: 0; top: 0"><dc-import name="MenuBar" kind="Editor" unsaved="{{yes}}" standalone="{{no}}" hint-size="1440px,30px"></dc-import></div>
+
+<div style="position: absolute; left: 40px; top: 300px">
+<dc-import name="ColorPicker" title="Text Color" target="Title Text" color="#FFD166" original="#FFFFFF" picking="{{picking}}" picked="{{picked}}" color-listener="{{onColor}}" pick-listener="{{togglePick}}" standalone="{{no}}" hint-size="620px,424px"></dc-import>
+</div>
+
+<sc-if value="{{picking}}" hint-placeholder-val="{{false}}">
+<div class="cp-pickov" aria-label="Pick a color from the screen" onMouseMove="{{track}}" onClick="{{take}}"></div>
+<div class="cp-hint">Click anywhere to pick a color · Esc cancels</div>
+<sc-if value="{{hasLoupe}}" hint-placeholder-val="{{false}}">
+<div class="cp-loupe" style="{{loupeStyle}}">
+<div class="cp-lz"><img src="dusk_valley.png" alt="" style="{{loupeImg}}"><span class="cp-lc" style="{{loupeCell}}"></span></div>
+<div class="cp-lhex"><i style="{{loupeSwatch}}"></i>{{loupeHex}}</div>
+</div>
+</sc-if>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const titleColor = s.titleColor || '#FFD166';
+    const picking = !!s.picking;
+    const hex2 = (n) => n.toString(16).padStart(2, '0').toUpperCase();
+    const ZOOM = 1.6, HALF = 53;
+    // Samples the backdrop art under the pointer. The real eyedropper reads the rendered screen; the mockup
+    // only has the pixel art to read from, so elements drawn on top of it are ignored here.
+    const sample = (e) => {
+      const ov = e.currentTarget;
+      const art = ov.parentElement.querySelector('.backdrop .art');
+      if (!art || !art.naturalWidth) return null;
+      const r = ov.getBoundingClientRect();
+      const k = ov.offsetWidth / r.width;
+      const x = (e.clientX - r.left) * k, y = (e.clientY - r.top) * k;
+      const W = art.offsetWidth, H = art.offsetHeight, nw = art.naturalWidth, nh = art.naturalHeight;
+      const scale = Math.max(W / nw, H / nh), offX = (nw * scale - W) / 2, offY = (nh * scale - H) / 2;
+      const px = Math.min(nw - 1, Math.floor((x + offX) / scale)), py = Math.min(nh - 1, Math.floor((y + offY) / scale));
+      if (!this._pixels) {
+        try {
+          const c = document.createElement('canvas');
+          c.width = nw; c.height = nh;
+          const g = c.getContext('2d');
+          g.drawImage(art, 0, 0);
+          this._pixels = g.getImageData(0, 0, nw, nh).data;
+        } catch (err) { this._pixels = null; }
+      }
+      const d = this._pixels;
+      const hex = d ? '#' + hex2(d[(py * nw + px) * 4]) + hex2(d[(py * nw + px) * 4 + 1]) + hex2(d[(py * nw + px) * 4 + 2]) : null;
+      return {
+        x, y, hex,
+        loupeStyle: 'left: ' + (x > W - 160 ? x - 134 : x + 22) + 'px; top: ' + (y > H - 180 ? y - 166 : y + 22) + 'px',
+        loupeImg: 'width: ' + (nw * scale * ZOOM) + 'px; left: ' + (HALF - (x + offX) * ZOOM) + 'px; top: ' + (HALF - (y + offY) * ZOOM) + 'px',
+        loupeCell: 'left: ' + (HALF + (px * scale - (x + offX)) * ZOOM) + 'px; top: ' + (HALF + (py * scale - (y + offY)) * ZOOM) + 'px; width: ' + (scale * ZOOM) + 'px; height: ' + (scale * ZOOM) + 'px'
+      };
+    };
+    const stopPicking = () => {
+      if (this._esc) { window.removeEventListener('keydown', this._esc); this._esc = null; }
+      this.setState({ picking: false, loupe: null });
+    };
+    const loupe = s.loupe;
+    return {
+      themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark',
+      matClass: (this.props.material ?? 'Blur') === 'Blur' ? 'mat-blur' : '',
+      yes: true, no: false,
+      titleStyle: 'left: 500px; top: 150px; width: 440px; height: 84px; display: grid; place-items: center; color: ' + titleColor + '; font-size: 52px; font-weight: 700; letter-spacing: 1px; text-shadow: 0 4px 0 rgba(0, 0, 0, .35)',
+      picking, picked: s.picked || '',
+      onColor: (hex) => { if (hex !== titleColor) this.setState({ titleColor: hex }); },
+      togglePick: () => {
+        if (picking) { stopPicking(); return; }
+        this._esc = (ev) => { if (ev.key === 'Escape') stopPicking(); };
+        window.addEventListener('keydown', this._esc);
+        this.setState({ picking: true, loupe: null });
+      },
+      track: (e) => { const l = sample(e); if (l) this.setState({ loupe: l }); },
+      take: (e) => {
+        const l = sample(e);
+        stopPicking();
+        if (l && l.hex) this.setState({ picked: l.hex + '|' + Date.now(), titleColor: l.hex });
+      },
+      hasLoupe: !!loupe,
+      loupeStyle: loupe ? loupe.loupeStyle : '', loupeImg: loupe ? loupe.loupeImg : '', loupeCell: loupe ? loupe.loupeCell : '',
+      loupeHex: loupe && loupe.hex ? loupe.hex : '', loupeSwatch: loupe && loupe.hex ? 'background: ' + loupe.hex : ''
+    };
+  }
+}
+</script>
+</body>
+</html>
