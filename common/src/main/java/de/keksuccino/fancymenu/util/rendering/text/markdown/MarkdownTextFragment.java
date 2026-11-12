@@ -28,6 +28,10 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     protected static final int TRAILING_SPACE_KEEP = 0;
     protected static final int TRAILING_SPACE_REMOVE = 1;
     protected static final int TRAILING_SPACE_SEPARATE = 2;
+    private static final int COMPONENT_STATE_LINE_END = 1;
+    private static final int COMPONENT_STATE_HYPERLINK_HOVERED = 2;
+    private static final int COMPONENT_STATE_CLICK_EVENT_HOVERED = 4;
+    private static final int COMPONENT_STATE_HOVER_EVENT_HOVERED = 8;
 
     public final MarkdownRenderer parent;
     public MarkdownTextLine parentLine;
@@ -61,8 +65,14 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     public CodeBlockContext codeBlockContext = null;
     public boolean plainText = false;
     public Identifier font = null;
+    /** Only gets changed through {@link #setHovered(boolean)}, because the fragment's hyperlink and text events count their hovered fragments. */
     public boolean hovered = false;
     public TableContext tableContext = null;
+    @Nullable
+    private Component renderComponent = null;
+    private int renderComponentState;
+    private int renderComponentStyleVersion;
+    private int renderComponentCustomColor;
 
     public MarkdownTextFragment(@NotNull MarkdownRenderer parent, @NotNull String text) {
         this.parent = parent;
@@ -73,7 +83,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     @Override
     public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
-        this.hovered = this.isMouseOver(mouseX, mouseY);
+        this.setHovered(this.isMouseOver(mouseX, mouseY));
 
         if (this.isLinkLike() && this.hovered) {
             CursorHandler.setClientTickCursor(CursorHandler.CURSOR_POINTING_HAND);
@@ -87,8 +97,10 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
         if (this.imageSupplier != null) {
             this.imageSupplier.forRenderable((iTexture, location) -> {
-                de.keksuccino.fancymenu.util.rendering.RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, this.parent.textOpacity);
-                RenderingUtils.blitF(graphics, location, this.x, this.y, 0.0F, 0.0F, this.getRenderWidth(), this.getRenderHeight(), this.getRenderWidth(), this.getRenderHeight());
+                float width = this.getRenderWidth();
+                float height = this.getRenderHeight();
+                RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, this.parent.textOpacity);
+                RenderingUtils.blitF(graphics, location, this.x, this.y, 0.0F, 0.0F, width, height, width, height);
                 RenderingUtils.resetShaderColor(graphics);
             });
         } else if (this.separationLine) {
@@ -108,7 +120,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                 // Vanilla text extraction only accepts integer draw coordinates. Translate to the exact text origin and draw at local zero so a fractional scale never requires dividing and truncating its absolute position, which would move glyphs into the parent's scissor area.
                 graphics.pose().translate(this.getTextX(), this.getTextY());
                 graphics.pose().scale(scale, scale);
-                this.parent.renderText(graphics, this.buildRenderComponent(false), 0.0F, 0.0F, this.parent.textBaseColor.getColorIntWithAlpha(this.parent.textOpacity), this.parent.textShadow && (this.codeBlockContext == null));
+                this.parent.renderText(graphics, this.getRenderComponent(), 0.0F, 0.0F, this.parent.textBaseColor.getColorIntWithAlpha(this.parent.textOpacity), this.parent.textShadow && (this.codeBlockContext == null));
             } finally {
                 graphics.pose().popMatrix();
             }
@@ -356,10 +368,39 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             // Vertical centering using text baseline
             final float textBaselineY = this.getTextY() + (this.parent.getUnscaledTextHeight() * scale * 0.5f) - (bulletSize * 0.5f);
 
-            RenderingUtils.fillF(graphics, bulletX, textBaselineY, bulletX + bulletSize, textBaselineY + bulletSize,
-                    this.parent.bulletListDotColor.getColorIntWithAlpha(this.parent.textOpacity)
-            );
+            RenderingUtils.fillF(graphics, bulletX, textBaselineY, bulletX + bulletSize, textBaselineY + bulletSize, this.parent.bulletListDotColor.getColorIntWithAlpha(this.parent.textOpacity));
         }
+    }
+
+    /**
+     * Returns the component that gets drawn for this fragment.<br>
+     * Building it allocates a style chain and a component, so the result stays cached. The cache follows every input that changes without the
+     * fragment knowing: the hover state of the fragment's hyperlink and text events and the end of a line (packed into a state value), the
+     * renderer settings that {@link MarkdownRenderer#fragmentStyleVersion} counts, and the color of a custom color formatter.
+     * Everything else the component gets built from belongs to the fragment itself, and changing it has to be followed by
+     * {@link #updateWidth()}, which drops the cached component.
+     */
+    @NotNull
+    protected Component getRenderComponent() {
+        int state = this.getRenderComponentState();
+        int customColor = this.minecraftFormatting.getCurrentCustomColor();
+        if ((this.renderComponent == null) || (this.renderComponentState != state) || (this.renderComponentStyleVersion != this.parent.fragmentStyleVersion) || (this.renderComponentCustomColor != customColor)) {
+            this.renderComponent = this.buildRenderComponent(false);
+            this.renderComponentState = state;
+            this.renderComponentStyleVersion = this.parent.fragmentStyleVersion;
+            this.renderComponentCustomColor = customColor;
+        }
+        return this.renderComponent;
+    }
+
+    private int getRenderComponentState() {
+        // Only link-like fragments get built differently when they are hovered or at the end of a line
+        if (!this.isLinkLike()) return 0;
+        int state = (this.naturalLineBreakAfter || this.autoLineBreakAfter) ? COMPONENT_STATE_LINE_END : 0;
+        if ((this.hyperlink != null) && this.hyperlink.isHovered()) state |= COMPONENT_STATE_HYPERLINK_HOVERED;
+        if ((this.clickEvent != null) && this.clickEvent.isHovered()) state |= COMPONENT_STATE_CLICK_EVENT_HOVERED;
+        if ((this.hoverEvent != null) && this.hoverEvent.isHovered()) state |= COMPONENT_STATE_HOVER_EVENT_HOVERED;
+        return state;
     }
 
     @NotNull
@@ -476,8 +517,21 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
      * Has to get called after anything changed that the fragment's text or style gets built from, like its text or formatting.
      */
     protected void updateWidth() {
+        this.renderComponent = null;
         int trailingSpaceMode = this.getTrailingSpaceMode();
         this.unscaledTextWidth = this.parent.textWidthCache.getWidth(this.buildRenderStyle(true), this.buildRenderText(trailingSpaceMode), trailingSpaceMode == TRAILING_SPACE_SEPARATE);
+    }
+
+    /**
+     * Sets if the mouse is over the fragment, and keeps the hover state of the fragment's hyperlink and text events up to date.
+     */
+    public void setHovered(boolean hovered) {
+        if (this.hovered == hovered) return;
+        this.hovered = hovered;
+        int change = hovered ? 1 : -1;
+        if (this.hyperlink != null) this.hyperlink.hoveredFragments += change;
+        if (this.clickEvent != null) this.clickEvent.hoveredFragments += change;
+        if (this.hoverEvent != null) this.hoverEvent.hoveredFragments += change;
     }
 
     public float getTextRenderX() {
@@ -708,21 +762,28 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         return (this.tableContext != null) && this.text.equals("[TABLE]");
     }
 
-    public static class Hyperlink {
+    /**
+     * A part of the text that spans several fragments and gets hovered as a whole: a hyperlink, or a text click or hover event.
+     */
+    public abstract static class HoverGroup {
 
-        public String link = null;
-        public final List<MarkdownTextFragment> hyperlinkFragments = new ArrayList<>();
+        /** How many fragments of the group the mouse is over. {@link MarkdownTextFragment#setHovered(boolean)} keeps it up to date. */
+        protected int hoveredFragments = 0;
 
         public boolean isHovered() {
-            for (MarkdownTextFragment f : this.hyperlinkFragments) {
-                if (f.hovered) return true;
-            }
-            return false;
+            return this.hoveredFragments > 0;
         }
 
     }
 
-    public static class TextClickEvent {
+    public static class Hyperlink extends HoverGroup {
+
+        public String link = null;
+        public final List<MarkdownTextFragment> hyperlinkFragments = new ArrayList<>();
+
+    }
+
+    public static class TextClickEvent extends HoverGroup {
 
         public final String identifier;
         public final List<MarkdownTextFragment> eventFragments = new ArrayList<>();
@@ -731,29 +792,15 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             this.identifier = identifier;
         }
 
-        public boolean isHovered() {
-            for (MarkdownTextFragment f : this.eventFragments) {
-                if (f.hovered) return true;
-            }
-            return false;
-        }
-
     }
 
-    public static class TextHoverEvent {
+    public static class TextHoverEvent extends HoverGroup {
 
         public final String identifier;
         public final List<MarkdownTextFragment> eventFragments = new ArrayList<>();
 
         public TextHoverEvent(@NotNull String identifier) {
             this.identifier = identifier;
-        }
-
-        public boolean isHovered() {
-            for (MarkdownTextFragment f : this.eventFragments) {
-                if (f.hovered) return true;
-            }
-            return false;
         }
 
     }
