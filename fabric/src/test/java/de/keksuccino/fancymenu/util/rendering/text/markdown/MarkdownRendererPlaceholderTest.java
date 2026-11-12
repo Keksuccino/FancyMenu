@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.ResourceLock;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ResourceLock("PlaceholderParser global state")
 class MarkdownRendererPlaceholderTest {
@@ -42,6 +43,39 @@ class MarkdownRendererPlaceholderTest {
 
         assertEquals(2, renderer.parses);
         assertEquals("second", renderer.fragmentContaining("second").text);
+    }
+
+    @Test
+    void changedPlaceholderValueWithTheSameHashCodeGetsNoticed() {
+        String key = "markdown_renderer_hash_collision";
+        String first = "Aa";
+        String second = "BB";
+        assertEquals(first.hashCode(), second.hashCode());
+        TestPlaceholders.setValue(key, first);
+        MarkdownTestRenderer renderer = new MarkdownTestRenderer(TestPlaceholders.value(key), 400);
+        renderer.tick();
+
+        TestPlaceholders.setValue(key, second);
+        renderer.tick();
+
+        assertEquals(2, renderer.parses);
+        assertEquals(second, renderer.fragments.get(0).text);
+    }
+
+    @Test
+    void placeholderChangeThatResultsInTheSameRenderTextDoesNotParseAgain() {
+        String key = "markdown_renderer_same_render_text";
+        TestPlaceholders.setValue(key, "word");
+        MarkdownTestRenderer renderer = new MarkdownTestRenderer("A " + TestPlaceholders.value(key), 400);
+        renderer.tick();
+
+        // HTML breaks get removed from the render text, so the text that gets parsed stays the same
+        TestPlaceholders.setValue(key, "word<br>");
+        renderer.tick();
+
+        assertEquals(1, renderer.parses);
+        assertEquals(1, renderer.layouts);
+        assertTrue(TestPlaceholders.evaluations(key) >= 2);
     }
 
     @Test
