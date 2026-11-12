@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pre-Load Resources on the title screen</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="fm {{themeClass}} {{matClass}}" style="position: relative; width: 1440px; height: 900px; overflow: hidden; background: var(--bd)">
+<div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""></div>
+<div aria-hidden="true" style="position: absolute; left: 16px; bottom: 12px; color: rgba(255, 255, 255, .85); font-size: 12px">Dusk Valley Pack 1.4.2</div>
+<div aria-hidden="true" style="position: absolute; right: 16px; bottom: 12px; color: rgba(255, 255, 255, .85); font-size: 12px">Copyright Mojang AB. Do not distribute!</div>
+<div style="position: absolute; left: 0; right: 0; top: 0"><dc-import name="MenuBar" kind="Overlay" standalone="{{no}}" hint-size="1440px,30px"></dc-import></div>
+<div style="position: absolute; left: 240px; top: 70px"><dc-import name="PreLoadResources" scene="{{scene}}" select="{{select}}" add-menu="{{addMenu}}" adding="{{adding}}" add-at="{{addAt}}" freeze="{{freeze}}" play="{{play}}" play-at="{{playAt}}" filter="{{filter}}" query="{{query}}" width="960" height="760" standalone="{{no}}" hint-size="960px,760px"></dc-import></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"scene":{"editor":"enum","options":["Dusk Valley","Empty"],"default":"Dusk Valley"},"select":{"editor":"text","default":"r1"},"addMenu":{"editor":"boolean","default":false},"adding":{"editor":"boolean","default":false},"addAt":{"editor":"text","default":"0.64"},"freeze":{"editor":"boolean","default":false},"play":{"editor":"boolean","default":false},"playAt":{"editor":"int","default":0},"filter":{"editor":"enum","options":["all","visual","sound","video","scenes","probs"],"default":"all"},"query":{"editor":"text","default":""},"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    return {
+      themeClass: (p.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark',
+      matClass: (p.material ?? 'Blur') === 'Blur' ? 'mat-blur' : '',
+      no: false,
+      scene: p.scene || 'Dusk Valley', select: p.select ?? 'r1', addMenu: !!p.addMenu, adding: !!p.adding, addAt: String(p.addAt ?? '0.64'),
+      freeze: !!p.freeze, play: !!p.play, playAt: +p.playAt || 0, filter: p.filter || 'all', query: p.query || ''
+    };
+  }
+}
+</script>
+</body>
+</html>

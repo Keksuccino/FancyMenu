@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Image element menu with the image source submenu open</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="fm {{themeClass}} {{matClass}}" style="position: relative; width: 1440px; height: 960px; overflow: hidden; background: var(--bd)">
+<div class="backdrop" aria-hidden="true" style="background: #15182c">
+<sc-if value="{{showArt}}" hint-placeholder-val="{{true}}"><img class="art" src="dusk_valley.png" alt=""></sc-if>
+<div class="gridlines"></div>
+</div>
+<div class="le" aria-hidden="true" style="left: 500px; top: 150px; width: 440px; height: 84px; display: grid; place-items: center; color: #fff; font-size: 52px; font-weight: 700; letter-spacing: 1px; text-shadow: 0 4px 0 rgba(0, 0, 0, .35)">Dusk Valley</div>
+<div class="le le-btn" aria-hidden="true" style="left: 590px; top: 420px; width: 260px; height: 38px">Play</div>
+<div class="le le-btn" aria-hidden="true" style="left: 590px; top: 468px; width: 260px; height: 38px">Options</div>
+<div class="le le-btn" aria-hidden="true" style="left: 590px; top: 516px; width: 260px; height: 38px">Quit Game</div>
+<div class="sel-border" aria-hidden="true" style="left: 2px; top: 2px; width: 1436px; height: 956px"><i style="left: -3px; top: -3px"></i><i style="right: -3px; top: -3px"></i><i style="left: -3px; bottom: -3px"></i><i style="right: -3px; bottom: -3px"></i></div>
+
+<div style="position: absolute; left: 300px; top: 96px; display: flex; align-items: flex-start; gap: 2px" onMouseMove="{{track}}">
+<div><dc-import name="ContextMenu" items="{{rootItems}}" focus-on-open="{{yes}}" search-listener="{{onQuery}}" standalone="{{no}}" hint-size="auto,760px"></dc-import></div>
+<sc-if value="{{subSource}}" hint-placeholder-val="{{true}}">
+<div style="{{subStyle}}" onMouseEnter="{{subEnter}}"><dc-import name="ContextMenu" items="{{sourceItems}}" sub="{{yes}}" standalone="{{no}}" hint-size="auto,330px"></dc-import></div>
+</sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"source":{"editor":"enum","options":["Local file","Web","Missing file","Placeholder","Placeholder, in game only"],"default":"Local file"},"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const sub = s.sub !== undefined ? s.sub : 'source';
+    // Submenu hover intent, same as in the menu bar: heading toward the open submenu keeps it open for a
+    // short grace time while crossing other rows; moving straight up or down switches instantly.
+    const hi = this._hoverIntent || (this._hoverIntent = { pts: [], rect: null, timer: 0 });
+    const GRACE_MS = 350;
+    const cancelIntent = () => { if (hi.timer) { clearTimeout(hi.timer); hi.timer = 0; } };
+    const track = (e) => {
+      hi.pts.push({ x: e.clientX, y: e.clientY });
+      if (hi.pts.length > 4) hi.pts.shift();
+      const subMenu = e.currentTarget.querySelectorAll('.menu.cm')[1];
+      hi.rect = subMenu ? subMenu.getBoundingClientRect() : null;
+    };
+    const headingToSub = () => {
+      const r = hi.rect;
+      if (!r || hi.pts.length < 2) return false;
+      const pt = hi.pts[hi.pts.length - 1], from = hi.pts[0];
+      if (pt.x === from.x && pt.y === from.y) return false;
+      const a = { x: r.left, y: r.top - 8 }, b = { x: r.left, y: r.bottom + 8 };
+      const side = (p1, p2, p3) => (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
+      const d1 = side(pt, from, a), d2 = side(pt, a, b), d3 = side(pt, b, from);
+      return !((d1 < 0 || d2 < 0 || d3 < 0) && (d1 > 0 || d2 > 0 || d3 > 0));
+    };
+    const liveSub = () => { const st = this.state || {}; return st.sub !== undefined ? st.sub : 'source'; };
+    const wantSub = (id) => {
+      cancelIntent();
+      const cur = liveSub();
+      if (cur === id) return;
+      if (cur !== null && headingToSub()) {
+        hi.timer = setTimeout(() => { hi.timer = 0; this.setState({ sub: id }); }, GRACE_MS);
+        return;
+      }
+      this.setState({ sub: id });
+    };
+    const open = (id) => () => wantSub(id);
+    const close = () => wantSub(null);
+    const kind = this.props.source ?? 'Local file';
+    const web = kind === 'Web', missing = kind === 'Missing file';
+    const ph = kind === 'Placeholder', phGame = kind === 'Placeholder, in game only';
+    const nine = s.nine ?? false;
+    const fileName = missing ? 'dusk_valley_v2.png' : 'dusk_valley.png';
+    const rootItems = [
+      { head: 'Image' },
+      ph || phGame
+        ? { ic: 'image', label: 'Image Source', file: true, fx: true, manual: true, manualVal: phGame ? 'in game' : 'dusk_valley.png', manualTone: phGame ? 'wait' : '', chipTip: phGame ? 'Only resolves while a world loads' : 'Resolved from the source text', thumb: phGame ? '' : 'dusk_valley.png', sub: true, hl: sub === 'source', enter: open('source'), click: open('source') }
+        : { ic: 'image', label: 'Image Source', file: true, fx: true, thumb: missing ? '' : 'dusk_valley.png', warn: missing, val: fileName, changed: true, sub: true, hl: sub === 'source', enter: open('source'), click: open('source') },
+      { ic: 'palette', label: 'Image Tint', swatch: '#FFFFFF', val: '#FFFFFF', enter: close },
+      { ic: 'grid', label: 'Repeat Texture', sw: true, on: false, enter: close },
+      { ic: 'grid', label: 'Nine-Slice Texture', sw: true, on: nine, enter: close, onToggle: (v) => this.setState({ nine: v }) },
+      { ic: 'fit', label: 'Nine-Slice Borders', val: '5 × 5', disabled: !nine, note: nine ? '' : 'needs nine-slice', enter: close },
+      { ic: 'restart_alt', label: 'Restart Animated Textures When Opening Screen', sw: true, on: true, enter: close },
+      { ic: 'rect', label: 'Corner Rounding Radius', val: '0', sub: true, enter: close },
+      { ic: 'fit', label: 'Restore Aspect Ratio', enter: close },
+      { head: 'Element' },
+      { ic: 'title', label: 'In-Editor Name', val: 'Dusk Valley', enter: close },
+      { ic: 'opacity', label: 'Opacity', slider: 1, enter: close },
+      { ic: 'move', label: 'Position & Size', val: 'Fill Screen', sub: true, enter: close },
+      { ic: 'eye', label: 'Visibility', val: 'Always', sub: true, enter: close },
+      { ic: 'sparkle', label: 'Animation & Effects', sub: true, enter: close },
+      { sep: true },
+      { ic: 'copy', label: 'Copy', kbd: 'Ctrl+C', enter: close },
+      { ic: 'id', label: 'Copy Element ID', enter: close },
+      { ic: 'trash', label: 'Delete', kbd: 'Del', danger: true, enter: close }
+    ];
+    const card = ph
+      ? { img: 'dusk_valley.png', name: 'dusk_valley.png', meta: 'PNG · 128 × 72 · 2.2 KB', source: 'local', sourceLabel: 'Local file', path: 'config/fancymenu/assets/backgrounds/dusk_valley.png',
+          ph: { parts: [{ t: 'config/fancymenu/assets/backgrounds/' }, { ph: 'getvariable: theme' }, { t: '.png' }], note: 'Resolved in the editor, so you see the real file. It changes while the game runs whenever the variable does.' } }
+      : phGame
+      ? { noPreview: true, noPreviewWait: true, noPreviewText: 'Resolves in game', name: 'No file in the editor', meta: 'World Loading Progress only has a value while a world loads.',
+          ph: { wait: true, parts: [{ t: 'config/fancymenu/assets/loading/stage_' }, { ph: 'world_load_progress' }, { t: '.png' }], note: 'This is not an error: the image shows up once the placeholder has a value in game.' } }
+      : web
+      ? { img: 'dusk_valley.png', name: 'dusk_valley.png', meta: 'PNG · 128 × 72 · 2.2 KB', source: 'web', sourceLabel: 'Web', path: 'https://cdn.duskvalley.net/menu/backgrounds/dusk_valley.png', status: 'Loaded' }
+      : missing
+        ? { noPreview: true, name: 'dusk_valley_v2.png', source: 'local', sourceLabel: 'Local file', path: 'config/fancymenu/assets/backgrounds/dusk_valley_v2.png', status: 'File not found. It may have been moved, renamed or deleted.', statusBad: true }
+        : { img: 'dusk_valley.png', name: 'dusk_valley.png', meta: 'PNG · 128 × 72 · 2.2 KB', source: 'local', sourceLabel: 'Local file', path: 'config/fancymenu/assets/backgrounds/dusk_valley.png' };
+    const sourceItems = [
+      { card },
+      { ic: 'image', label: 'Choose Image' },
+      { ic: 'braces', label: 'Edit Source as Text' },
+      phGame ? null : web ? { ic: 'external', label: 'Open in Browser' } : { ic: 'folder', label: 'Show in Folder' },
+      { ic: 'copy', label: phGame ? 'Copy Source Text' : web ? 'Copy URL' : 'Copy Path' }
+    ].filter(Boolean);
+    // same rule as ContextMenu: the search field shows from the start in menus with more than 10 entries
+    const listTop = 1 + 5 + (rootItems.filter((it) => !it.sep && !it.head).length > 10 ? 28 : 0);
+    let y = 0;
+    for (const it of rootItems) { if (it.label === 'Image Source') break; y += it.sep || it.head ? 25 : 26; }
+    return {
+      themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark',
+      matClass: (this.props.material ?? 'Blur') === 'Blur' ? 'mat-blur' : '',
+      no: false, yes: true, showArt: true,
+      track, subEnter: cancelIntent,
+      onQuery: (v) => { if (v && liveSub() !== null) { cancelIntent(); this.setState({ sub: null }); } },
+      rootItems, sourceItems,
+      subSource: sub === 'source',
+      subStyle: 'margin-top: ' + (listTop + y - 6) + 'px'
+    };
+  }
+}
+</script>
+</body>
+</html>

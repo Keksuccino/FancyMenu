@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>File browsers spec</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.pair{display:grid;grid-template-columns:600px minmax(0,1fr);gap:48px;align-items:start}
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:32px;align-items:start}
+.states{display:grid;grid-template-columns:repeat(2,600px);gap:36px 80px}
+.mini{width:600px;height:384px}
+.mini-in{position:absolute;left:0;top:0;width:1000px;height:640px;transform:scale(.6);transform-origin:0 0}
+.lg-win{width:600px}
+.lg-field,.lg-path{height:20px;display:flex;align-items:center;padding:0 6px;border:1px solid #3e4042;background:#1e1e1e;color:#8a8f94}
+.lg-path{color:#ceDDed}
+.lg-list{height:200px;border:1px solid #3e4042;background:#232323;padding:3px}
+.lg-row{height:20px;display:flex;align-items:center;gap:6px;padding:0 5px}
+.lg-types{height:20px;display:flex;align-items:center;padding:0 6px;border:1px solid #3e4042;background:#232323}
+.lg-prev{height:112px;border:1px solid #3e4042}
+.lg-prev img{width:100%;height:100%;object-fit:cover;image-rendering:pixelated;display:block}
+.lg-btn{height:20px;display:grid;place-items:center;border:1px solid #3e4042;background:#333}
+</style>
+</helmet>
+<div class="fm spec {{themeClass}} mat-blur" style="min-height: 4193px">
+
+<header style="display: flex; flex-direction: column; gap: 12px; max-width: 900px">
+<div style="font-size: 12px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; color: var(--text-3)">FancyMenu · UI rework concept · file browsers</div>
+<h1 style="margin: 0; font-size: 34px; line-height: 1.15; font-weight: 700; color: var(--title)">One browser for every file you pick or save</h1>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: var(--text-2)">Choosing a file, choosing a folder, saving a file and choosing a resource location all share one window: a toolbar to move around, a Places menu to jump to drives and recent folders, a list with thumbnails, and the same preview as the file entries in context menus. Only the bottom changes with what you are doing.</p>
+</header>
+
+<section>
+<h2 class="h2">Today and proposed</h2>
+<div class="pair">
+<div><div class="cap">Today</div><div class="lg-win">
+<div class="lg-title"><span>Choose File</span><span class="lg-x">×</span></div>
+<div class="lg-body">
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+<div>Files</div>
+<div class="lg-field">Search...</div>
+<div class="lg-path">/config/fancymenu/assets/backgrounds/</div>
+<div class="lg-list"><div class="lg-row"><span class="ms" style="font-size: 13px; flex: 0 0 auto" aria-hidden="true">arrow_upward</span><span>Go Up</span></div><div class="lg-row" style="background: #147fd0; color: #fff"><span class="ms" style="font-size: 13px; flex: 0 0 auto" aria-hidden="true">image</span><span>dusk_valley.png</span></div><div class="lg-row"><span class="ms" style="font-size: 13px; flex: 0 0 auto" aria-hidden="true">image</span><span>dusk_valley_winter.png</span></div><div class="lg-row"><span class="ms" style="font-size: 13px; flex: 0 0 auto" aria-hidden="true">image</span><span>meadow.png</span></div><div class="lg-row"><span class="ms" style="font-size: 13px; flex: 0 0 auto" aria-hidden="true">image</span><span>night_sky.png</span></div><div class="lg-row"><span class="ms" style="font-size: 13px; flex: 0 0 auto" aria-hidden="true">image</span><span><span style="color: #e59b12">Title Screen.png</span></span></div></div>
+<div class="lg-types">File Types: JPEG, PNG, GIF, APNG, FMA, AFMA</div>
+</div>
+<div style="flex: 0 0 200px; display: flex; flex-direction: column; gap: 6px">
+<div style="text-align: right">Preview</div>
+<div class="lg-prev"><img src="dusk_valley.png" alt=""></div>
+<div style="margin-top: auto; display: flex; flex-direction: column; gap: 5px"><span class="lg-btn">Create Folder</span><span class="lg-btn">Open in Explorer</span><span class="lg-btn">Apply</span><span class="lg-btn">OK</span><span class="lg-btn">Cancel</span></div>
+</div>
+</div>
+</div></div>
+<div><div class="cap">What gets in the way today</div><ul class="probs"><li>The path loses its start when it gets long, and there is no way back to a folder you just left.</li><li>Going up is a &quot;Go Up&quot; row in the list; there is no quick way to another drive or a folder you used a minute ago.</li><li>Files with names FancyMenu can&#x27;t use are only explained in a tooltip, with no way to fix them here.</li><li>Dropping files into the window copies them, but nothing tells you that you can.</li><li>The main button says OK, and a file that already exists is only mentioned in a pop-up after you click Save.</li></ul><div class="kd" style="margin-top: 18px">The proposed browsers are the boards next to this one. Each is clickable: open folders, use the Places menu, search, type a file name.</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">The Places menu</h2>
+<div class="three">
+<div><div class="k">Outside the game folder</div><div class="kd" style="margin: 3px 0 12px">When a browser may leave the game folder, the menu lists the drives with their free space, then recent folders and common places.</div><dc-import name="ContextMenu" items="{{placesAnywhere}}" standalone="{{no}}" hint-size="auto,440px"></dc-import></div>
+<div><div class="k">Limited to a folder</div><div class="kd" style="margin: 3px 0 12px">Most browsers stay inside a folder like FancyMenu's assets. No drives then, only recent folders inside it.</div><dc-import name="ContextMenu" items="{{placesGame}}" standalone="{{no}}" hint-size="auto,200px"></dc-import></div>
+<div><div class="k">Resources</div><div class="kd" style="margin: 3px 0 12px">For resource locations, the namespaces take the place of drives, with where they come from.</div><dc-import name="ContextMenu" items="{{placesRes}}" standalone="{{no}}" hint-size="auto,240px"></dc-import></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Every browser</h2>
+<div class="group" style="background: var(--win)"><div class="mv" style="grid-template-columns: 220px minmax(0, 1fr)"><div class="to">Choose File</div><div class="why">Titled after what you pick: Choose Image, Choose Sound, Choose Video. Choose confirms; Apply uses the file right away and keeps the window open, where a live preview is possible.</div></div><div class="mv" style="grid-template-columns: 220px minmax(0, 1fr)"><div class="to">Choose Folder</div><div class="why">Lists folders only. The main button says Use This Folder, or Use and the folder&#x27;s name when one is selected. The preview shows what is inside.</div></div><div class="mv" style="grid-template-columns: 220px minmax(0, 1fr)"><div class="to">Save File</div><div class="why">Adds a File name field with the fixed extension next to it. The main button says Save, or Replace when the name is taken.</div></div><div class="mv" style="grid-template-columns: 220px minmax(0, 1fr)"><div class="to">Choose Resource Location</div><div class="why">Namespaces are the top level, like drives. A Source column says where each resource comes from. Resources can&#x27;t be changed, so there is no drop target, New Folder or Show in Explorer.</div></div><div class="mv" style="grid-template-columns: 220px minmax(0, 1fr)"><div class="to">Choose Image Resource</div><div class="why">The resource chooser that opens first: it picks between a local file, a Minecraft resource and a web address, and opens these browsers from Browse Files and Choose Location.</div></div></div>
+</section>
+
+<section>
+<h2 class="h2">States</h2>
+<div class="states"><div class="st"><div class="k">Dropped files</div><div class="kd" style="margin: 3px 0 12px">Minecraft only reports files once they&#x27;re dropped, so the browser shows what happened right after: the new files are tagged New, the first one is selected, and the footer says where they went and what got skipped, with Undo. Dropping on a folder row copies into that folder (rule 118).</div><div class="mini spec-frame"><div class="mini-in"><dc-import name="FileBrowser" mode="Choose" kind="Images" dropped="{{yes}}" standalone="{{no}}" hint-size="1000px,640px"></dc-import></div></div></div><div class="st"><div class="k">A name FancyMenu can&#x27;t use</div><div class="kd" style="margin: 3px 0 12px">The file is marked and can&#x27;t be chosen. The preview explains why and offers a fixed name; Rename also shows on hover in the list.</div><div class="mini spec-frame"><div class="mini-in"><dc-import name="FileBrowser" mode="Choose" kind="Images" selected="config/fancymenu/assets/backgrounds/Title Screen.png" standalone="{{no}}" hint-size="1000px,640px"></dc-import></div></div></div><div class="st"><div class="k">Saving over an existing file</div><div class="kd" style="margin: 3px 0 12px">The warning shows while you type, and the main button turns into a red Replace.</div><div class="mini spec-frame"><div class="mini-in"><dc-import name="FileBrowser" mode="Save" save-name="dusk_valley" standalone="{{no}}" hint-size="1000px,640px"></dc-import></div></div></div><div class="st"><div class="k">A file name that won&#x27;t work</div><div class="kd" style="margin: 3px 0 12px">Capitals and spaces don&#x27;t work in resource paths, so the field turns red and offers the fixed name.</div><div class="mini spec-frame"><div class="mini-in"><dc-import name="FileBrowser" mode="Save" save-name="Dusk Valley Night" standalone="{{no}}" hint-size="1000px,640px"></dc-import></div></div></div><div class="st"><div class="k">Searching</div><div class="kd" style="margin: 3px 0 12px">Search looks in the open folder and every folder inside it. Matches from subfolders say where they are.</div><div class="mini spec-frame"><div class="mini-in"><dc-import name="FileBrowser" mode="Choose" kind="Images" start="config/fancymenu/assets" query="night" standalone="{{no}}" hint-size="1000px,640px"></dc-import></div></div></div><div class="st"><div class="k">Video without Watermedia</div><div class="kd" style="margin: 3px 0 12px">The preview says it can&#x27;t play videos and offers both downloads. Choosing the file still works.</div><div class="mini spec-frame"><div class="mini-in"><dc-import name="FileBrowser" mode="Choose" kind="Videos" start="config/fancymenu/assets/videos" selected="config/fancymenu/assets/videos/intro.mp4" watermedia-missing="{{yes}}" standalone="{{no}}" hint-size="1000px,640px"></dc-import></div></div></div></div>
+</section>
+
+<section>
+<h2 class="h2">What changed</h2>
+<div class="group" style="background: var(--win)">
+<div class="mv head"><div>Today</div><div></div><div>Proposed</div><div>Why</div></div>
+<div class="mv"><div class="from">&quot;Go Up&quot; as the first row</div><div class="arrow" aria-hidden="true">→</div><div class="to">Back, Forward and Up buttons</div><div class="why">Up also works with Backspace. Back and Forward remember the folders you visited.</div></div><div class="mv"><div class="from">A path that loses its start when long</div><div class="arrow" aria-hidden="true">→</div><div class="to">Path bar with a Places button</div><div class="why">Every folder is a button. Long paths fold their middle folders into a menu button instead of being cut off.</div></div><div class="mv"><div class="from">(new)</div><div class="arrow" aria-hidden="true">→</div><div class="to">Places menu</div><div class="why">Drives when the browser may leave the game folder, recent folders shared by all browsers, and places like Desktop or the Minecraft folder.</div></div><div class="mv"><div class="from">A list of names with icons</div><div class="arrow" aria-hidden="true">→</div><div class="to">Thumbnails, size and modified date</div><div class="why">Sort by name or date. Folders say how many items they hold.</div></div><div class="mv"><div class="from">Search results without context</div><div class="arrow" aria-hidden="true">→</div><div class="to">Matches say where they are</div><div class="why">Results from folders inside the open one show their folder next to the name.</div></div><div class="mv"><div class="from">Unusable names explained in a tooltip</div><div class="arrow" aria-hidden="true">→</div><div class="to">Rename right in the browser</div><div class="why">Marked in the list, explained in the preview, fixed with one click.</div></div><div class="mv"><div class="from">&quot;File Types: …&quot; text</div><div class="arrow" aria-hidden="true">→</div><div class="to">File types pop-up</div><div class="why">Shows which types are listed and narrows the list to one type.</div></div><div class="mv"><div class="from">Drag and drop nobody knew about</div><div class="arrow" aria-hidden="true">→</div><div class="to">Drop hint, and what a drop did</div><div class="why">The footer says files can be dropped. After a drop, the new files are tagged and the footer says where they went and what got skipped, with Undo (rule 118).</div></div><div class="mv"><div class="from">Create Folder and Open in Explorer as big buttons</div><div class="arrow" aria-hidden="true">→</div><div class="to">Icon buttons next to search</div><div class="why">With tooltips, out of the way of the main buttons.</div></div><div class="mv"><div class="from">OK and an overwrite pop-up</div><div class="arrow" aria-hidden="true">→</div><div class="to">Choose, Use This Folder, Save, Replace</div><div class="why">The main button says what happens, and a taken name shows inline before you click.</div></div><div class="mv"><div class="from">Separate preview controls</div><div class="arrow" aria-hidden="true">→</div><div class="to">The preview from the file entries</div><div class="why">Images, sounds and videos with the shared preview volume; text files show their first lines.</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Behavior</h2>
+<ul class="notes"><li>Double-click or Enter opens a folder or picks the file. Backspace goes up, Alt+Left and Alt+Right go back and forward, and typing starts a search.</li><li>The list follows the folder live: files added, renamed or removed outside Minecraft show up right away.</li><li>Recent folders are shared by all browsers and remembered between sessions. Drives only show up when a browser may leave the game folder.</li><li>A browser that is limited to a folder never shows anything outside it: the Places button names that folder and Up stops there.</li><li>Nothing in the browser is cut off: names wrap in the preview, and long paths fold into a menu button.</li></ul>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"$preview":{"width":1440,"height":4193}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark',
+      no: false, yes: true,
+      placesAnywhere: [
+        { head: 'Drives' },
+        { ic: 'drive', label: 'Local Disk (C:)', val: '412 GB free' }, { ic: 'drive', label: 'Data (D:)', val: '1.2 TB free' }, { ic: 'drive', label: 'USB Stick (E:)', val: '28 GB free' },
+        { head: 'Recent' },
+        { ic: 'once', label: 'Screenshots', val: 'in Pictures' }, { ic: 'once', label: 'Art', val: 'on D:' }, { ic: 'once', label: 'backgrounds', val: 'in FancyMenu assets' },
+        { head: 'Places' },
+        { ic: 'cube', label: 'Minecraft Folder' }, { ic: 'folder', label: 'FancyMenu Assets' }, { ic: 'screen', label: 'Desktop' }, { ic: 'file', label: 'Documents' }, { ic: 'download', label: 'Downloads' }, { ic: 'image', label: 'Pictures' }
+      ],
+      placesGame: [
+        { head: 'Recent' },
+        { ic: 'once', label: 'backgrounds', val: 'in assets' }, { ic: 'once', label: 'sounds', val: 'in assets' },
+        { head: 'Places' },
+        { ic: 'folder', label: 'FancyMenu Assets' }
+      ],
+      placesRes: [
+        { head: 'Namespaces' },
+        { ic: 'cube', label: 'minecraft', val: 'Minecraft' }, { ic: 'cube', label: 'fancymenu', val: 'FancyMenu' }, { ic: 'cube', label: 'duskvalley', val: 'Dusk Valley Pack' },
+        { head: 'Recent' },
+        { ic: 'once', label: 'background', val: 'in minecraft' }, { ic: 'once', label: 'menu', val: 'in duskvalley' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

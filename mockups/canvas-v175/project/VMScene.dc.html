@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Checking coins</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="fm {{themeClass}} {{matClass}}" style="position: relative; width: 1440px; height: 900px; overflow: hidden; background: var(--bd)">
+<div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""></div>
+<div aria-hidden="true">
+<div style="position: absolute; left: 112px; top: 610px; width: 6px; height: 6px; background: #ffe38c"></div>
+<div style="position: absolute; left: 182px; top: 668px; width: 6px; height: 6px; background: #ffe38c"></div>
+<div style="position: absolute; left: 1264px; top: 640px; width: 6px; height: 6px; background: #ffe38c"></div>
+<div style="position: absolute; left: 1330px; top: 700px; width: 6px; height: 6px; background: #ffe38c"></div>
+</div>
+<sc-if value="{{hasHud}}" hint-placeholder-val="{{true}}"><div aria-label="Coin counter text element" style="position: absolute; left: 22px; top: 50px; color: #ffe066; font-size: 15px; font-weight: 700; text-shadow: 0 2px 0 rgba(0, 0, 0, .4)">{{coins}} coins · {{streak}}-day streak</div></sc-if>
+<div aria-hidden="true" style="position: absolute; left: 16px; bottom: 12px; color: rgba(255, 255, 255, .85); font-size: 12px">Dusk Valley Pack 1.4.2</div>
+<div aria-hidden="true" style="position: absolute; right: 16px; bottom: 12px; color: rgba(255, 255, 255, .85); font-size: 12px">Copyright Mojang AB. Do not distribute!</div>
+<div style="position: absolute; left: 0; right: 0; top: 0"><dc-import name="MenuBar" kind="Overlay" standalone="{{no}}" hint-size="1440px,30px"></dc-import></div>
+<div style="position: absolute; left: 250px; top: 112px"><dc-import name="VariablesManager" scene="{{scene}}" select="{{select}}" sheet="{{sheet}}" new-name="{{newName}}" rename-to="{{renameTo}}" filter="{{filter}}" filter-menu="{{filterMenu}}" query="{{query}}" on-vars="{{onVars}}" width="940" height="680" standalone="{{no}}" hint-size="940px,680px"></dc-import></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"scene":{"editor":"enum","options":["Dusk Valley","Empty"],"default":"Dusk Valley"},"select":{"editor":"text","default":"coins"},"sheet":{"editor":"enum","options":["","new","rename","delete"],"default":""},"newName":{"editor":"text","default":""},"renameTo":{"editor":"text","default":""},"filter":{"editor":"enum","options":["all","reset","unused","changed"],"default":"all"},"filterMenu":{"editor":"boolean","default":false},"query":{"editor":"text","default":""},"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props, s = this.state || {};
+    const empty = (p.scene || 'Dusk Valley') === 'Empty';
+    const vals = s.vals || {};
+    return {
+      themeClass: (p.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark',
+      matClass: (p.material ?? 'Blur') === 'Blur' ? 'mat-blur' : '',
+      yes: true, no: false,
+      // The coin counter is a Text element that shows $$coins and $$daily_streak, so edits in the window show up here right away.
+      coins: vals.coins ?? (empty ? '0' : '125'), streak: vals.daily_streak ?? (empty ? '0' : '3'),
+      hasHud: !empty, onVars: (v) => this.setState({ vals: v }),
+      scene: p.scene || 'Dusk Valley', select: p.select ?? 'coins', sheet: p.sheet || '', newName: p.newName || '', renameTo: p.renameTo || '',
+      filter: p.filter || 'all', filterMenu: !!p.filterMenu, query: p.query || ''
+    };
+  }
+}
+</script>
+</body>
+</html>

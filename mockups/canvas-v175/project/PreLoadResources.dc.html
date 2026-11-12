@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pre-Load Resources window</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="{{rootCls}}" style="{{rootStyle}}" data-pl="{{uid}}" onMouseDown="{{activate}}">
+<sc-if value="{{standalone}}" hint-placeholder-val="{{true}}"><div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""><div class="dim"></div></div></sc-if>
+
+<div class="win vm pl" role="dialog" aria-label="Pre-Load Resources" style="{{winStyle}}">
+<div class="titlebar">
+<div class="tl"><button class="c" aria-label="Cancel and close" onClick="{{cancelAll}}"><span class="ms" aria-hidden="true">close</span></button><button class="m" aria-label="Collapse"><span class="ms" aria-hidden="true">remove</span></button><button class="x" aria-label="Maximize"><span class="ms" aria-hidden="true">open_in_full</span></button></div>
+<div class="wt"><span class="ms" aria-hidden="true">checklist</span>Pre-Load Resources</div>
+<div></div>
+</div>
+
+<sc-if value="{{anyPopup}}" hint-placeholder-val="{{false}}"><div class="fb-catch" style="z-index: 42" onClick="{{closePopups}}" onContextMenu="{{closePopupsCtx}}"></div></sc-if>
+
+<div class="split">
+<aside class="sidebar vm-side" aria-label="Pre-loaded resources">
+<div class="vm-top">
+<button class="{{addBtnCls}}" data-tip="Ctrl+N" aria-haspopup="menu" aria-expanded="{{addExpanded}}" onClick="{{toggleAdd}}"><span class="ms" aria-hidden="true">add</span>Add Resource<span class="ms chev" aria-hidden="true">expand_more</span></button>
+<label class="field vm-search"><span class="ms" aria-hidden="true">search</span><input type="text" placeholder="{{searchPh}}" aria-label="Search names, folders and where they're used" data-fk="{{searchFk}}" value="{{q}}" onInput="{{onSearch}}" onKeyDown="{{searchKey}}"><button class="{{filterBtnCls}}" data-tip="Show and sort" aria-label="Show and sort" aria-haspopup="menu" aria-expanded="{{filterExpanded}}" onClick="{{toggleFilter}}"><span class="ms" aria-hidden="true">filter_alt</span></button></label>
+<sc-if value="{{filterChip}}" hint-placeholder-val="{{false}}"><div class="chips"><span class="vm-fchip">{{filterChip}}<button aria-label="Show all resources" data-tip="Show all" onClick="{{clearFilter}}"><span class="ms" aria-hidden="true">close</span></button></span></div></sc-if>
+</div>
+<div class="plist vm-list" role="listbox" aria-label="Pre-loaded resources" aria-multiselectable="true">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="7">
+<div class="{{r.cls}}" role="option" aria-selected="{{r.ariaSel}}" onClick="{{r.click}}">
+<span class="{{r.thCls}}" style="{{r.thStyle}}" aria-hidden="true"><sc-if value="{{r.thIcon}}" hint-placeholder-val="{{false}}"><span class="ms">{{r.thIcon}}</span></sc-if></span>
+<span class="ln"><sc-for list="{{r.name}}" as="np" hint-placeholder-count="1"><sc-if value="{{np.hit}}" hint-placeholder-val="{{false}}"><mark>{{np.t}}</mark></sc-if><sc-if value="{{np.plain}}" hint-placeholder-val="{{true}}">{{np.t}}</sc-if></sc-for></span>
+<span class="{{r.rCls}}">{{r.right}}</span>
+<span class="{{r.subCls}}"><sc-for list="{{r.sub}}" as="sp" hint-placeholder-count="1"><sc-if value="{{sp.hit}}" hint-placeholder-val="{{false}}"><mark>{{sp.t}}</mark></sc-if><sc-if value="{{sp.plain}}" hint-placeholder-val="{{true}}">{{sp.t}}</sc-if></sc-for></span>
+</div>
+</sc-for>
+<sc-if value="{{noMatch}}" hint-placeholder-val="{{false}}"><div class="vm-nomatch"><span>{{noMatchText}}</span></div></sc-if>
+</div>
+</aside>
+
+<div class="vm-main">
+<main class="pcontent vm-content" data-sk="{{contentSk}}">
+
+<sc-if value="{{one}}" hint-placeholder-val="{{true}}">
+<div class="dhead">
+<div class="ls-dtop">
+<span class="ls-dicon" aria-hidden="true"><span class="ms">{{d.icon}}</span></span>
+<div class="ls-dtx"><div class="dt pl-name">{{d.name}}</div><div class="dm">{{d.wherePre}} <code class="pl-path">{{d.where}}</code></div></div>
+</div>
+<div class="dacts">
+<sc-if value="{{d.canReload}}" hint-placeholder-val="{{true}}"><button class="btn" data-tip="Loads it again, so changes to the file show up (F5)" onClick="{{reloadSel}}"><span class="ms" aria-hidden="true">refresh</span>Reload</button></sc-if>
+<button class="btn" onClick="{{reveal}}"><span class="ms" aria-hidden="true">{{d.revealIcon}}</span>{{d.revealLabel}}</button>
+<button class="btn icon danger" data-tip="Remove (Delete)" aria-label="Remove {{d.name}}" onClick="{{removeSel}}"><span class="ms" aria-hidden="true">delete</span></button>
+</div>
+</div>
+
+<sc-if value="{{d.callout}}" hint-placeholder-val="{{false}}">
+<div class="{{d.coCls}}"><span class="ms" aria-hidden="true">{{d.coIcon}}</span><div><b>{{d.coTitle}}</b><p>{{d.coText}}</p><sc-if value="{{d.coBtn}}" hint-placeholder-val="{{false}}"><button class="btn sm" onClick="{{d.coClick}}">{{d.coBtn}}</button></sc-if></div></div>
+</sc-if>
+
+<sc-if value="{{d.job}}" hint-placeholder-val="{{false}}">
+<div class="group sc-live">
+<div class="top"><span class="t">{{d.jobT}}</span><span class="r">{{d.jobR}}</span></div>
+<div class="sc-bar af-bar"><i style="{{d.jobBar}}"></i></div>
+<div class="pl-jsub">{{d.jobSub}}</div>
+</div>
+</sc-if>
+
+<sc-if value="{{d.hasPv}}" hint-placeholder-val="{{true}}">
+<div class="group pl-pv">
+<div class="pl-view">
+<sc-if value="{{d.pvStage}}" hint-placeholder-val="{{true}}">
+<div class="{{d.stageCls}}" role="{{d.stageRole}}" aria-label="{{d.stageLabel}}" onClick="{{togglePlay}}">
+<sc-for list="{{d.layers}}" as="ly" hint-placeholder-count="1"><div class="{{ly.cls}}" style="{{ly.style}}"></div></sc-for>
+<sc-if value="{{d.bigPlay}}" hint-placeholder-val="{{false}}"><span class="pl-big" aria-hidden="true"><span class="ms fill">play_arrow</span></span></sc-if>
+</div>
+</sc-if>
+<sc-if value="{{d.pvWave}}" hint-placeholder-val="{{false}}">
+<div class="pl-wave" role="slider" aria-label="Position" aria-valuemin="0" aria-valuemax="{{d.dur}}" aria-valuenow="{{d.posNow}}" onClick="{{seek}}">
+<sc-for list="{{d.bars}}" as="b" hint-placeholder-count="120"><i class="{{b.cls}}" style="{{b.style}}"></i></sc-for>
+<span class="head" style="{{d.headStyle}}"></span>
+</div>
+</sc-if>
+</div>
+<div class="pl-info">
+<sc-if value="{{d.playable}}" hint-placeholder-val="{{true}}"><button class="ib pl-pp" data-tip="{{d.playTip}}" aria-label="{{d.playTip}}" onClick="{{togglePlay}}"><span class="ms fill" aria-hidden="true">{{d.playIcon}}</span></button></sc-if>
+<sc-if value="{{d.timeText}}" hint-placeholder-val="{{false}}"><span class="t">{{d.timeText}}</span></sc-if>
+<span>{{d.facts}}</span>
+<span class="sz">{{d.size}}</span>
+</div>
+</div>
+</sc-if>
+
+
+<div>
+<div class="sec">Used in<span class="end">{{d.useCount}}</span></div>
+<sc-if value="{{d.used}}" hint-placeholder-val="{{true}}">
+<div class="group">
+<sc-for list="{{d.places}}" as="pl" hint-placeholder-count="1">
+<div class="row vm-loc"><span class="ms vm-ui" aria-hidden="true">{{pl.icon}}</span><span class="lbl">{{pl.name}}<sc-if value="{{pl.on}}" hint-placeholder-val="{{true}}"><span class="sub">{{pl.on}}</span></sc-if></span><span class="chip">{{pl.chip}}</span></div>
+<sc-for list="{{pl.uses}}" as="u" hint-placeholder-count="1">
+<div class="row child vm-use"><span class="ms vm-ui" aria-hidden="true">{{u.icon}}</span><span class="lbl">{{u.el}}<span class="sub">{{u.what}}</span></span><div class="ctl"><button class="ib" data-tip="{{u.openTip}}" aria-label="{{u.openTip}}" onClick="{{u.open}}"><span class="ms" aria-hidden="true">open_in_new</span></button></div></div>
+</sc-for>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{d.unused}}" hint-placeholder-val="{{false}}"><div class="group vm-unused">{{d.unusedText}}</div></sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{many}}" hint-placeholder-val="{{false}}">
+<div class="dhead">
+<div class="dt">{{m.title}}</div>
+<div class="dm">{{m.meta}}</div>
+<div class="dacts"><button class="btn" data-tip="F5" onClick="{{reloadSel}}"><span class="ms" aria-hidden="true">refresh</span>{{m.reloadLabel}}</button><button class="btn icon danger" data-tip="{{m.removeTip}}" aria-label="{{m.removeTip}}" onClick="{{removeSel}}"><span class="ms" aria-hidden="true">delete</span></button></div>
+</div>
+<div>
+<div class="sec">Selected</div>
+<div class="group">
+<sc-for list="{{m.rows}}" as="mr" hint-placeholder-count="3">
+<div class="row ls-mrow pl-mrow"><span class="{{mr.thCls}}" style="{{mr.thStyle}}" aria-hidden="true"><sc-if value="{{mr.thIcon}}" hint-placeholder-val="{{false}}"><span class="ms">{{mr.thIcon}}</span></sc-if></span><span class="lbl"><span class="pl-mname">{{mr.name}}</span><span class="sub">{{mr.sub}}</span></span><div class="ctl"><span class="{{mr.cls}}">{{mr.act}}</span></div></div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{none}}" hint-placeholder-val="{{false}}">
+<div class="vm-empty empty">
+<h3 class="t">Nothing is pre-loaded yet</h3>
+<p class="d">Pre-loaded resources load while the game starts. Big backgrounds, animations and music are then ready the moment a menu opens, instead of popping in a moment later.</p>
+<button class="btn primary" onClick="{{toggleAdd}}"><span class="ms" aria-hidden="true">add</span>Add Resource</button>
+</div>
+</sc-if>
+
+<sc-if value="{{nothingSel}}" hint-placeholder-val="{{false}}"><div class="vm-empty empty"><p class="d">Select a resource to see it, how fast it loads and where it&#x27;s used.</p></div></sc-if>
+</main>
+<div class="footer line"><span class="lead">{{footLead}}<sc-if value="{{footUndo}}" hint-placeholder-val="{{false}}"> <button class="vm-link" onClick="{{undo}}">Undo</button></sc-if></span><button class="btn wide" onClick="{{cancelAll}}">Cancel</button><button class="btn primary wide" onClick="{{done}}">Done</button></div>
+</div>
+</div>
+
+<sc-if value="{{addOpen}}" hint-placeholder-val="{{false}}"><div class="vm-pop" style="{{addStyle}}"><dc-import name="ContextMenu" items="{{addItems}}" escape-listener="{{closePopups}}" label="Add Resource" standalone="{{no}}" hint-size="auto,250px"></dc-import></div></sc-if>
+
+<sc-if value="{{filterOpen}}" hint-placeholder-val="{{false}}"><div class="vm-pop" style="{{filterStyle}}"><dc-import name="ContextMenu" items="{{filterItems}}" search="Search this menu" escape-listener="{{closePopups}}" standalone="{{no}}" hint-size="auto,330px"></dc-import></div></sc-if>
+
+<sc-if value="{{sheetAlert}}" hint-placeholder-val="{{false}}">
+<div class="sheet-dim"></div>
+<div class="sheet vm-alert" role="alertdialog" aria-label="{{al.title}}">
+<span class="vm-aicon"><span class="ms" aria-hidden="true">{{al.icon}}</span></span>
+<div class="vm-st" style="margin-top: 12px">{{al.title}}</div>
+<p>{{al.text}}</p>
+<div class="vm-abtns"><sc-for list="{{al.buttons}}" as="b" hint-placeholder-count="2"><button class="{{b.cls}}" onClick="{{b.click}}">{{b.label}}</button></sc-for></div>
+</div>
+</sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"scene":{"editor":"enum","options":["Dusk Valley","Empty"],"default":"Dusk Valley"},"select":{"editor":"text","default":"r1"},"addMenu":{"editor":"boolean","default":false},"adding":{"editor":"boolean","default":false},"addAt":{"editor":"text","default":"0.64"},"freeze":{"editor":"boolean","default":false},"play":{"editor":"boolean","default":false},"playAt":{"editor":"int","default":0},"filter":{"editor":"enum","options":["all","visual","sound","video","scenes","probs"],"default":"all"},"query":{"editor":"text","default":""},"width":{"editor":"int","default":960},"height":{"editor":"int","default":760},"standalone":{"editor":"boolean","default":true},"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1040,"height":840}}'>
+// ---------- what a resource can be ----------
+const KIND = {
+  image: ['Image', 'image'], anim: ['Animation', 'animation'], sound: ['Sound', 'music_note'], video: ['Video', 'movie'],
+  text: ['Text', 'description'], pano: ['Panorama', 'panorama'], slides: ['Slideshow', 'slideshow']
+};
+// The game start waits this long at most, for all resources together, since they load side by side (rule 119).
+const LIMIT = 30000;
+const sec = (ms) => (ms < 60000 ? String(Math.round(ms / 100) / 10) + ' s' : Math.floor(ms / 60000) + ' min' + (Math.round((ms % 60000) / 1000) ? ' ' + Math.round((ms % 60000) / 1000) + ' s' : ''));
+const clockOf = (s0) => Math.floor(s0 / 60) + ':' + String(Math.floor(s0 % 60)).padStart(2, '0');
+const mb = (b) => (b >= 1e6 ? (Math.round(b / 1e5) / 10) + ' MB' : Math.round(b / 1000) + ' KB');
+
+// ---------- places that use resources (rule 121): layouts, global customizations and scripts ----------
+const PLACES = {
+  title: { name: 'Dusk Valley Title', kind: 'layout', chip: 'Layout', icon: 'gallery_thumbnail', on: 'For the title screen', open: 'Open in the layout editor', screen: 'the title screen' },
+  options: { name: 'Dusk Valley Options', kind: 'layout', chip: 'Layout', icon: 'gallery_thumbnail', on: 'For the options screen', open: 'Open in the layout editor', screen: 'the options screen' },
+  worlds: { name: 'Dusk Valley Worlds', kind: 'layout', chip: 'Layout', icon: 'gallery_thumbnail', on: 'For the singleplayer screen', open: 'Open in the layout editor', screen: 'the singleplayer screen' },
+  servers: { name: 'Dusk Valley Servers', kind: 'layout', chip: 'Layout', icon: 'gallery_thumbnail', on: 'For the multiplayer screen', open: 'Open in the layout editor', screen: 'the multiplayer screen' }
+};
+
+// ---------- seed: what the Dusk Valley profile pre-loads, and what happened at the last game start ----------
+// src: local, web, pano (a panorama's folder) or slides (a slideshow's folder). state: ready, timeout or missing.
+// ms: how long it took to load. art: which picture the thumbnail and the preview show.
+const seed = () => [
+  { id: 'r1', kind: 'anim', name: 'dusk_valley_loop.afma', src: 'local', dir: 'config/fancymenu/assets', facts: 'AFMA · 1280 × 720 · 108 frames, the first 36 play once', bytes: 1.2e6, state: 'ready', ms: 900, art: 'afma',
+    uses: [{ at: 'title', el: 'Menu background', what: 'Background · Animation' }] },
+  { id: 'r2', kind: 'pano', name: 'Dusk Valley Night', src: 'pano', dir: 'config/fancymenu/panoramas/dusk_valley_night', facts: 'Panorama · 6 images, 1024 × 1024 each', bytes: 4.8e6, state: 'ready', ms: 640, art: 'night',
+    uses: [{ at: 'options', el: 'Menu background', what: 'Background · Panorama' }] },
+  { id: 'r3', kind: 'sound', name: 'menu_theme.ogg', src: 'local', dir: 'config/fancymenu/assets/music', facts: 'OGG · stereo', dur: 168, bytes: 3.1e6, state: 'ready', ms: 280, art: 'wave',
+    uses: [{ at: 'title', el: 'Menu music', what: 'Audio element' }] },
+  { id: 'r4', kind: 'image', name: 'winter_update.png', src: 'web', dir: 'cdn.duskvalley.net/news', facts: 'PNG · 1280 × 720', bytes: 4.12e5, state: 'ready', ms: 1400, art: 'winter',
+    uses: [{ at: 'title', el: 'News picture', what: 'Image element' }] },
+  { id: 'r5', kind: 'video', name: 'intro_cinematic.mp4', src: 'web', dir: 'cdn.duskvalley.net/video', facts: 'MP4 · 1920 × 1080', dur: 24, bytes: 3.8e7, state: 'timeout', ms: 78000, art: 'video',
+    uses: [{ at: 'title', el: 'Intro video', what: 'Video element' }] },
+  { id: 'r6', kind: 'slides', name: 'Seasons', src: 'slides', dir: 'config/fancymenu/slideshows/seasons', facts: 'Slideshow · 4 images, 1280 × 720 each', bytes: 2.2e6, state: 'ready', ms: 420, art: 'seasons',
+    uses: [{ at: 'worlds', el: 'Menu background', what: 'Background · Slideshow' }] },
+  { id: 'r7', kind: 'image', name: 'old_logo.png', src: 'local', dir: 'config/fancymenu/assets', facts: '', bytes: 0, state: 'missing', ms: 0, art: '', uses: [] }
+];
+// panoramas and slideshows on disk that aren't pre-loaded yet: the Add Resource menu offers them by name.
+// ms: how long they take to load.
+const MORE = [
+  { id: 'p2', kind: 'pano', name: 'Snowy Peaks', src: 'pano', dir: 'config/fancymenu/panoramas/snowy_peaks', facts: 'Panorama · 6 images, 1024 × 1024 each', bytes: 5.6e6, ms: 980, art: 'snow',
+    uses: [{ at: 'servers', el: 'Menu background', what: 'Background · Panorama' }] }
+];
+// what File or Link adds in this mockup, as if picked in Choose Resource
+const PICKED = () => ({ id: 'n1', kind: 'image', name: 'spring_event.png', src: 'web', dir: 'cdn.duskvalley.net/news', facts: 'PNG · 1280 × 720', bytes: 1.4e6, ms: 3600, art: 'spring',
+  uses: [{ at: 'title', el: 'Event picture', what: 'Image element' }] });
+// Every panorama and slideshow FancyMenu loaded, sorted by name (rule 123). The ones without an id are only names in
+// this mockup: picking one closes the menu.
+const PANOS = [['Aurora Lake'], ['Cherry Blossom Hill'], ['Dusk Valley Night', 'r2'], ['Golden Hour'], ['Snowy Peaks', 'p2'], ['Starfall Ridge']];
+const SLIDESHOWS = [['Autumn Trails'], ['Coastline'], ['Seasons', 'r6'], ['Server Highlights'], ['Winter Postcards']];
+
+// ---------- pictures ----------
+// Thumbnails are 48 × 27 and scale smoothly. The preview shows the pixel art 4 × as big, with sharp pixels.
+// The sheets come from fm-ui.css (i-afma, i-art), so their paths resolve next to it; only the spot is set here.
+const TH = {
+  afma: ['i-afma', '-384px -81px'], video: ['i-afma', '-384px -27px'],
+  night: ['i-art', '-88.5px 0'], snow: ['i-art', '-111px -27px'], seasons: ['i-art', '-96px -54px'], winter: ['i-art', '-144px -54px'], spring: ['i-art', '0 -54px']
+};
+const LAYERS = {
+  afma: [{ cls: 'ly sp afma', style: '' }],
+  video: [{ cls: 'ly sp full', style: '' }],
+  night: [{ cls: 'ly art pan', style: 'background-position-y: 0; --x0: -944px' }],
+  snow: [{ cls: 'ly art pan', style: 'background-position-y: -288px; --x0: -1184px' }],
+  seasons: [0, 1, 2, 3, 4].map((i) => ({ cls: 'ly art sl s' + i, style: 'background-position: ' + -(i % 4) * 512 + 'px -576px' })),
+  winter: [{ cls: 'ly art', style: 'background-position: -1536px -576px' }],
+  spring: [{ cls: 'ly art', style: 'background-position: 0 -576px' }]
+};
+// a waveform that looks like music: phrases, a quieter bridge and a fade at the end
+const BARS = Array.from({ length: 120 }, (_, i) => {
+  const t = i / 119;
+  const env = Math.min(1, t * 8) * Math.min(1, (1 - t) * 6) * (t > .55 && t < .7 ? .55 : 1);
+  const v = .35 + .4 * Math.abs(Math.sin(i * .61) * Math.cos(i * .23 + 1)) + .25 * Math.abs(Math.sin(i * 1.7 + 2));
+  return Math.max(8, Math.round(100 * env * v));
+});
+const ANIMATED = { anim: 1, video: 1, pano: 1, slides: 1 };
+
+class Component extends DCLogic {
+  componentWillUnmount() {
+    if (this._tick) clearInterval(this._tick);
+    if (this._keys) window.removeEventListener('keydown', this._keys, true);
+  }
+
+  renderVals() {
+    const p = this.props, s = this.state || {};
+    const set = (patch) => this.setState(patch);
+    const uid = this._uid || (this._uid = 'pl' + Math.random().toString(36).slice(2, 8));
+    const standalone = p.standalone ?? true;
+    const W = +p.width || 960, H = +p.height || 760;
+    const empty = (p.scene || 'Dusk Valley') === 'Empty';
+    const deepQuery = (sel0) => { const walk = (r) => { const hit = r.querySelector(sel0); if (hit) return hit; for (const el of r.querySelectorAll('*')) { if (el.shadowRoot) { const x = walk(el.shadowRoot); if (x) return x; } } return null; }; return walk(document); };
+    const fk = (k) => uid + '-' + k;
+    const focusLater = (key, select) => setTimeout(() => { const el = deepQuery('[data-fk="' + key + '"]'); if (el) { el.focus(); if (select && el.select) el.select(); } }, 0);
+    const anchorOf = (el) => { const w = el.closest('.win'); const wr = w.getBoundingClientRect(), r0 = el.getBoundingClientRect(); const k = wr.width / w.offsetWidth || 1; return [Math.round((r0.left - wr.left) / k), Math.round((r0.bottom - wr.top) / k + 4), Math.round((r0.right - wr.left) / k)]; };
+
+    // ---------- state ----------
+    if (!this._seed) {
+      this._seed = empty ? [] : seed();
+    }
+    let list = s.list ?? this._seed;
+    const jobs = s.jobs || {};
+    const byId = (id) => list.find((x) => x.id === id);
+    const selRaw = s.sel ?? (empty ? [] : String(p.select ?? 'r1').split(',').map((x) => x.trim()).filter(Boolean));
+    const sel = selRaw.filter((id) => byId(id));
+    const sheet = s.sheet || '';
+    const filterOpen = !!s.filterOpen;
+    const addOpen = s.addOpen !== undefined ? s.addOpen : !!p.addMenu;
+    const filter = s.filter ?? (p.filter || 'all');
+    const sort = s.sort ?? 'name';
+    const q = s.q ?? (p.query || '');
+    const ql = q.trim().toLowerCase();
+    const nowMs = Date.now();
+
+    // ---------- loading jobs: progress counts with the clock, the ticker redraws and finishes them ----------
+    const freezeAt = p.freeze ? Math.min(.99, Math.max(0, parseFloat(p.addAt) || .64)) : null;
+    const progOf = (j) => (j.frozen ? freezeAt : Math.min(1, (nowMs - j.t0) / j.dur));
+    const startJob = (x, again, base) => {
+      const web = x.src === 'web';
+      // a download takes as long as the file needs; reloading something from the disk is quick
+      const dur = again ? (web ? (x.kind === 'video' ? 9000 : 1800) : Math.max(300, x.ms || 600)) : (x.ms || 800);
+      return Object.assign({}, base || jobs, { [x.id]: { t0: Date.now(), dur, again: !!again, frozen: false } });
+    };
+    this._finish = () => {
+      const st = this.state || {};
+      const js = st.jobs || {};
+      const ids = Object.keys(js).filter((id) => !js[id].frozen && Date.now() - js[id].t0 >= js[id].dur);
+      if (!ids.length) return false;
+      const cl = st.list ?? this._seed;
+      const nj = Object.assign({}, js);
+      ids.forEach((id) => delete nj[id]);
+      const nl = cl.map((x) => (ids.includes(x.id) ? Object.assign({}, x, { state: 'ready', ms: js[x.id].dur }) : x));
+      this.setState({ jobs: nj, list: nl });
+      return true;
+    };
+    const playOf = (id) => (s.pv || {})[id];
+    const audioPos = (x) => { const pv = playOf(x.id); if (!pv) return 0; const t = pv.on ? pv.at + (nowMs - pv.t0) / 1000 : pv.at; return Math.min(x.dur, t); };
+    this._onTick = () => {
+      if (this._finish()) return;
+      const st = this.state || {};
+      const js = st.jobs || {};
+      const pv = st.pv || {};
+      const anyJob = Object.keys(js).some((id) => !js[id].frozen);
+      const cl = st.list ?? this._seed;
+      const playing = Object.keys(pv).filter((id) => pv[id].on && (cl.find((x) => x.id === id) || {}).kind === 'sound');
+      // a sound that reached its end stops there, ready to play from the start again
+      const ended = playing.filter((id) => { const x = cl.find((y) => y.id === id); return pv[id].at + (Date.now() - pv[id].t0) / 1000 >= x.dur; });
+      if (ended.length) { const np = Object.assign({}, pv); ended.forEach((id) => { np[id] = { on: false, at: 0, t0: 0 }; }); this.setState({ pv: np }); return; }
+      if (anyJob || playing.length) this.setState({ tk: Date.now() });
+    };
+    if (!this._tick) this._tick = setInterval(() => this._onTick && this._onTick(), 150);
+
+    // the board that shows a resource being added starts with it in the list
+    if (p.adding && !this._addedBoard && !empty) {
+      this._addedBoard = true;
+      setTimeout(() => addPicked(true), 0);
+    }
+    if (p.play && !this._played) {
+      this._played = true;
+      const id0 = (String(p.select || 'r3').split(',')[0] || 'r3').trim();
+      setTimeout(() => this.setState({ pv: Object.assign({}, (this.state || {}).pv, { [id0]: { on: true, at: +p.playAt || 0, t0: Date.now() } }) }), 0);
+    }
+
+    // ---------- undo ----------
+    const snapshot = () => ({ list, sel });
+    const commit = (nl, patch) => set({ list: nl, undoStack: [...(s.undoStack || []), snapshot()].slice(-50), redoStack: [], ...patch });
+    const status = (text, canUndo) => ({ status: { text, undo: !!canUndo } });
+    const undo = () => {
+      const u = s.undoStack || [];
+      if (!u.length) return;
+      const last = u[u.length - 1];
+      set({ list: last.list, sel: last.sel, undoStack: u.slice(0, -1), redoStack: [...(s.redoStack || []), snapshot()], status: { text: 'Undone.', undo: false } });
+    };
+    const redo = () => {
+      const r = s.redoStack || [];
+      if (!r.length) return;
+      const last = r[r.length - 1];
+      set({ list: last.list, sel: last.sel, redoStack: r.slice(0, -1), undoStack: [...(s.undoStack || []), snapshot()], status: { text: 'Redone.', undo: false } });
+    };
+
+    // ---------- the list ----------
+    const where = (x) => x.uses.map((u) => PLACES[u.at].name + ' ' + PLACES[u.at].screen + ' ' + u.el).join(' ');
+    const loadingOf = (x) => jobs[x.id];
+    const problemOf = (x) => (loadingOf(x) ? '' : x.state === 'missing' ? (x.src === 'pano' ? 'panorama not found' : x.src === 'slides' ? 'slideshow not found' : 'file not found') : x.state === 'timeout' ? 'didn\'t load in time' : '');
+    const fits = (x) => (filter === 'visual' ? ['image', 'anim'].includes(x.kind) : filter === 'sound' ? x.kind === 'sound' : filter === 'video' ? x.kind === 'video' : filter === 'scenes' ? ['pano', 'slides'].includes(x.kind)
+      : filter === 'probs' ? !!problemOf(x) : true);
+    // the search finds names, folders, links, kinds and the places that use a resource, so title finds the title screen's
+    const matches = (x) => !ql || [x.name, x.dir, KIND[x.kind][0], where(x)].some((t) => t.toLowerCase().includes(ql));
+    const hitParts = (text) => {
+      const at = ql ? text.toLowerCase().indexOf(ql) : -1;
+      const P = (t, hit) => ({ t, hit, plain: !hit });
+      return at < 0 ? [P(text, false)] : [P(text.slice(0, at), false), P(text.slice(at, at + ql.length), true), P(text.slice(at + ql.length), false)].filter((y) => y.t);
+    };
+    const byN = (a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+    const kindOrder = Object.keys(KIND);
+    const timeKey = (x) => (x.state === 'missing' ? -1 : x.ms || 0);
+    let shown = list.filter((x) => fits(x) && matches(x));
+    shown = sort === 'type' ? shown.slice().sort((a, b) => kindOrder.indexOf(a.kind) - kindOrder.indexOf(b.kind) || byN(a, b)) : sort === 'time' ? shown.slice().sort((a, b) => timeKey(b) - timeKey(a) || byN(a, b)) : shown.slice().sort(byN);
+    const order = shown.map((x) => x.id);
+
+    // a sound that plays in the preview stops when the selection changes
+    const quietPv = () => { const pv = Object.assign({}, s.pv || {}); Object.keys(pv).forEach((id) => { const x = byId(id); if (x && x.kind === 'sound' && pv[id].on) pv[id] = { on: false, at: audioPos(x), t0: 0 }; }); return pv; };
+    const selectRow = (id, e) => {
+      let next;
+      if (e && (e.ctrlKey || e.metaKey)) next = sel.includes(id) ? sel.filter((y) => y !== id) : [...sel, id];
+      else if (e && e.shiftKey && s.anchor && shown.some((y) => y.id === s.anchor)) { const ids = shown.map((y) => y.id); const a = ids.indexOf(s.anchor), b = ids.indexOf(id); next = ids.slice(Math.min(a, b), Math.max(a, b) + 1); }
+      else next = [id];
+      set({ sel: next, anchor: e && e.shiftKey ? s.anchor : id, filterOpen: false, addOpen: false, pv: quietPv() });
+    };
+    const thumb = (x, prefix) => {
+      const bad = x.state === 'missing' && !loadingOf(x);
+      // nothing to show before the first download or load is done
+      const pic = loadingOf(x) && !loadingOf(x).again ? null : TH[x.art];
+      return { [prefix + 'Cls']: 'pl-th' + (pic && !bad ? ' ' + pic[0] : ' ic') + (bad ? ' bad' : ''), [prefix + 'Style']: pic && !bad ? 'background-position: ' + pic[1] : '', [prefix + 'Icon']: bad ? 'broken_image' : pic ? '' : KIND[x.kind][1] };
+    };
+    const subOf = (x) => {
+      const j = loadingOf(x);
+      const k = KIND[x.kind][0];
+      if (j) return k + ' · ' + (x.src === 'web' ? 'downloading' : 'loading');
+      const pr = problemOf(x);
+      if (pr) return k + ' · ' + pr;
+      return k + ' · ' + (x.src === 'web' ? 'from the web' : mb(x.bytes));
+    };
+    const flash = s.flash || {};
+    const rows = shown.map((x) => {
+      const isSel = sel.includes(x.id);
+      const j = loadingOf(x);
+      const pr = problemOf(x);
+      return Object.assign({
+        cls: 'item tall lsrow plrow' + (isSel ? ' sel' : '') + (flash.id === x.id ? (flash.n % 2 ? ' flash-a' : ' flash-b') : ''), ariaSel: isSel ? 'true' : 'false',
+        name: hitParts(x.name), sub: hitParts(subOf(x)),
+        subCls: 'ls-sub' + (pr ? (x.state === 'missing' ? ' err' : ' warn') : ''),
+        // the time it took, so the slow ones stand out; a resource that loads shows how far it got
+        right: j ? Math.round(progOf(j) * 100) + ' %' : pr ? '' : x.ms ? sec(x.ms) : '',
+        rCls: 'pl-r' + (j ? ' acc' : ''),
+        click: (e) => selectRow(x.id, e)
+      }, thumb(x, 'th'));
+    });
+
+    // ---------- adding ----------
+    // A new resource loads right away, so it's ready without a restart and any problem shows now (rule 122).
+    const addItem = (x, msg) => {
+      commit([...list, x], { sel: [x.id], anchor: x.id, q: '', filter: 'all', addOpen: false, jobs: startJob(x, false), ...status(msg, true) });
+    };
+    const already = (id) => {
+      const x = list.find((y) => y.id === id);
+      set({ sel: [id], anchor: id, addOpen: false, q: '', filter: 'all', flash: { id, n: (flash.n || 0) + 1 }, ...status(x.name + ' is already pre-loaded.') });
+    };
+    const addPicked = (board) => {
+      const pk = PICKED();
+      if (list.some((y) => y.id === pk.id)) { already(pk.id); return; }
+      const x = Object.assign(pk, { state: 'loading' });
+      if (board) {
+        const st = this.state || {};
+        const cl = st.list ?? this._seed;
+        this.setState({ list: [...cl, x], sel: [x.id], anchor: x.id, jobs: { [x.id]: { t0: Date.now() - (freezeAt ?? .1) * x.ms, dur: x.ms, again: false, frozen: freezeAt !== null } },
+          status: { text: 'Added spring_event.png from Choose Resource.', undo: true }, undoStack: [{ list: cl, sel: ['r1'] }] });
+        return;
+      }
+      addItem(x, 'Added ' + x.name + ' from Choose Resource.');
+    };
+    const addNamed = (id) => { const g = id && MORE.find((y) => y.id === id); if (g) addItem(Object.assign({}, g, { state: 'loading' }), 'Pre-loading ' + g.name + ' from now on.'); else set({ addOpen: false }); };
+    // the menu only lists panoramas and slideshows that aren't in the list yet, and leaves out a section with none left
+    const notAdded = (all, ic) => all.filter(([, id]) => !id || !list.some((y) => y.id === id)).map(([n, id]) => ({ ic, label: n, click: () => addNamed(id) }));
+    const morePanos = notAdded(PANOS, 'panorama'), moreSlides = notAdded(SLIDESHOWS, 'slideshow');
+    const addItems = [
+      { ic: 'draft', label: 'File or Link', click: () => addPicked(false) },
+      ...(morePanos.length ? [{ head: 'Panoramas' }, ...morePanos] : []),
+      ...(moreSlides.length ? [{ head: 'Slideshows' }, ...moreSlides] : [])
+    ];
+
+    // ---------- removing, loading again ----------
+    const removeSel = () => {
+      const xs = sel.map(byId).filter(Boolean);
+      if (!xs.length) return;
+      const ids = xs.map((x) => x.id);
+      const nl = list.filter((x) => !ids.includes(x.id));
+      const rest = order.filter((id) => !ids.includes(id));
+      const idx = Math.max(0, order.indexOf(ids[0]));
+      const nextSel = rest.length ? [rest[Math.min(idx, rest.length - 1)]] : [];
+      const nj = Object.assign({}, jobs); ids.forEach((id) => delete nj[id]);
+      commit(nl, { sel: nextSel, jobs: nj, ...status(xs.length === 1 ? 'Removed ' + xs[0].name + '. It won\'t load at the next game start.' : 'Removed ' + xs.length + ' resources. They won\'t load at the next game start.', true) });
+    };
+    // Reload drops what's loaded and loads the file again, so an exported-again file shows up without a restart.
+    // It isn't a change to the list, so Undo and Cancel leave it alone.
+    const reloadSel = () => {
+      const xs = sel.map(byId).filter((x) => x && !loadingOf(x) && x.state !== 'missing');
+      if (!xs.length) return;
+      let nj = jobs;
+      xs.forEach((x) => { nj = startJob(x, true, nj); });
+      const nl = list.map((x) => (xs.includes(x) ? Object.assign({}, x, { state: 'loading' }) : x));
+      set({ list: nl, jobs: nj, ...status(xs.length === 1 ? (xs[0].src === 'web' ? 'Downloading ' + xs[0].name + ' again.' : 'Reloading ' + xs[0].name + '.') : 'Reloading ' + xs.length + ' resources.') });
+    };
+
+    // ---------- the preview ----------
+    const togglePlayOf = (x) => {
+      if (!x || !ANIMATED[x.kind] && x.kind !== 'sound') return;
+      const pv = s.pv || {};
+      const cur = pv[x.id];
+      const on = cur ? cur.on : x.kind !== 'sound' && x.kind !== 'video';
+      const at = x.kind === 'sound' ? audioPos(x) : 0;
+      set({ pv: Object.assign({}, pv, { [x.id]: { on: !on, at: x.kind === 'sound' && at >= x.dur ? 0 : at, t0: Date.now() } }) });
+    };
+
+    // ---------- details: one resource ----------
+    const one = sel.length === 1 ? byId(sel[0]) : null;
+    const many = sel.length > 1;
+    let d = {};
+    if (one) {
+      const x = one, j = loadingOf(x);
+      const web = x.src === 'web', folder = x.src === 'pano' || x.src === 'slides';
+      const missing = x.state === 'missing' && !j;
+      const pvs = s.pv || {};
+      const playingNow = pvs[x.id] ? pvs[x.id].on : x.kind !== 'sound' && x.kind !== 'video';
+      const ready = !j && (x.state === 'ready' || x.state === 'timeout');
+      const pos = x.kind === 'sound' ? audioPos(x) : 0;
+      let co = null;
+      if (missing) co = { cls: 'callout vm-card pl-bad', icon: 'error', title: (x.src === 'pano' ? 'This panorama' : x.src === 'slides' ? 'This slideshow' : x.name) + ' isn\'t there anymore',
+        text: 'It was moved or deleted from ' + x.dir + ', so it can\'t load. ' + (x.uses.length ? 'Pick where it is now, so the places that use it get it again.' : 'Nothing uses it, so you can remove it.'), btn: 'Choose Another File',
+        click: () => set(status('Opens Choose Resource, to pick a file in place of ' + x.name + '. It keeps its place in the list.')) };
+      else if (x.state === 'timeout' && !j) co = { cls: 'callout vm-card', icon: 'warning', title: 'The game start stopped waiting for it',
+        text: x.dir.split('/')[0] + ' sends it slower than the ' + sec(LIMIT) + ' the game start waits, so the title screen showed up without it, and the video popped in later. A copy in the game folder loads in a moment.' };
+      // the loading card: percentage, time left, and what it's at
+      let jobT = '', jobR = '', jobBar = '', jobSub = '';
+      if (j) {
+        const pr = progOf(j);
+        const left = Math.max(1, Math.ceil((1 - pr) * j.dur / 1000));
+        jobT = (web ? 'Downloading' + (j.again ? ' again' : '') : j.again ? 'Reloading' : 'Loading') + ' · ' + Math.round(pr * 100) + ' %';
+        jobR = pr >= 1 ? 'almost done' : 'about ' + left + ' s left';
+        jobBar = 'width: ' + (pr * 100).toFixed(1) + '%';
+        jobSub = web ? mb(x.bytes * pr) + ' of ' + mb(x.bytes) + ' from ' + x.dir.split('/')[0]
+          : x.kind === 'pano' ? 'Image ' + Math.min(6, Math.floor(pr * 6) + 1) + ' of 6' : x.kind === 'slides' ? 'Image ' + Math.min(4, Math.floor(pr * 4) + 1) + ' of 4' : mb(x.bytes * pr) + ' of ' + mb(x.bytes);
+      }
+      const places = [];
+      x.uses.forEach((u) => {
+        let g = places.find((y) => y.at === u.at);
+        const P = PLACES[u.at];
+        if (!g) { g = { at: u.at, name: P.name, on: P.on, chip: P.chip, icon: P.icon, uses: [] }; places.push(g); }
+        g.uses.push({ el: u.el, what: u.what, icon: KIND[x.kind][1], openTip: P.open, open: () => set(status(P.kind === 'layout' ? 'Opens ' + P.name + ' in the layout editor, with ' + u.el + ' selected.' : 'Opens ' + P.name + ' in Schedulers.')) });
+      });
+      const nU = x.uses.length;
+      const visual = !!LAYERS[x.art];
+      const canPlay = ANIMATED[x.kind] || x.kind === 'sound';
+      const head = x.kind === 'sound' ? (pos / x.dur) * 100 : 0;
+      d = {
+        name: x.name, icon: KIND[x.kind][1],
+        wherePre: web ? 'From' : 'In', where: x.dir,
+        canReload: !missing && !j,
+        revealIcon: web ? 'content_copy' : 'folder_open', revealLabel: web ? 'Copy Link' : 'Show in Folder',
+        callout: !!co, coCls: co ? co.cls : '', coIcon: co ? co.icon : '', coTitle: co ? co.title : '', coText: co ? co.text : '', coBtn: co && co.btn ? co.btn : '', coClick: co && co.click ? co.click : () => {},
+        // a preview once it's loaded, of what's there: missing files and downloads that aren't done have none
+        hasPv: ready && (visual || x.kind === 'sound'),
+        pvStage: visual, pvWave: x.kind === 'sound',
+        stageCls: 'af-stage checker pl-stage' + (canPlay ? '' : ' still') + (playingNow ? '' : ' paused'),
+        stageRole: canPlay ? 'button' : 'img', stageLabel: canPlay ? (playingNow ? 'Pause' : 'Play') : 'Preview of ' + x.name,
+        layers: visual ? LAYERS[x.art] : [],
+        bigPlay: canPlay && !playingNow && x.kind !== 'sound',
+        bars: x.kind === 'sound' ? BARS.map((h, i) => ({ cls: (i + .5) / BARS.length * 100 <= head ? 'on' : '', style: 'height: ' + h + '%' })) : [],
+        headStyle: 'left: ' + head.toFixed(2) + '%', dur: x.dur || 0, posNow: Math.floor(pos),
+        playable: canPlay, playIcon: playingNow ? 'pause' : 'play_arrow', playTip: (playingNow ? 'Pause' : 'Play') + ' (Space)',
+        timeText: x.kind === 'sound' ? clockOf(pos) + ' of ' + clockOf(x.dur) : x.kind === 'video' ? clockOf(x.dur) : '',
+        facts: x.facts, size: mb(x.bytes),
+        job: !!j, jobT, jobR, jobBar, jobSub,
+        used: nU > 0, unused: nU === 0, places,
+        useCount: nU ? nU + (nU === 1 ? ' place' : ' places') : '',
+        unusedText: 'Nothing uses it right now, so pre-loading it only makes the game start slower and takes memory.'
+      };
+    }
+
+    // ---------- details: several resources ----------
+    let m = {};
+    if (many) {
+      const xs = sel.map(byId);
+      const bytes = xs.reduce((a, x) => a + (x.bytes || 0), 0);
+      m = {
+        title: xs.length + ' resources',
+        meta: mb(bytes) + ' in all',
+        reloadLabel: 'Reload ' + xs.length, removeTip: 'Remove ' + xs.length + ' resources (Delete)',
+        rows: xs.map((x) => { const pr = problemOf(x); return Object.assign({ name: x.name, sub: subOf(x), act: loadingOf(x) ? Math.round(progOf(loadingOf(x)) * 100) + ' %' : pr ? (x.state === 'missing' ? 'Not found' : 'Too slow') : sec(x.ms), cls: 'vm-cnt' + (pr ? ' pl-' + (x.state === 'missing' ? 'err' : 'warn') : '') }, thumb(x, 'th')); })
+      };
+    }
+
+    // ---------- menus ----------
+    const pick = (patch) => () => set({ ...patch, filterOpen: false });
+    const filterItems = [
+      { head: 'Show' },
+      { radio: true, checked: filter === 'all', label: 'All Resources', click: pick({ filter: 'all' }) },
+      { radio: true, checked: filter === 'visual', label: 'Images and Animations', click: pick({ filter: 'visual' }) },
+      { radio: true, checked: filter === 'sound', label: 'Sounds', click: pick({ filter: 'sound' }) },
+      { radio: true, checked: filter === 'video', label: 'Videos', click: pick({ filter: 'video' }) },
+      { radio: true, checked: filter === 'scenes', label: 'Panoramas and Slideshows', click: pick({ filter: 'scenes' }) },
+      { radio: true, checked: filter === 'probs', label: 'With Problems', click: pick({ filter: 'probs' }) },
+      { head: 'Sort By' },
+      { radio: true, checked: sort === 'name', label: 'Name', click: pick({ sort: 'name' }) },
+      { radio: true, checked: sort === 'type', label: 'Type', click: pick({ sort: 'type' }) },
+      { radio: true, checked: sort === 'time', label: 'Load Time, Slowest First', click: pick({ sort: 'time' }) }
+    ];
+    const FILTER_CHIP = { visual: 'Images and animations', sound: 'Sounds', video: 'Videos', scenes: 'Panoramas and slideshows', probs: 'With problems' };
+
+    // ---------- Cancel and Done ----------
+    // Cancel puts the list back (rule 102) and only asks when there's something to lose (rule 68). What was only
+    // loaded for this window gets dropped again.
+    const changes = (() => {
+      const ids = new Set(this._seed.map((x) => x.id).concat(list.map((x) => x.id)));
+      let c = 0; ids.forEach((id) => { const x0 = this._seed.find((x) => x.id === id), x1 = list.find((x) => x.id === id); if (!x0 || !x1) c++; });
+      return c;
+    })();
+    const discard = () => set({ list: this._seed, jobs: {}, sel: empty ? [] : [String(p.select ?? 'r1').split(',')[0]], undoStack: [], redoStack: [], sheet: '', addOpen: false, filterOpen: false, status: { text: 'Your changes were taken back. The window closes now.', undo: false } });
+    const cancelAll = () => { if (changes) set({ sheet: 'discard', addOpen: false, filterOpen: false }); else set({ addOpen: false, filterOpen: false, ...status('Nothing changed, so Cancel closes the window without asking.') }); };
+    let al = { buttons: [] };
+    if (sheet === 'discard') al = {
+      icon: 'undo', title: changes === 1 ? 'Discard your change?' : 'Discard ' + changes + ' changes?',
+      text: 'Cancel puts the list back the way it was when you opened this window. What you added stops loading at the game start.',
+      buttons: [{ cls: 'btn primary danger', label: 'Discard Changes', click: discard }, { cls: 'btn', label: 'Keep Editing', click: () => set({ sheet: '' }) }]
+    };
+
+    // ---------- keyboard ----------
+    this._onKey = (e) => {
+      if (window.__plActive !== uid) return;
+      const tag = (e.target && e.target.tagName) || '';
+      const inField = tag === 'INPUT' || tag === 'TEXTAREA';
+      const mod = e.ctrlKey || e.metaKey;
+      const st = this.state || {};
+      const cur = st.sel ?? sel;
+      if (e.key === 'Escape') {
+        if (sheet) set({ sheet: '' });
+        else if (addOpen || filterOpen) set({ addOpen: false, filterOpen: false });
+        else if (q && !inField) set({ q: '' });
+        else if (!inField) cancelAll();
+        return;
+      }
+      if (sheet) return;
+      if (mod && e.key.toLowerCase() === 'n') { e.preventDefault(); set({ addOpen: !addOpen, addAt: null, filterOpen: false }); return; }
+      if (mod && e.key.toLowerCase() === 'f') { e.preventDefault(); focusLater(fk('search'), true); return; }
+      if (mod && (e.key === 'Enter' || e.key.toLowerCase() === 's')) { e.preventDefault(); return; }
+      if (e.key === 'F5') { e.preventDefault(); reloadSel(); return; }
+      if (inField || addOpen || filterOpen) return;
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (!order.length) return;
+        const at0 = order.indexOf(cur[cur.length - 1]);
+        const nx = Math.max(0, Math.min(order.length - 1, at0 + (e.key === 'ArrowDown' ? 1 : -1)));
+        set({ sel: [order[nx]], anchor: order[nx], pv: quietPv() });
+        return;
+      }
+      if (e.key === ' ') { e.preventDefault(); if (one) togglePlayOf(one); return; }
+      // Enter presses Done, like today
+      if (e.key === 'Enter') { e.preventDefault(); set(status('Done saves the list and closes the window.')); return; }
+      if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); removeSel(); return; }
+      if (mod && e.key.toLowerCase() === 'a') { e.preventDefault(); set({ sel: shown.map((x) => x.id) }); return; }
+      if (mod && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))) { e.preventDefault(); redo(); return; }
+      if (mod && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
+      if (!mod && !e.altKey && e.key.length === 1) { set({ q: q + e.key }); focusLater(fk('search')); }
+    };
+    if (!this._keys) { this._keys = (e) => this._onKey && this._onKey(e); window.addEventListener('keydown', this._keys, true); }
+
+    // ---------- the footer: what the last game start waited for, or what just happened ----------
+    const last = (() => {
+      const w = this._seed.filter((x) => x.state !== 'missing');
+      if (!w.length) return '';
+      const slow = w.filter((x) => x.state === 'timeout');
+      if (slow.length) return 'The last game start waited ' + sec(LIMIT) + ' for ' + slow[0].name + '.';
+      return 'The last game start waited ' + sec(Math.max(...w.map((x) => x.ms))) + ' for pre-loading.';
+    })();
+    const stt = s.status;
+    return {
+      uid, standalone, yes: true, no: false,
+      rootCls: standalone ? 'fm ' + ((p.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark') + ((p.material ?? 'Blur') === 'Blur' ? ' mat-blur' : '') : '',
+      rootStyle: standalone ? 'position: relative; width: ' + (W + 80) + 'px; height: ' + (H + 80) + 'px; overflow: hidden; background: var(--bd)' : 'position: relative; width: ' + W + 'px; height: ' + H + 'px',
+      winStyle: (standalone ? 'left: 40px; top: 40px; ' : 'left: 0; top: 0; ') + 'width: ' + W + 'px; height: ' + H + 'px',
+      activate: () => { window.__plActive = uid; },
+      searchFk: fk('search'), contentSk: fk('content') + '-' + (sel[0] || ''),
+      searchPh: 'Search ' + (list.length ? list.length + ' resources' : 'resources'), q,
+      onSearch: (e) => set({ q: e.target.value }),
+      searchKey: (e) => {
+        if (e.key === 'Escape') { set({ q: '' }); e.target.blur(); }
+        if ((e.key === 'ArrowDown' || e.key === 'Enter') && order.length) { e.preventDefault(); e.target.blur(); set({ sel: [order[0]], anchor: order[0] }); }
+      },
+      addBtnCls: 'btn tinted pl-add' + (addOpen ? ' on' : ''), addExpanded: addOpen ? 'true' : 'false',
+      toggleAdd: (e) => set({ addOpen: !addOpen, addAt: anchorOf(e.currentTarget), filterOpen: false }),
+      addOpen, addItems, addStyle: 'left: ' + (s.addAt ? s.addAt[0] : 10) + 'px; top: ' + (s.addAt ? s.addAt[1] : 90) + 'px; min-width: ' + (s.addAt ? s.addAt[2] - s.addAt[0] : 280) + 'px',
+      filterBtnCls: 'ib' + (filter !== 'all' || sort !== 'name' || filterOpen ? ' on' : ''), filterExpanded: filterOpen ? 'true' : 'false',
+      toggleFilter: (e) => { e.preventDefault(); set({ filterOpen: !filterOpen, filterAt: anchorOf(e.currentTarget), addOpen: false }); },
+      filterChip: filter !== 'all' ? FILTER_CHIP[filter] : '', clearFilter: () => set({ filter: 'all' }),
+      filterOpen, filterItems, filterStyle: 'left: ' + (s.filterAt ? s.filterAt[0] : 262) + 'px; top: ' + (s.filterAt ? s.filterAt[1] : 126) + 'px',
+      rows,
+      noMatch: !rows.length && list.length > 0, noMatchText: ql ? 'Nothing pre-loaded matches “' + q.trim() + '”.' : 'Nothing pre-loaded fits this filter.',
+      one: !!one, many, none: !list.length && !one, nothingSel: !sel.length && list.length > 0,
+      d, m,
+      removeSel, reloadSel,
+      reveal: () => { if (!one) return; set(status(one.src === 'web' ? 'Copied https://' + one.dir + '/' + one.name + '.' : 'Opens ' + one.dir + ' in your file manager' + (one.src === 'local' ? ', with ' + one.name + ' selected.' : '.'))); },
+      togglePlay: () => togglePlayOf(one),
+      seek: (e) => {
+        if (!one || one.kind !== 'sound') return;
+        const r0 = e.currentTarget.getBoundingClientRect();
+        const at = Math.max(0, Math.min(1, (e.clientX - r0.left) / r0.width)) * one.dur;
+        const pv = s.pv || {};
+        set({ pv: Object.assign({}, pv, { [one.id]: { on: pv[one.id] ? pv[one.id].on : false, at, t0: Date.now() } }) });
+      },
+      footLead: stt ? stt.text : last, footUndo: !!(stt && stt.undo), undo, cancelAll,
+      done: () => set(status('Done saves the list and closes the window.')),
+      anyPopup: !!(filterOpen || addOpen),
+      closePopups: () => set({ filterOpen: false, addOpen: false }),
+      closePopupsCtx: (e) => { e.preventDefault(); set({ filterOpen: false, addOpen: false }); },
+      sheetAlert: sheet === 'discard', al
+    };
+  }
+}
+</script>
+</body>
+</html>

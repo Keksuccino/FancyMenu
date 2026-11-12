@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Listeners spec</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.pair{display:grid;grid-template-columns:600px minmax(0,1fr);gap:48px;align-items:start}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start}
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;align-items:start}
+.kr{display:flex;align-items:center;gap:14px;padding:9px 18px;border-bottom:1px solid var(--sep);font-size:12.5px;color:var(--text-2)}
+.kr:last-child{border-bottom:0}
+.kk{flex:0 0 190px;font-family:"Noto Sans Mono",ui-monospace,Menlo,monospace;font-size:12px;color:var(--text)}
+.spec code{font-family:"Noto Sans Mono",ui-monospace,Menlo,monospace;font-size:12px;color:var(--text)}
+.flow{display:flex;flex-direction:column;gap:10px}
+.flow .step{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;font-size:13px;line-height:1.5;color:var(--text-2)}
+.flow .n{width:22px;height:22px;display:grid;place-items:center;border-radius:50%;font-size:11.5px;font-weight:700;color:var(--accent);background:color-mix(in srgb,var(--accent) 15%,transparent)}
+.flow b{color:var(--title);font-weight:600}
+.propchip{color:var(--warn);background:color-mix(in srgb,var(--warn) 15%,transparent)}
+.okchip2{color:var(--ok);background:color-mix(in srgb,var(--ok) 15%,transparent)}
+/* today's Manage Listeners window, redrawn at 600 of its 640 pixels */
+.lgl{position:relative;width:600px;height:418px}
+.lgl .lg-title{position:absolute;left:0;right:0;top:0}
+.lgl .a{position:absolute}
+.lg-field{display:flex;align-items:center;padding:0 6px;border:1px solid #3e4042;background:#1e1e1e;color:#7f878f;height:18px}
+.lg-list{border:1px solid #3e4042;background:#1e1e1e;padding:4px 2px;display:flex;flex-direction:column;gap:1px;overflow:hidden}
+.lg-e{padding:2px 6px;line-height:14px;white-space:nowrap;overflow:hidden}
+.lg-e.sel{background:#3a3a3a}
+.lg-desc{border:1px solid #3e4042;background:#1e1e1e;padding:5px 8px;overflow:hidden;font-size:11px;line-height:14px;color:#ceDDed}
+.lg-desc b{font-weight:700}
+.lg-desc .z{color:#e59b12}
+.lg-desc .r{color:#ff5555}
+.lg-desc .o{color:#e59b12}
+.lg-btn{height:19px;display:grid;place-items:center;border:1px solid #3e4042;background:#333;font-size:11.5px}
+.lg-btn.off{color:#707070}
+.lg-tip{font-size:10px;line-height:13px;color:#8a8f96;text-align:right}
+</style>
+</helmet>
+<div class="fm spec {{themeClass}}" style="min-height: 6102px">
+
+<header style="display: flex; flex-direction: column; gap: 12px; max-width: 920px">
+<div style="font-size: 12px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; color: var(--text-3)">FancyMenu · UI rework concept · listeners</div>
+<h1 style="margin: 0; font-size: 34px; line-height: 1.15; font-weight: 700; color: var(--title)">Listeners you can see working</h1>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: var(--text-2)">The Listeners window shows the events every listener listens for, its script in the script editor's own rows, and the Event Variables those events hand over, with their last values updating live. A listener can listen for several events at once, and $$event tells its script which one ran it. Every listener has an icon of its own, picked from every Material icon and emoji FancyMenu ships. Listeners can be turned off, tried with Run Now and switched to other events without rebuilding their script, and Cancel takes every change back. What listeners listen for are called events now, like Keyboard Key Pressed, without the On.</p>
+</header>
+
+<section>
+<h2 class="h2">Today and proposed</h2>
+<div class="pair">
+<div><div class="cap">Today</div><div class="lg-win lgl">
+<div class="lg-title"><span>Manage Listeners</span><span class="lg-x">×</span></div>
+<div class="a lg-field" style="left: 19px; top: 85px; width: 249px">Search...</div>
+<div class="a lg-list" style="left: 19px; top: 109px; width: 262px; height: 284px">
+<div class="lg-e">Achievement Fanfare</div>
+<div class="lg-e">Cherry Grove Music</div>
+<div class="lg-e">Coin Sound</div>
+<div class="lg-e">Death Counter</div>
+<div class="lg-e">Goodbye Stats</div>
+<div class="lg-e">Jump Counter</div>
+<div class="lg-e">On Server Joined</div>
+<div class="lg-e">On Weather Changed</div>
+<div class="lg-e sel">Quest Log Key</div>
+<div class="lg-e">Raid Horn</div>
+<div class="lg-e">Screenshot Toast</div>
+<div class="lg-e">Shop Command</div>
+</div>
+<div class="a lg-desc" style="left: 319px; top: 85px; width: 262px; height: 127px">
+<b>Listener Type</b><br>(On Keyboard Key Pressed)<br><br>This listener triggers whenever a keyboard key is pressed, which works both while a screen is open and when in-game (in a world/server). The listener keeps firing while the key is held down and the screen continues to receive repeat events.<br><br>It provides the following variables for its actions and requirements:<br><br>- <span class="z">$$key_name</span> = The resolved display name of the key<br>- <span class="z">$$key_keycode</span> = The Minecraft key ID (SDL scan code)<br>- <span class="z">$$key_scancode</span> = The layout-dependent SDL key code<br>- <span class="z">$$key_modifiers</span> = The active modifier bit mask<br><br><br><b>Action Script</b><br><br><span class="o">•</span> <span class="r">[UNKNOWN BLOCK]</span><br><span class="o">•</span> IF (Is Text, Is Any Screen Open)<br>&nbsp;&nbsp;• Open Screen or Custom GUI<br>&nbsp;&nbsp;&nbsp;&nbsp;◦ Value: quest_log
+</div>
+<div class="a lg-tip" style="left: 319px; top: 216px; width: 262px">Rename listeners by double-clicking their display name.<br><br>Right-click listeners to quick-edit their actions.</div>
+<div class="a lg-btn" style="left: 440px; top: 279px; width: 141px">Add Listener</div>
+<div class="a lg-btn" style="left: 440px; top: 302px; width: 141px">Edit Actions</div>
+<div class="a lg-btn" style="left: 440px; top: 325px; width: 141px">Remove Listener</div>
+<div class="a lg-btn" style="left: 440px; top: 357px; width: 141px">Cancel</div>
+<div class="a lg-btn" style="left: 440px; top: 380px; width: 141px">Done</div>
+</div></div>
+<div><div class="cap">What gets in the way</div>
+<ul class="probs">
+<li>A listener listens for exactly one event, so reacting to Server Left and to Singleplayer World Left takes two listeners with the same script, kept in sync by hand.</li>
+<li>One word means two things: listener is both what you make and what you pick in Choose Listener Type, so it's unclear what a listener's variables belong to.</li>
+<li>The list only shows names. A listener with a name of its own hides what it listens for, and nothing shows what it does or whether it ever ran.</li>
+<li>Renaming takes a double-click and editing a right-click, and only two small tips under the description say so.</li>
+<li>The description repeats the whole help text of the event and shows the script as a bullet list with raw values like last_key:$$key_name and NONE. Comments and folders show up as a red [UNKNOWN BLOCK], and the steps in a folder are left out.</li>
+<li>Edit Actions and renaming change the running listener right away, and Cancel doesn't take that back, although it warns that it will undo everything.</li>
+<li>Cancel and the close button always ask, even when nothing changed. Removing a listener warns that it can't be undone, while Cancel brings it back.</li>
+<li>A listener can't be turned off. Pausing one means deleting it and building its script again later.</li>
+<li>Choose Listener Type lists all 93 events in the order they were registered, without groups. What they hand over only shows up in their long description, and Copy Variables copies all of them, even when you need one.</li>
+<li>Picking an event opens the script editor, and the listener only gets added when that script is saved. Cancelling the editor throws the pick away.</li>
+<li>A script can't be tried without causing its event, like dying or joining a server.</li>
+<li>Listeners whose event comes from a mod that isn't installed are dropped when FancyMenu starts, so the next save deletes them for good.</li>
+</ul></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">What changes</h2>
+<div class="group" style="background: var(--win)">
+<div class="mv head"><div>Today</div><div></div><div>Proposed</div><div>Why</div></div>
+<div class="mv"><div class="from">Listener Type, Listener Variables, On Keyboard Key Pressed</div><div class="arrow">→</div><div class="to">Events and Event Variables: a listener listens for an event, like Keyboard Key Pressed</div><div class="why">What you make and what FancyMenu offers get their own words, so it's clear what everything belongs to (rules 103 and 105).</div></div>
+<div class="mv"><div class="from">One event per listener</div><div class="arrow">→</div><div class="to">Listens for: one or more events. Add Event adds another, × removes one, and $$event says which one ran the script</div><div class="why">One script for leaving a server, leaving a world and closing the game, instead of three copies to keep in sync (rule 111).</div></div>
+<div class="mv"><div class="from">Nothing but names to tell them apart</div><div class="arrow">→</div><div class="to">An icon of its own: any emoji or any of the 3,859 Material icons FancyMenu ships, from the icon chooser. The ear until one is picked</div><div class="why">A long list is easier to scan when 🪙 is the coin sound (rules 112 and 113).</div></div>
+<div class="mv"><div class="from">Names only</div><div class="arrow">→</div><div class="to">Two-line rows: the name, then the event it listens for, or what its script does when it has no name of its own. The icon of the event's category and a switch</div><div class="why">You see what every listener reacts to at a glance, and turning one off takes one click.</div></div>
+<div class="mv"><div class="from">A description area with the help text and a bullet list</div><div class="arrow">→</div><div class="to">Details: the events under Listens for, the script in the script editor's rows, and the Event Variables</div><div class="why">The script reads the same as in the editor, and a click on a step opens the editor right there.</div></div>
+<div class="mv"><div class="from">Right-click to edit, double-click to rename</div><div class="arrow">→</div><div class="to">Edit Script, Run Now, Duplicate and Delete as buttons. Double-click and Enter open the script, F2 and the pencil rename</div><div class="why">Core actions are easy to find (rule 41), and double-click opens, like everywhere else.</div></div>
+<div class="mv"><div class="from">Deleting is the only way to stop one</div><div class="arrow">→</div><div class="to">A switch on every listener, and Space for the selected ones</div><div class="why">A seasonal or broken listener stays where it is, without running (rule 99).</div></div>
+<div class="mv"><div class="from">Nothing about whether it ran</div><div class="arrow">→</div><div class="to">Runs since the game started and the last run in the details, and a ring around its icon every time it runs</div><div class="why">You see right away if your key press or chat message reached it (rule 100).</div></div>
+<div class="mv"><div class="from">Variables only in the help text</div><div class="arrow">→</div><div class="to">Event Variables with what they held at the last run, updating live. A click copies one $$ name, Copy All copies all of them</div><div class="why">Writing a condition like $$key_name is J starts with knowing what $$key_name holds.</div></div>
+<div class="mv"><div class="from">No way to try a script</div><div class="arrow">→</div><div class="to">Run Now and F5: the script runs once, with the last values or the examples</div><div class="why">Testing a listener for Player Died without dying (rule 101).</div></div>
+<div class="mv"><div class="from">Delete it and start over</div><div class="arrow">→</div><div class="to">Change: another event, keeping the script. It warns about $$ names the new event doesn't hand over</div><div class="why">Going from Keyboard Key Pressed to Keyboard Key Released is one click, not a rebuilt script.</div></div>
+<div class="mv"><div class="from">Choose Listener Type, unsorted, in its own window</div><div class="arrow">→</div><div class="to">New Listener: the shared menu of events with Recently Used, 15 categories as submenus, a search through names, descriptions and $$ names, and a help tag</div><div class="why">The same menu as Add in the script editor (rules 27 and 30).</div></div>
+<div class="mv"><div class="from">Edits go live, and Cancel can't take them back</div><div class="arrow">→</div><div class="to">Changes apply right away, and Cancel takes all of them back. It only asks when something changed</div><div class="why">You can try a change in the game and still back out (rules 38, 68 and 102).</div></div>
+<div class="mv"><div class="from">Remove asks and says it can't be undone</div><div class="arrow">→</div><div class="to">Delete works right away, with Undo in the footer</div><div class="why">Undo and Cancel both bring it back, so there's nothing to warn about.</div></div>
+<div class="mv"><div class="from">Listeners with an event from a missing mod vanish</div><div class="arrow">→</div><div class="to">They stay as saved, marked in amber, with their script still editable</div><div class="why">Removing a mod for a test doesn't cost you its listeners (rule 86).</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">The window, piece by piece</h2>
+<div class="three">
+<div class="spec-card"><div class="k">The list</div><div class="kd" style="margin: 0">Each row shows the listener's own icon, the name and a switch. The second line says what the first one doesn't: the event a named listener listens for, like Keyboard Key Pressed, or what an unnamed one does, like Set Variable, Show Toast. It turns amber for a listener without steps or with an event from a missing mod, with a warning that explains it. Rows of listeners that are off are dimmed. Shift- and Ctrl-click select several, and the search finds names, events and Event Variables, so key_name finds Quest Log Key. Filters show listeners that are off, have problems, ran or haven't run yet, and they sort by name, last run or event.</div></div>
+<div class="spec-card"><div class="k">The icon</div><div class="kd" style="margin: 0">The listener's icon sits left of its name in the details, with a small pencil that says it can change. A click opens the icon chooser: a search field, section tabs and one grid with the emoji first and then every Material icon, by popularity. The footer names the icon under the mouse, and Default goes back to the ear. Picking one closes the chooser, the list shows it right away, and Undo takes it back.</div></div>
+<div class="spec-card"><div class="k">Listens for</div><div class="kd" style="margin: 0">One row for every event the listener listens for, with its icon and its short description from rule 71, like Happens every time a key is pressed, in menus and while playing. Events that need FancyMenu on the server say so below it (rule 104). Change swaps one event for another and keeps the script, × removes one when there is more than one, and Add Event at the bottom adds another from the same event menu, with the events it has already checked. The list shows a listener with several events as Server Left and 2 more.</div></div>
+<div class="spec-card"><div class="k">Script</div><div class="kd" style="margin: 0">The steps in the script editor's own rows and sentences, with tiles, tokens and $$ chips, read-only. A click on a step opens the script editor with that step selected, and a short script shows all of it. After eight rows a button opens the rest in the editor. A script without steps says what doesn't happen yet, like No steps yet, so nothing happens when the weather changes, with Add Steps. The editor shows Runs when a keyboard key is pressed and the Event Variables (rule 81).</div></div>
+<div class="spec-card"><div class="k">Event Variables</div><div class="kd" style="margin: 0">Every $$ name the event hands over, what it is, and what it held the last time, updating live with a short highlight. A click on a name copies it with its $$ prefix, Copy All copies all of them, one per line, which replaces Copy Variables to Clipboard. Before the event first happens the values show –, and the note says that Run Now uses the examples. Events like Player Jumped say they hand over nothing. With several events, the names are grouped by where they come from: From every event, with $$event first, then Only from Server Left and so on, which say when they're empty.</div></div>
+<div class="spec-card"><div class="k">Running and testing</div><div class="kd" style="margin: 0">The line under the name says how often the listener ran since the game started and when it ran last, or that it's off. Every run draws a ring around its icon in the list, so a listener that runs every second, like one for Variable Updated next to a ticker, is easy to spot. Run Now runs the script once without the event, and a Show Toast in it shows its toast on the screen behind the window. With several events it asks which one to run it as, and F5 runs it as the one that happened last. Test runs don't count as runs.</div></div>
+<div class="spec-card"><div class="k">The footer</div><div class="kd" style="margin: 0">Changes apply to the running listeners right away, so you can try them in the game while the window is open, and the note says so (rule 38). Done saves listener_instances.txt. Cancel, the red light and Esc put every listener back the way it was when the window opened, and only ask when something changed (rule 68). After a delete, a rename or a change of event, the note says what happened, with Undo.</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">New, change, delete</h2>
+<div class="three">
+<div class="spec-card"><div class="k">New Listener</div><div class="flow">
+<div class="step"><span class="n">1</span><span><b>New Listener</b> or Ctrl+N opens the event menu below the button: Recently Used first, then 15 categories like Keyboard and Mouse, Player or Worlds and Servers.</span></div>
+<div class="step"><span class="n">2</span><span>Typing searches names, descriptions and Event Variables, so key_name finds the keyboard events.</span></div>
+<div class="step"><span class="n">3</span><span>The help tag says when the event happens, what it hands over, whether it needs FancyMenu on the server, and which of your listeners already listen for it.</span></div>
+<div class="step"><span class="n">4</span><span>Picking one adds a listener for it, selects it and opens its script in the script editor. Cancelling the editor keeps it without steps, marked in amber.</span></div>
+</div></div>
+<div class="spec-card"><div class="k">Change and add events</div><div class="flow">
+<div class="step"><span class="n">1</span><span><b>Change</b> in an event's row opens the same menu, aligned to the button's right edge, so it opens to the left and stays in the window. It starts with the events from the same category that hand over every $$ name the script uses from that event, like Keyboard Key Released for Quest Log Key.</span></div>
+<div class="step"><span class="n">2</span><span><b>Add Event</b> opens it to add another event. Events the listener has already are checked and can't be picked twice.</span></div>
+<div class="step"><span class="n">3</span><span>The help tag warns when the script uses a name that the highlighted event doesn't hand over, and with Add Event that the name stays empty when this event runs it.</span></div>
+<div class="step"><span class="n">4</span><span>× removes an event. When none of the events hand over a name the script uses, a callout says so and the script marks the steps that use it, with Edit Script right there.</span></div>
+</div></div>
+<div class="spec-card"><div class="k">Delete</div><div class="flow">
+<div class="step"><span class="n">1</span><span>The delete button or the Delete key, for one listener or several.</span></div>
+<div class="step"><span class="n">2</span><span>They're gone right away, and the next one in the list is selected.</span></div>
+<div class="step"><span class="n">3</span><span>The footer offers <b>Undo</b>, and Ctrl+Z or Cancel bring them back until the window closes.</span></div>
+</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Special cases it handles</h2>
+<div class="two">
+<div class="spec-card"><ul class="notes">
+<li>A listener whose event comes from a mod that isn't installed shows the event's saved identifier, like questbook:page_turned, and a callout that names the mod. It can't run or be switched on or off, its script stays editable, and Change can point it at an event that's here.</li>
+<li>Every key press reaches Keyboard Key Pressed, also while typing in this window, so the runs of its listeners go up as you type. That's how the game works today, and the window shows it instead of hiding it.</li>
+<li>A listener without a name of its own shows as its event, like Server Joined. An empty name in the rename field goes back to that, and the field points out when another listener has the same name.</li>
+<li>Duplicating names the copy Quest Log Key copy, then Quest Log Key copy 2. Copies run alongside the original.</li>
+<li>A listener with several events runs its script once every time one of them happens. When two of them happen at the same moment, like Server Left right before Minecraft Closing, it runs twice, and $$event tells the runs apart.</li>
+<li>When some of a listener's events come from a mod that isn't installed, it keeps listening for the others, and only the missing rows are amber.</li>
+</ul></div>
+<div class="spec-card"><ul class="notes">
+<li>With several listeners selected, one switch turns all of them on or off. When they disagree its knob sits in the middle, and a click turns them all on (rule 25).</li>
+<li>Last values belong to the event, since every listener of an event gets the same values. Two listeners for Keyboard Key Pressed show the same values, also when one of them is off.</li>
+<li>Filters show as a chip under the search field, so a shorter list is never a mystery. The chip's × shows everything again.</li>
+<li>Listeners keep running while the window is open, so a change can be tried in the game before Done.</li>
+</ul></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Keyboard shortcuts</h2>
+<div class="two">
+<div><div class="cap">Kept</div><div class="group" style="background: var(--win)">
+<div class="kr"><span class="kk">Typing</span><span>Searches, now also through events and Event Variables</span></div>
+<div class="kr"><span class="kk">Esc</span><span>Closes the menu, stops renaming, clears the search, then cancels, asking only when something changed</span></div>
+<div class="kr"><span class="kk">Double-click</span><span>Opens the script</span><span class="chip" style="margin-left: auto">Was Rename</span></div>
+</div></div>
+<div><div class="cap">New</div><div class="group" style="background: var(--win)">
+<div class="kr"><span class="kk">↑ ↓</span><span>Select the listener above or below</span></div>
+<div class="kr"><span class="kk">Shift-click, Ctrl-click</span><span>Select a range, or add one listener to the selection</span></div>
+<div class="kr"><span class="kk">Shift+↑ ↓, Ctrl+A</span><span>Select more, or all</span></div>
+<div class="kr"><span class="kk">Enter</span><span>Edit Script</span></div>
+<div class="kr"><span class="kk">F2</span><span>Rename</span></div>
+<div class="kr"><span class="kk">Space</span><span>Turn the selected listeners on or off</span></div>
+<div class="kr"><span class="kk">F5</span><span>Run Now, as the event that happened last</span></div>
+<div class="kr"><span class="kk">Delete</span><span>Delete, with Undo</span></div>
+<div class="kr"><span class="kk">Ctrl+N</span><span>New listener</span></div>
+<div class="kr"><span class="kk">Ctrl+D</span><span>Duplicate</span></div>
+<div class="kr"><span class="kk">Ctrl+F</span><span>Search</span></div>
+<div class="kr"><span class="kk">Ctrl+Z, Ctrl+Y</span><span>Undo and redo, Ctrl+Shift+Z too</span></div>
+<div class="kr"><span class="kk">Ctrl+S, Ctrl+Enter</span><span>Done</span></div>
+</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Changes beyond the UI</h2>
+<p class="kd" style="max-width: 920px; margin: -6px 0 16px; font-size: 13px; color: var(--text-2)">The window above already uses these. They change how listeners and events get saved, run, named or described, so each one is a rework rule.</p>
+<div class="two">
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">What listeners listen for are events <span class="chip propchip">New, rule 103</span></div><div class="kd" style="margin: 0">A listener is what you make: a name, a switch, a script and the events it listens for. What FancyMenu and addons register, like Keyboard Key Pressed, is an event, and what it hands to the scripts of its listeners are Event Variables. Choose Listener Type turns into the event menu, and the Listener Type of a listener into Listens for. The code follows, with events in their own registry, and saved identifiers stay, so listener files keep loading.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Listeners and schedulers have icons <span class="chip propchip">New, rule 112</span></div><div class="kd" style="margin: 0">Every listener saves an icon: a Material icon or an emoji. New listeners start with the ear, the same icon Manage Listeners has in the menu bar, and old listener files load with it. It replaces the icon of the event's category, which said little once several listeners shared a category.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">One icon chooser for icons and emoji <span class="chip propchip">New, rule 113</span></div><div class="kd" style="margin: 0">The chooser holds what FancyMenu already ships: the 1,898 emoji of Noto Color Emoji, which its text rendering uses, and the 3,859 icons of its Material icon font. Search goes through the names of both and a few words per icon, like heart for favorite. Recently Used is shared by every chooser.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Listeners can listen for several events <span class="chip propchip">New, rule 111</span></div><div class="kd" style="margin: 0">Today a listener has one event in a final field. It gets a list it can change instead, so Change, Add Event and × edit the running listener, and it registers with every event in it. Each event then hands its values over with the run, so names that two events share, like key_name, always come from the event that ran it, the names only other events hand over are empty, and $$event holds the event's identifier, like server_left. Old listener files load as listeners with one event.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Event names drop On <span class="chip propchip">New, rule 105</span></div><div class="kd" style="margin: 0">Keyboard Key Pressed instead of On Keyboard Key Pressed. Names that need more get reworded: On Death becomes Player Died, On Jump Player Jumped, On Quit Minecraft Minecraft Closing, On Block Broke Block Broken, On Enter Biome Biome Entered, and On Start Swimming Started Swimming. On Variable Updated [FM Variable] becomes Variable Updated. Only the texts change, so identifiers stay the same.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Listeners can be turned off <span class="chip propchip">New, rule 99</span></div><div class="kd" style="margin: 0">Every listener saves whether it's on. Listeners that are off stay in listener_instances.txt and in the window, but don't register with their event, so an event with only off listeners stays inactive and costs nothing. The file gets one extra line for each listener that's off, so old files load with everything on (rule 55).</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Listeners count their runs <span class="chip propchip">New, rule 100</span></div><div class="kd" style="margin: 0">Each listener counts its runs since the game started and remembers when it ran last, in memory only. Every event already keeps what it handed over last, for the scripts of its listeners, so the window reads the Event Variables from there. Before an event first happens they return defaults like ERROR, so each event also remembers whether it happened yet, and the window shows – until it did.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Scripts run on demand <span class="chip propchip">New, rule 101</span></div><div class="kd" style="margin: 0">Run Now runs one listener's script once, with the values its Event Variables hold right now, or with each variable's example (rule 71) when its event hasn't happened yet. It doesn't count as a run, and other listeners of the same event don't run.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Cancel takes everything back <span class="chip propchip">New, rule 102</span></div><div class="kd" style="margin: 0">Today the window copies the list, but not the listeners in it, so Edit Actions and renaming change the running listener right away, and Cancel can't undo them. The window works on copies, applies them to the running listeners as you go (rule 38), and puts the originals back on Cancel. Done saves the file.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Events say when they need the server <span class="chip propchip">New, rule 104</span></div><div class="kd" style="margin: 0">Structure Entered and Structure Left, their High Precision versions, Entity Spawned, Entity Died and the four raid events only work with FancyMenu on the server. Today a warning line at the top of their description says so. They get a flag instead, so the event menu and the window show it the same way, and the description is only the description.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Listeners with a missing event stay <span class="chip okchip2">Added to rule 86</span></div><div class="kd" style="margin: 0">A listener whose event isn't registered is dropped when listener_instances.txt loads, and the file gets saved without it at the next change. It stays as saved now, like elements, actions and conditions from a missing mod.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Cancel only asks when something changed <span class="chip okchip2">Added to rule 68</span></div><div class="kd" style="margin: 0">Manage Listeners asks on Cancel and when its window closes, even when nothing changed, like the script editor. It only asks when there are changes to lose.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Events describe themselves <span class="chip okchip2">Covered, rule 71</span></div><div class="kd" style="margin: 0">The categories of the event menu, the short descriptions and the description and example of every Event Variable come from the shared descriptions of rule 71. Today the variables only exist inside each event's long description.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">The script editor knows the listener <span class="chip okchip2">Covered, rule 81</span></div><div class="kd" style="margin: 0">Edit Script opens the editor with Runs when a keyboard key is pressed at the bottom and the Event Variables of the listener's event, like on the board Script editor · a listener’s script and its Event Variables. With several events it names all of them, like Runs when the player leaves a server, a singleplayer world closes or Minecraft starts closing, and adds $$event.</div></div>
+</div>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"$preview":{"width":1440,"height":6102}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark' };
+  }
+}
+</script>
+</body>
+</html>
