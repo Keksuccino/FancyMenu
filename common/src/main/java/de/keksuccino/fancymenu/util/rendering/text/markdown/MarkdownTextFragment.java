@@ -353,9 +353,10 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     }
 
     protected void renderQuoteLine(GuiGraphicsExtractor graphics) {
-        if ((this.quoteContext != null) && (this.quoteContext.getQuoteEnd() != null) && (this.quoteContext.getQuoteEnd() == this)) {
-            float yStart = Objects.requireNonNull(this.quoteContext.getQuoteStart()).y - 2;
-            float yEnd = this.y + this.getRenderHeight() + 1;
+        if ((this.quoteContext != null) && this.drawsQuoteLine()) {
+            MarkdownTextFragment end = Objects.requireNonNull(this.quoteContext.getQuoteEnd());
+            float yStart = Objects.requireNonNull(this.quoteContext.getQuoteStart()).getRenderLineY() - 2;
+            float yEnd = end.getRenderLineY() + end.getRenderHeight() + 1;
             if (this.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT) {
                 RenderingUtils.fillF(graphics, this.parent.x, yStart, this.parent.x + 2, yEnd, this.parent.quoteColor.getColorIntWithAlpha(this.parent.textOpacity));
             } else if (this.alignment == MarkdownRenderer.MarkdownLineAlignment.RIGHT) {
@@ -363,6 +364,18 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             }
             RenderingUtils.resetShaderColor(graphics);
         }
+    }
+
+    /**
+     * The line next to a quote gets drawn once per frame: by the last fragment of the quote,
+     * or, when that one is outside the visible range, by the last fragment of the last line of the quote that is inside of it.
+     */
+    protected boolean drawsQuoteLine() {
+        if (this.quoteContext.getQuoteEnd() == this) return true;
+        if ((this.parentLine == null) || (this.parentLine.fragments.get(this.parentLine.fragments.size()-1) != this)) return false;
+        MarkdownTextLine nextLine = this.parentLine.getNextLine();
+        if ((nextLine == null) || nextLine.isVisible()) return false;
+        return nextLine.fragments.get(0).quoteContext == this.quoteContext;
     }
 
     protected void renderBulletListDot(GuiGraphicsExtractor graphics) {
