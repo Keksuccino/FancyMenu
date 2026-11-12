@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
 import de.keksuccino.fancymenu.util.ListUtils;
-import de.keksuccino.fancymenu.util.ObjectUtils;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.text.color.TextColorFormatter;
@@ -14,19 +13,16 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.ChatFormatting;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.function.IntPredicate;
 
 public class MarkdownParser {
-
-    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final String EMPTY_STRING = "";
     private static final char NEWLINE_CHAR = '\n';
@@ -37,7 +33,6 @@ public class MarkdownParser {
     private static final char HASHTAG_CHAR = '#';
     private static final String FORMATTING_CODE_FONT_PREFIX = "%!!";
     private static final String FORMATTING_CODE_FONT_SUFFIX = "%!!%";
-    private static final String PERCENTAGE = "%";
     private static final char PERCENTAGE_CHAR = '%';
     private static final String FORMATTING_CODE_HEX_COLOR_PREFIX = "%#";
     private static final String FORMATTING_CODE_HEX_COLOR_SUFFIX = "%#%";
@@ -54,7 +49,6 @@ public class MarkdownParser {
     private static final String FORMATTING_CODE_TEXT_HOVER_EVENT_PREFIX = "hover:";
     private static final char OPEN_ROUND_BRACKETS_CHAR = '(';
     private static final char CLOSE_ROUND_BRACKETS_CHAR = ')';
-    private static final String CLOSE_ROUND_BRACKETS = ")";
     private static final char OPEN_SQUARE_BRACKETS_CHAR = '[';
     private static final char CLOSE_SQUARE_BRACKETS_CHAR = ']';
     private static final String OPEN_SQUARE_BRACKETS = "[";
@@ -62,7 +56,7 @@ public class MarkdownParser {
     private static final String FORMATTING_CODE_QUOTE_PREFIX = "> ";
     private static final String SPACE = " ";
     private static final char SPACE_CHAR = ' ';
-    private static final String BULLET_LIST_PATTERN = "^( *)- ";
+    private static final String FORMATTING_CODE_BULLET_LIST_PREFIX = "- ";
     private static final char MINUS_CHAR = '-';
     private static final char PLUS_CHAR = '+';
     private static final char DOT_CHAR = '.';
@@ -70,11 +64,9 @@ public class MarkdownParser {
     private static final char GRAVE_ACCENT_CHAR = '`';
     private static final String FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX = "```";
     private static final char SEMICOLON_CHAR = ';';
-    private static final String SEMICOLON = ";";
     private static final String FORMATTING_CODE_PLAIN_TEXT_SINGLE_LINE_PREFIX_SUFFIX = ";;";
     private static final String FORMATTING_CODE_PLAIN_TEXT_MULTI_LINE_PREFIX_SUFFIX = ";;;";
     private static final char CIRCUMFLEX_CHAR = '^';
-    private static final String CIRCUMFLEX = "^";
     private static final String FORMATTING_CODE_ALIGNMENT_CENTERED_PREFIX_SUFFIX = "^^^";
     private static final char VERTICAL_BAR_CHAR = '|';
     private static final String FORMATTING_CODE_ALIGNMENT_RIGHT_PREFIX_SUFFIX = "|||";
@@ -82,13 +74,14 @@ public class MarkdownParser {
     private static final char OPEN_CURLY_BRACKET_CHAR = '{';
     private static final char CLOSE_CURLY_BRACKET_CHAR = '}';
     private static final CharacterFilter RESOURCE_NAME_FILTER = CharacterFilter.buildResourceNameFilter();
-    private static final CharacterFilter MINUS_CHARACTER_FILTER = ObjectUtils.build(() -> {
-        CharacterFilter filter = new CharacterFilter();
-        filter.addAllowedCharacters(MINUS_CHAR);
-        return filter;
-    });
-    private static final Pattern TABLE_SEPARATOR_PATTERN = Pattern.compile("^\\s*\\|?\\s*:?-+:?\\s*(\\|\\s*:?-+:?\\s*)*\\|?\\s*$");
+    private static final char COLON_CHAR = ':';
     private static final String COLON = ":";
+    private static final String TABLE_PLACEHOLDER_PREFIX = "[TABLE_";
+    private static final IntPredicate IS_SPACE = character -> character == SPACE_CHAR;
+    /** Accepts the characters {@link String#trim()} removes. */
+    private static final IntPredicate IS_TRIMMED_WHITESPACE = character -> character <= SPACE_CHAR;
+    private static final IntPredicate IS_SEPARATION_LINE_CHARACTER = character -> (character == MINUS_CHAR) || (character == SPACE_CHAR);
+    private static final IntPredicate IS_RESOURCE_NAME_CHARACTER = character -> RESOURCE_NAME_FILTER.isAllowedChar((char) character);
 
     @NotNull
     public static List<MarkdownTextFragment> parse(@NotNull MarkdownRenderer renderer, @NotNull String markdownText, boolean parseMarkdown) {
@@ -96,7 +89,6 @@ public class MarkdownParser {
         Objects.requireNonNull(renderer);
         Objects.requireNonNull(markdownText);
 
-        List<MarkdownTextFragment> fragments = new ArrayList<>();
         List<MarkdownTextFragment.TableContext> tableContexts = new ArrayList<>();
 
         // Pre-process tables if markdown parsing is enabled
@@ -104,7 +96,26 @@ public class MarkdownParser {
             markdownText = preprocessTables(renderer, markdownText, tableContexts);
         }
 
+        return parseFragments(renderer, markdownText, parseMarkdown, tableContexts);
+
+    }
+
+    /**
+     * Parses text that has its tables replaced with table placeholder lines already.
+     *
+     * <p>The loop reads the text once and never copies the rest of it. Everything that looks ahead is either limited to
+     * the current line, stops at the first character that settles the answer, or goes through {@link MarkerLookahead}.
+     * This keeps the parsing time linear to the text length, so every new lookahead has to follow the same rules.</p>
+     *
+     * @param tableContexts The tables the table placeholder lines of the text refer to.
+     */
+    @NotNull
+    protected static List<MarkdownTextFragment> parseFragments(@NotNull MarkdownRenderer renderer, @NotNull String markdownText, boolean parseMarkdown, @NotNull List<MarkdownTextFragment.TableContext> tableContexts) {
+
+        List<MarkdownTextFragment> fragments = new ArrayList<>();
+
         FragmentBuilder builder = new FragmentBuilder(renderer, parseMarkdown);
+        MarkerLookahead lookahead = new MarkerLookahead(markdownText);
         boolean queueNewLine = true;
         boolean italicUnderscore = false;
         int charsToSkip = 0;
@@ -114,33 +125,30 @@ public class MarkdownParser {
         MarkdownTextFragment lastBuiltFragment = null;
         boolean lastLineWasHeadline = false;
 
-        String currentLine = EMPTY_STRING;
-        int tableContextIndex = 0;
+        final int textLength = markdownText.length();
+        //Index of the line break that ends the line of the current index, or the text length if it is the last line
+        int lineEnd = -1;
 
-        int index = -1;
-        for (char c : markdownText.toCharArray()) {
+        for (int index = 0; index < textLength; index++) {
+
+            char c = markdownText.charAt(index);
 
             boolean isStartOfLine = queueNewLine;
             queueNewLine = false;
             if (isStartOfLine) lineHandledByWholeLineConstruct = false;
 
-            index++;
-
-            //Part of full Markdown text source, starting at the current index
-            String subText = StringUtils.substring(markdownText, index);
-            //Part of current line, starting at current index
-            String subLine = getLine(subText);
-
-            //Update Current Line
-            if (isStartOfLine) currentLine = getLine(subText);
+            if (lineEnd < index) lineEnd = getLineEnd(markdownText, index);
+            //Length of the part of the current line that starts at the current index
+            int remainingLineLength = lineEnd - index;
 
             // Check for table placeholder
-            if (isStartOfLine && StringUtils.startsWith(currentLine, "[TABLE_")) {
+            if (isStartOfLine && markdownText.startsWith(TABLE_PLACEHOLDER_PREFIX, index)) {
                 // Extract table index from placeholder
-                String indexStr = StringUtils.substringBetween(currentLine, "[TABLE_", "]");
-                if (indexStr != null) {
+                int tableIndexStart = index + TABLE_PLACEHOLDER_PREFIX.length();
+                int tableIndexEnd = indexOf(markdownText, CLOSE_SQUARE_BRACKETS_CHAR, tableIndexStart, lineEnd);
+                if (tableIndexEnd != -1) {
                     try {
-                        int tableIndex = Integer.parseInt(indexStr);
+                        int tableIndex = Integer.parseInt(markdownText, tableIndexStart, tableIndexEnd, 10);
                         if (tableIndex >= 0 && tableIndex < tableContexts.size()) {
                             // Create table fragment
                             MarkdownTextFragment tableFragment = new MarkdownTextFragment(renderer, "[TABLE]");
@@ -161,13 +169,11 @@ public class MarkdownParser {
 
             //Skip empty line under headline
             if ((c == NEWLINE_CHAR) && lastLineWasHeadline) {
-                String nextLine = null;
-                try { nextLine = StringUtils.substring(subText, 1).split(NEWLINE, 2)[0]; } catch (Exception ignored) {}
-                if ((nextLine != null) && removeFromString(nextLine, NEWLINE, SPACE).isEmpty()) {
-                    lastLineWasHeadline = false;
+                lastLineWasHeadline = false;
+                int nextLineStart = index + 1;
+                if (containsOnly(markdownText, nextLineStart, getLineEnd(markdownText, nextLineStart), IS_SPACE)) {
                     continue;
                 }
-                lastLineWasHeadline = false;
             }
 
             //Skip Chars
@@ -218,7 +224,7 @@ public class MarkdownParser {
                 //Handle Escapes
                 if ((c == BACKSLASH_CHAR) && (builder.codeBlockContext == null) && !builder.plainText) {
                     int nextIndex = index + 1;
-                    if (nextIndex < markdownText.length()) {
+                    if (nextIndex < textLength) {
                         char nextChar = markdownText.charAt(nextIndex);
                         if (isEscapableMarkdownCharacter(nextChar)) {
                             builder.text.append(nextChar);
@@ -231,15 +237,15 @@ public class MarkdownParser {
                 //Handle Headline
                 if (isStartOfLine && (c == HASHTAG_CHAR) && (builder.codeBlockContext == null) && !builder.plainText) {
                     if (builder.headlineType == HeadlineType.NONE) {
-                        if (StringUtils.startsWith(subText, HEADLINE_PREFIX_BIGGEST)) {
+                        if (markdownText.startsWith(HEADLINE_PREFIX_BIGGEST, index)) {
                             builder.headlineType = HeadlineType.BIGGEST;
                             charsToSkip = 1;
                         }
-                        if (StringUtils.startsWith(subText, HEADLINE_PREFIX_BIGGER)) {
+                        if (markdownText.startsWith(HEADLINE_PREFIX_BIGGER, index)) {
                             builder.headlineType = HeadlineType.BIGGER;
                             charsToSkip = 2;
                         }
-                        if (StringUtils.startsWith(subText, HEADLINE_PREFIX_BIG)) {
+                        if (markdownText.startsWith(HEADLINE_PREFIX_BIG, index)) {
                             builder.headlineType = HeadlineType.BIG;
                             charsToSkip = 3;
                         }
@@ -252,29 +258,25 @@ public class MarkdownParser {
 
                 //Handle Fonts
                 if (c == PERCENTAGE_CHAR) {
-                    if (StringUtils.startsWith(subLine, FORMATTING_CODE_FONT_PREFIX) && !StringUtils.startsWith(subLine, FORMATTING_CODE_FONT_SUFFIX) && (builder.font == null) && (builder.codeBlockContext == null) && !builder.plainText) {
-                        String afterPrefix = StringUtils.substring(subLine, 3);
-                        if (StringUtils.contains(afterPrefix, PERCENTAGE_CHAR)) {
-                            String fontName = StringUtils.split(afterPrefix, PERCENTAGE, 2)[0];
-                            if (RESOURCE_NAME_FILTER.isAllowedText(fontName)) {
-                                if (StringUtils.contains(subText, FORMATTING_CODE_FONT_SUFFIX)) {
-                                    ResourceLocation font = null;
-                                    try {
-                                        font = ResourceLocation.parse(fontName);
-                                    } catch (Exception ignore) {}
-                                    if (font != null) {
-                                        if (isStartOfLine || !builder.text.isEmpty()) {
-                                            lastBuiltFragment = addFragment(fragments, builder.build(false, false));
-                                        }
-                                        builder.font = font;
-                                        charsToSkip = fontName.length()+3;
-                                        continue;
-                                    }
+                    if (markdownText.startsWith(FORMATTING_CODE_FONT_PREFIX, index) && !markdownText.startsWith(FORMATTING_CODE_FONT_SUFFIX, index) && (builder.font == null) && (builder.codeBlockContext == null) && !builder.plainText) {
+                        int fontNameStart = index + FORMATTING_CODE_FONT_PREFIX.length();
+                        int fontNameEnd = indexOf(markdownText, PERCENTAGE_CHAR, fontNameStart, lineEnd);
+                        if ((fontNameEnd != -1) && containsOnly(markdownText, fontNameStart, fontNameEnd, IS_RESOURCE_NAME_CHARACTER) && lookahead.existsFrom(LookaheadMarker.FONT_SUFFIX, index)) {
+                            ResourceLocation font = null;
+                            try {
+                                font = ResourceLocation.parse(markdownText.substring(fontNameStart, fontNameEnd));
+                            } catch (Exception ignore) {}
+                            if (font != null) {
+                                if (isStartOfLine || !builder.text.isEmpty()) {
+                                    lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                                 }
+                                builder.font = font;
+                                charsToSkip = fontNameEnd - index;
+                                continue;
                             }
                         }
                     }
-                    if (StringUtils.startsWith(subText, FORMATTING_CODE_FONT_SUFFIX) && (builder.font != null)) {
+                    if (markdownText.startsWith(FORMATTING_CODE_FONT_SUFFIX, index) && (builder.font != null)) {
                         lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                         builder.font = null;
                         charsToSkip = 3;
@@ -284,22 +286,22 @@ public class MarkdownParser {
 
                 //Handle Color Formatting
                 if (c == PERCENTAGE_CHAR) {
-                    if (StringUtils.startsWith(subLine, FORMATTING_CODE_HEX_COLOR_PREFIX) && !StringUtils.startsWith(subLine, FORMATTING_CODE_HEX_COLOR_SUFFIX) && (builder.textColor == null) && (builder.codeBlockContext == null) && !builder.plainText) {
-                        int endIndex = StringUtils.indexOf(subLine, PERCENTAGE_CHAR, 2);
-                        if ((endIndex > 1) && StringUtils.contains(subText, FORMATTING_CODE_HEX_COLOR_SUFFIX)) {
-                            String colorText = StringUtils.substring(subLine, 2, endIndex);
-                            DrawableColor color = DrawableColor.ofHtml(colorText);
+                    if (markdownText.startsWith(FORMATTING_CODE_HEX_COLOR_PREFIX, index) && !markdownText.startsWith(FORMATTING_CODE_HEX_COLOR_SUFFIX, index) && (builder.textColor == null) && (builder.codeBlockContext == null) && !builder.plainText) {
+                        int colorStart = index + FORMATTING_CODE_HEX_COLOR_PREFIX.length();
+                        int colorEnd = indexOf(markdownText, PERCENTAGE_CHAR, colorStart, lineEnd);
+                        if ((colorEnd != -1) && lookahead.existsFrom(LookaheadMarker.HEX_COLOR_SUFFIX, index)) {
+                            DrawableColor color = DrawableColor.ofHtml(markdownText.substring(colorStart, colorEnd));
                             if (color != DrawableColor.EMPTY) {
                                 if (isStartOfLine || !builder.text.isEmpty()) {
                                     lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                                 }
                                 builder.textColor = color;
-                                charsToSkip = endIndex;
+                                charsToSkip = colorEnd - index;
                                 continue;
                             }
                         }
                     }
-                    if (StringUtils.startsWith(subText, FORMATTING_CODE_HEX_COLOR_SUFFIX) && (builder.textColor != null)) {
+                    if (markdownText.startsWith(FORMATTING_CODE_HEX_COLOR_SUFFIX, index) && (builder.textColor != null)) {
                         lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                         builder.textColor = null;
                         charsToSkip = 2;
@@ -310,8 +312,7 @@ public class MarkdownParser {
                 //Handle Bold
                 if ((c == ASTERISK_CHAR) && !isCharacterEscaped(markdownText, index)) {
                     if (!builder.bold && (builder.codeBlockContext == null) && !builder.plainText) {
-                        String s2 = StringUtils.substring(markdownText, Math.min(markdownText.length(), index+2));
-                        if (StringUtils.startsWith(subText, FORMATTING_CODE_BOLD_PREFIX_SUFFIX) && StringUtils.contains(s2, FORMATTING_CODE_BOLD_PREFIX_SUFFIX)) {
+                        if (markdownText.startsWith(FORMATTING_CODE_BOLD_PREFIX_SUFFIX, index) && lookahead.existsFrom(LookaheadMarker.BOLD, index + 2)) {
                             if (isStartOfLine || !builder.text.isEmpty()) {
                                 lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                             }
@@ -321,7 +322,7 @@ public class MarkdownParser {
                         }
                     }
                     if (builder.bold) {
-                        if (StringUtils.startsWith(subText, FORMATTING_CODE_BOLD_PREFIX_SUFFIX)) {
+                        if (markdownText.startsWith(FORMATTING_CODE_BOLD_PREFIX_SUFFIX, index)) {
                             lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                             builder.bold = false;
                             charsToSkip = 1;
@@ -330,13 +331,10 @@ public class MarkdownParser {
                     }
                 }
 
-                int indexPlusOne = Math.min(markdownText.length(), index + 1);
-
                 //Handle Italic Underscore
                 if ((c == UNDERSCORE_CHAR) && !isCharacterEscaped(markdownText, index)) {
                     if (!builder.italic && (builder.codeBlockContext == null) && !builder.plainText) {
-                        String s = StringUtils.substring(markdownText, indexPlusOne);
-                        if (StringUtils.contains(s, UNDERSCORE_CHAR)) {
+                        if (lookahead.existsFrom(LookaheadMarker.ITALIC_UNDERSCORE, index + 1)) {
                             if (isStartOfLine || !builder.text.isEmpty()) {
                                 lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                             }
@@ -356,31 +354,18 @@ public class MarkdownParser {
                 //Handle Italic Asterisk
                 if ((c == ASTERISK_CHAR) && !isCharacterEscaped(markdownText, index)) {
                     if (!builder.italic && (builder.codeBlockContext == null) && !builder.plainText) {
-                        String s2 = StringUtils.substring(markdownText, indexPlusOne);
-                        if (!StringUtils.startsWith(subText, FORMATTING_CODE_BOLD_PREFIX_SUFFIX) && StringUtils.contains(s2, ASTERISK_CHAR)) {
-                            boolean isEndSingleAsterisk = false;
-                            int index2 = 0;
-                            for (char c2 : s2.toCharArray()) {
-                                if (c2 == ASTERISK_CHAR) {
-                                    String s3 = StringUtils.substring(s2, index2);
-                                    if (!StringUtils.startsWith(s3, FORMATTING_CODE_BOLD_PREFIX_SUFFIX)) {
-                                        isEndSingleAsterisk = true;
-                                        break;
-                                    }
-                                }
-                                index2++;
+                        // Italic text ends at an asterisk that is not followed by a second one. The last asterisk
+                        // of every row of asterisks is one, so any later asterisk means there is such an end.
+                        if (!markdownText.startsWith(FORMATTING_CODE_BOLD_PREFIX_SUFFIX, index) && lookahead.existsFrom(LookaheadMarker.ITALIC_ASTERISK, index + 1)) {
+                            if (isStartOfLine || !builder.text.isEmpty()) {
+                                lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                             }
-                            if (isEndSingleAsterisk) {
-                                if (isStartOfLine || !builder.text.isEmpty()) {
-                                    lastBuiltFragment = addFragment(fragments, builder.build(false, false));
-                                }
-                                builder.italic = true;
-                                continue;
-                            }
+                            builder.italic = true;
+                            continue;
                         }
                     }
                     if (builder.italic && !italicUnderscore) {
-                        if (!StringUtils.startsWith(subText, FORMATTING_CODE_BOLD_PREFIX_SUFFIX)) {
+                        if (!markdownText.startsWith(FORMATTING_CODE_BOLD_PREFIX_SUFFIX, index)) {
                             lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                             builder.italic = false;
                             continue;
@@ -391,8 +376,7 @@ public class MarkdownParser {
                 //Handle Strikethrough
                 if ((c == TILDE_CHAR) && !isCharacterEscaped(markdownText, index)) {
                     if (!builder.strikethrough && (builder.codeBlockContext == null) && !builder.plainText) {
-                        String s = StringUtils.substring(markdownText, indexPlusOne);
-                        if (StringUtils.contains(s, TILDE_CHAR)) {
+                        if (lookahead.existsFrom(LookaheadMarker.STRIKETHROUGH, index + 1)) {
                             if (isStartOfLine || !builder.text.isEmpty()) {
                                 lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                             }
@@ -409,8 +393,8 @@ public class MarkdownParser {
 
                 //Handle Hyperlink Image
                 if (isStartOfLine && (c == OPEN_SQUARE_BRACKETS_CHAR) && (builder.codeBlockContext == null) && !builder.plainText) {
-                    if (StringUtils.startsWith(currentLine, FORMATTING_CODE_HYPERLINK_IMAGE_PREFIX)) {
-                        List<String> hyperlinkImage = getHyperlinkImageFromLine(currentLine);
+                    if (markdownText.startsWith(FORMATTING_CODE_HYPERLINK_IMAGE_PREFIX, index)) {
+                        List<String> hyperlinkImage = getHyperlinkImageFromLine(markdownText.substring(index, lineEnd));
                         if (hyperlinkImage != null) {
                             builder.hyperlink = new Hyperlink();
                             builder.hyperlink.link = hyperlinkImage.get(1);
@@ -426,52 +410,47 @@ public class MarkdownParser {
 
                 //Handle Image
                 if (isStartOfLine && (c == EXCLAMATION_MARK_CHAR) && (builder.codeBlockContext == null) && !builder.plainText) {
-                    if (StringUtils.startsWith(currentLine, FORMATTING_CODE_IMAGE_PREFIX)) {
-                        String imageLink = getImageFromLine(currentLine);
-                        if (imageLink != null) {
-                            setImageToBuilder(builder, imageLink);
-                            lastBuiltFragment = addFragment(fragments, builder.build(true, true));
-                            builder.imageSupplier = null;
-                            skipLine = true;
-                            continue;
-                        }
+                    String imageLink = getImageFromLine(markdownText, index);
+                    if (imageLink != null) {
+                        setImageToBuilder(builder, imageLink);
+                        lastBuiltFragment = addFragment(fragments, builder.build(true, true));
+                        builder.imageSupplier = null;
+                        skipLine = true;
+                        continue;
                     }
                 }
 
                 //Handle Hyperlink
                 if ((c == OPEN_SQUARE_BRACKETS_CHAR) && (builder.hyperlink == null) && (builder.clickEvent == null) && (builder.hoverEvent == null) && (builder.codeBlockContext == null) && !builder.plainText) {
-                    String s2 = StringUtils.substring(markdownText, indexPlusOne);
-                    if (StringUtils.contains(s2, FORMATTING_CODE_HYPERLINK_INNER_PREFIX) && StringUtils.contains(s2, CLOSE_ROUND_BRACKETS_CHAR)) {
-                        String hyperlink = getHyperlinkFromLine(subText);
-                        if (hyperlink != null) {
-                            if (isStartOfLine || !builder.text.isEmpty()) {
-                                // Check if current text ends with space to set endOfWord properly
-                                boolean endsWithSpace = builder.text.toString().endsWith(" ");
-                                lastBuiltFragment = addFragment(fragments, builder.build(false, endsWithSpace));
-                            }
-                            builder.linkTargetRaw = hyperlink;
-                            String clickEventId = getTextClickEventId(hyperlink);
-                            if (clickEventId != null) {
-                                builder.clickEvent = new MarkdownTextFragment.TextClickEvent(clickEventId);
-                                continue;
-                            }
-                            String hoverEventId = getTextHoverEventId(hyperlink);
-                            if (hoverEventId != null) {
-                                builder.hoverEvent = new MarkdownTextFragment.TextHoverEvent(hoverEventId);
-                                continue;
-                            }
-                            builder.hyperlink = new Hyperlink();
-                            builder.hyperlink.link = hyperlink;
+                    String hyperlink = getHyperlinkFromLine(markdownText, index);
+                    if (hyperlink != null) {
+                        if (isStartOfLine || !builder.text.isEmpty()) {
+                            // Check if current text ends with space to set endOfWord properly
+                            boolean endsWithSpace = !builder.text.isEmpty() && (builder.text.charAt(builder.text.length() - 1) == SPACE_CHAR);
+                            lastBuiltFragment = addFragment(fragments, builder.build(false, endsWithSpace));
+                        }
+                        builder.linkTargetRaw = hyperlink;
+                        String clickEventId = getTextClickEventId(hyperlink);
+                        if (clickEventId != null) {
+                            builder.clickEvent = new MarkdownTextFragment.TextClickEvent(clickEventId);
                             continue;
                         }
+                        String hoverEventId = getTextHoverEventId(hyperlink);
+                        if (hoverEventId != null) {
+                            builder.hoverEvent = new MarkdownTextFragment.TextHoverEvent(hoverEventId);
+                            continue;
+                        }
+                        builder.hyperlink = new Hyperlink();
+                        builder.hyperlink.link = hyperlink;
+                        continue;
                     }
                 }
                 if ((c == CLOSE_SQUARE_BRACKETS_CHAR) && ((builder.hyperlink != null) || (builder.clickEvent != null) || (builder.hoverEvent != null))) {
-                    if (StringUtils.startsWith(subText, FORMATTING_CODE_HYPERLINK_INNER_PREFIX)) {
+                    if (markdownText.startsWith(FORMATTING_CODE_HYPERLINK_INNER_PREFIX, index)) {
                         // Check if there's whitespace after the closing parenthesis to determine endOfWord
                         int skipLength = 2 + ((builder.linkTargetRaw != null) ? builder.linkTargetRaw.length() : 0);
                         boolean hasSpaceAfter = false;
-                        if (index + skipLength < markdownText.length()) {
+                        if (index + skipLength < textLength) {
                             char afterChar = markdownText.charAt(index + skipLength);
                             hasSpaceAfter = (afterChar == SPACE_CHAR) || (afterChar == NEWLINE_CHAR);
                         }
@@ -487,14 +466,14 @@ public class MarkdownParser {
 
                 //Handle Quote
                 if (isStartOfLine && (c == GREATER_THAN_CHAR) && (builder.quoteContext == null) && (builder.codeBlockContext == null) && !builder.plainText) {
-                    if (StringUtils.startsWith(subText, FORMATTING_CODE_QUOTE_PREFIX)) {
+                    if (markdownText.startsWith(FORMATTING_CODE_QUOTE_PREFIX, index)) {
                         builder.quoteContext = new QuoteContext();
                         charsToSkip = 1;
                         continue;
                     }
                 }
                 if (isStartOfLine && (builder.quoteContext != null)) {
-                    if (StringUtils.trim(currentLine).isEmpty()) {
+                    if (containsOnly(markdownText, index, lineEnd, IS_TRIMMED_WHITESPACE)) {
                         builder.quoteContext = null; //it's important to disable quote BEFORE building the fragment
                         lastBuiltFragment = addFragment(fragments, builder.build(true, true));
                         queueNewLine = true;
@@ -504,13 +483,12 @@ public class MarkdownParser {
 
                 // Handle Bullet Lists (all levels)
                 if (isStartOfLine && (builder.codeBlockContext == null) && !builder.plainText) {
-                    // Match any bullet list pattern (supports 2 spaces per level)
-                    Matcher bulletMatcher = Pattern.compile(BULLET_LIST_PATTERN).matcher(currentLine);
-                    if (bulletMatcher.find()) {
-                        int indentSpaces = bulletMatcher.group(1).length();
+                    // Match any bullet list prefix (supports 2 spaces per level)
+                    int indentSpaces = getBulletListIndent(markdownText, index);
+                    if (indentSpaces != -1) {
                         int level = (indentSpaces / 2) + 1;
 
-                        if ((level >= 1) && (level <= 10)) {
+                        if (level <= 10) {
                             // Calculate characters to skip (indent + "- "), subtract one because the current char is already consumed
                             charsToSkip = indentSpaces + 1;
 
@@ -525,9 +503,9 @@ public class MarkdownParser {
 
                 //Handle Separation Line
                 if (isStartOfLine && (c == MINUS_CHAR) && (builder.codeBlockContext == null) && !builder.plainText) {
-                    if (StringUtils.startsWith(currentLine, FORMATTING_CODE_SEPARATION_LINE_PREFIX) && MINUS_CHARACTER_FILTER.isAllowedText(StringUtils.replace(currentLine, SPACE, EMPTY_STRING))) {
+                    if (markdownText.startsWith(FORMATTING_CODE_SEPARATION_LINE_PREFIX, index) && containsOnly(markdownText, index, lineEnd, IS_SEPARATION_LINE_CHARACTER)) {
                         builder.separationLine = true;
-                        builder.text = new StringBuilder(FORMATTING_CODE_SEPARATION_LINE_PREFIX);
+                        builder.clearText().text.append(FORMATTING_CODE_SEPARATION_LINE_PREFIX);
                         lastBuiltFragment = addFragment(fragments, builder.build(true, true));
                         skipLine = true;
                         continue;
@@ -537,7 +515,9 @@ public class MarkdownParser {
                 //Handle Code Block Single Line
                 if ((c == GRAVE_ACCENT_CHAR) && !builder.plainText) {
                     if (builder.codeBlockContext == null) {
-                        if (!StringUtils.startsWith(subLine, FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX) && isFormattedBlock(subText, GRAVE_ACCENT_CHAR, true)) {
+                        // The block ends at a grave accent of the same line that does not start a multi-line marker.
+                        // The last grave accent of every row of grave accents is one, so any later one in the line means there is such an end.
+                        if (!markdownText.startsWith(FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX, index) && lookahead.existsBetween(LookaheadMarker.CODE_BLOCK_SINGLE_LINE, index + 1, lineEnd)) {
                             if (isStartOfLine || !builder.text.isEmpty()) {
                                 lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                             }
@@ -547,7 +527,7 @@ public class MarkdownParser {
                         }
                     }
                     if ((builder.codeBlockContext != null) && builder.codeBlockContext.singleLine) {
-                        if (!StringUtils.startsWith(subLine, FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX)) {
+                        if (!markdownText.startsWith(FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX, index)) {
                             lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                             builder.codeBlockContext = null;
                             continue;
@@ -556,9 +536,9 @@ public class MarkdownParser {
                 }
 
                 //Handle Code Block Multi Line
-                if (isStartOfLine && (c == GRAVE_ACCENT_CHAR) && (currentLine.length() == 3) && !builder.plainText) {
+                if (isStartOfLine && (c == GRAVE_ACCENT_CHAR) && (remainingLineLength == 3) && !builder.plainText) {
                     if (builder.codeBlockContext == null) {
-                        if (StringUtils.startsWith(currentLine, FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX) && isFormattedBlock(subText, GRAVE_ACCENT_CHAR, false)) {
+                        if (markdownText.startsWith(FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX, index) && lookahead.existsFrom(LookaheadMarker.CODE_BLOCK_MULTI_LINE_END, index + 3)) {
                             builder.codeBlockContext = new CodeBlockContext();
                             builder.codeBlockContext.singleLine = false;
                             skipLine = true;
@@ -566,7 +546,7 @@ public class MarkdownParser {
                         }
                     }
                     if ((builder.codeBlockContext != null) && !builder.codeBlockContext.singleLine) {
-                        if (StringUtils.startsWith(currentLine, FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX)) {
+                        if (markdownText.startsWith(FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX, index)) {
                             builder.codeBlockContext = null;
                             skipLine = true;
                             continue;
@@ -575,10 +555,9 @@ public class MarkdownParser {
                 }
 
                 //Handle Plain Text Single Line
-                if ((c == SEMICOLON_CHAR) && !StringUtils.startsWith(subLine, FORMATTING_CODE_PLAIN_TEXT_MULTI_LINE_PREFIX_SUFFIX)) {
+                if ((c == SEMICOLON_CHAR) && !markdownText.startsWith(FORMATTING_CODE_PLAIN_TEXT_MULTI_LINE_PREFIX_SUFFIX, index)) {
                     if (!builder.plainText) {
-                        String s2 = StringUtils.substring(markdownText, Math.min(markdownText.length(), index+2));
-                        if (StringUtils.startsWith(subText, FORMATTING_CODE_PLAIN_TEXT_SINGLE_LINE_PREFIX_SUFFIX) && StringUtils.contains(s2, FORMATTING_CODE_PLAIN_TEXT_SINGLE_LINE_PREFIX_SUFFIX)) {
+                        if (markdownText.startsWith(FORMATTING_CODE_PLAIN_TEXT_SINGLE_LINE_PREFIX_SUFFIX, index) && lookahead.existsFrom(LookaheadMarker.PLAIN_TEXT_SINGLE_LINE, index + 2)) {
                             if (isStartOfLine || !builder.text.isEmpty()) {
                                 lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                             }
@@ -588,7 +567,7 @@ public class MarkdownParser {
                         }
                     }
                     if (builder.plainText) {
-                        if (StringUtils.startsWith(subText, FORMATTING_CODE_PLAIN_TEXT_SINGLE_LINE_PREFIX_SUFFIX)) {
+                        if (markdownText.startsWith(FORMATTING_CODE_PLAIN_TEXT_SINGLE_LINE_PREFIX_SUFFIX, index)) {
                             lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                             builder.plainText = false;
                             charsToSkip = 1;
@@ -598,14 +577,14 @@ public class MarkdownParser {
                 }
 
                 //Handle Plain Text Multi Line
-                if (isStartOfLine && (c == SEMICOLON_CHAR) && (currentLine.length() == 3)) {
-                    if (StringUtils.startsWith(subLine, FORMATTING_CODE_PLAIN_TEXT_MULTI_LINE_PREFIX_SUFFIX)) {
-                        if (!builder.plainText && isFormattedBlock(subText, SEMICOLON_CHAR, false)) {
+                if (isStartOfLine && (c == SEMICOLON_CHAR) && (remainingLineLength == 3)) {
+                    if (markdownText.startsWith(FORMATTING_CODE_PLAIN_TEXT_MULTI_LINE_PREFIX_SUFFIX, index)) {
+                        if (!builder.plainText && lookahead.existsFrom(LookaheadMarker.PLAIN_TEXT_MULTI_LINE_END, index + 3)) {
                             builder.plainText = true;
                             skipLine = true;
                             continue;
                         }
-                        if (builder.plainText && removeFromString(subLine, SEMICOLON, SPACE, NEWLINE).isEmpty()) {
+                        if (builder.plainText) {
                             builder.plainText = false;
                             skipLine = true;
                             continue;
@@ -614,14 +593,14 @@ public class MarkdownParser {
                 }
 
                 //Handle Alignment : Centered
-                if (isStartOfLine && (c == CIRCUMFLEX_CHAR) && (currentLine.length() == 3)) {
-                    if (StringUtils.startsWith(subLine, FORMATTING_CODE_ALIGNMENT_CENTERED_PREFIX_SUFFIX) && (builder.codeBlockContext == null)) {
-                        if ((builder.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT) && isFormattedBlock(subText, CIRCUMFLEX_CHAR, false)) {
+                if (isStartOfLine && (c == CIRCUMFLEX_CHAR) && (remainingLineLength == 3)) {
+                    if (markdownText.startsWith(FORMATTING_CODE_ALIGNMENT_CENTERED_PREFIX_SUFFIX, index) && (builder.codeBlockContext == null)) {
+                        if ((builder.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT) && lookahead.existsFrom(LookaheadMarker.ALIGNMENT_CENTERED_END, index + 3)) {
                             builder.alignment = MarkdownRenderer.MarkdownLineAlignment.CENTERED;
                             skipLine = true;
                             continue;
                         }
-                        if ((builder.alignment == MarkdownRenderer.MarkdownLineAlignment.CENTERED) && removeFromString(subLine, CIRCUMFLEX, SPACE, NEWLINE).isEmpty()) {
+                        if (builder.alignment == MarkdownRenderer.MarkdownLineAlignment.CENTERED) {
                             builder.alignment = MarkdownRenderer.MarkdownLineAlignment.LEFT;
                             skipLine = true;
                             continue;
@@ -630,14 +609,14 @@ public class MarkdownParser {
                 }
 
                 //Handle Alignment : Right
-                if (isStartOfLine && (c == VERTICAL_BAR_CHAR) && (currentLine.length() == 3)) {
-                    if (StringUtils.startsWith(subLine, FORMATTING_CODE_ALIGNMENT_RIGHT_PREFIX_SUFFIX) && (builder.codeBlockContext == null)) {
-                        if ((builder.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT) && isFormattedBlock(subText, VERTICAL_BAR_CHAR, false)) {
+                if (isStartOfLine && (c == VERTICAL_BAR_CHAR) && (remainingLineLength == 3)) {
+                    if (markdownText.startsWith(FORMATTING_CODE_ALIGNMENT_RIGHT_PREFIX_SUFFIX, index) && (builder.codeBlockContext == null)) {
+                        if ((builder.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT) && lookahead.existsFrom(LookaheadMarker.ALIGNMENT_RIGHT_END, index + 3)) {
                             builder.alignment = MarkdownRenderer.MarkdownLineAlignment.RIGHT;
                             skipLine = true;
                             continue;
                         }
-                        if ((builder.alignment == MarkdownRenderer.MarkdownLineAlignment.RIGHT) && removeFromString(subLine, VERTICAL_BAR, SPACE, NEWLINE).isEmpty()) {
+                        if (builder.alignment == MarkdownRenderer.MarkdownLineAlignment.RIGHT) {
                             builder.alignment = MarkdownRenderer.MarkdownLineAlignment.LEFT;
                             skipLine = true;
                             continue;
@@ -654,11 +633,16 @@ public class MarkdownParser {
             //Build fragment at every space
             if (c == SPACE_CHAR) {
                 //Fix end-of-word of last fragment if needed
-                if (!isStartOfLine && (lastBuiltFragment != null) && builder.text.toString().equals(SPACE)) {
+                if (!isStartOfLine && (lastBuiltFragment != null) && (builder.text.length() == 1)) {
+                    // All spaces that directly follow would end up in the same fragment one by one, so the whole row
+                    // of spaces is added here at once. This keeps long rows from rebuilding the fragment for each space.
+                    int spacesEnd = index + 1;
+                    while ((spacesEnd < textLength) && (markdownText.charAt(spacesEnd) == SPACE_CHAR)) spacesEnd++;
                     lastBuiltFragment.endOfWord = true;
-                    lastBuiltFragment.text += SPACE;
+                    lastBuiltFragment.text += ((spacesEnd - index) == 1) ? SPACE : markdownText.substring(index, spacesEnd);
                     lastBuiltFragment.updateWidth();
                     builder.clearText();
+                    index = spacesEnd - 1;
                 } else {
                     lastBuiltFragment = addFragment(fragments, builder.build(false, true));
                 }
@@ -684,13 +668,6 @@ public class MarkdownParser {
 
     }
 
-    protected static String removeFromString(@NotNull String in, String... remove) {
-        for (String s : remove) {
-            in = StringUtils.replace(in, s, EMPTY_STRING);
-        }
-        return in;
-    }
-
     protected static MarkdownTextFragment addFragment(List<MarkdownTextFragment> fragments, MarkdownTextFragment fragment) {
         fragments.add(fragment);
         return fragment;
@@ -698,16 +675,20 @@ public class MarkdownParser {
 
     @NotNull
     protected static String unescapeMarkdownText(@NotNull String text) {
-        if (!StringUtils.contains(text, BACKSLASH_CHAR)) {
+        int firstBackslash = text.indexOf(BACKSLASH_CHAR);
+        if (firstBackslash == -1) {
             return text;
         }
-        StringBuilder result = new StringBuilder(text.length());
         int length = text.length();
-        for (int i = 0; i < length; i++) {
+        StringBuilder result = new StringBuilder(length);
+        result.append(text, 0, firstBackslash);
+        // Every escape skips the character it escapes, so a row of backslashes gets consumed in pairs from its start.
+        // A backslash this loop reaches is therefore never escaped itself and needs no look back.
+        for (int i = firstBackslash; i < length; i++) {
             char c = text.charAt(i);
             if ((c == BACKSLASH_CHAR) && (i + 1 < length)) {
                 char next = text.charAt(i + 1);
-                if (isEscapableMarkdownCharacter(next) && !isCharacterEscaped(text, i)) {
+                if (isEscapableMarkdownCharacter(next)) {
                     result.append(next);
                     i++;
                     continue;
@@ -762,140 +743,69 @@ public class MarkdownParser {
         builder.imageSupplier = ResourceSupplier.image(imageSource);
     }
 
-    @NotNull
-    protected static String getLine(@NotNull String text) {
-        try {
-            if (!StringUtils.contains(text, NEWLINE)) return text;
-            if (StringUtils.startsWith(text, NEWLINE)) return EMPTY_STRING;
-            return StringUtils.split(text, NEWLINE, 2)[0];
-        } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to get line of Markdown text!", ex);
-        }
-        return text;
+    /**
+     * Returns the index of the line break that ends the line of the given index, or the text length if it is the last line.
+     */
+    protected static int getLineEnd(@NotNull String text, int index) {
+        int lineEnd = text.indexOf(NEWLINE_CHAR, index);
+        return (lineEnd != -1) ? lineEnd : text.length();
     }
 
-    protected static boolean isFormattedBlock(String text, char formatChar, boolean singleLine) {
-        String longFormatCode = EMPTY_STRING + formatChar + formatChar + formatChar;
-        if (singleLine) {
-            if (StringUtils.startsWith(text, EMPTY_STRING + formatChar) && !StringUtils.startsWith(text, longFormatCode)) {
-                int i = -1;
-                boolean endFound = false;
-                for (char c : text.toCharArray()) {
-                    i++;
-                    if (i == 0) {
-                        continue;
-                    }
-                    if (c == NEWLINE_CHAR) {
-                        break;
-                    }
-                    if (c == formatChar) {
-                        if (!StringUtils.startsWith(StringUtils.substring(text, i), EMPTY_STRING + formatChar + formatChar + formatChar)) {
-                            endFound = true;
-                            break;
-                        }
-                    }
-                }
-                return endFound;
-            }
-        } else {
-            if (StringUtils.startsWith(text, longFormatCode)) {
-                int i = -1;
-                boolean endFound = false;
-                boolean newLine = false;
-                for (char c : text.toCharArray()) {
-                    i++;
-                    if (i < 3) {
-                        continue;
-                    }
-                    if ((c == formatChar) && newLine && StringUtils.startsWith(StringUtils.substring(text, i), longFormatCode)) {
-                        endFound = true;
-                        break;
-                    }
-                    if (newLine) {
-                        newLine = false;
-                    }
-                    if (c == NEWLINE_CHAR) {
-                        newLine = true;
-                    }
-                }
-                return endFound;
-            }
+    /**
+     * Returns the index of the first occurrence of the character between the two indexes, or -1 if there is none.<br>
+     * Other than {@link String#indexOf(int, int)}, this never reads further than the end index.
+     */
+    protected static int indexOf(@NotNull String text, char character, int start, int end) {
+        for (int i = start; i < end; i++) {
+            if (text.charAt(i) == character) return i;
         }
-        return false;
+        return -1;
+    }
+
+    /**
+     * Returns if the text between the two indexes has no character the given check rejects, which includes having no characters at all.
+     */
+    protected static boolean containsOnly(@NotNull String text, int start, int end, @NotNull IntPredicate allowedCharacter) {
+        for (int i = start; i < end; i++) {
+            if (!allowedCharacter.test(text.charAt(i))) return false;
+        }
+        return true;
+    }
+
+    /**
+     * Returns the number of spaces in front of the bullet list prefix the line at the given index starts with, or -1 if it does not start with one.
+     */
+    protected static int getBulletListIndent(@NotNull String text, int lineStart) {
+        int prefixStart = lineStart;
+        while ((prefixStart < text.length()) && (text.charAt(prefixStart) == SPACE_CHAR)) prefixStart++;
+        return text.startsWith(FORMATTING_CODE_BULLET_LIST_PREFIX, prefixStart) ? (prefixStart - lineStart) : -1;
     }
 
     @Nullable
-    protected static List<String> getHyperlinkImageFromLine(String line) {
-        if (StringUtils.startsWith(line, FORMATTING_CODE_HYPERLINK_IMAGE_PREFIX) && StringUtils.contains(line, FORMATTING_CODE_HYPERLINK_INNER_PREFIX) && StringUtils.contains(line, CLOSE_ROUND_BRACKETS_CHAR)) {
-            String imageLink = null;
-            String hyperLink = null;
-            int index = -1;
-            for (char ignored : line.toCharArray()) {
-                index++;
-                String sub = StringUtils.substring(line, index);
-                if (index < 1) {
-                    continue;
+    protected static List<String> getHyperlinkImageFromLine(@NotNull String line) {
+        if (line.startsWith(FORMATTING_CODE_HYPERLINK_IMAGE_PREFIX)) {
+            int imageStart = line.indexOf(FORMATTING_CODE_IMAGE_PREFIX, 1);
+            while (imageStart != -1) {
+                String imageLink = getImageFromLine(line, imageStart);
+                if (imageLink != null) {
+                    // The hyperlink is what remains of the line without the image, which ends at its first closing round bracket
+                    String image = line.substring(imageStart, line.indexOf(CLOSE_ROUND_BRACKETS_CHAR, imageStart) + 1);
+                    String hyperLink = getHyperlinkFromLine(line.replace(image, EMPTY_STRING), 0);
+                    return (hyperLink != null) ? ListUtils.of(imageLink, hyperLink) : null;
                 }
-                if (StringUtils.startsWith(sub, FORMATTING_CODE_IMAGE_PREFIX)) {
-                    imageLink = getImageFromLine(sub);
-                    if (imageLink != null) {
-                        String s = StringUtils.split(sub, CLOSE_ROUND_BRACKETS, 2)[0] + CLOSE_ROUND_BRACKETS;
-                        hyperLink = getHyperlinkFromLine(line.replace(s, EMPTY_STRING));
-                        break;
-                    }
-                }
-            }
-            if ((imageLink != null) && (hyperLink != null)) {
-                return ListUtils.of(imageLink, hyperLink);
+                imageStart = line.indexOf(FORMATTING_CODE_IMAGE_PREFIX, imageStart + 1);
             }
         }
         return null;
     }
 
+    /**
+     * Returns the source of the image that starts at the given index, or NULL if there is no valid image.
+     */
     @Nullable
-    protected static String getImageFromLine(String line) {
-        if (StringUtils.startsWith(line, FORMATTING_CODE_IMAGE_PREFIX) && StringUtils.contains(line, FORMATTING_CODE_HYPERLINK_INNER_PREFIX) && StringUtils.contains(line, CLOSE_ROUND_BRACKETS)) {
-            boolean beforeClosedBrackets = true;
-            boolean isInsideImageLink = false;
-            StringBuilder imageLink = new StringBuilder();
-            boolean openRoundBracketsFound = false;
-            String s = StringUtils.substring(line, 2);
-            int index = -1;
-            for (char c : s.toCharArray()) {
-                index++;
-                if (c == NEWLINE_CHAR) {
-                    return null;
-                }
-                if (c == CLOSE_SQUARE_BRACKETS_CHAR) {
-                    if (!beforeClosedBrackets) {
-                        return null;
-                    }
-                    beforeClosedBrackets = false;
-                    if (StringUtils.startsWith(StringUtils.substring(s, index), FORMATTING_CODE_HYPERLINK_INNER_PREFIX)) {
-                        isInsideImageLink = true;
-                        continue;
-                    }
-                }
-                if ((c == OPEN_SQUARE_BRACKETS_CHAR) && beforeClosedBrackets) {
-                    return null;
-                }
-                if (isInsideImageLink) {
-                    if (c == OPEN_ROUND_BRACKETS_CHAR) {
-                        if (!openRoundBracketsFound) {
-                            openRoundBracketsFound = true;
-                            continue;
-                        } else {
-                            return null;
-                        }
-                    }
-                    if (c == CLOSE_ROUND_BRACKETS_CHAR) {
-                        return imageLink.toString();
-                    }
-                    imageLink.append(c);
-                }
-            }
-        }
-        return null;
+    protected static String getImageFromLine(@NotNull String text, int imageStart) {
+        if (!text.startsWith(FORMATTING_CODE_IMAGE_PREFIX, imageStart)) return null;
+        return getLinkTarget(text, imageStart + FORMATTING_CODE_IMAGE_PREFIX.length());
     }
 
     @Nullable
@@ -920,61 +830,91 @@ public class MarkdownParser {
         return null;
     }
 
+    /**
+     * Returns the target of the hyperlink that starts at the given index, or NULL if there is no valid hyperlink.
+     */
     @Nullable
-    protected static String getHyperlinkFromLine(String line) {
-        if (StringUtils.startsWith(line, OPEN_SQUARE_BRACKETS) && StringUtils.contains(line, FORMATTING_CODE_HYPERLINK_INNER_PREFIX) && StringUtils.contains(line, CLOSE_ROUND_BRACKETS)) {
-            boolean beforeClosedBrackets = true;
-            boolean isInsideHyperlink = false;
-            StringBuilder hyperlink = new StringBuilder();
-            boolean openRoundBracketsFound = false;
-            String s = StringUtils.substring(line, 1);
-            int index = -1;
-            for (char c : s.toCharArray()) {
-                index++;
-                if (c == NEWLINE_CHAR) {
-                    return null;
+    protected static String getHyperlinkFromLine(@NotNull String text, int hyperlinkStart) {
+        if (!text.startsWith(OPEN_SQUARE_BRACKETS, hyperlinkStart)) return null;
+        return getLinkTarget(text, hyperlinkStart + OPEN_SQUARE_BRACKETS.length());
+    }
+
+    /**
+     * Returns the target of the link ("label](target)") whose label starts at the given index, or NULL if there is no valid link.<br>
+     * A valid link stays in its line, has no square brackets in its label and no brackets but the closing one in its target.
+     *
+     * <p>The label search and the target search both stop at the first bracket or line break they reach. A label search
+     * therefore ends before the label of the next link starts, and a target search before the next target starts. This keeps
+     * the time for all searches of a text together linear to its length, no matter how many brackets it holds.</p>
+     */
+    @Nullable
+    protected static String getLinkTarget(@NotNull String text, int labelStart) {
+        int length = text.length();
+        for (int i = labelStart; i < length; i++) {
+            char c = text.charAt(i);
+            if ((c == NEWLINE_CHAR) || (c == OPEN_SQUARE_BRACKETS_CHAR)) return null;
+            if (c == CLOSE_SQUARE_BRACKETS_CHAR) {
+                if (!text.startsWith(FORMATTING_CODE_HYPERLINK_INNER_PREFIX, i)) return null;
+                int targetStart = i + FORMATTING_CODE_HYPERLINK_INNER_PREFIX.length();
+                for (int i2 = targetStart; i2 < length; i2++) {
+                    char c2 = text.charAt(i2);
+                    if (c2 == CLOSE_ROUND_BRACKETS_CHAR) return text.substring(targetStart, i2);
+                    if ((c2 == NEWLINE_CHAR) || (c2 == OPEN_ROUND_BRACKETS_CHAR) || (c2 == CLOSE_SQUARE_BRACKETS_CHAR)) return null;
                 }
-                if (c == CLOSE_SQUARE_BRACKETS_CHAR) {
-                    if (!beforeClosedBrackets) {
-                        return null;
-                    }
-                    beforeClosedBrackets = false;
-                    if (StringUtils.startsWith(StringUtils.substring(s, index), FORMATTING_CODE_HYPERLINK_INNER_PREFIX)) {
-                        isInsideHyperlink = true;
-                        continue;
-                    }
-                }
-                if ((c == OPEN_SQUARE_BRACKETS_CHAR) && beforeClosedBrackets) {
-                    return null;
-                }
-                if (isInsideHyperlink) {
-                    if (c == OPEN_ROUND_BRACKETS_CHAR) {
-                        if (!openRoundBracketsFound) {
-                            openRoundBracketsFound = true;
-                            continue;
-                        } else {
-                            return null;
-                        }
-                    }
-                    if (c == CLOSE_ROUND_BRACKETS_CHAR) {
-                        return hyperlink.toString();
-                    }
-                    hyperlink.append(c);
-                }
+                return null;
             }
         }
         return null;
     }
 
     protected static boolean isTableSeparatorLine(@NotNull String line) {
+        if (line.indexOf(VERTICAL_BAR_CHAR) == -1) return false;
         String structuralLine = splitLeadingFormattingTokens(line.trim()).content.trim();
         if (!containsUnescapedPipe(structuralLine)) {
             return false;
         }
-        return TABLE_SEPARATOR_PATTERN.matcher(structuralLine).matches();
+        return hasOnlyTableSeparatorCells(structuralLine);
+    }
+
+    /**
+     * Returns if the line holds nothing but table separator cells, which are rows of dashes with an optional colon at each end.
+     * The cells are split by pipes, with optional whitespace around the pipes and optional pipes at both ends of the line.
+     *
+     * <p>This reads the line in a loop on purpose. A regular expression goes one call deeper for every cell, which overflows
+     * the stack for lines with thousands of cells.</p>
+     */
+    protected static boolean hasOnlyTableSeparatorCells(@NotNull String line) {
+        int length = line.length();
+        int index = skipWhitespace(line, 0);
+        if ((index < length) && (line.charAt(index) == VERTICAL_BAR_CHAR)) index = skipWhitespace(line, index + 1);
+        while (true) {
+            if ((index < length) && (line.charAt(index) == COLON_CHAR)) index++;
+            int dashesStart = index;
+            while ((index < length) && (line.charAt(index) == MINUS_CHAR)) index++;
+            if (index == dashesStart) return false;
+            if ((index < length) && (line.charAt(index) == COLON_CHAR)) index++;
+            index = skipWhitespace(line, index);
+            if (index == length) return true;
+            if (line.charAt(index) != VERTICAL_BAR_CHAR) return false;
+            index = skipWhitespace(line, index + 1);
+            if (index == length) return true;
+        }
+    }
+
+    /**
+     * Returns the index of the first character at or after the given index that is no space, tab, line break, vertical tab, form feed or carriage return.
+     */
+    protected static int skipWhitespace(@NotNull String text, int index) {
+        while (index < text.length()) {
+            char c = text.charAt(index);
+            if ((c != SPACE_CHAR) && ((c < '\t') || (c > '\r'))) break;
+            index++;
+        }
+        return index;
     }
     
     protected static boolean isTableRow(@NotNull String line) {
+        if (line.indexOf(VERTICAL_BAR_CHAR) == -1) return false;
         String structuralLine = splitLeadingFormattingTokens(line.trim()).content.trim();
         return containsUnescapedPipe(structuralLine) && !isTableSeparatorLine(line);
     }
@@ -1038,8 +978,15 @@ public class MarkdownParser {
     
     @NotNull
     protected static String preprocessTables(@NotNull MarkdownRenderer renderer, @NotNull String markdownText, @NotNull List<MarkdownTextFragment.TableContext> tableContexts) {
+        // Tables need pipes. Text without any keeps all of its lines and only loses the line breaks at its end, which is what building it from its lines below does to it as well.
+        if (markdownText.indexOf(VERTICAL_BAR_CHAR) == -1) {
+            int end = markdownText.length();
+            while ((end > 0) && (markdownText.charAt(end - 1) == NEWLINE_CHAR)) end--;
+            return markdownText.substring(0, end);
+        }
+
         String[] lines = markdownText.split(NEWLINE);
-        StringBuilder result = new StringBuilder();
+        StringBuilder result = new StringBuilder(markdownText.length());
         
         for (int i = 0; i < lines.length; i++) {
             String currentLine = lines[i];
@@ -1063,7 +1010,7 @@ public class MarkdownParser {
                         cell.alignment = alignments.get(j);
                     }
                     // Parse the cell content as markdown
-                    List<MarkdownTextFragment> cellFragments = parse(renderer, headerCells.get(j), true);
+                    List<MarkdownTextFragment> cellFragments = parseTableCell(renderer, headerCells.get(j));
                     for (MarkdownTextFragment frag : cellFragments) {
                         frag.tableContext = tableContext;
                     }
@@ -1086,7 +1033,7 @@ public class MarkdownParser {
                             cell.alignment = alignments.get(j);
                         }
                         // Parse the cell content as markdown
-                        List<MarkdownTextFragment> cellFragments = parse(renderer, dataCells.get(j), true);
+                        List<MarkdownTextFragment> cellFragments = parseTableCell(renderer, dataCells.get(j));
                         for (MarkdownTextFragment frag : cellFragments) {
                             frag.tableContext = tableContext;
                         }
@@ -1101,7 +1048,7 @@ public class MarkdownParser {
                 tableContexts.add(tableContext);
                 
                 // Add a placeholder line in the result
-                result.append("[TABLE_").append(tableContexts.size() - 1).append("]").append(NEWLINE);
+                result.append(TABLE_PLACEHOLDER_PREFIX).append(tableContexts.size() - 1).append(CLOSE_SQUARE_BRACKETS_CHAR).append(NEWLINE);
                 i--; // Adjust because the loop will increment
             } else {
                 result.append(currentLine);
@@ -1112,6 +1059,15 @@ public class MarkdownParser {
         }
         
         return result.toString();
+    }
+
+    /**
+     * Parses the content of a table cell.<br>
+     * A cell is a single line, so it can't hold a table itself and skips the table pre-processing of {@link #parse(MarkdownRenderer, String, boolean)}.
+     */
+    @NotNull
+    protected static List<MarkdownTextFragment> parseTableCell(@NotNull MarkdownRenderer renderer, @NotNull String cellText) {
+        return parseFragments(renderer, cellText, true, Collections.emptyList());
     }
 
     protected static boolean containsUnescapedPipe(@NotNull String line) {
@@ -1142,11 +1098,94 @@ public class MarkdownParser {
         return parts;
     }
 
+    /**
+     * The markers the parser looks ahead for to find out if something it is about to open gets closed again.
+     */
+    protected enum LookaheadMarker {
+
+        FONT_SUFFIX(FORMATTING_CODE_FONT_SUFFIX),
+        HEX_COLOR_SUFFIX(FORMATTING_CODE_HEX_COLOR_SUFFIX),
+        BOLD(FORMATTING_CODE_BOLD_PREFIX_SUFFIX),
+        ITALIC_UNDERSCORE(String.valueOf(UNDERSCORE_CHAR)),
+        ITALIC_ASTERISK(String.valueOf(ASTERISK_CHAR)),
+        STRIKETHROUGH(String.valueOf(TILDE_CHAR)),
+        CODE_BLOCK_SINGLE_LINE(String.valueOf(GRAVE_ACCENT_CHAR)),
+        PLAIN_TEXT_SINGLE_LINE(FORMATTING_CODE_PLAIN_TEXT_SINGLE_LINE_PREFIX_SUFFIX),
+        // Multi-line blocks end at a marker that starts a line, no matter what follows it in that line
+        CODE_BLOCK_MULTI_LINE_END(NEWLINE + FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX),
+        PLAIN_TEXT_MULTI_LINE_END(NEWLINE + FORMATTING_CODE_PLAIN_TEXT_MULTI_LINE_PREFIX_SUFFIX),
+        ALIGNMENT_CENTERED_END(NEWLINE + FORMATTING_CODE_ALIGNMENT_CENTERED_PREFIX_SUFFIX),
+        ALIGNMENT_RIGHT_END(NEWLINE + FORMATTING_CODE_ALIGNMENT_RIGHT_PREFIX_SUFFIX);
+
+        protected static final int COUNT = values().length;
+
+        @NotNull
+        protected final String marker;
+
+        LookaheadMarker(@NotNull String marker) {
+            this.marker = marker;
+        }
+
+    }
+
+    /**
+     * Finds the next occurrence of {@link LookaheadMarker}s for the loop of the parser, which only moves forward.
+     *
+     * <p>A found occurrence answers every following search for its marker until the loop has moved past it, and a failed
+     * search answers every following search for the rest of the text. All searches for one marker together read the text
+     * only once that way, no matter how many markers without a closing one the text holds.</p>
+     *
+     * <p>This only works as long as the searches for a marker never start at a smaller index than an earlier one did.</p>
+     */
+    protected static class MarkerLookahead {
+
+        protected static final int NOT_SEARCHED = -2;
+        protected static final int NOT_FOUND = -1;
+
+        @NotNull
+        protected final String text;
+        protected final int[] nextOccurrences = new int[LookaheadMarker.COUNT];
+
+        protected MarkerLookahead(@NotNull String text) {
+            this.text = text;
+            Arrays.fill(this.nextOccurrences, NOT_SEARCHED);
+        }
+
+        /**
+         * Returns the index of the first occurrence of the marker at or after the given index, or -1 if there is none.
+         */
+        protected int indexOf(@NotNull LookaheadMarker marker, int fromIndex) {
+            int nextOccurrence = this.nextOccurrences[marker.ordinal()];
+            if (nextOccurrence == NOT_FOUND) return NOT_FOUND;
+            if (nextOccurrence < fromIndex) {
+                nextOccurrence = this.text.indexOf(marker.marker, fromIndex);
+                this.nextOccurrences[marker.ordinal()] = nextOccurrence;
+            }
+            return nextOccurrence;
+        }
+
+        /**
+         * Returns if the marker starts at or after the given index.
+         */
+        protected boolean existsFrom(@NotNull LookaheadMarker marker, int fromIndex) {
+            return this.indexOf(marker, fromIndex) != NOT_FOUND;
+        }
+
+        /**
+         * Returns if the marker starts at or after the given index and before the end index.
+         */
+        protected boolean existsBetween(@NotNull LookaheadMarker marker, int fromIndex, int endIndex) {
+            int nextOccurrence = this.indexOf(marker, fromIndex);
+            return (nextOccurrence != NOT_FOUND) && (nextOccurrence < endIndex);
+        }
+
+    }
+
     protected static class FragmentBuilder {
 
         protected final MarkdownRenderer renderer;
         protected final boolean parseMarkdownEnabled;
-        protected StringBuilder text = new StringBuilder();
+        protected final StringBuilder text = new StringBuilder();
         protected DrawableColor textColor = null;
         protected ResourceSupplier<ITexture> imageSupplier = null;
         protected boolean separationLine = false;
@@ -1231,7 +1270,7 @@ public class MarkdownParser {
         }
 
         protected FragmentBuilder clearText() {
-            this.text = new StringBuilder();
+            this.text.setLength(0);
             return this;
         }
 
