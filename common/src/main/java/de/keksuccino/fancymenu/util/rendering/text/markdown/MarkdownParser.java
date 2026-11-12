@@ -125,6 +125,9 @@ public class MarkdownParser {
         boolean lineHandledByWholeLineConstruct = false;
         MarkdownTextFragment lastBuiltFragment = null;
         boolean lastLineWasHeadline = false;
+        //Index of the square bracket that ends the label of the open link, and of the round bracket that ends its target
+        int linkLabelEnd = -1;
+        int linkTargetEnd = -1;
 
         final int textLength = markdownText.length();
         //Index of the line break that ends the line of the current index, or the text length if it is the last line
@@ -428,14 +431,17 @@ public class MarkdownParser {
 
                 //Handle Hyperlink
                 if ((c == OPEN_SQUARE_BRACKETS_CHAR) && (builder.hyperlink == null) && (builder.clickEvent == null) && (builder.hoverEvent == null) && (builder.codeBlockContext == null) && !builder.plainText) {
-                    String hyperlink = getHyperlinkFromLine(markdownText, index);
-                    if (hyperlink != null) {
+                    int labelEnd = getLinkLabelEnd(markdownText, index + 1);
+                    int targetEnd = (labelEnd != -1) ? getLinkTargetEnd(markdownText, labelEnd + FORMATTING_CODE_HYPERLINK_INNER_PREFIX.length()) : -1;
+                    if (targetEnd != -1) {
+                        String hyperlink = markdownText.substring(labelEnd + FORMATTING_CODE_HYPERLINK_INNER_PREFIX.length(), targetEnd);
                         if (isStartOfLine || !builder.text.isEmpty()) {
                             // Check if current text ends with space to set endOfWord properly
                             boolean endsWithSpace = !builder.text.isEmpty() && (builder.text.charAt(builder.text.length() - 1) == SPACE_CHAR);
                             lastBuiltFragment = addFragment(fragments, builder.build(false, endsWithSpace));
                         }
-                        builder.linkTargetRaw = hyperlink;
+                        linkLabelEnd = labelEnd;
+                        linkTargetEnd = targetEnd;
                         String clickEventId = getTextClickEventId(hyperlink);
                         if (clickEventId != null) {
                             builder.clickEvent = new MarkdownTextFragment.TextClickEvent(clickEventId);
@@ -451,23 +457,24 @@ public class MarkdownParser {
                         continue;
                     }
                 }
-                if ((c == CLOSE_SQUARE_BRACKETS_CHAR) && ((builder.hyperlink != null) || (builder.clickEvent != null) || (builder.hoverEvent != null))) {
-                    if (markdownText.startsWith(FORMATTING_CODE_HYPERLINK_INNER_PREFIX, index)) {
-                        // Check if there's whitespace after the closing parenthesis to determine endOfWord
-                        int skipLength = 2 + ((builder.linkTargetRaw != null) ? builder.linkTargetRaw.length() : 0);
-                        boolean hasSpaceAfter = false;
-                        if (index + skipLength < textLength) {
-                            char afterChar = markdownText.charAt(index + skipLength);
-                            hasSpaceAfter = (afterChar == SPACE_CHAR) || (afterChar == NEWLINE_CHAR);
-                        }
-                        lastBuiltFragment = addFragment(fragments, builder.build(false, hasSpaceAfter));
-                        charsToSkip = skipLength;
-                        builder.hyperlink = null;
-                        builder.clickEvent = null;
-                        builder.hoverEvent = null;
-                        builder.linkTargetRaw = null;
-                        continue;
+                // The link ends at the bracket its label was found to end at when it opened, and at no other one.
+                // The characters behind that bracket are exactly the target that was read back then, so skipping them never cuts into other text.
+                if (index == linkLabelEnd) {
+                    // Check if there's whitespace after the closing parenthesis to determine endOfWord
+                    int skipLength = linkTargetEnd - index;
+                    boolean hasSpaceAfter = false;
+                    if (index + skipLength < textLength) {
+                        char afterChar = markdownText.charAt(index + skipLength);
+                        hasSpaceAfter = (afterChar == SPACE_CHAR) || (afterChar == NEWLINE_CHAR);
                     }
+                    lastBuiltFragment = addFragment(fragments, builder.build(false, hasSpaceAfter));
+                    charsToSkip = skipLength;
+                    builder.hyperlink = null;
+                    builder.clickEvent = null;
+                    builder.hoverEvent = null;
+                    linkLabelEnd = -1;
+                    linkTargetEnd = -1;
+                    continue;
                 }
 
                 //Handle Quote
@@ -825,31 +832,51 @@ public class MarkdownParser {
     }
 
     /**
-     * Returns the target of the link ("label](target)") whose label starts at the given index, or NULL if there is no valid link.<br>
-     * A valid link stays in its line, has no square brackets in its label and no brackets but the closing one in its target.
-     *
-     * <p>The label search and the target search both stop at the first bracket or line break they reach. A label search
-     * therefore ends before the label of the next link starts, and a target search before the next target starts. This keeps
-     * the time for all searches of a text together linear to its length, no matter how many brackets it holds.</p>
+     * Returns the target of the link ("label](target)") whose label starts at the given index, or NULL if there is no valid link.
      */
     @Nullable
     protected static String getLinkTarget(@NotNull String text, int labelStart) {
+        int labelEnd = getLinkLabelEnd(text, labelStart);
+        if (labelEnd == -1) return null;
+        int targetStart = labelEnd + FORMATTING_CODE_HYPERLINK_INNER_PREFIX.length();
+        int targetEnd = getLinkTargetEnd(text, targetStart);
+        return (targetEnd != -1) ? text.substring(targetStart, targetEnd) : null;
+    }
+
+    /**
+     * Returns the index of the square bracket that ends the link label starting at the given index, or -1 if there is no valid label.<br>
+     * A valid label stays in its line and ends at the first square bracket that is not escaped. That bracket has to be a closing
+     * one with the target of the link right behind it ("](").
+     *
+     * <p>Escaped characters get skipped the same way the parser reads them, so the parser always reaches the bracket this returns.</p>
+     *
+     * <p>The search stops at the first bracket or line break it reaches, so the label search of one link ends before the label of the
+     * next link starts. Together with {@link #getLinkTargetEnd(String, int)} doing the same for targets, this keeps the time for
+     * all searches of a text linear to its length, no matter how many brackets it holds.</p>
+     */
+    protected static int getLinkLabelEnd(@NotNull String text, int labelStart) {
         int length = text.length();
         for (int i = labelStart; i < length; i++) {
             char c = text.charAt(i);
-            if ((c == NEWLINE_CHAR) || (c == OPEN_SQUARE_BRACKETS_CHAR)) return null;
-            if (c == CLOSE_SQUARE_BRACKETS_CHAR) {
-                if (!text.startsWith(FORMATTING_CODE_HYPERLINK_INNER_PREFIX, i)) return null;
-                int targetStart = i + FORMATTING_CODE_HYPERLINK_INNER_PREFIX.length();
-                for (int i2 = targetStart; i2 < length; i2++) {
-                    char c2 = text.charAt(i2);
-                    if (c2 == CLOSE_ROUND_BRACKETS_CHAR) return text.substring(targetStart, i2);
-                    if ((c2 == NEWLINE_CHAR) || (c2 == OPEN_ROUND_BRACKETS_CHAR) || (c2 == CLOSE_SQUARE_BRACKETS_CHAR)) return null;
-                }
-                return null;
-            }
+            if ((c == NEWLINE_CHAR) || (c == OPEN_SQUARE_BRACKETS_CHAR)) return -1;
+            if (c == CLOSE_SQUARE_BRACKETS_CHAR) return text.startsWith(FORMATTING_CODE_HYPERLINK_INNER_PREFIX, i) ? i : -1;
+            if ((c == BACKSLASH_CHAR) && (i + 1 < length) && isEscapableMarkdownCharacter(text.charAt(i + 1))) i++;
         }
-        return null;
+        return -1;
+    }
+
+    /**
+     * Returns the index of the round bracket that ends the link target starting at the given index, or -1 if there is no valid target.<br>
+     * A valid target stays in its line and holds no brackets.
+     */
+    protected static int getLinkTargetEnd(@NotNull String text, int targetStart) {
+        int length = text.length();
+        for (int i = targetStart; i < length; i++) {
+            char c = text.charAt(i);
+            if (c == CLOSE_ROUND_BRACKETS_CHAR) return i;
+            if ((c == NEWLINE_CHAR) || (c == OPEN_ROUND_BRACKETS_CHAR) || (c == CLOSE_SQUARE_BRACKETS_CHAR)) return -1;
+        }
+        return -1;
     }
 
     protected static boolean isTableSeparatorLine(@NotNull String line) {
@@ -1196,7 +1223,6 @@ public class MarkdownParser {
         protected Hyperlink hyperlink = null;
         protected MarkdownTextFragment.TextClickEvent clickEvent = null;
         protected MarkdownTextFragment.TextHoverEvent hoverEvent = null;
-        protected String linkTargetRaw = null;
         @NotNull
         protected HeadlineType headlineType = HeadlineType.NONE;
         protected QuoteContext quoteContext = null;
