@@ -118,6 +118,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     protected boolean refreshing = false;
     protected final List<MarkdownTextLine> lines = new ArrayList<>();
     protected final List<MarkdownTextFragment> fragments = new ArrayList<>();
+    final MarkdownTextWidthCache textWidthCache = new MarkdownTextWidthCache(this);
     protected final List<ConsumingSupplier<MarkdownTextLine, Boolean>> lineRenderValidators = new ArrayList<>();
 
     public MarkdownRenderer() {
@@ -249,7 +250,12 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     protected void rebuildFragments() {
         this.fragments.clear();
         if (this.renderText != null) {
-            this.fragments.addAll(MarkdownParser.parse(this, this.renderText, this.parseMarkdown));
+            this.textWidthCache.beginParse();
+            try {
+                this.fragments.addAll(MarkdownParser.parse(this, this.renderText, this.parseMarkdown));
+            } finally {
+                this.textWidthCache.endParse();
+            }
         }
     }
 
