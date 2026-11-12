@@ -29,6 +29,10 @@ import java.util.function.Predicate;
 @SuppressWarnings("unused")
 public class MarkdownRenderer implements Renderable, FocuslessContainerEventHandler, NarratableEntry, NavigatableWidget {
 
+    /**
+     * The text of the renderer never gets longer than this, see {@link #setText(String)}. The placeholder parser has a lower limit of its own,
+     * so the renderer always has to ask it for its placeholders with {@link PlaceholderParser#replacePlaceholdersWithoutLengthLimit(String, boolean)}.
+     */
     private static final int MAX_TEXT_LENGTH = 45000;
     private static final String EMPTY_STRING = "";
 
@@ -228,7 +232,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
      */
     protected void updateRenderText() {
         // A text without placeholders has nothing that changes on its own, so asking the placeholder parser every frame would be a waste
-        String replaced = this.textPlaceholders.isEmpty() ? EMPTY_STRING : PlaceholderParser.replacePlaceholders(this.textPlaceholders);
+        String replaced = this.textPlaceholders.isEmpty() ? EMPTY_STRING : PlaceholderParser.replacePlaceholdersWithoutLengthLimit(this.textPlaceholders, false);
         if ((this.renderText == null) || !replaced.equals(this.lastTextPlaceholders)) {
             String newRenderText = this.buildRenderText();
             if (!newRenderText.equals(this.renderText)) {
@@ -258,7 +262,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
 
     @NotNull
     protected String buildRenderText() {
-        String t = PlaceholderParser.replacePlaceholdersPreservingFormattingCodes(this.text);
+        String t = PlaceholderParser.replacePlaceholdersWithoutLengthLimit(this.text, true);
         return MarkdownRenderTextNormalizer.normalize(t, this.removeHtmlBreaks);
     }
 
