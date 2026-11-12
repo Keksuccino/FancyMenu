@@ -12,6 +12,12 @@ public class TextColorFormatterRegistry {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final Map<String, TextColorFormatter> FORMATTERS = new HashMap<>();
+    /**
+     * All registered formatters, in the order {@link #FORMATTERS} lists them. Gets replaced as a whole whenever a formatter gets registered.<br>
+     * {@link #getByCode(char)} gets asked for the formatting codes of every text that gets rendered, so it reads this array instead of
+     * copying the formatters for every call.
+     */
+    private static volatile TextColorFormatter[] formatterSnapshot = new TextColorFormatter[0];
 
     public static void register(@NotNull String identifier, @NotNull TextColorFormatter formatter) {
         Objects.requireNonNull(identifier);
@@ -20,6 +26,7 @@ public class TextColorFormatterRegistry {
             LOGGER.warn("[FANCYMENU] TextColorFormatter with identifier '" + identifier + "' already exists! Overriding formatter!");
         }
         FORMATTERS.put(identifier, formatter);
+        formatterSnapshot = FORMATTERS.values().toArray(new TextColorFormatter[0]);
     }
 
     @Nullable
@@ -29,8 +36,8 @@ public class TextColorFormatterRegistry {
 
     @Nullable
     public static TextColorFormatter getByCode(char code) {
-        for (TextColorFormatter f : getFormatters()) {
-            if (("" + f.getCode()).equals("" + code)) return f;
+        for (TextColorFormatter f : formatterSnapshot) {
+            if (f.getCode() == code) return f;
         }
         return null;
     }
