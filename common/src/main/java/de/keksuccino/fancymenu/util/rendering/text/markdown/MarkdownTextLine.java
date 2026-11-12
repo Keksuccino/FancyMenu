@@ -19,6 +19,11 @@ public class MarkdownTextLine implements Renderable {
     public boolean bulletListItemStartLine = false;
     public final Map<MarkdownTextFragment.CodeBlockContext, SingleLineCodeBlockPart> singleLineCodeBlockStartEndPairs = new HashMap<>();
     public final List<MarkdownTextFragment> fragments = new ArrayList<>();
+    /** The X offset the layout gave the line. {@link #offsetX} can differ from it, because centered lines get snapped to the pixel grid when they render. */
+    protected float layoutOffsetX;
+    protected boolean containsImages = false;
+    protected float lineWidth;
+    protected float lineHeight;
 
     public MarkdownTextLine(@NotNull MarkdownRenderer parent) {
         this.parent = parent;
@@ -45,11 +50,12 @@ public class MarkdownTextLine implements Renderable {
 
     public void prepareLine() {
         this.prepareFragments();
-        this.onRender(null, 0, 0, 0, false);
+        this.updateSize();
     }
 
     public void prepareFragments() {
         this.containsMultilineCodeBlockFragments = false;
+        this.containsImages = false;
         this.singleLineCodeBlockStartEndPairs.clear();
         this.alignment = MarkdownRenderer.MarkdownLineAlignment.LEFT;
         this.bulletListItemStartLine = false;
@@ -57,6 +63,9 @@ public class MarkdownTextLine implements Renderable {
             f.parentLine = this;
             f.startOfRenderLine = false;
             f.autoLineBreakAfter = false;
+            if (f.imageSupplier != null) {
+                this.containsImages = true;
+            }
             if (f.codeBlockContext != null) {
                 if (!f.codeBlockContext.singleLine) {
                     //Check if line is Multi-Line Code Block
@@ -89,32 +98,42 @@ public class MarkdownTextLine implements Renderable {
         }
     }
 
-    public float getLineWidth() {
-        float f = 0;
+    /**
+     * Measures the line again.<br>
+     * The size of a line gets used for the real size of the text, the position of every following line and the lookup of visible lines,
+     * and measuring it walks all of its fragments, so the line keeps its size until this gets called.
+     * It has to get called after anything changed that the render size of one of its fragments depends on.
+     */
+    public void updateSize() {
+        float width = 0;
+        float height = 0;
         MarkdownTextFragment last = null;
         for (MarkdownTextFragment frag : this.fragments) {
-            f += frag.getRenderWidth();
+            width += frag.getRenderWidth();
+            float fragmentHeight = frag.getRenderHeight();
+            if (fragmentHeight > height) {
+                height = fragmentHeight;
+            }
             last = frag;
         }
         if (last != null) {
             if (last.text.endsWith(" ")) {
-                f -= (this.parent.getUnscaledTextWidth(" ") * last.getScale());
+                width -= (this.parent.getUnscaledSpaceWidth() * last.getScale());
             }
         }
-        if (f < 0) {
-            f = 0;
+        if (width < 0) {
+            width = 0;
         }
-        return f;
+        this.lineWidth = width;
+        this.lineHeight = height;
+    }
+
+    public float getLineWidth() {
+        return this.lineWidth;
     }
 
     public float getLineHeight() {
-        float f = 0;
-        for (MarkdownTextFragment frag : this.fragments) {
-            if (frag.getRenderHeight() > f) {
-                f = frag.getRenderHeight();
-            }
-        }
-        return f;
+        return this.lineHeight;
     }
 
     public boolean isAlignmentAllowed(@NotNull MarkdownRenderer.MarkdownLineAlignment alignment) {
@@ -123,8 +142,10 @@ public class MarkdownTextLine implements Renderable {
     }
 
     public static class SingleLineCodeBlockPart {
+
         MarkdownTextFragment start;
         MarkdownTextFragment end;
+
     }
 
 }

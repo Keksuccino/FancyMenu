@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
-import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderScaleUtil;
 import de.keksuccino.fancymenu.util.rendering.RenderTranslationUtil;
@@ -105,6 +104,8 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     @Nullable
     protected Predicate<String> hyperlinkFilter = null;
     protected final Set<String> hoveredTextEventIds = new HashSet<>();
+    protected float visibleTop = Float.NEGATIVE_INFINITY;
+    protected float visibleBottom = Float.POSITIVE_INFINITY;
     /**
      * The fragments are outdated, because the render text, the way it gets parsed or the way its words get measured changed.
      * Parsing makes new fragments, so a parse always is followed by a layout.
@@ -124,7 +125,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     protected final List<MarkdownTextLine> lines = new ArrayList<>();
     protected final List<MarkdownTextFragment> fragments = new ArrayList<>();
     final MarkdownTextWidthCache textWidthCache = new MarkdownTextWidthCache(this);
-    protected final List<ConsumingSupplier<MarkdownTextLine, Boolean>> lineRenderValidators = new ArrayList<>();
+    final MarkdownLayout layout = new MarkdownLayout(this);
 
     public MarkdownRenderer() {
         this(Minecraft.getInstance().font);
@@ -137,60 +138,46 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.tick();
-        this.onRender(graphics, mouseX, mouseY, partial, true);
+        this.renderVisibleLines(graphics, mouseX, mouseY, partial);
         this.updateTextHoverEvents();
     }
 
-    protected void onRender(GuiGraphics graphics, int mouseX, int mouseY, float partial, boolean shouldRender) {
-
-        float lineOffsetY = this.border;
-        for (MarkdownTextLine line : this.lines) {
-            float lineAlignmentOffsetX = 0;
-            boolean alignmentAllowed = line.isAlignmentAllowed(line.alignment);
-            if (alignmentAllowed) {
-                float realInnerWidth = this.getRealWidth() - this.border - this.border;
-                if (line.alignment == MarkdownLineAlignment.CENTERED) {
-                    lineAlignmentOffsetX = Math.max(0, realInnerWidth - line.getLineWidth());
-                    if (lineAlignmentOffsetX > 0) lineAlignmentOffsetX = lineAlignmentOffsetX / 2f;
-                }
-                if (line.alignment == MarkdownLineAlignment.RIGHT) {
-                    lineAlignmentOffsetX = Math.max(0, realInnerWidth - line.getLineWidth());
-                }
-            }
-            float lineOffsetX = this.border + lineAlignmentOffsetX;
-            if (alignmentAllowed && (line.alignment == MarkdownLineAlignment.CENTERED) && !this.uiFontRenderingEnabled) {
-                // Odd-width centering can land on half GUI pixels. Vanilla bitmap text needs a physical-pixel-aligned origin, while UI fonts support fractional origins.
-                float renderScale = this.parentRenderScale != null ? this.parentRenderScale : RenderScaleUtil.getCurrentRenderScale();
-                float renderTranslationX = RenderTranslationUtil.getCurrentRenderTranslationX();
-                lineOffsetX = RenderScaleUtil.snapGuiCoordinateToPixel(this.x + lineOffsetX, renderScale, renderTranslationX) - this.x;
-            }
-            line.offsetX = lineOffsetX;
-            line.offsetY = lineOffsetY;
-            if (shouldRender && this.isLineRenderingAllowedByValidators(line)) {
-                line.render(graphics, mouseX, mouseY, partial);
-            }
-            lineOffsetY += line.getLineHeight() + this.lineSpacing;
+    protected void renderVisibleLines(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        this.layout.updateVisibleLines();
+        for (int i = this.layout.firstVisibleLine; (i < this.layout.visibleLinesEnd) && (i < this.lines.size()); i++) {
+            MarkdownTextLine line = this.lines.get(i);
+            if (!this.layout.isLineVisible(line)) continue;
+            line.offsetX = this.getRenderOffsetX(line);
+            line.render(graphics, mouseX, mouseY, partial);
         }
+    }
 
+    protected float getRenderOffsetX(@NotNull MarkdownTextLine line) {
+        if ((line.alignment == MarkdownLineAlignment.CENTERED) && !this.uiFontRenderingEnabled && line.isAlignmentAllowed(line.alignment)) {
+            // Odd-width centering can land on half GUI pixels. Vanilla bitmap text needs a physical-pixel-aligned origin, while UI fonts support fractional origins.
+            float renderScale = this.parentRenderScale != null ? this.parentRenderScale : RenderScaleUtil.getCurrentRenderScale();
+            float renderTranslationX = RenderTranslationUtil.getCurrentRenderTranslationX();
+            return RenderScaleUtil.snapGuiCoordinateToPixel(this.x + line.layoutOffsetX, renderScale, renderTranslationX) - this.x;
+        }
+        return line.layoutOffsetX;
     }
 
     public void tick() {
         this.refresh(true);
-        this.updateSize();
     }
 
+    /**
+     * Measures the real size of the text again and positions its lines again.
+     */
     public void updateSize() {
-        this.realWidth = 0;
-        this.realHeight = 0;
-        for (MarkdownTextLine l : this.lines) {
-            float lw = l.getLineWidth();
-            if (lw > this.realWidth) {
-                this.realWidth = lw;
-            }
-            this.realHeight += l.getLineHeight() + this.lineSpacing;
+        this.refresh(false);
+        if (this.refreshing) return;
+        this.refreshing = true;
+        try {
+            this.layout.updateMetrics();
+        } finally {
+            this.refreshing = false;
         }
-        this.realWidth += this.border + this.border;
-        this.realHeight += this.border + this.border;
     }
 
     /**
@@ -207,7 +194,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
      * parse and one layout. That work happens here, the next time the result is needed: at the start of a frame and when the real size gets asked for.<br>
      * While {@link #skipRefresh} is set, the renderer keeps its outdated fragments and lines.
      *
-     * @param startOfFrame Placeholder values get checked for changes once per frame, not for every size query.
+     * @param startOfFrame Placeholder values and images get checked for changes once per frame, not for every size query.
      */
     protected void refresh(boolean startOfFrame) {
         // Replacing placeholders and measuring lines can ask for the size of this renderer, which must not start another refresh
@@ -227,8 +214,8 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
             if (this.layoutNeeded) {
                 this.layoutNeeded = false;
                 this.rebuildLines();
-                this.onRender(null, 0, 0, 0, false);
-                this.updateSize();
+            } else if (startOfFrame && this.layout.haveImagesChanged()) {
+                this.layout.updateMetrics();
             }
         } finally {
             this.refreshing = false;
@@ -265,134 +252,13 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     }
 
     protected void rebuildLines() {
-
-        this.lines.clear();
-
-        boolean queueNewLine = true;
-        float totalWidth = 20;
-        float totalHeight = this.border;
-        float currentLineWidth = this.border;
-        float currentLineHeight = 0;
-        MarkdownTextFragment lastFragment = null;
-        MarkdownTextLine line = new MarkdownTextLine(this);
-
-        for (MarkdownTextFragment f : this.fragments) {
-
-            boolean isStartOfLine = queueNewLine;
-            queueNewLine = false;
-
-            f.autoLineBreakAfter = false;
-
-            // Tables should always be on their own line
-            if (f.isTable()) {
-                f.tableContext.updateMetrics(this);
-                // If there's content on the current line, finish it
-                if (!isStartOfLine && !line.fragments.isEmpty()) {
-                    line.prepareLine();
-                    this.lines.add(line);
-                    line = new MarkdownTextLine(this);
-                    totalHeight += currentLineHeight + this.lineSpacing;
-                    currentLineHeight = 0;
-                    currentLineWidth = this.border;
-                }
-                
-                // Add table as its own line
-                line.fragments.add(f);
-                f.startOfRenderLine = true;
-                line.offsetX = this.border;
-                line.offsetY = totalHeight;
-                line.prepareLine();
-                this.lines.add(line);
-                
-                // Update dimensions
-                float tableWidth = f.getRenderWidth() + this.border + this.border;
-                if (totalWidth < tableWidth) {
-                    totalWidth = tableWidth;
-                }
-                float tableHeight = f.getRenderHeight();
-                totalHeight += tableHeight + this.lineSpacing;
-                
-                // Reset for next line
-                line = new MarkdownTextLine(this);
-                currentLineHeight = 0;
-                currentLineWidth = this.border;
-                queueNewLine = true;
-                continue;
-            }
-
-            //Handle Auto Line Break
-            if (!isStartOfLine && this.isAutoLineBreakingEnabled()) {
-                f.startOfRenderLine = false;
-                if (lastFragment.endOfWord && ((lastFragment.codeBlockContext == null) || lastFragment.codeBlockContext.singleLine) && ((currentLineWidth + f.getRenderWidth() + this.border) > this.optimalWidth)) {
-                    if (totalWidth < currentLineWidth) {
-                        totalWidth = currentLineWidth;
-                    }
-                    currentLineWidth = this.border;
-                    line.offsetX = this.border;
-                    line.offsetY = totalHeight;
-                    totalHeight += currentLineHeight + this.lineSpacing;
-                    currentLineHeight = 0;
-                    isStartOfLine = true;
-                    line.prepareLine();
-                    this.lines.add(line);
-                    line = new MarkdownTextLine(this);
-                }
-            }
-
-            f.startOfRenderLine = isStartOfLine;
-
-            line.fragments.add(f);
-
-            float fw = f.getRenderWidth();
-            float fh = f.getRenderHeight();
-            currentLineWidth += fw;
-            if (currentLineHeight < fh) {
-                currentLineHeight = fh;
-            }
-
-            //Handle Natural Line Break
-            if (f.naturalLineBreakAfter) {
-                if (totalWidth < currentLineWidth) {
-                    totalWidth = currentLineWidth;
-                }
-                line.offsetX = this.border;
-                line.offsetY = totalHeight;
-                currentLineWidth = this.border;
-                totalHeight += currentLineHeight + this.lineSpacing;
-                currentLineHeight = 0;
-                queueNewLine = true;
-                line.prepareLine();
-                this.lines.add(line);
-                line = new MarkdownTextLine(this);
-            }
-
-            lastFragment = f;
-
-        }
-
-        if (this.lines.isEmpty() || !line.fragments.isEmpty()) {
-            line.prepareLine();
-            this.lines.add(line);
-        }
-
+        this.layout.rebuildLines();
     }
 
     @NotNull
     protected String buildRenderText() {
         String t = PlaceholderParser.replacePlaceholdersPreservingFormattingCodes(this.text);
         return MarkdownRenderTextNormalizer.normalize(t, this.removeHtmlBreaks);
-    }
-
-    public MarkdownRenderer addLineRenderValidator(@NotNull ConsumingSupplier<MarkdownTextLine, Boolean> validator) {
-        this.lineRenderValidators.add(validator);
-        return this;
-    }
-
-    protected boolean isLineRenderingAllowedByValidators(@NotNull MarkdownTextLine line) {
-        for (ConsumingSupplier<MarkdownTextLine, Boolean> validator : this.lineRenderValidators) {
-            if (!validator.get(line)) return false;
-        }
-        return true;
     }
 
     public boolean isParseMarkdown() {
@@ -465,6 +331,17 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     public float getRealHeight() {
         this.refresh(false);
         return this.realHeight;
+    }
+
+    /**
+     * Tells the renderer which vertical range of the screen is visible, in the same coordinates as its Y position.<br>
+     * Lines that are completely above or below that range don't get rendered, and the renderer finds the lines inside the range without walking the whole text.
+     * Whatever clips the text, like a scroll area, should set its visible range here before every render. Every line is visible by default.
+     */
+    public MarkdownRenderer setVisibleVerticalRange(float top, float bottom) {
+        this.visibleTop = top;
+        this.visibleBottom = bottom;
+        return this;
     }
 
     @Nullable
@@ -792,7 +669,10 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     }
 
     public MarkdownRenderer setTableLineThickness(float tableLineThickness) {
-        this.tableLineThickness = tableLineThickness;
+        if (this.tableLineThickness != tableLineThickness) {
+            this.tableLineThickness = tableLineThickness;
+            this.layoutNeeded = true;
+        }
         return this;
     }
 
@@ -831,7 +711,10 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     }
 
     public MarkdownRenderer setTableMargin(float tableMargin) {
-        this.tableMargin = tableMargin;
+        if (this.tableMargin != tableMargin) {
+            this.tableMargin = tableMargin;
+            this.layoutNeeded = true;
+        }
         return this;
     }
 
@@ -854,6 +737,10 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
             return UIBase.getUITextHeight(UIBase.getUITextSizeNormal());
         }
         return this.font.lineHeight;
+    }
+
+    protected float getUnscaledSpaceWidth() {
+        return this.layout.getSpaceWidth();
     }
 
     protected void renderText(@NotNull GuiGraphics graphics, @NotNull Component text, float x, float y, int color, boolean shadow) {
