@@ -197,6 +197,11 @@ public class PlaceholderParser {
 
     @NotNull
     private static ParsingContext createParsingContext(boolean preserveFormattingCodes) {
+        return createParsingContext(preserveFormattingCodes, true);
+    }
+
+    @NotNull
+    private static ParsingContext createParsingContext(boolean preserveFormattingCodes, boolean limitTextLength) {
         ParsingProcessorSnapshot processors = parsingProcessorSnapshot;
         CachingControllerSnapshot caching = cachingControllerSnapshot;
         boolean cachePlaceholders = false;
@@ -205,7 +210,7 @@ public class PlaceholderParser {
             cachingDurationMillis = caching.controller().cachingDurationMillis().get();
             cachePlaceholders = cachingDurationMillis > 0L;
         }
-        return new ParsingContext(processors, caching.revision(), cachePlaceholders, cachingDurationMillis, preserveFormattingCodes);
+        return new ParsingContext(processors, caching.revision(), cachePlaceholders, cachingDurationMillis, preserveFormattingCodes, limitTextLength);
     }
 
     /**
@@ -244,6 +249,20 @@ public class PlaceholderParser {
     }
 
     /**
+     * Replaces all placeholders in a text of any length.
+     *
+     * <p>{@link #replacePlaceholders(String)} and {@link #replacePlaceholdersPreservingFormattingCodes(String)} answer every text that reaches
+     * their length limit with an error text, because replacing placeholders takes longer the longer a text is.
+     * This method is for callers that limit the length of their text themselves and tell the user about their limit in their own way.</p>
+     *
+     * @param preserveFormattingCodes If formatting-code prefixes should stay as they are, like {@link #replacePlaceholdersPreservingFormattingCodes(String)} does it.
+     */
+    @NotNull
+    public static String replacePlaceholdersWithoutLengthLimit(@Nullable String in, boolean preserveFormattingCodes) {
+        return replacePlaceholders(in, null, createParsingContext(preserveFormattingCodes, false));
+    }
+
+    /**
      * Replaces all placeholders in the given {@link String}.<br>
      * Since placeholders can contain variables that are not always the same, this task can be performance-intensive,
      * so you should keep in mind to not parse/update long texts too often in a short time frame.
@@ -264,7 +283,7 @@ public class PlaceholderParser {
 
         if (in == null) return EMPTY_STRING;
 
-        if (in.length() >= MAX_TEXT_LENGTH) return TOO_LONG_TO_PARSE_ERROR_MESSAGE;
+        if (context.limitTextLength() && (in.length() >= MAX_TEXT_LENGTH)) return TOO_LONG_TO_PARSE_ERROR_MESSAGE;
 
         // Cache hits deliberately skip BEFORE processors, so insertion must use this exact pre-processor key too.
         String cacheKey = in;
@@ -705,7 +724,10 @@ public class PlaceholderParser {
     private record CachingControllerSnapshot(long revision, @NotNull PlaceholderCachingController controller) {
     }
 
-    private record ParsingContext(@NotNull ParsingProcessorSnapshot processors, long cachingControllerRevision, boolean cachePlaceholders, long cachingDurationMillis, boolean preserveFormattingCodes) {
+    /**
+     * @param limitTextLength If texts of MAX_TEXT_LENGTH characters or more get answered with an error text. This includes the values of nested placeholders.
+     */
+    private record ParsingContext(@NotNull ParsingProcessorSnapshot processors, long cachingControllerRevision, boolean cachePlaceholders, long cachingDurationMillis, boolean preserveFormattingCodes, boolean limitTextLength) {
     }
 
     public enum ParsingProcessorTiming {
