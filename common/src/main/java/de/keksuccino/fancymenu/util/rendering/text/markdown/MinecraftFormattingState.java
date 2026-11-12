@@ -94,6 +94,16 @@ final class MinecraftFormattingState {
         return combined;
     }
 
+    /**
+     * Returns the color the custom color formatter of this state has right now, or 0 if the state doesn't use one.<br>
+     * A custom formatter can change its color at any time, for example when it follows the UI theme, while everything else
+     * {@link #applyTo(Style)} uses never changes. Whoever keeps a style built by this state has to build it again when this value changes.
+     */
+    int getCurrentCustomColor() {
+        if ((this.colorSource != ColorSource.CUSTOM) || (this.customColorFormatter == null)) return 0;
+        return this.customColorFormatter.getColor().getColorInt();
+    }
+
     private enum ColorSource {
         NONE,
         VANILLA,
