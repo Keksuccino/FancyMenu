@@ -304,18 +304,39 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                 start = part.start;
                 end = part.end;
             }
-            if (start != this) return;
-            if (end == null) return;
+            if ((start == null) || (end == null)) return;
             if (this.codeBlockContext.singleLine) {
+                if (start != this) return;
                 float xEnd = end.x + end.getRenderWidth();
                 if (end.text.endsWith(" ")) {
                     xEnd -= (this.parent.getUnscaledSpaceWidth() * this.getScale());
                 }
                 renderCodeBlockBackground(graphics, this.x, this.y - 2, xEnd, this.y + this.getTextRenderHeight(), this.parent.codeBlockSingleLineColor.getColorIntWithAlpha(this.parent.textOpacity));
-            } else {
-                renderCodeBlockBackground(graphics, this.parent.x + this.parent.border, this.y, this.parent.x + this.parent.getRealWidth() - this.parent.border - 1, end.y + end.getRenderHeight() - 1, this.parent.codeBlockMultiLineColor.getColorIntWithAlpha(this.parent.textOpacity));
+            } else if (this.drawsCodeBlockBackground()) {
+                renderCodeBlockBackground(graphics, this.parent.x + this.parent.border, start.getRenderLineY(), this.parent.x + this.parent.getRealWidth() - this.parent.border - 1, end.getRenderLineY() + end.getRenderHeight() - 1, this.parent.codeBlockMultiLineColor.getColorIntWithAlpha(this.parent.textOpacity));
             }
         }
+    }
+
+    /**
+     * The background of a multi-line code block gets drawn once per frame, before the text of the block: by the first fragment of the block,
+     * or, when that one is outside the visible range, by the first fragment of the first line of the block that is inside of it.
+     */
+    protected boolean drawsCodeBlockBackground() {
+        if (this.codeBlockContext.getBlockStart() == this) return true;
+        if ((this.parentLine == null) || (this.parentLine.fragments.get(0) != this)) return false;
+        MarkdownTextLine previousLine = this.parentLine.getPreviousLine();
+        if ((previousLine == null) || previousLine.isVisible()) return false;
+        return previousLine.fragments.get(previousLine.fragments.size()-1).codeBlockContext == this.codeBlockContext;
+    }
+
+    /**
+     * Returns the Y position of the render line of the fragment, for where the renderer is right now.<br>
+     * A fragment only gets its own position when its line renders, so this is the position to use for fragments that can be outside the visible range.
+     */
+    protected float getRenderLineY() {
+        if (this.parentLine == null) return this.y;
+        return this.parent.y + this.parentLine.offsetY;
     }
 
     protected void renderCodeBlockBackground(GuiGraphicsExtractor graphics, float minX, float minY, float maxX, float maxY, int color) {
