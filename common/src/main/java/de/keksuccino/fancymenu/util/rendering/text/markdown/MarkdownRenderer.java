@@ -103,6 +103,17 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     @Nullable
     protected Predicate<String> hyperlinkFilter = null;
     protected final Set<String> hoveredTextEventIds = new HashSet<>();
+    /**
+     * The fragments are outdated, because the render text, the way it gets parsed or the way its words get measured changed.
+     * Parsing makes new fragments, so a parse always is followed by a layout.
+     */
+    protected boolean parseNeeded = false;
+    /**
+     * The lines are outdated, because something changed that decides where lines wrap, or how big and where lines and fragments are,
+     * like the optimal width, a scale, a border, a spacing or an indent.
+     */
+    protected boolean layoutNeeded = false;
+    protected boolean refreshing = false;
     protected final List<MarkdownTextLine> lines = new ArrayList<>();
     protected final List<MarkdownTextFragment> fragments = new ArrayList<>();
     protected final List<ConsumingSupplier<MarkdownTextLine, Boolean>> lineRenderValidators = new ArrayList<>();
@@ -156,17 +167,8 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     }
 
     public void tick() {
-
-        String replaced = PlaceholderParser.replacePlaceholders(this.textPlaceholders);
-        boolean placeholdersChanged = (this.lastTextPlaceholders == null) || (replaced.hashCode() != this.lastTextPlaceholders.hashCode());
-        if ((this.renderText == null) || placeholdersChanged) {
-            this.renderText = this.buildRenderText();
-            this.refreshRenderer();
-        }
-        this.lastTextPlaceholders = replaced;
-
+        this.refresh(true);
         this.updateSize();
-
     }
 
     public void updateSize() {
@@ -183,12 +185,59 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
         this.realHeight += this.border + this.border;
     }
 
+    /**
+     * Makes the renderer parse its text again the next time its fragments, lines or size are needed.
+     */
     public void refreshRenderer() {
         if (this.skipRefresh) return;
-        if (this.renderText == null) this.renderText = this.buildRenderText();
-        this.rebuildFragments();
-        this.rebuildLines();
-        this.onRender(null, 0, 0, 0, false);
+        this.parseNeeded = true;
+    }
+
+    /**
+     * Brings the fragments, the lines and the real size of the text up to date.<br>
+     * Setters only mark what they make outdated ({@link #parseNeeded}, {@link #layoutNeeded}), so any number of changes costs at most one
+     * parse and one layout. That work happens here, the next time the result is needed: at the start of a frame and when the real size gets asked for.<br>
+     * While {@link #skipRefresh} is set, the renderer keeps its outdated fragments and lines.
+     *
+     * @param startOfFrame Placeholder values get checked for changes once per frame, not for every size query.
+     */
+    protected void refresh(boolean startOfFrame) {
+        // Replacing placeholders and measuring lines can ask for the size of this renderer, which must not start another refresh
+        if (this.refreshing) return;
+        if (!startOfFrame && !this.parseNeeded && !this.layoutNeeded && (this.lastTextPlaceholders != null)) return;
+        this.refreshing = true;
+        try {
+            if (startOfFrame || (this.lastTextPlaceholders == null)) {
+                this.updateRenderText();
+            }
+            if (this.skipRefresh) return;
+            if (this.parseNeeded) {
+                this.parseNeeded = false;
+                this.layoutNeeded = true;
+                this.rebuildFragments();
+            }
+            if (this.layoutNeeded) {
+                this.layoutNeeded = false;
+                this.rebuildLines();
+                this.onRender(null, 0, 0, 0, false);
+                this.updateSize();
+            }
+        } finally {
+            this.refreshing = false;
+        }
+    }
+
+    /**
+     * Builds the render text again when the text got changed or one of its placeholders has a new value.
+     */
+    protected void updateRenderText() {
+        String replaced = PlaceholderParser.replacePlaceholders(this.textPlaceholders);
+        boolean placeholdersChanged = (this.lastTextPlaceholders == null) || (replaced.hashCode() != this.lastTextPlaceholders.hashCode());
+        if ((this.renderText == null) || placeholdersChanged) {
+            this.renderText = this.buildRenderText();
+            this.parseNeeded = true;
+        }
+        this.lastTextPlaceholders = replaced;
     }
 
     protected void rebuildFragments() {
@@ -333,8 +382,10 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     }
 
     public void setParseMarkdown(boolean parseMarkdown) {
-        this.parseMarkdown = parseMarkdown;
-        this.refreshRenderer();
+        if (this.parseMarkdown != parseMarkdown) {
+            this.parseMarkdown = parseMarkdown;
+            this.parseNeeded = true;
+        }
     }
 
     @NotNull
@@ -376,10 +427,9 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     }
 
     public MarkdownRenderer setOptimalWidth(float width) {
-        float oldOptimalWidth = this.optimalWidth;
-        this.optimalWidth = width;
-        if (oldOptimalWidth != this.optimalWidth) {
-            this.refreshRenderer();
+        if (this.optimalWidth != width) {
+            this.optimalWidth = width;
+            this.layoutNeeded = true;
         }
         return this;
     }
@@ -389,11 +439,13 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     }
 
     public float getRealWidth() {
+        this.refresh(false);
         //If real width smaller than optimal, return optimal
         return Math.max(this.realWidth, this.optimalWidth);
     }
 
     public float getRealHeight() {
+        this.refresh(false);
         return this.realHeight;
     }
 
@@ -404,7 +456,6 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
 
     public MarkdownRenderer setParentRenderScale(@Nullable Float parentRenderScale) {
         this.parentRenderScale = parentRenderScale;
-        this.refreshRenderer();
         return this;
     }
 
@@ -413,8 +464,10 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     }
 
     public MarkdownRenderer setAutoLineBreakingEnabled(boolean enabled) {
-        this.autoLineBreaks = enabled;
-        this.rebuildLines();
+        if (this.autoLineBreaks != enabled) {
+            this.autoLineBreaks = enabled;
+            this.layoutNeeded = true;
+        }
         return this;
     }
 
@@ -423,7 +476,11 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     }
 
     public MarkdownRenderer setRemoveHtmlBreaks(boolean removeHtmlBreaks) {
-        this.removeHtmlBreaks = removeHtmlBreaks;
+        if (this.removeHtmlBreaks != removeHtmlBreaks) {
+            this.removeHtmlBreaks = removeHtmlBreaks;
+            // Makes the render text get built again
+            this.lastTextPlaceholders = null;
+        }
         return this;
     }
 
@@ -522,8 +579,10 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     }
 
     public MarkdownRenderer setTextBaseScale(float textBaseScale) {
-        this.textBaseScale = textBaseScale;
-        this.refreshRenderer();
+        if (this.textBaseScale != textBaseScale) {
+            this.textBaseScale = textBaseScale;
+            this.layoutNeeded = true;
+        }
         return this;
     }
 
@@ -569,8 +628,10 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     }
 
     public MarkdownRenderer setBulletListIndent(float bulletListIndent) {
-        this.bulletListIndent = bulletListIndent;
-        this.refreshRenderer();
+        if (this.bulletListIndent != bulletListIndent) {
+            this.bulletListIndent = bulletListIndent;
+            this.layoutNeeded = true;
+        }
         return this;
     }
 
@@ -579,8 +640,10 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     }
 
     public MarkdownRenderer setBulletListSpacing(float bulletListSpacing) {
-        this.bulletListSpacing = bulletListSpacing;
-        this.refreshRenderer();
+        if (this.bulletListSpacing != bulletListSpacing) {
+            this.bulletListSpacing = bulletListSpacing;
+            this.layoutNeeded = true;
+        }
         return this;
     }
 
@@ -598,8 +661,10 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     }
 
     public MarkdownRenderer setQuoteIndent(float quoteIndent) {
-        this.quoteIndent = quoteIndent;
-        this.refreshRenderer();
+        if (this.quoteIndent != quoteIndent) {
+            this.quoteIndent = quoteIndent;
+            this.layoutNeeded = true;
+        }
         return this;
     }
 
@@ -617,8 +682,11 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     }
 
     public MarkdownRenderer setUIFontRenderingEnabled(boolean enabled) {
-        this.uiFontRenderingEnabled = enabled;
-        this.refreshRenderer();
+        if (this.uiFontRenderingEnabled != enabled) {
+            this.uiFontRenderingEnabled = enabled;
+            // Fragments get their text size from the font they got parsed with
+            this.parseNeeded = true;
+        }
         return this;
     }
 
@@ -627,8 +695,10 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     }
 
     public MarkdownRenderer setLineSpacing(float lineSpacing) {
-        this.lineSpacing = lineSpacing;
-        this.refreshRenderer();
+        if (this.lineSpacing != lineSpacing) {
+            this.lineSpacing = lineSpacing;
+            this.layoutNeeded = true;
+        }
         return this;
     }
 
@@ -637,8 +707,11 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     }
 
     public MarkdownRenderer setBorder(float border) {
-        this.border = Math.max(2.0F, border); // Cap min border size at 2, so text doesn't get cut off
-        this.refreshRenderer();
+        border = Math.max(2.0F, border); // Cap min border size at 2, so text doesn't get cut off
+        if (this.border != border) {
+            this.border = border;
+            this.layoutNeeded = true;
+        }
         return this;
     }
 
@@ -696,8 +769,10 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     }
 
     public MarkdownRenderer setTableCellPadding(float tableCellPadding) {
-        this.tableCellPadding = tableCellPadding;
-        this.refreshRenderer();
+        if (this.tableCellPadding != tableCellPadding) {
+            this.tableCellPadding = tableCellPadding;
+            this.layoutNeeded = true;
+        }
         return this;
     }
 
