@@ -155,6 +155,27 @@ class MarkdownParserHyperlinkTest {
         assertEquals("image.png", fragments.get(0).imageSupplier.getSourceWithoutPrefix());
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"Logo (dark)", "a) b", "(c", "plain"})
+    void hyperlinkImageKeepsItsLinkWhenItsLabelHoldsRoundBrackets(String label) {
+        List<MarkdownTextFragment> fragments = parse("[![" + label + "](logo.png)](https://example.invalid)\ntext");
+        MarkdownTextFragment image = fragments.get(0);
+
+        assertEquals(2, fragments.size());
+        assertEquals("logo.png", image.imageSupplier.getSourceWithoutPrefix());
+        assertEquals("https://example.invalid", image.hyperlink.link);
+        assertNull(fragments.get(1).imageSupplier);
+    }
+
+    @Test
+    void imageKeepsItsSourceWhenItsLabelHoldsRoundBrackets() {
+        List<MarkdownTextFragment> fragments = parse("![Screenshot (1)](screenshot.png)");
+
+        assertEquals(1, fragments.size());
+        assertEquals("screenshot.png", fragments.get(0).imageSupplier.getSourceWithoutPrefix());
+        assertNull(fragments.get(0).hyperlink);
+    }
+
     /**
      * Returns the fragment texts of all render lines the text gets at the given width, measured with 6 pixels per character.
      */
