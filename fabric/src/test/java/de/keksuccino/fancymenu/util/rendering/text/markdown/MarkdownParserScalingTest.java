@@ -53,7 +53,7 @@ class MarkdownParserScalingTest {
         SPACES(" "),
         SPACES_BEHIND_A_WORD("a" + " ".repeat(199)),
         BACKSLASHES("\\"),
-        EMPHASIS_MARKERS("*a _b ~c **d "),
+        EMPHASIS_MARKERS("*a _b ~c **d ~~e "),
         FONT_PREFIXES_WITHOUT_SUFFIX("%!!uniform%a "),
         COLOR_PREFIXES_WITHOUT_SUFFIX("%#ff0000%a "),
         OPEN_BRACKETS("[a "),
