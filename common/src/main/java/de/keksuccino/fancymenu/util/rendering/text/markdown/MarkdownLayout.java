@@ -24,6 +24,8 @@ final class MarkdownLayout {
     int firstVisibleLine = 0;
     /** Index after the last line that can be inside the visible range. Set by {@link #updateVisibleLines()}. */
     int visibleLinesEnd = 0;
+    /** The lines got replaced since {@link #updateVisibleLines()} ran last, so it can't tell anymore which lines left the visible range. */
+    private boolean linesReplaced = true;
 
     MarkdownLayout(@NotNull MarkdownRenderer renderer) {
         this.renderer = renderer;
@@ -37,6 +39,7 @@ final class MarkdownLayout {
         MarkdownRenderer renderer = this.renderer;
         List<MarkdownTextLine> lines = renderer.lines;
         lines.clear();
+        this.linesReplaced = true;
         this.spaceWidth = renderer.getUnscaledTextWidth(" ");
 
         boolean queueNewLine = true;
@@ -197,42 +200,66 @@ final class MarkdownLayout {
     }
 
     /**
-     * Looks up the lines that can be inside the visible vertical range of the renderer, and sets {@link #firstVisibleLine} and
-     * {@link #visibleLinesEnd} to them. Every line in that range still has to pass {@link #isLineVisible(MarkdownTextLine)}.<br><br>
+     * Looks up the lines inside the visible vertical range of the renderer, and sets {@link #firstVisibleLine} and {@link #visibleLinesEnd} to them.<br>
+     * While the lines are sorted by their position, the range gets found with a binary search instead of walking all lines, and holds nothing
+     * but visible lines. Otherwise it holds all lines, and every line in it still has to pass {@link #isLineVisible(MarkdownTextLine)}.<br><br>
      *
-     * Lines are sorted by their position, so the range gets found with a binary search instead of walking all lines. Rounding can make two
-     * lines that are almost at the same position disagree about which one of them is outside the range, so the range gets widened by one line on both ends.
+     * Fragments only update their hover state while they render, so the fragments of every line that left the visible range lose it here.
      */
     void updateVisibleLines() {
         List<MarkdownTextLine> lines = this.renderer.lines;
         int lineCount = lines.size();
-        if (!this.linesSortedByPosition) {
-            this.firstVisibleLine = 0;
-            this.visibleLinesEnd = lineCount;
-            return;
-        }
-        int low = 0;
-        int high = lineCount;
-        while (low < high) {
-            int mid = (low + high) >>> 1;
-            if (this.isLineAboveVisibleRange(lines.get(mid))) {
-                low = mid + 1;
-            } else {
-                high = mid;
+        int first = 0;
+        int end = lineCount;
+        if (this.linesSortedByPosition) {
+            int low = 0;
+            int high = lineCount;
+            while (low < high) {
+                int mid = (low + high) >>> 1;
+                if (this.isLineAboveVisibleRange(lines.get(mid))) {
+                    low = mid + 1;
+                } else {
+                    high = mid;
+                }
             }
-        }
-        int first = low;
-        high = lineCount;
-        while (low < high) {
-            int mid = (low + high) >>> 1;
-            if (this.isLineBelowVisibleRange(lines.get(mid))) {
-                high = mid;
-            } else {
-                low = mid + 1;
+            first = low;
+            high = lineCount;
+            while (low < high) {
+                int mid = (low + high) >>> 1;
+                if (this.isLineBelowVisibleRange(lines.get(mid))) {
+                    high = mid;
+                } else {
+                    low = mid + 1;
+                }
             }
+            // Rounding can make two lines that are almost at the same position disagree about which one of them is outside the range,
+            // so the range gets widened by one line on both ends before it gets cut down to the lines that really are visible
+            first = Math.max(0, first - 1);
+            end = Math.min(lineCount, low + 1);
+            while ((first < end) && !this.isLineVisible(lines.get(first))) first++;
+            while ((end > first) && !this.isLineVisible(lines.get(end - 1))) end--;
         }
-        this.firstVisibleLine = Math.max(0, first - 1);
-        this.visibleLinesEnd = Math.min(lineCount, low + 1);
+        this.resetHoverOfHiddenLines(first, end);
+        this.firstVisibleLine = first;
+        this.visibleLinesEnd = end;
+    }
+
+    /**
+     * Makes the fragments of the lines forget the mouse that are not part of the given new range of visible lines anymore.
+     * Only the lines of the last range can be hovered, so only those get checked, except when it is unknown which lines these are.
+     */
+    private void resetHoverOfHiddenLines(int newFirstVisibleLine, int newVisibleLinesEnd) {
+        List<MarkdownTextLine> lines = this.renderer.lines;
+        boolean checkAllLines = this.linesReplaced || !this.linesSortedByPosition;
+        this.linesReplaced = false;
+        int first = checkAllLines ? 0 : this.firstVisibleLine;
+        int end = checkAllLines ? lines.size() : Math.min(this.visibleLinesEnd, lines.size());
+        for (int i = first; i < end; i++) {
+            MarkdownTextLine line = lines.get(i);
+            // A range of sorted lines holds nothing but visible lines
+            if ((i >= newFirstVisibleLine) && (i < newVisibleLinesEnd) && (this.linesSortedByPosition || this.isLineVisible(line))) continue;
+            this.renderer.interactions.resetHoveredFragments(line.fragments);
+        }
     }
 
     /**
