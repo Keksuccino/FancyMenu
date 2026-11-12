@@ -41,6 +41,7 @@ public class MarkdownParser {
     private static final char UNDERSCORE_CHAR = '_';
     private static final char BACKSLASH_CHAR = '\\';
     private static final char TILDE_CHAR = '~';
+    private static final String FORMATTING_CODE_STRIKETHROUGH_DOUBLE_PREFIX_SUFFIX = "~~";
     private static final char EXCLAMATION_MARK_CHAR = '!';
     private static final String FORMATTING_CODE_IMAGE_PREFIX = "![";
     private static final String FORMATTING_CODE_HYPERLINK_IMAGE_PREFIX = "[![";
@@ -118,6 +119,7 @@ public class MarkdownParser {
         MarkerLookahead lookahead = new MarkerLookahead(markdownText);
         boolean queueNewLine = true;
         boolean italicUnderscore = false;
+        boolean strikethroughDouble = false;
         int charsToSkip = 0;
         boolean preserveStartOfLineWhileSkipping = false;
         boolean skipLine = false;
@@ -375,18 +377,26 @@ public class MarkdownParser {
 
                 //Handle Strikethrough
                 if ((c == TILDE_CHAR) && !isCharacterEscaped(markdownText, index)) {
+                    boolean isDoubleMarker = markdownText.startsWith(FORMATTING_CODE_STRIKETHROUGH_DOUBLE_PREFIX_SUFFIX, index);
                     if (!builder.strikethrough && (builder.codeBlockContext == null) && !builder.plainText) {
-                        if (lookahead.existsFrom(LookaheadMarker.STRIKETHROUGH, index + 1)) {
+                        // Two tildes open as one double marker if a later double marker closes them, and only a double marker
+                        // closes them then. Without a later one, they are two single markers that open and close right away.
+                        boolean opensDouble = isDoubleMarker && lookahead.existsFrom(LookaheadMarker.STRIKETHROUGH_DOUBLE, index + 2);
+                        if (opensDouble || lookahead.existsFrom(LookaheadMarker.STRIKETHROUGH, index + 1)) {
                             if (isStartOfLine || !builder.text.isEmpty()) {
                                 lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                             }
                             builder.strikethrough = true;
+                            strikethroughDouble = opensDouble;
+                            if (opensDouble) charsToSkip = 1;
                             continue;
                         }
                     }
-                    if (builder.strikethrough) {
+                    if (builder.strikethrough && (!strikethroughDouble || isDoubleMarker)) {
                         lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                         builder.strikethrough = false;
+                        if (strikethroughDouble) charsToSkip = 1;
+                        strikethroughDouble = false;
                         continue;
                     }
                 }
@@ -1109,6 +1119,7 @@ public class MarkdownParser {
         ITALIC_UNDERSCORE(String.valueOf(UNDERSCORE_CHAR)),
         ITALIC_ASTERISK(String.valueOf(ASTERISK_CHAR)),
         STRIKETHROUGH(String.valueOf(TILDE_CHAR)),
+        STRIKETHROUGH_DOUBLE(FORMATTING_CODE_STRIKETHROUGH_DOUBLE_PREFIX_SUFFIX),
         CODE_BLOCK_SINGLE_LINE(String.valueOf(GRAVE_ACCENT_CHAR)),
         PLAIN_TEXT_SINGLE_LINE(FORMATTING_CODE_PLAIN_TEXT_SINGLE_LINE_PREFIX_SUFFIX),
         // Multi-line blocks end at a marker that starts a line, no matter what follows it in that line
