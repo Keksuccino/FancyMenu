@@ -16,12 +16,9 @@ import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.ARGB;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.awt.*;
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,8 +29,6 @@ import java.util.function.Predicate;
 
 @SuppressWarnings("unused")
 public class MarkdownRenderer implements Renderable, FocuslessContainerEventHandler, NarratableEntry, NavigatableWidget {
-
-    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final int MAX_TEXT_LENGTH = 45000;
     protected boolean parseMarkdown = true;
@@ -762,14 +757,6 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
         graphics.drawString(this.font, text, (int)x, (int)y, color, shadow);
     }
 
-    protected int darkenColor(int color) {
-        int alpha = ARGB.alpha(color);
-        int red = (int)(ARGB.red(color) * 0.25F);
-        int green = (int)(ARGB.green(color) * 0.25F);
-        int blue = (int)(ARGB.blue(color) * 0.25F);
-        return ARGB.color(alpha, red, green, blue);
-    }
-
     public void resetHovered() {
         this.resetHovered(this.fragments);
         this.hoveredTextEventIds.clear();
@@ -778,9 +765,6 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     protected void resetHovered(@NotNull List<MarkdownTextFragment> fragments) {
         for (MarkdownTextFragment fragment : fragments) {
             fragment.hovered = false;
-            if (fragment.hoverEvent != null) {
-                fragment.hoverEvent.wasHovered = false;
-            }
             if (fragment.isTable() && fragment.tableContext != null) {
                 for (MarkdownTextFragment.TableRow row : fragment.tableContext.rows) {
                     for (MarkdownTextFragment.TableCell cell : row.cells) {
