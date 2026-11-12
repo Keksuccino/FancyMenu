@@ -69,6 +69,8 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     /** Only gets changed through {@link #setHovered(boolean)}, because the fragment's hyperlink and text events count their hovered fragments. */
     public boolean hovered = false;
     public TableContext tableContext = null;
+    /** TRUE for the fragment that stands for a whole table. The fragments inside its cells share its table context, so the context alone does not tell them apart. */
+    public boolean table = false;
     @Nullable
     private Component renderComponent = null;
     private int renderComponentState;
@@ -784,13 +786,8 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         return false;
     }
 
-    /**
-     * A table fragment and the fragments in the cells of that table share their table context, and a cell can contain the text that marks
-     * table fragments, so a fragment with that text is only a table when it is not part of the content of its own table.
-     * Treating such a cell fragment as a table would make the table walk into itself forever.
-     */
     public boolean isTable() {
-        return (this.tableContext != null) && this.text.equals("[TABLE]") && !this.tableContext.isCellFragment(this);
+        return this.table && (this.tableContext != null);
     }
 
     /**
@@ -925,20 +922,6 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             for (float width : this.columnWidths) {
                 this.totalWidth += width;
             }
-        }
-
-        /**
-         * Returns if the given fragment is part of the content of one of the cells of the table.
-         */
-        public boolean isCellFragment(@NotNull MarkdownTextFragment fragment) {
-            for (TableRow row : this.rows) {
-                for (TableCell cell : row.cells) {
-                    for (MarkdownTextFragment cellFragment : cell.fragments) {
-                        if (cellFragment == fragment) return true;
-                    }
-                }
-            }
-            return false;
         }
 
         public float getRowHeight(TableRow row) {
