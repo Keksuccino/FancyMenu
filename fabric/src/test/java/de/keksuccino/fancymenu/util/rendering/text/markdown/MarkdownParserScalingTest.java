@@ -63,7 +63,7 @@ class MarkdownParserScalingTest {
         PLAIN_TEXT_MARKERS(";;a ;b "),
         BLOCK_MARKER_LINES("```\na\n;;;\nb\n^^^\nc\n|||\nd\n"),
         HEADLINES("# a\n\n## b\n   \n"),
-        QUOTES("> a\nb\n   \n"),
+        QUOTES("> a\n> b\n>\nc\n   \n"),
         BULLET_LIST_ITEMS("- a\n  - b\n" + " ".repeat(40) + "- c\n"),
         SEPARATION_LINES("---\n--- - -\n"),
         TABLES("| a | b |\n| :-- | --: |\n| c | d |\n\n"),
