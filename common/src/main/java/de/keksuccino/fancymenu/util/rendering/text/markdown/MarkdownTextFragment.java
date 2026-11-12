@@ -217,7 +217,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                             // Render the code block background
                             float endX = fragment.x + fragment.getRenderWidth() + 1;
                             if (fragment.text.endsWith(" ")) {
-                                endX -= (this.parent.getUnscaledTextWidth(" ") * fragment.getScale());
+                                endX -= (this.parent.getUnscaledSpaceWidth() * fragment.getScale());
                             }
                             renderCodeBlockBackground(graphics, codeBlockStartX, fragment.y - 2, endX, fragment.y + fragment.getTextRenderHeight(), this.parent.codeBlockSingleLineColor.getColorIntWithAlpha(this.parent.textOpacity));
                             currentCodeBlock = null;
@@ -303,7 +303,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             if (this.codeBlockContext.singleLine) {
                 float xEnd = end.x + end.getRenderWidth();
                 if (end.text.endsWith(" ")) {
-                    xEnd -= (this.parent.getUnscaledTextWidth(" ") * this.getScale());
+                    xEnd -= (this.parent.getUnscaledSpaceWidth() * this.getScale());
                 }
                 renderCodeBlockBackground(graphics, this.x, this.y - 2, xEnd, this.y + this.getTextRenderHeight(), this.parent.codeBlockSingleLineColor.getColorIntWithAlpha(this.parent.textOpacity));
             } else {
@@ -521,6 +521,14 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if (this.hoverEvent != null) this.hoverEvent.hoveredFragments += change;
     }
 
+    /**
+     * Fragments of one render line share their Y position, so this is how a fragment checks if it sits in the first or last line of its code block.
+     * Fragments outside of render lines, like the ones in table cells, always are on their own line.
+     */
+    protected boolean isInRenderLineOf(@Nullable MarkdownTextFragment fragment) {
+        return (fragment != null) && (fragment.parentLine == this.parentLine);
+    }
+
     public float getTextRenderX() {
         float scale = this.getScale();
         if (scale <= 0.0F) return 0.0F;
@@ -559,7 +567,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
     protected float getTextRenderOffsetY() {
         float offsetY = 0.0F;
-        if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && (this.codeBlockContext.getBlockStart() != null) && (this.codeBlockContext.getBlockStart().y == this.y)) {
+        if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && this.isInRenderLineOf(this.codeBlockContext.getBlockStart())) {
             offsetY += 10;
         }
         if ((this.bulletListLevel > 0) && (this.parentLine != null) && this.parentLine.bulletListItemStartLine) {
@@ -636,10 +644,10 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if (this.headlineType == HeadlineType.BIG) {
             f += 6;
         }
-        if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && (this.codeBlockContext.getBlockStart() != null) && (this.codeBlockContext.getBlockStart().y == this.y)) {
+        if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && this.isInRenderLineOf(this.codeBlockContext.getBlockStart())) {
             f += 10;
         }
-        if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && (this.codeBlockContext.getBlockEnd() != null) && (this.codeBlockContext.getBlockEnd().y == this.y)) {
+        if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && this.isInRenderLineOf(this.codeBlockContext.getBlockEnd())) {
             f += 10;
         }
         if ((this.bulletListLevel > 0) && this.bulletListItemStart) {
