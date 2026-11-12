@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.util.rendering.text.markdown;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
@@ -65,17 +64,6 @@ public class ScrollableMarkdownRenderer implements Renderable, ContainerEventHan
         this.scrollArea.addEntry(new MarkdownRendererEntry(this.scrollArea, this.markdownRenderer));
 
         this.scrollArea.setRenderOnlyEntriesInArea(false);
-
-        //Don't render markdown lines outside visible area (for performance reasons)
-        this.markdownRenderer.addLineRenderValidator(line -> {
-            if ((line.parent.getY() + line.offsetY + line.getLineHeight()) < this.scrollArea.getInnerY()) {
-                return false;
-            }
-            if ((line.parent.getY() + line.offsetY) > (this.scrollArea.getInnerY() + this.scrollArea.getInnerHeight())) {
-                return false;
-            }
-            return true;
-        });
 
         this.markdownRenderer.setText(this.text);
 
@@ -178,35 +166,6 @@ public class ScrollableMarkdownRenderer implements Renderable, ContainerEventHan
         this.markdownRenderer.mouseReleased(mouseX, mouseY, button);
         this.scrollArea.mouseReleased(mouseX, mouseY, button);
         return false;
-    }
-
-    protected static class MarkdownRendererEntry extends ScrollAreaEntry {
-
-        protected MarkdownRenderer markdownRenderer;
-
-        public MarkdownRendererEntry(ScrollArea parent, MarkdownRenderer markdownRenderer) {
-            super(parent, 20, 20);
-            this.markdownRenderer = markdownRenderer;
-            this.selectable = false;
-            this.playClickSound = false;
-            this.backgroundColorNormal = () -> DrawableColor.of(0,0,0,0);
-            this.backgroundColorHover = () -> DrawableColor.of(0,0,0,0);
-        }
-
-        @Override
-        public void renderEntry(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
-            this.markdownRenderer.setOptimalWidth(this.parent.getInnerWidth());
-            this.markdownRenderer.setX(this.x);
-            this.markdownRenderer.setY(this.y);
-            this.setWidth(this.markdownRenderer.getRealWidth());
-            this.setHeight(this.markdownRenderer.getRealHeight());
-            this.markdownRenderer.extractRenderState(graphics, mouseX, mouseY, partial);
-        }
-
-        @Override
-        public void onClick(ScrollAreaEntry entry, double mouseX, double mouseY, int button) {
-        }
-
     }
 
 }

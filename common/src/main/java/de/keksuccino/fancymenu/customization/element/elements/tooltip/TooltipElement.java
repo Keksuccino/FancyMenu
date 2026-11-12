@@ -63,17 +63,6 @@ public class TooltipElement extends AbstractElement {
         
         // Configure markdown renderer for tooltip style
         this.markdownRenderer.setAutoLineBreakingEnabled(true);
-        
-        // Don't render markdown lines outside visible area (for performance reasons)
-        this.markdownRenderer.addLineRenderValidator(line -> {
-            if ((line.parent.getY() + line.offsetY + line.getLineHeight()) < this.getAbsoluteY()) {
-                return false;
-            }
-            if ((line.parent.getY() + line.offsetY) > (this.getAbsoluteY() + this.getAbsoluteHeight())) {
-                return false;
-            }
-            return true;
-        });
     }
 
     @Override
@@ -146,6 +135,8 @@ public class TooltipElement extends AbstractElement {
             // Render markdown content with padding
             this.markdownRenderer.setX(x + paddingX);
             this.markdownRenderer.setY(y + paddingY);
+            // Don't render markdown lines outside the tooltip (for performance reasons)
+            this.markdownRenderer.setVisibleVerticalRange(y, y + height);
             this.markdownRenderer.extractRenderState(graphics, mouseX, mouseY, partial);
 
             if (!isEditor()) graphics.pose().popMatrix();
