@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -727,7 +726,6 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
         public final String identifier;
         public final List<MarkdownTextFragment> eventFragments = new ArrayList<>();
-        public boolean wasHovered = false;
 
         public TextHoverEvent(@NotNull String identifier) {
             this.identifier = identifier;
@@ -791,8 +789,6 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         public final List<Float> columnWidths = new ArrayList<>();
         public boolean hasHeader = false;
         public float totalWidth = 0;
-        public float x = 0;
-        public float y = 0;
         
         public void calculateColumnWidths(MarkdownRenderer renderer) {
             columnWidths.clear();
