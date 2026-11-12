@@ -169,6 +169,22 @@ class MarkdownRendererRefreshTest {
     }
 
     @Test
+    void settingABorderBelowTheMinimumEveryFrameCausesNoWork() {
+        MarkdownTestRenderer renderer = new MarkdownTestRenderer(TEXT, 200);
+        renderer.tick();
+
+        // Owners sync their own border setting every frame, and theirs can be smaller than the minimum the renderer keeps
+        for (int i = 0; i < 5; i++) {
+            renderer.setBorder(0);
+            renderer.tick();
+        }
+
+        assertEquals(2.0F, renderer.getBorder());
+        assertEquals(1, renderer.parses);
+        assertEquals(1, renderer.layouts);
+    }
+
+    @Test
     void sizeQueryShowsANewTextWithoutWaitingForTheNextFrame() {
         MarkdownTestRenderer renderer = new MarkdownTestRenderer("one line", 200);
         float oneLineHeight = renderer.getRealHeight();
