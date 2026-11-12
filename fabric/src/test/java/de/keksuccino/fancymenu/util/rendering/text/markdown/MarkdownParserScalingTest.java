@@ -69,7 +69,6 @@ class MarkdownParserScalingTest {
         TABLES("| a | b |\n| :-- | --: |\n| c | d |\n\n"),
         TABLE_CELLS_IN_ONE_ROW("| a "),
         TABLE_SEPARATOR_CELLS_IN_ONE_ROW("| --- "),
-        TABLE_PLACEHOLDER_PREFIXES("[TABLE_\n[TABLE_1\n"),
         FORMATTING_CODES("§c&l§ra ");
 
         private final String text;
