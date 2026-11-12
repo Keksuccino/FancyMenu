@@ -25,6 +25,9 @@ import java.util.Objects;
 public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
     protected static final int BULLET_LIST_SPACE_AFTER_INDENT = 5;
+    protected static final int TRAILING_SPACE_KEEP = 0;
+    protected static final int TRAILING_SPACE_REMOVE = 1;
+    protected static final int TRAILING_SPACE_SEPARATE = 2;
 
     public final MarkdownRenderer parent;
     public MarkdownTextLine parentLine;
@@ -361,6 +364,21 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
     @NotNull
     protected Component buildRenderComponent(boolean forWidthCalculation) {
+        int trailingSpaceMode = this.getTrailingSpaceMode();
+        return createRenderComponent(this.buildRenderStyle(forWidthCalculation), this.buildRenderText(trailingSpaceMode), trailingSpaceMode == TRAILING_SPACE_SEPARATE);
+    }
+
+    @NotNull
+    protected static Component createRenderComponent(@NotNull Style style, @NotNull String renderText, boolean separateTrailingSpace) {
+        MutableComponent comp = Component.literal(renderText).setStyle(style);
+        if (separateTrailingSpace) {
+            comp.append(Component.literal(" ").setStyle(Style.EMPTY.withUnderlined(false)));
+        }
+        return comp;
+    }
+
+    @NotNull
+    protected Style buildRenderStyle(boolean forWidthCalculation) {
         Style style = Style.EMPTY;
         if (this.font != null) {
             style = style.withFont(new FontDescription.Resource(this.font));
@@ -382,16 +400,6 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         }
         if (this.textColor != null) {
             style = style.withColor(this.textColor.getColorInt());
-        }
-        boolean addSpaceComponentAtEnd = false;
-        String t = this.text;
-        if (this.isLinkLike() && (this.naturalLineBreakAfter || this.autoLineBreakAfter) && t.endsWith(" ")) {
-            //Remove spaces at line end that would look ugly when underlined
-            t = t.substring(0, t.length()-1);
-        } else if (this.isLinkLike() && this.isLastLinkLikeFragment() && t.endsWith(" ")) {
-            //Make space at the end not underlined without removing it completely
-            t = t.substring(0, t.length()-1);
-            addSpaceComponentAtEnd = true;
         }
         if (this.codeBlockContext != null) {
             style = Style.EMPTY;
@@ -418,17 +426,32 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                 style = style.withUnderlined(true);
             }
         }
+        return style;
+    }
+
+    /**
+     * The space at the end of link-like text would look ugly when underlined, so it gets removed at the end of a line
+     * and drawn without the link's style at the end of the link.
+     */
+    protected int getTrailingSpaceMode() {
+        if (!this.isLinkLike() || !this.text.endsWith(" ")) return TRAILING_SPACE_KEEP;
+        if (this.naturalLineBreakAfter || this.autoLineBreakAfter) return TRAILING_SPACE_REMOVE;
+        return this.isLastLinkLikeFragment() ? TRAILING_SPACE_SEPARATE : TRAILING_SPACE_KEEP;
+    }
+
+    @NotNull
+    protected String buildRenderText(int trailingSpaceMode) {
+        String t = this.text;
+        if (trailingSpaceMode != TRAILING_SPACE_KEEP) {
+            t = t.substring(0, t.length()-1);
+        }
         if (this.parent.textCase == MarkdownRenderer.TextCase.ALL_UPPER) {
             t = t.toUpperCase();
         }
         if (this.parent.textCase == MarkdownRenderer.TextCase.ALL_LOWER) {
             t = t.toLowerCase();
         }
-        MutableComponent comp = Component.literal(t).setStyle(style);
-        if (addSpaceComponentAtEnd) {
-            comp.append(Component.literal(" ").setStyle(Style.EMPTY.withUnderlined(false)));
-        }
-        return comp;
+        return t;
     }
 
     protected boolean isLinkLike() {
@@ -448,8 +471,13 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         return false;
     }
 
+    /**
+     * Measures the text of the fragment again.<br>
+     * Has to get called after anything changed that the fragment's text or style gets built from, like its text or formatting.
+     */
     protected void updateWidth() {
-        this.unscaledTextWidth = this.parent.getUnscaledTextWidth(this.buildRenderComponent(true));
+        int trailingSpaceMode = this.getTrailingSpaceMode();
+        this.unscaledTextWidth = this.parent.textWidthCache.getWidth(this.buildRenderStyle(true), this.buildRenderText(trailingSpaceMode), trailingSpaceMode == TRAILING_SPACE_SEPARATE);
     }
 
     public float getTextRenderX() {
