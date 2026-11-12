@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>File browser component</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="{{rootCls}}" style="{{rootStyle}}">
+<sc-if value="{{standalone}}" hint-placeholder-val="{{true}}"><div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""><div class="dim"></div></div></sc-if>
+<div class="win fb" role="dialog" aria-label="{{title}}" style="{{winStyle}}">
+
+<div class="titlebar">
+<div class="tl"><button class="c" aria-label="Cancel and close" onClick="{{noop}}"><span class="ms" aria-hidden="true">close</span></button><button class="m" aria-label="Collapse"><span class="ms" aria-hidden="true">remove</span></button><button class="x" aria-label="Maximize"><span class="ms" aria-hidden="true">open_in_full</span></button></div>
+<div class="wt"><span class="ms" aria-hidden="true">{{titleIcon}}</span>{{title}}</div>
+<div></div>
+</div>
+
+<sc-if value="{{anyPop}}" hint-placeholder-val="{{false}}"><div class="fb-catch" style="z-index: 4" onClick="{{closePops}}"></div></sc-if>
+<div class="fb-tool">
+<div class="fb-nav">
+<button class="ib" data-tip="Back" aria-label="Back" disabled="{{noBack}}" onClick="{{back}}"><span class="ms" aria-hidden="true">chevron_left</span></button>
+<button class="ib" data-tip="Forward" aria-label="Forward" disabled="{{noForward}}" onClick="{{forward}}"><span class="ms" aria-hidden="true">chevron_right</span></button>
+<button class="ib" data-tip="Up One Folder" aria-label="Up One Folder" disabled="{{noUp}}" onClick="{{up}}"><span class="ms" aria-hidden="true">arrow_upward</span></button>
+</div>
+<button class="{{placesCls}}" data-tip="{{placesTip}}" aria-haspopup="menu" aria-expanded="{{placesExpanded}}" onClick="{{togglePlaces}}"><span class="ms" aria-hidden="true">{{placesIcon}}</span>{{placesLabel}}<span class="ms chev" aria-hidden="true">expand_more</span></button>
+<sc-if value="{{placesOpen}}" hint-placeholder-val="{{false}}"><div class="fb-pop" style="left: 104px"><dc-import name="ContextMenu" items="{{placesItems}}" focus-on-open="{{yes}}" escape-listener="{{closePlaces}}" standalone="{{no}}" hint-size="auto,420px"></dc-import></div></sc-if>
+<nav class="fb-crumbs" aria-label="Folder path">
+<sc-for list="{{crumbs}}" as="c" hint-placeholder-count="3"><span class="ms sepc" aria-hidden="true">chevron_right</span><button class="{{c.cls}}" onClick="{{c.go}}">{{c.name}}</button></sc-for>
+</nav>
+<label class="field fb-search"><span class="ms" aria-hidden="true">search</span><input type="text" placeholder="{{searchPlaceholder}}" aria-label="{{searchPlaceholder}}" value="{{q}}" onInput="{{typed}}" onChange="{{typed}}"></label>
+<sc-if value="{{canWrite}}" hint-placeholder-val="{{true}}">
+<button class="ib" data-tip="New Folder" aria-label="New Folder" onClick="{{noop}}"><span class="ms" aria-hidden="true">create_new_folder</span></button>
+<button class="ib" data-tip="{{explorerTip}}" aria-label="{{explorerTip}}" onClick="{{noop}}"><span class="ms" aria-hidden="true">open_in_new</span></button>
+</sc-if>
+</div>
+
+<div class="fb-main">
+<div class="fb-list">
+<div class="fb-head" role="row">
+<button class="{{sortNameCls}}" onClick="{{sortByName}}">Name<span class="ms" aria-hidden="true">{{sortNameArrow}}</span></button>
+<button class="num" onClick="{{noop}}">{{col2}}</button>
+<button class="{{sortDateCls}}" onClick="{{sortByDate}}">{{col3}}<span class="ms" aria-hidden="true">{{sortDateArrow}}</span></button>
+</div>
+<div class="fb-rows" role="listbox" aria-label="Files">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
+<button class="{{r.cls}}" role="option" aria-selected="{{r.ariaSel}}" onClick="{{r.pick}}" onDoubleClick="{{r.open}}">
+<span class="fb-name">
+<sc-if value="{{r.isThumb}}" hint-placeholder-val="{{false}}"><span class="fb-thumb"><img src="dusk_valley.png" alt="" style="{{r.look}}"></span></sc-if>
+<sc-if value="{{r.isIcon}}" hint-placeholder-val="{{true}}"><span class="{{r.icCls}}"><span class="ms" aria-hidden="true">{{r.d}}</span></span></sc-if>
+<span>{{r.name}}</span>
+<sc-if value="{{r.isNew}}" hint-placeholder-val="{{false}}"><span class="chip ok">New</span></sc-if>
+<sc-if value="{{r.sub}}" hint-placeholder-val="{{false}}"><span class="fb-sub">{{r.sub}}</span></sc-if>
+<sc-if value="{{r.blocked}}" hint-placeholder-val="{{false}}"><span class="fb-warn" data-tip="This name can't be used in FancyMenu paths"><span class="ms" aria-hidden="true">warning</span></span><span class="fb-fix" onClick="{{r.fix}}">Rename</span></sc-if>
+</span>
+<span class="fb-size">{{r.size}}</span>
+<span class="fb-date">{{r.date}}</span>
+</button>
+</sc-for>
+<sc-if value="{{noRows}}" hint-placeholder-val="{{false}}"><div class="fb-empty">{{emptyText}}</div></sc-if>
+</div>
+</div>
+
+<aside class="fb-prev" aria-label="Preview">
+<sc-if value="{{pv.none}}" hint-placeholder-val="{{false}}"><div class="fb-pempty">{{pv.emptyText}}</div></sc-if>
+<sc-if value="{{pv.img}}" hint-placeholder-val="{{true}}"><div class="fb-pimg"><img src="dusk_valley.png" alt="" style="{{pv.look}}"></div></sc-if>
+<sc-if value="{{pv.dir}}" hint-placeholder-val="{{false}}"><div class="fb-pbig"><span class="ms" aria-hidden="true">{{pv.bigIcon}}</span></div></sc-if>
+<sc-if value="{{pv.audio}}" hint-placeholder-val="{{false}}"><div class="mc-audio" style="height: 60px"><button class="{{pv.playCls}}" aria-label="{{pv.playTip}}" onClick="{{pv.play}}"><sc-if value="{{pv.playing}}" hint-placeholder-val="{{false}}"><span class="ms fill" aria-hidden="true">stop</span></sc-if><sc-if value="{{pv.notPlaying}}" hint-placeholder-val="{{true}}"><span class="ms fill" aria-hidden="true">play_arrow</span></sc-if></button><span class="mc-wave"><sc-for list="{{pv.bars}}" as="b" hint-placeholder-count="30"><i style="{{b}}"></i></sc-for></span><span class="mc-dur">{{pv.dur}}</span></div></sc-if>
+<sc-if value="{{pv.video}}" hint-placeholder-val="{{false}}"><div class="fb-pimg mc-video"><img src="dusk_valley.png" alt="" style="{{pv.look}}"><button class="{{pv.vplayCls}}" aria-label="{{pv.playTip}}" onClick="{{pv.play}}"><sc-if value="{{pv.playing}}" hint-placeholder-val="{{false}}"><span class="ms fill" aria-hidden="true">stop</span></sc-if><sc-if value="{{pv.notPlaying}}" hint-placeholder-val="{{true}}"><span class="ms fill" aria-hidden="true">play_arrow</span></sc-if></button><span class="mc-vdur">{{pv.dur}}</span></div></sc-if>
+<sc-if value="{{pv.noWm}}" hint-placeholder-val="{{false}}"><div class="fb-pbig amber"><span class="ms" aria-hidden="true">videocam_off</span><span>Can't preview videos</span></div></sc-if>
+<sc-if value="{{pv.hasVol}}" hint-placeholder-val="{{false}}"><div class="mc-vol" style="margin: 2px 0 8px"><button class="ib" data-tip="{{muteTip}}" aria-label="{{muteTip}}" onClick="{{mute}}"><span class="ms" aria-hidden="true">{{volIcon}}</span></button><span class="mc-vl" data-tip="Only how loud previews play here. Files are not changed.">Preview volume</span><span class="mslider" role="slider" aria-label="Preview volume" aria-valuetext="{{volText}}"><span class="track" onPointerDown="{{volDown}}" onPointerMove="{{volMove}}" onPointerUp="{{volUp}}"><span class="fill" style="{{volFill}}"></span><span class="knob" style="{{volKnob}}"></span></span><span class="pct">{{volText}}</span></span></div></sc-if>
+<sc-if value="{{pv.named}}" hint-placeholder-val="{{true}}"><div class="fb-pname">{{pv.name}}</div><div class="fb-pmeta">{{pv.meta}}</div><sc-if value="{{pv.date}}" hint-placeholder-val="{{true}}"><div class="fb-pmeta">{{pv.date}}</div></sc-if></sc-if>
+<sc-if value="{{pv.text}}" hint-placeholder-val="{{false}}"><div class="codebox fb-ptext">{{pv.text}}</div></sc-if>
+<sc-if value="{{pv.msg}}" hint-placeholder-val="{{false}}"><div class="fb-pmsg">{{pv.msg}}</div></sc-if>
+<sc-if value="{{pv.blocked}}" hint-placeholder-val="{{false}}"><div class="fb-pactions"><button class="btn sm tinted" onClick="{{pv.fix}}">Rename to {{pv.fixedName}}</button></div></sc-if>
+<sc-if value="{{pv.noWm}}" hint-placeholder-val="{{false}}"><div class="fb-pactions"><a class="btn sm" href="#" onClick="{{noop}}">Download Watermedia V3</a><a class="btn sm" href="#" onClick="{{noop}}">Download Watermedia Binaries</a></div></sc-if>
+</aside>
+</div>
+
+<sc-if value="{{isSave}}" hint-placeholder-val="{{false}}">
+<div class="fb-save">
+<span class="lbl">File Name</span>
+<label class="{{nameCls}}"><input type="text" aria-label="File name" value="{{saveName}}" onInput="{{nameTyped}}" onChange="{{nameTyped}}"><span class="suf">{{ext}}</span></label>
+<sc-if value="{{nameMsg}}" hint-placeholder-val="{{false}}"><span class="{{nameMsgCls}}"><span class="ms" aria-hidden="true">warning</span>{{nameMsg}}</span></sc-if>
+<sc-if value="{{canFixName}}" hint-placeholder-val="{{false}}"><button class="btn sm tinted" onClick="{{fixName}}">Use {{fixedSaveName}}</button></sc-if>
+</div>
+</sc-if>
+
+<div class="{{footCls}}">
+<sc-if value="{{showTypes}}" hint-placeholder-val="{{true}}"><div class="fb-types"><span class="lbl">File Types</span>
+<sc-if value="{{typesPick}}" hint-placeholder-val="{{true}}"><div class="pop"><button class="{{typesCls}}" data-tip="{{typesTip}}" aria-haspopup="menu" aria-expanded="{{typesExpanded}}" onClick="{{toggleTypes}}"><span>{{typesLabel}}</span><span class="ms chev" aria-hidden="true">expand_more</span></button><sc-if value="{{typesOpen}}" hint-placeholder-val="{{false}}"><div class="pop-menu fill up"><dc-import name="ContextMenu" items="{{typesItems}}" label="File types" focus-on-open="{{yes}}" escape-listener="{{closeTypes}}" standalone="{{no}}" hint-size="auto,240px"></dc-import></div></sc-if></div></sc-if>
+<sc-if value="{{typesFixed}}" hint-placeholder-val="{{false}}"><span class="v" data-tip="{{typesTip}}">{{typesLabel}}</span></sc-if>
+</div></sc-if>
+<sc-if value="{{dropNote}}" hint-placeholder-val="{{false}}"><span class="fb-hint fb-dropped"><span class="ms" aria-hidden="true">{{dropIcon}}</span><span>{{dropNote}}<sc-if value="{{canUndoDrop}}" hint-placeholder-val="{{false}}"> <button class="vm-link" onClick="{{undoDrop}}">Undo</button></sc-if></span></span></sc-if><sc-if value="{{noDropNote}}" hint-placeholder-val="{{true}}"><span class="fb-hint"><sc-if value="{{canWrite}}" hint-placeholder-val="{{true}}"><span class="ms" aria-hidden="true">download</span>Drop files here to copy them into this folder</sc-if></span></sc-if>
+<button class="btn wide" onClick="{{noop}}">Cancel</button>
+<sc-if value="{{hasApply}}" hint-placeholder-val="{{false}}"><button class="btn wide" disabled="{{primaryDisabled}}" data-tip="Use it now and keep this window open" onClick="{{noop}}">Apply</button></sc-if>
+<button class="{{primaryCls}}" disabled="{{primaryDisabled}}" onClick="{{noop}}">{{primaryLabel}}</button>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"mode":{"editor":"enum","options":["Choose","Folder","Save","Resource"],"default":"Choose"},"scope":{"editor":"enum","options":["Game folder","Anywhere"],"default":"Game folder"},"kind":{"editor":"enum","options":["Images","Sounds","Videos","Text","All"],"default":"Images"},"start":{"editor":"text","default":""},"selected":{"editor":"text","default":""},"places":{"editor":"boolean","default":false},"saveName":{"editor":"text","default":"dusk_valley_night"},"title":{"editor":"text","default":""},"apply":{"editor":"boolean","default":false},"dropped":{"editor":"boolean","default":false},"query":{"editor":"text","default":""},"watermediaMissing":{"editor":"boolean","default":false},"standalone":{"editor":"boolean","default":true},"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1080,"height":720}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const p = this.props;
+    const mode = p.mode ?? 'Choose';
+    const anywhere = (p.scope ?? 'Game folder') === 'Anywhere' && mode !== 'Resource';
+    const kind = mode === 'Save' ? 'Text' : (p.kind ?? 'Images');
+
+    // ---------- a small fake file system, so the mockup can be clicked through ----------
+    const LOOK = {
+      '': '', winter: 'filter: hue-rotate(150deg) saturate(.55) brightness(1.15)', warm: 'filter: sepia(.55) saturate(1.7) hue-rotate(-25deg)',
+      sky: 'object-position: 50% 0%; transform: scale(2.4); transform-origin: 50% 0%', meadow: 'object-position: 50% 100%; transform: scale(2.4); transform-origin: 50% 100%',
+      mono: 'filter: grayscale(1) contrast(1.15)', night: 'filter: brightness(.65) saturate(1.3) hue-rotate(20deg)', moon: 'transform: scale(5); transform-origin: 66% 50%'
+    };
+    const img = (mod, ts, size, dims, look, extra) => ({ t: 'img', mod, ts, size, dims, look: LOOK[look || ''], ...(extra || {}) });
+    const aud = (mod, ts, size, dur) => ({ t: 'audio', mod, ts, size, dur });
+    const vid = (mod, ts, size, dur, dims) => ({ t: 'video', mod, ts, size, dur, dims });
+    const txt = (mod, ts, size, text) => ({ t: 'text', mod, ts, size, text });
+    const other = (mod, ts, size) => ({ t: 'file', mod, ts, size });
+    const assets = {
+      backgrounds: {
+        'dusk_valley.png': img('Today, 14:02', 9, '2.2 KB', '128 × 72'), 'dusk_valley_winter.png': img('Yesterday, 19:40', 8, '2.3 KB', '128 × 72', 'winter'),
+        'night_sky.png': img('Nov 2, 2026', 6, '1.1 KB', '128 × 72', 'sky'), 'meadow.png': img('Oct 28, 2026', 5, '1.4 KB', '128 × 72', 'meadow'),
+        'Title Screen.png': img('Oct 20, 2026', 4, '3.0 KB', '128 × 72', 'warm', { blocked: true })
+      },
+      buttons: { 'button_normal.png': img('Oct 12, 2026', 3, '420 B', '200 × 20', 'mono'), 'button_hover.png': img('Oct 12, 2026', 3, '436 B', '200 × 20', 'winter'), 'button_off.png': img('Oct 12, 2026', 3, '402 B', '200 × 20', 'night') },
+      sounds: { 'menu_click.ogg': aud('Nov 4, 2026', 7, '9 KB', '0:01'), 'ambient_night.ogg': aud('Oct 30, 2026', 5, '1.8 MB', '2:14') },
+      videos: { 'intro.mp4': vid('Nov 1, 2026', 6, '8.4 MB', '0:12', '1920 × 1080') },
+      texts: { 'welcome.txt': txt('Nov 5, 2026', 7, '62 B', 'Welcome back, adventurer!\nThe valley has missed you.'), 'splash_texts.txt': txt('Oct 18, 2026', 4, '118 B', 'Now with fireflies!\nCozy since 2026\n100% handmade pixels\nLook up at night') },
+      'logo.png': img('Nov 3, 2026', 7, '640 B', '32 × 32', 'moon')
+    };
+    const layoutTxt = 'type = fancymenu_layout\n\nlayout-meta {\n  identifier = title_screen\n  render_custom_elements_behind_vanilla = false\n}';
+    const customization = {
+      'dusk_valley.txt': txt('Today, 14:05', 9, '14 KB', layoutTxt), 'options_screen.txt': txt('Nov 1, 2026', 6, '6 KB', layoutTxt.replace('title_screen', 'options_screen')),
+      'universal_watermark.txt': txt('Oct 21, 2026', 4, '2 KB', layoutTxt.replace('title_screen', 'universal_layout'))
+    };
+    const GAME = { config: { fancymenu: { assets, customization } } };
+    const DRIVES = {
+      'C:': { Users: { Steve: {
+        Desktop: { 'menu_notes.txt': txt('Today, 09:12', 9, '1 KB', 'Ideas: night sky variant, softer clicks, fireflies everywhere') },
+        Documents: { 'pack_changelog.txt': txt('Nov 6, 2026', 8, '3 KB', '1.4.2\n- New title screen\n- Night sky background') },
+        Downloads: { 'dusk_valley_4k.png': img('Today, 11:30', 9, '6.1 MB', '3840 × 2160'), 'click_soft.ogg': aud('Nov 5, 2026', 7, '11 KB', '0:01'), 'menu_pack.zip': other('Nov 2, 2026', 6, '24 MB') },
+        Pictures: {
+          Wallpapers: { 'aurora.png': img('Nov 7, 2026', 8, '4.4 MB', '2560 × 1440', 'winter'), 'forest_dawn.png': img('Oct 30, 2026', 5, '3.9 MB', '2560 × 1440', 'warm'), 'mountains.png': img('Oct 22, 2026', 4, '5.2 MB', '2560 × 1440', 'meadow'), 'starry_night.png': img('Oct 9, 2026', 3, '2.8 MB', '2560 × 1440', 'sky') },
+          Screenshots: { '2026-11-07_19.42.10.png': img('Nov 7, 2026', 8, '1.2 MB', '1920 × 1080'), '2026-11-06_21.05.33.png': img('Nov 6, 2026', 7, '1.1 MB', '1920 × 1080', 'night') }
+        },
+        AppData: { Roaming: { '.minecraft': GAME } }
+      } } },
+      'D:': { Art: { 'logo_draft.png': img('Nov 4, 2026', 7, '18 KB', '64 × 64', 'moon'), 'palette.png': img('Oct 2, 2026', 3, '2 KB', '64 × 16', 'warm') }, Projects: { 'dusk_valley_pack': { 'pack.png': img('Oct 1, 2026', 2, '9 KB', '128 × 128', 'night') } } },
+      'E:': { Backups: { 'old_menu.png': img('Sep 3, 2026', 1, '1.8 MB', '1920 × 1080', 'mono') } }
+    };
+    const RES = {
+      minecraft: { textures: { gui: { title: { background: { 'panorama_0.png': img('', 0, '', '1024 × 1024', 'warm'), 'panorama_1.png': img('', 0, '', '1024 × 1024', 'meadow') }, 'minecraft.png': img('', 0, '', '1024 × 256', 'mono') }, 'options_background.png': img('', 0, '', '16 × 16', 'night') }, block: { 'grass_block_top.png': img('', 0, '', '16 × 16', 'meadow') } }, sounds: { ui: { button: { 'click.ogg': aud('', 0, '', '0:01') } } } },
+      fancymenu: { textures: { menubar: { 'fancymenu_logo.png': img('', 0, '', '28 × 28', 'mono') } } },
+      duskvalley: { textures: { menu: { 'dusk_valley.png': img('', 0, '', '128 × 72'), 'logo.png': img('', 0, '', '32 × 32', 'moon') } } }
+    };
+    const SOURCES = { minecraft: 'Minecraft', fancymenu: 'FancyMenu', duskvalley: 'Dusk Valley Pack' };
+    const FS = mode === 'Resource' ? RES : anywhere ? DRIVES : GAME;
+    const isDir = (n) => n && !n.t;
+    const nodeAt = (path) => path.reduce((n, k) => (n && isDir(n) ? n[k] : undefined), FS);
+
+    // the folder a browser may not leave, and the top level its Places button names
+    const ROOT = mode === 'Resource' || anywhere ? [] : mode === 'Save' ? ['config', 'fancymenu', 'customization'] : ['config', 'fancymenu', 'assets'];
+    const START = (p.start || (mode === 'Resource' ? 'duskvalley/textures/menu' : anywhere ? 'C:/Users/Steve/Pictures/Wallpapers' : mode === 'Save' ? 'config/fancymenu/customization' : mode === 'Folder' ? 'config/fancymenu/assets' : 'config/fancymenu/assets/backgrounds')).split('/').filter(Boolean);
+    const hist = s.hist || [START.join('/')];
+    const hi = s.hi ?? 0;
+    const path = hist[hi].split('/').filter(Boolean);
+    const go = (target) => { const t = target.join('/'); if (t === path.join('/')) return; const h = hist.slice(0, hi + 1).concat([t]); this.setState({ hist: h, hi: h.length - 1, sel: null, q: '', places: false }); };
+    // Files dropped onto the window: Minecraft only reports them once they're dropped, never while they're dragged
+    // over it, so the browser can't show a target beforehand (rule 118). They go into the folder row under the pointer,
+    // or the open folder, and the browser shows what happened right after: the new files are tagged New, the first
+    // one is selected, and the footer says where they went and what got skipped, with Undo.
+    const dropAt = START.join('/');
+    const dropActive = !!p.dropped && !s.dropUndone;
+    const DROPPED = { 'fireflies.png': img('Just now', 10, '1.8 KB', '128 × 72', 'night', { fresh: true }), 'title_glow.png': img('Just now', 10, '2.0 KB', '128 × 72', 'warm', { fresh: true }) };
+    const DROP_SKIPPED = 'notes.txt';
+    const curBase = nodeAt(path) || {};
+    const cur = dropActive && path.join('/') === dropAt ? Object.assign({}, curBase, DROPPED) : curBase;
+    const renames = s.renames || {};
+    const selKey = s.sel !== undefined ? s.sel : (p.selected || (p.dropped ? START.concat(['fireflies.png']).join('/') : null));
+    // the File types pop-up can narrow the list to one of the types the browser allows
+    const only = s.only || null;
+    const accepts = (n, name) => {
+      if (isDir(n)) return true;
+      if (mode === 'Folder') return false;
+      const want = { Images: 'img', Sounds: 'audio', Videos: 'video', Text: 'text' }[kind];
+      if (want && n.t !== want) return false;
+      return !only || (name || '').toLowerCase().endsWith('.' + only.toLowerCase());
+    };
+
+    // ---------- rows ----------
+    const sort = s.sort || { key: 'name', asc: true };
+    const ICON = {
+      dir: 'folder',
+      drive: 'hard_drive',
+      ns: 'dashboard',
+      audio: 'music_note',
+      video: 'smart_display',
+      text: 'description',
+      file: 'draft'
+    };
+    const plural = (k, one, many) => k + ' ' + (k === 1 ? one : many);
+    // the folder picker counts everything inside a folder, the other browsers count what they would list
+    const countOf = (n) => plural(Object.keys(n).filter((x) => mode === 'Folder' || accepts(n[x], x)).length, 'item', 'items');
+    const entryFor = (name, n, at, sub) => {
+      const full = at.concat([name]).join('/');
+      const renamed = renames[full];
+      const shown = renamed || name;
+      const blocked = !!n.blocked && !renamed;
+      const sel = selKey === full;
+      const dir = isDir(n);
+      const topDrive = anywhere && at.length === 0, topNs = mode === 'Resource' && at.length === 0;
+      return {
+        key: full, n, name: shown, sub: sub || '', blocked, isNew: !!n.fresh,
+        isThumb: n.t === 'img' || n.t === 'video', look: n.look || '',
+        isIcon: !(n.t === 'img' || n.t === 'video'), icCls: 'fb-ic' + (dir ? ' dir' : ''),
+        d: topDrive ? ICON.drive : topNs ? ICON.ns : dir ? ICON.dir : ICON[n.t] || ICON.file,
+        size: dir ? countOf(n) : mode === 'Resource' ? '' : n.size,
+        date: mode === 'Resource' ? (at.length === 0 ? SOURCES[name] || '' : SOURCES[path[0]] || '') : dir ? '' : n.mod,
+        cls: 'item fb-row' + (sel ? ' sel' : '') + (blocked ? ' off' : '') + (n.fresh ? ' fb-new' : ''), ariaSel: sel ? 'true' : 'false',
+        pick: () => { this.setState({ sel: full }); if (mode === 'Save' && n.t === 'text') this.setState({ name: shown.replace(/\.txt$/, '') }); },
+        open: () => { if (dir) go(at.concat([name])); },
+        fix: (e) => { e.stopPropagation(); this.setState({ renames: { ...renames, [full]: fixName(name) }, sel: full }); },
+        ts: n.ts || 0
+      };
+    };
+    const fixName = (n) => n.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_.-]/g, '');
+    const qRaw = s.q ?? (p.query || '');
+    const q = qRaw.trim().toLowerCase();
+    let rows = [];
+    if (q) {
+      const walk = (n, at, depth) => {
+        for (const k of Object.keys(n)) {
+          const c = n[k];
+          if (!accepts(c, k)) continue;
+          if (k.toLowerCase().includes(q)) rows.push(entryFor(k, c, at, depth > 0 ? 'in ' + at[at.length - 1] : ''));
+          if (isDir(c)) walk(c, at.concat([k]), depth + 1);
+        }
+      };
+      walk(cur, path, 0);
+    } else {
+      rows = Object.keys(cur).filter((k) => accepts(cur[k], k)).map((k) => entryFor(k, cur[k], path));
+    }
+    rows.sort((a, b) => {
+      const da = isDir(a.n), db = isDir(b.n);
+      if (da !== db) return da ? -1 : 1;
+      const base = (x) => x.replace(/\.[^.]+$/, '');
+      const r = sort.key === 'date' ? a.ts - b.ts : (base(a.name).localeCompare(base(b.name)) || a.name.localeCompare(b.name));
+      return sort.asc ? r : -r;
+    });
+
+    // the Places button names the top level (drive, namespace or the folder this browser is limited to); the path bar shows what's below it
+    const topLen = mode === 'Resource' || anywhere ? 1 : ROOT.length;
+    const topName = path.length < topLen ? (anywhere ? 'This PC' : 'Resources') : (mode === 'Resource' || anywhere ? path[0] : (mode === 'Save' ? 'Layouts' : 'FancyMenu Assets'));
+    const crumbs = path.slice(topLen).map((name, i, arr) => ({
+      name, cls: 'fb-crumb' + (i === arr.length - 1 ? ' cur' : ''),
+      go: () => go(path.slice(0, topLen + i + 1))
+    }));
+
+    // ---------- preview ----------
+    const selRow = rows.find((r) => r.key === selKey) || null;
+    const selected = selRow ? selRow.n : null;
+    const readVol = () => { try { const v = parseFloat(localStorage.getItem('fm-preview-volume')); if (v >= 0 && v <= 1) return v; } catch (x) {} return 0.8; };
+    const vol = s.vol ?? readVol();
+    const setVol = (v) => { const nv = Math.round(Math.min(1, Math.max(0, v)) * 100) / 100; try { localStorage.setItem('fm-preview-volume', String(nv)); } catch (x) {} this.setState({ vol: nv }); };
+    const ext = (n) => (n.split('.').pop() || '').toUpperCase();
+    const playing = !!s.playing && !!selRow && s.playing === selRow.key;
+    const togglePlay = () => { const on = !playing; this.setState({ playing: on ? selRow.key : null }); if (on) setTimeout(() => this.setState({ playing: null }), 2000); };
+    let pv = { none: true, emptyText: mode === 'Folder' ? 'Select a folder, or use the one that is open' : 'Select a file to see a preview' };
+    if (mode === 'Folder' && !selected) {
+      const nFolders = Object.keys(cur).filter((k) => isDir(cur[k])).length, nFiles = Object.keys(cur).length - nFolders;
+      pv = { dir: true, bigIcon: ICON.dir, named: true, name: crumbs.length ? crumbs[crumbs.length - 1].name : topName, meta: plural(nFolders, 'folder', 'folders') + ', ' + plural(nFiles, 'file', 'files'), date: 'The folder that is open right now' };
+    } else if (selected) {
+      const nm = selRow.name;
+      if (isDir(selected)) {
+        const nFolders = Object.keys(selected).filter((k) => isDir(selected[k])).length, nFiles = Object.keys(selected).length - nFolders;
+        pv = { dir: true, bigIcon: anywhere && path.length === 0 ? ICON.drive : mode === 'Resource' && path.length === 0 ? ICON.ns : ICON.dir, named: true, name: nm, meta: plural(nFolders, 'folder', 'folders') + ', ' + plural(nFiles, 'file', 'files'), date: mode === 'Resource' && path.length === 0 ? 'From ' + (SOURCES[nm] || nm) : '' };
+      } else if (selected.t === 'img') {
+        pv = { img: true, look: selected.look || '', named: true, name: nm, meta: [ext(nm), selected.dims, selected.size].filter(Boolean).join(' · '), date: mode === 'Resource' ? 'From ' + (SOURCES[path[0]] || path[0]) : 'Modified ' + selected.mod };
+        if (selRow.blocked) Object.assign(pv, { blocked: true, fixedName: fixName(nm), fix: selRow.fix, msg: 'FancyMenu can\'t use this name: only lowercase a–z, 0–9, _, - and . work in paths. Rename it to use the file.' });
+      } else if (selected.t === 'audio') {
+        pv = { audio: true, hasVol: true, bars: Array.from({ length: 40 }, (_, i) => 'height: ' + Math.round(5 + 21 * Math.abs(Math.sin(i * 1.3) * Math.cos(i * .37))) + 'px'), dur: selected.dur, named: true, name: nm, meta: [ext(nm), selected.size].filter(Boolean).join(' · '), date: mode === 'Resource' ? 'From ' + (SOURCES[path[0]] || path[0]) : 'Modified ' + selected.mod };
+      } else if (selected.t === 'video') {
+        pv = p.watermediaMissing
+          ? { noWm: true, named: true, name: nm, meta: [ext(nm), selected.size].join(' · '), date: 'Modified ' + selected.mod, msg: 'Watermedia V3 and Watermedia Binaries are needed to play videos.' }
+          : { video: true, hasVol: true, look: '', dur: selected.dur, named: true, name: nm, meta: [ext(nm), selected.dims, selected.size].join(' · '), date: 'Modified ' + selected.mod };
+      } else if (selected.t === 'text') {
+        pv = { named: true, name: nm, meta: [ext(nm), selected.size].join(' · '), date: 'Modified ' + selected.mod, text: selected.text };
+      } else {
+        pv = { named: true, name: nm, meta: [ext(nm), selected.size].join(' · '), date: 'Modified ' + selected.mod, msg: '' };
+      }
+    }
+    pv = { none: false, img: false, dir: false, audio: false, video: false, noWm: false, hasVol: false, named: false, text: '', msg: '', blocked: false, date: '', ...pv };
+    pv.playing = playing; pv.notPlaying = !playing; pv.playCls = 'mc-play' + (playing ? ' on' : ''); pv.vplayCls = 'mc-play mc-vplay' + (playing ? ' on' : ''); pv.playTip = playing ? 'Stop' : 'Play'; pv.play = togglePlay;
+
+    // ---------- places menu ----------
+    const placesOpen = s.places ?? !!p.places;
+    const at = (str) => () => go(str.split('/').filter(Boolean));
+    let placesItems;
+    if (mode === 'Resource') {
+      placesItems = [
+        { head: 'Namespaces' },
+        { ic: 'cube', label: 'minecraft', val: 'Minecraft', click: at('minecraft') },
+        { ic: 'cube', label: 'fancymenu', val: 'FancyMenu', click: at('fancymenu') },
+        { ic: 'cube', label: 'duskvalley', val: 'Dusk Valley Pack', click: at('duskvalley') },
+        { head: 'Recent' },
+        { ic: 'once', label: 'background', val: 'in minecraft', click: at('minecraft/textures/gui/title/background') },
+        { ic: 'once', label: 'menu', val: 'in duskvalley', click: at('duskvalley/textures/menu') }
+      ];
+    } else if (anywhere) {
+      placesItems = [
+        { head: 'Drives' },
+        { ic: 'drive', label: 'Local Disk (C:)', val: '412 GB free', click: at('C:') },
+        { ic: 'drive', label: 'Data (D:)', val: '1.2 TB free', click: at('D:') },
+        { ic: 'drive', label: 'USB Stick (E:)', val: '28 GB free', click: at('E:') },
+        { head: 'Recent' },
+        { ic: 'once', label: 'Screenshots', val: 'in Pictures', click: at('C:/Users/Steve/Pictures/Screenshots') },
+        { ic: 'once', label: 'Art', val: 'on D:', click: at('D:/Art') },
+        { ic: 'once', label: 'backgrounds', val: 'in FancyMenu assets', click: at('C:/Users/Steve/AppData/Roaming/.minecraft/config/fancymenu/assets/backgrounds') },
+        { head: 'Places' },
+        { ic: 'cube', label: 'Minecraft Folder', click: at('C:/Users/Steve/AppData/Roaming/.minecraft') },
+        { ic: 'folder', label: 'FancyMenu Assets', click: at('C:/Users/Steve/AppData/Roaming/.minecraft/config/fancymenu/assets') },
+        { ic: 'screen', label: 'Desktop', click: at('C:/Users/Steve/Desktop') },
+        { ic: 'file', label: 'Documents', click: at('C:/Users/Steve/Documents') },
+        { ic: 'download', label: 'Downloads', click: at('C:/Users/Steve/Downloads') },
+        { ic: 'image', label: 'Pictures', click: at('C:/Users/Steve/Pictures') }
+      ];
+    } else {
+      const base = ROOT.join('/');
+      placesItems = [
+        { head: 'Recent' },
+        { ic: 'once', label: 'backgrounds', val: 'in assets', click: at(base + '/backgrounds') },
+        { ic: 'once', label: 'sounds', val: 'in assets', click: at(base + '/sounds') },
+        { head: 'Places' },
+        { ic: 'folder', label: mode === 'Save' ? 'Layouts' : 'FancyMenu Assets', click: at(base) }
+      ];
+      if (mode === 'Save') placesItems = [{ head: 'Places' }, { ic: 'folder', label: 'Layouts', click: at(base) }];
+    }
+
+
+    // ---------- save ----------
+    const isSave = mode === 'Save';
+    const saveName = s.name ?? (p.saveName || 'dusk_valley_night');
+    const validName = /^[a-z0-9_.-]+$/.test(saveName);
+    const exists = isSave && !!cur[saveName + '.txt'];
+    const nameMsg = !saveName ? '' : !validName ? 'Only lowercase a–z, 0–9, _, - and . work in file names.' : exists ? saveName + '.txt is already here. Saving replaces it.' : '';
+    const canChoose = mode === 'Folder' ? true : mode === 'Save' ? (!!saveName && validName) : !!selected && !isDir(selected) && !selRow.blocked;
+    const selName = selRow ? selRow.name : '';
+
+    const standalone = p.standalone ?? true;
+    const titles = { Images: 'Choose Image', Sounds: 'Choose Sound', Videos: 'Choose Video', Text: 'Choose Text File', All: 'Choose File' };
+    const title = p.title || (mode === 'Folder' ? 'Choose Folder' : mode === 'Save' ? 'Save Layout As' : mode === 'Resource' ? 'Choose Resource Location' : titles[kind]);
+    // FancyMenu's registered file types (FileTypes); Save only writes layouts, so it shows TXT alone
+    const typeLists = { Images: ['PNG', 'JPG', 'JPEG', 'GIF', 'APNG', 'FMA', 'AFMA'], Sounds: ['OGG', 'WAV'], Videos: ['MP4'], Text: mode === 'Save' ? ['TXT'] : ['TXT', 'MD', 'JSON', 'LOG', 'LANG', 'PROPERTIES', 'XML', 'JS', 'HTML', 'CSS', 'CSV'], All: [] };
+    const types = typeLists[kind] || [];
+    const typesOpen = !!s.typesOpen;
+    // with a single allowed type there is nothing to pick, so the types show as plain text
+    const typesPick = types.length > 1;
+    const W = 1000, H = 640;
+    return {
+      rootCls: standalone ? 'fm ' + ((p.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark') + ((p.material ?? 'Blur') === 'Blur' ? ' mat-blur' : '') : '',
+      rootStyle: standalone ? 'position: relative; width: 1080px; height: 720px; overflow: hidden; background: var(--bd)' : 'position: relative; width: ' + W + 'px; height: ' + H + 'px',
+      winStyle: (standalone ? 'left: 40px; top: 40px; ' : 'left: 0; top: 0; ') + 'width: ' + W + 'px; height: ' + H + 'px',
+      standalone, yes: true, no: false, noop: () => {},
+      title,
+      titleIcon: mode === 'Save' ? 'save' : mode === 'Resource' ? ICON.ns : ICON.dir,
+      noBack: hi <= 0, noForward: hi >= hist.length - 1, noUp: path.length <= (mode === 'Resource' || anywhere ? 0 : ROOT.length),
+      back: () => this.setState({ hi: Math.max(0, hi - 1), sel: null, q: '' }),
+      forward: () => this.setState({ hi: Math.min(hist.length - 1, hi + 1), sel: null, q: '' }),
+      up: () => go(path.slice(0, -1)),
+      placesOpen, placesItems, placesExpanded: placesOpen ? 'true' : 'false',
+      placesCls: 'fb-places' + (placesOpen ? ' open' : ''),
+      placesLabel: topName,
+      placesIcon: anywhere ? ICON.drive : mode === 'Resource' ? ICON.ns : ICON.dir,
+      placesTip: anywhere ? 'Drives, recent folders and places' : mode === 'Resource' ? 'Namespaces and recent folders' : 'Recent folders · this browser stays in ' + ROOT.join('/'),
+      togglePlaces: () => this.setState({ places: !placesOpen, typesOpen: false }),
+      anyPop: placesOpen || !!s.typesOpen, closePops: () => this.setState({ places: false, typesOpen: false }),
+      closePlaces: () => this.setState({ places: false }),
+      crumbs,
+      searchPlaceholder: 'Search ' + (crumbs.length ? crumbs[crumbs.length - 1].name : topName),
+      q: qRaw, typed: (e) => this.setState({ q: e.target.value, sel: null }),
+      canWrite: mode !== 'Resource',
+      explorerTip: anywhere || mode !== 'Resource' ? 'Show in Explorer' : '',
+      col2: mode === 'Resource' ? '' : 'Size', col3: mode === 'Resource' ? 'Source' : 'Modified',
+      sortNameCls: sort.key === 'name' ? 'on' : '', sortDateCls: sort.key === 'date' ? 'on' : '',
+      sortNameArrow: sort.key === 'name' ? (sort.asc ? 'arrow_drop_up' : 'arrow_drop_down') : '',
+      sortDateArrow: sort.key === 'date' ? (sort.asc ? 'arrow_drop_up' : 'arrow_drop_down') : '',
+      sortByName: () => this.setState({ sort: { key: 'name', asc: sort.key === 'name' ? !sort.asc : true } }),
+      sortByDate: () => { if (mode !== 'Resource') this.setState({ sort: { key: 'date', asc: sort.key === 'date' ? !sort.asc : false } }); },
+      rows, noRows: rows.length === 0,
+      emptyText: q ? 'Nothing here or in the folders inside matches “' + qRaw + '”' : mode === 'Folder' ? 'No folders in here' : only ? 'No ' + only + ' files in this folder' : 'No ' + (kind === 'All' ? 'files' : kind.toLowerCase()) + ' in this folder',
+      dropNote: !p.dropped ? '' : dropActive ? 'Copied 2 files here, skipped ' + DROP_SKIPPED + ' (' + ({ Images: 'not an image', Sounds: 'not a sound', Videos: 'not a video', Text: 'not a text file' }[kind] || 'not supported') + ').' : 'Removed fireflies.png and title_glow.png again.',
+      noDropNote: !p.dropped, canUndoDrop: dropActive, dropIcon: dropActive ? 'check_circle' : 'undo',
+      undoDrop: () => this.setState({ dropUndone: true, sel: null }),
+      pv,
+      muteTip: vol === 0 ? 'Unmute previews' : 'Mute previews',
+      volIcon: vol === 0 ? 'volume_off' : 'volume_up',
+      mute: () => setVol(vol === 0 ? (this._unmute || 0.8) : (this._unmute = vol, 0)),
+      volText: Math.round(vol * 100) + '%', volFill: 'width: ' + vol * 100 + '%', volKnob: 'left: ' + vol * 100 + '%',
+      volDown: (e) => { try { e.currentTarget.setPointerCapture(e.pointerId); } catch (x) {} this._vd = true; const r = e.currentTarget.getBoundingClientRect(); setVol((e.clientX - r.left) / r.width); },
+      volMove: (e) => { if (this._vd && (e.buttons & 1)) { const r = e.currentTarget.getBoundingClientRect(); setVol((e.clientX - r.left) / r.width); } },
+      volUp: () => { this._vd = false; },
+      isSave, saveName, ext: '.txt',
+      nameCls: 'field' + (saveName && !validName ? ' bad' : ''),
+      nameTyped: (e) => this.setState({ name: e.target.value }),
+      nameMsg, nameMsgCls: 'fb-msg' + (!validName ? ' bad' : ' amber'),
+      canFixName: !!saveName && !validName, fixedSaveName: fixName(saveName), fixName: () => this.setState({ name: fixName(saveName) }),
+      footCls: 'footer fb-foot' + (isSave ? '' : ' line'),
+      showTypes: mode === 'Choose' || mode === 'Resource' || mode === 'Save',
+      typesLabel: only || (types.length ? types.join(', ') : 'All files'), typesTip: 'Only these files are shown',
+      typesPick, typesFixed: !typesPick, typesOpen, typesExpanded: typesOpen ? 'true' : 'false', typesCls: 'popup' + (typesOpen ? ' open' : ''),
+      toggleTypes: () => this.setState({ typesOpen: !typesOpen, places: false }), closeTypes: () => this.setState({ typesOpen: false }),
+      typesItems: [
+        { radio: true, checked: !only, label: 'All ' + ({ Images: 'Images', Sounds: 'Sounds', Text: 'Text Files' }[kind] || 'Files'), click: () => this.setState({ only: null, typesOpen: false }) },
+        { sep: true },
+        ...types.map((x) => ({ radio: true, checked: only === x, label: x, click: () => this.setState({ only: x, typesOpen: false }) }))
+      ],
+      hasApply: !!p.apply && mode === 'Choose',
+      primaryLabel: mode === 'Folder' ? (selected && isDir(selected) ? 'Use ' + selName : 'Use This Folder') : mode === 'Save' ? (exists ? 'Replace' : 'Save') : 'Choose',
+      primaryCls: 'btn wide primary' + (exists ? ' danger' : ''),
+      primaryDisabled: !canChoose
+    };
+  }
+}
+</script>
+</body>
+</html>

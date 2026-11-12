@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Profiles</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="fm {{themeClass}} {{matClass}}" style="position: relative; width: 1280px; height: 820px; overflow: hidden" onMouseDown="{{activate}}">
+
+<div class="backdrop" aria-hidden="true">
+<img class="art" src="dusk_valley.png" alt="">
+<div class="dim"></div>
+</div>
+
+<div class="win" style="left: 170px; top: 52px; width: 940px; height: 716px">
+<div class="titlebar">
+<div class="tl"><button class="c" aria-label="Close"><span class="ms" aria-hidden="true">close</span></button><button class="m" aria-label="Collapse"><span class="ms" aria-hidden="true">remove</span></button><button class="x" aria-label="Maximize"><span class="ms" aria-hidden="true">open_in_full</span></button></div>
+<div class="wt"><span class="ms" aria-hidden="true">stacks</span>Profiles</div>
+<div></div>
+</div>
+
+<div class="split">
+<aside class="sidebar" aria-label="Your profiles">
+<div class="vm-top">
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+<button class="btn tinted"><span class="ms" aria-hidden="true">add</span>New Profile</button>
+<button class="btn tinted" data-tip="Pick a .fmp file, or drop one anywhere in this window"><span class="ms" aria-hidden="true">download</span>Import</button>
+</div>
+<label class="field vm-search"><span class="ms" aria-hidden="true">search</span><input type="text" placeholder="{{searchPh}}" aria-label="Search names and authors" data-fk="{{searchFk}}" value="{{q}}" onInput="{{onSearch}}" onKeyDown="{{searchKey}}"></label>
+</div>
+<div class="plist vm-list" role="listbox" aria-label="Profiles">
+<sc-for list="{{rows}}" as="p" hint-placeholder-count="5">
+<button class="{{p.cls}}" role="option" aria-selected="{{p.ariaSel}}" onClick="{{p.select}}" onDoubleClick="{{p.load}}" onContextMenu="{{p.menu}}">
+<span class="picon" style="{{p.iconStyle}}; width: 36px; height: 36px; font-size: 16px"><sc-if value="{{p.img}}" hint-placeholder-val="{{false}}"><img src="dusk_valley.png" alt=""></sc-if><sc-if value="{{p.noImg}}" hint-placeholder-val="{{true}}">{{p.initial}}</sc-if></span>
+<span style="min-width: 0"><span class="pt"><sc-for list="{{p.titleParts}}" as="np" hint-placeholder-count="1"><sc-if value="{{np.hit}}" hint-placeholder-val="{{false}}"><mark>{{np.t}}</mark></sc-if><sc-if value="{{np.plain}}" hint-placeholder-val="{{true}}">{{np.t}}</sc-if></sc-for></span><sc-if value="{{p.subtitle}}" hint-placeholder-val="{{true}}"><span class="ps"><sc-for list="{{p.subParts}}" as="np" hint-placeholder-count="1"><sc-if value="{{np.hit}}" hint-placeholder-val="{{false}}"><mark>{{np.t}}</mark></sc-if><sc-if value="{{np.plain}}" hint-placeholder-val="{{true}}">{{np.t}}</sc-if></sc-for></span></sc-if></span>
+<sc-if value="{{p.active}}" hint-placeholder-val="{{false}}"><span class="chip ok">Active</span></sc-if>
+</button>
+</sc-for>
+<sc-if value="{{noMatch}}" hint-placeholder-val="{{false}}"><div class="vm-nomatch"><span>{{noMatchText}}</span></div></sc-if>
+</div>
+<div class="dropzone"><span class="ms" aria-hidden="true">download</span><span><b>Drop .fmp files here</b>to add them to your profiles</span></div>
+</aside>
+
+<main class="pcontent">
+<div style="display: flex; gap: 20px; align-items: flex-start">
+<span class="picon" style="{{sel.iconStyle}}; width: 96px; height: 96px; font-size: 42px"><sc-if value="{{sel.img}}" hint-placeholder-val="{{false}}"><img src="dusk_valley.png" alt=""></sc-if><sc-if value="{{sel.noImg}}" hint-placeholder-val="{{true}}">{{sel.initial}}</sc-if></span>
+<div class="dhead" style="flex: 1 1 auto; min-width: 0; padding-top: 2px">
+<h2 class="dt">{{sel.title}}</h2>
+<sc-if value="{{sel.authors}}" hint-placeholder-val="{{true}}"><div class="dm">by {{sel.authors}}</div></sc-if>
+<div class="dacts" style="position: relative">
+<sc-if value="{{sel.canLoad}}" hint-placeholder-val="{{true}}"><button class="btn primary" style="min-width: 124px" onClick="{{loadSel}}"><span class="ms" aria-hidden="true">play_arrow</span>Load Profile</button></sc-if>
+<sc-if value="{{sel.active}}" hint-placeholder-val="{{false}}"><span class="loaded-pill"><span class="ms" aria-hidden="true">check</span>Loaded</span></sc-if>
+<a class="btn" href="EditProfile.dc.html"><span class="ms" aria-hidden="true">edit</span>Edit</a>
+<button class="btn" data-tip="Export to share it" aria-label="Export"><span class="ms" aria-hidden="true">ios_share</span>Export</button>
+<div class="pop">
+<button class="{{moreCls}}" data-tip="More" aria-label="More actions" aria-haspopup="menu" aria-expanded="{{moreOpen}}" onClick="{{toggleMore}}"><span class="ms" style="font-size: 16px" aria-hidden="true">more_horiz</span></button>
+<sc-if value="{{moreOpen}}" hint-placeholder-val="{{false}}"><div class="pop-menu"><dc-import name="ContextMenu" items="{{moreItems}}" label="More actions" focus-on-open="{{yes}}" escape-listener="{{closeMenus}}" standalone="{{no}}" hint-size="auto,120px"></dc-import></div></sc-if>
+</div>
+</div>
+<sc-if value="{{sel.active}}" hint-placeholder-val="{{false}}"><div style="margin-top: 8px; font-size: 11.5px; color: var(--text-3)">Loaded right now. Every change you make goes straight into it.</div></sc-if>
+</div>
+</div>
+
+<div class="facts">
+<div><span class="k">Layouts</span><span class="v">{{sel.layouts}}</span></div>
+<div><span class="k">Size</span><span class="v">{{sel.size}}</span></div>
+<div><span class="k">Version</span><span class="v">{{sel.versionText}}</span></div>
+</div>
+
+<sc-if value="{{sel.hasLinks}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<sc-for list="{{sel.links}}" as="l" hint-placeholder-count="4">
+<a class="btn sm" href="#" data-tip="{{l.url}}" aria-label="{{l.label}}, {{l.url}}">
+<span class="ms" aria-hidden="true">{{l.icon}}</span>
+{{l.label}}
+</a>
+</sc-for>
+</div>
+</sc-if>
+
+<div>
+<div class="sec">About</div>
+<div class="group md" style="padding: 16px 18px">
+<sc-if value="{{sel.noDesc}}" hint-placeholder-val="{{false}}"><p style="margin: 0; color: var(--text-3); text-align: center; padding: 18px 0">This profile has no description yet.</p></sc-if>
+<sc-for list="{{sel.blocks}}" as="b" hint-placeholder-count="4">
+<sc-if value="{{b.h}}" hint-placeholder-val="{{false}}"><h3>{{b.h}}</h3></sc-if>
+<sc-if value="{{b.p}}" hint-placeholder-val="{{true}}"><p>{{b.p}}</p></sc-if>
+<sc-if value="{{b.ul}}" hint-placeholder-val="{{false}}"><ul><sc-for list="{{b.ul}}" as="li" hint-placeholder-count="3"><li>{{li}}</li></sc-for></ul></sc-if>
+</sc-for>
+</div>
+</div>
+</main>
+</div>
+
+<sc-if value="{{ctxOpen}}" hint-placeholder-val="{{false}}"><div style="{{ctxStyle}}"><dc-import name="ContextMenu" items="{{ctxItems}}" label="Profile" focus-on-open="{{yes}}" escape-listener="{{closeMenus}}" standalone="{{no}}" hint-size="auto,220px"></dc-import></div></sc-if>
+
+<sc-if value="{{taskOpen}}" hint-placeholder-val="{{false}}">
+<div class="sheet-dim"></div>
+<div class="sheet" role="dialog" aria-label="{{task.head}}">
+<div style="display: flex; align-items: center; gap: 12px">
+<span class="picon" style="{{task.iconStyle}}; width: 40px; height: 40px; font-size: 18px"><sc-if value="{{task.img}}" hint-placeholder-val="{{false}}"><img src="dusk_valley.png" alt=""></sc-if><sc-if value="{{task.noImg}}" hint-placeholder-val="{{true}}">{{task.initial}}</sc-if></span>
+<div style="min-width: 0"><div class="vm-st">{{task.head}}</div><div style="font-size: 12px; color: var(--text-3); margin-top: 2px">{{task.sub}}</div></div><span style="margin-left: auto; align-self: flex-start; font-size: 12px; color: var(--text-2); font-variant-numeric: tabular-nums">{{task.pct}}</span>
+</div>
+<div class="bar" style="margin-top: 16px"><i style="{{task.barStyle}}"></i></div>
+<div style="display: flex; justify-content: space-between; margin-top: 7px; font-size: 12px; color: var(--text-2)"><span>{{task.progressText}}</span><span>{{task.remaining}}</span></div>
+<div style="display: flex; justify-content: flex-end; margin-top: 14px"><button class="btn wide" onClick="{{cancelTask}}">Cancel</button></div>
+</div>
+</sc-if>
+
+<sc-if value="{{wrongOpen}}" hint-placeholder-val="{{false}}">
+<div class="sheet-dim"></div>
+<div class="sheet vm-alert" role="alertdialog" aria-label="Not a profile file">
+<span class="vm-aicon err"><span class="ms" aria-hidden="true">block</span></span>
+<div class="vm-st" style="margin-top: 12px">That&#x27;s not a profile file</div>
+<p>dusk_valley_backup.zip can&#x27;t be imported. Only FancyMenu profile files (.fmp) can, so nothing changed.</p>
+<div style="display: flex; flex-direction: column; gap: 8px; margin-top: 18px"><button class="btn primary" onClick="{{hideWrong}}">Close</button></div>
+</div>
+</sc-if>
+
+<sc-if value="{{conflictOpen}}" hint-placeholder-val="{{false}}">
+<div class="sheet-dim"></div>
+<div class="sheet vm-alert" role="alertdialog" aria-label="Profile already exists">
+<span class="picon" style="background: #3a4a8c; width: 64px; height: 64px; margin: 0 auto"><img src="dusk_valley.png" alt=""></span>
+<div class="vm-st" style="margin-top: 12px">This profile already exists</div>
+<p>You already have “Dusk Valley” (version 1.4.2). The imported one has version 1.5.0. Do you want to replace yours, or keep both?</p>
+<div style="display: flex; flex-direction: column; gap: 8px; margin-top: 18px">
+<button class="btn primary" onClick="{{hideConflict}}">Keep Both</button>
+<button class="btn danger" onClick="{{hideConflict}}">Replace</button>
+<button class="btn" onClick="{{hideConflict}}">Cancel</button>
+</div>
+</div>
+</sc-if>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Solid"},"demo":{"editor":"enum","options":["None","Loading","Drop","Wrong file","Conflict","Menu"],"default":"None"},"query":{"editor":"text","default":""},"$preview":{"width":1280,"height":820}}'>
+class Component extends DCLogic {
+  componentWillUnmount() {
+    if (this.timer) clearInterval(this.timer);
+    if (this._keys) window.removeEventListener('keydown', this._keys, true);
+  }
+  renderVals() {
+    const s = this.state || {};
+    const demo = this.props.demo ?? 'None';
+    const set = (patch) => () => this.setState(patch);
+    const profiles = [
+      { id: 'dusk', title: 'Dusk Valley', authors: 'Lumen Studio', version: '1.4.2', layouts: 12, size: '3.4 MB', img: true, color: '#3a4a8c',
+        links: [['chat', 'Discord', 'https://discord.gg/duskvalley'], ['puzzle', 'Modrinth', 'https://modrinth.com/modpack/dusk-valley'], ['play', 'Trailer', 'https://youtu.be/dusk-valley'], ['bug', 'Report an Issue', 'https://github.com/lumen/dusk-valley/issues']],
+        blocks: [{ h: 'A cozy pixel-art title screen' }, { p: 'Dusk Valley turns your menus into a calm evening scene with animated fireflies, its own soundtrack and buttons that match.' }, { ul: ['Title screen, pause menu and loading screen', 'Three background music tracks', 'Light and dark button styles'] }, { p: 'Looks best with GUI Scale 2 or 3.' }] },
+      { id: 'cherry', title: 'Cherry Grove Menus', authors: 'Petal', version: '2.0', layouts: 7, size: '1.8 MB', color: '#c23d6e',
+        links: [['globe', 'Website', 'https://petal.example.com']],
+        blocks: [{ p: 'Soft pink menus with falling petals and a gentle piano theme.' }] },
+      { id: 'minimal', title: 'Minimal Dark', authors: 'Nox', version: '1.0.0', layouts: 4, size: '412 KB', color: '#4152b8',
+        links: [['code', 'GitHub', 'https://github.com/nox/minimal-dark'], ['bug', 'Report an Issue', 'https://github.com/nox/minimal-dark/issues']],
+        blocks: [{ h: 'Less is more' }, { p: 'Flat, quiet menus without background music or animations.' }] },
+      { id: 'halloween', title: 'Halloween Event', authors: 'Lumen Studio', version: '0.3', layouts: 9, size: '5.1 MB', color: '#c25f12', links: [], blocks: [] },
+      { id: 'mine', title: 'My Profile', authors: '', version: '', layouts: 3, size: '96 KB', color: '#1f8a5b', links: [], blocks: [] }
+    ];
+    const active = s.active ?? 'mine';
+    // ---------- search: names and authors, like the search of every other manager ----------
+    const uid = this._uid || (this._uid = 'pr' + Math.random().toString(36).slice(2, 8));
+    const q = s.q ?? (this.props.query || '');
+    const ql = q.trim().toLowerCase();
+    const hitParts = (text) => {
+      const at = ql ? text.toLowerCase().indexOf(ql) : -1;
+      const part = (t, hit) => ({ t, hit, plain: !hit });
+      return at < 0 ? [part(text, false)] : [part(text.slice(0, at), false), part(text.slice(at, at + ql.length), true), part(text.slice(at + ql.length), false)].filter((y) => y.t);
+    };
+    const shown = profiles.filter((p) => !ql || p.title.toLowerCase().includes(ql) || p.authors.toLowerCase().includes(ql));
+    const focusSearch = () => setTimeout(() => { const el = document.querySelector('[data-fk="' + uid + '-search"]'); if (el) el.focus(); }, 0);
+    const selId = s.sel ?? (demo === 'Loading' ? 'cherry' : demo === 'Menu' ? 'minimal' : 'dusk');
+    const iconOf = (p) => ({ img: !!p.img, noImg: !p.img, initial: p.title.charAt(0), iconStyle: 'background: ' + p.color });
+    const findP = (id) => profiles.find((p) => p.id === id) || profiles[0];
+    // link icons: the ones FancyMenu shows for these platforms today
+    const LINK_IC = { chat: 'forum', puzzle: 'extension', play: 'smart_display', globe: 'public', code: 'code', bug: 'bug_report' };
+
+    const startLoad = (id) => {
+      if (this.timer || id === active) return;
+      this.setState({ task: id, prog: 0, sel: id, moreOpen: false, ctxFor: null });
+      this.timer = setInterval(() => {
+        const p = (this.state.prog || 0) + 0.035;
+        if (p >= 1) {
+          clearInterval(this.timer);
+          this.timer = null;
+          this.setState({ task: null, prog: 0, active: id });
+        } else {
+          this.setState({ prog: p });
+        }
+      }, 60);
+    };
+
+    const sp = findP(selId);
+    const isActive = (p) => p.id === active;
+    // the same menu rows as everywhere else; Delete stays red and says why it can't delete the loaded profile
+    const MI = {
+      load: 'play_arrow',
+      edit: 'edit',
+      export: 'ios_share'
+    };
+    const close = { moreOpen: false, ctxFor: null };
+    const deleteRow = (p) => ({ ic: 'trash', label: 'Delete', danger: true, disabled: isActive(p), note: isActive(p) ? 'Loaded' : '', click: set(close) });
+    const shareRows = (p) => [{ ic: 'copy', label: 'Duplicate', click: set(close) }, { ic: 'folder', label: 'Open Folder', click: set(close) }, { sep: true }, deleteRow(p)];
+    const sel = {
+      ...iconOf(sp), title: sp.title, authors: sp.authors, active: isActive(sp), canLoad: !isActive(sp),
+      layouts: String(sp.layouts), size: sp.size, versionText: sp.version || '–',
+      links: sp.links.map(([kind, label, url]) => ({ icon: LINK_IC[kind], label, url })), hasLinks: sp.links.length > 0,
+      blocks: sp.blocks, noDesc: sp.blocks.length === 0
+    };
+
+    const ctxFor = s.ctxFor !== undefined ? s.ctxFor : (demo === 'Menu' ? 'minimal' : null);
+    // the menu opens next to its row, so it counts the rows the search left in the list
+    const ctxIndex = shown.findIndex((p) => p.id === ctxFor);
+    const cp = ctxIndex >= 0 ? shown[ctxIndex] : null;
+
+    // A dropped .fmp file starts its import right away. Minecraft only reports files once they're dropped, never while
+    // they're dragged over the window, so there's no drop target to light up before (rule 118).
+    const IMPORT = { id: 'import', title: 'Winter Valley', file: 'winter_valley.fmp', size: '2.6 MB', color: '#2f7f9c' };
+    const taskId = s.task !== undefined ? s.task : (demo === 'Loading' ? 'cherry' : demo === 'Drop' ? 'import' : null);
+    const prog = s.task !== undefined ? (s.prog || 0) : 0.62;
+    const tp = taskId === 'import' ? IMPORT : taskId ? findP(taskId) : null;
+    const totalMb = tp ? parseFloat(tp.size) * (tp.size.endsWith('KB') ? 0.001 : 1) : 0;
+    const done = (totalMb * prog).toFixed(1);
+
+    const wrong = s.wrong !== undefined ? s.wrong : demo === 'Wrong file';
+    // Ctrl+F goes to the search field, and typing anywhere in the window starts a search, like in the other managers.
+    // An open menu or sheet keeps the keys, since menus have a search of their own (rule 30).
+    this._onKey = (e) => {
+      if (window.__prActive !== uid) return;
+      const st = this.state || {};
+      const tag = (e.target && e.target.tagName) || '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || st.moreOpen || ctxFor || taskId || wrong || conflict) return;
+      const mod = e.ctrlKey || e.metaKey;
+      if (mod && e.key.toLowerCase() === 'f') { e.preventDefault(); focusSearch(); return; }
+      if (!mod && !e.altKey && e.key.length === 1 && e.key !== ' ') { this.setState({ q: q + e.key }); focusSearch(); }
+    };
+    if (!this._keys) { this._keys = (e) => this._onKey && this._onKey(e); window.addEventListener('keydown', this._keys, true); }
+    const conflict = s.conflict !== undefined ? s.conflict : demo === 'Conflict';
+
+    return {
+      themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark',
+      matClass: (this.props.material ?? 'Blur') === 'Blur' ? 'mat-blur' : '',
+      activate: () => { window.__prActive = uid; },
+      searchFk: uid + '-search', searchPh: 'Search ' + profiles.length + ' profiles', q,
+      onSearch: (e) => this.setState({ q: e.target.value, moreOpen: false, ctxFor: null }),
+      searchKey: (e) => {
+        if (e.key === 'Escape') { this.setState({ q: '' }); e.target.blur(); }
+        if ((e.key === 'ArrowDown' || e.key === 'Enter') && shown.length) { e.preventDefault(); e.target.blur(); this.setState({ sel: shown[0].id }); }
+      },
+      noMatch: !shown.length, noMatchText: 'No profile matches “' + q.trim() + '”.',
+      rows: shown.map((p) => ({
+        ...iconOf(p), title: p.title, active: isActive(p),
+        subtitle: p.authors ? 'by ' + p.authors : (p.version ? 'v' + p.version : ''),
+        titleParts: hitParts(p.title), subParts: p.authors ? [{ t: 'by ', hit: false, plain: true }, ...hitParts(p.authors)] : [{ t: p.version ? 'v' + p.version : '', hit: false, plain: true }],
+        cls: 'item tall prow' + (p.id === selId ? ' sel' : ''), ariaSel: p.id === selId ? 'true' : 'false',
+        select: set({ sel: p.id, moreOpen: false, ctxFor: null }),
+        load: () => startLoad(p.id),
+        menu: (e) => { e.preventDefault(); this.setState({ sel: p.id, ctxFor: p.id, moreOpen: false }); }
+      })),
+      sel,
+      loadSel: () => startLoad(sp.id),
+      moreOpen: !!s.moreOpen, moreCls: s.moreOpen ? 'btn icon on' : 'btn icon',
+      toggleMore: set({ moreOpen: !s.moreOpen, ctxFor: null }),
+      yes: true, no: false, closeMenus: set(close),
+      moreItems: shareRows(sp),
+      ctxOpen: !!cp,
+      // title bar, the buttons and the search field above the list, then one row per profile
+      ctxStyle: 'position: absolute; z-index: 30; left: 210px; top: ' + (42 + 82 + 4 + ctxIndex * 54 + 40) + 'px',
+      ctxItems: cp ? [
+        { d: MI.load, label: 'Load Profile', disabled: isActive(cp), click: () => startLoad(cp.id) },
+        { d: MI.edit, label: 'Edit', click: set(close) },
+        { d: MI.export, label: 'Export', click: set(close) },
+        { sep: true },
+        ...shareRows(cp)
+      ] : [],
+      taskOpen: !!tp,
+      task: tp ? { ...iconOf(tp), title: tp.title, head: tp.id === 'import' ? 'Importing “' + tp.file + '”' : 'Loading “' + tp.title + '”', sub: tp.id === 'import' ? 'Dropped on the window, so the import started right away.' : 'Your current setup gets saved first, so nothing gets lost.', barStyle: 'width: ' + Math.round(prog * 100) + '%', pct: Math.round(prog * 100) + '%', progressText: done + ' MB of ' + totalMb.toFixed(1) + ' MB', remaining: 'About ' + Math.max(1, Math.ceil((1 - prog) * 4)) + ' s left' } : {},
+      cancelTask: () => { if (this.timer) { clearInterval(this.timer); this.timer = null; } this.setState({ task: null, prog: 0 }); },
+      wrongOpen: wrong, hideWrong: set({ wrong: false }),
+      conflictOpen: conflict, hideConflict: set({ conflict: false })
+    };
+  }
+}
+</script>
+</body>
+</html>

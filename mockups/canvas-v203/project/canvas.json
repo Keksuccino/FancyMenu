@@ -1,0 +1,1825 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "AFBase.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "AFMA Creator · ready to create",
+      "w": 1440,
+      "x": 0,
+      "y": 59562
+    },
+    "AFClose.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "AFMA Creator · closing while it creates",
+      "w": 1440,
+      "x": 0,
+      "y": 62502
+    },
+    "AFCreating.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "AFMA Creator · creating",
+      "w": 1440,
+      "x": 0,
+      "y": 61522
+    },
+    "AFDone.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "AFMA Creator · created",
+      "w": 1440,
+      "x": 1520,
+      "y": 61522
+    },
+    "AFEmpty.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "AFMA Creator · nothing added yet",
+      "w": 1440,
+      "x": 1520,
+      "y": 59562
+    },
+    "AFLight.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "AFMA Creator · light theme",
+      "w": 1440,
+      "x": 1520,
+      "y": 62502
+    },
+    "AFProblems.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "AFMA Creator · frames that don't fit",
+      "w": 1440,
+      "x": 0,
+      "y": 60542
+    },
+    "AFTune.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "AFMA Creator · fine-tuning Smallest File",
+      "w": 1440,
+      "x": 1520,
+      "y": 60542
+    },
+    "AfmaCreator.dc.html": {
+      "h": 760,
+      "is_interactive": true,
+      "title": "AFMA Creator component",
+      "w": 1120,
+      "x": 4560,
+      "y": 59562
+    },
+    "AfmaSpec.dc.html": {
+      "h": 4855,
+      "title": "AFMA Creator · today and proposed",
+      "w": 1440,
+      "x": 3040,
+      "y": 59562
+    },
+    "CGBase.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Custom GUIs · a quest log",
+      "w": 1440,
+      "x": 0,
+      "y": 70440
+    },
+    "CGConflict.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Custom GUIs · an identifier a screen already has",
+      "w": 1440,
+      "x": 1520,
+      "y": 73380
+    },
+    "CGDelete.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Custom GUIs · deleting one with layouts",
+      "w": 1440,
+      "x": 1520,
+      "y": 72400
+    },
+    "CGEmpty.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Custom GUIs · no custom GUIs yet",
+      "w": 1440,
+      "x": 1520,
+      "y": 71420
+    },
+    "CGLight.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Custom GUIs · light theme",
+      "w": 1440,
+      "x": 1520,
+      "y": 74360
+    },
+    "CGMulti.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Custom GUIs · three selected",
+      "w": 1440,
+      "x": 0,
+      "y": 74360
+    },
+    "CGNew.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Custom GUIs · adding a GUI",
+      "w": 1440,
+      "x": 0,
+      "y": 71420
+    },
+    "CGOpen.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Custom GUIs · a popup, open behind the window",
+      "w": 1440,
+      "x": 1520,
+      "y": 70440
+    },
+    "CGRename.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Custom GUIs · renaming one that scripts open",
+      "w": 1440,
+      "x": 0,
+      "y": 72400
+    },
+    "CGReplace.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Custom GUIs · one that replaces a screen",
+      "w": 1440,
+      "x": 0,
+      "y": 73380
+    },
+    "CRBase.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "About · the people behind FancyMenu",
+      "w": 1440,
+      "x": 1520,
+      "y": 82511
+    },
+    "CRFonts.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "About · fonts and copyright",
+      "w": 1440,
+      "x": 0,
+      "y": 83491
+    },
+    "ColorPicker.dc.html": {
+      "h": 520,
+      "is_interactive": true,
+      "title": "Color picker component",
+      "w": 700,
+      "x": 3040,
+      "y": 14330
+    },
+    "ColorPickerBoard.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Color picker · editing a text color",
+      "w": 1440,
+      "x": 0,
+      "y": 14330
+    },
+    "ColorPickerSpec.dc.html": {
+      "h": 2865,
+      "title": "Color picker · today and proposed",
+      "w": 1440,
+      "x": 1520,
+      "y": 14330
+    },
+    "CompareNumber.dc.html": {
+      "h": 800,
+      "is_interactive": true,
+      "title": "Is Number condition · blur material",
+      "w": 1200,
+      "x": 2840,
+      "y": 1040
+    },
+    "ContextMenu.dc.html": {
+      "h": 420,
+      "is_interactive": true,
+      "title": "Context menu component",
+      "w": 440,
+      "x": 4560,
+      "y": 5524
+    },
+    "CustomGuis.dc.html": {
+      "h": 840,
+      "is_interactive": true,
+      "title": "Custom GUIs component",
+      "w": 1040,
+      "x": 4560,
+      "y": 70440
+    },
+    "CustomGuisSpec.dc.html": {
+      "h": 5211,
+      "title": "Custom GUIs · today and proposed",
+      "w": 1440,
+      "x": 3040,
+      "y": 70440
+    },
+    "DBBase.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Debug overlay · on the title screen",
+      "w": 1440,
+      "x": 0,
+      "y": 85047
+    },
+    "DBLight.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Debug overlay · light theme, on the right",
+      "w": 1440,
+      "x": 1520,
+      "y": 86027
+    },
+    "DBMenu.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Debug overlay · the menu of a vanilla widget",
+      "w": 1440,
+      "x": 1520,
+      "y": 85047
+    },
+    "DBSlow.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Debug overlay · a screen that runs slow",
+      "w": 1440,
+      "x": 0,
+      "y": 86027
+    },
+    "DebugSpec.dc.html": {
+      "h": 2932,
+      "title": "Debug overlay · today and proposed",
+      "w": 1440,
+      "x": 3040,
+      "y": 85047
+    },
+    "EditProfile.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Edit Profile",
+      "w": 1280,
+      "x": 1360,
+      "y": 3734
+    },
+    "EditorMenu.dc.html": {
+      "h": 960,
+      "is_interactive": true,
+      "title": "Layout editor · background menu",
+      "w": 1440,
+      "x": 0,
+      "y": 5524
+    },
+    "ElementMenu.dc.html": {
+      "h": 960,
+      "is_interactive": true,
+      "title": "Layout editor · Text element menu",
+      "w": 1440,
+      "x": 1520,
+      "y": 5524
+    },
+    "ElementsSpec.dc.html": {
+      "h": 2956,
+      "title": "Element editors · today and proposed",
+      "w": 1440,
+      "x": 3040,
+      "y": 76939
+    },
+    "FBAnywhere.dc.html": {
+      "h": 720,
+      "is_interactive": true,
+      "title": "File browsers · outside the game folder, Places open",
+      "w": 1080,
+      "x": 1160,
+      "y": 17696
+    },
+    "FBChoose.dc.html": {
+      "h": 720,
+      "is_interactive": true,
+      "title": "File browsers · Choose Image",
+      "w": 1080,
+      "x": 0,
+      "y": 17696
+    },
+    "FBFolder.dc.html": {
+      "h": 720,
+      "is_interactive": true,
+      "title": "File browsers · Choose Folder",
+      "w": 1080,
+      "x": 1160,
+      "y": 18496
+    },
+    "FBResource.dc.html": {
+      "h": 720,
+      "is_interactive": true,
+      "title": "File browsers · Choose Resource Location",
+      "w": 1080,
+      "x": 0,
+      "y": 19296
+    },
+    "FBSave.dc.html": {
+      "h": 720,
+      "is_interactive": true,
+      "title": "File browsers · Save Layout As",
+      "w": 1080,
+      "x": 0,
+      "y": 18496
+    },
+    "FileBrowser.dc.html": {
+      "h": 720,
+      "is_interactive": true,
+      "title": "File browser component",
+      "w": 1080,
+      "x": 3960,
+      "y": 17696
+    },
+    "FileBrowserSpec.dc.html": {
+      "h": 4193,
+      "title": "File browsers · today and proposed",
+      "w": 1440,
+      "x": 2440,
+      "y": 17696
+    },
+    "FileMenuBoard.dc.html": {
+      "h": 960,
+      "is_interactive": true,
+      "title": "Layout editor · Image element menu",
+      "w": 1440,
+      "x": 0,
+      "y": 6564
+    },
+    "FileMenuSpec.dc.html": {
+      "h": 4121,
+      "title": "File entries · today and proposed",
+      "w": 1440,
+      "x": 1520,
+      "y": 6564
+    },
+    "HttpRequest.dc.html": {
+      "h": 920,
+      "is_interactive": true,
+      "title": "Edit HTTP Request",
+      "w": 1200,
+      "x": 1560,
+      "y": 0
+    },
+    "HttpRequestMenu.dc.html": {
+      "h": 920,
+      "title": "Edit HTTP Request · method menu open",
+      "w": 1200,
+      "x": 2840,
+      "y": 0
+    },
+    "IconChooser.dc.html": {
+      "h": 540,
+      "is_interactive": true,
+      "title": "Icon chooser component",
+      "w": 480,
+      "x": 4560,
+      "y": 47843
+    },
+    "LEAdd.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Layout editor · adding an element",
+      "w": 1440,
+      "x": 1520,
+      "y": 42427
+    },
+    "LEAnchor.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Layout editor · choosing an anchor element",
+      "w": 1440,
+      "x": 0,
+      "y": 42427
+    },
+    "LEAnimate.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Layout editor · editing a keyframe",
+      "w": 1440,
+      "x": 0,
+      "y": 44387
+    },
+    "LEAnimateEl.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Layout editor · animating a button",
+      "w": 1440,
+      "x": 1520,
+      "y": 44387
+    },
+    "LEAudio.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Element editors · an Audio element and its tracks",
+      "w": 1440,
+      "x": 0,
+      "y": 76939
+    },
+    "LEAudioShuffle.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Element editors · shuffled tracks with weights",
+      "w": 1440,
+      "x": 1520,
+      "y": 76939
+    },
+    "LEBase.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Layout editor · a button selected",
+      "w": 1440,
+      "x": 0,
+      "y": 40467
+    },
+    "LEFocus.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Layout editor · panels hidden",
+      "w": 1440,
+      "x": 0,
+      "y": 45367
+    },
+    "LELayout.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Layout editor · nothing selected",
+      "w": 1440,
+      "x": 1520,
+      "y": 40467
+    },
+    "LELight.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Layout editor · light theme, solid material",
+      "w": 1440,
+      "x": 1520,
+      "y": 45367
+    },
+    "LEModel.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Element editors · turning a JSON Model",
+      "w": 1440,
+      "x": 1520,
+      "y": 77919
+    },
+    "LEMove.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Layout editor · moving with smart guides",
+      "w": 1440,
+      "x": 0,
+      "y": 41447
+    },
+    "LEMulti.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Layout editor · three buttons selected",
+      "w": 1440,
+      "x": 1520,
+      "y": 41447
+    },
+    "LEPlayer.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Element editors · posing a Player Entity",
+      "w": 1440,
+      "x": 0,
+      "y": 77919
+    },
+    "LEPreview.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Layout editor · previewing the screen",
+      "w": 1440,
+      "x": 1520,
+      "y": 43407
+    },
+    "LESize.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Layout editor · another screen size",
+      "w": 1440,
+      "x": 0,
+      "y": 43407
+    },
+    "LSAddEvent.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Listeners · adding an event to a listener",
+      "w": 1440,
+      "x": 1520,
+      "y": 47903
+    },
+    "LSBase.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Listeners · the quest log key, running live",
+      "w": 1440,
+      "x": 0,
+      "y": 46923
+    },
+    "LSChange.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Listeners · changing what a listener listens for",
+      "w": 1440,
+      "x": 0,
+      "y": 48883
+    },
+    "LSEmpty.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Listeners · no listeners yet",
+      "w": 1440,
+      "x": 0,
+      "y": 50843
+    },
+    "LSEvents.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Listeners · one listener, three events",
+      "w": 1440,
+      "x": 0,
+      "y": 47903
+    },
+    "LSIcon.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Listeners · choosing an icon",
+      "w": 1440,
+      "x": 0,
+      "y": 51823
+    },
+    "LSLight.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Listeners · light theme, solid material",
+      "w": 1440,
+      "x": 1520,
+      "y": 50843
+    },
+    "LSMissing.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Listeners · an event from a mod that isn’t installed",
+      "w": 1440,
+      "x": 0,
+      "y": 49863
+    },
+    "LSMulti.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Listeners · three listeners selected",
+      "w": 1440,
+      "x": 1520,
+      "y": 48883
+    },
+    "LSNew.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Listeners · adding a listener",
+      "w": 1440,
+      "x": 1520,
+      "y": 46923
+    },
+    "LSNoSteps.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Listeners · a listener without steps",
+      "w": 1440,
+      "x": 1520,
+      "y": 49863
+    },
+    "LayoutEditor.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Layout editor component",
+      "w": 1440,
+      "x": 4560,
+      "y": 40467
+    },
+    "LayoutEditorSpec.dc.html": {
+      "h": 5573,
+      "title": "Layout editor · today and proposed",
+      "w": 1440,
+      "x": 3040,
+      "y": 40467
+    },
+    "ListenersManager.dc.html": {
+      "h": 840,
+      "is_interactive": true,
+      "title": "Listeners component",
+      "w": 1020,
+      "x": 4560,
+      "y": 46923
+    },
+    "ListenersSpec.dc.html": {
+      "h": 6102,
+      "title": "Listeners · today and proposed",
+      "w": 1440,
+      "x": 3040,
+      "y": 46923
+    },
+    "MDConfirm.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Messages · a question that makes you wait",
+      "w": 1440,
+      "x": 0,
+      "y": 80551
+    },
+    "MDDanger.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Messages · clearing the music tracks",
+      "w": 1440,
+      "x": 1520,
+      "y": 80551
+    },
+    "MDError.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Messages · an action that failed",
+      "w": 1440,
+      "x": 0,
+      "y": 81531
+    },
+    "MDLight.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Messages · light theme",
+      "w": 1440,
+      "x": 1520,
+      "y": 81531
+    },
+    "Main.dc.html": {
+      "h": 3094,
+      "is_interactive": true,
+      "title": "Controls & window chrome",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "MenuBar.dc.html": {
+      "h": 520,
+      "is_interactive": true,
+      "title": "Menu bar component",
+      "w": 1200,
+      "x": 4560,
+      "y": 11184
+    },
+    "MenuBarEditor.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Menu bar · layout editor",
+      "w": 1440,
+      "x": 1520,
+      "y": 11184
+    },
+    "MenuBarMusic.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Menu bar · custom menu music tracks",
+      "w": 1440,
+      "x": 1520,
+      "y": 12164
+    },
+    "MenuBarOverlay.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Menu bar · customization overlay",
+      "w": 1440,
+      "x": 0,
+      "y": 11184
+    },
+    "MenuBarOverlayMany.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Menu bar · customization overlay with 52 layouts",
+      "w": 1440,
+      "x": 0,
+      "y": 12164
+    },
+    "MenuBarOverride.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Menu bar · overriding a screen",
+      "w": 1440,
+      "x": 4560,
+      "y": 12164
+    },
+    "MenuBarSpec.dc.html": {
+      "h": 3066,
+      "title": "Menu bar · today and proposed",
+      "w": 1440,
+      "x": 3040,
+      "y": 11184
+    },
+    "MenuSpec.dc.html": {
+      "h": 3162,
+      "title": "Context menus · today and proposed",
+      "w": 1440,
+      "x": 3040,
+      "y": 5524
+    },
+    "PLAdd.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Pre-Load Resources · adding a resource",
+      "w": 1440,
+      "x": 0,
+      "y": 65944
+    },
+    "PLBase.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Pre-Load Resources · an animation, playing",
+      "w": 1440,
+      "x": 0,
+      "y": 64964
+    },
+    "PLEmpty.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Pre-Load Resources · nothing pre-loaded yet",
+      "w": 1440,
+      "x": 1520,
+      "y": 64964
+    },
+    "PLLight.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Pre-Load Resources · light theme",
+      "w": 1440,
+      "x": 0,
+      "y": 68884
+    },
+    "PLLoading.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Pre-Load Resources · a new resource, downloading",
+      "w": 1440,
+      "x": 1520,
+      "y": 65944
+    },
+    "PLMulti.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Pre-Load Resources · three selected",
+      "w": 1440,
+      "x": 0,
+      "y": 67904
+    },
+    "PLPanorama.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Pre-Load Resources · a panorama",
+      "w": 1440,
+      "x": 1520,
+      "y": 66924
+    },
+    "PLProblem.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Pre-Load Resources · the game start stopped waiting",
+      "w": 1440,
+      "x": 0,
+      "y": 66924
+    },
+    "PLSound.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Pre-Load Resources · a sound, playing",
+      "w": 1440,
+      "x": 1520,
+      "y": 67904
+    },
+    "PreLoadResources.dc.html": {
+      "h": 840,
+      "is_interactive": true,
+      "title": "Pre-Load Resources component",
+      "w": 1040,
+      "x": 4560,
+      "y": 64964
+    },
+    "PreLoadSpec.dc.html": {
+      "h": 4401,
+      "title": "Pre-Load Resources · today and proposed",
+      "w": 1440,
+      "x": 3040,
+      "y": 64964
+    },
+    "Profiles.dc.html": {
+      "h": 820,
+      "is_interactive": true,
+      "title": "Profiles",
+      "w": 1280,
+      "x": 0,
+      "y": 3734
+    },
+    "ProfilesStates.dc.html": {
+      "h": 1400,
+      "title": "Profiles · states and flows",
+      "w": 1604,
+      "x": 2720,
+      "y": 3734
+    },
+    "ResourceChooser.dc.html": {
+      "h": 800,
+      "is_interactive": true,
+      "title": "Choose Image Resource",
+      "w": 1200,
+      "x": 1160,
+      "y": 19296
+    },
+    "ResourceChooserGlass.dc.html": {
+      "h": 800,
+      "title": "Choose Image Resource · light theme, blur material",
+      "w": 1200,
+      "x": 1160,
+      "y": 20176
+    },
+    "ReworkFixes.dc.html": {
+      "h": 10349,
+      "title": "Rules for the real rework · fix during the rework",
+      "w": 1440,
+      "x": -1560,
+      "y": 9925
+    },
+    "ReworkRules.dc.html": {
+      "h": 9845,
+      "title": "Rules for the real rework",
+      "w": 1440,
+      "x": -1560,
+      "y": 0
+    },
+    "SCBase.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Schedulers · fireflies, running live",
+      "w": 1440,
+      "x": 0,
+      "y": 53681
+    },
+    "SCCountdown.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Schedulers · a countdown, run 4 of 10",
+      "w": 1440,
+      "x": 0,
+      "y": 54661
+    },
+    "SCEmpty.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Schedulers · no schedulers yet",
+      "w": 1440,
+      "x": 0,
+      "y": 56621
+    },
+    "SCIcon.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Schedulers · searching for an icon",
+      "w": 1440,
+      "x": 0,
+      "y": 57601
+    },
+    "SCLight.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Schedulers · light theme, solid material",
+      "w": 1440,
+      "x": 1520,
+      "y": 56621
+    },
+    "SCMulti.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Schedulers · three schedulers selected",
+      "w": 1440,
+      "x": 1520,
+      "y": 55641
+    },
+    "SCNew.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Schedulers · adding a scheduler",
+      "w": 1440,
+      "x": 1520,
+      "y": 53681
+    },
+    "SCRename.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Schedulers · renaming one that a layout uses",
+      "w": 1440,
+      "x": 1520,
+      "y": 54661
+    },
+    "SCUnstarted.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Schedulers · one that nothing starts",
+      "w": 1440,
+      "x": 0,
+      "y": 55641
+    },
+    "SEAdd.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Script editor · adding an action",
+      "w": 1440,
+      "x": 0,
+      "y": 28886
+    },
+    "SEBase.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Script editor · a button’s click script",
+      "w": 1440,
+      "x": 0,
+      "y": 27906
+    },
+    "SECond.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Script editor · conditions of an If",
+      "w": 1440,
+      "x": 1520,
+      "y": 29866
+    },
+    "SEDrag.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Script editor · moving a step",
+      "w": 1440,
+      "x": 0,
+      "y": 30846
+    },
+    "SEEditValue.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Script editor · editing a value in place",
+      "w": 1440,
+      "x": 1520,
+      "y": 27906
+    },
+    "SEEmpty.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Script editor · empty script",
+      "w": 1440,
+      "x": 0,
+      "y": 32806
+    },
+    "SEFind.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Script editor · find and replace",
+      "w": 1440,
+      "x": 1520,
+      "y": 30846
+    },
+    "SEListener.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Script editor · a listener’s script and its Event Variables",
+      "w": 1440,
+      "x": 1520,
+      "y": 31826
+    },
+    "SEMenu.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Script editor · two steps selected, Wrap In",
+      "w": 1440,
+      "x": 0,
+      "y": 29866
+    },
+    "SEMinimap.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Script editor · a long script and its minimap",
+      "w": 1440,
+      "x": 0,
+      "y": 33786
+    },
+    "SEPop.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Script editor · Play Audio’s variables",
+      "w": 1440,
+      "x": 1520,
+      "y": 28886
+    },
+    "SEPopVar.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Script editor · choosing a variable from the list",
+      "w": 1440,
+      "x": 1520,
+      "y": 32806
+    },
+    "SEProblems.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Script editor · problems",
+      "w": 1440,
+      "x": 0,
+      "y": 31826
+    },
+    "SchedulersManager.dc.html": {
+      "h": 840,
+      "is_interactive": true,
+      "title": "Schedulers component",
+      "w": 1020,
+      "x": 4560,
+      "y": 53681
+    },
+    "SchedulersSpec.dc.html": {
+      "h": 5244,
+      "title": "Schedulers · today and proposed",
+      "w": 1440,
+      "x": 3040,
+      "y": 53681
+    },
+    "ScriptEditor.dc.html": {
+      "h": 820,
+      "is_interactive": true,
+      "title": "Script editor component",
+      "w": 1080,
+      "x": 4560,
+      "y": 27906
+    },
+    "ScriptEditorSpec.dc.html": {
+      "h": 6053,
+      "title": "Script editor · today and proposed",
+      "w": 1440,
+      "x": 3040,
+      "y": 27906
+    },
+    "SystemSpec.dc.html": {
+      "h": 3426,
+      "title": "Messages, Welcome and About · today and proposed",
+      "w": 1440,
+      "x": 3040,
+      "y": 80551
+    },
+    "SystemWindows.dc.html": {
+      "h": 760,
+      "is_interactive": true,
+      "title": "Messages, Welcome and About component",
+      "w": 720,
+      "x": 4560,
+      "y": 80551
+    },
+    "TEChip.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Text editor · editing a placeholder chip",
+      "w": 1440,
+      "x": 0,
+      "y": 23410
+    },
+    "TECode.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Text editor · shader code with Find and Replace",
+      "w": 1440,
+      "x": 0,
+      "y": 24390
+    },
+    "TEColors.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Text editor · text color with a custom hex color",
+      "w": 1440,
+      "x": 1520,
+      "y": 25370
+    },
+    "TEComplete.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Text editor · suggestions while typing {",
+      "w": 1440,
+      "x": 1520,
+      "y": 22430
+    },
+    "TEInsert.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Text editor · Markdown Insert menu with FancyMenu codes",
+      "w": 1440,
+      "x": 0,
+      "y": 25370
+    },
+    "TESelect.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Text editor · formatting selected text (animated)",
+      "w": 1440,
+      "x": 0,
+      "y": 26350
+    },
+    "TESingle.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Text editor · one-line value with a problem",
+      "w": 1440,
+      "x": 1520,
+      "y": 23410
+    },
+    "TEText.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Text editor · Text element with the placeholder list",
+      "w": 1440,
+      "x": 0,
+      "y": 22430
+    },
+    "TETooltip.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Text editor · button tooltip with formatting codes only",
+      "w": 1440,
+      "x": 1520,
+      "y": 24390
+    },
+    "TextEditor.dc.html": {
+      "h": 740,
+      "is_interactive": true,
+      "title": "Text editor component",
+      "w": 1080,
+      "x": 4560,
+      "y": 22430
+    },
+    "TextEditorSpec.dc.html": {
+      "h": 4451,
+      "title": "Text editor · today and proposed",
+      "w": 1440,
+      "x": 3040,
+      "y": 22430
+    },
+    "VMConflict.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Variables · a variable whose $$ name is taken",
+      "w": 1440,
+      "x": 0,
+      "y": 37302
+    },
+    "VMEmpty.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Variables · no variables yet",
+      "w": 1440,
+      "x": 1520,
+      "y": 37302
+    },
+    "VMFilter.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Variables · showing what nothing uses",
+      "w": 1440,
+      "x": 0,
+      "y": 38282
+    },
+    "VMMulti.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Variables · three variables selected",
+      "w": 1440,
+      "x": 1520,
+      "y": 36322
+    },
+    "VMNew.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Variables · a new variable with a taken name",
+      "w": 1440,
+      "x": 1520,
+      "y": 35342
+    },
+    "VMRename.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Variables · renaming a variable that layouts use",
+      "w": 1440,
+      "x": 0,
+      "y": 36322
+    },
+    "VMScene.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Variables · checking coins",
+      "w": 1440,
+      "x": 0,
+      "y": 35342
+    },
+    "VariablesManager.dc.html": {
+      "h": 760,
+      "is_interactive": true,
+      "title": "Variables component",
+      "w": 1020,
+      "x": 4560,
+      "y": 35342
+    },
+    "VariablesSpec.dc.html": {
+      "h": 4816,
+      "title": "Variables · today and proposed",
+      "w": 1440,
+      "x": 3040,
+      "y": 35342
+    },
+    "WLBase.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Welcome · the first start",
+      "w": 1440,
+      "x": 0,
+      "y": 82511
+    },
+    "XTListener.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Export as Text · a listener, with what it uses",
+      "w": 1440,
+      "x": 0,
+      "y": 88635
+    },
+    "XTScript.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Export as Text · a button’s click script",
+      "w": 1440,
+      "x": 1520,
+      "y": 88635
+    },
+    "XTSetup.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Export as Text · the whole setup, from the Help menu",
+      "w": 1440,
+      "x": 0,
+      "y": 89615
+    },
+    "XTLight.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Export as Text · a variable, copied, light theme",
+      "w": 1440,
+      "x": 1520,
+      "y": 89615
+    },
+    "ExportTextSpec.dc.html": {
+      "h": 3597,
+      "title": "Export as Text · today and proposed",
+      "w": 1440,
+      "x": 3040,
+      "y": 88635
+    },
+    "ExportText.dc.html": {
+      "h": 640,
+      "is_interactive": true,
+      "title": "Export as Text component",
+      "w": 940,
+      "x": 4560,
+      "y": 88635
+    },
+    "CGIcon.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Custom GUIs · choosing an icon for a popup",
+      "w": 1440,
+      "x": 0,
+      "y": 75340
+    },
+    "VMIcon.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Variables · searching for an icon",
+      "w": 1440,
+      "x": 1520,
+      "y": 38282
+    },
+    "SSBase.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Slideshows · Seasons, playing",
+      "w": 1440,
+      "x": 0,
+      "y": 92888
+    },
+    "SSNew.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Slideshows · a new slideshow",
+      "w": 1440,
+      "x": 1520,
+      "y": 92888
+    },
+    "SSDrop.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Slideshows · images dropped onto the window",
+      "w": 1440,
+      "x": 0,
+      "y": 93868
+    },
+    "SSMove.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Slideshows · moving an image",
+      "w": 1440,
+      "x": 1520,
+      "y": 93868
+    },
+    "SSMenu.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Slideshows · picking one in the layout editor",
+      "w": 1440,
+      "x": 0,
+      "y": 94848
+    },
+    "SSUse.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Slideshows · opened from a Slideshow element",
+      "w": 1440,
+      "x": 1520,
+      "y": 94848
+    },
+    "SSRename.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Slideshows · renaming one that layouts use",
+      "w": 1440,
+      "x": 0,
+      "y": 95828
+    },
+    "SSDelete.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Slideshows · deleting one with images",
+      "w": 1440,
+      "x": 1520,
+      "y": 95828
+    },
+    "SSMissing.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Slideshows · images that went missing",
+      "w": 1440,
+      "x": 0,
+      "y": 96808
+    },
+    "SSEmpty.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Slideshows · no slideshows yet",
+      "w": 1440,
+      "x": 1520,
+      "y": 96808
+    },
+    "SSMulti.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Slideshows · three selected",
+      "w": 1440,
+      "x": 0,
+      "y": 97788
+    },
+    "SSLight.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Slideshows · light theme",
+      "w": 1440,
+      "x": 1520,
+      "y": 97788
+    },
+    "SlideshowsSpec.dc.html": {
+      "h": 4805,
+      "title": "Slideshows · today and proposed",
+      "w": 1440,
+      "x": 3040,
+      "y": 92888
+    },
+    "Slideshows.dc.html": {
+      "h": 840,
+      "is_interactive": true,
+      "title": "Slideshows component",
+      "w": 1040,
+      "x": 4560,
+      "y": 92888
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-11-08T09:52:54Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "noteOrder": [
+    "rules",
+    "screens",
+    "profiles",
+    "menus",
+    "menubar",
+    "colorpicker",
+    "filebrowsers",
+    "texteditor",
+    "scripteditor",
+    "variables",
+    "layouteditor",
+    "listeners",
+    "schedulers",
+    "afma",
+    "preload",
+    "customguis",
+    "elements",
+    "messages",
+    "debug",
+    "export",
+    "slideshows"
+  ],
+  "notes": {
+    "afma": {
+      "kind": "title1",
+      "maxW": 5640,
+      "text": "AFMA Creator",
+      "w": 240,
+      "x": 0,
+      "y": 59306
+    },
+    "colorpicker": {
+      "kind": "title1",
+      "maxW": 3740,
+      "text": "Color picker",
+      "w": 240,
+      "x": 0,
+      "y": 14074
+    },
+    "customguis": {
+      "kind": "title1",
+      "maxW": 5640,
+      "text": "Custom GUIs",
+      "w": 240,
+      "x": 0,
+      "y": 70184
+    },
+    "debug": {
+      "kind": "title1",
+      "maxW": 4480,
+      "text": "Debug overlay",
+      "w": 240,
+      "x": 0,
+      "y": 84791
+    },
+    "elements": {
+      "kind": "title1",
+      "maxW": 4480,
+      "text": "Element editors",
+      "w": 240,
+      "x": 0,
+      "y": 76683
+    },
+    "filebrowsers": {
+      "kind": "title1",
+      "maxW": 5040,
+      "text": "File browsers",
+      "w": 240,
+      "x": 0,
+      "y": 17440
+    },
+    "layouteditor": {
+      "kind": "title1",
+      "maxW": 6000,
+      "text": "Layout editor",
+      "w": 240,
+      "x": 0,
+      "y": 40211
+    },
+    "listeners": {
+      "kind": "title1",
+      "maxW": 5640,
+      "text": "Listeners",
+      "w": 240,
+      "x": 0,
+      "y": 46667
+    },
+    "menubar": {
+      "kind": "title1",
+      "maxW": 6000,
+      "text": "Menu bar",
+      "w": 240,
+      "x": 0,
+      "y": 10944
+    },
+    "menus": {
+      "kind": "title1",
+      "maxW": 4980,
+      "text": "Context menus",
+      "w": 240,
+      "x": 0,
+      "y": 5284
+    },
+    "messages": {
+      "kind": "title1",
+      "maxW": 5280,
+      "text": "Messages, Welcome and About",
+      "w": 240,
+      "x": 0,
+      "y": 80295
+    },
+    "preload": {
+      "kind": "title1",
+      "maxW": 5640,
+      "text": "Pre-Load Resources",
+      "w": 240,
+      "x": 0,
+      "y": 64708
+    },
+    "profiles": {
+      "kind": "title1",
+      "maxW": 4300,
+      "text": "Profiles",
+      "w": 240,
+      "x": 0,
+      "y": 3494
+    },
+    "rules": {
+      "kind": "title1",
+      "maxW": 1440,
+      "text": "Rework rules",
+      "w": 240,
+      "x": -1560,
+      "y": -300
+    },
+    "schedulers": {
+      "kind": "title1",
+      "maxW": 5640,
+      "text": "Schedulers",
+      "w": 240,
+      "x": 0,
+      "y": 53425
+    },
+    "screens": {
+      "kind": "title1",
+      "maxW": 2480,
+      "text": "Redesigned screens",
+      "w": 240,
+      "x": 1560,
+      "y": -300
+    },
+    "scripteditor": {
+      "kind": "title1",
+      "maxW": 5640,
+      "text": "Script editor",
+      "w": 240,
+      "x": 0,
+      "y": 27650
+    },
+    "texteditor": {
+      "kind": "title1",
+      "maxW": 5640,
+      "text": "Text editor",
+      "w": 240,
+      "x": 0,
+      "y": 22174
+    },
+    "variables": {
+      "kind": "title1",
+      "maxW": 5640,
+      "text": "Variables",
+      "w": 240,
+      "x": 0,
+      "y": 35086
+    },
+    "export": {
+      "kind": "title1",
+      "maxW": 4480,
+      "text": "Export as Text",
+      "w": 240,
+      "x": 0,
+      "y": 88379
+    },
+    "slideshows": {
+      "kind": "title1",
+      "maxW": 5640,
+      "text": "Slideshows",
+      "w": 240,
+      "x": 0,
+      "y": 92632
+    }
+  },
+  "order": [
+    "ReworkRules.dc.html",
+    "ReworkFixes.dc.html",
+    "Main.dc.html",
+    "HttpRequest.dc.html",
+    "HttpRequestMenu.dc.html",
+    "CompareNumber.dc.html",
+    "Profiles.dc.html",
+    "EditProfile.dc.html",
+    "ProfilesStates.dc.html",
+    "EditorMenu.dc.html",
+    "ElementMenu.dc.html",
+    "MenuSpec.dc.html",
+    "ContextMenu.dc.html",
+    "FileMenuBoard.dc.html",
+    "FileMenuSpec.dc.html",
+    "MenuBarOverlay.dc.html",
+    "MenuBarOverlayMany.dc.html",
+    "MenuBarEditor.dc.html",
+    "MenuBarSpec.dc.html",
+    "MenuBar.dc.html",
+    "ColorPickerBoard.dc.html",
+    "ColorPickerSpec.dc.html",
+    "ColorPicker.dc.html",
+    "FBChoose.dc.html",
+    "FBAnywhere.dc.html",
+    "FBSave.dc.html",
+    "FBFolder.dc.html",
+    "FBResource.dc.html",
+    "ResourceChooser.dc.html",
+    "ResourceChooserGlass.dc.html",
+    "FileBrowserSpec.dc.html",
+    "FileBrowser.dc.html",
+    "TEText.dc.html",
+    "TEComplete.dc.html",
+    "TEChip.dc.html",
+    "TESingle.dc.html",
+    "TECode.dc.html",
+    "TETooltip.dc.html",
+    "TEInsert.dc.html",
+    "TEColors.dc.html",
+    "TESelect.dc.html",
+    "TextEditorSpec.dc.html",
+    "TextEditor.dc.html",
+    "SEBase.dc.html",
+    "SEEditValue.dc.html",
+    "SEAdd.dc.html",
+    "SEPop.dc.html",
+    "SEMenu.dc.html",
+    "SECond.dc.html",
+    "SEDrag.dc.html",
+    "SEFind.dc.html",
+    "SEProblems.dc.html",
+    "SEListener.dc.html",
+    "SEEmpty.dc.html",
+    "SEPopVar.dc.html",
+    "SEMinimap.dc.html",
+    "ScriptEditorSpec.dc.html",
+    "ScriptEditor.dc.html",
+    "VMScene.dc.html",
+    "VMNew.dc.html",
+    "VariablesSpec.dc.html",
+    "VariablesManager.dc.html",
+    "VMRename.dc.html",
+    "VMMulti.dc.html",
+    "VMConflict.dc.html",
+    "VMEmpty.dc.html",
+    "VMFilter.dc.html",
+    "VMIcon.dc.html",
+    "LEBase.dc.html",
+    "LELayout.dc.html",
+    "LayoutEditorSpec.dc.html",
+    "LayoutEditor.dc.html",
+    "LEMove.dc.html",
+    "LEMulti.dc.html",
+    "LEAnchor.dc.html",
+    "LEAdd.dc.html",
+    "LESize.dc.html",
+    "LEPreview.dc.html",
+    "LEAnimate.dc.html",
+    "LEAnimateEl.dc.html",
+    "LEFocus.dc.html",
+    "LELight.dc.html",
+    "LSBase.dc.html",
+    "LSNew.dc.html",
+    "LSEvents.dc.html",
+    "LSAddEvent.dc.html",
+    "ListenersSpec.dc.html",
+    "ListenersManager.dc.html",
+    "IconChooser.dc.html",
+    "LSChange.dc.html",
+    "LSMulti.dc.html",
+    "LSMissing.dc.html",
+    "LSNoSteps.dc.html",
+    "LSEmpty.dc.html",
+    "LSLight.dc.html",
+    "LSIcon.dc.html",
+    "SCBase.dc.html",
+    "SCNew.dc.html",
+    "SchedulersSpec.dc.html",
+    "SchedulersManager.dc.html",
+    "SCCountdown.dc.html",
+    "SCRename.dc.html",
+    "SCUnstarted.dc.html",
+    "SCMulti.dc.html",
+    "SCEmpty.dc.html",
+    "SCLight.dc.html",
+    "SCIcon.dc.html",
+    "AFBase.dc.html",
+    "AFEmpty.dc.html",
+    "AfmaSpec.dc.html",
+    "AfmaCreator.dc.html",
+    "AFProblems.dc.html",
+    "AFTune.dc.html",
+    "AFCreating.dc.html",
+    "AFDone.dc.html",
+    "AFClose.dc.html",
+    "AFLight.dc.html",
+    "PLBase.dc.html",
+    "PLEmpty.dc.html",
+    "PLAdd.dc.html",
+    "PLLoading.dc.html",
+    "PLProblem.dc.html",
+    "PLPanorama.dc.html",
+    "PLMulti.dc.html",
+    "PLSound.dc.html",
+    "PLLight.dc.html",
+    "PreLoadSpec.dc.html",
+    "PreLoadResources.dc.html",
+    "CGBase.dc.html",
+    "CGOpen.dc.html",
+    "CGNew.dc.html",
+    "CGEmpty.dc.html",
+    "CGRename.dc.html",
+    "CGDelete.dc.html",
+    "CGReplace.dc.html",
+    "CGConflict.dc.html",
+    "CGMulti.dc.html",
+    "CGLight.dc.html",
+    "CGIcon.dc.html",
+    "CustomGuisSpec.dc.html",
+    "CustomGuis.dc.html",
+    "MenuBarMusic.dc.html",
+    "MenuBarOverride.dc.html",
+    "LEAudio.dc.html",
+    "LEAudioShuffle.dc.html",
+    "LEPlayer.dc.html",
+    "LEModel.dc.html",
+    "ElementsSpec.dc.html",
+    "MDConfirm.dc.html",
+    "MDDanger.dc.html",
+    "MDError.dc.html",
+    "MDLight.dc.html",
+    "WLBase.dc.html",
+    "CRBase.dc.html",
+    "CRFonts.dc.html",
+    "SystemSpec.dc.html",
+    "SystemWindows.dc.html",
+    "DBBase.dc.html",
+    "DBMenu.dc.html",
+    "DBSlow.dc.html",
+    "DBLight.dc.html",
+    "DebugSpec.dc.html",
+    "XTListener.dc.html",
+    "XTScript.dc.html",
+    "XTSetup.dc.html",
+    "XTLight.dc.html",
+    "ExportTextSpec.dc.html",
+    "ExportText.dc.html",
+    "SSBase.dc.html",
+    "SSNew.dc.html",
+    "SSDrop.dc.html",
+    "SSMove.dc.html",
+    "SSMenu.dc.html",
+    "SSUse.dc.html",
+    "SSRename.dc.html",
+    "SSDelete.dc.html",
+    "SSMissing.dc.html",
+    "SSEmpty.dc.html",
+    "SSMulti.dc.html",
+    "SSLight.dc.html",
+    "SlideshowsSpec.dc.html",
+    "Slideshows.dc.html"
+  ],
+  "pages": [],
+  "title": "FancyMenu UI Rework"
+}

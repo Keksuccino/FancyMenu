@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FancyMenu controls and window chrome</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="fm spec {{themeClass}}" style="min-height: 3094px">
+
+<header style="display: flex; flex-direction: column; gap: 12px; max-width: 880px">
+<div style="font-size: 12px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; color: var(--text-3)">FancyMenu · UI rework concept · issue #1838</div>
+<h1 style="margin: 0; font-size: 34px; line-height: 1.15; font-weight: 700; color: var(--title)">Every option, visible before you click</h1>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: var(--text-2)">Cycle buttons hide their choices behind repeated clicks. These controls show what you can pick right away, put each label on the same line as its control, and wrap every window in a macOS-style title bar.</p>
+</header>
+
+<section style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h2 style="margin: 0; font-size: 20px; font-weight: 700; color: var(--title)">Pick the right control</h2>
+<p style="margin: 0; color: var(--text-2); font-size: 13.5px; max-width: 760px">Three controls replace every cycle button. If all options fit on one line, show them all. If they don't, put them in a menu.</p>
+</div>
+<div class="group" style="display: grid; grid-template-columns: 250px 360px minmax(0, 1fr); background: var(--win)">
+<div style="padding: 12px 20px; font-size: 12px; font-weight: 600; color: var(--text-3); border-bottom: 1px solid var(--sep)">Use case</div>
+<div style="padding: 12px 20px; font-size: 12px; font-weight: 600; color: var(--text-3); border-bottom: 1px solid var(--sep)">Today</div>
+<div style="padding: 12px 20px; font-size: 12px; font-weight: 600; color: var(--text-3); border-bottom: 1px solid var(--sep)">Proposed</div>
+
+<div style="padding: 22px 20px; border-bottom: 1px solid var(--sep)">
+<div style="font-weight: 600; color: var(--title)">2–4 short options</div>
+<div style="font-size: 12px; color: var(--text-3); margin-top: 2px">Segmented control</div>
+</div>
+<div style="padding: 22px 20px; border-bottom: 1px solid var(--sep); display: flex; flex-direction: column; gap: 8px">
+<div class="legacy"><span>Source Type:</span><span class="v">Minecraft Resource</span></div>
+<div style="font-size: 11.5px; color: var(--text-3)">Takes 3 clicks to see every option</div>
+</div>
+<div style="padding: 20px; border-bottom: 1px solid var(--sep); display: flex; align-items: center">
+<div class="seg" style="width: 100%">
+<div class="thumb" style="width: calc((100% - 4px) / 3); transform: {{srcX}}"></div>
+<button class="{{srcC.a}}" onClick="{{pickSrc0}}"><span class="ms" aria-hidden="true">folder</span>Local</button>
+<button class="{{srcC.b}}" onClick="{{pickSrc1}}"><span class="ms" aria-hidden="true">dashboard</span>Minecraft Resource</button>
+<button class="{{srcC.c}}" onClick="{{pickSrc2}}"><span class="ms" aria-hidden="true">public</span>Web</button>
+</div>
+</div>
+
+<div style="padding: 22px 20px; border-bottom: 1px solid var(--sep)">
+<div style="font-weight: 600; color: var(--title)">5+ options or long names</div>
+<div style="font-size: 12px; color: var(--text-3); margin-top: 2px">Pop-up menu</div>
+</div>
+<div style="padding: 18px 20px; border-bottom: 1px solid var(--sep); display: flex; flex-direction: column; gap: 0">
+<div class="legacy-label">Request Method</div>
+<div class="legacy"><span>Request Method:</span><span class="v">POST</span></div>
+<div style="font-size: 11.5px; color: var(--text-3); margin-top: 8px">Label shown twice, 7 clicks to see every option</div>
+</div>
+<div style="padding: 20px; border-bottom: 1px solid var(--sep); display: flex; align-items: center">
+<div class="group" style="width: 100%"><div class="row"><span class="lbl">Request Method</span><div class="ctl"><button class="popup" style="min-width: 132px">POST<span class="ms chev" aria-hidden="true">expand_more</span></button></div></div></div>
+</div>
+
+<div style="padding: 22px 20px">
+<div style="font-weight: 600; color: var(--title)">On or off</div>
+<div style="font-size: 12px; color: var(--text-3); margin-top: 2px">Switch</div>
+</div>
+<div style="padding: 22px 20px; display: flex; flex-direction: column; gap: 8px">
+<div class="legacy"><span>Log Response:</span><span class="v ok">Enabled</span></div>
+<div style="font-size: 11.5px; color: var(--text-3)">State hidden in colored text</div>
+</div>
+<div style="padding: 20px; display: flex; align-items: center">
+<div class="group" style="width: 100%"><div class="row"><span class="lbl">Log Response</span><div class="ctl"><button class="{{swA}}" role="switch" aria-checked="{{swAOn}}" aria-label="Log Response" onClick="{{toggleA}}"></button></div></div></div>
+</div>
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h2 style="margin: 0; font-size: 20px; font-weight: 700; color: var(--title)">Segmented control</h2>
+<p style="margin: 0; color: var(--text-2); font-size: 13.5px; max-width: 760px">Works like tabs: the selection slides to the clicked segment, and a click mid-slide just redirects it, so nothing waits on the animation. Most need no label. The text under it explains the current choice, so you don't need a tooltip.</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px">
+<div class="spec-card">
+<div style="font-size: 12px; font-weight: 600; color: var(--text-3)">Icon and text, explained underneath</div>
+<div>
+<div class="seg">
+<div class="thumb" style="width: calc((100% - 4px) / 3); transform: {{srcX}}"></div>
+<button class="{{srcC.a}}" onClick="{{pickSrc0}}"><span class="ms" aria-hidden="true">folder</span>Local</button>
+<button class="{{srcC.b}}" onClick="{{pickSrc1}}"><span class="ms" aria-hidden="true">dashboard</span>Minecraft Resource</button>
+<button class="{{srcC.c}}" onClick="{{pickSrc2}}"><span class="ms" aria-hidden="true">public</span>Web</button>
+</div>
+<p class="foot" style="min-height: 34px">{{srcDesc}}</p>
+</div>
+</div>
+<div class="spec-card">
+<div style="font-size: 12px; font-weight: 600; color: var(--text-3)">Inside a settings row</div>
+<div class="group">
+<div class="row"><span class="lbl">Tag Type</span><div class="ctl"><div class="seg inline" style="width: 150px"><div class="thumb" style="width: calc((100% - 4px) / 2); transform: {{tagX}}"></div><button class="{{tagC.a}}" onClick="{{pickTag0}}">Block</button><button class="{{tagC.b}}" onClick="{{pickTag1}}">Item</button></div></div></div>
+<div class="row"><span class="lbl">Action Mode</span><div class="ctl"><div class="seg inline" style="width: 222px"><div class="thumb" style="width: calc((100% - 4px) / 3); transform: {{modeX}}"></div><button class="{{modeC.a}}" onClick="{{pickMode0}}">Enable</button><button class="{{modeC.b}}" onClick="{{pickMode1}}">Disable</button><button class="{{modeC.c}}" onClick="{{pickMode2}}">Toggle</button></div></div></div>
+</div>
+</div>
+<div class="spec-card">
+<div style="font-size: 12px; font-weight: 600; color: var(--text-3)">Icon only, with a tooltip on hover</div>
+<div style="display: flex; align-items: flex-start; gap: 16px; min-height: 70px">
+<div class="seg icons inline">
+<div class="thumb" style="transform: {{cmpX}}"></div>
+<button class="{{cmpC.a}}" data-tip="Equals" aria-label="Equals" onClick="{{pickCmp0}}">=</button>
+<button class="{{cmpC.b}}" data-tip="Bigger than" aria-label="Bigger than" onClick="{{pickCmp1}}">&gt;</button>
+<button class="{{cmpC.c}} tip-on" data-tip="Bigger than or equals" aria-label="Bigger than or equals" onClick="{{pickCmp2}}">≥</button>
+<button class="{{cmpC.d}}" data-tip="Smaller than" aria-label="Smaller than" onClick="{{pickCmp3}}">&lt;</button>
+<button class="{{cmpC.e}}" data-tip="Smaller than or equals" aria-label="Smaller than or equals" onClick="{{pickCmp4}}">≤</button>
+</div>
+</div>
+</div>
+<div class="spec-card">
+<div style="font-size: 12px; font-weight: 600; color: var(--text-3)">Disabled</div>
+<div class="seg" style="width: 320px">
+<div class="thumb" style="width: calc((100% - 4px) / 3); transform: translateX(0%)"></div>
+<button class="on" disabled="disabled">Balanced</button>
+<button disabled="disabled">Best Quality</button>
+<button disabled="disabled">Smallest File</button>
+</div>
+</div>
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h2 style="margin: 0; font-size: 20px; font-weight: 700; color: var(--title)">Pop-up menu</h2>
+<p style="margin: 0; color: var(--text-2); font-size: 13.5px; max-width: 760px">The chevron shows it opens. While open, it flips and the current value gets a checkmark. Short hints help with technical choices. The list is the same menu as everywhere else, so ↑ ↓ move through it and typing searches it. Long lists scroll with the same scroll bar as everything else.</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px">
+<div class="spec-card" style="height: 340px">
+<div style="font-size: 12px; font-weight: 600; color: var(--text-3)">Closed (click it)</div>
+<div class="pop">
+<button class="{{popCls}}" style="min-width: 150px" aria-haspopup="menu" aria-expanded="{{popOpen}}" onClick="{{togglePop}}">{{popVal}}<span class="ms chev" aria-hidden="true">expand_more</span></button>
+<sc-if value="{{popOpen}}" hint-placeholder-val="{{false}}"><div class="pop-menu fill"><dc-import name="ContextMenu" items="{{popItems}}" label="Request Method" focus-on-open="{{yes}}" escape-listener="{{closePop}}" standalone="{{no}}" hint-size="auto,240px"></dc-import></div></sc-if>
+</div>
+</div>
+<div class="spec-card" style="height: 340px">
+<div style="font-size: 12px; font-weight: 600; color: var(--text-3)">Open, pointer on PUT</div>
+<div class="pop">
+<button class="popup open" style="min-width: 150px" aria-haspopup="menu" aria-expanded="true">POST<span class="ms chev" aria-hidden="true">expand_more</span></button>
+<div class="pop-menu fill"><dc-import name="ContextMenu" items="{{popDemoItems}}" label="Request Method" standalone="{{no}}" hint-size="auto,240px"></dc-import></div>
+</div>
+</div>
+<div class="spec-card" style="height: 340px">
+<div style="font-size: 12px; font-weight: 600; color: var(--text-3)">Long list, scrolled to the top</div>
+<div class="pop">
+<button class="popup open" style="min-width: 190px" aria-haspopup="menu" aria-expanded="true">Music<span class="ms chev" aria-hidden="true">expand_more</span></button>
+<div class="pop-menu fill"><dc-import name="ContextMenu" items="{{channelItems}}" label="Sound Channel" max-height="182" standalone="{{no}}" hint-size="auto,200px"></dc-import></div>
+</div>
+</div>
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h2 style="margin: 0; font-size: 20px; font-weight: 700; color: var(--title)">Scroll bars</h2>
+<p style="margin: 0; color: var(--text-2); font-size: 13.5px; max-width: 800px">Everything that scrolls, menus included, shows the same scroll bar as long as there&#x27;s more to see. It never hides until you scroll, so a list that goes on always looks like one. The thumb is round, at least 28 px long, and grows on hover so it&#x27;s easy to grab.</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px">
+<div class="spec-card" style="height: 300px"><div style="font-size: 12px; font-weight: 600; color: var(--text-3)">Scroll it</div>
+<div class="group" style="height: 236px; overflow-y: auto">
+<div class="row" style="min-height: 34px"><span class="lbl">Dusk Valley Title</span><div class="ctl"><span style="font-size: 12px; color: var(--text-3)">Title screen</span></div></div>
+<div class="row" style="min-height: 34px"><span class="lbl">Halloween Menu</span><div class="ctl"><span style="font-size: 12px; color: var(--text-3)">Title screen</span></div></div>
+<div class="row" style="min-height: 34px"><span class="lbl">Winter Menu</span><div class="ctl"><span style="font-size: 12px; color: var(--text-3)">Title screen</span></div></div>
+<div class="row" style="min-height: 34px"><span class="lbl">Server Hub</span><div class="ctl"><span style="font-size: 12px; color: var(--text-3)">Custom GUI</span></div></div>
+<div class="row" style="min-height: 34px"><span class="lbl">Quest Log</span><div class="ctl"><span style="font-size: 12px; color: var(--text-3)">Custom GUI</span></div></div>
+<div class="row" style="min-height: 34px"><span class="lbl">Pause Overlay</span><div class="ctl"><span style="font-size: 12px; color: var(--text-3)">Pause screen</span></div></div>
+<div class="row" style="min-height: 34px"><span class="lbl">Loading Tips</span><div class="ctl"><span style="font-size: 12px; color: var(--text-3)">Loading screen</span></div></div>
+<div class="row" style="min-height: 34px"><span class="lbl">Death Screen</span><div class="ctl"><span style="font-size: 12px; color: var(--text-3)">Death screen</span></div></div>
+<div class="row" style="min-height: 34px"><span class="lbl">Shop</span><div class="ctl"><span style="font-size: 12px; color: var(--text-3)">Custom GUI</span></div></div>
+<div class="row" style="min-height: 34px"><span class="lbl">Credits</span><div class="ctl"><span style="font-size: 12px; color: var(--text-3)">Custom GUI</span></div></div>
+<div class="row" style="min-height: 34px"><span class="lbl">Options Background</span><div class="ctl"><span style="font-size: 12px; color: var(--text-3)">Options</span></div></div>
+<div class="row" style="min-height: 34px"><span class="lbl">Disconnect Screen</span><div class="ctl"><span style="font-size: 12px; color: var(--text-3)">Disconnected</span></div></div>
+</div></div>
+<div class="spec-card" style="height: 300px"><div style="font-size: 12px; font-weight: 600; color: var(--text-3)">Idle, hover and dragging</div>
+<div style="display: flex; gap: 12px; padding: 4px 8px 0"><div style="display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1 1 0"><div class="sbx " style="height: 200px"><div class="trk"></div><div class="th" style="top: 36px; height: 70px"></div></div><div style="text-align: center"><div style="font-size: 12.5px; color: var(--text)">Idle</div><div style="font-size: 11.5px; color: var(--text-3)">6 px, 3 px inset</div></div></div><div style="display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1 1 0"><div class="sbx hover" style="height: 200px"><div class="trk"></div><div class="th" style="top: 36px; height: 70px"></div></div><div style="text-align: center"><div style="font-size: 12.5px; color: var(--text)">Hover</div><div style="font-size: 11.5px; color: var(--text-3)">8 px with a track</div></div></div><div style="display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1 1 0"><div class="sbx drag" style="height: 200px"><div class="trk"></div><div class="th" style="top: 36px; height: 70px"></div></div><div style="text-align: center"><div style="font-size: 12.5px; color: var(--text)">Dragging</div><div style="font-size: 11.5px; color: var(--text-3)">8 px, darker</div></div></div></div></div>
+<div class="spec-card" style="height: 300px"><div style="font-size: 12px; font-weight: 600; color: var(--text-3)">Marks</div>
+<div style="display: flex; gap: 22px; align-items: flex-start; padding-top: 4px"><div class="sbx trkon" style="height: 200px"><div class="trk"></div><div class="th" style="top: 40px; height: 64px"></div><i class="mk bad" style="top: 22px"></i><i class="mk hit" style="top: 58px"></i><i class="mk hit" style="top: 66px"></i><i class="mk err" style="top: 121px"></i><i class="mk hit" style="top: 160px"></i><i class="mk bad" style="top: 182px"></i></div><div style="display: flex; flex-direction: column; gap: 9px; font-size: 12.5px; color: var(--text-2)"><span style="display: flex; align-items: center; gap: 7px"><i style="width: 10px; height: 4px; border-radius: 2px; background: var(--warn)"></i>Problem</span><span style="display: flex; align-items: center; gap: 7px"><i style="width: 10px; height: 4px; border-radius: 2px; background: var(--err)"></i>Error</span><span style="display: flex; align-items: center; gap: 7px"><i style="width: 10px; height: 4px; border-radius: 2px; background: var(--accent)"></i>Find result</span><span style="font-size: 12px; color: var(--text-3); line-height: 1.45">Lists that show problems or find results put a mark for each into their scroll bar, so you see where they are without scrolling. Next to a minimap, the marks sit in the minimap instead.</span></div></div></div>
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h2 style="margin: 0; font-size: 20px; font-weight: 700; color: var(--title)">Rows, switches and fields</h2>
+<p style="margin: 0; color: var(--text-2); font-size: 13.5px; max-width: 760px">Labels sit on the same line as their controls inside rounded groups, so a screen shows twice as much without scrolling. Short help text goes under the label instead of in a hidden tooltip. "Open in Editor" turns into an icon inside the field.</p>
+</div>
+<div style="display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 20px">
+<div class="spec-card" style="gap: 0">
+<div class="sec">Behavior</div>
+<div class="group">
+<div class="row"><span class="lbl">Pause Game<span class="sub">Stops the world while this GUI is open</span></span><div class="ctl"><button class="{{swB}}" role="switch" aria-checked="{{swBOn}}" aria-label="Pause Game" onClick="{{toggleB}}"></button></div></div>
+<div class="row"><span class="lbl">Popup Mode<span class="sub">Opens on top of the current screen</span></span><div class="ctl"><button class="{{swC}}" role="switch" aria-checked="{{swCOn}}" aria-label="Popup Mode" onClick="{{toggleC}}"></button></div></div>
+<div class="{{childRow}}"><span class="lbl">Background Overlay<span class="sub">Darkens the screen behind the popup</span></span><div class="ctl"><button class="sw on" role="switch" aria-checked="true" aria-label="Background Overlay" disabled="{{childOff}}"></button></div></div>
+</div>
+<div class="sec" style="margin-top: 18px">Request</div>
+<div class="group lw-96">
+<div class="row"><span class="lbl">Target URL</span><div class="ctl grow"><div class="field"><input type="text" aria-label="Target URL" value="https://api.example.com/v1/scores"><button class="ib tip-on" data-tip="Open in Editor" aria-label="Open in Editor"><span class="ms" aria-hidden="true">edit_note</span></button></div></div></div>
+<div class="row" style="align-items: flex-start; padding-top: 14px"><span class="lbl" style="padding-top: 5px">Identifier</span><div class="ctl grow" style="flex-direction: column; align-items: stretch; gap: 5px"><div class="field bad"><input type="text" aria-label="Identifier" value="main menu"></div><div class="err-msg"><span class="ms" aria-hidden="true">error</span>Only lowercase letters, numbers and _ work here</div></div></div>
+</div>
+</div>
+<div class="spec-card" style="gap: 22px">
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 12px; font-weight: 600; color: var(--text-3)">Buttons</div>
+<div style="display: flex; gap: 10px; flex-wrap: wrap">
+<button class="btn wide">Cancel</button>
+<button class="btn wide primary">Save</button>
+<button class="btn">Browse Files</button>
+<button class="btn" disabled="disabled">Disabled</button>
+</div>
+<div style="font-size: 11.5px; color: var(--text-3)">The blue default button reacts to Enter.</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 12px; font-weight: 600; color: var(--text-3)">Switch</div>
+<div style="display: flex; gap: 22px; align-items: center">
+<div style="display: flex; gap: 8px; align-items: center"><button class="sw" role="switch" aria-checked="false" aria-label="Off example"></button><span style="color: var(--text-2)">Off</span></div>
+<div style="display: flex; gap: 8px; align-items: center"><button class="sw on" role="switch" aria-checked="true" aria-label="On example"></button><span style="color: var(--text-2)">On</span></div>
+<div style="display: flex; gap: 8px; align-items: center"><button class="sw on" role="switch" aria-checked="true" aria-label="Disabled example" disabled="disabled"></button><span style="color: var(--text-2)">Disabled</span></div>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 12px; font-weight: 600; color: var(--text-3)">Fields</div>
+<div class="field focus" style="flex: 0 0 auto"><input type="text" aria-label="Focused field example" value="Focused"></div>
+<div style="display: flex; gap: 8px; align-items: center">
+<div class="field" style="flex: 0 0 96px"><input type="text" aria-label="Timeout" value="10"><span class="suf">sec</span></div>
+<div class="stepper"><button aria-label="5 seconds less" data-tip="&minus;5 sec"><span class="ms" aria-hidden="true">remove</span></button><button aria-label="5 seconds more" data-tip="+5 sec"><span class="ms" aria-hidden="true">add</span></button></div>
+<span style="font-size: 11.5px; color: var(--text-3); margin-left: 6px">Numbers get a unit and a stepper with steps that fit</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h2 style="margin: 0; font-size: 20px; font-weight: 700; color: var(--title)">Window title bar</h2>
+<p style="margin: 0; color: var(--text-2); font-size: 13.5px; max-width: 800px">Window buttons move to the top left as colored dots. Their symbols only show while the pointer is over the group, and then all three show together. The title and its icon sit centered, and the title bar uses the window's own color instead of a gray strip.</p>
+</div>
+<div style="display: flex; gap: 28px; flex-wrap: wrap; color: var(--text-2); font-size: 12.5px">
+<span style="display: flex; align-items: center; gap: 8px"><span style="width: 12px; height: 12px; border-radius: 50%; background: var(--tl-close)"></span>Close</span>
+<span style="display: flex; align-items: center; gap: 8px"><span style="width: 12px; height: 12px; border-radius: 50%; background: var(--tl-collapse)"></span>Collapse to title bar (new: peek at the layout behind it)</span>
+<span style="display: flex; align-items: center; gap: 8px"><span style="width: 12px; height: 12px; border-radius: 50%; background: var(--tl-max)"></span>Maximize / restore</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 28px">
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 12px; font-weight: 600; color: var(--text-3)">Idle (hover the dots to try it)</div>
+<div class="win" style="position: relative; height: 96px">
+<div class="titlebar">
+<div class="tl"><button class="c" aria-label="Close"><span class="ms" aria-hidden="true">close</span></button><button class="m" aria-label="Collapse"><span class="ms" aria-hidden="true">remove</span></button><button class="x" aria-label="Maximize"><span class="ms" aria-hidden="true">open_in_full</span></button></div>
+<div class="wt"><span class="ms" aria-hidden="true">swap_horiz</span>Edit HTTP Request</div>
+<div></div>
+</div>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 12px; font-weight: 600; color: var(--text-3)">Pointer anywhere over the dots</div>
+<div class="win" style="position: relative; height: 96px">
+<div class="titlebar">
+<div class="tl show"><button class="c" aria-label="Close"><span class="ms" aria-hidden="true">close</span></button><button class="m" aria-label="Collapse"><span class="ms" aria-hidden="true">remove</span></button><button class="x" aria-label="Maximize"><span class="ms" aria-hidden="true">open_in_full</span></button></div>
+<div class="wt"><span class="ms" aria-hidden="true">swap_horiz</span>Edit HTTP Request</div>
+<div></div>
+</div>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 12px; font-weight: 600; color: var(--text-3)">Window in the background</div>
+<div class="win inactive" style="position: relative; height: 96px">
+<div class="titlebar">
+<div class="tl"><button class="c" aria-label="Close"><span class="ms" aria-hidden="true">close</span></button><button class="m" aria-label="Collapse"><span class="ms" aria-hidden="true">remove</span></button><button class="x" aria-label="Maximize"><span class="ms" aria-hidden="true">open_in_full</span></button></div>
+<div class="wt"><span class="ms" aria-hidden="true">image</span>Choose Image Resource</div>
+<div></div>
+</div>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="font-size: 12px; font-weight: 600; color: var(--text-3)">Fixed-size dialog: only Close is active</div>
+<div class="win" style="position: relative; height: 96px">
+<div class="titlebar">
+<div class="tl"><button class="c" aria-label="Close"><span class="ms" aria-hidden="true">close</span></button><button class="m" aria-label="Collapse" disabled="disabled"><span class="ms" aria-hidden="true">remove</span></button><button class="x" aria-label="Maximize" disabled="disabled"><span class="ms" aria-hidden="true">open_in_full</span></button></div>
+<div class="wt"><span class="ms" aria-hidden="true">error</span>Unsaved Changes</div>
+<div></div>
+</div>
+</div>
+</div>
+
+</div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Dark&quot;,&quot;Light&quot;],&quot;default&quot;:&quot;Dark&quot;},&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:3094}}">
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const pick = (key, value) => () => this.setState({ [key]: value });
+    const flags = (index, count) => {
+      const out = {};
+      'abcde'.slice(0, count).split('').forEach((k, i) => { out[k] = i === index ? 'on' : ''; });
+      return out;
+    };
+    const tx = (i) => 'translateX(' + (i * 100) + '%)';
+    const src = s.src ?? 0;
+    const tag = s.tag ?? 0;
+    const mode = s.mode ?? 2;
+    const cmp = s.cmp ?? 2;
+    const swA = s.swA ?? true;
+    const swB = s.swB ?? true;
+    const swC = s.swC ?? false;
+    const methods = [['GET', 'Read data'], ['POST', 'Send data'], ['PUT', 'Replace'], ['PATCH', 'Update parts'], ['DELETE', 'Remove'], ['HEAD', 'Headers only'], ['OPTIONS', "Ask what's allowed"]];
+    const popVal = s.popVal ?? 'POST';
+    const popOpen = !!s.popOpen;
+    const descs = [
+      'Loads a file from your Minecraft instance folder. Your FancyMenu assets live in /config/fancymenu/assets/.',
+      "Uses Minecraft's resource system, so textures from resource packs, mods and vanilla all work.",
+      'Loads the file from the internet. Use a direct link that ends with the file name, like .png.'
+    ];
+    return {
+      themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark',
+      srcI: src, srcX: tx(src), srcC: flags(src, 3), srcDesc: descs[src],
+      pickSrc0: pick('src', 0), pickSrc1: pick('src', 1), pickSrc2: pick('src', 2),
+      tagI: tag, tagX: tx(tag), tagC: flags(tag, 2), pickTag0: pick('tag', 0), pickTag1: pick('tag', 1),
+      modeI: mode, modeX: tx(mode), modeC: flags(mode, 3), pickMode0: pick('mode', 0), pickMode1: pick('mode', 1), pickMode2: pick('mode', 2),
+      cmpI: cmp, cmpX: tx(cmp), cmpC: flags(cmp, 5), pickCmp0: pick('cmp', 0), pickCmp1: pick('cmp', 1), pickCmp2: pick('cmp', 2), pickCmp3: pick('cmp', 3), pickCmp4: pick('cmp', 4),
+      swA: swA ? 'sw on' : 'sw', swAOn: swA ? 'true' : 'false', toggleA: () => this.setState({ swA: !swA }),
+      swB: swB ? 'sw on' : 'sw', swBOn: swB ? 'true' : 'false', toggleB: () => this.setState({ swB: !swB }),
+      swC: swC ? 'sw on' : 'sw', swCOn: swC ? 'true' : 'false', toggleC: () => this.setState({ swC: !swC }),
+      childRow: swC ? 'row child' : 'row child off', childOff: !swC,
+      popOpen, popVal, popCls: popOpen ? 'popup open' : 'popup',
+      togglePop: () => this.setState({ popOpen: !popOpen }),
+      yes: true, no: false, closePop: () => this.setState({ popOpen: false }),
+      // pop-up buttons open the same menu as everything else: one checkmarked choice per row, hints on the right
+      popItems: methods.flatMap(([label, hint]) => [...(label === 'HEAD' ? [{ sep: true }] : []), { radio: true, checked: label === popVal, label, note: hint, click: () => this.setState({ popVal: label, popOpen: false }) }]),
+      popDemoItems: methods.flatMap(([label, hint]) => [...(label === 'HEAD' ? [{ sep: true }] : []), { radio: true, checked: label === 'POST', label, note: hint, hl: label === 'PUT' }]),
+      channelItems: ['Master Volume', 'Music', 'Jukebox/Note Blocks', 'Weather', 'Blocks', 'Hostile Creatures', 'Friendly Creatures', 'Players', 'Ambient/Environment', 'Voice/Speech'].map((label) => ({ radio: true, checked: label === 'Music', label }))
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Picking a slideshow in the layout editor</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="fm {{themeClass}} {{matClass}}" style="position: relative; width: 1440px; height: 900px; overflow: hidden; background: var(--bd)">
+<div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""><div class="gridlines"></div></div>
+<div class="le" aria-hidden="true" style="left: 500px; top: 120px; width: 440px; height: 84px; display: grid; place-items: center; color: #fff; font-size: 52px; font-weight: 700; letter-spacing: 1px; text-shadow: 0 4px 0 rgba(0, 0, 0, .35)">Dusk Valley</div>
+<div class="le le-btn" aria-hidden="true" style="left: 590px; top: 420px; width: 260px; height: 38px">Play</div>
+<div class="le le-btn" aria-hidden="true" style="left: 590px; top: 468px; width: 260px; height: 38px">Options</div>
+<div class="le le-btn" aria-hidden="true" style="left: 590px; top: 516px; width: 260px; height: 38px">Quit Game</div>
+<div class="le ss-el" aria-label="Winter gallery, a Slideshow element" style="left: 28px; top: 120px; width: 384px; height: 216px"><span class="ss-ly on" style="{{elSpot}}"></span></div>
+<div class="sel-border" aria-hidden="true" style="left: 26px; top: 118px; width: 388px; height: 220px"><i style="left: -3px; top: -3px"></i><i style="right: -3px; top: -3px"></i><i style="left: -3px; bottom: -3px"></i><i style="right: -3px; bottom: -3px"></i></div>
+<div style="position: absolute; left: 0; right: 0; top: 0"><dc-import name="MenuBar" kind="Editor" unsaved="{{yes}}" standalone="{{no}}" hint-size="1440px,30px"></dc-import></div>
+
+<div style="position: absolute; left: 300px; top: 236px; display: flex; align-items: flex-start; gap: 2px">
+<div><dc-import name="ContextMenu" items="{{items}}" search="Search this menu" standalone="{{no}}" hint-size="auto,420px"></dc-import></div>
+<div style="{{subStyle}}"><dc-import name="ContextMenu" items="{{subItems}}" sub="{{yes}}" search="" standalone="{{no}}" hint-size="auto,170px"></dc-import></div>
+<sc-if value="{{card}}" hint-placeholder-val="{{true}}">
+<div class="help-tag" style="{{cardStyle}}"><span class="ss-el" style="position: relative; display: block; width: 192px; height: 108px; margin-bottom: 8px; border-radius: 4px"><span class="ss-ly on" style="{{card.spot}}"></span></span><b style="display: block; color: var(--title)">{{card.name}}</b>{{card.meta}}</div>
+</sc-if>
+<sc-if value="{{note}}" hint-placeholder-val="{{false}}"><div class="help-tag" style="{{cardStyle}}">{{note}}</div></sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1440,"height":900}}'>
+// the slideshows of the Dusk Valley profile, as the Slideshows window lists them: name, what it plays, the picture of
+// its first image on preload_art.png in art pixels, and what's wrong with it
+const SHOWS = [
+  { id: 's1', n: 'Dusk Valley Nights', meta: '5 images · 8 s each', art: [0, 0] },
+  { id: 's2', n: 'Seasons', meta: '4 images · 6 s each', art: [0, 144] },
+  { id: 's3', n: 'Server Highlights', meta: '', prob: '2 images are missing' },
+  { id: 's4', n: 'Winter Postcards', meta: '5 images · 5 s each · random', art: [0, 72] }
+];
+const at = (art, k) => 'background-position: ' + -art[0] * k + 'px ' + -art[1] * k + 'px';
+
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const pick = s.pick ?? 's4';
+    const hover = s.hover !== undefined ? s.hover : pick;
+    const cur = SHOWS.find((x) => x.id === pick);
+    const hov = SHOWS.find((x) => x.id === hover);
+    const tell = (note) => () => this.setState({ note, hover: null });
+    const items = [
+      { head: 'Slideshow' },
+      { ic: 'slideshow', label: 'Slideshow', val: cur.n, sub: true, hl: true },
+      { ic: 'fit', label: 'Restore Aspect Ratio' },
+      { head: 'Element' },
+      { ic: 'title', label: 'In-Editor Name', val: 'Winter gallery' },
+      { ic: 'opacity', label: 'Opacity', slider: 1 },
+      { ic: 'move', label: 'Position & Size', sub: true, val: 'Top Left' },
+      { ic: 'eye', label: 'Visibility', sub: true, val: 'Always' },
+      { ic: 'sparkle', label: 'Animation & Effects', sub: true },
+      { ic: 'up', label: 'Move Layer Up' },
+      { ic: 'down', label: 'Move Layer Down' },
+      { sep: true },
+      { ic: 'copy', label: 'Copy', kbd: 'Ctrl+C' },
+      { ic: 'id', label: 'Copy Element ID' },
+      { ic: 'trash', label: 'Delete', kbd: 'Del', danger: true }
+    ];
+    // Wherever a slideshow gets picked, its submenu also leads to the Slideshows window: the pencil on a row opens it on
+    // that slideshow, and the last two rows make a new one or show them all (rule 164).
+    const subItems = [
+      ...SHOWS.map((x) => ({
+        radio: true, checked: x.id === pick, label: x.n, hl: x.id === hover,
+        warn: x.prob ? true : undefined, warnTip: x.prob || '',
+        enter: () => { if (hover !== x.id || s.note) this.setState({ hover: x.id, note: '' }); },
+        click: () => this.setState({ pick: x.id, hover: x.id, note: '' }),
+        editTip: 'Edit ' + x.n, onEdit: tell('Opens Slideshows with ' + x.n + ' selected, to change its images and how it plays.')
+      })),
+      { sep: true },
+      { ic: 'plus', label: 'New Slideshow', enter: () => this.setState({ hover: null }), click: tell('Opens Slideshows with a new slideshow, its name ready to type. Use in Element hands it to this element.') },
+      { ic: 'slideshow', label: 'Manage Slideshows', enter: () => this.setState({ hover: null }), click: tell('Opens Slideshows, where every slideshow can be changed, copied or deleted.') }
+    ];
+    const heightOf = (it) => (it.sep || it.head ? 25 : 26);
+    const offsetOf = (list, key) => { let y = 0; for (const it of list) { if (it.label === key) return y; y += heightOf(it); } return 0; };
+    // same rule as ContextMenu: the search field shows from the start in menus with more than 10 entries
+    const listTop = 1 + 5 + (items.filter((it) => !it.sep && !it.head).length > 10 ? 28 : 0);
+    const subTop = listTop + offsetOf(items, 'Slideshow') - 6;
+    return {
+      themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark',
+      matClass: (this.props.material ?? 'Blur') === 'Blur' ? 'mat-blur' : '',
+      yes: true, no: false,
+      items, subItems, subStyle: 'margin-top: ' + subTop + 'px',
+      elSpot: cur.art ? at(cur.art, 3) : 'display: none',
+      // hovering a slideshow shows it in a preview card next to the menu (rules 22 and 133)
+      card: !s.note && hov && hov.art ? { name: hov.n, meta: hov.meta, spot: 'background-size: 768px 324px; ' + at(hov.art, 1.5) } : null,
+      note: s.note || (hov && !hov.art ? hov.n + ' has nothing to show: ' + hov.prob + '.' : ''),
+      // the card sits next to the row it belongs to, and what a click did next to the top of the submenu
+      cardStyle: 'position: relative; animation: none; width: 222px; margin: ' + (subTop + 6 + (!s.note && hov ? offsetOf(subItems, hov.n) : 0)) + 'px 0 0 8px'
+    };
+  }
+}
+</script>
+</body>
+</html>

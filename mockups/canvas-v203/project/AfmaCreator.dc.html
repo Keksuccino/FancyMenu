@@ -1,0 +1,792 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>AFMA Creator component</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="{{rootCls}}" style="{{rootStyle}}" data-af="{{uid}}" onMouseDown="{{activate}}">
+<sc-if value="{{standalone}}" hint-placeholder-val="{{true}}"><div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""><div class="dim"></div></div></sc-if>
+
+<div class="win af" role="dialog" aria-label="AFMA Creator" style="{{winStyle}}">
+<div class="titlebar">
+<div class="tl"><button class="c" aria-label="Close" onClick="{{close}}"><span class="ms" aria-hidden="true">close</span></button><button class="m" aria-label="Collapse"><span class="ms" aria-hidden="true">remove</span></button><button class="x" aria-label="Maximize"><span class="ms" aria-hidden="true">open_in_full</span></button></div>
+<div class="wt"><span class="ms" aria-hidden="true">movie_edit</span>AFMA Creator</div>
+<div></div>
+</div>
+
+<sc-if value="{{anyPopup}}" hint-placeholder-val="{{false}}"><div class="fb-catch" style="z-index: 42" onClick="{{closePopups}}" onContextMenu="{{closePopups}}"></div></sc-if>
+
+<div class="split">
+<div class="af-stagecol">
+<div class="{{playerCls}}">
+<sc-if value="{{hasMain}}" hint-placeholder-val="{{true}}">
+<div class="af-stage checker" data-pv="stage" role="button" aria-label="{{stageLabel}}" onClick="{{togglePlay}}">
+<img class="af-sheet" data-pv="img" src="afma_frames.png" alt="" style="{{imgStyle}}">
+<span class="{{pillCls}}" data-pv="pill" data-t="{{pillText}}"></span>
+</div>
+</sc-if>
+<sc-if value="{{noMain}}" hint-placeholder-val="{{false}}">
+<div class="af-stage af-empty">
+<div class="empty">
+<h3 class="t">Add your frames</h3>
+<p class="d">Drop a folder of PNG frames anywhere in this window, or the PNG files themselves. They play in the order of their file names.</p>
+<button class="btn primary" onClick="{{chooseMain}}">Choose Folder</button>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{hasMain}}" hint-placeholder-val="{{true}}"><div class="af-trans">
+<button class="btn icon" data-tip="{{playTip}}" aria-label="{{playTip}}" disabled="{{playOff}}" onClick="{{togglePlay}}"><span class="ms fill" aria-hidden="true">{{playIcon}}</span></button>
+<div class="af-tl" data-pv="tl" role="slider" aria-label="Position" aria-valuetext="{{timeText}}" onPointerDown="{{tl.down}}" onPointerMove="{{tl.move}}" onPointerUp="{{tl.up}}" onPointerLeave="{{tl.leave}}">
+<sc-for list="{{segs}}" as="g" hint-placeholder-count="2"><div class="{{g.cls}}" data-seg="{{g.key}}" style="{{g.style}}"><i data-pv="{{g.fillKey}}" style="{{g.fill}}"></i><span>{{g.label}}</span></div></sc-for>
+<sc-for list="{{marks}}" as="mk" hint-placeholder-count="0"><span class="{{mk.cls}}" style="{{mk.style}}"></span></sc-for>
+<sc-if value="{{hasMain}}" hint-placeholder-val="{{true}}"><span class="af-head" data-pv="head" style="{{headStyle}}"></span></sc-if>
+<sc-if value="{{hov}}" hint-placeholder-val="{{false}}"><div class="af-hover" style="{{hovStyle}}"><div class="af-hthumb"><img src="afma_frames.png" alt="" style="{{hovImg}}"></div><span>{{hovText}}</span></div></sc-if>
+</div>
+<span class="af-time" data-pv="time" data-t="{{timeText}}"></span>
+</div></sc-if>
+</div>
+
+<sc-if value="{{hasMain}}" hint-placeholder-val="{{true}}"><div>
+<div class="sec">Frames</div>
+<div class="group lw-48 af-srcs">
+<sc-for list="{{srcs}}" as="r" hint-placeholder-count="2">
+<div class="{{r.cls}}" data-src="{{r.key}}">
+<span class="lbl">{{r.label}}</span>
+<span class="{{r.deckCls}}" aria-hidden="true"><span class="th"><sc-if value="{{r.has}}" hint-placeholder-val="{{true}}"><img src="afma_frames.png" alt="" style="{{r.thumb}}"></sc-if></span></span>
+<span class="af-stx">
+<span class="{{r.nameCls}}">{{r.name}}</span>
+<span class="sub">{{r.sub}}</span>
+<sc-for list="{{r.msgs}}" as="m" hint-placeholder-count="0"><span class="{{m.cls}}"><span class="ms" aria-hidden="true">{{m.icon}}</span><span>{{m.text}} <button class="vm-link" onClick="{{m.show}}">Show</button></span></span></sc-for>
+</span>
+<div class="ctl">
+<sc-if value="{{r.has}}" hint-placeholder-val="{{true}}"><button class="ib" data-tip="Choose Another Folder" aria-label="Choose another folder for the {{r.what}}" disabled="{{busy}}" onClick="{{r.choose}}"><span class="ms" aria-hidden="true">folder</span></button><button class="ib danger" data-tip="{{r.removeTip}}" aria-label="{{r.removeTip}}" disabled="{{busy}}" onClick="{{r.remove}}"><span class="ms" aria-hidden="true">close</span></button></sc-if>
+<sc-if value="{{r.none}}" hint-placeholder-val="{{false}}"><button class="btn sm" disabled="{{busy}}" onClick="{{r.choose}}">Choose Folder</button></sc-if>
+</div>
+</div>
+</sc-for>
+</div>
+</div></sc-if>
+</div>
+
+<div class="af-side">
+<main class="pcontent" data-sk="{{sk}}">
+
+<sc-if value="{{jobRun}}" hint-placeholder-val="{{false}}">
+<div class="group sc-live af-job" role="status">
+<div class="top"><span class="t">Creating {{outFile}}</span><span class="r">{{jb.pct}}</span></div>
+<div class="sc-bar af-bar"><i style="{{jb.bar}}"></i></div>
+<div class="af-jl"><span>{{jb.step}}</span><span class="r">{{jb.eta}}</span></div>
+</div>
+</sc-if>
+<sc-if value="{{jobDone}}" hint-placeholder-val="{{false}}">
+<div class="group sc-live af-job ok" role="status">
+<div class="top"><span class="ms" aria-hidden="true">check_circle</span><span class="t">{{jb.file}} is ready</span><span class="r">{{jb.took}}</span><button class="ib" data-tip="Dismiss" aria-label="Dismiss" onClick="{{dismissJob}}"><span class="ms" aria-hidden="true">close</span></button></div>
+<div class="af-jl"><span>{{jb.size}}</span></div>
+<div class="af-jl dim"><span>{{jb.kinds}}</span></div>
+<div class="af-jacts"><button class="btn sm" onClick="{{showFolder}}"><span class="ms" aria-hidden="true">folder</span>Show in Folder</button><button class="btn sm" data-tip="{{jb.copyTip}}" onClick="{{copyPath}}"><span class="ms" aria-hidden="true">content_copy</span>Copy Path</button></div>
+</div>
+</sc-if>
+<sc-if value="{{jobStopped}}" hint-placeholder-val="{{false}}">
+<div class="group sc-live af-job stopped" role="status">
+<div class="top"><span class="ms" aria-hidden="true">stop_circle</span><span class="t">Stopped</span><button class="ib" data-tip="Dismiss" aria-label="Dismiss" onClick="{{dismissJob}}"><span class="ms" aria-hidden="true">close</span></button></div>
+<div class="af-jl"><span>{{jb.stopText}}</span></div>
+</div>
+</sc-if>
+
+<div class="{{setsCls}}">
+<div>
+<div class="sec">Playback</div>
+<div class="group">
+<div class="row"><span class="lbl af-grow">Speed<span class="sub">{{spd.sub}}</span></span><div class="ctl">
+<label class="{{spd.cls}}"><input type="text" inputmode="decimal" aria-label="Speed" data-fk="{{spd.fk}}" value="{{spd.text}}" onFocus="{{spd.focus}}" onInput="{{spd.input}}" onKeyDown="{{spd.key}}" onBlur="{{spd.blur}}"><button class="{{spd.unitCls}}" aria-haspopup="menu" aria-expanded="{{spd.unitOpen}}" aria-label="Unit: {{spd.unitName}}" onClick="{{spd.openUnit}}">{{spd.unit}}<span class="ms" aria-hidden="true">expand_more</span></button></label><div class="stepper"><button aria-label="Less" onClick="{{spd.down}}"><span class="ms" aria-hidden="true">remove</span></button><button aria-label="More" onClick="{{spd.up}}"><span class="ms" aria-hidden="true">add</span></button></div>
+</div></div>
+<sc-if value="{{hasIntro}}" hint-placeholder-val="{{true}}"><div class="{{ispd.rowCls}}"><span class="lbl af-grow">Intro Speed<span class="sub">{{ispd.sub}}</span></span><div class="ctl">
+<sc-if value="{{ispd.own}}" hint-placeholder-val="{{false}}"><button class="fx rst" data-tip="Same as the main frames" aria-label="Same speed as the main frames" onClick="{{ispd.reset}}"><span class="ms" aria-hidden="true">undo</span></button></sc-if>
+<label class="{{ispd.cls}}"><input type="text" inputmode="decimal" aria-label="Intro speed" placeholder="{{ispd.ph}}" data-fk="{{ispd.fk}}" value="{{ispd.text}}" onFocus="{{ispd.focus}}" onInput="{{ispd.input}}" onKeyDown="{{ispd.key}}" onBlur="{{ispd.blur}}"><span class="suf">{{spd.unit}}</span></label><div class="stepper"><button aria-label="Less" onClick="{{ispd.down}}"><span class="ms" aria-hidden="true">remove</span></button><button aria-label="More" onClick="{{ispd.up}}"><span class="ms" aria-hidden="true">add</span></button></div>
+</div></div></sc-if>
+<div class="row"><span class="lbl af-grow">Loops<sc-if value="{{hasIntro}}" hint-placeholder-val="{{true}}"><span class="sub">The intro plays only once</span></sc-if></span><div class="ctl">
+<div class="seg" role="radiogroup" aria-label="Loops" style="width: 214px"><div class="thumb" style="{{lp.thumb}}"></div><button class="{{lp.foreverCls}}" role="radio" aria-checked="{{lp.forever}}" onClick="{{lp.setForever}}">Forever</button><button class="{{lp.onceCls}}" role="radio" aria-checked="{{lp.once}}" onClick="{{lp.setOnce}}">Once</button><button class="{{lp.severalCls}}" role="radio" aria-checked="{{lp.several}}" onClick="{{lp.setSeveral}}">Several</button></div>
+<sc-if value="{{lp.several}}" hint-placeholder-val="{{false}}"><label class="{{lc.cls}}"><input type="text" inputmode="numeric" aria-label="How many times the main frames play" data-fk="{{lc.fk}}" value="{{lc.text}}" onFocus="{{lc.focus}}" onInput="{{lc.input}}" onKeyDown="{{lc.key}}" onBlur="{{lc.blur}}"><span class="suf">times</span></label><div class="stepper"><button aria-label="Less" onClick="{{lc.down}}"><span class="ms" aria-hidden="true">remove</span></button><button aria-label="More" onClick="{{lc.up}}"><span class="ms" aria-hidden="true">add</span></button></div></sc-if>
+</div></div>
+</div>
+<sc-if value="{{fieldErr}}" hint-placeholder-val="{{false}}"><p class="err-msg sc-err"><span class="ms" aria-hidden="true">warning</span>{{fieldErr}}</p></sc-if>
+</div>
+
+<div>
+<div class="sec">Quality</div>
+<div class="seg" role="radiogroup" aria-label="Quality"><div class="thumb" style="{{pr.thumb}}"></div><sc-for list="{{pr.opts}}" as="o" hint-placeholder-count="3"><button class="{{o.cls}}" role="radio" aria-checked="{{o.on}}" onClick="{{o.pick}}">{{o.label}}</button></sc-for></div>
+<p class="foot">{{pr.desc}}</p>
+</div>
+
+<div>
+<div class="sec af-dsec" data-anchor="adv"><button class="{{adv.discCls}}" aria-expanded="{{adv.open}}" onClick="{{adv.toggle}}"><span class="ms chev" aria-hidden="true">chevron_right</span>Advanced</button><sc-if value="{{adv.changed}}" hint-placeholder-val="{{false}}"><span class="chip">{{adv.changedText}}</span><span class="end"><button class="vm-link" onClick="{{adv.resetAll}}">Reset to {{pr.name}}</button></span></sc-if></div>
+<sc-if value="{{adv.open}}" hint-placeholder-val="{{false}}">
+<div class="af-advs">
+<sc-for list="{{adv.groups}}" as="ag" hint-placeholder-count="4">
+<div class="group">
+<sc-for list="{{ag.rows}}" as="a" hint-placeholder-count="2">
+<div class="{{a.cls}}"><span class="{{a.lblCls}}">{{a.label}}<sc-if value="{{a.sub}}" hint-placeholder-val="{{false}}"><span class="sub">{{a.sub}}</span></sc-if></span><div class="ctl">
+<sc-if value="{{a.mod}}" hint-placeholder-val="{{false}}"><button class="fx rst" data-tip="{{a.resetTip}}" aria-label="{{a.resetTip}}" onClick="{{a.reset}}"><span class="ms" aria-hidden="true">undo</span></button></sc-if>
+<sc-if value="{{a.isSw}}" hint-placeholder-val="{{false}}"><button class="{{a.swCls}}" role="switch" aria-checked="{{a.on}}" aria-label="{{a.label}}" onClick="{{a.flip}}"></button></sc-if>
+<sc-for list="{{a.nums}}" as="n" hint-placeholder-count="1"><sc-if value="{{n.isField}}" hint-placeholder-val="{{true}}"><label class="{{n.cls}}"><input type="text" inputmode="decimal" aria-label="{{n.name}}" data-fk="{{n.fk}}" value="{{n.text}}" onFocus="{{n.focus}}" onInput="{{n.input}}" onKeyDown="{{n.key}}" onBlur="{{n.blur}}"><span class="suf">{{n.suf}}</span></label><div class="stepper"><button aria-label="Less" onClick="{{n.down}}"><span class="ms" aria-hidden="true">remove</span></button><button aria-label="More" onClick="{{n.up}}"><span class="ms" aria-hidden="true">add</span></button></div></sc-if><sc-if value="{{n.isSl}}" hint-placeholder-val="{{false}}"><span class="mslider" role="slider" aria-label="{{n.name}}" aria-valuenow="{{n.text}}"><span class="track" onClick="{{n.pick}}"><span class="fill" style="{{n.fill}}"></span><span class="knob" style="{{n.knob}}"></span></span><span class="pct">{{n.text}}</span></span></sc-if></sc-for>
+</div></div>
+</sc-for>
+</div>
+</sc-for>
+</div>
+</sc-if>
+</div>
+
+<div>
+<div class="sec">Save As</div>
+<div class="group lw-64">
+<div class="row"><span class="lbl">Name</span><div class="ctl grow"><label class="field"><input type="text" aria-label="File name" placeholder="{{outPh}}" data-fk="{{nameFk}}" value="{{outName}}" onFocus="{{nameFocus}}" onInput="{{nameInput}}" onKeyDown="{{nameKey}}" onBlur="{{nameBlur}}"><span class="suf">.afma</span></label></div></div>
+<div class="row"><span class="lbl">Folder</span><div class="ctl grow"><span class="af-path"><span class="ms" aria-hidden="true">folder</span><span>{{outFolder}}</span></span><button class="btn sm" onClick="{{changeFolder}}">Change Folder</button></div></div>
+<div class="row"><span class="lbl af-grow">Check the File After Saving<span class="sub">Reads it once more to make sure every frame works. Takes a little longer.</span></span><div class="ctl"><button class="{{checkSw}}" role="switch" aria-checked="{{checkOn}}" aria-label="Check the file after saving" onClick="{{flipCheck}}"></button></div></div>
+</div>
+<p class="{{outNoteCls}}">{{outNote}}</p>
+</div>
+</div>
+</main>
+</div>
+</div>
+
+<div class="footer line">
+<span class="{{leadCls}}">{{lead}}<sc-if value="{{footUndo}}" hint-placeholder-val="{{false}}"> <button class="vm-link" onClick="{{undo}}">Undo</button></sc-if></span>
+<button class="btn wide" onClick="{{close}}">Close</button>
+<button class="{{goCls}}" data-tip="{{goTip}}" disabled="{{goOff}}" onClick="{{go}}">{{goLabel}}</button>
+</div>
+
+<sc-if value="{{unitOpen}}" hint-placeholder-val="{{false}}"><div class="vm-pop" style="{{unitStyle}}"><dc-import name="ContextMenu" items="{{unitItems}}" escape-listener="{{closePopups}}" label="Unit" standalone="{{no}}" hint-size="auto,90px"></dc-import></div></sc-if>
+
+<sc-if value="{{sheetOpen}}" hint-placeholder-val="{{false}}">
+<div class="sheet-dim"></div>
+<div class="sheet vm-alert" role="alertdialog" aria-label="{{al.title}}">
+<span class="vm-aicon"><span class="ms" aria-hidden="true">{{al.icon}}</span></span>
+<div class="vm-st" style="margin-top: 12px">{{al.title}}</div>
+<p>{{al.text}}</p>
+<div class="vm-abtns"><sc-for list="{{al.buttons}}" as="b" hint-placeholder-count="2"><button class="{{b.cls}}" onClick="{{b.click}}">{{b.label}}</button></sc-for></div>
+</div>
+</sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"scene":{"editor":"enum","options":["Ready","Empty","Problems"],"default":"Ready"},"at":{"editor":"int","default":0},"paused":{"editor":"boolean","default":false},"job":{"editor":"enum","options":["","run","done"],"default":""},"jobAt":{"editor":"int","default":0},"freeze":{"editor":"boolean","default":false},"sheet":{"editor":"enum","options":["","close"],"default":""},"preset":{"editor":"enum","options":["best","balanced","small"],"default":"balanced"},"advOpen":{"editor":"boolean","default":false},"tuned":{"editor":"boolean","default":false},"exists":{"editor":"boolean","default":false},"width":{"editor":"int","default":1040},"height":{"editor":"int","default":680},"standalone":{"editor":"boolean","default":true},"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1120,"height":760}}'>
+// ---------- the frames ----------
+// Dusk Valley pixel art at 128 × 72, exported at 10× as 1280 × 720 PNG files. afma_frames.png holds every frame,
+// 12 in a row: the intro's 36 frames first (night falls, the moon and stars come out), then the 72 frames of the loop.
+const SHEET = { cols: 12, w: 128, h: 72, sw: 1536, sh: 648 };
+const fname = (n) => 'frame_' + String(n).padStart(4, '0') + '.png';
+const INTRO = { key: 'intro', folder: 'dusk_valley_intro', n: 36, base: 0, w: 1280, h: 720, kb: 940, file: (i) => fname(i + 1), bad: [], gap: null };
+const MAIN = { key: 'main', folder: 'dusk_valley_loop', n: 72, base: 36, w: 1280, h: 720, kb: 2710, file: (i) => fname(i + 1), bad: [], gap: null };
+// A loop where one frame was exported at the wrong size and one file is missing from the numbering.
+const MAIN_PROBLEMS = Object.assign({}, MAIN, {
+  file: (i) => fname(i < 41 ? i + 1 : i + 2),
+  bad: [{ i: 48, w: 1920, h: 1080 }],
+  gap: { i: 41, missing: fname(42) }
+});
+const FRAMES_ROOT = 'config/fancymenu/assets/frames/';
+
+// ---------- quality presets: the values AfmaOptimizationPreset and AfmaCreatorState use today ----------
+const PRESETS = {
+  best: { name: 'Best Quality', desc: 'Keeps every pixel exactly as in your frames. Makes the biggest file and takes longer to create.',
+    key: 90, adaptive: true, amax: 360, minB: 128, minP: 0.25, moved: true, dist: 2048, offs: 12, tiny: false, col: 0, alp: 0, avg: 0, rep: true, mb: 1.7, full: 3 },
+  balanced: { name: 'Balanced', desc: 'Lets colors shift a little where nobody notices, for a much smaller file. The quickest to create.',
+    key: 90, adaptive: true, amax: 180, minB: 768, minP: 0.75, moved: true, dist: 512, offs: 8, tiny: true, col: 14, alp: 20, avg: 6, rep: true, mb: 1.2, full: 3 },
+  small: { name: 'Smallest File', desc: 'Allows a bit more color shift and searches harder for savings. Makes the smallest file and takes longer to create.',
+    key: 90, adaptive: true, amax: 360, minB: 128, minP: 0.25, moved: true, dist: 2048, offs: 12, tiny: true, col: 24, alp: 64, avg: 12, rep: true, mb: 0.9, full: 2 }
+};
+const PRESET_ORDER = ['best', 'balanced', 'small'];
+const ADV_KEYS = ['key', 'adaptive', 'amax', 'minB', 'minP', 'moved', 'dist', 'offs', 'tiny', 'col', 'alp', 'avg', 'rep'];
+const advOf = (pk) => { const o = {}; ADV_KEYS.forEach((k) => { o[k] = PRESETS[pk][k]; }); return o; };
+// The advanced settings in plain words. int: whole numbers only; min: the smallest value that works.
+const NUMS = {
+  key: { label: 'Full Frame Every', suf: 'frames', int: true, min: 1 },
+  amax: { label: 'At Least Every', suf: 'frames', int: true, min: 1 },
+  minB: { label: 'Savings Needed', suf: 'B', int: true, min: 0 },
+  minP: { label: 'Savings Needed', suf: '%', int: false, min: 0 },
+  dist: { label: 'Search Up To', suf: 'px', int: true, min: 0 },
+  offs: { label: 'Shifts to Try', suf: '', int: true, min: 0 },
+  col: { label: 'Color', suf: '', int: true, min: 0, max: 255 }, alp: { label: 'Transparency', suf: '', int: true, min: 0, max: 255 },
+  avg: { label: 'Average', suf: '', int: false, min: 0 }
+};
+const SWS = {
+  adaptive: 'Place Full Frames Where They Help', moved: 'Reuse Moved Areas', tiny: 'Allow Tiny Color Changes', rep: 'Store Repeated Frames Once'
+};
+
+// ---------- the simulated encoder: the same phases and progress values AfmaCreatorState reports today ----------
+// Reading takes the progress to 15 %, analyzing every frame to 78 %, packing to 98 % and the check to 98.5 %.
+const SIM = { read: 0.8, perFrame: 0.2, pack: 1.6, check: 1.2 };
+
+const fmtS = (ms) => { const s = ms / 1000; if (s < 60) return (Math.round(s * 10) / 10).toFixed(1) + ' s'; const m = Math.floor(s / 60); return m + ' min ' + Math.round(s - m * 60) + ' s'; };
+const fmtNum = (v) => String(Math.round(v * 100) / 100);
+const fpsOf = (ms) => fmtNum(Math.round(10000 / ms) / 10);
+const mbText = (kb) => (kb >= 1000 ? (Math.round(kb / 100) / 10).toFixed(1) + ' MB' : Math.round(kb) + ' KB');
+
+class Component extends DCLogic {
+  componentWillUnmount() {
+    if (this._tick) clearInterval(this._tick);
+    if (this._keys) window.removeEventListener('keydown', this._keys, true);
+    clearTimeout(this._paintT);
+  }
+
+  renderVals() {
+    const p = this.props, s = this.state || {};
+    const set = (patch) => this.setState(patch);
+    const uid = this._uid || (this._uid = 'af' + Math.random().toString(36).slice(2, 8));
+    const standalone = p.standalone ?? true;
+    const W = +p.width || 1040, H = +p.height || 680;
+    const scene = p.scene || 'Ready';
+    const fk = (k) => uid + '-' + k;
+    const deepQuery = (sel0) => { const walk = (r) => { const hit = r.querySelector(sel0); if (hit) return hit; for (const el of r.querySelectorAll('*')) { if (el.shadowRoot) { const x = walk(el.shadowRoot); if (x) return x; } } return null; }; return walk(document); };
+    const focusLater = (key, select) => setTimeout(() => { const el = deepQuery('[data-fk="' + key + '"]'); if (el) { el.focus(); if (select && el.select) el.select(); } }, 0);
+    const anchorOf = (el) => { const w = el.closest('.win'); const wr = w.getBoundingClientRect(), r0 = el.getBoundingClientRect(); const k = wr.width / w.offsetWidth || 1; return [Math.round((r0.left - wr.left) / k), Math.round((r0.bottom - wr.top) / k + 4), Math.round((r0.right - wr.left) / k)]; };
+
+    // ---------- the document: frames, settings and where the file goes ----------
+    if (!this._doc0) {
+      const pk = p.preset || 'balanced';
+      const adv = advOf(pk);
+      // a board can show settings someone changed: a full frame every 60 frames and a smaller color shift
+      if (p.tuned) { adv.key = 60; adv.col = 18; }
+      this._doc0 = {
+        src: scene === 'Empty' ? { intro: null, main: null } : { intro: INTRO, main: scene === 'Problems' ? MAIN_PROBLEMS : MAIN },
+        cfg: { ms: 41, unit: 'ms', ims: null, loops: 0, preset: pk, adv, check: false },
+        out: { name: scene === 'Empty' ? '' : 'dusk_valley', folder: 'config/fancymenu/assets' }
+      };
+      this._existing = new Set(p.exists || p.job === 'done' ? ['dusk_valley.afma'] : []);
+    }
+    const doc = s.doc ?? this._doc0;
+    const { src, cfg, out } = doc;
+    const intro = src.intro, main = src.main;
+    const hasMain = !!main, hasIntro = !!intro;
+    const ims = cfg.ims ?? cfg.ms;
+    const introDur = hasIntro ? intro.n * ims : 0;
+    const mainDur = hasMain ? main.n * cfg.ms : 0;
+    const passDur = introDur + mainDur;
+    const sizeOff = hasIntro && hasMain && (intro.w !== main.w || intro.h !== main.h);
+    const badCount = (main ? main.bad.length : 0) + (intro ? intro.bad.length : 0);
+    const blocked = !hasMain || badCount > 0 || sizeOff;
+    const defName = hasMain ? main.folder : 'animation';
+    const fileName = (out.name.trim() || defName) + '.afma';
+    const exists = this._existing.has(fileName);
+
+    const snapshot = () => ({ doc });
+    const commit = (nd, patch, tag) => {
+      const keep = tag && s.lastTag === tag;
+      set({ doc: nd, undoStack: keep ? (s.undoStack || []) : [...(s.undoStack || []), snapshot()].slice(-50), redoStack: [], lastTag: tag || null, ...patch });
+    };
+    const status = (text, canUndo) => ({ status: { text, undo: !!canUndo } });
+    const withCfg = (patch) => Object.assign({}, doc, { cfg: Object.assign({}, cfg, patch) });
+    const undo = () => { const u = s.undoStack || []; if (!u.length) return; const last = u[u.length - 1]; set({ doc: last.doc, undoStack: u.slice(0, -1), redoStack: [...(s.redoStack || []), snapshot()], lastTag: null, edit: null, status: { text: 'Undone.', undo: false } }); };
+    const redo = () => { const r = s.redoStack || []; if (!r.length) return; const last = r[r.length - 1]; set({ doc: last.doc, redoStack: r.slice(0, -1), undoStack: [...(s.undoStack || []), snapshot()], lastTag: null, edit: null, status: { text: 'Redone.', undo: false } }); };
+
+    // ---------- the job ----------
+    if (this._job0 === undefined) {
+      this._job0 = p.job === 'run' ? { st: 'run', t0: Date.now() - (+p.jobAt || 0) * 1000 } : p.job === 'done' ? { st: 'done', took: 26, file: 'dusk_valley.afma', preset: doc.cfg.preset } : null;
+    }
+    const job = s.job !== undefined ? s.job : this._job0;
+    const frozen = !!p.freeze;
+    const nTot = (hasIntro ? intro.n : 0) + (hasMain ? main.n : 0);
+    const total = SIM.read + nTot * SIM.perFrame + SIM.pack + (cfg.check ? SIM.check : 0);
+    const elapsedOf = (j) => (frozen ? (+p.jobAt || 0) : (Date.now() - j.t0) / 1000);
+    // where the job is: its phase, the progress the bar shows, and the frame it works on
+    const jobInfo = (el) => {
+      if (el < SIM.read) return { phase: 'read', prog: 0.15 * (el / SIM.read), step: 'Reading ' + nTot + ' frames', idx: -1 };
+      const a = el - SIM.read;
+      if (a < nTot * SIM.perFrame) {
+        const k = a / SIM.perFrame, idx = Math.min(nTot - 1, Math.floor(k));
+        const inIntro = hasIntro && idx < intro.n;
+        const part = inIntro ? 'intro' : 'main', i = inIntro ? idx : idx - (hasIntro ? intro.n : 0);
+        return { phase: 'analyze', prog: 0.15 + 0.63 * (k / nTot), step: 'Analyzing ' + part + ' frame ' + (i + 1) + ' of ' + (inIntro ? intro.n : main.n), idx, part, i };
+      }
+      const b = a - nTot * SIM.perFrame;
+      if (b < SIM.pack) return { phase: 'pack', prog: 0.82 + 0.16 * (b / SIM.pack), step: 'Packing the file', idx: nTot };
+      return { phase: 'check', prog: 0.985, step: 'Checking the file', idx: nTot };
+    };
+    const running = !!job && job.st === 'run';
+
+    // ---------- playback: the preview plays like the finished file, the intro once, then the main frames ----------
+    if (!this._pb) {
+      const startAt = Math.max(0, (+p.at || 0) * 1000);
+      const play = !p.paused && p.job !== 'run';
+      this._pb = { playing: play, t0: Date.now() - startAt, pos: startAt };
+    }
+    const pb = this._pb;
+    const pbPos = () => (pb.playing ? Date.now() - pb.t0 : pb.pos);
+    const posInfo = (pos) => {
+      if (!hasMain) return null;
+      if (hasIntro && pos < introDur) { const i = Math.min(intro.n - 1, Math.floor(pos / ims)); return { part: 'intro', seq: intro, i, pass: 0, tl: pos }; }
+      const p2 = Math.max(0, pos - introDur), pass = Math.floor(p2 / mainDur);
+      if (cfg.loops > 0 && pass >= cfg.loops) return { part: 'main', seq: main, i: main.n - 1, pass: cfg.loops - 1, tl: passDur, ended: true };
+      const inPass = p2 - pass * mainDur;
+      return { part: 'main', seq: main, i: Math.min(main.n - 1, Math.floor(inPass / cfg.ms)), pass, tl: introDur + inPass };
+    };
+    if (this._keepFrame) {
+      const kf = this._keepFrame; this._keepFrame = null;
+      const pos = kf.part === 'intro' && hasIntro ? kf.i * ims : introDur + Math.min(hasMain ? main.n - 1 : 0, kf.i) * cfg.ms;
+      pb.pos = pos; pb.t0 = Date.now() - pos;
+    }
+    // Timing changes keep the frame that's showing, so the preview never jumps or ends early.
+    const keepFrame = () => { const info = posInfo(pbPos()); if (info) this._keepFrame = { part: info.part, i: info.ended ? 0 : info.i }; };
+    const setPlaying = (on) => {
+      const now0 = Date.now();
+      if (on) { const info = posInfo(pb.pos); const from = info && info.ended ? 0 : pb.pos; pb.t0 = now0 - from; pb.playing = true; }
+      else { pb.pos = pbPos(); pb.playing = false; }
+      set({ playing: on });
+    };
+    const seek = (pos) => { pb.pos = Math.max(0, pos); pb.t0 = Date.now() - pb.pos; if (this._paint) this._paint(); set({ seekAt: Date.now() }); };
+    // the start of a frame, counted from the start of the intro
+    const frameStart = (part, i) => (part === 'intro' ? i * ims : introDur + i * cfg.ms);
+    const showFrame = (part, i) => { pb.playing = false; pb.pos = frameStart(part, i) + 1; set({ playing: false, seekAt: Date.now() }); };
+    const stepFrame = (d) => {
+      const info = posInfo(pbPos()); if (!info) return;
+      const list = []; if (hasIntro) for (let i = 0; i < intro.n; i++) list.push(['intro', i]); for (let i = 0; i < main.n; i++) list.push(['main', i]);
+      const at = list.findIndex(([pt, i]) => pt === info.part && i === info.i);
+      const nx = list[Math.max(0, Math.min(list.length - 1, at + d))];
+      showFrame(nx[0], nx[1]);
+    };
+
+    // what the preview shows right now: the frame, its file and how far the timeline is
+    const spriteAt = (idx, scale) => { const c = idx % SHEET.cols, r = Math.floor(idx / SHEET.cols); return 'width: ' + SHEET.sw * scale + 'px; height: ' + SHEET.sh * scale + 'px; left: ' + (-c * SHEET.w * scale) + 'px; top: ' + (-r * SHEET.h * scale) + 'px'; };
+    const view = () => {
+      if (!hasMain) return null;
+      if (running) {
+        const ji = jobInfo(elapsedOf(job));
+        const k = Math.max(0, Math.min(nTot - 1, ji.idx < 0 ? 0 : ji.idx));
+        const inIntro = hasIntro && k < intro.n;
+        const seq = inIntro ? intro : main, i = inIntro ? k : k - (hasIntro ? intro.n : 0);
+        const done = ji.idx < 0 ? 0 : ji.idx >= nTot ? nTot : ji.idx;
+        const introDone = hasIntro ? Math.min(1, done / intro.n) : 0;
+        const mainDone = Math.max(0, Math.min(1, (done - (hasIntro ? intro.n : 0)) / main.n));
+        return { idx: seq.base + i, pill: (ji.phase === 'analyze' ? 'Analyzing · ' : ji.phase === 'read' ? 'Reading · ' : 'Packing · ') + seq.file(i), bad: false, introFill: introDone, mainFill: mainDone, head: inIntro ? (i / intro.n) * (introDur / passDur) : (introDur + i * cfg.ms) / passDur, tl: frameStart(inIntro ? 'intro' : 'main', i) };
+      }
+      const info = posInfo(pbPos());
+      const bad = info.seq.bad.find((b) => b.i === info.i);
+      const label = info.part === 'intro' ? 'Intro' : cfg.loops > 1 ? 'Main, ' + (info.pass + 1) + ' of ' + cfg.loops : 'Main';
+      return {
+        idx: info.seq.base + info.i, ended: !!info.ended,
+        pill: bad ? info.seq.file(info.i) + ' is ' + bad.w + ' × ' + bad.h : label + ' · ' + info.seq.file(info.i), bad: !!bad,
+        introFill: hasIntro ? Math.min(1, info.tl / introDur) : 0,
+        mainFill: info.tl <= introDur ? 0 : Math.min(1, (info.tl - introDur) / mainDur),
+        head: info.tl / passDur, tl: info.tl
+      };
+    };
+    const v0 = view();
+    const timeOf = (v) => (v ? fmtS(Math.min(v.tl, passDur)) + ' / ' + fmtS(passDur) : '0.0 s / 0.0 s');
+
+    // paints the preview straight into the page between renders, so playback never waits for a render
+    this._paint = () => {
+      const root = deepQuery('[data-af="' + uid + '"]');
+      if (!root) return;
+      const v = view();
+      if (!v) return;
+      const img = root.querySelector('[data-pv="img"]');
+      if (img) { const c = v.idx % SHEET.cols, r = Math.floor(v.idx / SHEET.cols); img.style.left = (-c * 512) + 'px'; img.style.top = (-r * 288) + 'px'; }
+      const pill = root.querySelector('[data-pv="pill"]');
+      if (pill) { pill.setAttribute('data-t', v.pill); pill.classList.toggle('bad', v.bad); }
+      const time = root.querySelector('[data-pv="time"]');
+      if (time) time.setAttribute('data-t', timeOf(v));
+      const fi = root.querySelector('[data-pv="fill-intro"]'); if (fi) fi.style.width = (v.introFill * 100) + '%';
+      const fm = root.querySelector('[data-pv="fill-main"]'); if (fm) fm.style.width = (v.mainFill * 100) + '%';
+      const head = root.querySelector('[data-pv="head"]');
+      const tlEl = root.querySelector('[data-pv="tl"]');
+      if (head && tlEl) head.style.left = this._headPx(tlEl, v.tl) + 'px';
+    };
+    // where a time lands on the timeline: each part has its own segment, 2 px apart
+    this._headPx = (tlEl, t) => {
+      const si = tlEl.querySelector('[data-seg="intro"]'), sm = tlEl.querySelector('[data-seg="main"]');
+      if (si && t < introDur) return si.offsetLeft + (t / introDur) * si.offsetWidth;
+      if (sm) return sm.offsetLeft + Math.min(1, (t - introDur) / mainDur) * sm.offsetWidth;
+      return 0;
+    };
+    this._timeAtX = (tlEl, x) => {
+      const si = tlEl.querySelector('[data-seg="intro"]'), sm = tlEl.querySelector('[data-seg="main"]');
+      if (si && x < si.offsetLeft + si.offsetWidth + 1) return Math.max(0, Math.min(introDur - 1, ((x - si.offsetLeft) / si.offsetWidth) * introDur));
+      if (sm) return introDur + Math.max(0, Math.min(mainDur - 1, ((x - sm.offsetLeft) / sm.offsetWidth) * mainDur));
+      return 0;
+    };
+    // a board that opens with Advanced shows it: the column scrolls to it once
+    if (p.advOpen && !this._advScrolled) {
+      this._advScrolled = true;
+      setTimeout(() => { const col = deepQuery('[data-sk="' + fk('side') + '"]'), a = deepQuery('[data-af="' + uid + '"] [data-anchor="adv"]'); if (col && a) col.scrollTop = a.offsetTop - 18; }, 0);
+    }
+    clearTimeout(this._paintT);
+    this._paintT = setTimeout(() => this._paint && this._paint(), 0);
+
+    // one ticker for playback and the job; the job re-renders its card only when its text changes
+    this._onTick = () => {
+      const st = this.state || {};
+      const j = st.job !== undefined ? st.job : this._job0;
+      if (j && j.st === 'run' && !p.freeze) {
+        const el = (Date.now() - j.t0) / 1000;
+        if (el >= this._total) { this._finish && this._finish(el); return; }
+        const ji = jobInfo(el);
+        const key = Math.floor(ji.prog * 100) + '|' + ji.step + '|' + Math.ceil(this._total - el);
+        if (key !== this._jobKey) { this._jobKey = key; this.setState({ jt: key }); }
+        if (this._paint) this._paint();
+        return;
+      }
+      if (!this._pb.playing) return;
+      const info = posInfo(Date.now() - this._pb.t0);
+      if (info && info.ended) { this._pb.pos = introDur + cfg.loops * mainDur; this._pb.playing = false; this.setState({ playing: false }); }
+      if (this._paint) this._paint();
+    };
+    this._total = total;
+    if (!this._tick) this._tick = setInterval(() => this._onTick && this._onTick(), 20);
+
+    const startJob = () => {
+      if (blocked || running) return;
+      pb.pos = pbPos(); pb.playing = false;
+      this._jobKey = '';
+      set({ job: { st: 'run', t0: Date.now() }, playing: false, status: null, sheet: '', unitMenu: null });
+    };
+    this._finish = (el) => {
+      this._existing.add(fileName);
+      pb.t0 = Date.now() - pb.pos; pb.playing = true;
+      this.setState({ job: { st: 'done', took: Math.round(el), file: fileName, preset: cfg.preset }, playing: true, status: null });
+    };
+    const stopJob = (close) => {
+      pb.t0 = Date.now() - pb.pos; pb.playing = !close;
+      set({ job: { st: 'stopped', file: fileName, existed: exists }, sheet: '', playing: !close, ...(close ? status('Stopped, and the window closes now. Nothing was saved.') : {}) });
+    };
+
+    // ---------- frames: choosing, removing, problems ----------
+    const flash = (key) => ({ flash: { key, n: ((s.flash && s.flash.n) || 0) + 1 } });
+    const chooseFor = (key) => () => {
+      if (running) return;
+      // the mockup has one folder for each part; the real button opens the folder chooser (rule 39)
+      const seq = key === 'intro' ? INTRO : MAIN;
+      const nsrc = Object.assign({}, src, { [key]: seq });
+      if (key === 'main' && !hasMain) { pb.pos = 0; pb.t0 = Date.now(); pb.playing = true; }
+      commit(Object.assign({}, doc, { src: nsrc }), { playing: pb.playing, ...flash(key), ...status('Added ' + seq.n + ' frames from ' + seq.folder + (key === 'intro' ? ' as the intro.' : '.'), true) });
+    };
+    const removeFor = (key) => () => {
+      if (running) return;
+      const nsrc = Object.assign({}, src, { [key]: null });
+      if (key === 'main') { pb.playing = false; pb.pos = 0; }
+      else { pb.pos = Math.max(0, pbPos() - introDur); pb.t0 = Date.now() - pb.pos; }
+      commit(Object.assign({}, doc, { src: nsrc }), { playing: pb.playing, ...status(key === 'intro' ? 'Removed the intro.' : 'Removed the main frames.', true) });
+    };
+    const seqSub = (seq, ms) => seq.n + ' frames · ' + fmtS(seq.n * ms) + ' · ' + seq.w + ' × ' + seq.h;
+    const srcRow = (key) => {
+      const seq = src[key], has = !!seq;
+      const isIntro = key === 'intro';
+      const msgs = [];
+      if (seq) {
+        seq.bad.forEach((b) => msgs.push({ cls: 'af-msg err', icon: 'error', text: seq.file(b.i) + ' is ' + b.w + ' × ' + b.h + ', the other frames are ' + seq.w + ' × ' + seq.h + '.', show: () => showFrame(key, b.i) }));
+        if (isIntro && sizeOff) msgs.push({ cls: 'af-msg err', icon: 'error', text: 'These frames are ' + seq.w + ' × ' + seq.h + ', the main frames ' + main.w + ' × ' + main.h + '.', show: () => showFrame(key, 0) });
+        if (seq.gap) msgs.push({ cls: 'af-msg warn', icon: 'warning', text: 'The numbering skips ' + seq.gap.missing + '.', show: () => showFrame(key, seq.gap.i) });
+      }
+      const midIdx = seq ? seq.base + Math.floor(seq.n * (isIntro ? 0.75 : 0.5)) : 0;
+      const fl = s.flash && s.flash.key === key ? (s.flash.n % 2 ? ' flash-a' : ' flash-b') : '';
+      return {
+        key, has, none: !has, what: isIntro ? 'intro' : 'main frames',
+        label: isIntro ? 'Intro' : 'Main',
+        cls: 'row af-src' + fl,
+        deckCls: 'af-deck' + (has ? '' : ' none'),
+        thumb: has ? spriteAt(midIdx, 0.5) : '',
+        nameCls: has ? 'af-name' : 'af-name none',
+        name: has ? seq.folder : isIntro ? 'No intro' : 'No frames yet',
+        sub: has ? seqSub(seq, isIntro ? ims : cfg.ms) : isIntro ? 'Optional. Plays once before the main frames.' : 'A folder of PNG frames, or the PNG files',
+        msgs,
+        removeTip: isIntro ? 'Remove the Intro' : 'Remove the Main Frames',
+        choose: chooseFor(key), remove: removeFor(key)
+      };
+    };
+
+    // ---------- number fields: typed text stays until it's valid (rule 47) ----------
+    const edit = s.edit || null;
+    let fieldErr = '';
+    const numField = (o) => {
+      const editing = edit && edit.key === o.key;
+      const text = editing ? edit.text : o.text;
+      const bad = editing && text.trim() !== '' && !o.ok(text);
+      if (bad && o.err) fieldErr = o.err;
+      const stepFn = o.step || ((v, dd) => Math.max(1, Math.round(v + dd))); const stepBy = (dd) => () => { const nv = stepFn(parseFloat(String(text).replace(',', '.')) || 0, dd); set({ edit: { key: o.key, text: String(nv) } }); o.apply(String(nv)); }; return { up: stepBy(1), down: stepBy(-1), cls: o.cls + (bad ? ' bad' : ''), fk: fk(o.key), text, name: o.name || '', suf: o.suf || '',
+        focus: () => set({ edit: { key: o.key, text: o.text }, lastTag: null }),
+        input: (e) => { const t = e.target.value; set({ edit: { key: o.key, text: t } }); if (o.ok(t) || (o.allowEmpty && t.trim() === '')) o.apply(t); },
+        key: (e) => {
+          if ((e.key === 'ArrowUp' || e.key === 'ArrowDown') && o.step) {
+            e.preventDefault();
+            const nv = o.step(parseFloat(String(e.target.value).replace(',', '.')) || 0, (e.shiftKey ? 10 : 1) * (e.key === 'ArrowUp' ? 1 : -1));
+            set({ edit: { key: o.key, text: String(nv) } }); o.apply(String(nv));
+          }
+          if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); }
+        },
+        blur: () => set({ edit: null, lastTag: null })
+      };
+    };
+    const parseNum = (t) => parseFloat(String(t).replace(',', '.'));
+    // speed: stored as milliseconds a frame, shown in ms or frames a second
+    const unit = cfg.unit;
+    const showSpeed = (ms) => (unit === 'fps' ? fpsOf(ms) : String(ms));
+    const toMs = (t) => { const v = parseNum(t); return unit === 'fps' ? Math.max(1, Math.round(1000 / v)) : Math.max(1, Math.round(v)); };
+    const okSpeed = (t) => { const v = parseNum(t); return v > 0 && v <= (unit === 'fps' ? 1000 : 600000); };
+    const speedText = (ms) => (unit === 'fps' ? ms + ' ms a frame' : fpsOf(ms) + ' frames a second');
+    const unitMenu = s.unitMenu || null;
+    const spdF = numField({
+      key: 'speed', cls: 'field sc-num', text: showSpeed(cfg.ms), ok: okSpeed,
+      err: unit === 'fps' ? 'Type how many frames play each second, like 24.' : 'Type how long each frame shows, like 41.',
+      apply: (t) => { const ms = toMs(t); if (ms === cfg.ms) return; keepFrame(); commit(withCfg({ ms }), status('Plays at ' + fpsOf(ms) + ' frames a second now, ' + ms + ' ms a frame.', true), 'speed'); },
+      step: (v, d) => Math.max(1, Math.round((v + d) * 10) / 10)
+    });
+    const spd = Object.assign(spdF, {
+      sub: speedText(cfg.ms), unit: unit === 'fps' ? 'fps' : 'ms', unitName: unit === 'fps' ? 'Frames a second' : 'Milliseconds a frame',
+      unitOpen: unitMenu ? 'true' : 'false', unitCls: 'sc-unit' + (unitMenu ? ' on' : ''),
+      openUnit: (e) => { e.preventDefault(); e.stopPropagation(); set({ unitMenu: unitMenu ? null : { at: anchorOf(e.currentTarget) } }); }
+    });
+    const ispdF = numField({
+      key: 'ispeed', cls: 'field sc-num af-n', text: cfg.ims === null ? '' : showSpeed(cfg.ims), ok: okSpeed, allowEmpty: true,
+      apply: (t) => { if (t.trim() === '') { if (cfg.ims !== null) { keepFrame(); commit(withCfg({ ims: null }), status('The intro plays at the same speed as the main frames now.', true), 'ispeed'); } return; } const ms = toMs(t); if (ms === cfg.ims) return; keepFrame(); commit(withCfg({ ims: ms }), status('The intro plays at ' + fpsOf(ms) + ' frames a second now.', true), 'ispeed'); },
+      step: (v, d) => Math.max(1, Math.round(((v || parseNum(showSpeed(cfg.ms))) + d) * 10) / 10)
+    });
+    const ispd = Object.assign(ispdF, {
+      own: cfg.ims !== null, ph: showSpeed(cfg.ms), sub: cfg.ims === null ? 'Same as the main frames' : speedText(cfg.ims),
+      rowCls: 'row' + (cfg.ims !== null ? ' af-mod' : ''),
+      reset: () => { keepFrame(); commit(withCfg({ ims: null }), { edit: null, ...status('The intro plays at the same speed as the main frames again.', true) }); }
+    });
+    const unitItems = unitMenu ? [['ms', 'Milliseconds a Frame'], ['fps', 'Frames a Second']].map(([u, label]) => ({ radio: true, checked: unit === u, label, val: u === 'ms' ? cfg.ms + ' ms' : fpsOf(cfg.ms) + ' fps', click: () => { if (u === unit) { set({ unitMenu: null }); return; } commit(withCfg({ unit: u }), { unitMenu: null, edit: null, ...status(u === 'fps' ? 'Speed shows in frames a second now.' : 'Speed shows in milliseconds a frame now.', true) }); } })) : [];
+
+    // loops: 0 plays forever, 1 once, more plays the main frames that many times (AfmaTexture counts main plays)
+    const loopsTo = (n, msg) => () => { if (n === cfg.loops) return; keepFrame(); commit(withCfg({ loops: n }), { edit: null, ...status(msg, true) }); };
+    const lastCount = s.lastCount || 3;
+    const lpK = cfg.loops === 0 ? 0 : cfg.loops === 1 ? 1 : 2;
+    const lp = {
+      thumb: 'width: calc((100% - 2px) / 3); transform: translateX(' + lpK * 100 + '%)',
+      forever: lpK === 0 ? 'true' : 'false', once: lpK === 1 ? 'true' : 'false', several: lpK === 2,
+      foreverCls: lpK === 0 ? 'on' : '', onceCls: lpK === 1 ? 'on' : '', severalCls: lpK === 2 ? 'on' : '',
+      setForever: loopsTo(0, 'The main frames loop forever now.'),
+      setOnce: loopsTo(1, 'Plays once now and stays on the last frame.'),
+      setSeveral: () => { if (lpK === 2) return; keepFrame(); commit(withCfg({ loops: lastCount }), { edit: null, ...status('The main frames play ' + lastCount + ' times now.', true) }); focusLater(fk('loops'), true); }
+    };
+    const lc = numField({
+      key: 'loops', cls: 'field sc-num af-cnt', text: String(cfg.loops), ok: (t) => /^\d+$/.test(t.trim()) && +t >= 2 && +t <= 9999,
+      err: 'Type how many times the main frames play, 2 or more. For one time, pick Once.',
+      apply: (t) => { const n = +t; if (n === cfg.loops) return; keepFrame(); commit(withCfg({ loops: n }), { lastCount: n, ...status('The main frames play ' + n + ' times now.', true) }, 'loops'); },
+      step: (v, d) => Math.max(2, Math.round(v + d))
+    });
+
+    // ---------- quality ----------
+    const pk = cfg.preset, P = PRESETS[pk];
+    const changedKeys = ADV_KEYS.filter((k) => cfg.adv[k] !== P[k]);
+    const pickPreset = (k) => () => {
+      if (k === pk) return;
+      const n = changedKeys.length;
+      commit(withCfg({ preset: k, adv: advOf(k) }), { edit: null, ...status('Switched to ' + PRESETS[k].name + '.' + (n ? ' Your ' + (n === 1 ? 'own setting was' : n + ' own settings were') + ' replaced.' : ''), true) });
+    };
+    const pkIdx = PRESET_ORDER.indexOf(pk);
+    const pr = {
+      name: P.name, desc: P.desc,
+      thumb: 'width: calc((100% - 4px) / 3); transform: translateX(' + pkIdx * 100 + '%)',
+      opts: PRESET_ORDER.map((k) => ({ label: PRESETS[k].name, cls: k === pk ? 'on' : '', on: k === pk ? 'true' : 'false', pick: pickPreset(k) }))
+    };
+    const advOpen = s.advOpen !== undefined ? s.advOpen : !!p.advOpen;
+    const setAdv = (k, val, msg) => { if (cfg.adv[k] === val) return; commit(withCfg({ adv: Object.assign({}, cfg.adv, { [k]: val }) }), status(msg, true), 'adv:' + k); };
+    const valText = (k, v) => (k === 'minP' || k === 'avg' ? fmtNum(v) : String(v)) + (NUMS[k].suf ? ' ' + NUMS[k].suf : '');
+    const advNum = (k) => {
+      const d = NUMS[k];
+      return numField({
+        key: 'adv-' + k, cls: 'field sc-num af-n', name: d.label, suf: d.suf, text: k === 'minP' || k === 'avg' ? fmtNum(cfg.adv[k]) : String(cfg.adv[k]),
+        ok: (t) => { const v = parseNum(t); return (d.int ? /^\d+$/.test(t.trim()) : /^\d+([.,]\d+)?$/.test(t.trim())) && v >= d.min; },
+        err: d.int ? (d.min ? 'Type a whole number, 1 or more.' : 'Type a whole number, 0 or more.') : 'Type a number, 0 or more, like ' + fmtNum(P[k]) + '.',
+        apply: (t) => { const v = d.int ? parseInt(t, 10) : Math.round(parseNum(t) * 100) / 100; setAdv(k, v, d.label + ' is ' + valText(k, v) + ' now.'); },
+        step: (v, dd) => (d.int ? Math.max(d.min, Math.round(v + dd)) : Math.max(0, Math.round((v + dd * 0.25) * 100) / 100))
+      });
+    };
+    const resetOne = (keys, label) => () => { const na = Object.assign({}, cfg.adv); keys.forEach((k) => { na[k] = P[k]; }); commit(withCfg({ adv: na }), { edit: null, ...status(label + ' is back to ' + P.name + '.', true) }); };
+    const resetTip = (keys) => 'Back to ' + P.name + ': ' + keys.map((k) => (typeof P[k] === 'boolean' ? (P[k] ? 'On' : 'Off') : valText(k, P[k]))).join(' and ');
+    const advCtl = (k) => { const f = advNum(k), d = NUMS[k], v = cfg.adv[k]; const fr = d.max ? Math.max(0, Math.min(1, v / d.max)) : 0; const pos = 'calc(6.5px + (100% - 13px) * ' + fr.toFixed(4) + ')'; return { ...f, isSl: !!d.max, isField: !d.max, fill: 'width: ' + pos, knob: 'left: ' + pos, pick: (e) => { const r = e.currentTarget.getBoundingClientRect(); const nv = Math.round(Math.max(0, Math.min(1, (e.clientX - r.left - 6.5) / (r.width - 13))) * d.max); setAdv(k, nv, d.label + ' is ' + valText(k, nv) + ' now.'); } }; }; const numRow = (keys, label, sub) => {
+      const mod = keys.some((k) => cfg.adv[k] !== P[k]);
+      return { cls: 'row' + (mod ? ' af-mod' : ''), lblCls: 'lbl af-grow', label, sub: sub || '', mod, resetTip: resetTip(keys), reset: resetOne(keys, label), isSw: false, nums: keys.map(advCtl) };
+    };
+    const swRow = (k, sub) => {
+      const on = !!cfg.adv[k], mod = on !== P[k];
+      return { cls: 'row' + (mod ? ' af-mod' : ''), lblCls: 'lbl af-grow', label: SWS[k], sub, mod, resetTip: resetTip([k]), reset: resetOne([k], SWS[k]), isSw: true, on: on ? 'true' : 'false', swCls: 'sw' + (on ? ' on' : ''), nums: [],
+        flip: () => setAdv(k, !on, SWS[k] + (on ? ' is off now.' : ' is on now.')) };
+    };
+    const A = cfg.adv;
+    const adv = {
+      open: advOpen, discCls: 'af-disc' + (advOpen ? ' open' : ''),
+      toggle: () => set({ advOpen: !advOpen }),
+      changed: changedKeys.length > 0, changedText: changedKeys.length + ' changed',
+      resetAll: () => commit(withCfg({ adv: advOf(pk) }), { edit: null, ...status('Every advanced setting is back to ' + P.name + '.', true) }),
+      groups: advOpen ? [
+        { rows: [numRow(['key'], 'Full Frame Every', 'Lower decodes faster, higher makes it smaller'), swRow('adaptive', 'Moves them to where they save the most')]
+          .concat(A.adaptive ? [numRow(['amax'], 'At Least Every'), numRow(['minB', 'minP'], 'Savings Needed', 'A new full frame comes once a frame saves less. The bigger value counts.')] : []) },
+        { rows: [swRow('moved', 'Copies parts that moved from an earlier frame instead of storing them again')]
+          .concat(A.moved ? [numRow(['dist'], 'Search Up To'), numRow(['offs'], 'Shifts to Try', 'More can find better matches but takes longer')] : []) },
+        { rows: [swRow('tiny', 'Colors may shift a few steps where nobody sees it')]
+          .concat(A.tiny ? [numRow(['col'], 'Color', 'Largest shift of a color channel, out of 255'), numRow(['alp'], 'Transparency', 'Largest shift of transparency, out of 255'), numRow(['avg'], 'Average', 'Largest average shift across a frame')] : []) },
+        { rows: [swRow('rep', 'A frame that looks just like the one before isn\'t stored again, the one before shows longer')] }
+      ] : []
+    };
+
+    // ---------- save as ----------
+    const nameF = {
+      focus: () => set({ lastTag: null }),
+      input: (e) => { const t = e.target.value.replace(/[\\/:*?"<>|]/g, ''); commit(Object.assign({}, doc, { out: Object.assign({}, out, { name: t }) }), status(t.trim() ? 'Saves as ' + t.trim() + '.afma now.' : 'Named after the main frames again.', true), 'name'); },
+      key: (e) => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } },
+      blur: () => set({ lastTag: null })
+    };
+    const inAssets = out.folder === 'config/fancymenu/assets' || out.folder.startsWith('config/fancymenu/assets/');
+    const outNote = exists ? fileName + ' already exists. Creating it again replaces it.' : inAssets ? 'It goes into the assets folder, so layouts can use it right away.' : 'Layouts can only use it once it\'s in config/fancymenu/assets.';
+
+    // ---------- the footer and the main button ----------
+    const stt = s.status;
+    const busy = running;
+    let lead = '', leadCls = 'lead', footUndo = false;
+    if (running) lead = 'Collapse the window to keep working while it creates.';
+    else if (stt) { lead = stt.text; footUndo = stt.undo && (s.undoStack || []).length > 0; }
+    else if (!hasMain) lead = 'Add the main frames to start.';
+    else if (badCount) { lead = 'Every frame needs the same size before it can be created.'; leadCls = 'lead af-bad'; }
+    else if (sizeOff) { lead = 'The intro and the main frames need the same size.'; leadCls = 'lead af-bad'; }
+    else lead = nTot + ' frames at ' + main.w + ' × ' + main.h + ', ' + fmtS(passDur) + ' from start to end';
+    const go = () => { if (running) { stopJob(false); return; } startJob(); };
+
+    // ---------- the job card ----------
+    let jb = {};
+    if (running) {
+      const el = elapsedOf(job), ji = jobInfo(el), left = Math.max(0, total - el);
+      jb = { pct: Math.floor(ji.prog * 100) + '%', bar: 'width: ' + (ji.prog * 100).toFixed(1) + '%', step: ji.step, eta: left < 3 ? 'A few seconds left' : 'About ' + Math.ceil(left) + ' s left' };
+    } else if (job && job.st === 'done') {
+      const J = PRESETS[job.preset || pk];
+      const srcKb = (hasIntro ? intro.kb : 0) + (hasMain ? main.kb : 0);
+      const kb = J.mb * 1000;
+      jb = { file: job.file, took: 'took ' + job.took + ' s', size: mbText(kb) + ', ' + Math.round((1 - kb / srcKb) * 100) + ' % smaller than the ' + mbText(srcKb) + ' of frames',
+        kinds: J.full + ' full frames, and ' + (nTot - J.full) + ' that only store what changed', copyTip: '/' + out.folder + '/' + job.file };
+    } else if (job && job.st === 'stopped') {
+      jb = { stopText: job.existed ? 'Nothing was saved. The ' + job.file + ' that was already there is unchanged.' : 'Nothing was saved.' };
+    }
+
+    // ---------- the close sheet ----------
+    const sheet = s.sheet ?? (p.sheet || '');
+    let al = { buttons: [] };
+    if (sheet === 'close' && running) {
+      const pct = Math.floor(jobInfo(elapsedOf(job)).prog * 100);
+      al = {
+        icon: 'movie_edit', title: 'Stop creating ' + fileName + '?',
+        text: 'It\'s ' + pct + ' % done. Closing the window stops it, and nothing gets saved. To keep it going while you do something else, collapse the window instead.',
+        buttons: [{ cls: 'btn primary danger', label: 'Stop and Close', click: () => stopJob(true) }, { cls: 'btn', label: 'Keep Creating', click: () => set({ sheet: '' }) }]
+      };
+    }
+    const close = () => { if (running) set({ sheet: 'close', unitMenu: null }); else set({ unitMenu: null, ...status('The window closes. Next time it opens with these frames and settings.') }); };
+
+    // ---------- the timeline ----------
+    const segs = !hasMain ? [{ key: 'none', cls: 'af-seg none', style: '', fillKey: 'none', fill: 'width: 0', label: '' }] : [
+      hasIntro ? { key: 'intro', cls: 'af-seg', style: 'flex: ' + introDur + ' 1 0', fillKey: 'fill-intro', fill: 'width: ' + (v0.introFill * 100) + '%', label: 'Intro' } : null,
+      { key: 'main', cls: 'af-seg', style: 'flex: ' + mainDur + ' 1 0', fillKey: 'fill-main', fill: 'width: ' + (v0.mainFill * 100) + '%', label: 'Main' }
+    ].filter(Boolean);
+    // problems show as marks where they are, a red one for a frame that doesn't fit and an amber one for a gap
+    const pctAt = (t) => { const gaps = hasIntro ? 2 : 0; return 'left: calc(' + (t / passDur) * 100 + '% + ' + (t >= introDur && hasIntro ? gaps * (1 - t / passDur) : 0) + 'px)'; };
+    const marks = [];
+    if (hasMain) ['intro', 'main'].forEach((key) => { const seq = src[key]; if (!seq) return; seq.bad.forEach((b) => marks.push({ cls: 'af-mark', style: pctAt(frameStart(key, b.i) + (key === 'intro' ? ims : cfg.ms) / 2) })); if (seq.gap) marks.push({ cls: 'af-mark warn', style: pctAt(frameStart(key, seq.gap.i)) }); });
+    const hov = s.hov || null;
+    const hovInfo = hov && hasMain ? posInfo(hov.t) : null;
+    const tl = {
+      down: (e) => { if (!hasMain || running) return; try { e.currentTarget.setPointerCapture(e.pointerId); } catch (x) {} this._scrub = true; const r = e.currentTarget.getBoundingClientRect(), k = e.currentTarget.offsetWidth / r.width || 1; seek(this._timeAtX(e.currentTarget, (e.clientX - r.left) * k)); },
+      move: (e) => {
+        if (!hasMain || running) return;
+        const r = e.currentTarget.getBoundingClientRect(), k = e.currentTarget.offsetWidth / r.width || 1, x = (e.clientX - r.left) * k;
+        const t = this._timeAtX(e.currentTarget, x);
+        if (this._scrub && (e.buttons & 1)) { pb.pos = t; pb.t0 = Date.now() - t; if (this._paint) this._paint(); }
+        set({ hov: { x: Math.max(70, Math.min(e.currentTarget.offsetWidth - 70, x)), t } });
+      },
+      up: () => { this._scrub = false; },
+      leave: () => { if (!this._scrub) set({ hov: null }); }
+    };
+
+    // ---------- keyboard ----------
+    this._onKey = (e) => {
+      if (window.__afActive !== uid) return;
+      const tag = (e.target && e.target.tagName) || '';
+      const inField = tag === 'INPUT' || tag === 'TEXTAREA';
+      const mod = e.ctrlKey || e.metaKey;
+      const st = this.state || {};
+      if (e.key === 'Escape') {
+        if (st.sheet || sheet) set({ sheet: '' });
+        else if (unitMenu) set({ unitMenu: null });
+        else if (inField) e.target.blur();
+        else close();
+        return;
+      }
+      if (sheet || unitMenu) return;
+      // Ctrl+Enter only creates; stopping a job always takes the Stop button
+      if (mod && e.key === 'Enter') { e.preventDefault(); if (!running) startJob(); return; }
+      if (mod && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))) { if (!inField) { e.preventDefault(); redo(); } return; }
+      if (mod && e.key.toLowerCase() === 'z') { if (!inField) { e.preventDefault(); undo(); } return; }
+      if (inField || running || !hasMain) return;
+      if (e.key === ' ') { e.preventDefault(); setPlaying(!pb.playing); return; }
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); stepFrame((e.key === 'ArrowRight' ? 1 : -1) * (e.shiftKey ? 10 : 1)); return; }
+      if (e.key === 'Home') { e.preventDefault(); seek(0); return; }
+      if (e.key === 'End') { e.preventDefault(); showFrame('main', main.n - 1); }
+    };
+    if (!this._keys) { this._keys = (e) => this._onKey && this._onKey(e); window.addEventListener('keydown', this._keys, true); }
+
+    const playing = !!pb.playing;
+    const ended = v0 && v0.ended && !playing;
+    const um = unitMenu;
+    return {
+      uid, standalone, no: false,
+      rootCls: standalone ? 'fm ' + ((p.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark') + ((p.material ?? 'Blur') === 'Blur' ? ' mat-blur' : '') : '',
+      rootStyle: standalone ? 'position: relative; width: ' + (W + 80) + 'px; height: ' + (H + 80) + 'px; overflow: hidden; background: var(--bd)' : 'position: relative; width: ' + W + 'px; height: ' + H + 'px',
+      winStyle: (standalone ? 'left: 40px; top: 40px; ' : 'left: 0; top: 0; ') + 'width: ' + W + 'px; height: ' + H + 'px',
+      activate: () => { window.__afActive = uid; },
+      anyPopup: !!um, closePopups: () => set({ unitMenu: null }),
+      sk: fk('side'),
+
+      hasMain, noMain: !hasMain, hasIntro, busy, playerCls: 'af-player' + (hasMain ? '' : ' af-fill'),
+      stageLabel: playing ? 'Pause' : 'Play',
+      imgStyle: v0 ? spriteAt(v0.idx, 4) : '',
+      pillCls: 'af-pill' + (v0 && v0.bad ? ' bad' : ''), pillText: v0 ? v0.pill : '',
+      togglePlay: () => { if (!hasMain || running) return; setPlaying(!playing); },
+      playIcon: running || !hasMain ? 'play_arrow' : playing ? 'pause' : ended ? 'replay' : 'play_arrow',
+      playTip: playing ? 'Pause (Space)' : ended ? 'Play Again (Space)' : 'Play (Space)',
+      playOff: !hasMain || running,
+      segs, marks, tl,
+      headStyle: v0 ? 'left: ' + (v0.head * 100) + '%' : 'left: 0',
+      timeText: timeOf(v0),
+      hov: !!hovInfo, hovStyle: hov ? 'left: ' + hov.x + 'px' : '',
+      hovImg: hovInfo ? spriteAt(hovInfo.seq.base + hovInfo.i, 1) : '',
+      hovText: hovInfo ? (hovInfo.part === 'intro' ? 'Intro' : 'Main') + ' · ' + hovInfo.seq.file(hovInfo.i) : '',
+      chooseMain: chooseFor('main'),
+      srcs: [srcRow('intro'), srcRow('main')],
+
+      jobRun: running, jobDone: !!job && job.st === 'done', jobStopped: !!job && job.st === 'stopped', jb, outFile: fileName,
+      dismissJob: () => set({ job: null }),
+      showFolder: () => set(status('Opens ' + out.folder + ' in your file manager, with ' + (job && job.file) + ' selected.')),
+      copyPath: () => set(status('Copied /' + out.folder + '/' + (job && job.file) + '. Paste it into any image or background.')),
+      setsCls: 'af-sets' + (running ? ' af-lock' : ''),
+
+      spd, ispd, lp, lc, fieldErr,
+      unitOpen: !!um, unitItems, unitStyle: um ? 'left: ' + Math.max(8, um.at[2] - 210) + 'px; top: ' + um.at[1] + 'px' : '',
+      pr, adv,
+      outName: out.name, outPh: defName, nameFk: fk('name'), nameFocus: nameF.focus, nameInput: nameF.input, nameKey: nameF.key, nameBlur: nameF.blur,
+      outFolder: out.folder, changeFolder: () => set(status('Opens the folder chooser, starting in ' + out.folder + '.')),
+      checkSw: 'sw' + (cfg.check ? ' on' : ''), checkOn: cfg.check ? 'true' : 'false',
+      flipCheck: () => commit(withCfg({ check: !cfg.check }), status(cfg.check ? 'It doesn\'t check the file after saving now.' : 'It checks the file after saving now.', true)),
+      outNoteCls: 'foot' + (exists ? ' af-warn' : ''), outNote,
+
+      lead, leadCls, footUndo, undo, close,
+      goCls: running ? 'btn wide' : exists ? 'btn wide primary danger' : 'btn wide primary',
+      goLabel: running ? 'Stop' : exists ? 'Replace' : 'Create AFMA',
+      goTip: running ? 'Stops and saves nothing' : 'Ctrl+Enter',
+      goOff: !running && blocked, go,
+
+      sheetOpen: sheet === 'close' && running, al
+    };
+  }
+}
+</script>
+</body>
+</html>

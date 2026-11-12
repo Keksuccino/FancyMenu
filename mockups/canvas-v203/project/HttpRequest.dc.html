@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Edit HTTP Request</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="fm {{themeClass}} {{matClass}}" style="position: relative; width: 1200px; height: 920px; overflow: hidden">
+
+<div class="backdrop" aria-hidden="true">
+<img class="art" src="dusk_valley.png" alt="">
+<div class="dim"></div>
+<div class="gridlines"></div>
+<div class="le" style="left: 420px; top: 16px; width: 360px; height: 28px; display: grid; place-items: center; color: #fff; font-size: 18px; font-weight: 700">Dusk Valley</div>
+<div class="le le-btn" style="left: 1040px; top: 380px; width: 130px; height: 36px">Submit Score</div>
+</div>
+
+<div class="win" style="left: 200px; top: 48px; width: 800px; height: 830px">
+<div class="titlebar">
+<div class="tl"><button class="c" aria-label="Close"><span class="ms" aria-hidden="true">close</span></button><button class="m" aria-label="Collapse"><span class="ms" aria-hidden="true">remove</span></button><button class="x" aria-label="Maximize"><span class="ms" aria-hidden="true">open_in_full</span></button></div>
+<div class="wt"><span class="ms" aria-hidden="true">swap_horiz</span>Edit HTTP Request</div>
+<div></div>
+</div>
+
+<div class="body">
+
+<div>
+<div class="sec">Request</div>
+<div class="group lw-108">
+<div class="row"><span class="lbl">Target URL</span><div class="ctl grow"><div class="field"><input type="text" aria-label="Target URL" value="{{url}}" onChange="{{setUrl}}"><button class="ib" data-tip="Open in Editor" aria-label="Open in Editor"><span class="ms" aria-hidden="true">edit_note</span></button></div></div></div>
+
+<div class="row" style="z-index: 3"><span class="lbl">Method</span><div class="ctl" style="margin-left: 0">
+<div class="pop">
+<button class="{{methodCls}}" style="min-width: 132px" aria-haspopup="menu" aria-expanded="{{open}}" onClick="{{toggleMenu}}">{{method}}<span class="ms chev" aria-hidden="true">expand_more</span></button>
+<sc-if value="{{open}}" hint-placeholder-val="{{false}}"><div class="pop-menu fill"><dc-import name="ContextMenu" items="{{methods}}" label="Method" focus-on-open="{{yes}}" escape-listener="{{closeMenus}}" standalone="{{no}}" hint-size="auto,240px"></dc-import></div></sc-if>
+</div>
+</div></div>
+
+<div class="row" style="z-index: 2"><span class="lbl">Content Type</span><div class="ctl grow">
+<div class="pop" style="flex: 1 1 auto; align-self: auto">
+<div class="field" style="padding-right: 3px"><input type="text" aria-label="Content Type" value="{{contentType}}" onChange="{{setContentType}}"><button class="ib" data-tip="Common types" aria-label="Common content types" aria-haspopup="menu" aria-expanded="{{ctOpen}}" onClick="{{toggleCt}}"><span class="ms" aria-hidden="true">expand_more</span></button></div>
+<sc-if value="{{ctOpen}}" hint-placeholder-val="{{false}}"><div class="pop-menu right"><dc-import name="ContextMenu" items="{{contentTypes}}" label="Common content types" focus-on-open="{{yes}}" escape-listener="{{closeMenus}}" standalone="{{no}}" hint-size="auto,180px"></dc-import></div></sc-if>
+</div>
+</div></div>
+
+<div class="{{bodyRow}}"><span class="lbl">Body<sc-if value="{{bodyOff}}" hint-placeholder-val="{{false}}"><span class="sub">Not sent with {{method}}</span></sc-if></span><div class="ctl grow"><div class="{{bodyField}}"><input type="text" aria-label="Request Body" value="{{body}}" onChange="{{setBody}}" disabled="{{bodyOff}}"><button class="ib" data-tip="Open in Editor" aria-label="Open in Editor" disabled="{{bodyOff}}"><span class="ms" aria-hidden="true">edit_note</span></button></div></div></div>
+
+<div class="row"><span class="lbl">Timeout</span><div class="ctl" style="margin-left: 0">
+<div class="field" style="flex: 0 0 92px"><input type="text" aria-label="Timeout in seconds" value="{{timeout}}" onChange="{{setTimeout}}"><span class="suf">sec</span></div>
+<div class="stepper"><button aria-label="5 seconds less" data-tip="&minus;5 sec" onClick="{{timeoutDown}}"><span class="ms" aria-hidden="true">remove</span></button><button aria-label="5 seconds more" data-tip="+5 sec" onClick="{{timeoutUp}}"><span class="ms" aria-hidden="true">add</span></button></div>
+</div></div>
+</div>
+</div>
+
+<div>
+<div class="sec">Response</div>
+<div class="group">
+<div class="row"><span class="lbl">Log Response<span class="sub">Writes the server's answer to the game log</span></span><div class="ctl"><button class="{{logCls}}" role="switch" aria-checked="{{logOn}}" aria-label="Log Response" onClick="{{toggleLog}}"></button></div></div>
+<div class="row"><span class="lbl">Save in Variable<span class="sub">Optional. Filled in as soon as the answer arrives</span></span><div class="ctl"><div class="field" style="flex: 0 0 230px"><input type="text" aria-label="Response variable name" placeholder="variable_name" value="{{variable}}" onChange="{{setVariable}}"></div></div></div>
+<div class="{{singleRow}}"><span class="lbl">Save as Single Line<span class="sub">Removes line breaks before saving</span></span><div class="ctl"><button class="{{singleCls}}" role="switch" aria-checked="{{singleOn}}" aria-label="Save as Single Line" disabled="{{noVariable}}" onClick="{{toggleSingle}}"></button></div></div>
+</div>
+</div>
+
+<div>
+<div class="sec">Authentication</div>
+<div class="seg" role="radiogroup" aria-label="Authentication type">
+<div class="thumb" style="width: calc((100% - 4px) / 4); transform: {{authX}}"></div>
+<button class="{{authC.a}}" role="radio" aria-checked="{{authA.a}}" onClick="{{auth0}}">None</button>
+<button class="{{authC.b}}" role="radio" aria-checked="{{authA.b}}" onClick="{{auth1}}">Basic</button>
+<button class="{{authC.c}}" role="radio" aria-checked="{{authA.c}}" onClick="{{auth2}}">Bearer Token</button>
+<button class="{{authC.d}}" role="radio" aria-checked="{{authA.d}}" onClick="{{auth3}}">API Key</button>
+</div>
+<sc-if value="{{authNone}}" hint-placeholder-val="{{false}}"><p class="foot">No login data is sent with this request.</p></sc-if>
+<sc-if value="{{authBasic}}" hint-placeholder-val="{{false}}">
+<div class="group lw-108" style="margin-top: 10px">
+<div class="row"><span class="lbl">Username</span><div class="ctl grow"><div class="field"><input type="text" aria-label="Username" value="steve"></div></div></div>
+<div class="row"><span class="lbl">Password</span><div class="ctl grow"><div class="field"><input type="{{secretType}}" aria-label="Password" value="correct-horse-battery"><button class="ib" data-tip="{{eyeTip}}" aria-label="{{eyeTip}}" onClick="{{toggleSecret}}"><span class="ms" aria-hidden="true">visibility</span></button></div></div></div>
+</div>
+</sc-if>
+<sc-if value="{{authBearer}}" hint-placeholder-val="{{true}}">
+<div class="group lw-108" style="margin-top: 10px">
+<div class="row"><span class="lbl">Token</span><div class="ctl grow"><div class="field"><input type="{{secretType}}" aria-label="Bearer token" value="sk_live_4f9a2c7e1b3d8f60"><button class="ib" data-tip="{{eyeTip}}" aria-label="{{eyeTip}}" onClick="{{toggleSecret}}"><span class="ms" aria-hidden="true">visibility</span></button></div></div></div>
+</div>
+</sc-if>
+<sc-if value="{{authKey}}" hint-placeholder-val="{{false}}">
+<div class="group lw-108" style="margin-top: 10px">
+<div class="row"><span class="lbl">Header Name</span><div class="ctl grow"><div class="field"><input type="text" aria-label="API key header name" value="X-API-Key"></div></div></div>
+<div class="row"><span class="lbl">Key</span><div class="ctl grow"><div class="field"><input type="{{secretType}}" aria-label="API key" value="9e1c55d0a7f24b38"><button class="ib" data-tip="{{eyeTip}}" aria-label="{{eyeTip}}" onClick="{{toggleSecret}}"><span class="ms" aria-hidden="true">visibility</span></button></div></div></div>
+</div>
+</sc-if>
+</div>
+
+<div>
+<div class="sec">Custom Headers<span class="end"><button class="btn sm" onClick="{{addHeader}}"><span class="ms" aria-hidden="true">add</span>Add Header</button></span></div>
+<sc-if value="{{hasHeaders}}" hint-placeholder-val="{{true}}">
+<div class="group">
+<sc-for list="{{headers}}" as="h" hint-placeholder-count="2">
+<div class="row" style="gap: 8px">
+<div class="field" style="flex: 0 0 210px"><input type="text" aria-label="Header name" placeholder="Name" value="{{h.key}}"></div>
+<div class="field"><input type="text" aria-label="Header value" placeholder="Value" value="{{h.value}}"></div>
+<button class="ib danger" data-tip="Remove" aria-label="Remove header" onClick="{{h.remove}}"><span class="ms" aria-hidden="true">do_not_disturb_on</span></button>
+</div>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{noHeaders}}" hint-placeholder-val="{{false}}"><p class="foot" style="margin-top: 0">No custom headers yet.</p></sc-if>
+</div>
+
+</div>
+
+<div class="footer line">
+<button class="btn wide">Cancel</button>
+<button class="btn wide primary">Save</button>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Solid"},"menuOpen":{"editor":"boolean","default":false},"$preview":{"width":1200,"height":920}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const set = (patch) => () => this.setState(patch);
+    const bind = (key) => (e) => this.setState({ [key]: e.target.value });
+    const method = s.method ?? 'POST';
+    const open = s.open ?? !!this.props.menuOpen;
+    const hl = s.hl ?? (this.props.menuOpen ? 'PUT' : '');
+    const methodList = [['GET', 'Read data'], ['POST', 'Send data'], ['PUT', 'Replace'], ['PATCH', 'Update parts'], ['DELETE', 'Remove'], ['HEAD', 'Headers only'], ['OPTIONS', "Ask what's allowed"]];
+    const contentType = s.contentType ?? 'application/json';
+    const ctOpen = !!s.ctOpen;
+    const ctList = [['application/json', 'JSON'], ['text/plain', 'Plain text'], ['application/x-www-form-urlencoded', 'Form'], ['multipart/form-data', 'Files'], ['application/xml', 'XML']];
+    const bodyOff = method === 'GET' || method === 'HEAD';
+    const timeout = Number(s.timeout ?? 10) || 0;
+    const log = s.log ?? true;
+    const variable = s.variable ?? 'score_reply';
+    const single = s.single ?? false;
+    const auth = s.auth ?? 2;
+    const secretShown = !!s.secretShown;
+    const headers = s.headers ?? [{ key: 'Accept', value: 'application/json' }, { key: 'X-Client', value: 'FancyMenu' }];
+    const authC = {};
+    const authA = {};
+    ['a', 'b', 'c', 'd'].forEach((k, i) => { authC[k] = i === auth ? 'on' : ''; authA[k] = i === auth ? 'true' : 'false'; });
+    return {
+      themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark',
+      matClass: (this.props.material ?? 'Blur') === 'Blur' ? 'mat-blur' : '',
+      url: s.url ?? 'https://api.example.com/v1/scores', setUrl: bind('url'),
+      method, open, methodCls: open ? 'popup open' : 'popup',
+      toggleMenu: set({ open: !open, hl: '', ctOpen: false }),
+      yes: true, no: false, closeMenus: set({ open: false, ctOpen: false, hl: '' }),
+      methods: methodList.flatMap(([label, hint]) => [
+        ...(label === 'HEAD' ? [{ sep: true }] : []),
+        // the "pointer on PUT" demo highlight goes away as soon as the real pointer moves over the menu
+        { radio: true, checked: label === method, label, note: hint, hl: label === hl, enter: hl ? set({ hl: '' }) : undefined, click: set({ method: label, open: false, hl: '' }) }
+      ]),
+      contentType, setContentType: bind('contentType'), ctOpen,
+      toggleCt: set({ ctOpen: !ctOpen, open: false }),
+      contentTypes: ctList.map(([label, hint]) => ({ radio: true, checked: label === contentType, label, note: hint, click: set({ contentType: label, ctOpen: false }) })),
+      body: s.body ?? '{"score": $$score, "streak": $$streak}', setBody: bind('body'),
+      bodyOff, bodyRow: bodyOff ? 'row off' : 'row', bodyField: bodyOff ? 'field mono dim' : 'field mono',
+      timeout, setTimeout: bind('timeout'),
+      timeoutDown: set({ timeout: Math.max(5, timeout - 5) }), timeoutUp: set({ timeout: timeout + 5 }),
+      logCls: log ? 'sw on' : 'sw', logOn: log ? 'true' : 'false', toggleLog: set({ log: !log }),
+      variable, setVariable: bind('variable'), noVariable: !variable,
+      singleCls: single ? 'sw on' : 'sw', singleOn: single ? 'true' : 'false', toggleSingle: set({ single: !single }),
+      singleRow: variable ? 'row' : 'row off',
+      authI: auth, authX: 'translateX(' + (auth * 100) + '%)', authC, authA,
+      auth0: set({ auth: 0 }), auth1: set({ auth: 1 }), auth2: set({ auth: 2 }), auth3: set({ auth: 3 }),
+      authNone: auth === 0, authBasic: auth === 1, authBearer: auth === 2, authKey: auth === 3,
+      secretType: secretShown ? 'text' : 'password', eyeTip: secretShown ? 'Hide' : 'Show',
+      toggleSecret: set({ secretShown: !secretShown }),
+      headers: headers.map((h, i) => ({ ...h, remove: set({ headers: headers.filter((_, j) => j !== i) }) })),
+      hasHeaders: headers.length > 0, noHeaders: headers.length === 0,
+      addHeader: set({ headers: [...headers, { key: '', value: '' }] })
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Messages, Welcome and About spec</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.pair{display:grid;grid-template-columns:600px minmax(0,1fr);gap:48px;align-items:start}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start}
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;align-items:start}
+.kr{display:flex;align-items:center;gap:14px;padding:9px 18px;border-bottom:1px solid var(--sep);font-size:12.5px;color:var(--text-2)}
+.kr:last-child{border-bottom:0}
+.kk{flex:0 0 190px;font-family:"Noto Sans Mono",ui-monospace,Menlo,monospace;font-size:12px;color:var(--text)}
+.spec code{font-family:"Noto Sans Mono",ui-monospace,Menlo,monospace;font-size:12px;color:var(--text)}
+.flow{display:flex;flex-direction:column;gap:10px}
+.flow .step{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;font-size:13px;line-height:1.5;color:var(--text-2)}
+.flow .n{width:22px;height:22px;display:grid;place-items:center;border-radius:50%;font-size:11.5px;font-weight:700;color:var(--accent);background:color-mix(in srgb,var(--accent) 15%,transparent)}
+.flow b{color:var(--title);font-weight:600}
+.propchip{color:var(--warn);background:color-mix(in srgb,var(--warn) 15%,transparent)}
+.okchip2{color:var(--ok);background:color-mix(in srgb,var(--ok) 15%,transparent)}
+/* today's screens, redrawn at 600 pixels wide: a list of text lines or rows of sliders, and the buttons in a column at the bottom right */
+.lgcs{display:flex;flex-direction:column;gap:14px}
+.lgc{position:relative;width:600px;padding:12px 14px 14px;background:#1f1f1f;border:1px solid #3e4042;color:#ceDDed;font-size:11px}
+.lgc .tt{margin:0 0 9px 2px;font-size:12px;font-weight:600;color:#e8eef4}
+.lgc .bd{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:14px}
+.lgc .lft{display:flex;flex-direction:column;gap:6px;min-width:0}
+.lgc .f{height:17px;padding:0 5px;display:flex;align-items:center;border:1px solid #3e4042;background:#1a1a1a;color:#ceDDed;white-space:nowrap;overflow:hidden}
+.lgc .ls{flex:1 1 auto;padding:5px 6px;border:1px solid #3e4042;background:#262626;display:flex;flex-direction:column;gap:3px;overflow:hidden}
+.lgc .ls div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:1px 3px}
+.lgc .ls .sel{background:#3a4a5e}
+.lgc .rt{display:flex;flex-direction:column;justify-content:flex-end;gap:5px}
+.lgc .b{height:18px;padding:0 8px;display:flex;align-items:center;justify-content:center;border:1px solid #3e4042;background:#333;white-space:nowrap}
+.lgc .gap{height:10px}
+.lgc .lb{margin:3px 0 -2px 1px}
+.lgc .sl{position:relative;height:18px;display:flex;align-items:center;justify-content:center;border:1px solid #3e4042;background:#2a2a2a}
+.lgc .sl i{position:absolute;top:0;bottom:0;width:6px;background:#8a96a3;opacity:.4}
+.lgc .pr{display:grid;grid-template-columns:minmax(0,1fr) 140px;gap:6px}
+</style>
+</helmet>
+<div class="fm spec {{themeClass}}" style="min-height: 3426px">
+
+<header style="display: flex; flex-direction: column; gap: 12px; max-width: 920px">
+<div style="font-size: 12px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; color: var(--text-3)">FancyMenu · UI rework concept · Messages, Welcome and About</div>
+<h1 style="margin: 0; font-size: 34px; line-height: 1.15; font-weight: 700; color: var(--title)">Small windows that say more</h1>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: var(--text-2)">FancyMenu asks questions, reports errors, greets new users and thanks its people in small windows. Messages get a title, a clear text and buttons that say what they do. The Welcome window helps with the first steps instead of only pointing to the docs, and Credits becomes About, a window with FancyMenu&#x27;s version at hand.</p>
+</header>
+
+<section>
+<h2 class="h2">Today and proposed</h2>
+<div class="pair">
+<div>
+<div class="cap">Today</div>
+<div class="lgcs">
+<div class="lgc">
+<div class="tt">Warning</div>
+<div style="padding: 18px 10px 8px; text-align: center; line-height: 1.6">Overriding screens can cause unexpected game behavior.<br>Do you really want to override the screen now?</div>
+<div style="display: flex; justify-content: center; gap: 8px; padding: 10px 0 4px"><span class="b" style="width: 120px">Cancel</span><span class="b" style="width: 120px; color: #6f767d">Accept</span></div>
+</div>
+<div class="lgc">
+<div class="tt">Welcome to FancyMenu!</div>
+<div style="padding: 8px 26px 8px; text-align: center; line-height: 1.6"><b style="color: #e8eef4">Thank you for using FancyMenu!</b><br><br>Before you begin customizing with FancyMenu, please make sure to read the documentation thoroughly. While FancyMenu can seem overwhelming initially, the documentation will guide you step-by-step.<br><br>Start with the Getting Started page for the basics of menu customization.</div>
+<div style="display: flex; justify-content: center; padding: 8px 0 4px"><span class="b" style="width: 220px">Open Documentation</span></div>
+</div>
+<div class="lgc">
+<div class="tt" style="text-align: center">Credits</div>
+<div style="padding: 4px 26px 8px; text-align: center; line-height: 1.7"><b style="color: #e8eef4">CREDITS</b><br><br><b style="color: #e8eef4">LEAD DEVELOPER</b><br>Keksuccino<br><br><b style="color: #e8eef4">PATREON SUPPORTERS</b><br>Infidel<br>OtakuGamer<br>Andreas Grewe</div>
+<div style="display: flex; justify-content: center; padding: 8px 0 4px"><span class="b" style="width: 220px">Close</span></div>
+</div>
+</div>
+</div>
+<div>
+<div class="cap">What gets in the way</div>
+<ul class="probs">
+<li>Every message is called Info, Warning or Error and has one block of text. Its buttons are OK, or Cancel and Accept, whatever it asks.</li>
+<li>A question that makes you wait keeps its button grey, and only a tooltip says for how long.</li>
+<li>An error from an action doesn&#x27;t say which script ran it, so you have to search for the button or listener that did.</li>
+<li>Messages that belong to a window open as one more window on top of it.</li>
+<li>The Welcome window is a block of text with one button, Open Documentation. After that it never shows again.</li>
+<li>Credits is a full screen that replaces the screen you&#x27;re on: one long centered text, a third of it the same font license seven times.</li>
+<li>Credits doesn&#x27;t show FancyMenu&#x27;s version, which every bug report needs.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">What changes</h2>
+<div class="group" style="background: var(--win)">
+<div class="mv head"><div>Today</div><div></div><div>Proposed</div><div>Why</div></div>
+<div class="mv"><div class="from">Info, Warning or Error, and one text</div><div class="arrow">→</div><div class="to">A title that asks the question or names the problem, the details below, and an icon in the tone of the message</div><div class="why">You know what it&#x27;s about from the first line (rule 140).</div></div>
+<div class="mv"><div class="from">OK, Cancel, Accept</div><div class="arrow">→</div><div class="to">Buttons named after what they do, like Override or Clear Tracks. A button that deletes is red</div><div class="why">Nobody has to read the text twice to know what Accept accepts (rule 40).</div></div>
+<div class="mv"><div class="from">Clickable in 2 seconds.. in a tooltip</div><div class="arrow">→</div><div class="to">The button counts down itself, Override in 2 s, and fills up while it waits</div><div class="why">The wait shows where you look (rule 141).</div></div>
+<div class="mv"><div class="from">A message window on top of the window that asked</div><div class="arrow">→</div><div class="to">A sheet that slides down from that window</div><div class="why">One window, and the message can&#x27;t get lost behind it (rule 134).</div></div>
+<div class="mv"><div class="from">Failed to open screen via the action</div><div class="arrow">→</div><div class="to">What couldn&#x27;t be opened, and the element and script that tried, with Show Script and Copy Details</div><div class="why">The fix is one click away (rule 142).</div></div>
+<div class="mv"><div class="from">Thank you for using FancyMenu! and a text about the docs</div><div class="arrow">→</div><div class="to">Four first steps: the menu bar, the first layout, the docs and the Discord</div><div class="why">It helps right there, and the docs stay one button away.</div></div>
+<div class="mv"><div class="from">(new)</div><div class="arrow">→</div><div class="to">Appearance: Dark or Light, right in the Welcome window</div><div class="why">The first thing most people change, without looking for it.</div></div>
+<div class="mv"><div class="from">Open Documentation</div><div class="arrow">→</div><div class="to">Start Customizing, Open the Docs and Join the Discord</div><div class="why">Closing the window isn&#x27;t the same as opening the docs.</div></div>
+<div class="mv"><div class="from">The Welcome window shows once</div><div class="arrow">→</div><div class="to">It still shows once, and Help › Welcome brings it back</div><div class="why">Nothing useful is gone for good (rule 143).</div></div>
+<div class="mv"><div class="from">Credits, a full screen</div><div class="arrow">→</div><div class="to">About, a window</div><div class="why">The screen you&#x27;re on stays, and the name fits what it shows: the version, the people and the licenses (rule 144).</div></div>
+<div class="mv"><div class="from">One centered text</div><div class="arrow">→</div><div class="to">Sections: names as tags, thanks and licenses as rows, and every license as a tag that opens it</div><div class="why">Names are easy to find, and the licenses don&#x27;t bury them.</div></div>
+<div class="mv"><div class="from">(new)</div><div class="arrow">→</div><div class="to">FancyMenu&#x27;s version, the Minecraft version and the mod loader, with Copy Version Info</div><div class="why">A bug report starts with one click (rule 144).</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">The windows, piece by piece</h2>
+<div class="three">
+<div class="spec-card"><div class="k">A message</div><div class="kd" style="margin: 0">The same layout as a sheet, in a window of its own: an icon tile, the title, the text and the buttons under each other, the main one first. Only Close works in its title bar, since a message has one size.</div></div>
+<div class="spec-card"><div class="k">Tones</div><div class="kd" style="margin: 0">Blue for a plain question, amber for one that can break something, red for errors and for buttons that delete. The word in the title bar stays Info, Warning or Error.</div></div>
+<div class="spec-card"><div class="k">A button that waits</div><div class="kd" style="margin: 0">It says how long, like Override in 2 s, and a fill moves across it. Once the time is up it turns into Override.</div></div>
+<div class="spec-card"><div class="k">An error</div><div class="kd" style="margin: 0">The title names what failed. The text says why, and which element and script ran it. A line in code font gives the exact place. Show Script opens the script editor there, Copy Details copies all of it with the log lines that belong to it.</div></div>
+<div class="spec-card"><div class="k">Welcome</div><div class="kd" style="margin: 0">The logo, four numbered steps, the Appearance choice, and three buttons: Start Customizing closes the window, Open the Docs and Join the Discord open in the browser.</div></div>
+<div class="spec-card"><div class="k">About</div><div class="kd" style="margin: 0">FancyMenu with its version line and Copy Version Info, the line in memory of UwUCookies, then Lead Developer, Patreon Supporters, Alpha and Beta Testers, Special Thanks, Buddy&#x27;s Assets, Fonts and Copyright.</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Special cases they handle</h2>
+<div class="two">
+<div class="spec-card"><ul class="notes">
+<li>Closing a question with the red button answers Cancel, like today.</li>
+<li>Enter presses the main button and Esc cancels, like today. While the button waits, Enter does nothing.</li>
+<li>Info and Error messages have one main button, Close. An error can have Show Script and Copy Details below it.</li>
+<li>An error that no script caused, like a file that can&#x27;t be read, has no Show Script.</li>
+</ul></div>
+<div class="spec-card"><ul class="notes">
+<li>The Welcome window shows on the first title screen and not in modpack mode, like today.</li>
+<li>Appearance changes FancyMenu&#x27;s theme right away, also for the menu bar behind the window.</li>
+<li>About reads its names from the same file as today, so adding a supporter is still one line.</li>
+<li>Copy Version Info copies one line, like FancyMenu 3.10.0, Minecraft 1.21.11, NeoForge.</li>
+</ul></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Keyboard shortcuts</h2>
+<div class="two">
+<div>
+<div class="cap">Kept</div>
+<div class="group" style="background: var(--win)">
+<div class="kr"><span class="kk">Enter</span><span>The main button of a message</span></div>
+<div class="kr"><span class="kk">Esc</span><span>Cancel, or OK when that&#x27;s the only button</span></div>
+</div>
+</div>
+<div>
+<div class="cap">New</div>
+<div class="group" style="background: var(--win)">
+<div class="kr"><span class="kk">Esc</span><span>Closes Welcome and About</span></div>
+</div>
+</div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Changes beyond the UI</h2>
+<p class="kd" style="max-width: 920px; margin: -6px 0 16px; font-size: 13px; color: var(--text-2)">The windows above already use these, so each one is a rework rule.</p>
+<div class="two">
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Messages have a title, a text and named buttons <span class="chip propchip">New, rule 140</span></div><div class="kd" style="margin: 0">Dialogs.openMessage takes one text and a style, and the buttons are fixed. Callers pass a title, a text, the label of the main button and whether it deletes.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">A button that waits counts down <span class="chip propchip">New, rule 141</span></div><div class="kd" style="margin: 0">setDelay keeps the button off and puts Clickable in N seconds.. into a tooltip. The button shows the seconds and a fill instead.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Errors say what ran them <span class="chip propchip">New, rule 142</span></div><div class="kd" style="margin: 0">An action that fails knows its script and what runs it (rule 81), so its message names the element and step, and Show Script jumps there.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">The Welcome window can come back <span class="chip propchip">New, rule 143</span></div><div class="kd" style="margin: 0">Help gets a Welcome entry. The window itself still shows once, on the first title screen.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Credits becomes About, a window with the version <span class="chip propchip">New, rule 144</span></div><div class="kd" style="margin: 0">CreditsScreen becomes a window called About, and credits_and_copyright.md gets read as sections and names instead of one Markdown text.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Messages are sheets wherever a window is open <span class="chip okchip2">Covered, rule 134</span></div><div class="kd" style="margin: 0">The standalone window is only for messages that have no window to slide down from.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Main buttons say what they do <span class="chip okchip2">Covered, rule 40</span></div><div class="kd" style="margin: 0">Override, Clear Tracks and Start Customizing instead of Accept and OK.</div></div>
+</div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"$preview":{"width":1440,"height":3426}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark' };
+  }
+}
+</script>
+</body>
+</html>

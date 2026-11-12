@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Slideshows, today and proposed</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.pair{display:grid;grid-template-columns:600px minmax(0,1fr);gap:48px;align-items:start}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:start}
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;align-items:start}
+.kr{display:flex;align-items:center;gap:14px;padding:9px 18px;border-bottom:1px solid var(--sep);font-size:12.5px;color:var(--text-2)}
+.kr:last-child{border-bottom:0}
+.kk{flex:0 0 190px;font-family:"Noto Sans Mono",ui-monospace,Menlo,monospace;font-size:12px;color:var(--text)}
+.spec code{font-family:"Noto Sans Mono",ui-monospace,Menlo,monospace;font-size:12px;color:var(--text)}
+.flow{display:flex;flex-direction:column;gap:10px}
+.flow .step{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;font-size:13px;line-height:1.5;color:var(--text-2)}
+.flow .n{width:22px;height:22px;display:grid;place-items:center;border-radius:50%;font-size:11.5px;font-weight:700;color:var(--accent);background:color-mix(in srgb,var(--accent) 15%,transparent)}
+.flow b{color:var(--title);font-weight:600}
+.propchip{color:var(--warn);background:color-mix(in srgb,var(--warn) 15%,transparent)}
+.okchip2{color:var(--ok);background:color-mix(in srgb,var(--ok) 15%,transparent)}
+/* today's three windows, redrawn at 600 pixels wide: lists of text lines, cycle buttons, and the buttons in a column at the bottom right */
+.lgcs{display:flex;flex-direction:column;gap:14px}
+.lgc{position:relative;width:600px;padding:12px 14px 14px;background:#1f1f1f;border:1px solid #3e4042;color:#ceDDed;font-size:11px}
+.lgc .tt{margin:0 0 9px 2px;font-size:12px;font-weight:600;color:#e8eef4}
+.lgc .bd{display:grid;grid-template-columns:minmax(0,1fr) 150px;gap:14px}
+.lgc .lft{display:flex;flex-direction:column;gap:6px;min-width:0}
+.lgc .f{height:17px;padding:0 5px;display:flex;align-items:center;border:1px solid #3e4042;background:#1a1a1a;color:#ceDDed;white-space:nowrap;overflow:hidden}
+.lgc .ls{flex:1 1 auto;padding:5px 6px;border:1px solid #3e4042;background:#262626;display:flex;flex-direction:column;gap:3px;overflow:hidden}
+.lgc .ls div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:1px 3px}
+.lgc .ls .sel{background:#3a4a5e}
+.lgc .ls .hr{height:1px;padding:0;margin:4px 0;background:#3e4042}
+.lgc .ls b{font-weight:700;color:#e8eef4}
+.lgc .rt{display:flex;flex-direction:column;justify-content:flex-end;gap:5px}
+.lgc .b{height:18px;padding:0 8px;display:flex;align-items:center;justify-content:center;border:1px solid #3e4042;background:#333;white-space:nowrap}
+.lgc .b.off{color:#6f767d}
+.lgc .b.warn{color:#e8b65a}
+.lgc .gap{height:10px}
+.lgc .lb{margin:3px 0 -2px 1px}
+</style>
+</helmet>
+<div class="fm spec {{themeClass}}" style="min-height: 4805px">
+
+<header style="display: flex; flex-direction: column; gap: 12px; max-width: 920px">
+<div style="font-size: 12px; font-weight: 600; letter-spacing: .6px; text-transform: uppercase; color: var(--text-3)">FancyMenu · UI rework concept · Slideshows</div>
+<h1 style="margin: 0; font-size: 34px; line-height: 1.15; font-weight: 700; color: var(--title)">Slideshows without the file explorer</h1>
+<p style="margin: 0; font-size: 15px; line-height: 1.55; color: var(--text-2)">A slideshow is a set of images that fade into each other, as the background of a layout or in a Slideshow element. Today it&#x27;s a folder you build by hand, with a file you write yourself. The Slideshows window makes, changes and deletes them: add images with a button or by dropping files, drag them into order, set how long each one shows, and watch it play. It opens from the menu bar and from every place that picks a slideshow.</p>
+</header>
+
+<section>
+<h2 class="h2">Today and proposed</h2>
+<div class="pair">
+<div>
+<div class="cap">Today</div>
+<div class="lgcs">
+<div class="lgc">
+<div class="tt">config/fancymenu/slideshows/seasons, in the file explorer</div>
+<div class="ls" style="font-family: &quot;Noto Sans Mono&quot;, ui-monospace, Menlo, monospace; font-size: 10.5px">
+<div>images/</div>
+<div style="padding-left: 18px">01_spring.png</div>
+<div style="padding-left: 18px">02_summer.png</div>
+<div style="padding-left: 18px">03_autumn.png</div>
+<div style="padding-left: 18px">04_winter.png</div>
+<div>overlay.png</div>
+<div class="sel">properties.txt</div>
+</div>
+</div>
+<div class="lgc">
+<div class="tt">properties.txt, in a text editor</div>
+<div class="ls" style="font-family: &quot;Noto Sans Mono&quot;, ui-monospace, Menlo, monospace; font-size: 10.5px; white-space: pre">
+<div>type = slideshow</div>
+<div>&nbsp;</div>
+<div>slideshow-meta {</div>
+<div style="padding-left: 18px">name = Seasons</div>
+<div style="padding-left: 18px">duration = 6.0</div>
+<div style="padding-left: 18px">fadespeed = 3.33</div>
+<div style="padding-left: 18px">randomize = false</div>
+<div style="padding-left: 18px">x = 0</div>
+<div style="padding-left: 18px">y = 0</div>
+<div style="padding-left: 18px">width = 1280</div>
+<div style="padding-left: 18px">height = 720</div>
+<div>}</div>
+</div>
+</div>
+<div class="lgc">
+<div class="tt">Choose Slideshow</div>
+<div class="bd" style="grid-template-columns: minmax(0, 1fr) 190px">
+<div class="lft">
+<span class="lb">Available Slideshows</span>
+<div class="ls">
+<div>Dusk Valley Nights</div>
+<div class="sel">Seasons</div>
+<div>Server Highlights</div>
+<div>Winter Postcards</div>
+</div>
+</div>
+<div class="rt">
+<span class="lb">Slideshow Preview</span>
+<span aria-hidden="true" style="display: block; height: 107px; border: 1px solid #3e4042; background: #0b0d18 url(preload_art.png) 0 -214px / 760px 321px no-repeat; image-rendering: pixelated"></span>
+<span class="gap"></span>
+<span class="b">Done</span>
+<span class="b">Cancel</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div>
+<div class="cap">What gets in the way</div>
+<ul class="probs">
+<li>A slideshow gets made outside the game: a folder in config/fancymenu/slideshows, an images folder inside it, and a properties.txt next to that.</li>
+<li>properties.txt is written by hand. A missing bracket or a missing type line, and the slideshow doesn&#x27;t load. Only the log says why.</li>
+<li>Images play sorted by file name, so changing the order means renaming files.</li>
+<li>fadespeed is a factor, not a time: 1 fades for 5 seconds and 2 for 2.5. With 0 the slideshow stays on its first image.</li>
+<li>x, y, width and height are in the file, but nothing reads them. Backgrounds and elements set their own.</li>
+<li>A new slideshow or a changed file only shows up after Reload FancyMenu.</li>
+<li>The name in properties.txt is what layouts ask for. Changing it empties every background and element that showed the slideshow, without a warning.</li>
+<li>Choose Slideshow lists the slideshows and previews one, but it can&#x27;t make, change or delete any.</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">What changes</h2>
+<div class="group" style="background: var(--win)">
+<div class="mv head"><div>Today</div><div></div><div>Proposed</div><div>Why</div></div>
+<div class="mv"><div class="from">A folder and a properties.txt, made by hand</div><div class="arrow">→</div><div class="to">Slideshows, one window with the list on the left and the selected slideshow on the right</div><div class="why">Nobody has to leave the game or learn a file format (rule 160).</div></div>
+<div class="mv"><div class="from">(new)</div><div class="arrow">→</div><div class="to">New Slideshow adds one right away, with its name ready to type over</div><div class="why">Every manager makes new things the same way.</div></div>
+<div class="mv"><div class="from">Copy files into the images folder</div><div class="arrow">→</div><div class="to">Add Images opens Choose Image for several files at once, and files dropped onto the window get added too. FancyMenu copies them into the slideshow</div><div class="why">A slideshow stays one folder that&#x27;s easy to share (rule 161).</div></div>
+<div class="mv"><div class="from">The order of the file names</div><div class="arrow">→</div><div class="to">Drag an image to where it should play. A number on each image says its place</div><div class="why">No more renaming files to reorder them (rule 161).</div></div>
+<div class="mv"><div class="from">duration</div><div class="arrow">→</div><div class="to">Show Each Image For, in seconds, with a stepper</div><div class="why">Numbers get a unit and steps that fit.</div></div>
+<div class="mv"><div class="from">fadespeed, a factor</div><div class="arrow">→</div><div class="to">Fade, in seconds. 0 switches without fading</div><div class="why">A time is what people think in (rule 162).</div></div>
+<div class="mv"><div class="from">randomize = true</div><div class="arrow">→</div><div class="to">Random Order, a switch</div><div class="why">On or off is a switch (rule 16).</div></div>
+<div class="mv"><div class="from">x, y, width and height</div><div class="arrow">→</div><div class="to">Gone</div><div class="why">Nothing reads them (rule 162).</div></div>
+<div class="mv"><div class="from">The preview in Choose Slideshow</div><div class="arrow">→</div><div class="to">A preview in the details that plays with the real timing. The image it shows is marked below, and a click on an image shows that one</div><div class="why">You see a change the moment you make it.</div></div>
+<div class="mv"><div class="from">Reload FancyMenu after every change</div><div class="arrow">→</div><div class="to">Changes show right away, also on the screen behind the window</div><div class="why">Try a fade and see it, without reloading (rule 38).</div></div>
+<div class="mv"><div class="from">(new)</div><div class="arrow">→</div><div class="to">Used in: the backgrounds and elements that show the slideshow, each with Open</div><div class="why">You see what changes before you rename or delete (rule 163).</div></div>
+<div class="mv"><div class="from">A new name empties backgrounds and elements</div><div class="arrow">→</div><div class="to">A sheet offers to update the places that use it</div><div class="why">A better name never breaks a menu (rule 163).</div></div>
+<div class="mv"><div class="from">Delete the folder</div><div class="arrow">→</div><div class="to">Delete asks only when images or places are involved, and says what goes with it. Undo is in the footer</div><div class="why">The question only comes when there&#x27;s something to say.</div></div>
+<div class="mv"><div class="from">Choose Slideshow, a window that only picks</div><div class="arrow">→</div><div class="to">The slideshow submenu, with a pencil on every row, New Slideshow and Manage Slideshows</div><div class="why">Making and changing one starts right where it gets picked (rule 164).</div></div>
+<div class="mv"><div class="from">(new)</div><div class="arrow">→</div><div class="to">Use in Element or Use as Background, when the window was opened from a place that picks a slideshow</div><div class="why">A new slideshow goes where it was needed, without picking it again (rule 164).</div></div>
+<div class="mv"><div class="from">One at a time</div><div class="arrow">→</div><div class="to">Ctrl and Shift select several, and Playback sets all of them</div><div class="why">Give every slideshow the same fade at once (rule 25).</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">The window, piece by piece</h2>
+<div class="three">
+<div class="spec-card"><div class="k">The list</div><div class="kd" style="margin: 0">One row per slideshow, sorted by name: its first image, the name, and under it how many images it has and how long each one shows. No images yet shows in amber, and missing images in red. The search finds names and image files. Opened from a place that picks one, a mark shows which slideshow that place shows.</div></div>
+<div class="spec-card"><div class="k">The header</div><div class="kd" style="margin: 0">The name with Rename, and a line with the number of images and their size on disk. Below: Duplicate, Export as Text and Delete. Opened from a place that picks one, Use in Element or Use as Background comes first.</div></div>
+<div class="spec-card"><div class="k">The preview</div><div class="kd" style="margin: 0">Plays the slideshow like the game does: each image stays for its time, then the next one is there and the old one fades out over it. The line below says which image is up, with Play and Pause, and how long one round takes. It only shows once there&#x27;s an image to play.</div></div>
+<div class="spec-card"><div class="k">Images</div><div class="kd" style="margin: 0">Every image as a picture with its place and its file name, four in a row. The one the preview shows has a blue frame, and a click shows any other. Drag one to move it, and the × that appears on it removes it. Add Images sits in the section&#x27;s header. A slideshow without images shows where to drop them instead.</div></div>
+<div class="spec-card"><div class="k">Playback</div><div class="kd" style="margin: 0">Show Each Image For and Fade in seconds, each with a stepper. Random Order as a switch, and Overlay Image for the one picture that&#x27;s drawn on top of every image. The line below says how long one round takes.</div></div>
+<div class="spec-card"><div class="k">Used in</div><div class="kd" style="margin: 0">Every layout whose background is the slideshow, every Slideshow element that shows it and Pre-Load Resources, each with Open. When nothing shows it yet, a line says where a slideshow can go.</div></div>
+<div class="spec-card"><div class="k">Dropping files</div><div class="kd" style="margin: 0">Minecraft only reports files once they&#x27;re dropped, so the window can&#x27;t show a target while they hover (rule 118). The Images section says up front that dropping works. Dropped images go into the selected slideshow, or into a new one when none or several are selected. Right after, they&#x27;re tagged New and the footer says what got added and what got left out, with Undo.</div></div>
+<div class="spec-card"><div class="k">Opened from a picker</div><div class="kd" style="margin: 0">The pencil, New Slideshow and Manage Slideshows in a slideshow submenu open this window. It then says which element or background it belongs to, marks the slideshow that place shows, and Use in Element or a double-click hands over another one. The element behind the window plays it right away.</div></div>
+<div class="spec-card"><div class="k">Several selected</div><div class="kd" style="margin: 0">How many, and how many images in all, with Duplicate and Delete for all of them. Playback sets every selected slideshow, and a value that differs shows as Mixed. Below, the selected slideshows with how many places use each one.</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Make one, use one, rename one</h2>
+<div class="three">
+<div class="spec-card"><div class="k">A slideshow from scratch</div><div class="flow">
+<div class="step"><span class="n">1</span><span><b>New Slideshow</b> adds New Slideshow with its name selected. Type Seasons and press Enter.</span></div>
+<div class="step"><span class="n">2</span><span>Drop four pictures onto the window, or pick them with <b>Add Images</b>.</span></div>
+<div class="step"><span class="n">3</span><span>Drag them into order, then set <b>Show Each Image For</b> to 6 s and <b>Fade</b> to 1.5 s. The preview plays it.</span></div>
+<div class="step"><span class="n">4</span><span><b>Save</b> writes the folder and its file.</span></div>
+</div></div>
+<div class="spec-card"><div class="k">Straight from the layout editor</div><div class="flow">
+<div class="step"><span class="n">1</span><span>Right-click a Slideshow element and open <b>Slideshow</b>. It lists every slideshow.</span></div>
+<div class="step"><span class="n">2</span><span><b>New Slideshow</b> at the bottom opens the window with a new one.</span></div>
+<div class="step"><span class="n">3</span><span>Add its images, then press <b>Use in Element</b>. The element behind the window plays it.</span></div>
+<div class="step"><span class="n">4</span><span><b>Save</b> keeps the slideshow and the choice. <b>Cancel</b> takes both back.</span></div>
+</div></div>
+<div class="spec-card"><div class="k">A better name</div><div class="flow">
+<div class="step"><span class="n">1</span><span>Select Seasons, press <b>F2</b> and type Four Seasons.</span></div>
+<div class="step"><span class="n">2</span><span>A sheet says it&#x27;s used in 2 places, in a layout and Pre-Load Resources.</span></div>
+<div class="step"><span class="n">3</span><span><b>Rename and Update 2 Places</b> changes both, so they keep showing it.</span></div>
+<div class="step"><span class="n">4</span><span>The footer says what happened, with <b>Undo</b>.</span></div>
+</div></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Special cases it handles</h2>
+<div class="two">
+<div class="spec-card"><ul class="notes">
+<li>Files that were copied into a slideshow&#x27;s images folder by hand show up at the end, sorted by name, so old slideshows play like before.</li>
+<li>An image whose file is gone shows as Missing and gets skipped while playing. A card at the top offers to remove it.</li>
+<li>PNG and JPEG work, like today. Other files dropped onto the window get left out, and the footer names them.</li>
+<li>An image that&#x27;s already in the slideshow doesn&#x27;t get added twice.</li>
+<li>A fade can&#x27;t take longer than an image shows, so raising one past the other moves both.</li>
+<li>When a slideshow starts, its first image changes after half the time, like today, so a menu doesn&#x27;t look still for long.</li>
+</ul></div>
+<div class="spec-card"><ul class="notes">
+<li>Every image gets drawn at the size of its background or element, so one with a different shape gets stretched, like today.</li>
+<li>Removing an image deletes its copy with Save, and deleting a slideshow deletes its folder with Save. Until then Undo brings them back.</li>
+<li>The folder is named after the slideshow, in lowercase with _ for spaces, and gets renamed with it.</li>
+<li>Overlay Image is today&#x27;s overlay.png: one picture drawn on top of every image, like a frame or a logo.</li>
+<li>Opened from a picker, Cancel also takes back which slideshow the element or background shows.</li>
+<li>A copy gets copies of the images. Nothing shows it until it&#x27;s picked somewhere.</li>
+</ul></div>
+</div>
+</section>
+
+<section>
+<h2 class="h2">Keyboard shortcuts</h2>
+<div class="two">
+<div>
+<div class="cap">The list</div>
+<div class="group" style="background: var(--win)">
+<div class="kr"><span class="kk">↑ ↓</span><span>Select the slideshow above or below</span></div>
+<div class="kr"><span class="kk">Typing</span><span>Starts a search</span></div>
+<div class="kr"><span class="kk">Ctrl+N</span><span>New Slideshow</span></div>
+<div class="kr"><span class="kk">Ctrl+F</span><span>Search</span></div>
+<div class="kr"><span class="kk">F2</span><span>Rename</span></div>
+<div class="kr"><span class="kk">Ctrl+D</span><span>Duplicate</span></div>
+<div class="kr"><span class="kk">Delete</span><span>Delete the selected slideshows</span></div>
+<div class="kr"><span class="kk">Ctrl+A</span><span>Select every slideshow in the list</span></div>
+</div>
+</div>
+<div>
+<div class="cap">The slideshow</div>
+<div class="group" style="background: var(--win)">
+<div class="kr"><span class="kk">Space</span><span>Play or pause the preview</span></div>
+<div class="kr"><span class="kk">Alt+← Alt+→</span><span>Move the image that has the focus</span></div>
+<div class="kr"><span class="kk">Delete</span><span>On an image: remove it</span></div>
+<div class="kr"><span class="kk">Ctrl+Z, Ctrl+Y</span><span>Undo and redo, Ctrl+Shift+Z too</span></div>
+<div class="kr"><span class="kk">Enter</span><span>Save</span></div>
+<div class="kr"><span class="kk">Ctrl+S</span><span>Save, Ctrl+Enter too</span></div>
+<div class="kr"><span class="kk">Esc</span><span>Closes the menu or sheet, clears the search, then Cancel</span></div>
+</div>
+</div>
+</div>
+</section>
+
+<section>
+<h2 class="h2" style="display: flex; align-items: center; gap: 10px">Changes beyond the UI <span class="chip okchip2" style="font-size: 11px">All approved</span></h2>
+<p class="kd" style="max-width: 920px; margin: -6px 0 16px; font-size: 13px; color: var(--text-2)">The window above already uses these. They change how slideshows get saved, ordered, timed and found, so each one is a rework rule.</p>
+<div class="two">
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Slideshows are made in a window <span class="chip okchip2">Approved, rule 160</span></div><div class="kd" style="margin: 0">The Slideshows window writes the folder in config/fancymenu/slideshows and its properties.txt on Save, so nobody has to. The folder is named after the slideshow. Old slideshows load as they are, and changes show without Reload FancyMenu.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Slideshow images keep their order <span class="chip okchip2">Approved, rule 161</span></div><div class="kd" style="margin: 0">properties.txt saves the file names in the order they play, instead of sorting them by name. Files in the folder that aren&#x27;t in the list come last. Added images get copied into the folder, and a listed file that&#x27;s gone shows as missing.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Slideshow timing is in seconds <span class="chip okchip2">Approved, rule 162</span></div><div class="kd" style="margin: 0">Fade is a time, and 0 switches without fading. Old files with fadespeed load as 5 divided by it. x, y, width and height go away, since backgrounds and elements set them.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Slideshows know where they&#x27;re used <span class="chip okchip2">Approved, rule 163</span></div><div class="kd" style="margin: 0">The index of rule 87 also collects slideshow names: Slideshow backgrounds, Slideshow elements and Pre-Load Resources. Used in, the filter, the rename sheet and the delete sheet read it.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Slideshows are managed where they&#x27;re picked <span class="chip okchip2">Approved, rule 164</span></div><div class="kd" style="margin: 0">The slideshow submenu of rule 133 gets a pencil on every row, then New Slideshow and Manage Slideshows. Opened from there, the window can hand the selected slideshow back. The menu bar gets a Slideshows entry too.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Changes show right away <span class="chip okchip2">Covered, rule 38</span></div><div class="kd" style="margin: 0">A screen or element that shows a slideshow follows every change to it, and Cancel puts everything back.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Cancel asks only when something changed <span class="chip okchip2">Covered, rule 68</span></div><div class="kd" style="margin: 0">Discard 2 changes? only shows when a slideshow changed, or when another one got picked for the place the window was opened from.</div></div>
+<div class="spec-card"><div class="k" style="display: flex; align-items: center; gap: 8px">Mixed selections are visible <span class="chip okchip2">Covered, rule 25</span></div><div class="kd" style="margin: 0">With several slideshows selected, a number that differs shows as Mixed and a switch shows the mixed state.</div></div>
+</div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"$preview":{"width":1440,"height":4805}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark' };
+  }
+}
+</script>
+</body>
+</html>

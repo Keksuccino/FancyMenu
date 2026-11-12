@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Schedulers on the title screen</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.mc-toast{position:absolute;right:18px;top:46px;width:300px;padding:10px 14px 11px;background:#212121;border:2px solid #555;box-shadow:inset 0 0 0 2px #2f2f2f;color:#fff;font-size:12.5px;line-height:1.35;animation:mc-toast-in .25s cubic-bezier(.2,.8,.3,1)}
+.mc-toast b{display:block;color:#ffff55;font-weight:600}
+@keyframes mc-toast-in{from{transform:translateX(330px)}to{transform:none}}
+/* the Firefly swarm's Element Animator: every Reset Element Animator replays it, so the fireflies rise and settle */
+.ffly{position:absolute;width:6px;height:6px;background:#ffe38c}
+.ffs.tw-a .ffly{animation:ff-a 1.8s cubic-bezier(.35,0,.25,1) both}
+.ffs.tw-b .ffly{animation:ff-b 1.8s cubic-bezier(.35,0,.25,1) both}
+@keyframes ff-a{0%{transform:none;opacity:1}40%{transform:translate(4px,-16px);opacity:.3}75%{transform:translate(-2px,-5px);opacity:1}100%{transform:none;opacity:1}}
+@keyframes ff-b{0%{transform:none;opacity:1}40%{transform:translate(4px,-16px);opacity:.3}75%{transform:translate(-2px,-5px);opacity:1}100%{transform:none;opacity:1}}
+</style>
+</helmet>
+<div class="fm {{themeClass}} {{matClass}}" style="position: relative; width: 1440px; height: 900px; overflow: hidden; background: var(--bd)">
+<div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""></div>
+<div class="{{ffCls}}" aria-hidden="true">
+<div class="ffly" style="left: 112px; top: 610px"></div>
+<div class="ffly" style="left: 182px; top: 668px; animation-delay: .18s"></div>
+<div class="ffly" style="left: 64px; top: 520px; animation-delay: .32s"></div>
+<div class="ffly" style="left: 1264px; top: 640px; animation-delay: .1s"></div>
+<div class="ffly" style="left: 1330px; top: 700px; animation-delay: .26s"></div>
+<div class="ffly" style="left: 1372px; top: 560px; animation-delay: .4s"></div>
+</div>
+<div aria-hidden="true" style="position: absolute; left: 16px; bottom: 12px; color: rgba(255, 255, 255, .85); font-size: 12px">Dusk Valley Pack 1.4.2</div>
+<div aria-hidden="true" style="position: absolute; right: 16px; bottom: 12px; color: rgba(255, 255, 255, .85); font-size: 12px">Copyright Mojang AB. Do not distribute!</div>
+<div style="position: absolute; left: 0; right: 0; top: 0"><dc-import name="MenuBar" kind="Overlay" standalone="{{no}}" hint-size="1440px,30px"></dc-import></div>
+<div style="position: absolute; left: 250px; top: 70px"><dc-import name="SchedulersManager" scene="{{scene}}" select="{{select}}" sheet="{{sheet}}" rename-to="{{renameTo}}" add="{{add}}" start="{{start}}" start-ago="{{startAgo}}" filter="{{filter}}" filter-menu="{{filterMenu}}" query="{{query}}" icon-open="{{iconOpen}}" icon-query="{{iconQuery}}" room="830" on-toast="{{onToast}}" on-twinkle="{{onTwinkle}}" width="940" height="760" standalone="{{no}}" hint-size="940px,760px"></dc-import></div>
+<sc-if value="{{toast}}" hint-placeholder-val="{{false}}"><div class="mc-toast" role="status"><b>{{toast}}</b>{{toastFrom}}</div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"scene":{"editor":"enum","options":["Dusk Valley","Empty"],"default":"Dusk Valley"},"select":{"editor":"text","default":"s1"},"sheet":{"editor":"enum","options":["","rename","delete"],"default":""},"renameTo":{"editor":"text","default":""},"add":{"editor":"boolean","default":false},"start":{"editor":"text","default":""},"startAgo":{"editor":"int","default":0},"filter":{"editor":"enum","options":["all","running","stopped","launch","probs"],"default":"all"},"filterMenu":{"editor":"boolean","default":false},"query":{"editor":"text","default":""},"iconOpen":{"editor":"boolean","default":false},"iconQuery":{"editor":"text","default":""},"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  componentWillUnmount() { if (this._toastT) clearTimeout(this._toastT); }
+  renderVals() {
+    const p = this.props, s = this.state || {};
+    return {
+      themeClass: (p.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark',
+      matClass: (p.material ?? 'Blur') === 'Blur' ? 'mat-blur' : '',
+      yes: true, no: false,
+      // A run of a script with Reset Element Animator replays the Firefly swarm behind the window, and Show Toast shows
+      // its toast, like the real actions do.
+      ffCls: 'ffs' + (s.tw ? (s.tw % 2 ? ' tw-a' : ' tw-b') : ''),
+      onTwinkle: () => this.setState({ tw: ((this.state || {}).tw || 0) + 1 }),
+      toast: s.toast || '', toastFrom: s.toastFrom || '',
+      onToast: (text, from) => { if (this._toastT) clearTimeout(this._toastT); this.setState({ toast: '' }); setTimeout(() => this.setState({ toast: text, toastFrom: 'Show Toast, from ' + from }), 0); this._toastT = setTimeout(() => this.setState({ toast: '' }), 4000); },
+      scene: p.scene || 'Dusk Valley', select: p.select ?? 's1', sheet: p.sheet || '', renameTo: p.renameTo || '', add: !!p.add,
+      start: p.start || '', startAgo: +p.startAgo || 0,
+      filter: p.filter || 'all', filterMenu: !!p.filterMenu, query: p.query || '', iconOpen: !!p.iconOpen, iconQuery: p.iconQuery || ''
+    };
+  }
+}
+</script>
+</body>
+</html>

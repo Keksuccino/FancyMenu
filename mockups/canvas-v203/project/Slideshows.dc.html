@@ -1,0 +1,776 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Slideshows</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="{{rootCls}}" style="{{rootStyle}}" data-ss="{{uid}}" onMouseDown="{{activate}}">
+<sc-if value="{{standalone}}" hint-placeholder-val="{{true}}"><div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""><div class="dim"></div></div></sc-if>
+
+<div class="win vm ls ss" role="dialog" aria-label="Slideshows" style="{{winStyle}}" onDragOver="{{fileOver}}" onDrop="{{fileDrop}}">
+<div class="titlebar">
+<div class="tl"><button class="c" aria-label="Cancel and close" onClick="{{cancelAll}}"><span class="ms" aria-hidden="true">close</span></button><button class="m" aria-label="Collapse"><span class="ms" aria-hidden="true">remove</span></button><button class="x" aria-label="Maximize"><span class="ms" aria-hidden="true">open_in_full</span></button></div>
+<div class="wt"><span class="ms" aria-hidden="true">{{ic.show}}</span>Slideshows</div>
+<div></div>
+</div>
+
+<sc-if value="{{anyPopup}}" hint-placeholder-val="{{false}}"><div class="fb-catch" style="z-index: 42" onClick="{{closePopups}}" onContextMenu="{{closePopupsCtx}}"></div></sc-if>
+
+<div class="split">
+<aside class="sidebar vm-side" aria-label="Slideshows list">
+<div class="vm-top">
+<button class="btn tinted" data-tip="Ctrl+N" onClick="{{addNew}}"><span class="ms" aria-hidden="true">{{ic.plus}}</span>New Slideshow</button>
+<label class="field vm-search"><span class="ms" aria-hidden="true">{{ic.search}}</span><input type="text" placeholder="{{searchPh}}" aria-label="Search names and image files" data-fk="{{searchFk}}" value="{{q}}" onInput="{{onSearch}}" onKeyDown="{{searchKey}}"><button class="{{filterBtnCls}}" data-tip="Show" aria-label="Show" aria-haspopup="menu" aria-expanded="{{filterExpanded}}" onClick="{{toggleFilter}}"><span class="ms" aria-hidden="true">{{ic.funnel}}</span></button></label>
+<sc-if value="{{filterChip}}" hint-placeholder-val="{{false}}"><div class="chips"><span class="vm-fchip">{{filterChip}}<button aria-label="Show all slideshows" data-tip="Show all" onClick="{{clearFilter}}"><span class="ms" aria-hidden="true">{{ic.x}}</span></button></span></div></sc-if>
+</div>
+<div class="plist vm-list" role="listbox" aria-label="Slideshows" aria-multiselectable="true">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="4">
+<div class="{{r.cls}}" role="option" aria-selected="{{r.ariaSel}}" onClick="{{r.click}}" onDoubleClick="{{r.dbl}}">
+<span class="{{r.thCls}}" style="{{r.thStyle}}" aria-hidden="true"><sc-if value="{{r.thIcon}}" hint-placeholder-val="{{false}}"><span class="ms" aria-hidden="true">{{r.thIcon}}</span></sc-if></span>
+<span class="ln"><sc-for list="{{r.name}}" as="np" hint-placeholder-count="1"><sc-if value="{{np.hit}}" hint-placeholder-val="{{false}}"><mark>{{np.t}}</mark></sc-if><sc-if value="{{np.plain}}" hint-placeholder-val="{{true}}">{{np.t}}</sc-if></sc-for></span>
+<span class="vic"><sc-if value="{{r.inUse}}" hint-placeholder-val="{{false}}"><span class="vb ss-use" data-tip="{{useBadgeTip}}"><span class="ms" aria-hidden="true">{{ic.image}}</span></span></sc-if></span>
+<span class="{{r.subCls}}"><sc-for list="{{r.sub}}" as="sp" hint-placeholder-count="1"><sc-if value="{{sp.hit}}" hint-placeholder-val="{{false}}"><mark>{{sp.t}}</mark></sc-if><sc-if value="{{sp.plain}}" hint-placeholder-val="{{true}}">{{sp.t}}</sc-if></sc-for></span>
+</div>
+</sc-for>
+<sc-if value="{{noMatch}}" hint-placeholder-val="{{false}}"><div class="vm-nomatch"><span>{{noMatchText}}</span><sc-if value="{{canNewFromQ}}" hint-placeholder-val="{{true}}"><button class="btn sm" onClick="{{newFromQ}}"><span class="ms" aria-hidden="true">{{ic.plus}}</span>New Slideshow “{{qName}}”</button></sc-if></div></sc-if>
+</div>
+</aside>
+
+<div class="vm-main">
+<main class="pcontent vm-content ls-content" data-sk="{{contentSk}}">
+
+<sc-if value="{{one}}" hint-placeholder-val="{{true}}">
+<div class="dhead">
+<sc-if value="{{notRenaming}}" hint-placeholder-val="{{true}}"><div class="dt vm-name" style="font-family: inherit"><span>{{d.name}}</span><button class="ib" data-tip="Rename (F2)" aria-label="Rename" onClick="{{startRename}}"><span class="ms" aria-hidden="true">{{ic.pencil}}</span></button></div></sc-if>
+<sc-if value="{{renaming}}" hint-placeholder-val="{{false}}"><div class="{{renameCls}}"><input type="text" aria-label="New name" style="font-family: inherit; font-size: 13px" data-fk="{{renameFk}}" value="{{renameDraft}}" onInput="{{onRename}}" onKeyDown="{{renameKey}}"></div><div class="{{renameMsgCls}}">{{renameMsg}}</div></sc-if>
+<div class="dm">{{d.meta}}</div>
+<div class="dacts">
+<sc-if value="{{d.canUse}}" hint-placeholder-val="{{false}}"><button class="btn tinted" data-tip="{{d.useTip}}" onClick="{{useSel}}"><span class="ms" aria-hidden="true">{{ic.image}}</span>{{useLabel}}</button></sc-if>
+<button class="btn" data-tip="Ctrl+D" onClick="{{duplicate}}"><span class="ms" aria-hidden="true">{{ic.dup}}</span>Duplicate</button>
+<button class="btn icon" data-tip="Export as Text" aria-label="Export as Text" onClick="{{noop}}"><span class="ms" aria-hidden="true">ios_share</span></button>
+<button class="btn icon danger" data-tip="Delete" aria-label="Delete {{d.name}}" onClick="{{askDelete}}"><span class="ms" aria-hidden="true">{{ic.trash}}</span></button>
+</div>
+</div>
+
+<sc-if value="{{d.missing}}" hint-placeholder-val="{{false}}">
+<div class="callout vm-card err"><span class="ms" aria-hidden="true">{{ic.err}}</span><div><b>{{d.missTitle}}</b><p>{{d.missText}}</p><button class="btn sm" onClick="{{dropMissing}}">{{d.missBtn}}</button></div></div>
+</sc-if>
+
+<sc-if value="{{d.hasPv}}" hint-placeholder-val="{{true}}">
+<div class="group pl-pv">
+<div class="pl-view">
+<button class="{{d.stageCls}}" style="{{d.stageStyle}}" aria-label="{{d.stageLabel}}" onClick="{{togglePlay}}">
+<sc-for list="{{d.layers}}" as="ly" hint-placeholder-count="1"><span class="{{ly.cls}}" style="{{ly.style}}"></span></sc-for>
+<sc-if value="{{d.bigPlay}}" hint-placeholder-val="{{false}}"><span class="pl-big" aria-hidden="true"><span class="ms fill">play_arrow</span></span></sc-if>
+</button>
+</div>
+<div class="pl-info">
+<sc-if value="{{d.playable}}" hint-placeholder-val="{{true}}"><button class="ib pl-pp" data-tip="{{d.playTip}}" aria-label="{{d.playTip}}" onClick="{{togglePlay}}"><span class="ms fill" aria-hidden="true">{{d.playIcon}}</span></button></sc-if>
+<span class="t">{{d.pvPos}}</span>
+<span>{{d.pvFile}}</span>
+<span class="sz">{{d.pvRound}}</span>
+</div>
+</div>
+</sc-if>
+
+<div>
+<div class="sec">Images<sc-if value="{{d.hasImgs}}" hint-placeholder-val="{{true}}"><span class="end"><button class="vm-link" onClick="{{addImages}}">Add Images</button></span></sc-if></div>
+<sc-if value="{{d.hasImgs}}" hint-placeholder-val="{{true}}">
+<div class="group ss-imgs">
+<sc-for list="{{d.imgs}}" as="im" hint-placeholder-count="4">
+<div class="{{im.cls}}" data-img="{{im.i}}" draggable="true" onDragStart="{{im.dragStart}}" onDragOver="{{im.dragOver}}" onDrop="{{im.drop}}" onDragEnd="{{dragEnd}}">
+<button class="th" style="{{im.thStyle}}" aria-label="{{im.aria}}" data-fk="{{im.fk}}" onClick="{{im.click}}"><sc-if value="{{im.bad}}" hint-placeholder-val="{{false}}"><span class="ms" aria-hidden="true">{{ic.broken}}</span></sc-if><span class="no" aria-hidden="true">{{im.no}}</span></button>
+<button class="rm" data-tip="Remove" aria-label="{{im.rmAria}}" onClick="{{im.remove}}"><span class="ms" aria-hidden="true">{{ic.x}}</span></button>
+<span class="fn">{{im.name}}<sc-if value="{{im.fresh}}" hint-placeholder-val="{{false}}"><span class="chip ok">New</span></sc-if><sc-if value="{{im.bad}}" hint-placeholder-val="{{false}}"><i>Missing</i></sc-if></span>
+<sc-if value="{{im.ghost}}" hint-placeholder-val="{{false}}"><span class="ss-ghost" style="{{im.ghostStyle}}" aria-hidden="true"></span></sc-if>
+</div>
+</sc-for>
+</div>
+<p class="foot">{{d.imgNote}}</p>
+</sc-if>
+<sc-if value="{{d.noImgs}}" hint-placeholder-val="{{false}}">
+<div class="group vm-unused ls-nosteps"><span>No images yet. Drop image files onto this window, or pick them with Add Images. PNG and JPEG work, and FancyMenu copies them into the slideshow.</span><button class="btn sm" onClick="{{addImages}}"><span class="ms" aria-hidden="true">{{ic.plus}}</span>Add Images</button></div>
+</sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{many}}" hint-placeholder-val="{{false}}">
+<div class="dhead">
+<div class="dt">{{m.title}}</div>
+<div class="dm">{{m.meta}}</div>
+<div class="dacts"><button class="btn" data-tip="Ctrl+D" onClick="{{duplicate}}"><span class="ms" aria-hidden="true">{{ic.dup}}</span>{{m.dupLabel}}</button><button class="btn icon" data-tip="Export as Text" aria-label="Export as Text" onClick="{{noop}}"><span class="ms" aria-hidden="true">ios_share</span></button>
+<button class="btn icon danger" data-tip="{{m.deleteTip}}" aria-label="{{m.deleteTip}}" onClick="{{askDelete}}"><span class="ms" aria-hidden="true">{{ic.trash}}</span></button></div>
+</div>
+</sc-if>
+
+<sc-if value="{{anySel}}" hint-placeholder-val="{{true}}">
+<div>
+<div class="sec">Playback</div>
+<div class="group ss-play">
+<div class="row"><span class="lbl">Show Each Image For</span><div class="ctl"><label class="{{fe.cls}}"><input type="text" inputmode="decimal" aria-label="Seconds each image shows" placeholder="{{fe.ph}}" data-fk="{{fe.fk}}" value="{{fe.text}}" onFocus="{{fe.focus}}" onInput="{{fe.input}}" onKeyDown="{{fe.key}}" onBlur="{{fe.blur}}"><span class="suf">s</span></label><div class="stepper"><button aria-label="1 second less" data-tip="&minus;1 s" onClick="{{fe.down}}"><span class="ms" aria-hidden="true">remove</span></button><button aria-label="1 second more" data-tip="+1 s" onClick="{{fe.up}}"><span class="ms" aria-hidden="true">add</span></button></div></div></div>
+<div class="row"><span class="lbl">Fade<span class="sub">{{fadeSub}}</span></span><div class="ctl"><label class="{{ff.cls}}"><input type="text" inputmode="decimal" aria-label="Seconds one image fades into the next" placeholder="{{ff.ph}}" data-fk="{{ff.fk}}" value="{{ff.text}}" onFocus="{{ff.focus}}" onInput="{{ff.input}}" onKeyDown="{{ff.key}}" onBlur="{{ff.blur}}"><span class="suf">s</span></label><div class="stepper"><button aria-label="Half a second less" data-tip="&minus;0.5 s" onClick="{{ff.down}}"><span class="ms" aria-hidden="true">remove</span></button><button aria-label="Half a second more" data-tip="+0.5 s" onClick="{{ff.up}}"><span class="ms" aria-hidden="true">add</span></button></div></div></div>
+<div class="row"><span class="lbl">Random Order<span class="sub">{{rnd.sub}}</span></span><div class="ctl"><button class="{{rnd.cls}}" role="switch" aria-checked="{{rnd.aria}}" aria-label="Random Order" onClick="{{rnd.toggle}}"></button></div></div>
+<sc-if value="{{one}}" hint-placeholder-val="{{true}}"><div class="row"><span class="lbl">Overlay Image<span class="sub">On top of every image, like a frame or a logo</span></span><div class="ctl"><span class="vm-cnt none">None</span><button class="btn sm" onClick="{{chooseOverlay}}">Choose</button></div></div></sc-if>
+</div>
+<sc-if value="{{playNote}}" hint-placeholder-val="{{true}}"><p class="foot">{{playNote}}</p></sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{one}}" hint-placeholder-val="{{true}}">
+<div>
+<div class="sec">Used In<span class="end">{{d.useCount}}</span></div>
+<sc-if value="{{d.used}}" hint-placeholder-val="{{true}}">
+<div class="group">
+<sc-for list="{{d.places}}" as="pl" hint-placeholder-count="2">
+<div class="row vm-loc"><span class="ms vm-ui" aria-hidden="true">{{pl.icon}}</span><span class="lbl">{{pl.name}}<sc-if value="{{pl.on}}" hint-placeholder-val="{{true}}"><span class="sub">{{pl.on}}</span></sc-if></span><sc-if value="{{pl.chip}}" hint-placeholder-val="{{true}}"><span class="chip">{{pl.chip}}</span></sc-if></div>
+<sc-for list="{{pl.uses}}" as="u" hint-placeholder-count="1">
+<div class="row child vm-use"><span class="ms vm-ui" aria-hidden="true">{{u.icon}}</span><span class="lbl">{{u.el}}<span class="sub">{{u.what}}</span></span><div class="ctl"><button class="ib" data-tip="{{u.openTip}}" aria-label="{{u.openTip}}" onClick="{{u.open}}"><span class="ms" aria-hidden="true">{{ic.open}}</span></button></div></div>
+</sc-for>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{d.unused}}" hint-placeholder-val="{{false}}"><div class="group vm-unused">Nothing uses it yet. Pick it as the background of a layout, or show it anywhere with a Slideshow element.</div></sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{many}}" hint-placeholder-val="{{false}}">
+<div>
+<div class="sec">Selected</div>
+<div class="group">
+<sc-for list="{{m.rows}}" as="mr" hint-placeholder-count="3">
+<div class="row ls-mrow ss-mrow"><span class="{{mr.thCls}}" style="{{mr.thStyle}}" aria-hidden="true"><sc-if value="{{mr.thIcon}}" hint-placeholder-val="{{false}}"><span class="ms" aria-hidden="true">{{mr.thIcon}}</span></sc-if></span><span class="lbl">{{mr.name}}<span class="sub">{{mr.sub}}</span></span><div class="ctl"><span class="{{mr.cls}}">{{mr.act}}</span></div></div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{none}}" hint-placeholder-val="{{false}}">
+<div class="vm-empty empty">
+<h3 class="t">No slideshows yet</h3>
+<p class="d">A slideshow shows a set of images one after another and fades from each one into the next. Use one as the background of a layout, or put it anywhere with a Slideshow element.</p>
+<div class="vm-ways">
+<div><b>A background</b>The four seasons behind the singleplayer screen</div>
+<div><b>A gallery</b>Pictures of your server in a Slideshow element</div>
+<div><b>An event</b>Winter postcards on the title screen in December</div>
+</div>
+<button class="btn primary" onClick="{{addNew}}"><span class="ms" aria-hidden="true">{{ic.plus}}</span>New Slideshow</button>
+<p class="foot" style="margin-top: 12px">Or drop images onto this window to start one with them.</p>
+</div>
+</sc-if>
+
+<sc-if value="{{nothingSel}}" hint-placeholder-val="{{false}}"><div class="vm-empty empty"><p class="d">Select a slideshow to see its images, how it plays and where it's used.</p></div></sc-if>
+</main>
+<div class="footer line"><span class="lead">{{footLead}}<sc-if value="{{footUndo}}" hint-placeholder-val="{{false}}"> <button class="vm-link" onClick="{{undo}}">Undo</button></sc-if></span><button class="btn wide" onClick="{{cancelAll}}">Cancel</button><button class="btn primary wide" onClick="{{noop}}">Save</button></div>
+</div>
+</div>
+
+<sc-if value="{{filterOpen}}" hint-placeholder-val="{{false}}"><div class="vm-pop" style="{{filterStyle}}"><dc-import name="ContextMenu" items="{{filterItems}}" escape-listener="{{closePopups}}" standalone="{{no}}" hint-size="auto,120px"></dc-import></div></sc-if>
+
+<sc-if value="{{sheetAlert}}" hint-placeholder-val="{{false}}">
+<div class="sheet-dim"></div>
+<div class="sheet vm-alert" role="alertdialog" aria-label="{{al.title}}">
+<span class="vm-aicon"><span class="ms" aria-hidden="true">{{al.icon}}</span></span>
+<div class="vm-st" style="margin-top: 12px">{{al.title}}</div>
+<p>{{al.text}}</p>
+<div class="vm-abtns"><sc-for list="{{al.buttons}}" as="b" hint-placeholder-count="2"><button class="{{b.cls}}" onClick="{{b.click}}">{{b.label}}</button></sc-for></div>
+</div>
+</sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"scene":{"editor":"enum","options":["Dusk Valley","Empty"],"default":"Dusk Valley"},"select":{"editor":"text","default":"s2"},"sheet":{"editor":"enum","options":["","rename","delete"],"default":""},"renameTo":{"editor":"text","default":""},"add":{"editor":"boolean","default":false},"useFor":{"editor":"enum","options":["","Background","Element"],"default":""},"using":{"editor":"text","default":"s4"},"usedBy":{"editor":"text","default":"Winter gallery"},"dropped":{"editor":"int","default":0},"drag":{"editor":"text","default":""},"playing":{"editor":"boolean","default":true},"filter":{"editor":"enum","options":["all","unused","probs"],"default":"all"},"filterMenu":{"editor":"boolean","default":false},"query":{"editor":"text","default":""},"scroll":{"editor":"text","default":""},"onStage":{"editor":null},"width":{"editor":"int","default":960},"height":{"editor":"int","default":760},"standalone":{"editor":"boolean","default":true},"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1040,"height":840}}'>
+// ---------- pictures ----------
+// The sample images are the pictures on preload_art.png, in art pixels, each 128 × 72. Pre-Load Resources shows the
+// same sheet, so the Seasons slideshow looks the same in both windows. fm-ui.css sets the sheet and its size per place
+// (list thumbnail, image tile, preview), so only the spot is set here.
+const ART = {
+  night1: [0, 0], night2: [128, 0], night3: [256, 0], night4: [384, 0],
+  snow1: [0, 72], snow2: [128, 72], snow3: [256, 72], snow4: [384, 72],
+  spring: [0, 144], summer: [128, 144], autumn: [256, 144], winter: [384, 144]
+};
+const spot = (key, k) => 'background-position: ' + -ART[key][0] * k + 'px ' + -ART[key][1] * k + 'px';
+// what Add Images and dropped files add in this mockup, as if picked in Choose Image
+const POOL = [['spring', 'spring_lake.png'], ['autumn', 'autumn_shore.png'], ['night3', 'full_moon.png'], ['snow2', 'first_snow.png'], ['summer', 'late_evening.png'], ['winter', 'frozen_lake.png'], ['night1', 'cabin_lights.png'], ['snow4', 'white_ridge.png']];
+
+// ---------- places that use a slideshow, the same ones Pre-Load Resources and the other managers list ----------
+const PLACES = {
+  title: { name: 'Dusk Valley Title', kind: 'layout', chip: 'Layout', icon: 'layout', on: 'For the title screen', open: 'Open in the layout editor' },
+  worlds: { name: 'Dusk Valley Worlds', kind: 'layout', chip: 'Layout', icon: 'layout', on: 'For the singleplayer screen', open: 'Open in the layout editor' },
+  servers: { name: 'Dusk Valley Servers', kind: 'layout', chip: 'Layout', icon: 'layout', on: 'For the multiplayer screen', open: 'Open in the layout editor' },
+  preload: { name: 'Pre-Load Resources', kind: 'preload', chip: '', icon: 'preload', on: '', open: 'Open in Pre-Load Resources' }
+};
+const whereText = (uses) => {
+  const lays = new Set(uses.filter((u) => PLACES[u.at].kind === 'layout').map((u) => u.at)).size;
+  const parts = [lays ? (lays === 1 ? 'a layout' : lays + ' layouts') : '', uses.some((u) => u.at === 'preload') ? 'Pre-Load Resources' : ''].filter(Boolean);
+  return parts.join(' and ');
+};
+
+// ---------- seed: the Dusk Valley profile's slideshows ----------
+// each and fade are seconds. imgs: f is the file in the slideshow's images folder, a its picture, kb its size, and
+// st is missing for a file that was moved or deleted outside FancyMenu. uses: the places that show the slideshow.
+const img = (f, a, kb, st) => ({ f, a, kb, st: st || 'ok' });
+const seed = () => [
+  { id: 's1', n: 'Dusk Valley Nights', each: 8, fade: 2, random: false,
+    imgs: [img('cabin_on_the_hill.png', 'night1', 512), img('quiet_shore.png', 'night2', 498), img('moon_on_the_lake.png', 'night3', 530), img('pine_ridge.png', 'night4', 476), img('summer_night.png', 'summer', 544)],
+    uses: [{ at: 'servers', el: 'Menu background', what: 'Background · Slideshow', k: 'bg' }] },
+  { id: 's2', n: 'Seasons', each: 6, fade: 1.5, random: false,
+    imgs: [img('01_spring.png', 'spring', 560), img('02_summer.png', 'summer', 544), img('03_autumn.png', 'autumn', 572), img('04_winter.png', 'winter', 524)],
+    uses: [{ at: 'worlds', el: 'Menu background', what: 'Background · Slideshow', k: 'bg' }, { at: 'preload', el: 'Pre-loaded', what: 'Loads while the game starts, so its first image is there right away', k: 'pre' }] },
+  { id: 's3', n: 'Server Highlights', each: 10, fade: 5, random: false,
+    imgs: [img('spawn_town.png', '', 0, 'missing'), img('market_square.png', '', 0, 'missing')], uses: [] },
+  { id: 's4', n: 'Winter Postcards', each: 5, fade: 1, random: true,
+    imgs: [img('frozen_ridge.png', 'snow1', 488), img('pine_valley.png', 'snow2', 502), img('cabin_in_the_snow.png', 'snow3', 517), img('white_peaks.png', 'snow4', 470), img('winter_lake.png', 'winter', 524)],
+    uses: [{ at: 'title', el: 'Winter gallery', what: 'Slideshow element', k: 'el' }] }
+];
+
+class Component extends DCLogic {
+  componentWillUnmount() {
+    if (this._keys) window.removeEventListener('keydown', this._keys, true);
+    if (this._tick) clearInterval(this._tick);
+  }
+
+  renderVals() {
+    const p = this.props, s = this.state || {};
+    const set = (patch) => this.setState(patch);
+    const uid = this._uid || (this._uid = 'ss' + Math.random().toString(36).slice(2, 8));
+    const standalone = p.standalone ?? true;
+    const W = +p.width || 960, H = +p.height || 760;
+    const empty = (p.scene || 'Dusk Valley') === 'Empty';
+    const IC = {
+      show: 'slideshow', plus: 'add', search: 'search', funnel: 'filter_alt', x: 'close', err: 'error', pencil: 'edit',
+      dup: 'library_add', trash: 'delete', open: 'open_in_new', image: 'image', broken: 'broken_image',
+      layout: 'gallery_thumbnail', preload: 'checklist', bg: 'image', el: 'slideshow', pre: 'checklist'
+    };
+
+    // ---------- state ----------
+    if (!this._seed) this._seed = empty ? [] : seed();
+    const list = s.list ?? this._seed;
+    const byId = (id) => list.find((x) => x.id === id);
+    const selRaw = s.sel ?? (empty ? [] : String(p.select ?? 's2').split(',').map((x) => x.trim()).filter(Boolean));
+    const sel = selRaw.filter((id) => byId(id));
+    const sheet = s.sheet ?? (p.sheet || '');
+    const filterOpen = s.filterOpen !== undefined ? s.filterOpen : !!p.filterMenu;
+    const filter = s.filter ?? (p.filter || 'all');
+    const q = s.q ?? (p.query || '');
+    const ql = q.trim().toLowerCase();
+    const renaming = !!s.renaming;
+    // Opened from a place that picks a slideshow, the window can hand one over: useFor says for what, usedBy names
+    // the layout, and using is the slideshow that place shows right now (rule 164).
+    const useFor = empty ? '' : p.useFor || '';
+    const usedBy = p.usedBy || 'Winter gallery';
+    const using = (() => { const id = s.using !== undefined ? s.using : (useFor ? p.using ?? 's4' : ''); return id && byId(id) ? id : ''; })();
+    // how the place that shows a slideshow gets named: an element by its name, a layout's background as such
+    const shows = (n) => (useFor === 'Element' ? usedBy + ' shows ' + n : usedBy + ' shows ' + n + ' as its background');
+    const shownBy = useFor === 'Element' ? usedBy + ' shows it' : 'the background of ' + usedBy;
+    const fk = (k) => uid + '-' + k;
+    const deepQuery = (sel0) => { const walk = (r) => { const hit = r.querySelector(sel0); if (hit) return hit; for (const el of r.querySelectorAll('*')) { if (el.shadowRoot) { const x = walk(el.shadowRoot); if (x) return x; } } return null; }; return walk(document); };
+    const focusLater = (key, select) => setTimeout(() => { const el = deepQuery('[data-fk="' + key + '"]'); if (el) { el.focus(); if (select && el.select) el.select(); } }, 0);
+
+    const snapshot = () => ({ list, sel, using });
+    // Typing into a field coalesces into one undo step per field and focus.
+    const commit = (nl, patch, tag) => {
+      const keep = tag && s.lastTag === tag;
+      set({ list: nl, undoStack: keep ? (s.undoStack || []) : [...(s.undoStack || []), snapshot()].slice(-50), redoStack: [], lastTag: tag || null, ...patch });
+    };
+    const status = (text, canUndo) => ({ status: { text, undo: !!canUndo } });
+    const plural = (n, one, many) => (n === 1 ? one : n + ' ' + many);
+    const secs = (v) => (Math.round(v * 100) / 100) + ' s';
+    const patchSel = (fn) => list.map((x) => (sel.includes(x.id) ? fn(x) : x));
+
+    // ---------- what a slideshow is ----------
+    const okImgs = (x) => x.imgs.filter((i) => i.st !== 'missing');
+    const missing = (x) => x.imgs.filter((i) => i.st === 'missing').length;
+    const problemOf = (x) => (missing(x) ? plural(missing(x), '1 image is missing', 'images are missing') : !x.imgs.length ? 'No images yet' : '');
+    const summary = (x) => plural(x.imgs.length, '1 image', 'images') + ' · ' + secs(x.each) + ' each' + (x.random ? ' · random' : '');
+    const bytes = (x) => { const kb = x.imgs.reduce((a, i) => a + i.kb, 0); return kb >= 1000 ? (Math.round(kb / 100) / 10) + ' MB' : kb + ' KB'; };
+    const thumbOf = (x) => {
+      const first = okImgs(x)[0];
+      if (missing(x)) return { thCls: 'pl-th bad', thStyle: '', thIcon: IC.broken };
+      return first ? { thCls: 'pl-th i-art', thStyle: spot(first.a, .375), thIcon: '' } : { thCls: 'pl-th ic', thStyle: '', thIcon: IC.show };
+    };
+
+    // ---------- list ----------
+    const fits = (x) => (filter === 'unused' ? !x.uses.length : filter === 'probs' ? !!problemOf(x) : true);
+    const hitParts = (text) => {
+      const at = ql ? text.toLowerCase().indexOf(ql) : -1;
+      const P = (t, hit) => ({ t, hit, plain: !hit });
+      return at < 0 ? [P(text, false)] : [P(text.slice(0, at), false), P(text.slice(at, at + ql.length), true), P(text.slice(at + ql.length), false)].filter((y) => y.t);
+    };
+    // the search finds names and the files of a slideshow's images
+    const hitFile = (x) => (ql ? x.imgs.find((i) => i.f.toLowerCase().includes(ql)) : null);
+    const matches = (x) => !ql || x.n.toLowerCase().includes(ql) || !!hitFile(x);
+    const shown = list.filter((x) => fits(x) && matches(x)).sort((a, b) => a.n.localeCompare(b.n));
+    const order = shown.map((x) => x.id);
+
+    const selectRow = (id, e) => {
+      let next;
+      if (e && (e.ctrlKey || e.metaKey)) next = sel.includes(id) ? sel.filter((y) => y !== id) : [...sel, id];
+      else if (e && e.shiftKey && s.anchor && order.includes(s.anchor)) { const a = order.indexOf(s.anchor), b = order.indexOf(id); next = order.slice(Math.min(a, b), Math.max(a, b) + 1); }
+      else next = [id];
+      set({ sel: next, anchor: e && e.shiftKey ? s.anchor : id, renaming: false, filterOpen: false, nf: null, fresh: [] });
+    };
+    const rows = shown.map((x) => {
+      const isSel = sel.includes(x.id);
+      const prob = problemOf(x);
+      const bad = missing(x) > 0;
+      const file = hitFile(x) && !x.n.toLowerCase().includes(ql) ? hitFile(x).f : '';
+      return {
+        cls: 'item tall lsrow plrow' + (isSel ? ' sel' : ''), ariaSel: isSel ? 'true' : 'false', ...thumbOf(x),
+        name: hitParts(x.n), sub: hitParts(file || prob || summary(x)),
+        subCls: 'ls-sub' + (file ? '' : bad ? ' err' : prob ? ' warn' : ''),
+        inUse: using === x.id,
+        click: (e) => selectRow(x.id, e),
+        // where the window can hand a slideshow over, a double-click does it
+        dbl: () => { selectRow(x.id); if (useFor && using !== x.id && okImgs(x).length) use(x); }
+      };
+    });
+
+    // ---------- the preview's clock ----------
+    // One clock per slideshow that plays: the selected one in the preview, and the one the place behind the window
+    // shows. An image stays for its time, then the next one is there and the old one fades out over it, like in game.
+    const now = Date.now();
+    const clocks = this._clocks || (this._clocks = {});
+    const clockOf = (x) => {
+      const n = okImgs(x).length;
+      let c = clocks[x.id];
+      if (!c) c = clocks[x.id] = { i: 0, prev: -1, at: now };
+      if (c.i >= n) { c.i = 0; c.prev = -1; c.at = now; }
+      return c;
+    };
+    const one = sel.length === 1 ? byId(sel[0]) : null;
+    const playing = (s.playing ?? (p.playing ?? true)) && !sheet;
+    this._onTick = () => {
+      const st = this.state || {};
+      const cur = st.list ?? this._seed;
+      const t = Date.now();
+      let moved = false;
+      [one && playing ? one.id : '', using].filter(Boolean).filter((id, i, a) => a.indexOf(id) === i).forEach((id) => {
+        const x = cur.find((y) => y.id === id);
+        const n = x ? x.imgs.filter((i) => i.st !== 'missing').length : 0;
+        const c = clocks[id];
+        if (!x || !c || n < 2 || t - c.at < x.each * 1000) return;
+        c.prev = c.i;
+        // random never shows the same image twice in a row
+        c.i = x.random ? (c.i + 1 + Math.floor(Math.random() * (n - 1))) % n : (c.i + 1) % n;
+        c.at = t;
+        moved = true;
+      });
+      if (moved) this.setState({ tk: t });
+    };
+    if (!this._tick) this._tick = setInterval(() => this._onTick && this._onTick(), 200);
+    const layersOf = (x, k) => { const c = clockOf(x); return okImgs(x).map((im, i) => ({ cls: 'ss-ly' + (i === c.i ? ' on' : '') + (i === c.prev ? ' out' : ''), style: spot(im.a, k) })); };
+    const jump = (x, i) => { const c = clockOf(x); c.prev = -1; c.i = i; c.at = Date.now(); };
+
+    // ---------- actions ----------
+    const use = (x) => {
+      set({ using: x.id, undoStack: [...(s.undoStack || []), snapshot()].slice(-50), redoStack: [], lastTag: null, ...status(shows(x.n) + ' now.', true) });
+    };
+    const doDelete = () => {
+      if (!sel.length) return;
+      const xs = sel.map(byId);
+      const nl = list.filter((x) => !sel.includes(x.id));
+      const idx = Math.max(0, order.indexOf(sel[0]));
+      const rest = order.filter((id) => !sel.includes(id));
+      const nextSel = rest.length ? [rest[Math.min(idx, rest.length - 1)]] : [];
+      const nI = xs.reduce((a, x) => a + x.imgs.length, 0);
+      commit(nl, { sel: nextSel, renaming: false, sheet: '', using: sel.includes(using) ? '' : using, ...status((xs.length === 1 ? 'Deleted ' + xs[0].n : 'Deleted ' + xs.length + ' slideshows') + (nI ? ' and ' + plural(nI, 'its image', 'images') + '.' : '.'), true) });
+    };
+    // Deleting asks only when images go with it or something still shows it. Undo brings it back otherwise.
+    const askDelete = () => { if (!sel.length) return; const xs = sel.map(byId); if (xs.some((x) => x.imgs.length || x.uses.length || using === x.id)) set({ sheet: 'delete', filterOpen: false }); else doDelete(); };
+    let idN = this._idN || 100;
+    const newId = () => { idN += 1; this._idN = idN; return 'n' + idN; };
+    const taken = (n, except) => list.some((x) => x !== except && x.n.toLowerCase() === n.toLowerCase());
+    const freeName = (base) => { let n = base, i = 2; while (taken(n)) n = base + ' ' + i++; return n; };
+    const cleanName = (v) => v.replace(/\s+/g, ' ').replace(/^ /, '');
+    // A copy brings copies of the images along. Nothing shows it yet.
+    const duplicate = () => {
+      if (!sel.length) return;
+      const copies = sel.map(byId).map((x) => Object.assign(JSON.parse(JSON.stringify(x)), { id: newId(), n: freeName(x.n + ' Copy'), uses: [] }));
+      commit([...list, ...copies], { sel: copies.map((c) => c.id), anchor: copies[0].id, ...status(copies.length === 1 ? 'Made ' + copies[0].n + (copies[0].imgs.length ? ', with copies of its images.' : '.') : 'Made ' + copies.length + ' copies, with copies of their images.', true) });
+    };
+    // New Slideshow adds one right away, with a name to type over and the settings a slideshow has without a file today.
+    const blank = (n, imgs) => ({ id: newId(), n, each: 10, fade: 5, random: false, imgs: imgs || [], uses: [] });
+    const addNew = (base) => {
+      const x = blank(freeName(typeof base === 'string' && base ? base : 'New Slideshow'));
+      commit([...list, x], { sel: [x.id], anchor: x.id, q: '', filter: 'all', filterOpen: false, renaming: true, renameDraft: x.n, ...status('Added ' + x.n + '. Type its name, then add images.', true) });
+      focusLater(fk('rename'), true);
+    };
+    if (p.add && !this._added && !empty) { this._added = true; setTimeout(() => addNew(), 0); }
+    // Images get copied into the slideshow's folder, so a slideshow stays one folder that can be shared (rule 161).
+    const picked = (x, n) => { const have = new Set(x.imgs.map((i) => i.f)); return POOL.filter(([, f]) => !have.has(f)).slice(0, n).map(([a, f], i) => img(f, a, 480 + ((x.imgs.length + i) * 37) % 90)); };
+    // Minecraft only reports files once they're dropped, never while they hover over the window, so nothing here
+    // reacts before a drop (rule 118). The Images section says up front that dropping works, and right after a drop
+    // the new images are tagged New and the footer says where they went and which files were left out.
+    const addTo = (x, n, how, skipped) => {
+      const more = picked(x, n);
+      if (!more.length) { set(status(how === 'drop' ? 'Those images are already in ' + x.n + '.' : 'Opens Choose Image, where several files can be picked at once.')); return; }
+      commit(list.map((y) => (y === x ? Object.assign({}, y, { imgs: [...y.imgs, ...more] }) : y)), { fresh: how === 'drop' ? more.map((i) => i.f) : [], ...status('Added ' + plural(more.length, '1 image', 'images') + ' to ' + x.n + (how === 'drop' ? (skipped ? ', skipped ' + skipped + ' (not an image).' : '.') : ', as if picked in Choose Image.'), true) });
+    };
+    const fromDrop = (n) => {
+      const x = blank(freeName('New Slideshow'));
+      x.imgs = picked(x, n);
+      commit([...list, x], { sel: [x.id], anchor: x.id, q: '', filter: 'all', fresh: x.imgs.map((i) => i.f), renaming: true, renameDraft: x.n, ...status('Made ' + x.n + ' from ' + plural(x.imgs.length, '1 image', 'images') + '. Type its name.', true) });
+      focusLater(fk('rename'), true);
+    };
+    const undo = () => {
+      const u = s.undoStack || [];
+      if (!u.length) return;
+      const last = u[u.length - 1];
+      set({ list: last.list, sel: last.sel, using: last.using, undoStack: u.slice(0, -1), redoStack: [...(s.redoStack || []), snapshot()], renaming: false, lastTag: null, nf: null, fresh: [], status: { text: 'Undone.', undo: false } });
+    };
+    const redo = () => {
+      const r = s.redoStack || [];
+      if (!r.length) return;
+      const last = r[r.length - 1];
+      set({ list: last.list, sel: last.sel, using: last.using, redoStack: r.slice(0, -1), undoStack: [...(s.undoStack || []), snapshot()], lastTag: null, nf: null, status: { text: 'Redone.', undo: false } });
+    };
+    // Nothing gets saved before Save, so Cancel only asks when there is something to lose (rule 68).
+    const using0 = useFor ? (p.using ?? 's4') : '';
+    const changes = (() => {
+      const orig = this._seed, j = (x) => JSON.stringify(x);
+      const ids = new Set(orig.map((x) => x.id).concat(list.map((x) => x.id)));
+      let n = using !== using0 ? 1 : 0; ids.forEach((id) => { const a = orig.find((x) => x.id === id), b = list.find((x) => x.id === id); if (!a || !b || j(a) !== j(b)) n++; });
+      return n;
+    })();
+    const discard = () => set({ list: this._seed, sel: empty ? [] : [String(p.select ?? 's2').split(',')[0]], using: using0, undoStack: [], redoStack: [], renaming: false, sheet: '', filterOpen: false, nf: null, status: { text: 'Your changes were taken back. The window closes now.', undo: false } });
+    const cancelAll = () => { if (changes) set({ sheet: 'discard', filterOpen: false }); else set({ filterOpen: false, ...status('Nothing changed, so Cancel closes the window without asking.') }); };
+    const startRename = () => { if (!one) return; set({ renaming: true, renameDraft: one.n }); focusLater(fk('rename'), true); };
+    const checkName = (draft, x) => {
+      const n = draft.trim();
+      if (!n) return { ok: false, bad: false, msg: 'A name people will recognize, like Seasons.' };
+      if (taken(n, x)) return { ok: false, bad: true, msg: 'A slideshow called ' + n + ' already exists.' };
+      return { ok: true, bad: false, msg: 'Enter renames it, Esc keeps the old name.' };
+    };
+    // Places find a slideshow by its name, so renaming one that's shown somewhere asks whether they should follow (rule 163).
+    const applyRename = (x, to, update) => {
+      const nl = list.map((y) => (y === x ? Object.assign({}, y, { n: to, uses: update ? y.uses : [] }) : y));
+      const c = x.uses.length;
+      commit(nl, { renaming: false, sheet: '', ...status(c && update ? 'Renamed it to ' + to + ' and updated ' + (c === 1 ? 'the place' : c === 2 ? 'both places' : 'all ' + c + ' places') + ' that use it.' : c ? 'Renamed it to ' + to + '. ' + (c === 1 ? 'The place that uses ' + x.n + ' still says ' + x.n + ', so it shows' : 'The ' + c + ' places that use ' + x.n + ' still say ' + x.n + ', so they show') + ' nothing.' : 'Renamed it to ' + to + '.', true) });
+    };
+    const tryRename = (x, draft) => {
+      const to = draft.trim();
+      if (to === x.n) { set({ renaming: false }); return; }
+      if (!checkName(to, x).ok) return;
+      if (x.uses.length) set({ sheet: 'rename', renameTo: to, renaming: false });
+      else applyRename(x, to, false);
+    };
+
+    // ---------- images: picking, moving, removing ----------
+    const patchOne = (x, patch) => list.map((y) => (y === x ? Object.assign({}, y, patch) : y));
+    const removeImg = (x, i) => {
+      const im = x.imgs[i];
+      commit(patchOne(x, { imgs: x.imgs.filter((_, j) => j !== i) }), status('Removed ' + im.f + ' from ' + x.n + '.' + (im.st === 'missing' ? '' : ' Its file gets deleted with Save.'), true));
+    };
+    const moveImg = (x, from, to) => {
+      // to is the gap the image lands in: 0 is before the first image, the image count is after the last
+      const at = to > from ? to - 1 : to;
+      if (at === from) { set({ dragFrom: null, dragTo: null }); return; }
+      const imgs = x.imgs.slice(); const [im] = imgs.splice(from, 1); imgs.splice(at, 0, im);
+      const c = clockOf(x); c.i = 0; c.prev = -1; c.at = Date.now();
+      commit(patchOne(x, { imgs }), { dragFrom: null, dragTo: null, ...status('Moved ' + im.f + ' to place ' + (at + 1) + '.', true) });
+      focusLater(fk('img' + at));
+    };
+    // a board can show an image mid-move: "1>3" is the second image over the gap before the fourth
+    const boardDrag = (() => { const m = /^(\d+)>(\d+)$/.exec(p.drag || ''); return m && s.dragFrom === undefined && !s.dragDone ? { from: +m[1], to: +m[2], ghost: true } : null; })();
+    const dragFrom = boardDrag ? boardDrag.from : (s.dragFrom ?? null);
+    const dragTo = boardDrag ? boardDrag.to : (s.dragTo ?? null);
+
+    // ---------- details ----------
+    const many = sel.length > 1;
+    const selXs = sel.map(byId);
+    let d = {};
+    if (one) {
+      const x = one, ok = okImgs(x), c = clockOf(x), miss = missing(x);
+      const groups = [];
+      x.uses.forEach((u) => {
+        let g = groups.find((y) => y.at === u.at);
+        const P = PLACES[u.at];
+        if (!g) { g = { at: u.at, name: P.name, on: P.on || '', chip: P.chip, icon: IC[P.icon], uses: [] }; groups.push(g); }
+        const open = P.kind === 'layout' ? () => set(status('Saves first, then opens ' + P.name + ' in the layout editor' + (u.k === 'el' ? ', with ' + u.el + ' selected.' : '.'))) : () => set(status('Saves first, then opens Pre-Load Resources with ' + x.n + ' selected.'));
+        g.uses.push({ el: u.el, what: u.what, icon: IC[u.k], openTip: P.open, open });
+      });
+      const nU = x.uses.length;
+      const isUsing = using === x.id;
+      const stageOn = ok.length > 0;
+      d = {
+        name: x.n,
+        meta: [plural(x.imgs.length, '1 image', 'images'), ok.length ? bytes(x) : '', isUsing ? shownBy : ''].filter(Boolean).join(' · '),
+        canUse: !!useFor && !isUsing && ok.length > 0,
+        useTip: 'Double-click the slideshow in the list does the same',
+        missing: miss > 0,
+        missTitle: miss === 1 ? x.imgs.find((i) => i.st === 'missing').f + ' is missing' : miss + ' images are missing',
+        missText: (miss === 1 ? 'The file was' : 'The files were') + ' moved or deleted outside FancyMenu, so the slideshow skips ' + (miss === 1 ? 'it' : 'them') + (ok.length ? '.' : ' and shows nothing.') + ' Put ' + (miss === 1 ? 'it' : 'them') + ' back into the slideshow\'s folder, or remove ' + (miss === 1 ? 'it' : 'them') + ' here.',
+        missBtn: miss === 1 ? 'Remove It' : 'Remove ' + miss + ' Images',
+        hasPv: stageOn,
+        stageCls: 'ss-stage' + (ok.length > 1 ? '' : ' still'), stageStyle: '--fade: ' + x.fade + 's',
+        stageLabel: ok.length > 1 ? (playing ? 'Pause the preview' : 'Play the preview') : 'Preview',
+        layers: layersOf(x, 3),
+        bigPlay: stageOn && !playing && ok.length > 1,
+        playable: ok.length > 1, playIcon: playing ? 'pause' : 'play_arrow', playTip: playing ? 'Pause (Space)' : 'Play (Space)',
+        pvPos: ok.length ? 'Image ' + (c.i + 1) + ' of ' + ok.length : '',
+        pvFile: ok.length ? ok[c.i].f : '',
+        pvRound: ok.length > 1 ? 'One round takes ' + secs(ok.length * x.each) : '',
+        hasImgs: x.imgs.length > 0, noImgs: !x.imgs.length,
+        imgs: x.imgs.map((im, i) => {
+          const bad = im.st === 'missing';
+          const okI = ok.indexOf(im);
+          return {
+            f: im.f, bad, no: String(i + 1), i: String(i), fk: fk('img' + i), fresh: (s.fresh || []).includes(im.f),
+            // a long file name breaks after an underscore or a dash instead of in the middle of a word
+            name: im.f.replace(/([_-])/g, '$1\u200b'),
+            cls: 'ss-img' + (okI >= 0 && okI === c.i ? ' cur' : '') + (bad ? ' bad' : '') + (dragFrom === i ? ' drag' : '') + (dragFrom !== null && dragTo === i ? ' before' : '') + (dragFrom !== null && dragTo === x.imgs.length && i === x.imgs.length - 1 ? ' after' : ''),
+            thStyle: bad ? '' : spot(im.a, 1),
+            aria: bad ? im.f + ', missing' : 'Show ' + im.f + ' in the preview',
+            rmAria: 'Remove ' + im.f,
+            click: () => { if (okI >= 0) { jump(x, okI); set({ tk: Date.now() }); } },
+            remove: (e) => { e.stopPropagation(); removeImg(x, i); },
+            dragStart: (e) => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', im.f); set({ dragFrom: i, dragTo: null }); },
+            // the left half of an image is the gap before it, the right half the gap after it
+            dragOver: (e) => { if (s.dragFrom === null || s.dragFrom === undefined) return; e.preventDefault(); const r = e.currentTarget.getBoundingClientRect(); const to = e.clientX < r.left + r.width / 2 ? i : i + 1; if (to !== s.dragTo) set({ dragTo: to }); },
+            drop: (e) => { if (s.dragFrom === null || s.dragFrom === undefined) return; e.preventDefault(); e.stopPropagation(); moveImg(x, s.dragFrom, s.dragTo ?? i); },
+            ghost: !!(boardDrag && boardDrag.ghost && dragTo === i), ghostStyle: boardDrag && x.imgs[boardDrag.from] && x.imgs[boardDrag.from].a ? spot(x.imgs[boardDrag.from].a, 1) : ''
+          };
+        }),
+        imgNote: (x.random ? 'Random Order is on, so the order here doesn\'t matter.' : x.imgs.length > 1 ? 'Drag an image to move it.' : 'With one image, the slideshow just shows it.') + ' Drop image files onto the window to add more.',
+        used: nU > 0, unused: nU === 0, places: groups,
+        useCount: nU ? plural(nU, '1 place', 'places') + ' in ' + whereText(x.uses) : ''
+      };
+    }
+
+    // ---------- playback: one builder for one slideshow or several ----------
+    // A number field keeps what gets typed until Enter or a click elsewhere, then sets it for everything selected.
+    // Several slideshows that differ show Mixed (rule 25).
+    const numField = (key, step, min, max, say) => {
+      const vals = [...new Set(selXs.map((x) => x[key]))];
+      const mixed = vals.length > 1;
+      const draft = s.nf && s.nf.key === key ? s.nf.text : null;
+      const apply = (v) => {
+        const nv = Math.round(Math.max(min, Math.min(max, v)) * 100) / 100;
+        // a fade can't take longer than an image shows, so the two pull each other along
+        const nl = patchSel((x) => Object.assign({}, x, { [key]: nv }, key === 'each' && x.fade > nv ? { fade: nv } : {}, key === 'fade' && x.each < nv ? { each: nv } : {}));
+        commit(nl, { nf: null, ...status(say(nv), true) }, 'n:' + key + ':' + sel.join());
+      };
+      const base = mixed ? Math.min(...vals) : vals[0];
+      const parse = (t) => { const v = parseFloat(String(t).replace(',', '.')); return isFinite(v) ? v : null; };
+      const done = () => { if (draft === null) return; const v = parse(draft); if (v === null || (!mixed && v === vals[0])) set({ nf: null }); else apply(v); };
+      return {
+        cls: 'field num', fk: fk(key), ph: mixed ? 'Mixed' : '', text: draft !== null ? draft : mixed ? '' : String(vals[0]),
+        focus: () => set({ nf: { key, text: mixed ? '' : String(vals[0]) }, lastTag: null }),
+        input: (e) => set({ nf: { key, text: e.target.value.replace(/[^0-9.,]/g, '') } }),
+        key: (e) => { if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); done(); e.target.blur(); } if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); set({ nf: null }); e.target.blur(); } },
+        blur: done,
+        up: () => apply(base + step), down: () => apply(base - step)
+      };
+    };
+    const who = selXs.length === 1 ? selXs[0].n : 'All ' + selXs.length;
+    const fe = sel.length ? numField('each', 1, 1, 600, (v) => who + (selXs.length === 1 ? ' shows' : ' show') + ' each image for ' + secs(v) + ' now.') : {};
+    const ff = sel.length ? numField('fade', .5, 0, 60, (v) => (v ? who + (selXs.length === 1 ? ' fades' : ' fade') + ' for ' + secs(v) + ' now.' : who + (selXs.length === 1 ? ' switches' : ' switch') + ' without fading now.')) : {};
+    const nRnd = selXs.filter((x) => x.random).length;
+    const rndMixed = nRnd > 0 && nRnd < selXs.length;
+    const rnd = {
+      cls: 'sw' + (rndMixed ? ' mixed' : nRnd ? ' on' : ''), aria: rndMixed ? 'mixed' : nRnd ? 'true' : 'false',
+      sub: rndMixed ? 'On for ' + nRnd + ' of ' + selXs.length : 'Never the same image twice in a row',
+      toggle: () => { const to = rndMixed || !nRnd; commit(patchSel((x) => Object.assign({}, x, { random: to })), status(to ? who + (selXs.length === 1 ? ' plays' : ' play') + ' in a random order now.' : who + (selXs.length === 1 ? ' plays' : ' play') + ' from the first image to the last again.', true)); }
+    };
+    const fades = [...new Set(selXs.map((x) => x.fade))];
+    const fadeSub = fades.length === 1 && fades[0] === 0 ? 'Switches without fading' : 'How long one image blends into the next';
+    const playNote = one && okImgs(one).length > 1 ? 'The fade is part of the ' + secs(one.each) + ', so one round takes ' + secs(okImgs(one).length * one.each) + '.' : many ? 'Changes here set all ' + selXs.length + ' slideshows.' : '';
+
+    // ---------- details: several slideshows ----------
+    let m = {};
+    if (many) {
+      const nI = selXs.reduce((a, x) => a + x.imgs.length, 0);
+      m = {
+        title: selXs.length + ' slideshows', meta: plural(nI, '1 image', 'images') + ' in all',
+        dupLabel: 'Duplicate ' + selXs.length, deleteTip: 'Delete ' + selXs.length + ' slideshows',
+        rows: selXs.map((x) => { const prob = problemOf(x); return { ...thumbOf(x), name: x.n, sub: prob || summary(x), act: x.uses.length ? plural(x.uses.length, '1 place', 'places') : 'Not used anywhere', cls: 'vm-cnt' + (x.uses.length ? '' : ' none') }; })
+      };
+    }
+
+    // ---------- the filter ----------
+    const anchorOf = (el) => { const w = el.closest('.win'); const wr = w.getBoundingClientRect(), r0 = el.getBoundingClientRect(); const k = wr.width / w.offsetWidth || 1; return [Math.round((r0.left - wr.left) / k), Math.round((r0.bottom - wr.top) / k + 4)]; };
+    const pickF = (patch) => () => set({ ...patch, filterOpen: false });
+    const filterItems = [
+      { head: 'Show' },
+      { radio: true, checked: filter === 'all', label: 'All Slideshows', click: pickF({ filter: 'all' }) },
+      { radio: true, checked: filter === 'unused', label: 'Not Used', click: pickF({ filter: 'unused' }) },
+      { radio: true, checked: filter === 'probs', label: 'With Problems', click: pickF({ filter: 'probs' }) }
+    ];
+    const FILTER_CHIP = { unused: 'Not used', probs: 'With problems' };
+
+    // ---------- files dropped in from outside ----------
+    // Dropped files go into the selected slideshow, or into a new one when none or several are selected. The browser
+    // only hands a drop over when the dragover before it was accepted, so fileOver does that and nothing else: the
+    // window never shows a target while files hover, because the game can't know about them then (rule 118).
+    const hasFiles = (e) => !!(e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files'));
+    const isImage = (f) => /\.(png|jpe?g)$/i.test(f.name);
+    const fileOver = (e) => { if (hasFiles(e) && !sheet) e.preventDefault(); };
+    const fileDrop = (e) => {
+      if (!hasFiles(e) || sheet) return;
+      e.preventDefault();
+      const files = Array.from(e.dataTransfer.files || []);
+      const n = files.filter(isImage).length, other = files.find((f) => !isImage(f));
+      // a drop without any image gets said out loud instead of doing nothing
+      if (!n) { set(status(other ? other.name + ' isn\'t a PNG or JPEG image, so nothing was added.' : 'Nothing was added.')); return; }
+      if (one) addTo(one, n, 'drop', other ? other.name : ''); else fromDrop(n);
+    };
+    // a board can show the moment after a drop: that many images, and one file that wasn't an image
+    if (p.dropped && !this._dropped && !empty && one) { this._dropped = true; setTimeout(() => addTo(one, +p.dropped, 'drop', 'notes.txt'), 0); }
+
+    // ---------- sheets ----------
+    let al = { buttons: [] };
+    if (sheet === 'discard') al = {
+      icon: 'undo', title: changes === 1 ? 'Discard your change?' : 'Discard ' + changes + ' changes?',
+      text: 'Cancel puts every slideshow back the way it was when you opened this window.' + (using !== using0 && byId(using0) ? ' ' + usedBy + ' keeps ' + byId(using0).n + '.' : ''),
+      buttons: [{ cls: 'btn primary danger', label: 'Discard Changes', click: discard }, { cls: 'btn', label: 'Keep Editing', click: () => set({ sheet: '' }) }]
+    };
+    else if (sheet === 'rename' && one) {
+      const to = s.renameTo ?? (p.renameTo || 'Four Seasons');
+      const c = one.uses.length;
+      al = {
+        icon: IC.pencil, title: 'Rename ' + one.n + ' to ' + to + '?',
+        text: one.n + ' is used in ' + plural(c, '1 place', 'places') + ', in ' + whereText(one.uses) + '. FancyMenu can change ' + (c === 1 ? 'it' : 'them') + ' to ' + to + ' too, so ' + (c === 1 ? 'it keeps' : 'they keep') + ' showing it. Its images move with it either way.',
+        buttons: [
+          { cls: 'btn primary', label: c === 1 ? 'Rename and Update It' : 'Rename and Update ' + c + ' Places', click: () => applyRename(one, to, true) },
+          { cls: 'btn', label: 'Only Rename', click: () => applyRename(one, to, false) },
+          { cls: 'btn', label: 'Cancel', click: () => set({ sheet: '' }) }
+        ]
+      };
+    } else if (sheet === 'delete' && sel.length) {
+      const xs = selXs, one1 = xs.length === 1;
+      const nI = xs.reduce((a, x) => a + x.imgs.filter((i) => i.st !== 'missing').length, 0);
+      const c = xs.reduce((a, x) => a + x.uses.length, 0);
+      const parts = [];
+      if (nI) parts.push(one1 ? plural(nI, 'Its image gets', 'Its ' + nI + ' images get').replace(/^\d+ /, '') + ' deleted with it.' : plural(nI, 'Their image gets', 'Their ' + nI + ' images get').replace(/^\d+ /, '') + ' deleted with them.');
+      if (c) parts.push((one1 ? 'It\'s' : 'They\'re') + ' still used in ' + plural(c, '1 place', 'places') + ', which ' + (c === 1 ? 'shows' : 'show') + ' nothing from then on.');
+      parts.push('Undo brings everything back until you press Save.');
+      al = {
+        icon: IC.trash, title: one1 ? 'Delete ' + xs[0].n + '?' : 'Delete ' + xs.length + ' slideshows?',
+        text: parts.join(' '),
+        buttons: [{ cls: 'btn primary danger', label: nI ? (one1 ? 'Delete Slideshow and Images' : 'Delete ' + xs.length + ' Slideshows and Images') : 'Delete', click: doDelete }, { cls: 'btn', label: 'Cancel', click: () => set({ sheet: '' }) }]
+      };
+    }
+
+    // ---------- the place behind the window ----------
+    // The scene draws the slideshow that the place behind the window shows, so every change to it shows right away (rule 38).
+    const ux = using ? byId(using) : null;
+    const stage = ux && okImgs(ux).length ? { id: ux.id, n: ux.n, fade: ux.fade, i: clockOf(ux).i, prev: clockOf(ux).prev, arts: okImgs(ux).map((i) => i.a) } : null;
+    const stageKey = JSON.stringify(stage);
+    if (stageKey !== this._stageKey) { this._stageKey = stageKey; if (typeof p.onStage === 'function') setTimeout(() => p.onStage(stage), 0); }
+
+    // ---------- keyboard ----------
+    this._onKey = (e) => {
+      if (window.__ssActive !== uid) return;
+      const tag = (e.target && e.target.tagName) || '';
+      const inField = tag === 'INPUT' || tag === 'TEXTAREA';
+      const mod = e.ctrlKey || e.metaKey;
+      const st = this.state || {};
+      const cur = st.sel ?? sel;
+      if (e.key === 'Escape') {
+        if (sheet) set({ sheet: '' });
+        else if (filterOpen) set({ filterOpen: false });
+        else if (renaming) set({ renaming: false });
+        else if (q && !inField) set({ q: '' });
+        // with nothing else to close, Esc is Cancel, like closing the window
+        else if (!inField) cancelAll();
+        return;
+      }
+      if (sheet) return;
+      if (mod && e.key.toLowerCase() === 'n') { e.preventDefault(); addNew(); return; }
+      if (mod && e.key.toLowerCase() === 'f') { e.preventDefault(); focusLater(fk('search'), true); return; }
+      // Enter, Ctrl+Enter and Ctrl+S press Save
+      if (mod && (e.key === 'Enter' || e.key.toLowerCase() === 's')) { e.preventDefault(); return; }
+      if (inField) return;
+      // while an image has the focus, Delete and Alt with the arrow keys belong to it instead of the slideshow
+      const tile = e.target && e.target.closest ? e.target.closest('[data-img]') : null;
+      const ti = tile && one ? +tile.getAttribute('data-img') : -1;
+      if (ti >= 0 && e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { e.preventDefault(); const to = e.key === 'ArrowLeft' ? ti - 1 : ti + 2; if (to >= 0 && to <= one.imgs.length) moveImg(one, ti, to); return; }
+      if (ti >= 0 && (e.key === 'Delete' || e.key === 'Backspace')) { e.preventDefault(); removeImg(one, ti); return; }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (!order.length) return;
+        const at0 = order.indexOf(cur[cur.length - 1]);
+        const nx = Math.max(0, Math.min(order.length - 1, at0 + (e.key === 'ArrowDown' ? 1 : -1)));
+        if (e.shiftKey && st.anchor) { const a = order.indexOf(st.anchor); set({ sel: order.slice(Math.min(a, nx), Math.max(a, nx) + 1) }); }
+        else set({ sel: [order[nx]], anchor: order[nx], renaming: false });
+        return;
+      }
+      if (e.key === 'Enter') { e.preventDefault(); return; }
+      if (e.key === 'F2') { e.preventDefault(); startRename(); return; }
+      if (e.key === ' ') { e.preventDefault(); if (one && okImgs(one).length > 1) set({ playing: !playing }); return; }
+      if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); askDelete(); return; }
+      if (mod && e.key.toLowerCase() === 'a') { e.preventDefault(); set({ sel: order.slice() }); return; }
+      if (mod && e.key.toLowerCase() === 'd') { e.preventDefault(); duplicate(); return; }
+      if (mod && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))) { e.preventDefault(); redo(); return; }
+      if (mod && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
+      if (!mod && !e.altKey && e.key.length === 1) { set({ q: q + e.key }); focusLater(fk('search')); }
+    };
+    if (!this._keys) { this._keys = (e) => this._onKey && this._onKey(e); window.addEventListener('keydown', this._keys, true); }
+    // a board can show the lower part of the details
+    if (p.scroll && !this._scrolled) { this._scrolled = true; setTimeout(() => { const el = deepQuery('[data-ss="' + uid + '"] .pcontent'); if (el) el.scrollTop = p.scroll === 'end' ? el.scrollHeight : +p.scroll || 0; }, 80); }
+
+    const stt = s.status;
+    const rDraft = s.renameDraft ?? (one ? one.n : '');
+    const rCheck = one ? checkName(rDraft, one) : { ok: false, bad: false, msg: '' };
+    const qName = q.trim();
+    return {
+      uid, ic: IC, standalone, yes: true, no: false, noop: () => {},
+      rootCls: standalone ? 'fm ' + ((p.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark') + ((p.material ?? 'Blur') === 'Blur' ? ' mat-blur' : '') : '',
+      rootStyle: standalone ? 'position: relative; width: ' + (W + 80) + 'px; height: ' + (H + 80) + 'px; overflow: hidden; background: var(--bd)' : 'position: relative; width: ' + W + 'px; height: ' + H + 'px',
+      winStyle: (standalone ? 'left: 40px; top: 40px; ' : 'left: 0; top: 0; ') + 'width: ' + W + 'px; height: ' + H + 'px',
+      activate: () => { window.__ssActive = uid; },
+      searchFk: fk('search'), renameFk: fk('rename'), contentSk: fk('content') + '-' + (sel[0] || ''),
+      searchPh: 'Search ' + (list.length ? plural(list.length, '1 slideshow', 'slideshows') : 'slideshows'), q,
+      onSearch: (e) => set({ q: e.target.value }),
+      searchKey: (e) => {
+        if (e.key === 'Escape') { set({ q: '' }); e.target.blur(); }
+        if ((e.key === 'ArrowDown' || e.key === 'Enter') && order.length) { e.preventDefault(); e.stopPropagation(); e.target.blur(); set({ sel: [order[0]], anchor: order[0] }); }
+      },
+      addNew: () => addNew(),
+      filterBtnCls: 'ib' + (filter !== 'all' || filterOpen ? ' on' : ''), filterExpanded: filterOpen ? 'true' : 'false',
+      toggleFilter: (e) => { e.preventDefault(); set({ filterOpen: !filterOpen, filterAt: anchorOf(e.currentTarget) }); },
+      filterChip: filter !== 'all' ? FILTER_CHIP[filter] : '', clearFilter: () => set({ filter: 'all' }),
+      rows, useBadgeTip: useFor === 'Element' ? usedBy + ' shows it' : 'The background of ' + usedBy + ' shows it',
+      noMatch: !rows.length && list.length > 0, noMatchText: ql ? 'No slideshow matches “' + qName + '”.' : 'No slideshow fits this filter.',
+      canNewFromQ: !!qName && !taken(qName), qName, newFromQ: () => addNew(qName),
+      one: !!one, many, anySel: sel.length > 0, none: !list.length, nothingSel: !sel.length && list.length > 0,
+      d, m, fe, ff, rnd, fadeSub, playNote,
+      useLabel: useFor === 'Element' ? 'Use in Element' : 'Use as Background', useSel: () => { if (one) use(one); },
+      notRenaming: !renaming, renaming, renameDraft: rDraft,
+      renameCls: 'field vm-rename' + (rCheck.bad ? ' bad' : ''), renameMsgCls: rCheck.bad ? 'err-msg vm-rmsg' : 'foot vm-rmsg',
+      renameMsg: rCheck.msg,
+      onRename: (e) => set({ renameDraft: cleanName(e.target.value) }),
+      renameKey: (e) => {
+        if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); set({ renaming: false }); return; }
+        if (e.key === 'Enter' && one) { e.preventDefault(); e.stopPropagation(); tryRename(one, s.renameDraft ?? one.n); }
+      },
+      startRename, duplicate, askDelete,
+      togglePlay: () => { if (one && okImgs(one).length > 1) { if (!playing) clockOf(one).at = Date.now(); set({ playing: !playing }); } },
+      addImages: () => { if (one) addTo(one, 2, 'pick'); },
+      dropMissing: () => { if (one) commit(patchOne(one, { imgs: okImgs(one) }), status('Removed ' + plural(missing(one), 'the missing image', 'missing images') + ' from ' + one.n + '.', true)); },
+      chooseOverlay: () => { if (one) set(status('Opens Choose Image for the overlay of ' + one.n + '.')); },
+      dragEnd: () => set({ dragFrom: null, dragTo: null, dragDone: true }),
+      fileOver, fileDrop,
+      footLead: stt ? stt.text : ux ? shows(ux.n) + '. Changes show right away.' : 'Changes show right away wherever a slideshow is on screen.', footUndo: !!(stt && stt.undo), undo, cancelAll,
+      anyPopup: !!filterOpen,
+      filterOpen, filterItems, filterStyle: 'left: ' + (s.filterAt ? s.filterAt[0] : 252) + 'px; top: ' + (s.filterAt ? s.filterAt[1] : 120) + 'px',
+      closePopups: () => set({ filterOpen: false }),
+      closePopupsCtx: (e) => { e.preventDefault(); set({ filterOpen: false }); },
+      sheetAlert: (sheet === 'discard' || sheet === 'rename' || sheet === 'delete') && al.buttons.length > 0, al
+    };
+  }
+}
+</script>
+</body>
+</html>
