@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Layout editor with the Layers panel</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="fm {{themeClass}} {{matClass}}" style="position: relative; width: 1440px; height: 900px; overflow: hidden; background: var(--bd)">
+
+<div class="backdrop" aria-hidden="true" style="background: #15182c">
+<sc-if value="{{show.bg}}" hint-placeholder-val="{{true}}"><img class="art" src="dusk_valley.png" alt=""></sc-if>
+<div class="gridlines"></div>
+</div>
+
+<sc-if value="{{show.fireflies}}" hint-placeholder-val="{{true}}">
+<div aria-hidden="true">
+<div style="position: absolute; left: 312px; top: 610px; width: 6px; height: 6px; background: #ffe38c"></div>
+<div style="position: absolute; left: 402px; top: 668px; width: 6px; height: 6px; background: #ffe38c"></div>
+<div style="position: absolute; left: 1004px; top: 640px; width: 6px; height: 6px; background: #ffe38c"></div>
+<div style="position: absolute; left: 1120px; top: 700px; width: 6px; height: 6px; background: #ffe38c"></div>
+<div style="position: absolute; left: 238px; top: 720px; width: 6px; height: 6px; background: #ffe38c"></div>
+</div>
+</sc-if>
+
+<sc-if value="{{show.title}}" hint-placeholder-val="{{true}}"><div class="{{elCls.title}}" style="left: 500px; top: 150px; width: 440px; height: 84px; display: grid; place-items: center; color: #fff; font-size: 52px; font-weight: 700; letter-spacing: 1px; text-shadow: 0 4px 0 rgba(0, 0, 0, .35)">Dusk Valley</div></sc-if>
+<sc-if value="{{show.splash}}" hint-placeholder-val="{{true}}"><div class="{{elCls.splash}}" style="left: 846px; top: 226px; padding: 2px 8px; color: #ffe066; font-size: 17px; font-weight: 700; transform: rotate(-12deg); text-shadow: 0 2px 0 rgba(0, 0, 0, .4)">Now with fireflies!</div></sc-if>
+<sc-if value="{{show.play}}" hint-placeholder-val="{{true}}"><div class="{{elCls.play}}" style="left: 590px; top: 420px; width: 260px; height: 38px">Play</div></sc-if>
+<sc-if value="{{show.options}}" hint-placeholder-val="{{true}}"><div class="{{elCls.options}}" style="left: 590px; top: 468px; width: 260px; height: 38px">Options</div></sc-if>
+<sc-if value="{{show.quit}}" hint-placeholder-val="{{true}}"><div class="{{elCls.quit}}" style="left: 590px; top: 516px; width: 260px; height: 38px">Quit Game</div></sc-if>
+<sc-if value="{{show.version}}" hint-placeholder-val="{{true}}"><div class="{{elCls.version}}" style="left: 16px; top: 866px; padding: 2px 6px; color: rgba(255, 255, 255, .85); font-size: 12px">Dusk Valley Pack 1.4.2</div></sc-if>
+<sc-if value="{{selBox}}" hint-placeholder-val="{{true}}">
+<div class="sel-border" aria-hidden="true" style="{{selStyle}}"><i style="left: -3px; top: -3px"></i><i style="right: -3px; top: -3px"></i><i style="left: -3px; bottom: -3px"></i><i style="right: -3px; bottom: -3px"></i></div>
+</sc-if>
+
+<sc-if value="{{panelHidden}}" hint-placeholder-val="{{false}}">
+<button class="btn sm" style="position: absolute; right: 14px; top: 14px" onClick="{{showPanel}}">Show Layers</button>
+</sc-if>
+<sc-if value="{{panelShown}}" hint-placeholder-val="{{true}}">
+<div class="{{panelCls}}" role="region" aria-label="Layers" style="right: 14px; top: 14px; max-height: 620px">
+<div class="ptitle" onDoubleClick="{{toggleCollapse}}">
+<div class="tl sm"><button class="c" aria-label="Hide panel" onClick="{{hidePanel}}"><span class="ms" aria-hidden="true">close</span></button><button class="m" aria-label="Collapse panel" onClick="{{toggleCollapse}}"><span class="ms" aria-hidden="true">remove</span></button></div>
+<div class="wt"><span class="ms" aria-hidden="true">layers</span>Layers</div>
+<div class="wa"><button class="ib" data-tip="New Group" aria-label="New Group" onClick="{{addGroup}}"><span class="ms" aria-hidden="true">create_new_folder</span></button></div>
+</div>
+<sc-if value="{{expanded}}" hint-placeholder-val="{{true}}">
+<div class="plist" role="tree" aria-label="Layers">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="12">
+<sc-if value="{{r.isSep}}" hint-placeholder-val="{{false}}"><div class="lsep"></div></sc-if>
+<sc-if value="{{r.isRow}}" hint-placeholder-val="{{true}}">
+<div class="{{r.cls}}" role="treeitem" aria-selected="{{r.ariaSel}}">
+<sc-if value="{{r.isGroup}}" hint-placeholder-val="{{false}}"><button class="{{r.chevCls}}" aria-label="{{r.chevLabel}}" onClick="{{r.toggleGroup}}"><span class="ms" aria-hidden="true">chevron_right</span></button></sc-if>
+<sc-if value="{{r.noChev}}" hint-placeholder-val="{{true}}"><span class="lspace"></span></sc-if>
+<button class="lmain" onClick="{{r.select}}" onContextMenu="{{r.menu}}">
+<sc-if value="{{r.iFolder}}" hint-placeholder-val="{{false}}"><span class="ms" aria-hidden="true">folder</span></sc-if>
+<sc-if value="{{r.iButton}}" hint-placeholder-val="{{false}}"><span class="ms" aria-hidden="true">smart_button</span></sc-if>
+<sc-if value="{{r.iText}}" hint-placeholder-val="{{false}}"><span class="ms" aria-hidden="true">text_fields</span></sc-if>
+<sc-if value="{{r.iAudio}}" hint-placeholder-val="{{false}}"><span class="ms" aria-hidden="true">music_note</span></sc-if>
+<sc-if value="{{r.iImage}}" hint-placeholder-val="{{false}}"><span class="ms" aria-hidden="true">image</span></sc-if>
+<sc-if value="{{r.iCube}}" hint-placeholder-val="{{false}}"><span class="ms" aria-hidden="true">dashboard</span></sc-if>
+<span class="lname">{{r.name}}</span>
+</button>
+<sc-if value="{{r.isVanilla}}" hint-placeholder-val="{{false}}"><button class="leye" data-tip="{{r.moveTip}}" aria-label="{{r.moveTip}}" onClick="{{moveVanilla}}"><sc-if value="{{vanillaTop}}" hint-placeholder-val="{{false}}"><span class="ms" aria-hidden="true">vertical_align_bottom</span></sc-if><sc-if value="{{vanillaBottom}}" hint-placeholder-val="{{true}}"><span class="ms" aria-hidden="true">vertical_align_top</span></sc-if></button></sc-if>
+<sc-if value="{{r.hasEye}}" hint-placeholder-val="{{true}}"><button class="leye" aria-label="{{r.eyeLabel}}" onClick="{{r.toggleEye}}">
+<sc-if value="{{r.visible}}" hint-placeholder-val="{{true}}"><span class="ms" aria-hidden="true">visibility</span></sc-if>
+<sc-if value="{{r.hidden}}" hint-placeholder-val="{{false}}"><span class="ms" aria-hidden="true">visibility_off</span></sc-if>
+</button></sc-if>
+</div>
+</sc-if>
+</sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{menuOpen}}" hint-placeholder-val="{{false}}"><div style="{{menuStyle}}"><dc-import name="ContextMenu" items="{{menuItems}}" label="Layer" focus-on-open="{{yes}}" escape-listener="{{closeMenu}}" standalone="{{no}}" hint-size="auto,200px"></dc-import></div></sc-if>
+</div>
+</sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const set = (patch) => () => this.setState(patch);
+    const sel = s.sel ?? 'play';
+    const hidden = s.hidden ?? { music: true };
+    const collapsed = s.collapsed ?? { background: true };
+    const vanillaTop = !!s.vanillaTop;
+    const extraGroups = s.extraGroups ?? 0;
+    const menuFor = s.menuFor !== undefined ? s.menuFor : (this.props.demoMenu ? 'play' : null);
+    const tree = [
+      { id: 'buttons', name: 'Main Buttons', children: [
+        { id: 'play', name: 'Play', icon: 'button' },
+        { id: 'options', name: 'Options', icon: 'button' },
+        { id: 'quit', name: 'Quit Game', icon: 'button' }
+      ] },
+      { id: 'title', name: 'Title Text', icon: 'text' },
+      { id: 'splash', name: 'Splash Text', icon: 'text' },
+      { id: 'version', name: 'Version Text', icon: 'text' },
+      { id: 'music', name: 'Menu Music', icon: 'audio' },
+      { id: 'background', name: 'Background', children: [
+        { id: 'fireflies', name: 'Fireflies', icon: 'image' },
+        { id: 'bg', name: 'Dusk Valley', icon: 'image' }
+      ] }
+    ];
+    for (let i = 0; i < extraGroups; i++) tree.unshift({ id: 'new' + i, name: 'Group ' + (extraGroups - i), children: [] });
+    const icons = (kind) => ({ iFolder: kind === 'folder', iButton: kind === 'button', iText: kind === 'text', iAudio: kind === 'audio', iImage: kind === 'image', iCube: kind === 'cube' });
+    const rows = [];
+    let offset = 0;
+    const push = (row, height) => { row.top = offset; rows.push(row); offset += height; };
+    const vanillaRow = () => ({
+      isRow: true, isVanilla: true, noChev: true, hasEye: false, name: 'Vanilla Elements', ...icons('cube'),
+      cls: 'item lrow vanilla', ariaSel: 'false', moveTip: vanillaTop ? 'Move below your elements' : 'Move above your elements',
+      select: set({ menuFor: null }), menu: (e) => { e.preventDefault(); }
+    });
+    const layerRow = (n, child, parentHidden) => {
+      const off = !!hidden[n.id] || parentHidden;
+      const isSel = sel === n.id;
+      return {
+        isRow: true, isGroup: !!n.children, noChev: !n.children, hasEye: true, name: n.name, ...icons(n.children ? 'folder' : n.icon),
+        cls: 'item lrow' + (child ? ' child' : '') + (isSel ? ' sel' : '') + (off ? ' off' : ''),
+        ariaSel: isSel ? 'true' : 'false',
+        chevCls: collapsed[n.id] ? 'lchev' : 'lchev open',
+        chevLabel: collapsed[n.id] ? 'Expand group' : 'Collapse group',
+        toggleGroup: set({ collapsed: { ...collapsed, [n.id]: !collapsed[n.id] } }),
+        visible: !hidden[n.id], hidden: !!hidden[n.id], eyeLabel: hidden[n.id] ? 'Show layer' : 'Hide layer',
+        toggleEye: set({ hidden: { ...hidden, [n.id]: !hidden[n.id] } }),
+        select: set({ sel: n.id, menuFor: null }),
+        menu: (e) => { e.preventDefault(); this.setState({ sel: n.id, menuFor: n.id }); }
+      };
+    };
+    if (vanillaTop) { push(vanillaRow(), 27); push({ isSep: true }, 9); }
+    tree.forEach((n) => {
+      push(layerRow(n, false, false), 27);
+      if (n.children && !collapsed[n.id]) n.children.forEach((c) => push(layerRow(c, true, !!hidden[n.id]), 27));
+    });
+    if (!vanillaTop) { push({ isSep: true }, 9); push(vanillaRow(), 27); }
+
+    const groupOf = (id) => tree.find((n) => n.children && n.children.some((c) => c.id === id));
+    const isShown = (id) => !hidden[id] && !(groupOf(id) && hidden[groupOf(id).id]);
+    const ids = ['title', 'splash', 'play', 'options', 'quit', 'version', 'fireflies', 'bg'];
+    const show = {};
+    const elCls = {};
+    ids.forEach((id) => { show[id] = isShown(id); elCls[id] = 'le' + (['play', 'options', 'quit'].includes(id) ? ' le-btn' : ''); });
+    const boxes = { title: [500, 150, 440, 84], splash: [846, 222, 196, 30], play: [590, 420, 260, 38], options: [590, 468, 260, 38], quit: [590, 516, 260, 38], version: [16, 866, 170, 22] };
+    const box = boxes[sel];
+    const selBox = !!box && isShown(sel);
+
+    const menuRow = rows.find((r) => r.isRow && menuFor && r.name && r.select && sel === menuFor && r.ariaSel === 'true');
+    const isGroupMenu = !!(menuFor && tree.some((n) => n.id === menuFor && n.children));
+    const close = { menuFor: null };
+    const hideLabel = hidden[menuFor] ? (isGroupMenu ? 'Show Group' : 'Show Layer') : (isGroupMenu ? 'Hide Group' : 'Hide Layer');
+    // layer menu icons, by their Material Symbols names
+    const LI = {
+      settings: 'settings',
+      rename: 'drive_file_rename_outline',
+      addGroup: 'create_new_folder'
+    };
+    const toggleHidden = set({ ...close, hidden: { ...hidden, [menuFor]: !hidden[menuFor] } });
+    const addGroup = { d: LI.addGroup, label: 'Add Group', click: set({ ...close, extraGroups: extraGroups + 1 }) };
+    // Delete goes last, after a separator, and is red, like in every other menu
+    const menuItems = isGroupMenu ? [
+      { d: LI.rename, label: 'Rename Group', click: set(close) },
+      { ic: 'eye', label: hideLabel, click: toggleHidden },
+      { d: collapsed[menuFor] ? 'unfold_more' : 'unfold_less', label: collapsed[menuFor] ? 'Expand Group' : 'Collapse Group', click: set({ ...close, collapsed: { ...collapsed, [menuFor]: !collapsed[menuFor] } }) },
+      { sep: true },
+      addGroup,
+      { sep: true },
+      { ic: 'trash', label: 'Delete Group', kbd: 'Del', danger: true, click: set(close) }
+    ] : [
+      { d: LI.settings, label: 'Element Settings', sub: true, click: set(close) },
+      { d: LI.rename, label: 'Rename Layer', click: set(close) },
+      { ic: 'eye', label: hideLabel, click: toggleHidden },
+      { sep: true },
+      addGroup
+    ];
+
+    const panelHidden = !!s.panelHidden;
+    const expanded = !s.panelCollapsed;
+    return {
+      themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark',
+      matClass: (this.props.material ?? 'Blur') === 'Blur' ? 'mat-blur' : '',
+      show, elCls, selBox,
+      selStyle: box ? 'left: ' + (box[0] - 1) + 'px; top: ' + (box[1] - 1) + 'px; width: ' + (box[2] + 2) + 'px; height: ' + (box[3] + 2) + 'px' : '',
+      panelHidden, panelShown: !panelHidden, expanded,
+      panelCls: 'win panel' + (expanded ? ' open' : ''),
+      hidePanel: set({ panelHidden: true, menuFor: null }), showPanel: set({ panelHidden: false }),
+      toggleCollapse: set({ panelCollapsed: expanded, menuFor: null }),
+      addGroup: set({ extraGroups: extraGroups + 1 }),
+      rows, vanillaTop, vanillaBottom: !vanillaTop, moveVanilla: set({ vanillaTop: !vanillaTop }),
+      menuOpen: !!(menuRow && expanded),
+      menuStyle: menuRow ? 'position: absolute; z-index: 30; left: 46px; top: ' + (32 + 6 + menuRow.top + 24) + 'px' : '',
+      yes: true, no: false, closeMenu: set(close),
+      menuItems
+    };
+  }
+}
+</script>
+</body>
+</html>

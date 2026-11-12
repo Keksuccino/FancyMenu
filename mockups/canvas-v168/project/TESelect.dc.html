@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Text editor formatting selected text, animated</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+.demo-ptr{position:absolute;z-index:200;left:0;top:0;width:22px;height:22px;pointer-events:none;transition:transform .55s cubic-bezier(.33,1,.68,1);filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}
+.demo-ptr svg{width:22px;height:22px;transition:transform .12s}
+.demo-ptr.down svg{transform:scale(.86)}
+.demo-ptr .ring{position:absolute;left:-9px;top:-9px;width:18px;height:18px;border-radius:50%;border:2px solid #fff;opacity:0}
+.demo-ptr.down .ring{animation:demo-ring .45s ease-out}
+@keyframes demo-ring{from{opacity:.9;transform:scale(.4)}to{opacity:0;transform:scale(1.6)}}
+.demo-cap{position:absolute;z-index:150;left:56px;top:400px;max-width:420px;display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;padding:9px 16px 9px 10px;border:1px solid var(--menu-line);border-radius:10px;background:var(--menu);box-shadow:var(--menu-shadow);font-size:13px;color:var(--text);line-height:1.4}
+.demo-cap .n{flex:0 0 22px;height:22px;display:grid;place-items:center;border-radius:50%;background:var(--accent-fill);color:var(--on-accent);font-size:11.5px;font-weight:700}
+.demo-cap code{font-family:"Noto Sans Mono",ui-monospace,Menlo,monospace;font-size:12px;color:var(--accent)}
+</style>
+</helmet>
+<div class="te-demo fm {{themeClass}} {{matClass}}" style="position: relative; width: 1440px; height: 900px; overflow: hidden">
+<dc-import name="TEText" sidebar="{{no}}" select="{{select}}" reset-key="{{rk}}" theme="{{theme}}" material="{{material}}" hint-size="1440px,900px"></dc-import>
+<div class="{{ptrCls}}" style="{{ptrStyle}}" aria-hidden="true"><span class="ring"></span><svg viewBox="0 0 22 22"><path d="M4 2.5v15.2l3.9-3.7 2.6 5.9 2.6-1.1-2.6-5.8h5.4z" fill="#111" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"></path></svg></div>
+<div class="demo-cap" role="status"><span class="n">{{capN}}</span><span>{{capText}}</span><code>{{capCode}}</code></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1440,"height":900}}'>
+// Plays the formatting controls on selected text in a loop, using the real editor: a pointer moves to each control
+// and clicks it, the caption says what happens, and the live preview on the element updates with it.
+const SCENE_A = { line: 5, from: 2, to: 14 };
+const SCENE_B = { a: { l: 7, c: 2 }, b: { l: 8, c: 13 } };
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    if (!this._run) { this._run = true; setTimeout(() => this.loop(), 600); }
+    return {
+      themeClass: (this.props.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark',
+      matClass: (this.props.material ?? 'Blur') === 'Blur' ? 'mat-blur' : '',
+      theme: this.props.theme ?? 'Dark', material: this.props.material ?? 'Blur', no: false,
+      select: s.select || '', rk: s.rk || 0,
+      ptrCls: 'demo-ptr' + (s.down ? ' down' : ''), ptrStyle: 'transform: translate(' + (s.px ?? 760) + 'px, ' + (s.py ?? 520) + 'px)',
+      capN: String(s.capN || 1), capText: s.capText || 'Select some text', capCode: s.capCode || ''
+    };
+  }
+  root() { return document.querySelector('.te-demo'); }
+  // Converts a screen point to board pixels, so the canvas zoom doesn't matter.
+  local(x, y) { const r = this.root(); const b = r.getBoundingClientRect(); const k = r.offsetWidth / b.width; return [(x - b.left) * k, (y - b.top) * k]; }
+  at(sel, dx, dy) { const el = this.root().querySelector(sel); if (!el) return null; const b = el.getBoundingClientRect(); return this.local(b.left + b.width * (dx ?? .5), b.top + b.height * (dy ?? .5)); }
+  // Board position of a text column, measured on the rendered text.
+  col(l, c) {
+    const spans = [...this.root().querySelectorAll('.te-code [data-l="' + l + '"][data-c]')].filter((sp) => !sp.hasAttribute('data-chip'));
+    for (const sp of spans) {
+      const c0 = +sp.getAttribute('data-c'); const tn = [...sp.childNodes].find((n) => n.nodeType === 3); if (!tn) continue;
+      if (c >= c0 && c <= c0 + tn.length) { const r = document.createRange(); r.setStart(tn, c - c0); r.setEnd(tn, c - c0); const b = r.getBoundingClientRect(); return this.local(b.left, b.top + b.height * .6); }
+    }
+    const last = spans[spans.length - 1]; if (!last) return null; const b = last.getBoundingClientRect(); return this.local(b.right, b.top + b.height * .6);
+  }
+  wait(ms) { return new Promise((r) => setTimeout(r, ms)); }
+  async move(pt) { if (pt) { this.setState({ px: pt[0], py: pt[1] }); await this.wait(650); } }
+  async click(selector) { this.setState({ down: true }); await this.wait(140); const el = this.root().querySelector(selector); if (el) el.click(); this.setState({ down: false }); await this.wait(260); }
+  cap(n, text, code) { this.setState({ capN: n, capText: text, capCode: code || '' }); }
+  async drag(a, b, steps) {
+    await this.move(this.col(a.l, a.c));
+    for (let k = 1; k <= steps; k++) {
+      const c = a.l === b.l ? Math.round(a.c + (b.c - a.c) * k / steps) : null;
+      const sel = a.l === b.l ? a.l + ':' + a.c + '-' + c : a.l + ':' + a.c + '-' + (k < steps ? a.l : b.l) + ':' + (k < steps ? 40 : b.c);
+      this.setState({ select: sel });
+      const pt = a.l === b.l ? this.col(a.l, c) : (k < steps ? this.col(a.l, 40) : this.col(b.l, b.c));
+      if (pt) this.setState({ px: pt[0], py: pt[1] });
+      await this.wait(110);
+    }
+  }
+  async loop() {
+    while (this.root()) {
+      this.setState({ rk: (this.state && this.state.rk || 0) + 1, select: '' }); await this.wait(500);
+      this.cap(1, 'Select some text'); await this.drag({ l: SCENE_A.line, c: SCENE_A.from }, { l: SCENE_A.line, c: SCENE_A.to }, 6); await this.wait(500);
+      this.cap(2, 'Bold wraps the selection in', '** **'); await this.move(this.at('[aria-label="Bold"]')); await this.click('[aria-label="Bold"]'); await this.wait(1400);
+      this.cap(3, 'Pressing it again takes the markers off'); await this.move(this.at('[aria-label="Bold"]', .55, .6)); await this.click('[aria-label="Bold"]'); await this.wait(1300);
+      this.cap(4, 'Colors wrap it too, with any hex color in Markdown', '%#FF6B9D% %#%'); await this.move(this.at('[aria-label="Text color"]')); await this.click('[aria-label="Text color"]'); await this.wait(400);
+      await this.move(this.at('.te-custom .btn')); await this.click('.te-custom .btn'); await this.wait(1800);
+      this.setState({ rk: this.state.rk + 1, select: '' }); await this.wait(500);
+      this.cap(5, 'Alignment applies to every selected line', '^^^'); await this.drag(SCENE_B.a, SCENE_B.b, 5); await this.wait(400);
+      await this.move(this.at('[aria-label^="Center"]')); await this.click('[aria-label^="Center"]'); await this.wait(2400);
+    }
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Custom GUIs</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="fm-ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&amp;family=Noto+Sans+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div class="{{rootCls}}" style="{{rootStyle}}" data-cg="{{uid}}" onMouseDown="{{activate}}">
+<sc-if value="{{standalone}}" hint-placeholder-val="{{true}}"><div class="backdrop" aria-hidden="true" style="background: #15182c"><img class="art" src="dusk_valley.png" alt=""><div class="dim"></div></div></sc-if>
+
+<div class="win vm ls cg" role="dialog" aria-label="Custom GUIs" style="{{winStyle}}">
+<div class="titlebar">
+<div class="tl"><button class="c" aria-label="Cancel and close" onClick="{{cancelAll}}"><span class="ms" aria-hidden="true">close</span></button><button class="m" aria-label="Collapse"><span class="ms" aria-hidden="true">remove</span></button><button class="x" aria-label="Maximize"><span class="ms" aria-hidden="true">open_in_full</span></button></div>
+<div class="wt"><span class="ms" aria-hidden="true">{{ic.gui}}</span>Custom GUIs</div>
+<div></div>
+</div>
+
+<sc-if value="{{anyPopup}}" hint-placeholder-val="{{false}}"><div class="fb-catch" style="z-index: 42" onClick="{{closePopups}}" onContextMenu="{{closePopupsCtx}}"></div></sc-if>
+
+<div class="split">
+<aside class="sidebar vm-side" aria-label="Custom GUIs list">
+<div class="vm-top">
+<button class="btn tinted" data-tip="Ctrl+N" onClick="{{addNew}}"><span class="ms" aria-hidden="true">{{ic.plus}}</span>New GUI</button>
+<label class="field vm-search"><span class="ms" aria-hidden="true">{{ic.search}}</span><input type="text" placeholder="{{searchPh}}" aria-label="Search identifiers, titles and layouts" data-fk="{{searchFk}}" value="{{q}}" onInput="{{onSearch}}" onKeyDown="{{searchKey}}"><button class="{{filterBtnCls}}" data-tip="Show" aria-label="Show" aria-haspopup="menu" aria-expanded="{{filterExpanded}}" onClick="{{toggleFilter}}"><span class="ms" aria-hidden="true">{{ic.funnel}}</span></button></label>
+<sc-if value="{{filterChip}}" hint-placeholder-val="{{false}}"><div class="chips"><span class="vm-fchip">{{filterChip}}<button aria-label="Show all GUIs" data-tip="Show all" onClick="{{clearFilter}}"><span class="ms" aria-hidden="true">{{ic.x}}</span></button></span></div></sc-if>
+</div>
+<div class="plist vm-list" role="listbox" aria-label="Custom GUIs" aria-multiselectable="true">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="7">
+<div class="{{r.cls}}" role="option" aria-selected="{{r.ariaSel}}" onClick="{{r.click}}" onDoubleClick="{{r.dbl}}">
+<span class="{{r.tileCls}}" aria-hidden="true"><span class="ms" aria-hidden="true">{{r.icon}}</span></span>
+<span class="ln"><sc-for list="{{r.name}}" as="np" hint-placeholder-count="1"><sc-if value="{{np.hit}}" hint-placeholder-val="{{false}}"><mark>{{np.t}}</mark></sc-if><sc-if value="{{np.plain}}" hint-placeholder-val="{{true}}">{{np.t}}</sc-if></sc-for></span>
+<span class="vic"><sc-if value="{{r.open}}" hint-placeholder-val="{{false}}"><span class="vb cg-eye" data-tip="Open behind this window"><span class="ms" aria-hidden="true">{{ic.eye}}</span></span></sc-if></span>
+<span class="{{r.subCls}}"><sc-for list="{{r.sub}}" as="sp" hint-placeholder-count="1"><sc-if value="{{sp.hit}}" hint-placeholder-val="{{false}}"><mark>{{sp.t}}</mark></sc-if><sc-if value="{{sp.plain}}" hint-placeholder-val="{{true}}">{{sp.t}}</sc-if></sc-for></span>
+</div>
+</sc-for>
+<sc-if value="{{noMatch}}" hint-placeholder-val="{{false}}"><div class="vm-nomatch"><span>{{noMatchText}}</span><sc-if value="{{canNewFromQ}}" hint-placeholder-val="{{true}}"><button class="btn sm" onClick="{{newFromQ}}"><span class="ms" aria-hidden="true">{{ic.plus}}</span>New GUI “{{qName}}”</button></sc-if></div></sc-if>
+</div>
+</aside>
+
+<div class="vm-main">
+<main class="pcontent vm-content ls-content" data-sk="{{contentSk}}">
+
+<sc-if value="{{one}}" hint-placeholder-val="{{true}}">
+<div class="dhead">
+<div class="ls-dtop">
+<span class="{{d.tileCls}}" aria-hidden="true"><span class="ms" aria-hidden="true">{{d.icon}}</span></span>
+<div class="ls-dtx">
+<sc-if value="{{notRenaming}}" hint-placeholder-val="{{true}}"><div class="dt vm-name"><span>{{d.name}}</span><button class="ib" data-tip="Rename (F2)" aria-label="Rename" onClick="{{startRename}}"><span class="ms" aria-hidden="true">{{ic.pencil}}</span></button></div></sc-if>
+<sc-if value="{{renaming}}" hint-placeholder-val="{{false}}"><div class="{{renameCls}}"><input type="text" aria-label="New identifier" data-fk="{{renameFk}}" value="{{renameDraft}}" onInput="{{onRename}}" onKeyDown="{{renameKey}}"></div><div class="{{renameMsgCls}}">{{renameMsg}}</div></sc-if>
+<div class="dm">{{d.meta}}</div>
+</div>
+</div>
+<div class="dacts">
+<button class="{{d.openCls}}" data-tip="Space, or double-click the GUI" onClick="{{toggleOpenSel}}"><span class="ms" aria-hidden="true">{{d.openIcon}}</span>{{d.openLabel}}</button>
+<button class="btn" data-tip="Ctrl+D" onClick="{{duplicate}}"><span class="ms" aria-hidden="true">{{ic.dup}}</span>Duplicate</button>
+<button class="btn icon danger" data-tip="Delete" aria-label="Delete {{d.name}}" onClick="{{askDelete}}"><span class="ms" aria-hidden="true">{{ic.trash}}</span></button>
+</div>
+</div>
+
+<sc-if value="{{d.conflict}}" hint-placeholder-val="{{false}}">
+<div class="callout vm-card pl-bad"><span class="ms" aria-hidden="true">{{ic.err}}</span><div><b>{{d.cfTitle}}</b><p>{{d.cfText}}</p><button class="btn sm" onClick="{{startRename}}">Rename</button></div></div>
+</sc-if>
+
+<div>
+<div class="sec">Screen</div>
+<div class="group">
+<div class="row"><span class="lbl">Title<span class="sub">At the top of the screen</span></span><div class="ctl grow">
+<sc-if value="{{d.titlePlain}}" hint-placeholder-val="{{true}}"><div class="field"><input type="text" aria-label="Title" placeholder="None" data-fk="{{titleFk}}" value="{{d.titleText}}" onInput="{{onTitle}}" onFocus="{{titleFocus}}"><button class="ib" data-tip="Open in the text editor" aria-label="Open in the text editor" onClick="{{titleEditor}}"><span class="ms" aria-hidden="true">{{ic.editor}}</span></button></div></sc-if>
+<sc-if value="{{d.titleRich}}" hint-placeholder-val="{{false}}"><div class="field cg-tf" role="textbox" aria-label="Title" tabindex="0" onClick="{{titleEditor}}"><span class="tv"><sc-for list="{{d.titlePieces}}" as="pc" hint-placeholder-count="3"><sc-if value="{{pc.isText}}" hint-placeholder-val="{{true}}"><span>{{pc.s}}</span></sc-if><sc-if value="{{pc.isChip}}" hint-placeholder-val="{{false}}"><span class="{{pc.cls}}">{{pc.s}}</span></sc-if></sc-for></span><button class="ib" data-tip="Open in the text editor" aria-label="Open in the text editor" onClick="{{titleEditor}}"><span class="ms" aria-hidden="true">{{ic.editor}}</span></button></div></sc-if>
+</div></div>
+<sc-for list="{{sws.screen}}" as="w" hint-placeholder-count="2">
+<div class="{{w.rowCls}}"><span class="lbl">{{w.label}}<sc-if value="{{w.sub}}" hint-placeholder-val="{{false}}"><span class="sub">{{w.sub}}</span></sc-if></span><div class="ctl"><button class="{{w.swCls}}" role="switch" aria-checked="{{w.aria}}" aria-label="{{w.label}}" onClick="{{w.toggle}}"></button></div></div>
+</sc-for>
+</div>
+</div>
+
+<div>
+<div class="sec">Behind the GUI</div>
+<div class="group">
+<sc-for list="{{sws.behind}}" as="w" hint-placeholder-count="4">
+<div class="{{w.rowCls}}"><span class="lbl">{{w.label}}<sc-if value="{{w.sub}}" hint-placeholder-val="{{false}}"><span class="sub">{{w.sub}}</span></sc-if></span><div class="ctl"><button class="{{w.swCls}}" role="switch" aria-checked="{{w.aria}}" aria-label="{{w.label}}" onClick="{{w.toggle}}"></button></div></div>
+</sc-for>
+</div>
+</div>
+
+<div>
+<div class="sec">Layouts<sc-if value="{{d.hasLayouts}}" hint-placeholder-val="{{true}}"><span class="end"><button class="vm-link" onClick="{{newLayout}}">New Layout</button></span></sc-if></div>
+<sc-if value="{{d.hasLayouts}}" hint-placeholder-val="{{true}}">
+<div class="group">
+<sc-for list="{{d.layouts}}" as="l" hint-placeholder-count="2">
+<div class="row vm-use cg-lay" onDoubleClick="{{l.open}}"><span class="ms vm-ui" aria-hidden="true">{{ic.layout}}</span><span class="lbl">{{l.name}}</span><sc-if value="{{l.off}}" hint-placeholder-val="{{false}}"><span class="chip">Off</span></sc-if><div class="ctl"><button class="ib" data-tip="Open in the layout editor" aria-label="Open {{l.name}} in the layout editor" onClick="{{l.open}}"><span class="ms" aria-hidden="true">{{ic.open}}</span></button></div></div>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{d.noLayouts}}" hint-placeholder-val="{{false}}"><div class="group vm-unused ls-nosteps"><span>No layout yet, so it opens as an empty screen.</span><button class="btn sm" onClick="{{newLayout}}"><span class="ms" aria-hidden="true">{{ic.plus}}</span>New Layout</button></div></sc-if>
+</div>
+
+<sc-if value="{{d.replaces}}" hint-placeholder-val="{{false}}">
+<div>
+<div class="sec">Shown Instead Of</div>
+<div class="group">
+<sc-for list="{{d.repl}}" as="rp" hint-placeholder-count="1">
+<div class="row cg-rep"><span class="ms vm-ui" aria-hidden="true">{{ic.screen}}</span><span class="lbl">{{rp.name}}<span class="sub"><code>{{rp.id}}</code></span></span><div class="ctl"><button class="btn sm" onClick="{{rp.remove}}">Stop Replacing</button></div></div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<div>
+<div class="sec">Used in<span class="end">{{d.useCount}}</span></div>
+<sc-if value="{{d.used}}" hint-placeholder-val="{{true}}">
+<div class="group">
+<sc-for list="{{d.places}}" as="pl" hint-placeholder-count="2">
+<div class="row vm-loc"><span class="ms vm-ui" aria-hidden="true">{{pl.icon}}</span><span class="lbl">{{pl.name}}<sc-if value="{{pl.on}}" hint-placeholder-val="{{true}}"><span class="sub">{{pl.on}}</span></sc-if></span><span class="chip">{{pl.chip}}</span></div>
+<sc-for list="{{pl.uses}}" as="u" hint-placeholder-count="1">
+<div class="row child vm-use"><span class="ms vm-ui" aria-hidden="true">{{u.icon}}</span><span class="lbl">{{u.el}}<span class="sub">{{u.what}}</span></span><div class="ctl"><button class="ib" data-tip="{{u.openTip}}" aria-label="{{u.openTip}}" onClick="{{u.open}}"><span class="ms" aria-hidden="true">{{ic.open}}</span></button></div></div>
+</sc-for>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{d.unused}}" hint-placeholder-val="{{false}}"><div class="group vm-unused">{{d.unusedA}}<code>{{d.unusedCmd}}</code>{{d.unusedB}}</div></sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{many}}" hint-placeholder-val="{{false}}">
+<div class="dhead">
+<div class="dt">{{m.title}}</div>
+<div class="dm">{{m.meta}}</div>
+<div class="dacts"><button class="btn" data-tip="Ctrl+D" onClick="{{duplicate}}"><span class="ms" aria-hidden="true">{{ic.dup}}</span>{{m.dupLabel}}</button><button class="btn icon danger" data-tip="{{m.deleteTip}}" aria-label="{{m.deleteTip}}" onClick="{{askDelete}}"><span class="ms" aria-hidden="true">{{ic.trash}}</span></button></div>
+</div>
+<div>
+<div class="sec">Screen</div>
+<div class="group">
+<sc-for list="{{sws.screen}}" as="w" hint-placeholder-count="2">
+<div class="{{w.rowCls}}"><span class="lbl">{{w.label}}<sc-if value="{{w.sub}}" hint-placeholder-val="{{false}}"><span class="sub">{{w.sub}}</span></sc-if></span><div class="ctl"><button class="{{w.swCls}}" role="switch" aria-checked="{{w.aria}}" aria-label="{{w.label}}" onClick="{{w.toggle}}"></button></div></div>
+</sc-for>
+</div>
+</div>
+<div>
+<div class="sec">Behind the GUI</div>
+<div class="group">
+<sc-for list="{{sws.behind}}" as="w" hint-placeholder-count="4">
+<div class="{{w.rowCls}}"><span class="lbl">{{w.label}}<sc-if value="{{w.sub}}" hint-placeholder-val="{{false}}"><span class="sub">{{w.sub}}</span></sc-if></span><div class="ctl"><button class="{{w.swCls}}" role="switch" aria-checked="{{w.aria}}" aria-label="{{w.label}}" onClick="{{w.toggle}}"></button></div></div>
+</sc-for>
+</div>
+</div>
+<div>
+<div class="sec">Selected</div>
+<div class="group">
+<sc-for list="{{m.rows}}" as="mr" hint-placeholder-count="3">
+<div class="row ls-mrow"><span class="{{mr.tileCls}}" aria-hidden="true"><span class="ms" aria-hidden="true">{{mr.icon}}</span></span><span class="lbl"><span class="cg-mname">{{mr.name}}</span><span class="sub">{{mr.sub}}</span></span><div class="ctl"><span class="{{mr.cls}}">{{mr.act}}</span></div></div>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{none}}" hint-placeholder-val="{{false}}">
+<div class="vm-empty empty">
+<h3 class="t">No custom GUIs yet</h3>
+<p class="d">A custom GUI is a screen of your own. It starts empty, and a layout fills it with buttons, texts and everything else. Any script can open it with Open Screen or Custom GUI, and <code>/openguiscreen</code> opens it from commands.</p>
+<div class="vm-ways">
+<div><b>A menu</b>A quest log that opens with a key while playing</div>
+<div><b>A popup</b>The credits, on top of the title screen</div>
+<div><b>A story</b>An intro to click through, with Esc turned off</div>
+</div>
+<button class="btn primary" onClick="{{addNew}}"><span class="ms" aria-hidden="true">{{ic.plus}}</span>New GUI</button>
+</div>
+</sc-if>
+
+<sc-if value="{{nothingSel}}" hint-placeholder-val="{{false}}"><div class="vm-empty empty"><p class="d">Select a GUI to see its settings, its layouts and where it's used.</p></div></sc-if>
+</main>
+<div class="footer line"><span class="lead">{{footLead}}<sc-if value="{{footUndo}}" hint-placeholder-val="{{false}}"> <button class="vm-link" onClick="{{undo}}">Undo</button></sc-if></span><button class="btn wide" onClick="{{cancelAll}}">Cancel</button><button class="btn primary wide" onClick="{{noop}}">Done</button></div>
+</div>
+</div>
+
+<sc-if value="{{filterOpen}}" hint-placeholder-val="{{false}}"><div class="vm-pop" style="{{filterStyle}}"><dc-import name="ContextMenu" items="{{filterItems}}" escape-listener="{{closePopups}}" standalone="{{no}}" hint-size="auto,190px"></dc-import></div></sc-if>
+
+<sc-if value="{{sheetAlert}}" hint-placeholder-val="{{false}}">
+<div class="sheet-dim"></div>
+<div class="sheet vm-alert" role="alertdialog" aria-label="{{al.title}}">
+<span class="vm-aicon"><span class="ms" aria-hidden="true">{{al.icon}}</span></span>
+<div class="vm-st" style="margin-top: 12px">{{al.title}}</div>
+<p>{{al.text}}</p>
+<div class="vm-abtns"><sc-for list="{{al.buttons}}" as="b" hint-placeholder-count="2"><button class="{{b.cls}}" onClick="{{b.click}}">{{b.label}}</button></sc-for></div>
+</div>
+</sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"scene":{"editor":"enum","options":["Dusk Valley","Empty"],"default":"Dusk Valley"},"select":{"editor":"text","default":"g1"},"sheet":{"editor":"enum","options":["","rename","delete"],"default":""},"renameTo":{"editor":"text","default":""},"add":{"editor":"boolean","default":false},"open":{"editor":"text","default":""},"conflict":{"editor":"boolean","default":false},"filter":{"editor":"enum","options":["all","popup","repl","unused","probs"],"default":"all"},"filterMenu":{"editor":"boolean","default":false},"query":{"editor":"text","default":""},"scroll":{"editor":"text","default":""},"onStage":{"editor":null},"width":{"editor":"int","default":960},"height":{"editor":"int","default":760},"standalone":{"editor":"boolean","default":true},"theme":{"editor":"enum","options":["Dark","Light"],"default":"Dark"},"material":{"editor":"enum","options":["Solid","Blur"],"default":"Blur"},"$preview":{"width":1040,"height":840}}'>
+// ---------- places that use a GUI's identifier, the same ones the Variables and Schedulers windows list ----------
+const PLACES = {
+  title: { name: 'Dusk Valley Title', kind: 'layout', chip: 'Layout', icon: 'layout', on: 'For the title screen', open: 'Open in the layout editor' },
+  pause: { name: 'Dusk Valley Pause', kind: 'layout', chip: 'Layout', icon: 'layout', on: 'For the pause screen', open: 'Open in the layout editor' },
+  questlay: { name: 'Quest Log', kind: 'layout', chip: 'Layout', icon: 'layout', on: 'For the quest_log custom GUI', open: 'Open in the layout editor' },
+  questkey: { name: 'Quest Log Key', kind: 'listener', chip: 'Listener', icon: 'listener', on: '', open: 'Open in Listeners' },
+  shopcmd: { name: 'Shop Command', kind: 'listener', chip: 'Listener', icon: 'listener', on: '', open: 'Open in Listeners' },
+  joined: { name: 'Server Joined', kind: 'listener', chip: 'Listener', icon: 'listener', on: '', open: 'Open in Listeners' }
+};
+const KINDS = [['layout', 'a layout', 'layouts'], ['listener', 'a listener', 'listeners'], ['scheduler', 'a scheduler', 'schedulers']];
+const whereText = (uses) => KINDS.map(([k, one, many]) => { const n = new Set(uses.filter((u) => PLACES[u.at].kind === k).map((u) => u.at)).size; return n ? (n === 1 ? one : n + ' ' + many) : ''; }).filter(Boolean).join(', ').replace(/, ([^,]*)$/, ' and $1');
+
+// Identifiers Minecraft's own screens have. A custom GUI can't take one, because layouts and scripts
+// find screens and custom GUIs by the same identifier (rule 127).
+const SCREENS = {
+  title_screen: 'title', pause_screen: 'pause', options_screen: 'options', join_multiplayer_screen: 'multiplayer', select_world_screen: 'singleplayer',
+  death_screen: 'death', chat_screen: 'chat', video_settings_screen: 'video settings', controls_screen: 'controls', language_select_screen: 'language',
+  advancements_screen: 'advancements', stats_screen: 'statistics', connect_screen: 'connecting', disconnected_screen: 'disconnected'
+};
+
+// ---------- seed: the Dusk Valley profile's custom GUIs ----------
+// title: text pieces, { v } is a variable. esc, pause, world, dim, popup and pblur are the six switches of
+// custom_gui_screens.txt. repl: the screens it's shown instead of, named like in a sentence. uses: the places that open it.
+const A_OPEN = 'Open Screen or Custom GUI';
+const seed = (withConflict) => [
+  { id: 'g1', n: 'quest_log', title: ['Quest Log'], esc: true, pause: false, world: true, dim: true, popup: false, pblur: true,
+    layouts: [{ n: 'Quest Log', on: true }, { n: 'Quest Log Winter Event', on: false }], repl: [],
+    uses: [
+      { at: 'questkey', el: 'Script', what: A_OPEN },
+      { at: 'pause', el: 'Quests button', what: 'Click script · ' + A_OPEN }] },
+  { id: 'g2', n: 'coin_shop', title: ['Coin Shop · ', { v: 'coins' }, ' coins'], esc: true, pause: true, world: true, dim: true, popup: false, pblur: true,
+    layouts: [{ n: 'Coin Shop', on: true }], repl: [],
+    uses: [
+      { at: 'title', el: 'Shop button', what: 'Click script · ' + A_OPEN },
+      { at: 'questlay', el: 'Rewards button', what: 'Click script · ' + A_OPEN },
+      { at: 'shopcmd', el: 'Script', what: A_OPEN }] },
+  { id: 'g3', n: 'credits', title: ['Credits'], esc: true, pause: true, world: true, dim: true, popup: true, pblur: true,
+    layouts: [{ n: 'Credits', on: true }], repl: [],
+    uses: [{ at: 'title', el: 'Credits button', what: 'Click script · ' + A_OPEN }] },
+  { id: 'g4', n: 'intro_story', title: [], esc: false, pause: true, world: false, dim: true, popup: false, pblur: true,
+    layouts: [{ n: 'Intro Story', on: true }], repl: [],
+    uses: [{ at: 'joined', el: 'Script', what: A_OPEN }] },
+  { id: 'g5', n: 'server_hub', title: ['Dusk Valley Servers'], esc: true, pause: true, world: true, dim: true, popup: false, pblur: true,
+    layouts: [{ n: 'Server Hub', on: true }], repl: [{ id: 'join_multiplayer_screen', name: 'multiplayer screen' }], uses: [] },
+  { id: 'g6', n: 'whats_new', title: ['What\'s New'], esc: true, pause: true, world: true, dim: true, popup: true, pblur: false,
+    layouts: [], repl: [], uses: [] },
+  ...(withConflict ? [{ id: 'g7', n: 'pause_screen', title: ['Paused'], esc: true, pause: true, world: true, dim: true, popup: false, pblur: true,
+    layouts: [{ n: 'Custom Pause', on: true }], repl: [{ id: 'pause_screen', name: 'pause screen' }], uses: [] }] : [])
+];
+// what $$ names read in a title, for the GUI that's open behind the window
+const VALUES = { coins: '240' };
+
+class Component extends DCLogic {
+  componentWillUnmount() {
+    if (this._keys) window.removeEventListener('keydown', this._keys, true);
+  }
+
+  renderVals() {
+    const p = this.props, s = this.state || {};
+    const set = (patch) => this.setState(patch);
+    const uid = this._uid || (this._uid = 'cg' + Math.random().toString(36).slice(2, 8));
+    const standalone = p.standalone ?? true;
+    const W = +p.width || 960, H = +p.height || 760;
+    const empty = (p.scene || 'Dusk Valley') === 'Empty';
+    const IC = {
+      gui: 'contextual_token', plus: 'add', search: 'search', funnel: 'filter_alt', x: 'close', warn: 'warning', err: 'error', pencil: 'edit',
+      editor: 'edit_note', dup: 'library_add', trash: 'delete', open: 'open_in_new', eye: 'visibility', eyeOff: 'visibility_off',
+      screen: 'web_asset', popup: 'picture_in_picture_center', layout: 'gallery_thumbnail', listener: 'hearing', act: 'bolt'
+    };
+
+    // ---------- state ----------
+    if (!this._seed) this._seed = empty ? [] : seed(!!p.conflict);
+    const list = s.list ?? this._seed;
+    const byId = (id) => list.find((x) => x.id === id);
+    const byName = (n) => list.find((x) => x.n === n);
+    const selRaw = s.sel ?? (empty ? [] : String(p.select ?? 'g1').split(',').map((x) => x.trim()).filter(Boolean));
+    const sel = selRaw.filter((id) => byId(id));
+    const sheet = s.sheet ?? (p.sheet || '');
+    const filterOpen = s.filterOpen !== undefined ? s.filterOpen : !!p.filterMenu;
+    const filter = s.filter ?? (p.filter || 'all');
+    const q = s.q ?? (p.query || '');
+    const ql = q.trim().toLowerCase();
+    const renaming = !!s.renaming;
+    // the GUI that Open put behind the window: it shows the copy this window edits, so changes show right away (rule 124)
+    const openId = (() => { const id = s.open !== undefined ? s.open : (empty ? '' : p.open || ''); return id && byId(id) ? id : ''; })();
+    const fk = (k) => uid + '-' + k;
+    const deepQuery = (sel0) => { const walk = (r) => { const hit = r.querySelector(sel0); if (hit) return hit; for (const el of r.querySelectorAll('*')) { if (el.shadowRoot) { const x = walk(el.shadowRoot); if (x) return x; } } return null; }; return walk(document); };
+    const focusLater = (key, select) => setTimeout(() => { const el = deepQuery('[data-fk="' + key + '"]'); if (el) { el.focus(); if (select && el.select) el.select(); } }, 0);
+
+    const snapshot = () => ({ list, sel });
+    // Typing into a field coalesces into one undo step per field and focus.
+    const commit = (nl, patch, tag) => {
+      const keep = tag && s.lastTag === tag;
+      set({ list: nl, undoStack: keep ? (s.undoStack || []) : [...(s.undoStack || []), snapshot()].slice(-50), redoStack: [], lastTag: tag || null, ...patch });
+    };
+    const status = (text, canUndo) => ({ status: { text, undo: !!canUndo } });
+
+    // ---------- texts ----------
+    const titleRaw = (x) => x.title.map((t) => (typeof t === 'string' ? t : '$$' + t.v)).join('');
+    const titleShown = (x) => x.title.map((t) => (typeof t === 'string' ? t : VALUES[t.v] ?? '$$' + t.v)).join('');
+    const conflictOf = (x) => SCREENS[x.n] || '';
+    const problemOf = (x) => (conflictOf(x) ? 'Has the identifier of the ' + conflictOf(x) + ' screen' : !x.layouts.length ? 'No layout yet' : '');
+    const lower = (name) => 'the ' + name;
+    const cap = (t) => t.charAt(0).toUpperCase() + t.slice(1);
+    // the list's second line: the screen it replaces, or its title
+    const summary = (x) => (x.repl.length ? 'Replaces ' + lower(x.repl[0].name) : [titleRaw(x), x.popup ? 'Popup' : ''].filter(Boolean).join(' · ') || 'No title');
+    const plural = (n, one, many) => (n === 1 ? one : n + ' ' + many);
+
+    // ---------- list ----------
+    const fits = (x) => (filter === 'popup' ? x.popup : filter === 'repl' ? x.repl.length > 0 : filter === 'unused' ? !x.uses.length && !x.repl.length : filter === 'probs' ? !!problemOf(x) : true);
+    const hitParts = (text) => {
+      const at = ql ? text.toLowerCase().indexOf(ql) : -1;
+      const P = (t, hit) => ({ t, hit, plain: !hit });
+      return at < 0 ? [P(text, false)] : [P(text.slice(0, at), false), P(text.slice(at, at + ql.length), true), P(text.slice(at + ql.length), false)].filter((y) => y.t);
+    };
+    // the search finds identifiers, titles and the names of a GUI's layouts
+    const matches = (x) => !ql || x.n.includes(ql) || summary(x).toLowerCase().includes(ql) || x.layouts.some((l) => l.n.toLowerCase().includes(ql));
+    const shown = list.filter((x) => fits(x) && matches(x)).sort((a, b) => a.n.localeCompare(b.n));
+    const order = shown.map((x) => x.id);
+
+    const selectRow = (id, e) => {
+      let next;
+      if (e && (e.ctrlKey || e.metaKey)) next = sel.includes(id) ? sel.filter((y) => y !== id) : [...sel, id];
+      else if (e && e.shiftKey && s.anchor && order.includes(s.anchor)) { const a = order.indexOf(s.anchor), b = order.indexOf(id); next = order.slice(Math.min(a, b), Math.max(a, b) + 1); }
+      else next = [id];
+      set({ sel: next, anchor: e && e.shiftKey ? s.anchor : id, renaming: false, filterOpen: false });
+    };
+    const tileIcon = (x) => (x.popup ? IC.popup : IC.screen);
+    const rows = shown.map((x) => {
+      const isSel = sel.includes(x.id);
+      const prob = problemOf(x);
+      return {
+        cls: 'item tall lsrow cgrow' + (isSel ? ' sel' : ''), ariaSel: isSel ? 'true' : 'false',
+        tileCls: 'ls-tile' + (conflictOf(x) ? ' err' : prob ? ' bad' : '') + (openId === x.id ? ' open' : ''), icon: tileIcon(x),
+        name: hitParts(x.n), sub: hitParts(prob || summary(x)),
+        subCls: 'ls-sub' + (conflictOf(x) ? ' err' : prob ? ' warn' : ''),
+        open: openId === x.id,
+        click: (e) => selectRow(x.id, e),
+        dbl: () => { selectRow(x.id); toggleOpen(x.id); }
+      };
+    });
+
+    // ---------- actions ----------
+    // Open isn't a change to the list: Undo and Cancel leave it alone, and Cancel goes back to the screen you came from.
+    const toggleOpen = (id) => {
+      const x = byId(id);
+      if (!x) return;
+      if (openId === id) set({ open: '', ...status('Closed ' + x.n + '. You\'re back on the title screen.') });
+      else set({ open: id, ...status(x.n + ' is open behind this window. Changes show right away.') });
+    };
+    const places = (x) => x.uses.length;
+    const doDelete = () => {
+      if (!sel.length) return;
+      const xs = sel.map(byId);
+      const nl = list.filter((x) => !sel.includes(x.id));
+      const idx = Math.max(0, order.indexOf(sel[0]));
+      const rest = order.filter((id) => !sel.includes(id));
+      const nextSel = rest.length ? [rest[Math.min(idx, rest.length - 1)]] : [];
+      const nLay = xs.reduce((a, x) => a + x.layouts.length, 0);
+      commit(nl, { sel: nextSel, renaming: false, sheet: '', open: sel.includes(openId) ? '' : openId, ...status((xs.length === 1 ? 'Deleted ' + xs[0].n : 'Deleted ' + xs.length + ' GUIs') + (nLay ? ' and ' + plural(nLay, 'its layout', 'layouts') + '.' : '.'), true) });
+    };
+    // Deleting asks only when something goes with it or still uses it. Undo brings it back otherwise.
+    const askDelete = () => { if (!sel.length) return; const xs = sel.map(byId); if (xs.some((x) => x.layouts.length || x.uses.length || x.repl.length)) set({ sheet: 'delete', filterOpen: false }); else doDelete(); };
+    let idN = this._idN || 100;
+    const newId = () => { idN += 1; this._idN = idN; return 'n' + idN; };
+    const freeName = (base) => { let n = base, i = 2; while (list.some((x) => x.n === n) || SCREENS[n]) n = base + '_' + i++; return n; };
+    const cleanName = (v) => v.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9._-]/g, '');
+    // A copy brings copies of the layouts along, since a GUI is empty without them. Screens stay with the original.
+    const duplicate = () => {
+      if (!sel.length) return;
+      const copies = sel.map(byId).map((x) => Object.assign(JSON.parse(JSON.stringify(x)), { id: newId(), n: freeName(x.n + '_copy'), uses: [], repl: [], layouts: x.layouts.map((l) => ({ n: l.n + ' Copy', on: l.on })) }));
+      const nLay = copies[0].layouts.length;
+      commit([...list, ...copies], { sel: copies.map((c) => c.id), anchor: copies[0].id, ...status(copies.length === 1 ? 'Made ' + copies[0].n + (nLay ? ', with ' + plural(nLay, 'a copy of its layout', 'copies of its layouts') : '') + '. Nothing opens it yet.' : 'Made ' + copies.length + ' copies, with copies of their layouts.', true) });
+    };
+    // New GUI adds one right away, with an identifier to type over and the same defaults as today.
+    const addNew = (base) => {
+      const n = freeName(typeof base === 'string' && base ? base : 'new_gui');
+      const x = { id: newId(), n, title: [], esc: true, pause: true, world: true, dim: true, popup: false, pblur: true, layouts: [], repl: [], uses: [] };
+      commit([...list, x], { sel: [x.id], anchor: x.id, q: '', filter: 'all', filterOpen: false, renaming: true, renameDraft: n, ...status('Added ' + n + '. Type its identifier, then give it a layout.', true) });
+      focusLater(fk('rename'), true);
+    };
+    if (p.add && !this._added && !empty) { this._added = true; setTimeout(() => addNew(), 0); }
+    const undo = () => {
+      const u = s.undoStack || [];
+      if (!u.length) return;
+      const last = u[u.length - 1];
+      set({ list: last.list, sel: last.sel, undoStack: u.slice(0, -1), redoStack: [...(s.redoStack || []), snapshot()], renaming: false, lastTag: null, status: { text: 'Undone.', undo: false } });
+    };
+    const redo = () => {
+      const r = s.redoStack || [];
+      if (!r.length) return;
+      const last = r[r.length - 1];
+      set({ list: last.list, sel: last.sel, redoStack: r.slice(0, -1), undoStack: [...(s.undoStack || []), snapshot()], lastTag: null, status: { text: 'Redone.', undo: false } });
+    };
+    // Nothing gets saved before Done, so Cancel only asks when there is something to lose (rule 68).
+    const changes = (() => {
+      const orig = this._seed, j = (x) => JSON.stringify(x);
+      const ids = new Set(orig.map((x) => x.id).concat(list.map((x) => x.id)));
+      let n = 0; ids.forEach((id) => { const a = orig.find((x) => x.id === id), b = list.find((x) => x.id === id); if (!a || !b || j(a) !== j(b)) n++; });
+      return n;
+    })();
+    const discard = () => set({ list: this._seed, sel: empty ? [] : [String(p.select ?? 'g1').split(',')[0]], open: '', undoStack: [], redoStack: [], renaming: false, sheet: '', filterOpen: false, status: { text: 'Your changes were taken back. The window closes now.', undo: false } });
+    const cancelAll = () => { if (changes) set({ sheet: 'discard', filterOpen: false }); else set({ filterOpen: false, ...status('Nothing changed, so Cancel closes the window without asking.') }); };
+    const startRename = () => { if (sel.length !== 1) return; const x = byId(sel[0]); set({ renaming: true, renameDraft: x.n }); focusLater(fk('rename'), true); };
+    const checkName = (draft, x) => {
+      if (!draft) return { ok: false, bad: false, msg: 'Lowercase letters, numbers, . _ and -. Spaces turn into _.' };
+      if (SCREENS[draft]) return { ok: false, bad: true, msg: draft + ' is the identifier of the ' + SCREENS[draft] + ' screen.' };
+      if (draft !== x.n && byName(draft)) return { ok: false, bad: true, msg: draft + ' already exists.' };
+      return { ok: true, bad: false, msg: 'Enter renames it, Esc keeps the old identifier.' };
+    };
+    // A GUI's own layouts and the screens it replaces always move with it. Only the places that open it ask (rule 126).
+    const applyRename = (x, to, update) => {
+      const nl = list.map((y) => (y === x ? Object.assign({}, y, { n: to }) : y));
+      const c = places(x);
+      const own = x.layouts.length ? ' ' + plural(x.layouts.length, 'Its layout', 'Its ' + x.layouts.length + ' layouts').replace(/^\d+ /, '') + ' moved with it.' : '';
+      commit(nl, { renaming: false, sheet: '', ...status(c && update ? 'Renamed it to ' + to + ' and updated ' + (c === 1 ? 'the place' : c === 2 ? 'both places' : 'all ' + c + ' places') + ' that use it.' + own : c ? 'Renamed it to ' + to + '. ' + (c === 1 ? 'The place that uses ' + x.n + ' still says ' + x.n + ', so it doesn\'t' : 'The ' + c + ' places that use ' + x.n + ' still say ' + x.n + ', so they don\'t') + ' find it anymore.' : 'Renamed it to ' + to + '.' + own, true) });
+    };
+    const tryRename = (x, draft) => {
+      const to = cleanName(draft);
+      const c0 = checkName(to, x);
+      if (to === x.n && !SCREENS[to]) { set({ renaming: false }); return; }
+      if (!c0.ok) return;
+      if (places(x)) set({ sheet: 'rename', renameTo: to, renaming: false });
+      else applyRename(x, to, false);
+    };
+
+    // ---------- details ----------
+    const one = sel.length === 1 ? byId(sel[0]) : null;
+    const many = sel.length > 1;
+    const selXs = sel.map(byId);
+    // One builder for the six switches, for one GUI or several. A mixed switch turns everything on (rule 25).
+    const SAY = {
+      esc: [(n) => n + ' closes with Esc now.', (n) => n + ' doesn\'t close with Esc anymore, so give it a button that closes it.'],
+      pause: [(n) => 'The game pauses while ' + n + ' is open.', (n) => 'The game keeps running while ' + n + ' is open.'],
+      world: [(n) => 'In a world, ' + n + ' shows the world behind it now.', (n) => n + ' always shows the panorama behind it now.'],
+      dim: [(n) => 'What\'s behind ' + n + ' gets blurred and dimmed now.', (n) => 'What\'s behind ' + n + ' stays clear now.'],
+      popup: [(n) => n + ' is a popup now: the screen it opens from stays visible.', (n) => n + ' covers the screen it opens from now.'],
+      pblur: [(n) => 'The screen behind ' + n + ' gets blurred now.', (n) => 'The screen behind ' + n + ' stays sharp now.']
+    };
+    const mkSw = (key, label, sub, parent) => {
+      // Blur and Dim It and Blur the Screen Behind belong to the switch above them: they only count the GUIs
+      // that have it on, and hide when none has
+      const xs = parent ? selXs.filter((x) => x[parent]) : selXs;
+      const nOn = xs.filter((x) => x[key]).length;
+      const mixed = nOn > 0 && nOn < xs.length;
+      const toggle = () => {
+        const to = mixed || !nOn;
+        commit(list.map((x) => (sel.includes(x.id) ? Object.assign({}, x, { [key]: to }) : x)), status(selXs.length === 1 ? SAY[key][to ? 0 : 1](selXs[0].n) : (to ? 'Turned ' + label + ' on' : 'Turned ' + label + ' off') + ' for all ' + selXs.length + '.', true));
+      };
+      return {
+        label, sub: mixed && !parent ? 'On for ' + nOn + ' of ' + xs.length : typeof sub === 'function' ? sub(nOn > 0) : sub,
+        rowCls: 'row' + (parent ? ' child' : ''), hide: !xs.length,
+        swCls: 'sw' + (mixed ? ' mixed' : nOn ? ' on' : ''), aria: mixed ? 'mixed' : nOn ? 'true' : 'false', toggle
+      };
+    };
+    const sws = sel.length ? {
+      screen: [
+        mkSw('esc', 'Close with Esc', (on) => (on ? '' : 'Players need a button that closes it')),
+        mkSw('pause', 'Pause the Game', 'In singleplayer worlds')],
+      behind: [
+        mkSw('world', 'Show the World', 'In a world, instead of the panorama'),
+        mkSw('dim', 'Blur and Dim It', '', 'world'),
+        mkSw('popup', 'Popup', 'The screen it opens from stays visible behind it'),
+        mkSw('pblur', 'Blur the Screen Behind', '', 'popup')].filter((w) => !w.hide)
+    } : { screen: [], behind: [] };
+
+    let d = {};
+    if (one) {
+      const x = one, isOpen = openId === x.id;
+      const groups = [];
+      x.uses.forEach((u) => {
+        let g = groups.find((y) => y.at === u.at);
+        const P = PLACES[u.at];
+        if (!g) { g = { at: u.at, name: P.name, on: P.on || '', chip: P.chip, icon: IC[P.icon], uses: [] }; groups.push(g); }
+        const open = P.kind === 'layout' ? () => set(status('Saves like Done, then opens ' + P.name + ' in the layout editor, with ' + u.el + ' selected.')) : () => set(status('Opens ' + P.name + ' in Listeners.'));
+        g.uses.push({ el: u.el, what: u.what, icon: IC.act, openTip: P.open, open });
+      });
+      const nU = x.uses.length;
+      const cf = conflictOf(x);
+      const rich = x.title.some((t) => typeof t !== 'string');
+      d = {
+        name: x.n,
+        meta: (x.popup ? 'Popup' : 'Screen') + ' · ' + (x.layouts.length ? plural(x.layouts.length, '1 layout', 'layouts') : 'no layout yet') + (x.repl.length ? ' · shown instead of ' + x.repl.map((r) => lower(r.name)).join(' and ') : '') + (isOpen ? ' · open behind this window' : ''),
+        tileCls: 'ls-dicon cg-dicon' + (isOpen ? ' open' : ''), icon: tileIcon(x),
+        openCls: 'btn' + (isOpen ? ' tinted' : ''), openIcon: isOpen ? IC.eyeOff : IC.eye, openLabel: isOpen ? 'Close' : 'Open',
+        conflict: !!cf,
+        cfTitle: x.n + ' is also the identifier of the ' + cf + ' screen',
+        cfText: 'Layouts and scripts find screens by their identifier, so this GUI and the ' + cf + ' screen share their layouts, and Open Screen or Custom GUI with ' + x.n + ' always opens this GUI. Rename it to keep the two apart.',
+        titlePlain: !rich, titleRich: rich, titleText: rich ? '' : titleRaw(x),
+        titlePieces: x.title.map((t) => (typeof t === 'string' ? { isText: true, s: t } : { isChip: true, s: '$$' + t.v, cls: 'mchip var' })),
+        hasLayouts: x.layouts.length > 0, noLayouts: !x.layouts.length,
+        layouts: x.layouts.map((l) => ({ name: l.n, off: !l.on, open: () => set(status('Saves like Done, then opens ' + l.n + ' in the layout editor.')) })),
+        replaces: x.repl.length > 0,
+        repl: x.repl.map((r) => ({ name: cap(r.name), id: r.id, remove: () => commit(list.map((y) => (y === x ? Object.assign({}, y, { repl: y.repl.filter((z) => z !== r) }) : y)), status(cap(lower(r.name)) + ' shows as usual again.', true)) })),
+        used: nU > 0, unused: nU === 0, places: groups,
+        useCount: nU ? plural(nU, '1 place', 'places') + ' in ' + whereText(x.uses) : '',
+        unusedA: x.repl.length ? 'No script opens it. It shows whenever the game opens ' + lower(x.repl[0].name) + '.' : 'Nothing opens it yet. Open it with Open Screen or Custom GUI in any script, or with ',
+        unusedCmd: x.repl.length ? '' : '/openguiscreen ' + x.n,
+        unusedB: x.repl.length ? '' : ' from commands.'
+      };
+    }
+    const newLayout = () => { if (one) set(status('Saves like Done, then opens the layout editor with a new layout for ' + one.n + '.')); };
+    const onTitle = (e) => { if (!one) return; const v = e.target.value; commit(list.map((y) => (y === one ? Object.assign({}, y, { title: v ? [v] : [] }) : y)), status(v ? one.n + ' shows ' + v + ' at the top now.' : one.n + ' has no title anymore.', true), 't:' + one.id); };
+
+    // ---------- details: several GUIs ----------
+    let m = {};
+    if (many) {
+      const xs = selXs;
+      const nPop = xs.filter((x) => x.popup).length;
+      m = {
+        title: xs.length + ' custom GUIs',
+        meta: nPop === xs.length ? 'All of them are popups' : nPop ? plural(nPop, '1 popup', 'popups') + ' and ' + plural(xs.length - nPop, '1 screen', 'screens') : 'All of them are screens',
+        dupLabel: 'Duplicate ' + xs.length, deleteTip: 'Delete ' + xs.length + ' GUIs',
+        rows: xs.map((x) => { const prob = problemOf(x); return { tileCls: 'ls-tile' + (prob ? ' bad' : ''), icon: tileIcon(x), name: x.n, sub: summary(x), act: prob || plural(x.layouts.length, '1 layout', 'layouts'), cls: 'vm-cnt' + (prob ? ' pl-warn' : '') }; })
+      };
+    }
+
+    // ---------- the filter ----------
+    const anchorOf = (el) => { const w = el.closest('.win'); const wr = w.getBoundingClientRect(), r0 = el.getBoundingClientRect(); const k = wr.width / w.offsetWidth || 1; return [Math.round((r0.left - wr.left) / k), Math.round((r0.bottom - wr.top) / k + 4), Math.round((r0.right - wr.left) / k)]; };
+    const pick = (patch) => () => set({ ...patch, filterOpen: false });
+    const filterItems = [
+      { head: 'Show' },
+      { radio: true, checked: filter === 'all', label: 'All GUIs', click: pick({ filter: 'all' }) },
+      { radio: true, checked: filter === 'popup', label: 'Popups', click: pick({ filter: 'popup' }) },
+      { radio: true, checked: filter === 'repl', label: 'Replacing a Screen', click: pick({ filter: 'repl' }) },
+      { radio: true, checked: filter === 'unused', label: 'Not Used', click: pick({ filter: 'unused' }) },
+      { radio: true, checked: filter === 'probs', label: 'With Problems', click: pick({ filter: 'probs' }) }
+    ];
+    const FILTER_CHIP = { popup: 'Popups', repl: 'Replacing a screen', unused: 'Not used', probs: 'With problems' };
+
+    // ---------- sheets ----------
+    let al = { buttons: [] };
+    if (sheet === 'discard') al = {
+      icon: 'undo', title: changes === 1 ? 'Discard your change?' : 'Discard ' + changes + ' changes?',
+      text: 'Cancel puts every custom GUI back the way it was when you opened this window.' + (openId ? ' The one that\'s open behind it closes.' : ''),
+      buttons: [{ cls: 'btn primary danger', label: 'Discard Changes', click: discard }, { cls: 'btn', label: 'Keep Editing', click: () => set({ sheet: '' }) }]
+    };
+    else if (sheet === 'rename' && one) {
+      const to = s.renameTo ?? (p.renameTo || 'quests');
+      const c = places(one), nL = one.layouts.length;
+      al = {
+        icon: IC.pencil, title: 'Rename ' + one.n + ' to ' + to + '?',
+        text: one.n + ' is used in ' + plural(c, '1 place', 'places') + ', in ' + whereText(one.uses) + '. FancyMenu can change ' + (c === 1 ? 'it' : 'them') + ' to ' + to + ' too, so ' + (c === 1 ? 'it keeps' : 'they keep') + ' opening it.' + (nL ? ' ' + plural(nL, 'Its layout moves', 'Its ' + nL + ' layouts move').replace(/^\d+ /, '') + ' with it either way.' : ''),
+        buttons: [
+          { cls: 'btn primary', label: c === 1 ? 'Rename and Update It' : 'Rename and Update ' + c + ' Places', click: () => applyRename(one, to, true) },
+          { cls: 'btn', label: 'Only Rename', click: () => applyRename(one, to, false) },
+          { cls: 'btn', label: 'Cancel', click: () => set({ sheet: '' }) }
+        ]
+      };
+    } else if (sheet === 'delete' && sel.length) {
+      const xs = selXs, one1 = xs.length === 1;
+      const nL = xs.reduce((a, x) => a + x.layouts.length, 0);
+      const reps = xs.flatMap((x) => x.repl);
+      const c = xs.reduce((a, x) => a + x.uses.length, 0);
+      const parts = [];
+      if (nL) parts.push(one1 ? (nL === 1 ? 'Its layout ' + xs[0].layouts[0].n + ' gets deleted with it.' : 'Its ' + nL + ' layouts get deleted with it.') : plural(nL, 'Their 1 layout gets', 'Their ' + nL + ' layouts get').replace(/^\d+ /, '') + ' deleted with them.');
+      if (reps.length) parts.push(cap(reps.map((r) => lower(r.name)).join(' and ')) + (reps.length === 1 ? ' shows' : ' show') + ' as usual again.');
+      if (c) parts.push((one1 ? 'It\'s' : 'They\'re') + ' still used in ' + plural(c, '1 place', 'places') + ', where Open Screen or Custom GUI shows an error from then on.');
+      parts.push('Undo brings everything back until you press Done.');
+      al = {
+        icon: IC.trash, title: one1 ? 'Delete ' + xs[0].n + '?' : 'Delete ' + xs.length + ' GUIs?',
+        text: parts.join(' '),
+        buttons: [{ cls: 'btn primary danger', label: nL ? (one1 ? (nL === 1 ? 'Delete GUI and Layout' : 'Delete GUI and ' + nL + ' Layouts') : 'Delete ' + xs.length + ' GUIs and ' + plural(nL, '1 Layout', 'Layouts')) : 'Delete', click: doDelete }, { cls: 'btn', label: 'Cancel', click: () => set({ sheet: '' }) }]
+      };
+    }
+
+    // ---------- the screen behind the window ----------
+    // The scene draws the open GUI. Without a world the panorama shows, blurred and dimmed unless Show the World is on
+    // and Blur and Dim It is off. A popup keeps the screen it opened from, here the title screen.
+    const ox = openId ? byId(openId) : null;
+    const stage = ox ? { id: ox.id, n: ox.n, title: titleShown(ox), popup: ox.popup, blur: ox.popup ? ox.pblur : !ox.world || ox.dim, dim: !ox.popup && (!ox.world || ox.dim) } : null;
+    const stageKey = JSON.stringify(stage);
+    if (stageKey !== this._stageKey) { this._stageKey = stageKey; if (typeof p.onStage === 'function') setTimeout(() => p.onStage(stage), 0); }
+
+    // ---------- keyboard ----------
+    this._onKey = (e) => {
+      if (window.__cgActive !== uid) return;
+      const tag = (e.target && e.target.tagName) || '';
+      const inField = tag === 'INPUT' || tag === 'TEXTAREA';
+      const mod = e.ctrlKey || e.metaKey;
+      const st = this.state || {};
+      const cur = st.sel ?? sel;
+      if (e.key === 'Escape') {
+        if (sheet) set({ sheet: '' });
+        else if (filterOpen) set({ filterOpen: false });
+        else if (renaming) set({ renaming: false });
+        else if (q && !inField) set({ q: '' });
+        // with nothing else to close, Esc is Cancel, like closing the window
+        else if (!inField) cancelAll();
+        return;
+      }
+      if (sheet) return;
+      if (mod && e.key.toLowerCase() === 'n') { e.preventDefault(); addNew(); return; }
+      if (mod && e.key.toLowerCase() === 'f') { e.preventDefault(); focusLater(fk('search'), true); return; }
+      // Enter, Ctrl+Enter and Ctrl+S press Done, like today
+      if (mod && (e.key === 'Enter' || e.key.toLowerCase() === 's')) { e.preventDefault(); return; }
+      if (inField) return;
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (!order.length) return;
+        const at0 = order.indexOf(cur[cur.length - 1]);
+        const nx = Math.max(0, Math.min(order.length - 1, at0 + (e.key === 'ArrowDown' ? 1 : -1)));
+        if (e.shiftKey && st.anchor) { const a = order.indexOf(st.anchor); set({ sel: order.slice(Math.min(a, nx), Math.max(a, nx) + 1) }); }
+        else set({ sel: [order[nx]], anchor: order[nx], renaming: false });
+        return;
+      }
+      if (e.key === 'Enter') { e.preventDefault(); return; }
+      if (e.key === 'F2') { e.preventDefault(); startRename(); return; }
+      if (e.key === ' ') { e.preventDefault(); if (one) toggleOpen(one.id); return; }
+      if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); askDelete(); return; }
+      if (mod && e.key.toLowerCase() === 'a') { e.preventDefault(); set({ sel: order.slice() }); return; }
+      if (mod && e.key.toLowerCase() === 'd') { e.preventDefault(); duplicate(); return; }
+      if (mod && (e.key.toLowerCase() === 'y' || (e.shiftKey && e.key.toLowerCase() === 'z'))) { e.preventDefault(); redo(); return; }
+      if (mod && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
+      if (!mod && !e.altKey && e.key.length === 1) { set({ q: q + e.key }); focusLater(fk('search')); }
+    };
+    if (!this._keys) { this._keys = (e) => this._onKey && this._onKey(e); window.addEventListener('keydown', this._keys, true); }
+    // a board can show the lower part of the details
+    if (p.scroll && !this._scrolled) { this._scrolled = true; setTimeout(() => { const el = deepQuery('[data-cg="' + uid + '"] .pcontent'); if (el) el.scrollTop = p.scroll === 'end' ? el.scrollHeight : +p.scroll || 0; }, 80); }
+
+    const stt = s.status;
+    const rDraft = s.renameDraft ?? (one ? one.n : '');
+    const rCheck = one ? checkName(cleanName(rDraft), one) : { ok: false, bad: false, msg: '' };
+    return {
+      uid, ic: IC, standalone, yes: true, no: false, noop: () => {},
+      rootCls: standalone ? 'fm ' + ((p.theme ?? 'Dark') === 'Light' ? 'theme-light' : 'theme-dark') + ((p.material ?? 'Blur') === 'Blur' ? ' mat-blur' : '') : '',
+      rootStyle: standalone ? 'position: relative; width: ' + (W + 80) + 'px; height: ' + (H + 80) + 'px; overflow: hidden; background: var(--bd)' : 'position: relative; width: ' + W + 'px; height: ' + H + 'px',
+      winStyle: (standalone ? 'left: 40px; top: 40px; ' : 'left: 0; top: 0; ') + 'width: ' + W + 'px; height: ' + H + 'px',
+      activate: () => { window.__cgActive = uid; },
+      searchFk: fk('search'), renameFk: fk('rename'), titleFk: fk('title'), contentSk: fk('content') + '-' + (sel[0] || ''),
+      searchPh: 'Search ' + (list.length ? list.length + ' GUIs' : 'GUIs'), q,
+      onSearch: (e) => set({ q: e.target.value }),
+      searchKey: (e) => {
+        if (e.key === 'Escape') { set({ q: '' }); e.target.blur(); }
+        if ((e.key === 'ArrowDown' || e.key === 'Enter') && order.length) { e.preventDefault(); e.stopPropagation(); e.target.blur(); set({ sel: [order[0]], anchor: order[0] }); }
+      },
+      addNew: () => addNew(),
+      filterBtnCls: 'ib' + (filter !== 'all' || filterOpen ? ' on' : ''), filterExpanded: filterOpen ? 'true' : 'false',
+      toggleFilter: (e) => { e.preventDefault(); set({ filterOpen: !filterOpen, filterAt: anchorOf(e.currentTarget) }); },
+      filterChip: filter !== 'all' ? FILTER_CHIP[filter] : '', clearFilter: () => set({ filter: 'all' }),
+      rows,
+      noMatch: !rows.length && list.length > 0, noMatchText: ql ? 'No GUI matches “' + q.trim() + '”.' : 'No GUI fits this filter.',
+      canNewFromQ: !!cleanName(q.trim()) && !SCREENS[cleanName(q.trim())], qName: cleanName(q.trim()), newFromQ: () => addNew(cleanName(q.trim())),
+      one: !!one, many, none: !list.length, nothingSel: !sel.length && list.length > 0,
+      d, m, sws,
+      notRenaming: !renaming, renaming, renameDraft: rDraft,
+      renameCls: 'field mono vm-rename' + (rCheck.bad ? ' bad' : ''), renameMsgCls: rCheck.bad ? 'err-msg vm-rmsg' : 'foot vm-rmsg',
+      renameMsg: rCheck.msg,
+      onRename: (e) => set({ renameDraft: cleanName(e.target.value) }),
+      renameKey: (e) => {
+        if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); set({ renaming: false }); return; }
+        if (e.key === 'Enter' && one) { e.preventDefault(); e.stopPropagation(); tryRename(one, s.renameDraft ?? one.n); }
+      },
+      startRename, duplicate, askDelete, newLayout, onTitle,
+      titleFocus: () => set({ lastTag: null }),
+      titleEditor: (e) => { e.preventDefault(); e.stopPropagation(); if (one) set(status('Opens the title of ' + one.n + ' in the text editor, with placeholders and $$ names.')); },
+      toggleOpenSel: () => { if (one) toggleOpen(one.id); },
+      footLead: stt ? stt.text : ox ? ox.n + ' is open behind this window. Changes show right away.' : '', footUndo: !!(stt && stt.undo), undo, cancelAll,
+      anyPopup: !!filterOpen,
+      filterOpen, filterItems, filterStyle: 'left: ' + (s.filterAt ? s.filterAt[0] : 252) + 'px; top: ' + (s.filterAt ? s.filterAt[1] : 120) + 'px',
+      closePopups: () => set({ filterOpen: false }),
+      closePopupsCtx: (e) => { e.preventDefault(); set({ filterOpen: false }); },
+      sheetAlert: (sheet === 'discard' || sheet === 'rename' || sheet === 'delete') && al.buttons.length > 0, al
+    };
+  }
+}
+</script>
+</body>
+</html>
