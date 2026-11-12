@@ -613,17 +613,18 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             float bulletSpace = (this.parent.bulletListIndent * this.bulletListLevel * this.getScale()) + (BULLET_LIST_SPACE_AFTER_INDENT * this.getScale());
             f += bulletSpace;
         }
+        // The paddings of code blocks scale with the text, like the text offset they belong to (see getTextX()). Otherwise the text would grow out of them.
         if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && this.startOfRenderLine) {
-            f += 10;
+            f += 10 * this.getScale();
         }
         if ((this.codeBlockContext != null) && this.codeBlockContext.singleLine && (this.codeBlockContext.getBlockStart() == this)) {
-            f += 1;
+            f += this.getScale();
         }
         if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && (this.autoLineBreakAfter || this.naturalLineBreakAfter)) {
-            f += 10;
+            f += 10 * this.getScale();
         }
         if ((this.codeBlockContext != null) && this.codeBlockContext.singleLine && (this.codeBlockContext.getBlockEnd() == this)) {
-            f += 1;
+            f += this.getScale();
         }
         return f;
 
@@ -654,14 +655,15 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if (this.headlineType == HeadlineType.BIG) {
             f += 6;
         }
+        // The paddings of code blocks and the spacing of bullet items scale with the text, like the text offset they belong to (see getTextY()). Otherwise the text would grow into the next line.
         if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && this.isInRenderLineOf(this.codeBlockContext.getBlockStart())) {
-            f += 10;
+            f += 10 * this.getScale();
         }
         if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && this.isInRenderLineOf(this.codeBlockContext.getBlockEnd())) {
-            f += 10;
+            f += 10 * this.getScale();
         }
         if ((this.bulletListLevel > 0) && this.bulletListItemStart) {
-            f += this.parent.bulletListSpacing;
+            f += this.parent.bulletListSpacing * this.getScale();
         }
         return f;
     }
