@@ -20,7 +20,6 @@ import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -92,6 +91,8 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     public TableContext tableContext = null;
     /** TRUE for the fragment that stands for a whole table. The fragments inside its cells share its table context, so the context alone does not tell them apart. */
     public boolean table = false;
+    /** TRUE for the fragments in the cells of the header row of a table. Set after every parse. */
+    public boolean tableHeader = false;
     @Nullable
     private Component renderComponent = null;
     @Nullable
@@ -115,9 +116,8 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             CursorHandler.setClientTickCursor(CursorHandler.CURSOR_POINTING_HAND);
         }
 
-        // Handle table rendering
         if (this.isTable()) {
-            renderTable(graphics, mouseX, mouseY, partial);
+            MarkdownTablePainter.render(graphics, this, mouseX, mouseY, partial);
             return;
         }
 
@@ -167,121 +167,6 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
         }
 
-    }
-
-    protected void renderTable(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
-        if (this.tableContext == null) return;
-
-        float[] columnWidths = this.tableContext.columnWidths;
-        float cellPadding = this.parent.scaling.sized(this.parent.style.tableCellPadding.get());
-
-        // Use the fragment's x position which already includes alignment offset
-        float tableX = this.x;
-        float tableY = this.y;
-        float currentY = tableY;
-
-        // Use the actual table width for rendering (not the full area width)
-        float actualTableWidth = this.tableContext.totalWidth;
-        
-        com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
-        
-        // Render rows
-        for (int rowIndex = 0; rowIndex < this.tableContext.rows.size(); rowIndex++) {
-            TableRow row = this.tableContext.rows.get(rowIndex);
-            float rowHeight = row.height;
-            float currentX = tableX;
-
-            // Draw row background
-            RenderingUtils.fillF(graphics, tableX, currentY, tableX + actualTableWidth, currentY + rowHeight, this.parent.getRenderColor(this.tableContext.getRowBackgroundColor(this.parent, rowIndex)));
-
-            // Render cells
-            for (int cellIndex = 0; cellIndex < row.cells.size(); cellIndex++) {
-                if (cellIndex >= columnWidths.length) break;
-
-                TableCell cell = row.cells.get(cellIndex);
-                float cellWidth = columnWidths[cellIndex];
-
-                // Calculate text position based on alignment
-                float textX = currentX + cellPadding;
-                float textY = currentY + cellPadding;
-
-                float alignmentOffset = 0;
-                if (cell.alignment == TableCell.TableCellAlignment.CENTER) {
-                    alignmentOffset = (cellWidth - cellPadding * 2 - cell.textWidth) / 2;
-                } else if (cell.alignment == TableCell.TableCellAlignment.RIGHT) {
-                    alignmentOffset = cellWidth - cellPadding * 2 - cell.textWidth;
-                }
-
-                // First pass: position fragments and render the backgrounds of inline code
-                float fragmentX = textX + alignmentOffset;
-                MarkdownTextFragment codeStart = null;
-
-                for (int fragIndex = 0; fragIndex < cell.fragments.size(); fragIndex++) {
-                    MarkdownTextFragment fragment = cell.fragments.get(fragIndex);
-
-                    fragment.x = fragmentX;
-                    fragment.y = textY;
-
-                    if ((fragment.codeBlockContext != null) && fragment.codeBlockContext.singleLine) {
-                        if ((codeStart == null) || (codeStart.codeBlockContext != fragment.codeBlockContext)) codeStart = fragment;
-                        boolean isLastFragment = (fragIndex == cell.fragments.size() - 1) || (cell.fragments.get(fragIndex + 1).codeBlockContext != fragment.codeBlockContext);
-                        if (isLastFragment) {
-                            MarkdownCodePainter.renderInline(graphics, codeStart, fragment);
-                            codeStart = null;
-                        }
-                    } else {
-                        codeStart = null;
-                    }
-
-                    // The paddings of inline code are part of the width of its fragments, like in a line of text
-                    fragmentX += fragment.getRenderWidth();
-                }
-
-                // Second pass: render the fragments
-                for (MarkdownTextFragment fragment : cell.fragments) {
-                    fragment.extractRenderState(graphics, mouseX, mouseY, partial); // Pass actual mouse coords for hover/click detection
-
-                    // Check if any hyperlink in the table is hovered
-                    if (fragment.isLinkLike() && fragment.hovered) {
-                        CursorHandler.setClientTickCursor(CursorHandler.CURSOR_POINTING_HAND);
-                    }
-                }
-
-                currentX += cellWidth;
-            }
-
-            currentY += rowHeight;
-        }
-
-        // Draw table borders
-        int lineColor = this.parent.getRenderColor(this.parent.style.tableLineColor);
-        float lineThickness = this.parent.scaling.sized(this.parent.style.tableLineThickness.get());
-
-        // Horizontal lines
-        float y = tableY;
-        for (int i = 0; i <= this.tableContext.rows.size(); i++) {
-            RenderingUtils.fillF(graphics, tableX, y, tableX + actualTableWidth, y + lineThickness, lineColor);
-            if (i < this.tableContext.rows.size()) {
-                y += this.tableContext.rows.get(i).height;
-            }
-        }
-
-        // Draw thicker line under header
-        if (this.tableContext.hasHeader && this.parent.style.tableShowHeader.get() && !this.tableContext.rows.isEmpty()) {
-            float headerY = tableY + this.tableContext.rows.get(0).height;
-            RenderingUtils.fillF(graphics, tableX, headerY, tableX + actualTableWidth, headerY + lineThickness * 2, lineColor);
-        }
-
-        // Vertical lines
-        float x = tableX;
-        for (int i = 0; i <= columnWidths.length; i++) {
-            RenderingUtils.fillF(graphics, x, tableY, x + lineThickness, currentY + lineThickness, lineColor);
-            if (i < columnWidths.length) {
-                x += columnWidths[i];
-            }
-        }
-
-        RenderingUtils.resetShaderColor(graphics);
     }
 
     /**
@@ -394,6 +279,10 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             if (headline.color.isSet()) style = style.withColor(headline.color.argb());
         } else if (this.bold && this.parent.style.boldTextColor.isSet()) {
             style = style.withColor(this.parent.style.boldTextColor.argb());
+        }
+        if (this.tableHeader && this.parent.style.tableShowHeader.get()) {
+            if (this.parent.style.tableHeaderBold.get()) style = style.withBold(true);
+            if (this.parent.style.tableHeaderTextColor.isSet()) style = style.withColor(this.parent.style.tableHeaderTextColor.argb());
         }
         if (this.textColor != null) {
             style = style.withColor(this.textColor.getColorInt());
@@ -613,12 +502,8 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
      */
     public float getRenderHeight() {
 
-        // Handle table height
         if (this.isTable()) {
-            float totalHeight = this.tableContext.totalRowHeight;
-            // Add line thickness for borders
-            totalHeight += this.parent.scaling.sized(this.parent.style.tableLineThickness.get()) * (this.tableContext.rows.size() + 1);
-            return totalHeight;
+            return MarkdownTablePainter.getHeight(this.parent, this.tableContext);
         }
 
         if (this.imageSupplier != null) {
@@ -846,7 +731,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         public float[] columnWidths = new float[0];
         public boolean hasHeader = false;
         public float totalWidth = 0;
-        /** Height of all rows together, without the table lines and margins. */
+        /** Height of all rows together, without the table lines. */
         public float totalRowHeight = 0;
 
         /**
@@ -855,71 +740,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
          * and rendering, hit tests and size queries all use the measured sizes.
          */
         public void updateMetrics(@NotNull MarkdownRenderer renderer) {
-            int columnCount = this.rows.isEmpty() ? 0 : this.rows.get(0).cells.size();
-            if (this.columnWidths.length != columnCount) {
-                this.columnWidths = new float[columnCount];
-            } else {
-                Arrays.fill(this.columnWidths, 0.0F);
-            }
-            this.totalWidth = 0;
-            this.totalRowHeight = 0;
-            for (TableRow row : this.rows) {
-                for (int i = 0; i < row.cells.size(); i++) {
-                    TableCell cell = row.cells.get(i);
-                    float textWidth = 0;
-                    for (MarkdownTextFragment fragment : cell.fragments) {
-                        textWidth += fragment.getRenderWidth();
-                    }
-                    cell.textWidth = textWidth;
-                    if (i < columnCount) {
-                        float cellWidth = textWidth + (renderer.scaling.sized(renderer.style.tableCellPadding.get()) * 2);
-                        if (cellWidth > this.columnWidths[i]) {
-                            this.columnWidths[i] = cellWidth;
-                        }
-                    }
-                }
-                row.height = this.getRowHeight(row);
-                this.totalRowHeight += row.height;
-            }
-            for (float width : this.columnWidths) {
-                this.totalWidth += width;
-            }
-        }
-
-        /**
-         * Returns the background color of the row at the given index.<br>
-         * The header row only looks like a header while the renderer shows table headers. Otherwise it is a row like every other
-         * one, so the colors alternate from the first row of the table and not from the first row behind the header.
-         */
-        @NotNull
-        public MarkdownStyleOption.ColorOption getRowBackgroundColor(@NotNull MarkdownRenderer renderer, int rowIndex) {
-            if (this.isHeaderRow(renderer, rowIndex)) return renderer.style.tableHeaderBackgroundColor;
-            int alternatingIndex = this.isHeaderRow(renderer, 0) ? (rowIndex - 1) : rowIndex;
-            return (renderer.style.tableAlternateRows.get() && ((alternatingIndex % 2) == 1)) ? renderer.style.tableAlternateRowBackgroundColor : renderer.style.tableRowBackgroundColor;
-        }
-
-        /**
-         * Returns if the row at the given index gets shown as the header of the table.
-         */
-        public boolean isHeaderRow(@NotNull MarkdownRenderer renderer, int rowIndex) {
-            return renderer.style.tableShowHeader.get() && (rowIndex < this.rows.size()) && this.rows.get(rowIndex).isHeader;
-        }
-
-        public float getRowHeight(TableRow row) {
-            float maxHeight = 0;
-            for (TableCell cell : row.cells) {
-                float cellHeight = 0;
-                for (MarkdownTextFragment fragment : cell.fragments) {
-                    float fragmentHeight = fragment.getTextRenderHeight();
-                    if (fragmentHeight > cellHeight) {
-                        cellHeight = fragmentHeight;
-                    }
-                }
-                if (cellHeight > maxHeight) {
-                    maxHeight = cellHeight;
-                }
-            }
-            return maxHeight + (row.parent.scaling.sized(row.parent.style.tableCellPadding.get()) * 2);
+            MarkdownTablePainter.measure(renderer, this);
         }
 
     }
@@ -931,6 +752,8 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         public MarkdownRenderer parent;
         /** Measured by {@link TableContext#updateMetrics(MarkdownRenderer)}. */
         public float height = 0;
+        /** The distance from the top of the table to the top of the row. Measured by {@link TableContext#updateMetrics(MarkdownRenderer)}. */
+        public float offsetY = 0;
 
         public TableRow(MarkdownRenderer parent) {
             this.parent = parent;
