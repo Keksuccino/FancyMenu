@@ -783,10 +783,10 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         return false;
     }
 
-        public void setFocused(boolean var1) {
+    public void setFocused(boolean var1) {
     }
 
-        public boolean isFocused() {
+    public boolean isFocused() {
         return false;
     }
 
