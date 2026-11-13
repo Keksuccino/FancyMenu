@@ -249,13 +249,16 @@ public class TextElement extends AbstractElement {
     }
 
     /**
-     * Gives the scroll bars the colors and textures of their grabbers.<br>
+     * Gives the scroll bars the colors and textures of their grabbers, and the opacity of the element.<br>
      * Textures and colors of the user win. Without any of them, the design of the element decides what the grabbers look like.
      */
     protected void updateScrollGrabbers() {
 
         ScrollBar vertical = this.scrollArea.verticalScrollBar;
         ScrollBar horizontal = this.scrollArea.horizontalScrollBar;
+
+        vertical.grabberOpacity = this.opacity;
+        horizontal.grabberOpacity = this.opacity;
 
         this.customGrabberColorNormal = (this.scrollGrabberColorHexNormal.get() != null) ? this.scrollGrabberColorHexNormal.getDrawable() : null;
         this.customGrabberColorHover = (this.scrollGrabberColorHexHover.get() != null) ? this.scrollGrabberColorHexHover.getDrawable() : null;
