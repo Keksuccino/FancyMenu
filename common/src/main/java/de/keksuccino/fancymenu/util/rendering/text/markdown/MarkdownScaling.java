@@ -89,6 +89,17 @@ final class MarkdownScaling {
     }
 
     /**
+     * Returns the distance rounded down to whole pixels of the style, if the style rounds positions.<br>
+     * Things that get centered or aligned to the right end up a fraction of a pixel away from everything around them otherwise,
+     * which keeps them off the grid all other pixels of the text share.
+     */
+    float snapOffset(float offset) {
+        float pixel = this.bodyScale();
+        if (!this.renderer.style.snapPositions.get() || (pixel <= 0.0F)) return offset;
+        return (float) Math.floor(offset / pixel) * pixel;
+    }
+
+    /**
      * Returns the X position rounded down to a whole screen pixel, if the style rounds positions.
      */
     float snapX(float x) {
