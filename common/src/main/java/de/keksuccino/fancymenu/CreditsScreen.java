@@ -5,7 +5,9 @@ import de.keksuccino.fancymenu.util.ScreenUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.ScrollableMarkdownRenderer;
+import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownHeadlineDecoration;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownLook;
+import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
@@ -50,7 +52,12 @@ public class CreditsScreen extends Screen {
         }
         // Allow markdown to render once to measure its size before entry culling.
         this.markdownRenderer.getScrollArea().setRenderOnlyEntriesInArea(false);
-        this.markdownRenderer.getMarkdownRenderer().getStyle().applyLook(MarkdownLook.NEUTRAL);
+        MarkdownStyle style = this.markdownRenderer.getMarkdownRenderer().getStyle();
+        style.applyLook(MarkdownLook.NEUTRAL);
+        // The credits use empty headlines as spacers, which have to stay invisible
+        for (int level = 1; level <= 3; level++) {
+            style.headline(level).decoration.set(MarkdownHeadlineDecoration.NONE);
+        }
         this.markdownRenderer.getMarkdownRenderer().setUIFontRenderingEnabled(true);
         this.addRenderableWidget(this.markdownRenderer);
 
