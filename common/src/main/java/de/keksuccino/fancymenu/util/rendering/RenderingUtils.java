@@ -472,6 +472,17 @@ public class RenderingUtils {
         return replaceAlphaInColor(color, (int)(newAlpha * 255.0F));
     }
 
+    /**
+     * @param color The color.
+     * @param factor Value between 0.0F and 1.0F the alpha of the color gets multiplied with, like the opacity of what gets drawn in the color.
+     * @return The given color with new alpha. A factor of 1.0F or more returns the color exactly as it is.
+     */
+    public static int multiplyAlphaInColor(int color, float factor) {
+        if (factor >= 1.0F) return color;
+        int alpha = (int)((color >>> 24) * Math.max(0.0F, factor));
+        return (color & 0x00FFFFFF) | (alpha << 24);
+    }
+
     public static void fillF(@NotNull GuiGraphics graphics, float minX, float minY, float maxX, float maxY, int color) {
         fillF(graphics, minX, minY, maxX, maxY, 0F, color);
     }
