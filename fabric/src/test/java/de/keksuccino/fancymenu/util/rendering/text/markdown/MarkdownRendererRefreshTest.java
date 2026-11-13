@@ -124,7 +124,9 @@ class MarkdownRendererRefreshTest {
 
     static Stream<Arguments> parseSettings() {
         return Stream.<Consumer<MarkdownRenderer>>of(
-                renderer -> renderer.setParseMarkdown(false)
+                renderer -> renderer.setParseMarkdown(false),
+                renderer -> renderer.setTextCase(MarkdownRenderer.TextCase.ALL_UPPER),
+                renderer -> renderer.setQuoteItalic(true)
         ).map(Arguments::of);
     }
 
