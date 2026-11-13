@@ -834,6 +834,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
      */
     public void resetHovered() {
         this.interactions.resetHovered(this.fragments);
+        this.layout.resetHoveredPieces();
     }
 
     protected void updateTextHoverEvents() {
@@ -855,7 +856,8 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
 
     /**
      * Only returns the fragments that react to input, which are the link-like ones and tables that contain link-like fragments.
-     * Every input event walks all children, and most fragments of a text are plain words.
+     * Every input event walks all children, and most fragments of a text are plain words.<br>
+     * A fragment the layout split over several lines is here as its first piece only. Clicks reach the other ones through {@link #getChildAt(double, double)}.
      */
     @Override
     @NotNull
