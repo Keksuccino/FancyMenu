@@ -438,20 +438,16 @@ final class MarkdownStructure {
     /**
      * Adds the format markers of a row of underscores that the parser reads as text or markers.
      *
-     * <p>A single underscore opens and closes italic text wherever it is. Two underscores open and close bold text, but only where they are no part of a word:
+     * <p>A single underscore opens and closes italic text and two underscores open and close bold text, but only where they are no part of a word:
      * they open in front of something that is no whitespace, if no letter or digit is in front of them, and close behind something that is no whitespace,
-     * if no letter or digit follows them. That is how "__init__" becomes the bold word "init" while "my__var__name" stays as it is.
-     * Three underscores that can open or close are both markers at once, the two for bold text first. Every other row is text.</p>
+     * if no letter or digit follows them. That is how "_init_" becomes the italic and "__init__" the bold word "init", while "snake_case_name",
+     * "2_000_000" and "my__var__name" stay as they are. Three underscores are both markers at once, the two for bold text first. Every other row is text.</p>
      *
      * @param rowStart The index of the first underscore of the row.
      * @param rowEnd The index behind the last underscore of the row.
      */
     private void addUnderscoreMarkers(@NotNull String text, int rowStart, int rowEnd) {
         int rowLength = rowEnd - rowStart;
-        if (rowLength == 1) {
-            this.formatMarkers.add(FormatMarker.UNDERSCORE, rowStart);
-            return;
-        }
         if (rowLength > 3) return;
         // What stands next to the row counts without the formatting codes in between, which are not shown
         int before = rowStart - 1;
@@ -462,9 +458,14 @@ final class MarkdownStructure {
         boolean whitespaceBehind = (behind >= text.length()) || isWhitespace(text.charAt(behind));
         boolean canOpen = !whitespaceBehind && (whitespaceBefore || !Character.isLetterOrDigit(text.charAt(before)));
         boolean canClose = !whitespaceBefore && (whitespaceBehind || !Character.isLetterOrDigit(text.charAt(behind)));
-        if (canOpen) this.formatMarkers.add(FormatMarker.UNDERSCORE_PAIR_OPEN, rowStart);
-        if (canClose) this.formatMarkers.add(FormatMarker.UNDERSCORE_PAIR_CLOSE, rowStart);
-        if ((rowLength == 3) && (canOpen || canClose)) this.formatMarkers.add(FormatMarker.UNDERSCORE, rowStart + 2);
+        if (rowLength >= 2) {
+            if (canOpen) this.formatMarkers.add(FormatMarker.UNDERSCORE_PAIR_OPEN, rowStart);
+            if (canClose) this.formatMarkers.add(FormatMarker.UNDERSCORE_PAIR_CLOSE, rowStart);
+        }
+        if (rowLength != 2) {
+            if (canOpen) this.formatMarkers.add(FormatMarker.UNDERSCORE_OPEN, rowEnd - 1);
+            if (canClose) this.formatMarkers.add(FormatMarker.UNDERSCORE_CLOSE, rowEnd - 1);
+        }
     }
 
     private static boolean isWhitespace(char character) {
