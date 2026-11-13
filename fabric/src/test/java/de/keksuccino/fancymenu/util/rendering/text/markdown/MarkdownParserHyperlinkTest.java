@@ -137,8 +137,8 @@ class MarkdownParserHyperlinkTest {
 
     @Test
     void lineDoesNotWrapBetweenALinkAndTheTextDirectlyBehindIt() {
-        // "aa bb" fits into the line and the "cc" behind the link does not, but it belongs to the word the link ends in
-        assertEquals(List.of(List.of("aa ", "bb", "cc "), List.of("dd")), renderLines("aa [bb](https://example.invalid)cc dd", 40));
+        // "aa bb" fits into the line and the "cc" behind the link does not, but it belongs to the word the link ends in, so the line wraps in front of that word
+        assertEquals(List.of(List.of("aa "), List.of("bb", "cc "), List.of("dd")), renderLines("aa [bb](https://example.invalid)cc dd", 40));
     }
 
     @Test
