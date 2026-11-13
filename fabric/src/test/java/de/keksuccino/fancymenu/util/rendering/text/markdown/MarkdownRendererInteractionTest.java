@@ -206,6 +206,81 @@ class MarkdownRendererInteractionTest {
         assertEquals(List.of("hover_id", "hover_id"), events.hovered);
     }
 
+    @Test
+    void fragmentsThatLeaveTheVisibleRangeForgetTheMouse() {
+        MarkdownTestRenderer renderer = new MarkdownTestRenderer("top [link words](https://example.invalid)\n\nmiddle\n\n[hover me](hover:hover_id) bottom", 600);
+        RecordingEventHandler events = new RecordingEventHandler();
+        renderer.setTextEventHandler(events);
+        renderer.tick();
+        MarkdownTextFragment link = renderer.fragmentContaining("link");
+        MarkdownTextFragment middle = renderer.fragmentContaining("middle");
+        MarkdownTextFragment hover = renderer.fragmentContaining("hover");
+        renderer.layout.updateVisibleLines();
+        // Rendering sets the hover state of a fragment
+        link.setHovered(true);
+        middle.setHovered(true);
+        hover.setHovered(true);
+        renderer.updateTextHoverEvents();
+
+        // Only the middle line stays visible, like after scrolling
+        renderer.setVisibleVerticalRange(middle.parentLine.offsetY, middle.parentLine.offsetY + 1);
+        renderer.layout.updateVisibleLines();
+        renderer.updateTextHoverEvents();
+
+        assertFalse(link.hovered);
+        assertFalse(link.hyperlink.isHovered());
+        assertFalse(hover.hovered);
+        assertFalse(hover.hoverEvent.isHovered());
+        assertTrue(middle.hovered);
+
+        // The mouse entering the event after it came back is a new hover
+        renderer.setVisibleVerticalRange(Float.NEGATIVE_INFINITY, Float.POSITIVE_INFINITY);
+        renderer.layout.updateVisibleLines();
+        hover.setHovered(true);
+        renderer.updateTextHoverEvents();
+
+        assertEquals(List.of("hover_id", "hover_id"), events.hovered);
+    }
+
+    @Test
+    void fragmentsInTablesThatLeaveTheVisibleRangeForgetTheMouse() {
+        MarkdownTestRenderer renderer = new MarkdownTestRenderer(TEXT, 600);
+        renderer.tick();
+        MarkdownTextFragment table = renderer.tableFragment(1);
+        MarkdownTextFragment cellClick = MarkdownTestRenderer.fragmentContaining(table.tableContext.rows.get(1).cells.get(0).fragments, "cell");
+        MarkdownTextFragment last = renderer.fragmentContaining("last");
+        renderer.layout.updateVisibleLines();
+        table.setHovered(true);
+        cellClick.setHovered(true);
+
+        renderer.setVisibleVerticalRange(last.parentLine.offsetY, 1000);
+        renderer.layout.updateVisibleLines();
+
+        assertFalse(table.hovered);
+        assertFalse(cellClick.hovered);
+        assertFalse(cellClick.clickEvent.isHovered());
+    }
+
+    @Test
+    void fragmentsOutsideTheVisibleRangeForgetTheMouseAfterANewLayout() {
+        MarkdownTestRenderer renderer = new MarkdownTestRenderer("top [link words](https://example.invalid)\n\nmiddle\n\nbottom", 600);
+        renderer.tick();
+        MarkdownTextFragment link = renderer.fragmentContaining("link");
+        MarkdownTextFragment bottom = renderer.fragmentContaining("bottom");
+        renderer.layout.updateVisibleLines();
+        link.setHovered(true);
+        bottom.setHovered(true);
+
+        // The same fragments end up in new lines, and the visible range moved at the same time
+        renderer.setOptimalWidth(500);
+        renderer.tick();
+        renderer.setVisibleVerticalRange(bottom.parentLine.offsetY, 1000);
+        renderer.layout.updateVisibleLines();
+
+        assertFalse(link.hovered);
+        assertTrue(bottom.hovered);
+    }
+
     private static final class RecordingEventHandler implements MarkdownRenderer.TextEventHandler {
 
         private final List<String> clicked = new ArrayList<>();
