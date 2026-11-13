@@ -7,9 +7,11 @@ import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyle;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -42,24 +44,115 @@ class MarkdownListItemMarkerTest {
         MarkdownTestRenderer renderer = renderer("- one\n- two\n  - nested\n~ changed\n* highlight", MarkdownLook.PIXEL);
         MarkdownStyle style = renderer.getStyle();
 
-        assertFalse(renderer.textHasPlusListItems);
+        assertFalse(MarkdownListMarkerPainter.isRemovedItem(renderer.fragmentContaining("one")));
         assertMarker(renderer, "one", MarkdownMarkerShape.CURSOR, style.listLevel(1).markerColor);
         assertMarker(renderer, "two", MarkdownMarkerShape.CURSOR, style.listLevel(1).markerColor);
         assertMarker(renderer, "nested", MarkdownMarkerShape.CURSOR_SMALL, style.listLevel(2).markerColor);
     }
 
     @Test
-    void automaticModeNoticesPlusItemsAnywhereInTheText() {
-        MarkdownTestRenderer renderer = renderer("- first\n\ntext\n\n  + nested plus", MarkdownLook.PIXEL);
+    void automaticModeOnlyLooksAtTheListOfAnItem() {
+        MarkdownTestRenderer renderer = renderer("## Added\n- plain\n- list\n\n### Patch notes\n+ added\n- removed\n\ntext\n\n- last", MarkdownLook.PIXEL);
+        MarkdownStyle style = renderer.getStyle();
 
-        assertTrue(renderer.textHasPlusListItems);
+        // The first and the last list have no "+" items of their own, whatever the list between them has
+        assertFalse(MarkdownListMarkerPainter.isRemovedItem(renderer.fragmentContaining("plain")));
+        assertFalse(MarkdownListMarkerPainter.isRemovedItem(renderer.fragmentContaining("list")));
+        assertTrue(MarkdownListMarkerPainter.isRemovedItem(renderer.fragmentContaining("removed")));
+        assertFalse(MarkdownListMarkerPainter.isRemovedItem(renderer.fragmentContaining("last")));
+        assertMarker(renderer, "plain", style.listLevel(1).markerShape.get(), style.listLevel(1).markerColor);
+        assertMarker(renderer, "removed", style.listMinusMarkerShape.get(), style.listMinusMarkerColor);
+        assertMarker(renderer, "last", style.listLevel(1).markerShape.get(), style.listLevel(1).markerColor);
+    }
+
+    @Test
+    void automaticModeFindsPlusItemsBeforeAndBehindAnItemOfTheirList() {
+        MarkdownTestRenderer renderer = renderer("- first\n+ added\n- last", MarkdownLook.PIXEL);
+
         assertTrue(MarkdownListMarkerPainter.isRemovedItem(renderer.fragmentContaining("first")));
+        assertTrue(MarkdownListMarkerPainter.isRemovedItem(renderer.fragmentContaining("last")));
 
-        renderer.setText("- first\n\ntext with a + in it");
+        renderer.setText("- first\n- text with a + in it\n- last");
         renderer.tick();
 
-        assertFalse(renderer.textHasPlusListItems);
         assertFalse(MarkdownListMarkerPainter.isRemovedItem(renderer.fragmentContaining("first")));
+        assertFalse(MarkdownListMarkerPainter.isRemovedItem(renderer.fragmentContaining("last")));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "- first\ntext\n+ added",
+            "- first\n\ntext\n\n+ added",
+            "- first\n# Headline\n+ added",
+            "- first\n\n## Headline\n\n+ added",
+            "- first\n---\n+ added",
+            "- first\n> quote\n+ added",
+            "- first\n| a | b |\n| --- | --- |\n| 1 | 2 |\n+ added",
+            "- first\n```\ncode\n```\n+ added",
+            "+ added\ntext\n- first"
+    })
+    void anythingButBlankLinesBetweenTwoItemsMakesThemTwoLists(String text) {
+        MarkdownTestRenderer renderer = renderer(text, MarkdownLook.PIXEL);
+
+        assertFalse(MarkdownListMarkerPainter.isRemovedItem(renderer.fragmentContaining("first")), text);
+    }
+
+    @Test
+    void blankLinesStayInsideOfAList() {
+        MarkdownTestRenderer renderer = renderer("- first\n\n\n+ added\n   \n- last\n\n", MarkdownLook.PIXEL);
+
+        assertTrue(MarkdownListMarkerPainter.isRemovedItem(renderer.fragmentContaining("first")));
+        assertTrue(MarkdownListMarkerPainter.isRemovedItem(renderer.fragmentContaining("last")));
+    }
+
+    @Test
+    void itemsWithNumbersAndOtherMarkersArePartOfTheList() {
+        MarkdownTestRenderer renderer = renderer("- first\n1. numbered\n~ changed\n* highlight\n  - nested\n+ added\n2) numbered too\n- last", MarkdownLook.PIXEL);
+        renderer.setNumberedListsEnabled(true);
+        renderer.tick();
+
+        assertTrue(MarkdownListMarkerPainter.isRemovedItem(renderer.fragmentContaining("first")));
+        assertTrue(MarkdownListMarkerPainter.isRemovedItem(renderer.fragmentContaining("last")));
+        assertFalse(MarkdownListMarkerPainter.isRemovedItem(renderer.fragmentContaining("nested")));
+        assertFalse(MarkdownListMarkerPainter.isRemovedItem(renderer.fragmentContaining("numbered")));
+
+        // Without numbered lists, a line with a number is text, which ends the list in front of it
+        renderer.setNumberedListsEnabled(false);
+        renderer.tick();
+
+        assertFalse(MarkdownListMarkerPainter.isRemovedItem(renderer.fragmentContaining("first")));
+        assertFalse(MarkdownListMarkerPainter.isRemovedItem(renderer.fragmentContaining("last")));
+    }
+
+    @Test
+    void plusItemsOfEveryLevelCountForTheirListAndNestedItemsStayNeutral() {
+        MarkdownTestRenderer renderer = renderer("- first\n  + deeper plus\n\ntext\n\n+ added\n  - nested\n- removed", MarkdownLook.PIXEL);
+        MarkdownStyle style = renderer.getStyle();
+
+        assertTrue(MarkdownListMarkerPainter.isRemovedItem(renderer.fragmentContaining("first")));
+        assertTrue(MarkdownListMarkerPainter.isRemovedItem(renderer.fragmentContaining("removed")));
+        assertFalse(MarkdownListMarkerPainter.isRemovedItem(renderer.fragmentContaining("nested").parentLine.fragments.get(0)));
+        assertMarker(renderer, "nested", style.listLevel(2).markerShape.get(), style.listLevel(2).markerColor);
+    }
+
+    @Test
+    void itemsThatContinueAQuoteAreNoPartOfTheListBehindTheQuote() {
+        MarkdownTestRenderer renderer = renderer("> quote\n- inside\n\n+ added\n- removed", MarkdownLook.PIXEL);
+        MarkdownTextFragment inside = renderer.fragmentContaining("inside");
+
+        // The line behind a quote line continues the quote, and the blank line ends it
+        assertSame(renderer.fragmentContaining("quote").quoteContext, inside.quoteContext);
+        assertNull(renderer.fragmentContaining("added").quoteContext);
+        assertFalse(MarkdownListMarkerPainter.isRemovedItem(inside));
+        assertTrue(MarkdownListMarkerPainter.isRemovedItem(renderer.fragmentContaining("removed")));
+    }
+
+    @Test
+    void itemWithFormattedTextKnowsItsList() {
+        MarkdownTestRenderer renderer = renderer("- **bold** first [link](https://example.com) item\n+ *added*", MarkdownLook.PIXEL);
+
+        assertTrue(MarkdownListMarkerPainter.isRemovedItem(renderer.fragmentContaining("first").parentLine.fragments.get(0)));
+        assertMarker(renderer, "first", renderer.getStyle().listMinusMarkerShape.get(), renderer.getStyle().listMinusMarkerColor);
     }
 
     @Test
@@ -86,7 +179,6 @@ class MarkdownListItemMarkerTest {
         MarkdownTestRenderer renderer = new MarkdownTestRenderer("+ added\n- removed", 400);
         renderer.tick();
 
-        assertFalse(renderer.textHasPlusListItems);
         assertFalse(MarkdownListMarkerPainter.isRemovedItem(renderer.fragmentContaining("removed")));
     }
 

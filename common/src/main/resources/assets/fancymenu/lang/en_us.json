@@ -2005,7 +2005,7 @@
   "fancymenu.elements.text.markdown.style.list_marker_size.desc": "How big the area of a marker is. Squares,\ncircles and rings fill it.\n\nPixel art markers always keep their size\nand stand in the middle of it.",
   "fancymenu.elements.text.markdown.style.list_minus_marker_color": "- Marker Color",
   "fancymenu.elements.text.markdown.style.list_minus_marker_mode": "- Marker Used: %s",
-  "fancymenu.elements.text.markdown.style.list_minus_marker_mode.desc": "When items that start with - get the marker\nfor removed things instead of the normal\nmarker of their level.\n\nAutomatic: Only when the same text also has\nitems that start with +, like patch notes do.\n\nOnly items of the first list level can get it.",
+  "fancymenu.elements.text.markdown.style.list_minus_marker_mode.desc": "When items that start with - get the marker\nfor removed things instead of the normal\nmarker of their level.\n\nAutomatic: Only when their own list also has\nan item that starts with +, like patch notes do.\nA list ends where anything but list items\nor blank lines follows.\n\nOnly items of the first list level can get it.",
   "fancymenu.elements.text.markdown.style.list_minus_marker_shape": "- Marker: %s",
   "fancymenu.elements.text.markdown.style.list_minus_marker_shape.desc": "The marker of items that start with -,\nwhen it stands for things that got removed.",
   "fancymenu.elements.text.markdown.style.list_number_alignment": "Number Alignment: %s",
