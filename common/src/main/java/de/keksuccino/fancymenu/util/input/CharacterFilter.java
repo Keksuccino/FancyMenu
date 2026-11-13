@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.util.input;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.BitSet;
 import de.keksuccino.fancymenu.util.Legacy;
 import org.jetbrains.annotations.NotNull;
 
@@ -68,8 +67,9 @@ public class CharacterFilter {
         return f;
     }
 
-    private final List<Character> allowed = new ArrayList<>();
-    private final List<Character> forbidden = new ArrayList<>();
+    // One bit per character, so checking a character takes the same short time for every filter and never creates objects
+    private final BitSet allowed = new BitSet();
+    private final BitSet forbidden = new BitSet();
 
     public boolean isAllowedText(@NotNull String text) {
         return this.filterForAllowedChars(text).equals(text);
@@ -77,9 +77,9 @@ public class CharacterFilter {
 
     public boolean isAllowedChar(char c) {
         if (!this.allowed.isEmpty()) {
-            return this.allowed.contains(c);
+            return this.allowed.get(c);
         } else {
-            return !this.forbidden.contains(c);
+            return !this.forbidden.get(c);
         }
     }
 
@@ -87,45 +87,52 @@ public class CharacterFilter {
         return (charAsString.length() < 1) || this.isAllowedChar(charAsString.charAt(0));
     }
 
+    /**
+     * Returns the text without the characters this filter does not allow.<br>
+     * A text that only holds allowed characters gets returned as it is, without a copy.
+     */
     @NotNull
     public String filterForAllowedChars(@NotNull String text) {
-        String s = "";
-        for (int i = 0; i < text.length(); ++i) {
-            if (this.isAllowedChar(text.charAt(i))) {
-                s = s + text.charAt(i);
+        int length = text.length();
+        for (int i = 0; i < length; i++) {
+            if (!this.isAllowedChar(text.charAt(i))) {
+                // Everything in front of the first character that is not allowed stays, the rest gets checked one by one.
+                // The result is built in one buffer, because adding to a String copies all of it for every single character.
+                StringBuilder filtered = new StringBuilder(length - 1).append(text, 0, i);
+                for (i++; i < length; i++) {
+                    char c = text.charAt(i);
+                    if (this.isAllowedChar(c)) filtered.append(c);
+                }
+                return filtered.toString();
             }
         }
-        return s;
+        return text;
     }
 
     public void addAllowedCharacters(char... chars) {
         for (char c : chars) {
-            if (!this.allowed.contains(c)) {
-                this.allowed.add(c);
-            }
+            this.allowed.set(c);
         }
     }
 
     public void addAllowedCharacters(String... chars) {
         for (String s : chars) {
-            if (s != null && s.length() >= 1 && !this.allowed.contains(s.charAt(0))) {
-                this.allowed.add(s.charAt(0));
+            if (s != null && s.length() >= 1) {
+                this.allowed.set(s.charAt(0));
             }
         }
     }
 
     public void addForbiddenCharacters(char... chars) {
         for (char c : chars) {
-            if (!this.forbidden.contains(c)) {
-                this.forbidden.add(c);
-            }
+            this.forbidden.set(c);
         }
     }
 
     public void addForbiddenCharacters(String... chars) {
         for (String s : chars) {
-            if (s != null && s.length() >= 1 && !this.forbidden.contains(s.charAt(0))) {
-                this.forbidden.add(s.charAt(0));
+            if (s != null && s.length() >= 1) {
+                this.forbidden.set(s.charAt(0));
             }
         }
     }
