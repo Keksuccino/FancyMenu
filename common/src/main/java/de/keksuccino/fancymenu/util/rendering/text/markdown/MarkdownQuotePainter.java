@@ -44,11 +44,13 @@ final class MarkdownQuotePainter {
         if (background.isSet()) {
             float left = renderer.x + scaling.padding();
             float right = renderer.x + renderer.getRealWidth() - scaling.padding();
-            MarkdownPaint.box(graphics, left, top, right, bottom, scaling.sized(style.quoteCornerRadius.get()), renderer.getRenderColor(background));
+            MarkdownPaint.box(graphics, renderer, left, top, right, bottom, MarkdownPaint.cornerRadius(renderer, style.quoteCornerRadius.get()), renderer.getRenderColor(background));
         }
         if (hasBar(context)) {
             float barX = getBarX(context);
-            RenderingUtils.fillF(graphics, barX, top - scaling.sized(style.quoteBarOverhangTop.get()), barX + getBarWidth(renderer), bottom + scaling.sized(style.quoteBarOverhangBottom.get()), renderer.getRenderColor(getBarColor(renderer, context)));
+            float barWidth = getBarWidth(renderer);
+            // With smooth corners, the ends of the bar are round, and without, it is a plain rectangle
+            MarkdownPaint.box(graphics, renderer, barX, top - scaling.sized(style.quoteBarOverhangTop.get()), barX + barWidth, bottom + scaling.sized(style.quoteBarOverhangBottom.get()), style.smoothCorners.get() ? MarkdownPaint.cornerRadius(renderer, barWidth / 2) : 0.0F, renderer.getRenderColor(getBarColor(renderer, context)));
         }
         RenderingUtils.resetShaderColor(graphics);
     }
