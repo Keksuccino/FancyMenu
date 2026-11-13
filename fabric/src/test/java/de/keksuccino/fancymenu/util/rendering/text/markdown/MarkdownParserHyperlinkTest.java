@@ -176,6 +176,49 @@ class MarkdownParserHyperlinkTest {
         assertNull(fragments.get(0).hyperlink);
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"https://example.invalid/wiki/Name_(disambiguation)", "a(b)c", "(a)", "a((b)(c))d", "()"})
+    void linkTargetCanHoldPairsOfRoundBrackets(String target) {
+        List<MarkdownTextFragment> fragments = parse("see [the link](" + target + ") and more");
+        MarkdownTextFragment link = fragmentContaining(fragments, "link");
+
+        assertEquals(target, link.hyperlink.link);
+        assertSame(link.hyperlink, fragmentContaining(fragments, "the").hyperlink);
+        assertNull(fragmentContaining(fragments, "see").hyperlink);
+        assertNull(fragmentContaining(fragments, "more").hyperlink);
+        assertEquals("see the link and more", joinText(fragments));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"[label](a(b)", "[label](a((b)c)", "[label](a(b]c))", "[label](a(b\nc))"})
+    void linkTargetWithAnOpenRoundBracketThatNeverClosesIsNoLink(String text) {
+        List<MarkdownTextFragment> fragments = parse(text);
+
+        for (MarkdownTextFragment fragment : fragments) assertNull(fragment.hyperlink);
+        assertEquals(text.replace("\n", ""), joinText(fragments));
+    }
+
+    @Test
+    void linkTargetEndsAtTheFirstClosingBracketWithoutAnOpeningOne() {
+        List<MarkdownTextFragment> fragments = parse("[label](a(b)c)d) rest");
+        MarkdownTextFragment link = fragmentContaining(fragments, "label");
+
+        assertEquals("a(b)c", link.hyperlink.link);
+        assertEquals("labeld) rest", joinText(fragments));
+    }
+
+    @Test
+    void imageSourcesAndTextEventsCanHoldPairsOfRoundBracketsToo() {
+        List<MarkdownTextFragment> image = parse("![alt](image(1).png)");
+        List<MarkdownTextFragment> hyperlinkImage = parse("[![alt](image(1).png)](https://example.invalid/(page))");
+        List<MarkdownTextFragment> event = parse("[click](click:event(1))");
+
+        assertEquals("image(1).png", image.get(0).imageSupplier.getSourceWithoutPrefix());
+        assertEquals("image(1).png", hyperlinkImage.get(0).imageSupplier.getSourceWithoutPrefix());
+        assertEquals("https://example.invalid/(page)", hyperlinkImage.get(0).hyperlink.link);
+        assertEquals("event(1)", fragmentContaining(event, "click").clickEvent.identifier);
+    }
+
     /**
      * Returns the fragment texts of all render lines the text gets at the given width, measured with 6 pixels per character.
      */
