@@ -30,7 +30,7 @@ public final class TextBackground {
     public final Property.BooleanProperty enabled;
     /** How far the background reaches beyond the text area on every side. */
     public final Property.IntegerProperty padding;
-    /** If the background also covers the space next to the text area that a shown scroll bar has its grabber in. */
+    /** If the background also covers the space next to the text area that a shown scroll bar has its grabber in. Otherwise the scroll bars stand outside of the background. */
     public final Property.BooleanProperty behindScrollBars;
     /** The texture of the user. Without one, the background is the built-in panel. Its entry shares its name with the background texture of tooltip elements. */
     public final Property<ResourceSupplier<ITexture>> texture;
@@ -88,13 +88,23 @@ public final class TextBackground {
             borderY = Math.max(0, this.nineSliceBorderY.getInteger());
         }
         int[] area = this.updateArea(x, y, width, height, scrollArea.isVerticalScrollBarVisible(), scrollArea.isHorizontalScrollBarVisible());
-        int color = RenderingUtils.replaceAlphaInColor(-1, Math.max(0.0F, Math.min(1.0F, opacity)));
+        int color = RenderingUtils.multiplyAlphaInColor(-1, opacity);
         if (nineSliced) {
             // Stretched instead of tiled, which keeps it at nine pieces for every size of the element
             RenderingUtils.blitNineSlicedTexture(graphics, RenderPipelines.GUI_TEXTURED, location, area[0], area[1], area[2], area[3], textureWidth, textureHeight, borderY, borderX, borderY, borderX, color, true);
         } else {
             graphics.blit(RenderPipelines.GUI_TEXTURED, location, area[0], area[1], 0.0F, 0.0F, area[2], area[3], textureWidth, textureHeight, textureWidth, textureHeight, color);
         }
+    }
+
+    /**
+     * Returns how far the background moves the scroll bars of the element away from its text area.<br>
+     * A background that does not reach behind the scroll bars has them outside of it, right behind its edge, so a grabber never lies across its frame.
+     * Without a background, and with one that reaches behind the scroll bars, they stand right next to the text area.
+     */
+    public int getScrollBarDistance() {
+        if (!this.enabled.getBoolean() || this.behindScrollBars.getBoolean()) return 0;
+        return Math.max(0, this.padding.getInteger());
     }
 
     /**

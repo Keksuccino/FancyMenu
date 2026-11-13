@@ -1858,7 +1858,7 @@
   "fancymenu.elements.text.auto_line_wrapping": "Auto Line Wrapping: %s",
   "fancymenu.elements.text.background": "Background",
   "fancymenu.elements.text.background.behind_scroll_bars": "Reach Behind Scroll Bars: %s",
-  "fancymenu.elements.text.background.behind_scroll_bars.desc": "If the background also reaches behind\na scroll bar while one is shown.\n\nTurn this off to only cover the text area.",
+  "fancymenu.elements.text.background.behind_scroll_bars.desc": "If the background also reaches behind\na scroll bar while one is shown.\n\nWhen this is off, the background only covers\nthe text area and the scroll bars move\nout of it, right next to its edge.",
   "fancymenu.elements.text.background.enabled": "Show Background: %s",
   "fancymenu.elements.text.background.enabled.desc": "Draws a panel behind the text.\n\nThe panel reaches a bit beyond the text area,\nso turning it on or off never moves your text.",
   "fancymenu.elements.text.background.nine_slice.desc": "Nine-slicing keeps the corners and edges of\nyour texture in shape and only stretches\nwhat is between them. When this is off,\nthe whole texture gets stretched.\n\nThese settings are for your own texture.\nThe built-in panel takes care of itself.",
