@@ -60,6 +60,8 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     public ResourceLocation font = null;
     public boolean hovered = false;
     public TableContext tableContext = null;
+    /** TRUE for the fragment that stands for a whole table. The fragments inside its cells share its table context, so the context alone does not tell them apart. */
+    public boolean table = false;
 
     public MarkdownTextFragment(@NotNull MarkdownRenderer parent, @NotNull String text) {
         this.parent = parent;
@@ -676,7 +678,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     }
     
     public boolean isTable() {
-        return (this.tableContext != null) && this.text.equals("[TABLE]");
+        return this.table && (this.tableContext != null);
     }
 
     public static class Hyperlink {
