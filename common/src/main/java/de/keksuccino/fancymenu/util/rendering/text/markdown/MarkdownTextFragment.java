@@ -48,6 +48,9 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     /** The alternative text of the image of this fragment, without the backslashes of its escaped characters. NULL if the fragment is no image. */
     @Nullable
     public String imageAltText = null;
+    /** The caption below the image of this fragment, if the style shows one. Wrapped by the layout whenever it measures the image. */
+    @Nullable
+    MarkdownImagePainter.Caption imageCaption = null;
     public boolean separationLine;
     public DrawableColor textColor = null;
     public boolean bold;
@@ -122,14 +125,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         }
 
         if (this.imageSupplier != null) {
-            this.imageSupplier.forRenderable((iTexture, location) -> {
-                RenderSystem.enableBlend();
-                float width = this.getRenderWidth();
-                float height = this.getRenderHeight();
-                graphics.setColor(1.0F, 1.0F, 1.0F, this.parent.textOpacity);
-                RenderingUtils.blitF(graphics, location, this.x, this.y, 0.0F, 0.0F, width, height, width, height);
-                RenderingUtils.resetShaderColor(graphics);
-            });
+            MarkdownImagePainter.render(graphics, this);
         } else if (this.separationLine) {
 
             RenderSystem.enableBlend();
@@ -485,12 +481,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         }
 
         if (this.imageSupplier != null) {
-            ITexture t = this.imageSupplier.get();
-            if (t == null) return 10;
-            if (t.getWidth() <= (this.parent.getRealWidth() - this.parent.scaling.padding() - this.parent.scaling.padding())) {
-                return t.getWidth();
-            }
-            return this.parent.getRealWidth() - this.parent.scaling.padding() - this.parent.scaling.padding();
+            return MarkdownImagePainter.getWidth(this);
         }
 
         return this.getLeadingSpace() + this.getTextRenderWidth() + this.getTrailingSpace(endOfRenderLine);
@@ -507,9 +498,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         }
 
         if (this.imageSupplier != null) {
-            ITexture t = this.imageSupplier.get();
-            if (t == null) return 10;
-            return t.getAspectRatio().getAspectRatioHeight((int)this.getRenderWidth());
+            return MarkdownImagePainter.getHeight(this);
         }
 
         return this.getTextRenderHeight();
