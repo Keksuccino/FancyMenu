@@ -108,8 +108,6 @@ final class MarkdownStructure {
             queueNewLine = false;
 
             if (lineEnd < index) lineEnd = getLineEnd(text, index);
-            //Length of the part of the current line that starts at the current index
-            int remainingLineLength = lineEnd - index;
 
             // A label stays in its line, so a link whose label has no end in this line is none
             if ((c == NEWLINE_CHAR) && (linkLabelEnd == LINK_LABEL_END_UNKNOWN)) {
@@ -292,7 +290,7 @@ final class MarkdownStructure {
                         continue;
                     }
                     // A line with nothing but the quote character is an empty line of the open quote
-                    if (quote && (remainingLineLength == 1)) {
+                    if (quote && ((lineEnd - index) == 1)) {
                         this.addEvent(index, Event.QUOTE_EMPTY_LINE, 0, 0);
                         continue;
                     }
@@ -400,11 +398,13 @@ final class MarkdownStructure {
                 }
 
                 //Handle Alignment
-                if (isStartOfLine && (remainingLineLength == 3) && markdown && ((c == CIRCUMFLEX_CHAR) || (c == VERTICAL_BAR_CHAR))) {
+                if (isStartOfLine && markdown && ((c == CIRCUMFLEX_CHAR) || (c == VERTICAL_BAR_CHAR))) {
                     boolean centered = (c == CIRCUMFLEX_CHAR);
-                    if (text.startsWith(centered ? FORMATTING_CODE_ALIGNMENT_CENTERED_PREFIX_SUFFIX : FORMATTING_CODE_ALIGNMENT_RIGHT_PREFIX_SUFFIX, index)) {
+                    String marker = centered ? FORMATTING_CODE_ALIGNMENT_CENTERED_PREFIX_SUFFIX : FORMATTING_CODE_ALIGNMENT_RIGHT_PREFIX_SUFFIX;
+                    // The marker line has nothing but whitespace behind its marker
+                    if (text.startsWith(marker, index) && containsOnly(text, index + marker.length(), lineEnd, IS_TRIMMED_WHITESPACE)) {
                         // What the marker does depends on the markers behind it, so that gets settled when all of them are found.
-                        // The line holds nothing but the marker, so jumping over it is right even if the marker turns out to be text.
+                        // The line holds nothing the pass has to read, so jumping over it is right even if the marker turns out to be text.
                         this.addEvent(index, Event.ALIGNMENT, (centered ? MarkdownRenderer.MarkdownLineAlignment.CENTERED : MarkdownRenderer.MarkdownLineAlignment.RIGHT).ordinal(), 0);
                         if (centered) {
                             centeredAlignmentMarkers++;
