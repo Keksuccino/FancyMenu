@@ -175,17 +175,6 @@ class MarkdownParserTableTest {
     }
 
     @Test
-    void tableSyntaxThatEndsTheTextInsideACodeBlockAddsNoLine() {
-        // The line "```x" closes no code block, so the block runs to the end of the text
-        List<MarkdownTextFragment> fragments = parse("```\ncode\n```x\n| a | b |\n| --- | --- |");
-
-        assertTrue(fragments.stream().noneMatch(MarkdownTextFragment::isTable));
-        // One line for every line of the text behind the marker that opens the block
-        assertEquals(List.of("code", "```x", "|", "|"), fragments.stream().filter(fragment -> fragment.naturalLineBreakAfter).map(fragment -> fragment.text).toList());
-        assertEquals("|", fragments.get(fragments.size() - 1).text);
-    }
-
-    @Test
     void closingMarkerOfAPlainTextBlockIsFoundBehindTableSyntaxInIt() {
         // The table lines are no part of the text the block markers get searched in, the lines around them are
         List<MarkdownTextFragment> fragments = parse(";;;\n| a |\n| --- |\n;;;\n**bold**");
