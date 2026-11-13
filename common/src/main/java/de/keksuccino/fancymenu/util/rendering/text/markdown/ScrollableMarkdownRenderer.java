@@ -59,8 +59,8 @@ public class ScrollableMarkdownRenderer implements Renderable, ContainerEventHan
         this.scrollArea.verticalScrollBar.grabberHeight = 20;
         this.scrollArea.horizontalScrollBar.grabberWidth = 20;
         this.scrollArea.horizontalScrollBar.grabberHeight = 10;
-        this.scrollArea.backgroundColor = () -> DrawableColor.of(0,0,0,0);
-        this.scrollArea.borderColor = () -> DrawableColor.of(0,0,0,0);
+        this.scrollArea.backgroundColor = () -> DrawableColor.FULLY_TRANSPARENT;
+        this.scrollArea.borderColor = () -> DrawableColor.FULLY_TRANSPARENT;
 
         this.scrollArea.addEntry(new MarkdownRendererEntry(this.scrollArea, this.markdownRenderer));
 
