@@ -122,6 +122,9 @@ class MarkdownParserScalingTest {
         PERCENT_SIGNS("%!!%#%!!%#%"),
         FORMATTING_CODES_IN_LINK_LABELS("[a §cb &lc](d) [e §c](f "),
         FORMATTING_CODE_PREFIXES("§§&&§` &&; §§] "),
+        DOUBLE_UNDERSCORES("__a__ b__c__d __e f__ ___g___ §c__h§r__ "),
+        DOUBLE_UNDERSCORES_WITHOUT_END("__a "),
+        FORMATTING_CODES_NEXT_TO_DOUBLE_UNDERSCORES("§c§l§r__a"),
         ESCAPED_PIPES_AT_THE_END_OF_TABLE_ROWS("| a | b \\|\n| --- | --- |\n| c \\|\n\n");
 
         private final String text;
