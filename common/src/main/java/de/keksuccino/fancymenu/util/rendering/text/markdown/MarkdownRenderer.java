@@ -174,7 +174,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     /**
      * Returns the GUI scale the renderer gets drawn at, without what the render pose scales on top of it.
      */
-    protected float getGuiScale() {
+    protected float getBaseRenderScale() {
         return (this.parentRenderScale != null) ? this.parentRenderScale : (float) WindowHandler.getGuiScale();
     }
 
