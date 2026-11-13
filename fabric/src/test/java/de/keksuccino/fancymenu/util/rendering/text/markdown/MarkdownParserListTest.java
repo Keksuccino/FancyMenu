@@ -128,6 +128,38 @@ class MarkdownParserListTest {
         assertEquals(ListItemMarker.NONE, lastStruck.listItemMarker);
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"2 * 3 is six\n* first\n* second", "about ~5 or so\n~ first\n  ~ second", "2 * 3 is six\n  * first\n    * second\nlast"})
+    void markerOfAnItemClosesNoFormatThatAMarkerInFrontOfItWouldOpen(String text) {
+        List<MarkdownTextFragment> fragments = parseWithExtendedBullets(text);
+
+        for (MarkdownTextFragment fragment : fragments) {
+            assertFalse(fragment.italic);
+            assertFalse(fragment.strikethrough);
+        }
+        assertTrue(fragmentContaining(fragments, "first").bulletListItemStart);
+        assertTrue(fragmentContaining(fragments, "second").bulletListItemStart);
+        assertTrue(joinText(fragments).startsWith(text.substring(0, text.indexOf('\n'))));
+    }
+
+    @Test
+    void asteriskAtALineStartStillClosesItalicTextWhileExtendedBulletCharactersAreSwitchedOff() {
+        List<MarkdownTextFragment> fragments = parse("2 * 3 is six\n* rest");
+
+        assertTrue(fragmentContaining(fragments, "six").italic);
+        assertFalse(fragmentContaining(fragments, "rest").italic);
+        assertEquals(0, fragmentContaining(fragments, "rest").bulletListLevel);
+    }
+
+    @Test
+    void markerWithoutASpaceBehindItStillClosesAFormatWhileExtendedBulletCharactersAreSwitchedOn() {
+        List<MarkdownTextFragment> fragments = parseWithExtendedBullets("2 * 3 is six\n*rest and ~struck\n~rest");
+
+        assertTrue(fragmentContaining(fragments, "six").italic);
+        assertFalse(fragmentContaining(fragments, "rest").italic);
+        assertTrue(fragmentContaining(fragments, "struck").strikethrough);
+    }
+
     @Test
     void extendedItemsWorkInsideTableCells() {
         MarkdownRenderer renderer = renderer().setExtendedBulletListMarkersEnabled(true);
