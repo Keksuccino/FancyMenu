@@ -402,6 +402,35 @@ public class RenderingUtils {
                                              int textureWidth, int textureHeight,
                                              int borderTop, int borderRight, int borderBottom, int borderLeft, int color) {
 
+        blitNineSlicedTexture(graphics, renderType, texture, x, y, width, height, textureWidth, textureHeight, borderTop, borderRight, borderBottom, borderLeft, color, false);
+
+    }
+
+    /**
+     * Renders a texture using nine-slice scaling, with edges and center that are either tiled or stretched.
+     *
+     * @param graphics The GuiGraphicsExtractor instance to use for rendering
+     * @param renderType The render type.
+     * @param texture The texture Identifier to render
+     * @param x The x position to render at
+     * @param y The y position to render at
+     * @param width The desired width to render
+     * @param height The desired height to render
+     * @param textureWidth The actual width of the texture
+     * @param textureHeight The actual height of the texture
+     * @param borderTop The size of the top border
+     * @param borderRight The size of the right border
+     * @param borderBottom The size of the bottom border
+     * @param borderLeft The size of the left border
+     * @param color The color to tint the texture with
+     * @param stretch If the edges and the center get stretched to their size as one piece each, instead of getting tiled.
+     *                A stretched texture always is nine pieces. A tiled one is one piece per repetition,
+     *                which is a lot for a small texture on a big area.
+     */
+    public static void blitNineSlicedTexture(GuiGraphicsExtractor graphics, @NotNull RenderPipeline renderType, Identifier texture, int x, int y, int width, int height,
+                                             int textureWidth, int textureHeight,
+                                             int borderTop, int borderRight, int borderBottom, int borderLeft, int color, boolean stretch) {
+
         // Correct border sizes if they're too large
         if (borderLeft + borderRight >= textureWidth) {
             float scale = (float)(textureWidth - 2) / (borderLeft + borderRight);
@@ -424,9 +453,32 @@ public class RenderingUtils {
         // Bottom right
         graphics.blit(renderType, texture, x + width - borderRight, y + height - borderBottom, textureWidth - borderRight, textureHeight - borderBottom, borderRight, borderBottom, textureWidth, textureHeight, color);
 
-        // Edges - Tiled
         int centerWidth = textureWidth - borderLeft - borderRight;
         int centerHeight = textureHeight - borderTop - borderBottom;
+
+        if (stretch) {
+            int innerWidth = width - borderLeft - borderRight;
+            int innerHeight = height - borderTop - borderBottom;
+            if (innerWidth > 0) {
+                // Top edge
+                graphics.blit(renderType, texture, x + borderLeft, y, borderLeft, 0, innerWidth, borderTop, centerWidth, borderTop, textureWidth, textureHeight, color);
+                // Bottom edge
+                graphics.blit(renderType, texture, x + borderLeft, y + height - borderBottom, borderLeft, textureHeight - borderBottom, innerWidth, borderBottom, centerWidth, borderBottom, textureWidth, textureHeight, color);
+            }
+            if (innerHeight > 0) {
+                // Left edge
+                graphics.blit(renderType, texture, x, y + borderTop, 0, borderTop, borderLeft, innerHeight, borderLeft, centerHeight, textureWidth, textureHeight, color);
+                // Right edge
+                graphics.blit(renderType, texture, x + width - borderRight, y + borderTop, textureWidth - borderRight, borderTop, borderRight, innerHeight, borderRight, centerHeight, textureWidth, textureHeight, color);
+            }
+            if ((innerWidth > 0) && (innerHeight > 0)) {
+                // Center
+                graphics.blit(renderType, texture, x + borderLeft, y + borderTop, borderLeft, borderTop, innerWidth, innerHeight, centerWidth, centerHeight, textureWidth, textureHeight, color);
+            }
+            return;
+        }
+
+        // Edges - Tiled
 
         // Top edge
         for (int i = borderLeft; i < width - borderRight; i += centerWidth) {
