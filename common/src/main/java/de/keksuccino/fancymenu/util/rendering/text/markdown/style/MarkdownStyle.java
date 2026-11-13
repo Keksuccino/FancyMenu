@@ -195,6 +195,21 @@ public final class MarkdownStyle {
     /** The space between the edge of the text area and the text of a quote, which holds the bar. */
     public final FloatOption quoteIndent = this.size("quote_indent", Group.QUOTES, Impact.LAYOUT, 8.0F, 8.0F, 10.0F);
     public final BooleanOption quoteItalic = this.bool("quote_italic", Group.QUOTES, Impact.PARSE, false, false, false);
+    public final FloatOption quoteBarWidth = this.size("quote_bar_width", Group.QUOTES, Impact.DRAW, 2.0F, 2.0F, 2.0F);
+    public final EnumOption<MarkdownQuoteBarPosition> quoteBarPosition = this.mode("quote_bar_position", Group.QUOTES, Impact.DRAW, MarkdownQuoteBarPosition.INSIDE, MarkdownQuoteBarPosition.INSIDE, MarkdownQuoteBarPosition.INSIDE);
+    /** How far the bar reaches above the first line of its quote. */
+    public final FloatOption quoteBarOverhangTop = this.size("quote_bar_overhang_top", Group.QUOTES, Impact.DRAW, 2.0F, 0.0F, 0.0F);
+    /** How far the bar reaches below the last line of its quote. */
+    public final FloatOption quoteBarOverhangBottom = this.size("quote_bar_overhang_bottom", Group.QUOTES, Impact.DRAW, 1.0F, 0.0F, 0.0F);
+    /** The color of the panel behind a quote, if it has one. The panel is as wide as the text area. */
+    public final ColorOption quoteBackgroundColor = this.optionalColor("quote_background_color", Group.QUOTES, Impact.DRAW, NONE, rgba(255, 201, 77, 23), this.theme(theme -> theme.ui_interface_generic_text_color, 14));
+    /** The space between the upper edge of the panel of a quote and its first line. */
+    public final FloatOption quotePaddingTop = this.size("quote_padding_top", Group.QUOTES, Impact.LAYOUT, 0.0F, 4.0F, 5.0F);
+    public final FloatOption quotePaddingBottom = this.size("quote_padding_bottom", Group.QUOTES, Impact.LAYOUT, 0.0F, 4.0F, 5.0F);
+    /** The space between the text of a quote and the edge of the text area across from its bar. */
+    public final FloatOption quotePaddingSide = this.size("quote_padding_side", Group.QUOTES, Impact.LAYOUT, 0.0F, 4.0F, 6.0F);
+    /** How much of every corner of the panel of a quote gets cut off. */
+    public final FloatOption quoteCornerRadius = this.size("quote_corner_radius", Group.QUOTES, Impact.DRAW, 0.0F, 0.0F, 3.0F);
     public final FloatOption quoteSpaceAbove = this.size("quote_space_above", Group.QUOTES, Impact.LAYOUT, 0.0F, 6.0F, 8.0F);
     public final FloatOption quoteSpaceBelow = this.size("quote_space_below", Group.QUOTES, Impact.LAYOUT, 0.0F, 6.0F, 8.0F);
 
