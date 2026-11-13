@@ -92,7 +92,23 @@ class MarkdownParserScalingTest {
         TABLE_SYNTAX_IN_ONE_PLAIN_TEXT_BLOCK("| a | ;; |\n| --- | --- |\n\n;;;\n"),
         TABLE_CELLS_IN_ONE_ROW("| a "),
         TABLE_SEPARATOR_CELLS_IN_ONE_ROW("| --- "),
-        FORMATTING_CODES("§c&l§ra ");
+        FORMATTING_CODES("§c&l§ra "),
+        MARKERS_IN_INLINE_CODE("*a _b ~c **d ~~e `*f _g ~h **i ~~j %!!% %#%` "),
+        MARKERS_IN_PLAIN_TEXT("*a _b ~c **d ;;*e _f ~g **h;; "),
+        MARKERS_IN_CODE_BLOCKS("*a _b ~c **d\n```\n*e _f ~g **h\n```\n"),
+        MARKERS_IN_TABLE_SYNTAX_INSIDE_ONE_CODE_BLOCK("| *a | _b |\n| --- | --- |\n| ~c | **d |\n\n*e\n"),
+        PLAIN_TEXT_MARKERS_IN_INLINE_CODE("`a ;;b` ;;c "),
+        LINK_LABELS_THAT_END_IN_INLINE_CODE("[a `b](c) d` "),
+        LINK_LABELS_THAT_END_IN_INLINE_CODE_OF_ONE_LABEL("[a `b](c)` `d](e)` "),
+        LINK_LABELS_THAT_END_IN_PLAIN_TEXT("[a ;;b](c) d;; "),
+        UNDERSCORES_IN_ROWS("_a __b__ c___ "),
+        TRIPLE_ASTERISKS("***a** b ***c* d "),
+        FONT_PREFIXES_WITH_UNDERSCORES_WITHOUT_SUFFIX("_a %!!b_c%d "),
+        FONT_PREFIXES_WITHOUT_END("%!!a_b "),
+        FONT_AND_COLOR_PREFIXES_THAT_END_IN_A_SUFFIX("%!!a%!!% %#f00%#% "),
+        ALIGNMENT_MARKERS_WITHOUT_END("^^^\na\n|||\nb\n```\n^^^\n|||\n```\n"),
+        ALIGNMENT_BLOCKS("^^^\na\n^^^\n|||\nb\n|||\n;;;\n^^^\n|||\n;;;\n"),
+        SPACES_BEHIND_OPENING_MARKERS("* a* ` b` [ c](d) #  e\n-  f\n>  g\n");
 
         private final String text;
 
