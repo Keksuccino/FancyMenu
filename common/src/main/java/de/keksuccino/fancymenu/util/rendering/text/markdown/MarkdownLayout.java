@@ -77,7 +77,8 @@ final class MarkdownLayout {
             //Handle Auto Line Break
             if (!isStartOfLine && renderer.isAutoLineBreakingEnabled()) {
                 f.startOfRenderLine = false;
-                if (lastFragment.endOfWord && !isEmptyLineEnd(f) && ((lastFragment.codeBlockContext == null) || lastFragment.codeBlockContext.singleLine) && ((currentLineWidth + f.getRenderWidth() + renderer.border) > renderer.optimalWidth)) {
+                // The fragment has to fit as the last one of the line, because that is what it becomes when the next fragment wraps
+                if (lastFragment.endOfWord && !isEmptyLineEnd(f) && ((lastFragment.codeBlockContext == null) || lastFragment.codeBlockContext.singleLine) && ((currentLineWidth + f.getRenderWidth(true) + renderer.border) > renderer.optimalWidth)) {
                     currentLineWidth = renderer.border;
                     isStartOfLine = true;
                     line.prepareLine();
