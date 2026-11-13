@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
@@ -117,6 +118,39 @@ class MarkdownLayoutTest {
             assertSame(lastCode, part.end);
         }
         assertTrue(linesWithCode > 1);
+    }
+
+    @Test
+    void everyFragmentOfALineHasItsPositionBeforeTheFirstOneRenders() {
+        MarkdownTestRenderer renderer = new MarkdownTestRenderer("", 400);
+        List<Float> lastFragmentPositions = new ArrayList<>();
+        MarkdownTextFragment last = new MarkdownTextFragment(renderer, "last") {
+            @Override
+            public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+            }
+        };
+        // Fragments draw things that reach to fragments after them, like the background of an inline code span
+        MarkdownTextFragment first = new MarkdownTextFragment(renderer, "first") {
+            @Override
+            public void render(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+                lastFragmentPositions.add(last.x);
+                lastFragmentPositions.add(last.y);
+            }
+        };
+        first.unscaledTextWidth = 30;
+        last.unscaledTextWidth = 24;
+        MarkdownTextLine line = new MarkdownTextLine(renderer);
+        line.fragments.add(first);
+        line.fragments.add(last);
+        line.offsetX = 2;
+        line.offsetY = 5;
+
+        renderer.setX(100).setY(200);
+        line.render((GuiGraphics) null, 0, 0, 0);
+        renderer.setX(150).setY(300);
+        line.render((GuiGraphics) null, 0, 0, 0);
+
+        assertEquals(List.of(132.0F, 205.0F, 182.0F, 305.0F), lastFragmentPositions);
     }
 
     @Test

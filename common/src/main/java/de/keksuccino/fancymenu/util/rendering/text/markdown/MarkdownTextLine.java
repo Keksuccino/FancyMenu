@@ -39,14 +39,17 @@ public class MarkdownTextLine implements Renderable {
 
     protected void onRender(GuiGraphics graphics, int mouseX, int mouseY, float partial, boolean shouldRender) {
 
+        // Fragments draw things that reach to fragments after them, like the background of a code span, so all of them get their position before the first one renders
         float textX = this.parent.x + this.offsetX;
         for (MarkdownTextFragment f : this.fragments) {
             f.x = textX;
             f.y = this.parent.y + this.offsetY;
-            if (shouldRender) {
+            textX += f.getRenderWidth();
+        }
+        if (shouldRender) {
+            for (MarkdownTextFragment f : this.fragments) {
                 f.render(graphics, mouseX, mouseY, partial);
             }
-            textX += f.getRenderWidth();
         }
 
     }
