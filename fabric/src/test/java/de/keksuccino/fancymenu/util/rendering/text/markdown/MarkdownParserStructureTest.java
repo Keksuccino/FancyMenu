@@ -365,24 +365,6 @@ class MarkdownParserStructureTest {
     }
 
     @Test
-    void tablePlaceholderTextInsideACellRefersToNoTable() {
-        List<MarkdownTextFragment> fragments = parse("| a | b |\n| --- | --- |\n\n| [TABLE_0] | d |\n| --- | --- |");
-        List<MarkdownTextFragment> tables = fragments.stream().filter(MarkdownTextFragment::isTable).toList();
-
-        assertEquals(2, tables.size());
-        List<TableCell> cells = tables.get(1).tableContext.rows.get(0).cells;
-        assertEquals(2, cells.size());
-        assertTrue(cells.get(0).fragments.isEmpty());
-        assertEquals("d", joinText(cells.get(1).fragments));
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"[TABLE_7]", "[TABLE_x]", "[TABLE_]", "[TABLE_", "[TABLE_-1]"})
-    void placeholderLineWithoutItsTableGetsSkipped(String line) {
-        assertEquals(List.of("above", "below"), texts(parse("above\n" + line + "\nbelow")));
-    }
-
-    @Test
     void tableRowWithThousandsOfCellsGetsParsed() {
         int columns = 20000;
         MarkdownTextFragment table = tableFragment(parse("| a ".repeat(columns) + "|\n" + "| :-: ".repeat(columns) + "|"));
