@@ -91,6 +91,30 @@ class MarkdownParserMarkerInCodeTest {
         assertTrue(fragments.stream().noneMatch(fragment -> fragment.bold || fragment.italic || fragment.strikethrough));
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"`code ;;plain;; code`", "```\ncode ;;plain;; code\n```", "```\ncode\n;;;\nplain\n;;;\ncode\n```"})
+    void plainTextMarkersInsideCodeStayText(String text) {
+        List<MarkdownTextFragment> fragments = parse(text);
+
+        // Only the markers of the code are gone, and the text between the plain text markers is code like the text around them
+        assertEquals(text.replace("`", "").replace("\n", ""), joinText(fragments));
+        for (MarkdownTextFragment fragment : fragments) {
+            assertFalse(fragment.plainText);
+            // Code inside of a line leaves an empty fragment in front of it when it starts the line
+            assertTrue((fragment.codeBlockContext != null) || fragment.text.isEmpty(), () -> "<" + fragment.text + ">");
+        }
+    }
+
+    @Test
+    void codeEndsAtItsMarkerBehindPlainTextMarkersInsideOfIt() {
+        List<MarkdownTextFragment> fragments = parse("`one ;;two` three;; four");
+
+        assertEquals("one ;;two three;; four", joinText(fragments));
+        assertTrue(fragmentContaining(fragments, "two").codeBlockContext != null);
+        assertTrue(fragmentContaining(fragments, "three").codeBlockContext == null);
+        assertTrue(fragments.stream().noneMatch(fragment -> fragment.plainText));
+    }
+
     @Test
     void formatAroundCodeStillClosesBehindIt() {
         List<MarkdownTextFragment> fragments = parse("**bold `code` bold** plain");
