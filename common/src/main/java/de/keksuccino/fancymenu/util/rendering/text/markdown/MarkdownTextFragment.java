@@ -262,7 +262,9 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             style = style.withStrikethrough(true);
         }
         if (this.quoteContext != null) {
-            style = style.withColor(this.parent.style.quoteTextColor.argb());
+            // The text of a callout can have a color of its own
+            boolean calloutColor = (this.quoteContext.calloutType != null) && this.parent.style.calloutTextColor.isSet();
+            style = style.withColor(calloutColor ? this.parent.style.calloutTextColor.argb() : this.parent.style.quoteTextColor.argb());
             if (this.parent.style.quoteItalic.get()) {
                 style = style.withItalic(true);
             }

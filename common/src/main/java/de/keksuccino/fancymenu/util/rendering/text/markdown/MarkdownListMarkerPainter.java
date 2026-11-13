@@ -107,7 +107,7 @@ final class MarkdownListMarkerPainter {
             }
             return;
         }
-        MarkdownPaint.marker(graphics, renderer, getMarkerShape(first), getMarkerX(first), getMarkerY(first), renderer.style.listMarkerSize.get() * scale, scale, renderer.getRenderColor(getMarkerColor(first)));
+        MarkdownPaint.marker(graphics, renderer, getMarkerShape(first), getMarkerX(first), getMarkerY(first), renderer.style.listMarkerSize.get() * scale, scale, renderer.getFontMetrics().baseline * scale, renderer.getRenderColor(getMarkerColor(first)));
     }
 
     /**

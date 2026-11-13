@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.ScrollableMarkdownRenderer;
+import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownLook;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
@@ -27,7 +28,7 @@ public class WelcomeWindowBody extends PiPWindowBody {
     private static final Component HEADLINE = Component.translatable("fancymenu.welcome.screen.headline").withStyle(Style.EMPTY.withBold(true));
 
     public static final int PIP_WINDOW_WIDTH = 490;
-    public static final int PIP_WINDOW_HEIGHT = 294;
+    public static final int PIP_WINDOW_HEIGHT = 272;
 
     private ScrollableMarkdownRenderer markdownRenderer;
 
@@ -57,10 +58,9 @@ public class WelcomeWindowBody extends PiPWindowBody {
         } else {
             this.markdownRenderer.rebuild((float)(centerX - scrollWidth / 2), (float)HEADER_HEIGHT, (float)scrollWidth, (float)scrollHeight);
         }
-        this.markdownRenderer.getMarkdownRenderer().setText("^^^\n\n\n" + I18n.get("fancymenu.welcome.screen.text") + "\n^^^");
+        this.markdownRenderer.getMarkdownRenderer().setText("^^^\n" + I18n.get("fancymenu.welcome.screen.text") + "\n^^^");
         this.markdownRenderer.getMarkdownRenderer().setAutoLineBreakingEnabled(true);
-        this.markdownRenderer.getMarkdownRenderer().setTextBaseColor(UIBase.getUITheme().ui_interface_generic_text_color);
-        this.markdownRenderer.getMarkdownRenderer().setTextShadow(false);
+        this.markdownRenderer.getMarkdownRenderer().getStyle().applyLook(MarkdownLook.NEUTRAL);
         this.markdownRenderer.getMarkdownRenderer().setUIFontRenderingEnabled(true);
         this.addRenderableWidget(this.markdownRenderer);
 

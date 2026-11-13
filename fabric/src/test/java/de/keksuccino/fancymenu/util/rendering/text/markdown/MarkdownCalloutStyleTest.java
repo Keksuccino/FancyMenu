@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownCalloutIcons;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownLook;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyle;
+import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyleOption;
 import net.minecraft.network.chat.Component;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -36,8 +37,9 @@ class MarkdownCalloutStyleTest {
             assertTrue(label.getStyle().isBold());
             assertEquals(label.getString().length() * 6, marker.unscaledTextWidth);
             assertSame(callout.color, MarkdownQuotePainter.getBarColor(renderer, marker.quoteContext));
-            // The text of a callout looks like the text of a quote
-            assertEquals(renderer.getStyle().quoteTextColor.argb() & 0xFFFFFF, renderer.fragmentContaining("body").getRenderComponent().getStyle().getColor().getValue() & 0xFFFFFF);
+            // The text of a callout looks like the text of a quote unless the style gives it a color of its own
+            MarkdownStyleOption.ColorOption textColor = renderer.getStyle().calloutTextColor.isSet() ? renderer.getStyle().calloutTextColor : renderer.getStyle().quoteTextColor;
+            assertEquals(textColor.argb() & 0xFFFFFF, renderer.fragmentContaining("body").getRenderComponent().getStyle().getColor().getValue() & 0xFFFFFF);
             for (MarkdownTextFragment.CalloutType other : MarkdownTextFragment.CalloutType.values()) {
                 if (other != type) assertNotSame(callout, renderer.getStyle().callout(other.ordinal()));
             }

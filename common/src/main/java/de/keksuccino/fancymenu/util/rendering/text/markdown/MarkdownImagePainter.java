@@ -137,8 +137,8 @@ final class MarkdownImagePainter {
         float width = getImageWidth(fragment);
         float height = getImageHeight(fragment);
         if (lineThickness > 0.0F) {
-            MarkdownPaint.box(graphics, fragment.x, fragment.y, fragment.x + width + (frame * 2), fragment.y + height + (frame * 2), 0.0F, renderer.getRenderColor(style.imageFrameOuterColor));
-            MarkdownPaint.box(graphics, fragment.x + lineThickness, fragment.y + lineThickness, fragment.x + width + frame + lineThickness, fragment.y + height + frame + lineThickness, 0.0F, renderer.getRenderColor(style.imageFrameInnerColor));
+            MarkdownPaint.box(graphics, renderer, fragment.x, fragment.y, fragment.x + width + (frame * 2), fragment.y + height + (frame * 2), 0.0F, renderer.getRenderColor(style.imageFrameOuterColor));
+            MarkdownPaint.box(graphics, renderer, fragment.x + lineThickness, fragment.y + lineThickness, fragment.x + width + frame + lineThickness, fragment.y + height + frame + lineThickness, 0.0F, renderer.getRenderColor(style.imageFrameInnerColor));
         }
         // Textured rectangles without a color of their own get drawn with the blend state they find, and everything drawn before them leaves blending disabled
         RenderSystem.enableBlend();
