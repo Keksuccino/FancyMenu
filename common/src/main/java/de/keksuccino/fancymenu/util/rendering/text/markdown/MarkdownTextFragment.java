@@ -388,9 +388,8 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
     protected void renderQuoteLine(GuiGraphics graphics) {
         if ((this.quoteContext != null) && this.drawsQuoteLine()) {
-            MarkdownTextFragment end = Objects.requireNonNull(this.quoteContext.getQuoteEnd());
             float yStart = Objects.requireNonNull(this.quoteContext.getQuoteStart()).getRenderLineY() - 2;
-            float yEnd = end.getRenderLineY() + end.getRenderHeight() + 1;
+            float yEnd = this.getQuoteLineBottom();
             RenderSystem.enableBlend();
             if (this.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT) {
                 float lineX = this.getLeftQuoteLineX();
@@ -401,6 +400,17 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             }
             RenderingUtils.resetShaderColor(graphics);
         }
+    }
+
+    /**
+     * Returns where the line next to the quote of this fragment ends, which is right below the last render line of the quote.<br>
+     * The whole render line counts and not only the last fragment of the quote, because the first fragment of a line can make it
+     * taller than the others, like the one that starts a list item.
+     */
+    protected float getQuoteLineBottom() {
+        MarkdownTextFragment end = Objects.requireNonNull(this.quoteContext.getQuoteEnd());
+        float lastLineHeight = (end.parentLine != null) ? end.parentLine.getLineHeight() : end.getRenderHeight();
+        return end.getRenderLineY() + lastLineHeight + 1;
     }
 
     /**
