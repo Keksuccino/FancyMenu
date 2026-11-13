@@ -193,6 +193,37 @@ class TextBackgroundTest {
         background.padding.set(-5);
 
         assertArrayEquals(new int[]{100, 50, 200, 80}, background.updateArea(100, 50, 200, 80, false, false));
+        background.enabled.set(true);
+        background.behindScrollBars.set(false);
+        assertEquals(0, background.getScrollBarDistance());
+    }
+
+    @Test
+    void scrollBarsStandOutsideOfABackgroundThatDoesNotReachBehindThem() {
+        TextBackground background = new TestElement().background;
+        background.enabled.set(true);
+        background.behindScrollBars.set(false);
+
+        // The scroll bars start where the background ends, which is the padding away from the text area
+        assertEquals(6, background.getScrollBarDistance());
+        assertEquals(94 + 212, 100 + 200 + background.getScrollBarDistance());
+        background.padding.set(10);
+        assertEquals(10, background.getScrollBarDistance());
+        background.padding.set(0);
+        assertEquals(0, background.getScrollBarDistance());
+    }
+
+    @Test
+    void scrollBarsStayNextToTheTextAreaWithoutABackgroundAndOnABackgroundThatReachesBehindThem() {
+        TextBackground background = new TestElement().background;
+
+        // What elements that got saved without a background have
+        assertEquals(0, background.getScrollBarDistance());
+        background.behindScrollBars.set(false);
+        assertEquals(0, background.getScrollBarDistance());
+        background.enabled.set(true);
+        background.behindScrollBars.set(true);
+        assertEquals(0, background.getScrollBarDistance());
     }
 
     @Test
