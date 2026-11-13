@@ -149,11 +149,13 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                 graphics.pose().translate(this.getTextX(), this.getTextY(), 0.0F);
                 graphics.pose().scale(scale, scale, 1.0F);
                 // The fragments that only end a line and the ones of blank lines have nothing to draw
-                if (!this.text.isEmpty()) this.parent.renderText(graphics, this.getRenderComponent(), 0.0F, 0.0F, this.parent.getRenderColor(this.parent.style.textColor), this.parent.style.textShadow.get() && (this.codeBlockContext == null));
+                if (!this.text.isEmpty()) this.parent.renderText(graphics, this.getRenderComponent(), 0.0F, 0.0F, this.parent.getRenderColor(this.parent.style.textColor), this.parent.hasTextShadow() && (this.codeBlockContext == null));
             } finally {
                 graphics.pose().popPose();
             }
             RenderingUtils.resetShaderColor(graphics);
+
+            if (this.isLinkLike()) MarkdownLinkPainter.renderUnderline(graphics, this);
 
             this.renderQuoteLine(graphics);
 
@@ -511,24 +513,35 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         }
         style = this.minecraftFormatting.applyTo(style);
         if (this.hyperlink != null) {
-            style = style.withColor(this.parent.style.hyperlinkColor.argb());
-            if (this.hyperlink.isHovered()) {
-                style = style.withUnderlined(true);
-            }
+            style = this.applyLinkStyle(style, this.parent.style.hyperlinkColor, this.hyperlink.isHovered());
         }
         if (this.clickEvent != null) {
-            style = style.withColor(this.parent.style.clickEventColor.argb());
-            if (this.clickEvent.isHovered()) {
-                style = style.withUnderlined(true);
-            }
+            style = this.applyLinkStyle(style, this.parent.style.clickEventColor, this.clickEvent.isHovered());
         }
         if (this.hoverEvent != null) {
-            style = style.withColor(this.parent.style.hoverEventColor.argb());
-            if (this.hoverEvent.isHovered()) {
-                style = style.withUnderlined(true);
-            }
+            style = this.applyLinkStyle(style, this.parent.style.hoverEventColor, this.hoverEvent.isHovered());
         }
         return style;
+    }
+
+    /**
+     * Gives the style the color of a link or text event, and its underline if that is part of the text (see {@link MarkdownLinkPainter}).
+     */
+    @NotNull
+    private Style applyLinkStyle(@NotNull Style style, @NotNull MarkdownStyleOption.ColorOption color, boolean hovered) {
+        MarkdownStyle markdownStyle = this.parent.style;
+        style = style.withColor((hovered && markdownStyle.linkHoverColor.isSet()) ? markdownStyle.linkHoverColor.argb() : color.argb());
+        if (!markdownStyle.linkUnderlineColor.isSet() && MarkdownLinkPainter.isUnderlined(this, hovered)) {
+            style = style.withUnderlined(true);
+        }
+        return style;
+    }
+
+    /**
+     * Returns if the mouse is over the hyperlink or one of the text events of the fragment.
+     */
+    protected boolean isLinkHovered() {
+        return ((this.hyperlink != null) && this.hyperlink.isHovered()) || ((this.clickEvent != null) && this.clickEvent.isHovered()) || ((this.hoverEvent != null) && this.hoverEvent.isHovered());
     }
 
     /**
