@@ -56,6 +56,8 @@ public class MarkdownTextLine implements Renderable {
             textX += f.getRenderWidth();
         }
         if (shouldRender) {
+            // A quote can hold a code block, so its panel comes first
+            if ((this.fragments.get(0).quoteContext != null) && this.drawsQuotePanel()) MarkdownQuotePainter.render(graphics, this);
             if ((this.blockType == MarkdownBlockType.CODE_BLOCK) && this.drawsCodeBlockPanel()) MarkdownCodePainter.renderBlock(graphics, this);
             for (int i = 0; i < this.fragments.size(); i++) {
                 MarkdownTextFragment f = this.fragments.get(i);
@@ -78,6 +80,22 @@ public class MarkdownTextLine implements Renderable {
         MarkdownTextLine previousLine = this.getPreviousLine();
         if ((previousLine == null) || previousLine.isVisible()) return false;
         return previousLine.fragments.get(previousLine.fragments.size() - 1).codeBlockContext == context;
+    }
+
+    /**
+     * The panel and the bar of a quote get drawn once per frame, before the text of the quote: by the first line of the quote,
+     * or, when that one is outside the visible range, by the first line of the quote that is inside of it.
+     */
+    protected boolean drawsQuotePanel() {
+        MarkdownTextFragment.QuoteContext context = this.fragments.get(0).quoteContext;
+        MarkdownTextFragment start = context.getQuoteStart();
+        if ((start == null) || (start.parentLine == null) || (start.parentLine == this)) return start != null;
+        // A table inside a quote is no part of it, so the last line of the quote in front of this one can be further up
+        MarkdownTextLine previousLine = this.getPreviousLine();
+        while ((previousLine != null) && (previousLine.index > start.parentLine.index) && (previousLine.fragments.get(0).quoteContext != context)) {
+            previousLine = previousLine.getPreviousLine();
+        }
+        return (previousLine != null) && (previousLine.fragments.get(0).quoteContext == context) && !previousLine.isVisible();
     }
 
     private void renderDecorations(@NotNull GuiGraphics graphics, @NotNull MarkdownTextFragment first) {
@@ -176,6 +194,11 @@ public class MarkdownTextLine implements Renderable {
             MarkdownTextFragment first = this.fragments.get(0);
             if (first.headlineType != MarkdownTextFragment.HeadlineType.NONE) {
                 this.paddingBottom += MarkdownHeadlinePainter.getLinePaddingBottom(this);
+            }
+            if (first.quoteContext != null) {
+                // The panel of a quote has its padding above the first and below the last line of the quote
+                if (first.isInRenderLineOf(first.quoteContext.getQuoteStart())) this.paddingTop += MarkdownQuotePainter.getPaddingTop(this.parent);
+                if (first.isInRenderLineOf(first.quoteContext.getQuoteEnd())) this.paddingBottom += MarkdownQuotePainter.getPaddingBottom(this.parent);
             }
             if ((first.codeBlockContext != null) && !first.codeBlockContext.singleLine) {
                 // The panel of a code block has its padding above the first and below the last line of the block
