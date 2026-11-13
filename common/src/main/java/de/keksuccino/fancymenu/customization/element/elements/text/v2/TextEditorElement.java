@@ -108,6 +108,11 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
 
         this.rightClickMenu.addSeparatorEntry("separator_after_scrolling");
 
+        this.element.scrollGrabberDesign.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setStackable(true)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.scroll_grabber_design.desc")))
+                .setIcon(MaterialIcons.DRAG_INDICATOR);
+
         ContextMenu grabberTextureMenu = new ContextMenu();
         this.rightClickMenu.addSubMenuEntry("grabber_texture", Component.translatable("fancymenu.elements.text.scroll_grabber_texture"), grabberTextureMenu)
                 .setStackable(true)
