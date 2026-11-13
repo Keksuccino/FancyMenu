@@ -234,6 +234,25 @@ public final class MarkdownStyle {
     public final FloatOption quoteSpaceAbove = this.size("quote_space_above", Group.QUOTES, Impact.LAYOUT, 0.0F, 6.0F, 8.0F);
     public final FloatOption quoteSpaceBelow = this.size("quote_space_below", Group.QUOTES, Impact.LAYOUT, 0.0F, 6.0F, 8.0F);
 
+    // ---------------------------------------------------------------- Callouts
+
+    /** The options of the callout types, in the order note, tip, important, warning, caution. */
+    private final Callout[] callouts = {
+            new Callout("note", rgb(85, 153, 255), PIXEL_LINK, rgba(127, 216, 255, 23), theme -> theme.info_color),
+            new Callout("tip", rgb(85, 255, 85), rgb(134, 223, 108), rgba(134, 223, 108, 23), theme -> theme.success_color),
+            new Callout("important", rgb(170, 119, 255), rgb(199, 155, 255), rgba(199, 155, 255, 23), theme -> theme.input_field_suggestions_text_color_selected),
+            new Callout("warning", rgb(255, 170, 0), rgb(255, 162, 77), rgba(255, 162, 77, 28), theme -> theme.warning_color),
+            new Callout("caution", rgb(255, 85, 85), rgb(255, 123, 107), rgba(255, 123, 107, 28), theme -> theme.error_color)
+    };
+    public final EnumOption<MarkdownCalloutIcons> calloutIcons = this.mode("callout_icons", Group.CALLOUTS, Impact.LAYOUT, MarkdownCalloutIcons.PIXEL, MarkdownCalloutIcons.PIXEL, MarkdownCalloutIcons.PIXEL);
+    /** The color of the details inside of pixel art callout icons, like the mark of the warning sign. */
+    public final ColorOption calloutIconDetailColor = this.color("callout_icon_detail_color", Group.CALLOUTS, Impact.DRAW, rgb(12, 15, 30), rgb(12, 15, 30), rgb(12, 15, 30));
+    /** The space between the icon of a callout and its label. */
+    public final FloatOption calloutIconGap = this.size("callout_icon_gap", Group.CALLOUTS, Impact.LAYOUT, 3.0F, 3.0F, 4.0F);
+    public final BooleanOption calloutLabelBold = this.bool("callout_label_bold", Group.CALLOUTS, Impact.PARSE, true, true, true);
+    /** The space between the line with the label of a callout and its text, on top of the line spacing. */
+    public final FloatOption calloutHeaderGap = this.size("callout_header_gap", Group.CALLOUTS, Impact.LAYOUT, 1.0F, 1.0F, 2.0F);
+
     // ---------------------------------------------------------------- Tables
 
     /** The space between the left edge of a cell and its text. */
@@ -374,6 +393,16 @@ public final class MarkdownStyle {
     }
 
     /**
+     * Returns the options of a callout type.
+     *
+     * @param type 0 for notes, 1 for tips, 2 for important things, 3 for warnings and 4 for cautions.
+     */
+    @NotNull
+    public Callout callout(int type) {
+        return this.callouts[Math.max(0, Math.min(this.callouts.length - 1, type))];
+    }
+
+    /**
      * Reads the sources of all colors again that follow one, like the colors of the UI theme.<br>
      * Has to run before the style gets drawn with, because the options keep the last colors of their sources.
      *
@@ -509,6 +538,24 @@ public final class MarkdownStyle {
             String key = "list_level_" + level + "_";
             this.markerShape = MarkdownStyle.this.mode(key + "marker_shape", Group.LISTS, Impact.DRAW, MarkdownMarkerShape.SQUARE, pick(level, MarkdownMarkerShape.CURSOR, MarkdownMarkerShape.CURSOR_SMALL, MarkdownMarkerShape.DOT), MarkdownMarkerShape.SQUARE);
             this.markerColor = MarkdownStyle.this.color(key + "marker_color", Group.LISTS, Impact.DRAW, rgb(169, 169, 169), pick(level, PIXEL_ACCENT, PIXEL_DIM, PIXEL_DIM), MarkdownStyle.this.theme(theme -> pick(level, theme.bullet_list_dot_color_1, theme.bullet_list_dot_color_2, theme.bullet_list_dot_color_3)));
+        }
+
+    }
+
+    /**
+     * The options of one callout type.
+     */
+    public final class Callout {
+
+        /** The color of the bar, the icon and the label of the callout. */
+        public final ColorOption color;
+        /** The color of the panel behind the callout, if it has another one than the panel of quotes. */
+        public final ColorOption backgroundColor;
+
+        private Callout(String name, LookColor classicColor, LookColor pixelColor, LookColor pixelBackground, Function<UITheme, DrawableColor> neutralColor) {
+            String key = "callout_" + name + "_";
+            this.color = MarkdownStyle.this.color(key + "color", Group.CALLOUTS, Impact.COMPONENTS, classicColor, pixelColor, MarkdownStyle.this.theme(neutralColor));
+            this.backgroundColor = MarkdownStyle.this.optionalColor(key + "background_color", Group.CALLOUTS, Impact.DRAW, NONE, pixelBackground, MarkdownStyle.this.theme(neutralColor, 26));
         }
 
     }
