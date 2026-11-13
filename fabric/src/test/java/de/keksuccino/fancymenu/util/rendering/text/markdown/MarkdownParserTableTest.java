@@ -53,7 +53,7 @@ class MarkdownParserTableTest {
         MarkdownTextFragment table = tableFragment(parse("| " + TABLE_FRAGMENT_TEXT + " | b |\n| --- | --- |"));
 
         // The click is inside the table and on the cell fragment, which both sit at the origin
-        assertFalse(table.mouseClicked(1.0D, table.parent.tableMargin + 1.0D, 0));
+        assertFalse(table.mouseClicked(1.0D, table.parent.getTableMargin() + 1.0D, 0));
     }
 
     @ParameterizedTest
