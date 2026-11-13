@@ -84,6 +84,7 @@ class TextBackgroundTest {
 
         assertFalse(loaded.background.enabled.getBoolean());
         assertNull(loaded.background.texture.get());
+        assertFalse(loaded.background.tile.getBoolean());
     }
 
     @Test
@@ -97,6 +98,9 @@ class TextBackgroundTest {
         assertNull(element.background.texture.get());
         assertTrue(element.background.behindScrollBars.getBoolean());
         assertEquals(6, element.background.padding.getInteger());
+        // A texture of the user starts nine-sliced and stretched
+        assertTrue(element.background.nineSlice.getBoolean());
+        assertFalse(element.background.tile.getBoolean());
     }
 
     @Test
@@ -109,6 +113,7 @@ class TextBackgroundTest {
         element.background.nineSlice.set(false);
         element.background.nineSliceBorderX.set(3);
         element.background.nineSliceBorderY.set(4);
+        element.background.tile.set(true);
         SerializedElement saved = new SerializedElement();
         element.getPropertyMap().forEach((key, property) -> property.serialize(saved));
 
@@ -123,6 +128,7 @@ class TextBackgroundTest {
         assertFalse(loaded.background.nineSlice.getBoolean());
         assertEquals(3, loaded.background.nineSliceBorderX.getInteger());
         assertEquals(4, loaded.background.nineSliceBorderY.getInteger());
+        assertTrue(loaded.background.tile.getBoolean());
     }
 
     @Test
@@ -235,7 +241,7 @@ class TextBackgroundTest {
         }
         TextBackground background = new TestElement().background;
 
-        for (Property<?> property : List.of(background.enabled, background.padding, background.behindScrollBars, background.texture, background.nineSlice, background.nineSliceBorderX, background.nineSliceBorderY)) {
+        for (Property<?> property : List.of(background.enabled, background.padding, background.behindScrollBars, background.texture, background.nineSlice, background.nineSliceBorderX, background.nineSliceBorderY, background.tile)) {
             assertTrue(english.has(property.getContextMenuEntryLocalizationKeyBase()), property::getKey);
         }
     }
