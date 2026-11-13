@@ -1,6 +1,7 @@
 
-CHANGELOG | FANCYMENU v3.10.0 [ W I P !! Not public yet !! ]
+CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 
-- 
+- Fixed multi-line text pasted into the text editor ending up on a single line when it was copied from apps like Microsoft Word or Excel
+- Fixed tabs disappearing from text pasted into the text editor, so indentation and tab-aligned columns now stay intact
 
 %changelog:end%
