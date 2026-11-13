@@ -1299,28 +1299,32 @@ public class MarkdownParser {
      */
     protected enum LookaheadMarker {
 
-        FONT_SUFFIX(FORMATTING_CODE_FONT_SUFFIX),
-        HEX_COLOR_SUFFIX(FORMATTING_CODE_HEX_COLOR_SUFFIX),
-        BOLD(FORMATTING_CODE_BOLD_PREFIX_SUFFIX),
-        ITALIC_UNDERSCORE(String.valueOf(UNDERSCORE_CHAR)),
-        ITALIC_ASTERISK(String.valueOf(ASTERISK_CHAR)),
-        STRIKETHROUGH(String.valueOf(TILDE_CHAR)),
-        STRIKETHROUGH_DOUBLE(FORMATTING_CODE_STRIKETHROUGH_DOUBLE_PREFIX_SUFFIX),
-        CODE_BLOCK_SINGLE_LINE(String.valueOf(GRAVE_ACCENT_CHAR)),
-        PLAIN_TEXT_SINGLE_LINE(FORMATTING_CODE_PLAIN_TEXT_SINGLE_LINE_PREFIX_SUFFIX),
+        FONT_SUFFIX(FORMATTING_CODE_FONT_SUFFIX, false),
+        HEX_COLOR_SUFFIX(FORMATTING_CODE_HEX_COLOR_SUFFIX, false),
+        BOLD(FORMATTING_CODE_BOLD_PREFIX_SUFFIX, true),
+        ITALIC_UNDERSCORE(String.valueOf(UNDERSCORE_CHAR), true),
+        ITALIC_ASTERISK(String.valueOf(ASTERISK_CHAR), true),
+        STRIKETHROUGH(String.valueOf(TILDE_CHAR), true),
+        STRIKETHROUGH_DOUBLE(FORMATTING_CODE_STRIKETHROUGH_DOUBLE_PREFIX_SUFFIX, true),
+        // A grave accent closes its block even behind a backslash, because nothing gets escaped inside the block
+        CODE_BLOCK_SINGLE_LINE(String.valueOf(GRAVE_ACCENT_CHAR), false),
+        PLAIN_TEXT_SINGLE_LINE(FORMATTING_CODE_PLAIN_TEXT_SINGLE_LINE_PREFIX_SUFFIX, false),
         // Multi-line blocks end at a marker that starts a line, no matter what follows it in that line
-        CODE_BLOCK_MULTI_LINE_END(NEWLINE + FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX),
-        PLAIN_TEXT_MULTI_LINE_END(NEWLINE + FORMATTING_CODE_PLAIN_TEXT_MULTI_LINE_PREFIX_SUFFIX),
-        ALIGNMENT_CENTERED_END(NEWLINE + FORMATTING_CODE_ALIGNMENT_CENTERED_PREFIX_SUFFIX),
-        ALIGNMENT_RIGHT_END(NEWLINE + FORMATTING_CODE_ALIGNMENT_RIGHT_PREFIX_SUFFIX);
+        CODE_BLOCK_MULTI_LINE_END(NEWLINE + FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX, false),
+        PLAIN_TEXT_MULTI_LINE_END(NEWLINE + FORMATTING_CODE_PLAIN_TEXT_MULTI_LINE_PREFIX_SUFFIX, false),
+        ALIGNMENT_CENTERED_END(NEWLINE + FORMATTING_CODE_ALIGNMENT_CENTERED_PREFIX_SUFFIX, false),
+        ALIGNMENT_RIGHT_END(NEWLINE + FORMATTING_CODE_ALIGNMENT_RIGHT_PREFIX_SUFFIX, false);
 
         protected static final int COUNT = values().length;
 
         @NotNull
         protected final String marker;
+        /** If a backslash in front of the marker turns it into text, which makes the parser never close anything at it. */
+        protected final boolean escapable;
 
-        LookaheadMarker(@NotNull String marker) {
+        LookaheadMarker(@NotNull String marker, boolean escapable) {
             this.marker = marker;
+            this.escapable = escapable;
         }
 
     }
@@ -1367,13 +1371,18 @@ public class MarkdownParser {
         }
 
         /**
-         * Returns the index of the first occurrence of the marker at or after the given index of the text of this lookahead, or -1 if there is none.
+         * Returns the index of the first occurrence of the marker at or after the given index of the text of this lookahead, or -1 if there is none.<br>
+         * Occurrences of escaped markers do not count.
          */
         protected int indexOf(@NotNull LookaheadMarker marker, int fromIndex) {
             // The remembered occurrence is the next one in the whole text, so it stays right when the end moves
             int nextOccurrence = this.nextOccurrences[marker.ordinal()];
             if ((nextOccurrence != NOT_FOUND) && (nextOccurrence < fromIndex)) {
                 nextOccurrence = this.text.indexOf(marker.marker, fromIndex);
+                // An escaped marker is text and closes nothing, so the search goes on behind it
+                while ((nextOccurrence != NOT_FOUND) && marker.escapable && isCharacterEscaped(this.text, nextOccurrence)) {
+                    nextOccurrence = this.text.indexOf(marker.marker, nextOccurrence + 1);
+                }
                 this.nextOccurrences[marker.ordinal()] = nextOccurrence;
             }
             return (nextOccurrence < this.end) ? nextOccurrence : NOT_FOUND;
