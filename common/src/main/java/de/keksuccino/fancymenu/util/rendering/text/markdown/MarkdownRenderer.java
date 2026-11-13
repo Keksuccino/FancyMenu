@@ -274,6 +274,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
             this.textWidthCache.beginParse();
             try {
                 this.fragments.addAll(MarkdownParser.parse(this, this.renderText, this.parseMarkdown));
+                MarkdownTablePainter.prepareHeaders(this, this.fragments);
             } finally {
                 this.textWidthCache.endParse();
             }
@@ -757,8 +758,12 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
         return Objects.requireNonNull(this.style.tableLineColor.get());
     }
 
+    /**
+     * Sets the color of all lines of tables, which includes the line below a table header.
+     */
     public MarkdownRenderer setTableLineColor(@NotNull DrawableColor tableLineColor) {
         this.style.tableLineColor.set(tableLineColor);
+        this.style.tableHeaderSeparatorColor.set(tableLineColor);
         return this;
     }
 
@@ -796,17 +801,30 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
         return this.style.tableLineThickness.get();
     }
 
+    /**
+     * Sets the thickness of the lines of tables. The line below a table header becomes twice as thick.
+     */
     public MarkdownRenderer setTableLineThickness(float tableLineThickness) {
         this.style.tableLineThickness.set(tableLineThickness);
+        this.style.tableHeaderSeparatorThickness.set(tableLineThickness * 2);
         return this;
     }
 
+    /**
+     * Returns the space between the left edge of a table cell and its text. Every side of a cell has a padding of its own in the {@linkplain #getStyle() style}.
+     */
     public float getTableCellPadding() {
-        return this.style.tableCellPadding.get();
+        return this.style.tableCellPaddingLeft.get();
     }
 
+    /**
+     * Sets the space between the text of a table cell and all four edges of the cell.
+     */
     public MarkdownRenderer setTableCellPadding(float tableCellPadding) {
-        this.style.tableCellPadding.set(tableCellPadding);
+        this.style.tableCellPaddingLeft.set(tableCellPadding);
+        this.style.tableCellPaddingRight.set(tableCellPadding);
+        this.style.tableCellPaddingTop.set(tableCellPadding);
+        this.style.tableCellPaddingBottom.set(tableCellPadding);
         return this;
     }
 
