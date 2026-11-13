@@ -170,7 +170,7 @@ final class MarkdownTableParser {
         if (trimmed.startsWith(VERTICAL_BAR)) {
             trimmed = trimmed.substring(1);
         }
-        if (trimmed.endsWith(VERTICAL_BAR)) {
+        if (trimmed.endsWith(VERTICAL_BAR) && !isFormattingCodeCharacter(trimmed, trimmed.length() - 1)) {
             trimmed = trimmed.substring(0, trimmed.length() - 1);
         }
         List<String> parts = splitByUnescapedPipes(trimmed);
@@ -213,10 +213,17 @@ final class MarkdownTableParser {
     private record LeadingFormattingTokens(@NotNull String tokens, @NotNull String content) {
     }
 
+    /**
+     * Returns if the character at the given index is a pipe that separates two cells, which an escaped pipe and the character of a formatting code are not.
+     */
+    private static boolean isCellSeparator(@NotNull String line, int index) {
+        return (line.charAt(index) == VERTICAL_BAR_CHAR) && !isCharacterEscaped(line, index) && !isFormattingCodeCharacter(line, index);
+    }
+
     private static boolean containsUnescapedPipe(@NotNull String line) {
         int length = line.length();
         for (int i = 0; i < length; i++) {
-            if ((line.charAt(i) == VERTICAL_BAR_CHAR) && !isCharacterEscaped(line, i)) {
+            if (isCellSeparator(line, i)) {
                 return true;
             }
         }
@@ -230,7 +237,7 @@ final class MarkdownTableParser {
         int length = line.length();
         for (int i = 0; i < length; i++) {
             char c = line.charAt(i);
-            if ((c == VERTICAL_BAR_CHAR) && !isCharacterEscaped(line, i)) {
+            if (isCellSeparator(line, i)) {
                 parts.add(current.toString());
                 current = new StringBuilder();
                 continue;
