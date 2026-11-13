@@ -433,9 +433,7 @@ public class MarkdownParser {
                 //Handle Italic Asterisk
                 if ((c == ASTERISK_CHAR) && !isCharacterEscaped(markdownText, index)) {
                     if (!builder.italic && (builder.codeBlockContext == null) && !builder.plainText) {
-                        // Italic text ends at an asterisk that is not followed by a second one. The last asterisk
-                        // of every row of asterisks is one, so any later asterisk means there is such an end.
-                        if (!markdownText.startsWith(FORMATTING_CODE_BOLD_PREFIX_SUFFIX, index) && lookahead.existsFrom(LookaheadMarker.ITALIC_ASTERISK, index + 1)) {
+                        if (!markdownText.startsWith(FORMATTING_CODE_BOLD_PREFIX_SUFFIX, index) && lookahead.hasItalicAsteriskEnd(index + 1, builder.bold)) {
                             if (isStartOfLine || !builder.text.isEmpty()) {
                                 lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                             }
@@ -1311,7 +1309,6 @@ public class MarkdownParser {
         HEX_COLOR_SUFFIX(FORMATTING_CODE_HEX_COLOR_SUFFIX, false),
         BOLD(FORMATTING_CODE_BOLD_PREFIX_SUFFIX, true),
         ITALIC_UNDERSCORE(String.valueOf(UNDERSCORE_CHAR), true),
-        ITALIC_ASTERISK(String.valueOf(ASTERISK_CHAR), true),
         STRIKETHROUGH(String.valueOf(TILDE_CHAR), true),
         STRIKETHROUGH_DOUBLE(FORMATTING_CODE_STRIKETHROUGH_DOUBLE_PREFIX_SUFFIX, true),
         // A grave accent closes its block even behind a backslash, because nothing gets escaped inside the block
@@ -1402,6 +1399,46 @@ public class MarkdownParser {
         protected boolean existsFrom(@NotNull LookaheadMarker marker, int fromIndex) {
             if (this.indexOf(marker, fromIndex) != NOT_FOUND) return true;
             return (this.continuation != null) && this.continuation.existsFrom(marker, this.continuationIndex);
+        }
+
+        /**
+         * Returns if italic text that a single asterisk opens gets closed by an asterisk at or after the given index.
+         *
+         * <p>Italic text ends at an asterisk that has no second one behind it, but the parser reads asterisks in pairs as markers of bold text first.
+         * This goes through the rows of asterisks the way the parser will: the pairs of a row open and close bold text, and only an asterisk
+         * that is left over ends the italic text. A pair that finds no later pair to close its bold text opens none, which leaves its second asterisk over.</p>
+         *
+         * <p>Italic text that opens inside of bold text has to end inside of it as well, so the pair that closes that bold text means there is no end.</p>
+         *
+         * @param boldOpen If the italic text opens inside of bold text.
+         */
+        protected boolean hasItalicAsteriskEnd(int fromIndex, boolean boldOpen) {
+            return this.hasItalicAsteriskEnd(fromIndex, boldOpen, boldOpen);
+        }
+
+        /**
+         * @param insideOuterBold If the italic text opened inside of bold text.
+         * @param boldOpen If bold text is open at the given index, which is the outer bold text or one that opened inside of the italic text.
+         */
+        protected boolean hasItalicAsteriskEnd(int fromIndex, boolean insideOuterBold, boolean boldOpen) {
+            int index = fromIndex;
+            while (true) {
+                int rowStart = this.text.indexOf(ASTERISK_CHAR, index);
+                if ((rowStart == NOT_FOUND) || (rowStart >= this.end)) break;
+                index = rowStart + 1;
+                // An escaped asterisk is text. The row starts behind it then.
+                if (isCharacterEscaped(this.text, rowStart)) continue;
+                while ((index < this.end) && (this.text.charAt(index) == ASTERISK_CHAR)) index++;
+                int rowLength = index - rowStart;
+                if ((rowLength % 2) == 1) return true;
+                for (int pair = 0; pair < (rowLength / 2); pair++) {
+                    if (boldOpen && insideOuterBold) return false;
+                    boldOpen = !boldOpen;
+                }
+            }
+            if (this.continuation != null) return this.continuation.hasItalicAsteriskEnd(this.continuationIndex, insideOuterBold, boldOpen);
+            // Bold text that is still open here was opened by a pair without a later pair, so it is none and the second asterisk of that pair is the end
+            return boldOpen && !insideOuterBold;
         }
 
         /**
