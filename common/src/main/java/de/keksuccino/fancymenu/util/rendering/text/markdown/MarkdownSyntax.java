@@ -37,28 +37,28 @@ final class MarkdownSyntax {
     static final String FORMATTING_CODE_IMAGE_PREFIX = "![";
     static final String FORMATTING_CODE_HYPERLINK_IMAGE_PREFIX = "[![";
     static final String FORMATTING_CODE_HYPERLINK_INNER_PREFIX = "](";
-    static final String FORMATTING_CODE_TEXT_CLICK_EVENT_PREFIX = "click:";
-    static final String FORMATTING_CODE_TEXT_HOVER_EVENT_PREFIX = "hover:";
-    static final char OPEN_ROUND_BRACKETS_CHAR = '(';
-    static final char CLOSE_ROUND_BRACKETS_CHAR = ')';
+    private static final String FORMATTING_CODE_TEXT_CLICK_EVENT_PREFIX = "click:";
+    private static final String FORMATTING_CODE_TEXT_HOVER_EVENT_PREFIX = "hover:";
+    private static final char OPEN_ROUND_BRACKETS_CHAR = '(';
+    private static final char CLOSE_ROUND_BRACKETS_CHAR = ')';
     static final char OPEN_SQUARE_BRACKETS_CHAR = '[';
     static final char CLOSE_SQUARE_BRACKETS_CHAR = ']';
-    static final String OPEN_SQUARE_BRACKETS = "[";
+    private static final String OPEN_SQUARE_BRACKETS = "[";
     static final char GREATER_THAN_CHAR = '>';
     static final String FORMATTING_CODE_QUOTE_PREFIX = "> ";
-    static final String FORMATTING_CODE_CALLOUT_PREFIX = "[!";
+    private static final String FORMATTING_CODE_CALLOUT_PREFIX = "[!";
     static final CalloutType[] CALLOUT_TYPES = CalloutType.values();
     static final String SPACE = " ";
     static final char SPACE_CHAR = ' ';
     static final char MINUS_CHAR = '-';
-    static final char PLUS_CHAR = '+';
-    static final char DOT_CHAR = '.';
-    static final String DOT = ".";
-    static final String CLOSE_ROUND_BRACKETS = ")";
+    private static final char PLUS_CHAR = '+';
+    private static final char DOT_CHAR = '.';
+    private static final String DOT = ".";
+    private static final String CLOSE_ROUND_BRACKETS = ")";
     /** The indent of the items of the deepest list level, which is level 10. Markers behind a longer indent start no list item. */
     static final int MAX_LIST_ITEM_INDENT = 19;
     /** Longer numbers start no list item, like in CommonMark. */
-    static final int MAX_LIST_ITEM_NUMBER_DIGITS = 9;
+    private static final int MAX_LIST_ITEM_NUMBER_DIGITS = 9;
     static final String FORMATTING_CODE_SEPARATION_LINE_PREFIX = "---";
     static final char GRAVE_ACCENT_CHAR = '`';
     static final String FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX = "```";
@@ -71,16 +71,16 @@ final class MarkdownSyntax {
     static final char VERTICAL_BAR_CHAR = '|';
     static final String FORMATTING_CODE_ALIGNMENT_RIGHT_PREFIX_SUFFIX = "|||";
     static final String VERTICAL_BAR = "|";
-    static final char OPEN_CURLY_BRACKET_CHAR = '{';
-    static final char CLOSE_CURLY_BRACKET_CHAR = '}';
-    static final CharacterFilter RESOURCE_NAME_FILTER = CharacterFilter.buildResourceNameFilter();
+    private static final char OPEN_CURLY_BRACKET_CHAR = '{';
+    private static final char CLOSE_CURLY_BRACKET_CHAR = '}';
+    private static final CharacterFilter RESOURCE_NAME_FILTER = CharacterFilter.buildResourceNameFilter();
     static final char COLON_CHAR = ':';
     static final String COLON = ":";
     static final IntPredicate IS_SPACE = character -> character == SPACE_CHAR;
     /** Accepts the characters {@link String#trim()} removes. */
     static final IntPredicate IS_TRIMMED_WHITESPACE = character -> character <= SPACE_CHAR;
     static final IntPredicate IS_SEPARATION_LINE_CHARACTER = character -> (character == MINUS_CHAR) || (character == SPACE_CHAR);
-    static final IntPredicate IS_RESOURCE_NAME_CHARACTER = character -> RESOURCE_NAME_FILTER.isAllowedChar((char) character);
+    private static final IntPredicate IS_RESOURCE_NAME_CHARACTER = character -> RESOURCE_NAME_FILTER.isAllowedChar((char) character);
 
     private MarkdownSyntax() {
     }
@@ -264,7 +264,7 @@ final class MarkdownSyntax {
     /**
      * Returns if the character is one of the digits 0 to 9. Digits of other writing systems start no numbered list item.
      */
-    static boolean isDigit(char character) {
+    private static boolean isDigit(char character) {
         return (character >= '0') && (character <= '9');
     }
 
@@ -321,7 +321,7 @@ final class MarkdownSyntax {
      * Returns the target of the hyperlink that starts at the given index, or NULL if there is no valid hyperlink.
      */
     @Nullable
-    static String getHyperlinkFromLine(@NotNull String text, int hyperlinkStart) {
+    private static String getHyperlinkFromLine(@NotNull String text, int hyperlinkStart) {
         if (!text.startsWith(OPEN_SQUARE_BRACKETS, hyperlinkStart)) return null;
         return getLinkTarget(text, hyperlinkStart + OPEN_SQUARE_BRACKETS.length());
     }
@@ -330,7 +330,7 @@ final class MarkdownSyntax {
      * Returns the target of the link ("label](target)") whose label starts at the given index, or NULL if there is no valid link.
      */
     @Nullable
-    static String getLinkTarget(@NotNull String text, int labelStart) {
+    private static String getLinkTarget(@NotNull String text, int labelStart) {
         int labelEnd = getLinkLabelEnd(text, labelStart);
         if (labelEnd == -1) return null;
         int targetStart = labelEnd + FORMATTING_CODE_HYPERLINK_INNER_PREFIX.length();
