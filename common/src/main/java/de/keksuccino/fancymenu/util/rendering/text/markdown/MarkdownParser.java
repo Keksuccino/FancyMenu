@@ -154,6 +154,7 @@ public class MarkdownParser {
                         if (tableIndex >= 0 && tableIndex < tableContexts.size()) {
                             // Create table fragment
                             MarkdownTextFragment tableFragment = new MarkdownTextFragment(renderer, "[TABLE]");
+                            tableFragment.table = true;
                             tableFragment.tableContext = tableContexts.get(tableIndex);
                             tableFragment.naturalLineBreakAfter = true;
                             // Inherit current alignment from builder
