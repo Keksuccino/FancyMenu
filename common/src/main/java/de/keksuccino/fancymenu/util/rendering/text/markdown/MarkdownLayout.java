@@ -48,8 +48,10 @@ final class MarkdownLayout {
         MarkdownTextFragment lastFragment = null;
         MarkdownTextLine line = new MarkdownTextLine(renderer);
 
-        for (MarkdownTextFragment f : renderer.fragments) {
+        List<MarkdownTextFragment> fragments = renderer.fragments;
+        for (int index = 0; index < fragments.size(); index++) {
 
+            MarkdownTextFragment f = fragments.get(index);
             boolean isStartOfLine = queueNewLine;
             queueNewLine = false;
 
@@ -78,8 +80,8 @@ final class MarkdownLayout {
             //Handle Auto Line Break
             if (!isStartOfLine && renderer.isAutoLineBreakingEnabled()) {
                 f.startOfRenderLine = false;
-                // The fragment has to fit as the last one of the line, because that is what it becomes when the next fragment wraps
-                if (lastFragment.endOfWord && !isEmptyLineEnd(f) && ((lastFragment.codeBlockContext == null) || lastFragment.codeBlockContext.singleLine) && ((currentLineWidth + f.getRenderWidth(true) + padding) > renderer.optimalWidth)) {
+                // The word has to fit as the last one of the line, because that is what it becomes when the next word wraps
+                if (lastFragment.endOfWord && !isEmptyLineEnd(f) && ((lastFragment.codeBlockContext == null) || lastFragment.codeBlockContext.singleLine) && ((currentLineWidth + this.getWordWidthAtLineEnd(fragments, index) + padding) > renderer.optimalWidth)) {
                     currentLineWidth = padding;
                     isStartOfLine = true;
                     line.prepareLine();
@@ -114,6 +116,28 @@ final class MarkdownLayout {
 
         this.updateMetrics();
 
+    }
+
+    /**
+     * Returns the width the word that starts with the fragment at the given index needs as the last word of a render line.<br>
+     * A word is made of several fragments when its format changes inside of it, like the bold word and the comma in "**word**,",
+     * and a line can only wrap in front of the first one of them.<br>
+     * A word of a single fragment needs room for the space behind it as well, although a line drops the space at its end:
+     * that is where lines of plain words wrap, and texts are written around it. A word of several fragments only needs the room it really takes.
+     */
+    private float getWordWidthAtLineEnd(@NotNull List<MarkdownTextFragment> fragments, int index) {
+        int first = index;
+        float width = 0.0F;
+        while (true) {
+            MarkdownTextFragment fragment = fragments.get(index);
+            boolean endsWord = fragment.endOfWord || fragment.naturalLineBreakAfter || (index == (fragments.size() - 1)) || fragments.get(index + 1).isTable();
+            width += fragment.getRenderWidth(endsWord);
+            if (endsWord) {
+                if ((index > first) && fragment.text.endsWith(" ")) width -= this.spaceWidth * fragment.getScale();
+                return width;
+            }
+            index++;
+        }
     }
 
     /**
