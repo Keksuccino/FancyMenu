@@ -44,8 +44,8 @@ final class MarkdownLinkPainter {
     static float getUnderlineWidth(@NotNull MarkdownTextFragment fragment) {
         MarkdownRenderer renderer = fragment.parent;
         float width = fragment.unscaledTextWidth;
-        // The space behind the last word of a link is drawn behind the link and no part of it
-        if (fragment.getTrailingSpaceMode() == MarkdownTextFragment.TRAILING_SPACE_SEPARATE) width -= renderer.getUnscaledSpaceWidth();
+        // The space behind the last word of a link is drawn behind the link, and the one at the end of a line is not drawn at all
+        if (fragment.getTrailingSpaceMode() != MarkdownTextFragment.TRAILING_SPACE_KEEP) width -= fragment.unscaledTrailingSpaceWidth;
         if (renderer.style.trimGlyphSpacing.get()) width -= renderer.getFontMetrics().glyphSpacing;
         return Math.max(0.0F, width) * fragment.getScale();
     }
