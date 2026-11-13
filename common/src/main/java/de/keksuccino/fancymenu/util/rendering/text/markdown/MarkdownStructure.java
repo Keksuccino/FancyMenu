@@ -141,7 +141,9 @@ final class MarkdownStructure {
             }
 
             // Formatting codes come before Markdown. Ampersand codes are found here, behind the targets of links that got skipped, so URL query parameters stay intact.
-            if (((c == ChatFormatting.PREFIX_CODE) || (c == AMPERSAND_CHAR)) && isFormattingCode(text, index)) {
+            // Inside of code, an ampersand code is text, because code shows the way it got typed. A section sign is nothing anyone types to show it,
+            // and the font of the game would read it as a formatting code anyway, so codes with one keep working there.
+            if (((c == ChatFormatting.PREFIX_CODE) || ((c == AMPERSAND_CHAR) && !code)) && isFormattingCode(text, index)) {
                 this.addEvent(index, Event.FORMATTING_CODE, 0, 0);
                 index++;
                 queueNewLine = isStartOfLine;
@@ -759,6 +761,9 @@ final class MarkdownStructure {
          * Returns if the marker that starts at the given index is a line of its own, the way the pass reads the line when it gets there:
          * nothing but whitespace follows the marker, and nothing but formatting codes stands in front of it, which leave the start of a line to what follows them.
          *
+         * <p>The pass gets to such a line inside of the code block the marker closes, where an ampersand code is text.
+         * So only codes with a section sign count as formatting codes in front of the marker.</p>
+         *
          * <p>Both checks stop at the first character that does not fit. Checking every occurrence of a marker this way reads
          * the whitespace behind each one and the formatting codes in front of each one once, which keeps all searches together linear.</p>
          */
@@ -768,7 +773,7 @@ final class MarkdownStructure {
                 if (!IS_TRIMMED_WHITESPACE.test(this.text.charAt(index))) return false;
             }
             int lineStart = occurrence;
-            while ((lineStart >= 2) && (this.text.charAt(lineStart - 1) != NEWLINE_CHAR) && isFormattingCode(this.text, lineStart - 2)) lineStart -= 2;
+            while ((lineStart >= 2) && (this.text.charAt(lineStart - 1) != NEWLINE_CHAR) && (this.text.charAt(lineStart - 2) == ChatFormatting.PREFIX_CODE) && isFormattingCode(this.text, lineStart - 2)) lineStart -= 2;
             return (lineStart == 0) || (this.text.charAt(lineStart - 1) == NEWLINE_CHAR);
         }
 
