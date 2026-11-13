@@ -77,7 +77,6 @@ public class MarkdownParser {
     private static final CharacterFilter RESOURCE_NAME_FILTER = CharacterFilter.buildResourceNameFilter();
     private static final char COLON_CHAR = ':';
     private static final String COLON = ":";
-    private static final String TABLE_PLACEHOLDER_PREFIX = "[TABLE_";
     private static final IntPredicate IS_SPACE = character -> character == SPACE_CHAR;
     /** Accepts the characters {@link String#trim()} removes. */
     private static final IntPredicate IS_TRIMMED_WHITESPACE = character -> character <= SPACE_CHAR;
@@ -90,28 +89,28 @@ public class MarkdownParser {
         Objects.requireNonNull(renderer);
         Objects.requireNonNull(markdownText);
 
-        List<MarkdownTextFragment.TableContext> tableContexts = new ArrayList<>();
+        List<TableLine> tables = new ArrayList<>();
 
         // Pre-process tables if markdown parsing is enabled
         if (parseMarkdown) {
-            markdownText = preprocessTables(renderer, markdownText, tableContexts);
+            markdownText = preprocessTables(renderer, markdownText, tables);
         }
 
-        return parseFragments(renderer, markdownText, parseMarkdown, tableContexts);
+        return parseFragments(renderer, markdownText, parseMarkdown, tables);
 
     }
 
     /**
-     * Parses text that has its tables replaced with table placeholder lines already.
+     * Parses text that has its tables cut out already.
      *
      * <p>The loop reads the text once and never copies the rest of it. Everything that looks ahead is either limited to
      * the current line, stops at the first character that settles the answer, or goes through {@link MarkerLookahead}.
      * This keeps the parsing time linear to the text length, so every new lookahead has to follow the same rules.</p>
      *
-     * @param tableContexts The tables the table placeholder lines of the text refer to.
+     * @param tables The tables that were cut out of the text, in the order of their lines.
      */
     @NotNull
-    protected static List<MarkdownTextFragment> parseFragments(@NotNull MarkdownRenderer renderer, @NotNull String markdownText, boolean parseMarkdown, @NotNull List<MarkdownTextFragment.TableContext> tableContexts) {
+    protected static List<MarkdownTextFragment> parseFragments(@NotNull MarkdownRenderer renderer, @NotNull String markdownText, boolean parseMarkdown, @NotNull List<TableLine> tables) {
 
         List<MarkdownTextFragment> fragments = new ArrayList<>();
 
@@ -130,6 +129,9 @@ public class MarkdownParser {
         final int textLength = markdownText.length();
         //Index of the line break that ends the line of the current index, or the text length if it is the last line
         int lineEnd = -1;
+        //The tables follow the order of their lines, so the loop only ever has to look out for the next one
+        int nextTable = 0;
+        int nextTableLine = tables.isEmpty() ? -1 : tables.get(0).lineIndex();
 
         for (int index = 0; index < textLength; index++) {
 
@@ -143,30 +145,22 @@ public class MarkdownParser {
             //Length of the part of the current line that starts at the current index
             int remainingLineLength = lineEnd - index;
 
-            // Check for table placeholder
-            if (isStartOfLine && markdownText.startsWith(TABLE_PLACEHOLDER_PREFIX, index)) {
-                // Extract table index from placeholder
-                int tableIndexStart = index + TABLE_PLACEHOLDER_PREFIX.length();
-                int tableIndexEnd = indexOf(markdownText, CLOSE_SQUARE_BRACKETS_CHAR, tableIndexStart, lineEnd);
-                if (tableIndexEnd != -1) {
-                    try {
-                        int tableIndex = Integer.parseInt(markdownText, tableIndexStart, tableIndexEnd, 10);
-                        if (tableIndex >= 0 && tableIndex < tableContexts.size()) {
-                            // Create table fragment
-                            MarkdownTextFragment tableFragment = new MarkdownTextFragment(renderer, "[TABLE]");
-                            tableFragment.table = true;
-                            tableFragment.tableContext = tableContexts.get(tableIndex);
-                            tableFragment.naturalLineBreakAfter = true;
-                            // Inherit current alignment from builder
-                            tableFragment.alignment = builder.alignment;
-                            lastBuiltFragment = addFragment(fragments, tableFragment);
-                            skipLine = true;
-                            continue;
-                        }
-                    } catch (NumberFormatException ignored) {}
-                }
-                // If we couldn't parse the table index, skip the line
-                skipLine = true;
+            // Check for a table
+            if (index == nextTableLine) {
+                MarkdownTextFragment tableFragment = new MarkdownTextFragment(renderer, "[TABLE]");
+                tableFragment.table = true;
+                tableFragment.tableContext = tables.get(nextTable).tableContext();
+                tableFragment.naturalLineBreakAfter = true;
+                // Inherit current alignment from builder
+                tableFragment.alignment = builder.alignment;
+                lastBuiltFragment = addFragment(fragments, tableFragment);
+                nextTable++;
+                nextTableLine = (nextTable < tables.size()) ? tables.get(nextTable).lineIndex() : -1;
+                // The line of a table is empty, so the character at its index is the line break that ends it
+                lineHandledByWholeLineConstruct = true;
+                builder.headlineType = HeadlineType.NONE;
+                builder.separationLine = false;
+                queueNewLine = true;
                 continue;
             }
 
@@ -174,7 +168,8 @@ public class MarkdownParser {
             if ((c == NEWLINE_CHAR) && lastLineWasHeadline) {
                 lastLineWasHeadline = false;
                 int nextLineStart = index + 1;
-                if (containsOnly(markdownText, nextLineStart, getLineEnd(markdownText, nextLineStart), IS_SPACE)) {
+                // The line of a table is empty as well, but stands for the table
+                if ((nextLineStart != nextTableLine) && containsOnly(markdownText, nextLineStart, getLineEnd(markdownText, nextLineStart), IS_SPACE)) {
                     continue;
                 }
             }
@@ -965,9 +960,21 @@ public class MarkdownParser {
 
     private record LeadingFormattingTokens(@NotNull String tokens, @NotNull String content) {
     }
-    
+
+    /**
+     * A table that was cut out of the text.
+     *
+     * @param lineIndex The index of the empty line the table left behind in the text.
+     */
+    protected record TableLine(int lineIndex, @NotNull MarkdownTextFragment.TableContext tableContext) {
+    }
+
+    /**
+     * Cuts all tables out of the text. Every table leaves an empty line behind and gets added to the given list together
+     * with the index of that line, so nothing the text itself holds can stand for a table or get mistaken for one.
+     */
     @NotNull
-    protected static String preprocessTables(@NotNull MarkdownRenderer renderer, @NotNull String markdownText, @NotNull List<MarkdownTextFragment.TableContext> tableContexts) {
+    protected static String preprocessTables(@NotNull MarkdownRenderer renderer, @NotNull String markdownText, @NotNull List<TableLine> tables) {
         // Tables need pipes. Text without any keeps all of its lines and only loses the line breaks at its end, which is what building it from its lines below does to it as well.
         if (markdownText.indexOf(VERTICAL_BAR_CHAR) == -1) {
             int end = markdownText.length();
@@ -1034,11 +1041,9 @@ public class MarkdownParser {
                     i++;
                 }
                 
-                // Store the table context
-                tableContexts.add(tableContext);
-                
-                // Add a placeholder line in the result
-                result.append(TABLE_PLACEHOLDER_PREFIX).append(tableContexts.size() - 1).append(CLOSE_SQUARE_BRACKETS_CHAR).append(NEWLINE);
+                // Store the table with the index of the empty line it leaves behind in the result
+                tables.add(new TableLine(result.length(), tableContext));
+                result.append(NEWLINE);
                 i--; // Adjust because the loop will increment
             } else {
                 result.append(currentLine);
