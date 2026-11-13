@@ -65,6 +65,38 @@ class MarkdownParserEmphasisTest {
         assertEquals("outer both outer and all more", joinText(fragments));
     }
 
+    /**
+     * The words say how they have to be formatted: "bold", "italic", "both" or "none".
+     */
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "***both*** none", "***both** italic* none", "***both* bold** none", "**bold *both*** none", "*italic **both*** none",
+            "***both** italic **both*** none", "***both* bold *both*** none", "none ***both** italic* none ***both* bold** none",
+            "**bold *both* bold** none", "*italic **both** italic* none", "**bold***italic* none", "*italic***bold** none",
+            "**bold** *italic* ***both*** none", "_italic **both**_ none", "**_both_ bold** none", "***both** italic\nitalic* none"
+    })
+    void asterisksInARowOpenAndCloseBoldAndItalicTextInEveryOrder(String text) {
+        List<MarkdownTextFragment> fragments = parse(text);
+
+        assertEquals(text.replace("*", "").replace("_", "").replace("\n", ""), joinText(fragments));
+        for (MarkdownTextFragment fragment : fragments) {
+            String word = fragment.text.trim();
+            if (word.isEmpty()) continue;
+            assertEquals(word.equals("bold") || word.equals("both"), fragment.bold, () -> text + " <" + fragment.text + ">");
+            assertEquals(word.equals("italic") || word.equals("both"), fragment.italic, () -> text + " <" + fragment.text + ">");
+        }
+    }
+
+    @Test
+    void thirdAsteriskOfARowStaysTextWithoutASingleAsteriskToCloseItalicText() {
+        List<MarkdownTextFragment> fragments = parse("***bold** and more");
+
+        for (MarkdownTextFragment fragment : fragments) assertFalse(fragment.italic);
+        assertTrue(fragmentContaining(fragments, "bold").bold);
+        assertFalse(fragmentContaining(fragments, "more").bold);
+        assertEquals("*bold and more", joinText(fragments));
+    }
+
     @Test
     void pairOfAsterisksThatOpensNoBoldTextClosesItalicTextWithItsSecondAsterisk() {
         List<MarkdownTextFragment> fragments = parse("*italic **rest");
