@@ -27,11 +27,20 @@ class MarkdownParserScalingTest {
     @ParameterizedTest
     @EnumSource(RepeatedText.class)
     void allocationStaysProportionalToTheTextLength(RepeatedText repeatedText) {
+        assertAllocationStaysProportional(new MarkdownRenderer(TEST_FONT), repeatedText);
+    }
+
+    @ParameterizedTest
+    @EnumSource(RepeatedText.class)
+    void allocationStaysProportionalToTheTextLengthWithEverySyntaxSwitchedOn(RepeatedText repeatedText) {
+        assertAllocationStaysProportional(new MarkdownRenderer(TEST_FONT).setExtendedBulletListMarkersEnabled(true).setNumberedListsEnabled(true).setCalloutsEnabled(true), repeatedText);
+    }
+
+    private static void assertAllocationStaysProportional(MarkdownRenderer renderer, RepeatedText repeatedText) {
         assumeTrue(ManagementFactory.getThreadMXBean() instanceof com.sun.management.ThreadMXBean);
         com.sun.management.ThreadMXBean threads = (com.sun.management.ThreadMXBean) ManagementFactory.getThreadMXBean();
         assumeTrue(threads.isThreadAllocatedMemorySupported() && threads.isThreadAllocatedMemoryEnabled());
         String document = repeatedText.text.repeat((DOCUMENT_LENGTH / repeatedText.text.length()) + 1).substring(0, DOCUMENT_LENGTH);
-        MarkdownRenderer renderer = new MarkdownRenderer(TEST_FONT);
         // The first run loads all classes, which keeps their one-time allocations out of the measured run
         MarkdownParser.parse(renderer, document, true);
 
@@ -54,10 +63,19 @@ class MarkdownParserScalingTest {
         SPACES_BEHIND_A_WORD("a" + " ".repeat(199)),
         BACKSLASHES("\\"),
         EMPHASIS_MARKERS("*a _b ~c **d ~~e "),
+        ESCAPED_MARKERS("*a \\*b _c \\_d ~e \\~f **g \\**h "),
+        SINGLE_ASTERISKS_BETWEEN_BOLD_TEXT("a * b **c** "),
+        SINGLE_ASTERISKS_INSIDE_BOLD_TEXT("**a * b** "),
+        SINGLE_ASTERISKS_IN_FRONT_OF_BOLD_TEXT("* ".repeat(50) + "**a** ".repeat(50)),
+        DOUBLE_TILDES_WITHOUT_END("~~a "),
+        GRAVE_ACCENT_PAIRS("``a "),
         FONT_PREFIXES_WITHOUT_SUFFIX("%!!uniform%a "),
         COLOR_PREFIXES_WITHOUT_SUFFIX("%#ff0000%a "),
         OPEN_BRACKETS("[a "),
         HYPERLINK_TARGETS_WITHOUT_END("[a](b "),
+        HYPERLINK_TARGETS_WITH_OPEN_ROUND_BRACKETS("[a](b(c "),
+        MARKERS_IN_HYPERLINK_TARGETS("a_b ~c *d [e](f_g~h*i) "),
+        MARKERS_IN_IMAGE_LINES("a_b ~c *d\n![e_f](g_h.png)\n[![i_j](k_l.png)](m_n)\n"),
         IMAGES_WITHOUT_END_IN_ONE_HYPERLINK_IMAGE_LINE("[![a](b "),
         INLINE_CODE_MARKERS_IN_SEPARATE_LINES("`a\n"),
         PLAIN_TEXT_MARKERS(";;a ;b "),
@@ -65,6 +83,9 @@ class MarkdownParserScalingTest {
         HEADLINES("# a\n\n## b\n   \n"),
         QUOTES("> a\n> b\n>\nc\n   \n"),
         BULLET_LIST_ITEMS("- a\n  - b\n" + " ".repeat(40) + "- c\n"),
+        LIST_ITEMS_OF_EVERY_MARKER("+ a\n  * b\n    ~ c\n1. d\n  22) e\n" + " ".repeat(40) + "* f\n1234567890. g\n"),
+        LIST_MARKERS_BEHIND_SINGLE_MARKERS("a * b ~ c\n* d\n~ e\n"),
+        CALLOUTS("> [!NOTE]\n> a\n\n> [!tip]  \n\n> [!UNKNOWN]\nb\n\n"),
         SEPARATION_LINES("---\n--- - -\n"),
         TABLES("| a | b |\n| :-- | --: |\n| c | d |\n\n"),
         TABLE_SYNTAX_IN_CODE_BLOCKS("```\n| a | b |\n| --- | --- |\n\n| ;; | ** |\n| --- | --- |\n```\n"),
