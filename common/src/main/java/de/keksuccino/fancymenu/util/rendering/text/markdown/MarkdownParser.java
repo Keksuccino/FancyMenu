@@ -958,6 +958,17 @@ public class MarkdownParser {
     }
 
     /**
+     * Returns if the line between the two indexes is an image or an image that is a hyperlink.
+     */
+    protected static boolean isImageLine(@NotNull String text, int lineStart, int lineEnd) {
+        if (text.startsWith(FORMATTING_CODE_IMAGE_PREFIX, lineStart)) {
+            int labelEnd = getLinkLabelEnd(text, lineStart + FORMATTING_CODE_IMAGE_PREFIX.length());
+            return (labelEnd != -1) && (getLinkTargetEnd(text, labelEnd + FORMATTING_CODE_HYPERLINK_INNER_PREFIX.length()) != -1);
+        }
+        return text.startsWith(FORMATTING_CODE_HYPERLINK_IMAGE_PREFIX, lineStart) && (getHyperlinkImageFromLine(text.substring(lineStart, lineEnd)) != null);
+    }
+
+    /**
      * An image that is a hyperlink ("[![alternative text](image source)](link)").
      */
     protected record HyperlinkImage(@NotNull String imageSource, @NotNull String imageAltText, @NotNull String link) {
@@ -1357,6 +1368,10 @@ public class MarkdownParser {
         @Nullable
         protected MarkerLookahead continuation = null;
         protected int continuationIndex;
+        /** Start and end index of every part of the text {@link #findSkippedRanges()} found, in ascending order. NULL until the first marker gets checked. */
+        @Nullable
+        protected int[] skippedRanges = null;
+        protected int skippedRangeCount = 0;
 
         protected MarkerLookahead(@NotNull String text) {
             this.text = text;
@@ -1377,15 +1392,15 @@ public class MarkdownParser {
 
         /**
          * Returns the index of the first occurrence of the marker at or after the given index of the text of this lookahead, or -1 if there is none.<br>
-         * Occurrences of escaped markers do not count.
+         * Occurrences of markers that can be escaped do not count where {@link #isNoMarker(int)} applies.
          */
         protected int indexOf(@NotNull LookaheadMarker marker, int fromIndex) {
             // The remembered occurrence is the next one in the whole text, so it stays right when the end moves
             int nextOccurrence = this.nextOccurrences[marker.ordinal()];
             if ((nextOccurrence != NOT_FOUND) && (nextOccurrence < fromIndex)) {
                 nextOccurrence = this.text.indexOf(marker.marker, fromIndex);
-                // An escaped marker is text and closes nothing, so the search goes on behind it
-                while ((nextOccurrence != NOT_FOUND) && marker.escapable && isCharacterEscaped(this.text, nextOccurrence)) {
+                // What the parser reads as text or skips closes nothing, so the search goes on behind it
+                while ((nextOccurrence != NOT_FOUND) && marker.escapable && this.isNoMarker(nextOccurrence)) {
                     nextOccurrence = this.text.indexOf(marker.marker, nextOccurrence + 1);
                 }
                 this.nextOccurrences[marker.ordinal()] = nextOccurrence;
@@ -1426,8 +1441,8 @@ public class MarkdownParser {
                 int rowStart = this.text.indexOf(ASTERISK_CHAR, index);
                 if ((rowStart == NOT_FOUND) || (rowStart >= this.end)) break;
                 index = rowStart + 1;
-                // An escaped asterisk is text. The row starts behind it then.
-                if (isCharacterEscaped(this.text, rowStart)) continue;
+                // An asterisk that is no marker is no part of a row. The row starts behind it then.
+                if (this.isNoMarker(rowStart)) continue;
                 while ((index < this.end) && (this.text.charAt(index) == ASTERISK_CHAR)) index++;
                 int rowLength = index - rowStart;
                 if ((rowLength % 2) == 1) return true;
@@ -1439,6 +1454,62 @@ public class MarkdownParser {
             if (this.continuation != null) return this.continuation.hasItalicAsteriskEnd(this.continuationIndex, insideOuterBold, boldOpen);
             // Bold text that is still open here was opened by a pair without a later pair, so it is none and the second asterisk of that pair is the end
             return boldOpen && !insideOuterBold;
+        }
+
+        /**
+         * Returns if a marker at the given index closes nothing, because the parser reads it as text or never reaches it:
+         * it is escaped, or it is part of the target of a link or image, or of a line that is an image.
+         */
+        protected boolean isNoMarker(int index) {
+            if (isCharacterEscaped(this.text, index)) return true;
+            if (this.skippedRanges == null) this.findSkippedRanges();
+            int low = 0;
+            int high = (this.skippedRangeCount / 2) - 1;
+            while (low <= high) {
+                int middle = (low + high) >>> 1;
+                if (index < this.skippedRanges[middle * 2]) {
+                    high = middle - 1;
+                } else if (index >= this.skippedRanges[(middle * 2) + 1]) {
+                    low = middle + 1;
+                } else {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /**
+         * Finds all parts of the text that look like something the parser skips: targets of links and images, and whole lines that are images.<br>
+         * This only looks at the text and not at what the parser makes of the text around it, so it can take a part for skipped that the parser reads.
+         * A marker in such a part then is no end for a marker in front of it, which stays text for that reason.
+         * That is the harmless way to be wrong: the other way, a format never gets closed and runs to the end of the text.
+         */
+        protected void findSkippedRanges() {
+            String text = this.text;
+            int[] ranges = new int[16];
+            int count = 0;
+            int lineStart = 0;
+            int lineEnd = getLineEnd(text, 0);
+            boolean imageLine = isImageLine(text, lineStart, lineEnd);
+            int targetOpening = text.indexOf(FORMATTING_CODE_HYPERLINK_INNER_PREFIX);
+            while (targetOpening != -1) {
+                while (lineEnd < targetOpening) {
+                    lineStart = lineEnd + 1;
+                    lineEnd = getLineEnd(text, lineStart);
+                    imageLine = isImageLine(text, lineStart, lineEnd);
+                }
+                int rangeStart = imageLine ? lineStart : (targetOpening + FORMATTING_CODE_HYPERLINK_INNER_PREFIX.length());
+                // No link ends at an escaped bracket, so there is no target behind one
+                int rangeEnd = imageLine ? lineEnd : (isCharacterEscaped(text, targetOpening) ? -1 : getLinkTargetEnd(text, rangeStart));
+                if (rangeEnd != -1) {
+                    if (count == ranges.length) ranges = Arrays.copyOf(ranges, count * 2);
+                    ranges[count++] = rangeStart;
+                    ranges[count++] = rangeEnd;
+                }
+                targetOpening = text.indexOf(FORMATTING_CODE_HYPERLINK_INNER_PREFIX, (rangeEnd != -1) ? rangeEnd : rangeStart);
+            }
+            this.skippedRanges = ranges;
+            this.skippedRangeCount = count;
         }
 
         /**
