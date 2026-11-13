@@ -1,6 +1,8 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownFormatMarkers.FormatMarker;
+import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTableParser.Table;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.CodeBlockContext;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.HeadlineType;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.Hyperlink;
@@ -16,11 +18,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTableParser.Table;
-import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownFormatMarkers.FormatMarker;
 
 import static de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownSyntax.*;
 
+/**
+ * Turns the text of a {@link MarkdownRenderer} into the fragments the renderer shows.
+ *
+ * <p>The work is split between a few classes. {@link MarkdownTableParser} finds the tables of the text. {@link MarkdownStructure} finds everything else
+ * that decides how each character has to be read, and collects the {@link MarkdownFormatMarkers} of the text. This class builds the fragments from all of that.
+ * {@link MarkdownSyntax} holds the characters and markers of the syntax, and the checks the other classes share.</p>
+ */
 public class MarkdownParser {
 
     private static final MarkdownRenderer.MarkdownLineAlignment[] LINE_ALIGNMENTS = MarkdownRenderer.MarkdownLineAlignment.values();
@@ -110,9 +117,7 @@ public class MarkdownParser {
                     case FORMATTING_CODE: {
                         // The formatting gets applied before Markdown, so its state survives the word-sized fragments built below
                         ChatFormatting vanillaFormatting = (c == ChatFormatting.PREFIX_CODE) ? MinecraftFormattingState.getSectionFormattingAt(markdownText, index) : MinecraftFormattingState.getAmpersandFormattingAt(markdownText, index);
-                        if (!builder.text.isEmpty()) {
-                            lastBuiltFragment = addFragment(fragments, builder.build(false, false));
-                        }
+                        if (!builder.text.isEmpty()) fragments.add(builder.build(false, false));
                         builder.minecraftFormatting = (vanillaFormatting != null) ? builder.minecraftFormatting.apply(vanillaFormatting) : builder.minecraftFormatting.apply(Objects.requireNonNull(MinecraftFormattingState.getCustomFormattingAt(markdownText, index)));
                         // A following isolated space must be built with the new formatting state instead of being folded
                         // into the fragment before this formatting boundary by the whitespace optimization below.
