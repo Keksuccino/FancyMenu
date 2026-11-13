@@ -57,23 +57,19 @@ public class MarkdownTextLine implements Renderable {
             f.parentLine = this;
             f.startOfRenderLine = false;
             f.autoLineBreakAfter = false;
-            //Check if line is Multi-Line Code Block
-            if ((f.codeBlockContext != null) && !f.codeBlockContext.singleLine) {
-                this.containsMultilineCodeBlockFragments = true;
-            }
-            //Discover Single-Line Code Block parts of the line
-            if ((f.codeBlockContext != null) && f.codeBlockContext.singleLine && !this.singleLineCodeBlockStartEndPairs.containsKey(f.codeBlockContext)) {
-                SingleLineCodeBlockPart part = new SingleLineCodeBlockPart();
-                part.start = f;
-                int index = f.codeBlockContext.codeBlockFragments.indexOf(f);
-                if (index >= 0) {
-                    List<MarkdownTextFragment> subList = f.codeBlockContext.codeBlockFragments.subList(index, f.codeBlockContext.codeBlockFragments.size());
-                    for (MarkdownTextFragment cf : subList) {
-                        if (!this.fragments.contains(cf)) break;
-                        if (cf != f) part.end = cf;
+            if (f.codeBlockContext != null) {
+                if (!f.codeBlockContext.singleLine) {
+                    //Check if line is Multi-Line Code Block
+                    this.containsMultilineCodeBlockFragments = true;
+                } else {
+                    //Discover Single-Line Code Block parts of the line. The fragments of a code block follow each other, so the last one found in this line ends the block's part of the line.
+                    SingleLineCodeBlockPart part = this.singleLineCodeBlockStartEndPairs.get(f.codeBlockContext);
+                    if (part == null) {
+                        part = new SingleLineCodeBlockPart();
+                        part.start = f;
+                        this.singleLineCodeBlockStartEndPairs.put(f.codeBlockContext, part);
                     }
-                    if (part.end == null) part.end = f;
-                    this.singleLineCodeBlockStartEndPairs.put(f.codeBlockContext, part);
+                    part.end = f;
                 }
             }
         }
