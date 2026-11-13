@@ -1131,7 +1131,8 @@ public class MarkdownParser {
             boolean singleLineCode = false;
             boolean plainText = false;
             boolean quote = false;
-            MarkdownRenderer.MarkdownLineAlignment alignment = MarkdownRenderer.MarkdownLineAlignment.LEFT;
+            int centeredAlignmentMarkers = 0;
+            int rightAlignmentMarkers = 0;
             //Index of the square bracket that ends the label of the open link, and of the round bracket that ends its target
             int linkLabelEnd = NO_LINK;
             int linkTargetEnd = -1;
@@ -1433,24 +1434,20 @@ public class MarkdownParser {
                     }
 
                     //Handle Alignment
-                    if (isStartOfLine && (remainingLineLength == 3) && !code && ((c == CIRCUMFLEX_CHAR) || (c == VERTICAL_BAR_CHAR))) {
+                    if (isStartOfLine && (remainingLineLength == 3) && markdown && ((c == CIRCUMFLEX_CHAR) || (c == VERTICAL_BAR_CHAR))) {
                         boolean centered = (c == CIRCUMFLEX_CHAR);
-                        MarkdownRenderer.MarkdownLineAlignment blockAlignment = centered ? MarkdownRenderer.MarkdownLineAlignment.CENTERED : MarkdownRenderer.MarkdownLineAlignment.RIGHT;
                         if (text.startsWith(centered ? FORMATTING_CODE_ALIGNMENT_CENTERED_PREFIX_SUFFIX : FORMATTING_CODE_ALIGNMENT_RIGHT_PREFIX_SUFFIX, index)) {
-                            // The marker opens its block in text that is not aligned, and closes it again
-                            MarkdownRenderer.MarkdownLineAlignment newAlignment = null;
-                            if ((alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT) && lookahead.existsFrom(centered ? LookaheadMarker.ALIGNMENT_CENTERED_END : LookaheadMarker.ALIGNMENT_RIGHT_END, index + 3)) {
-                                newAlignment = blockAlignment;
-                            } else if (alignment == blockAlignment) {
-                                newAlignment = MarkdownRenderer.MarkdownLineAlignment.LEFT;
+                            // What the marker does depends on the markers behind it, so that gets settled when all of them are found.
+                            // The line holds nothing but the marker, so jumping over it is right even if the marker turns out to be text.
+                            this.addEvent(index, Event.ALIGNMENT, (centered ? MarkdownRenderer.MarkdownLineAlignment.CENTERED : MarkdownRenderer.MarkdownLineAlignment.RIGHT).ordinal(), 0);
+                            if (centered) {
+                                centeredAlignmentMarkers++;
+                            } else {
+                                rightAlignmentMarkers++;
                             }
-                            if (newAlignment != null) {
-                                this.addEvent(index, Event.ALIGNMENT, newAlignment.ordinal(), 0);
-                                alignment = newAlignment;
-                                index = lineEnd;
-                                queueNewLine = true;
-                                continue;
-                            }
+                            index = lineEnd;
+                            queueNewLine = true;
+                            continue;
                         }
                     }
 
@@ -1460,12 +1457,45 @@ public class MarkdownParser {
 
             }
 
+            if ((centeredAlignmentMarkers > 0) || (rightAlignmentMarkers > 0)) this.settleAlignmentMarkers(centeredAlignmentMarkers, rightAlignmentMarkers);
+
             // A link needs the end of its label. Code and plain text always close before the text ends, so this only happens
             // if something else took the marker that closes them, like a custom formatting code that uses a character of that marker.
             if (linkLabelEnd == LINK_LABEL_END_UNKNOWN) this.removeEvent(linkOpenEvent);
 
             if (this.eventsEnd > 0) this.nextEventIndex = this.events[0];
 
+        }
+
+        /**
+         * Settles what the marker lines of aligned blocks do, which all are events with the alignment of their marker as value so far.
+         *
+         * <p>A marker opens its block in text that is not aligned if a later marker of the same alignment closes it, and the next such marker does.
+         * Every other marker is text and loses its event: one without a later marker to close its block, and one inside the block of the other alignment.</p>
+         *
+         * <p>Counting the markers that follow, instead of searching the text for one, only counts lines the parser reads as markers.
+         * That leaves out lines of code blocks and plain text, which are text.</p>
+         *
+         * @param centeredMarkers The number of marker lines for centered blocks.
+         * @param rightMarkers The number of marker lines for right-aligned blocks.
+         */
+        protected void settleAlignmentMarkers(int centeredMarkers, int rightMarkers) {
+            int left = MarkdownRenderer.MarkdownLineAlignment.LEFT.ordinal();
+            int centered = MarkdownRenderer.MarkdownLineAlignment.CENTERED.ordinal();
+            int alignment = left;
+            for (int event = 0; event < this.eventsEnd; event += EVENT_SIZE) {
+                if (this.events[event + 1] != Event.ALIGNMENT.ordinal()) continue;
+                int markerAlignment = this.events[event + 2];
+                int laterMarkers = (markerAlignment == centered) ? --centeredMarkers : --rightMarkers;
+                if ((alignment == left) && (laterMarkers > 0)) {
+                    alignment = markerAlignment;
+                } else if (alignment == markerAlignment) {
+                    alignment = left;
+                    this.events[event + 2] = left;
+                } else {
+                    this.removeEvent(event);
+                }
+            }
         }
 
         /**
@@ -1598,7 +1628,7 @@ public class MarkdownParser {
             PLAIN_TEXT_BLOCK_OPEN(true),
             /** The marker line that closes plain text. */
             PLAIN_TEXT_BLOCK_CLOSE(true),
-            /** The marker line that opens or closes an aligned block. Value: the ordinal of the alignment of the lines behind it. */
+            /** The marker line that opens or closes an aligned block. Value: the ordinal of the alignment of the lines behind it. A marker line that does neither is text and no event. */
             ALIGNMENT(true);
 
             /** If the event stands for everything up to the end of its line, so the parser reads nothing else of that line. */
@@ -1740,9 +1770,7 @@ public class MarkdownParser {
         PLAIN_TEXT_SINGLE_LINE(FORMATTING_CODE_PLAIN_TEXT_SINGLE_LINE_PREFIX_SUFFIX),
         // Multi-line blocks end at a marker that starts a line, no matter what follows it in that line
         CODE_BLOCK_MULTI_LINE_END(NEWLINE + FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX),
-        PLAIN_TEXT_MULTI_LINE_END(NEWLINE + FORMATTING_CODE_PLAIN_TEXT_MULTI_LINE_PREFIX_SUFFIX),
-        ALIGNMENT_CENTERED_END(NEWLINE + FORMATTING_CODE_ALIGNMENT_CENTERED_PREFIX_SUFFIX),
-        ALIGNMENT_RIGHT_END(NEWLINE + FORMATTING_CODE_ALIGNMENT_RIGHT_PREFIX_SUFFIX);
+        PLAIN_TEXT_MULTI_LINE_END(NEWLINE + FORMATTING_CODE_PLAIN_TEXT_MULTI_LINE_PREFIX_SUFFIX);
 
         protected static final int COUNT = values().length;
 
