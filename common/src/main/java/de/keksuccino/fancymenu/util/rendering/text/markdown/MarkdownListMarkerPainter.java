@@ -42,7 +42,7 @@ final class MarkdownListMarkerPainter {
         if (MarkdownPixelArt.isMarker(shape)) {
             // Pixel art has its own size and stands in the middle of the marker area
             float inset = (size - (MarkdownPixelArt.MARKER_SIZE * scale)) * 0.5F;
-            MarkdownPixelArt.marker(graphics, shape, x + inset, y + inset, scale, color, style.textShadow.get());
+            MarkdownPixelArt.marker(graphics, shape, x + inset, y + inset, scale, color, renderer.hasTextShadow());
         } else {
             RenderingUtils.fillF(graphics, x, y, x + size, y + size, color);
         }
