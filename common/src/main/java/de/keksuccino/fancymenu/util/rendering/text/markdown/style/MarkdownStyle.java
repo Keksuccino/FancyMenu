@@ -61,6 +61,11 @@ public final class MarkdownStyle {
 
     /** The color of text that has no color of its own. */
     public final ColorOption textColor = this.color("text_color", Group.TEXT, Impact.DRAW, WHITE, PIXEL_TEXT, this.theme(theme -> theme.ui_interface_generic_text_color));
+    /**
+     * How far lines and backgrounds that span the text area stay away from its right edge, which are the lines of headlines and
+     * the backgrounds of code blocks. The backgrounds of code blocks stay away from the bottom of their last line by this as well.
+     */
+    public final FloatOption blockEdgeInset = this.size("block_edge_inset", Group.TEXT, Impact.DRAW, 1.0F, 0.0F, 0.0F);
     /** If text has a shadow. Text in the smooth UI font never has one. */
     public final BooleanOption textShadow = this.bool("text_shadow", Group.TEXT, Impact.DRAW, true, true, false);
     /** The space between the edges of the renderer and its text area. The outer 2 pixels can get clipped by containers like scroll areas, so it is never smaller. */
@@ -99,6 +104,12 @@ public final class MarkdownStyle {
 
     /** The options of the three headline levels, starting with the biggest one. */
     private final Headline[] headlines = {new Headline(1), new Headline(2), new Headline(3)};
+    /** How much of the right end of a {@link MarkdownHeadlineDecoration#RULE} fades out through dithering. */
+    public final FloatOption headlineRuleFadeLength = this.size("headline_rule_fade_length", Group.HEADLINES, Impact.DRAW, 0.0F, 28.0F, 0.0F);
+    /** The color of the shadow below a {@link MarkdownHeadlineDecoration#RULE}, if it has one. */
+    public final ColorOption headlineRuleShadowColor = this.optionalColor("headline_rule_shadow_color", Group.HEADLINES, Impact.DRAW, NONE, rgba(0, 0, 0, 115), NONE);
+    /** The space between the end of a headline and the first dot of its {@link MarkdownHeadlineDecoration#LEADER}. */
+    public final FloatOption headlineLeaderGap = this.size("headline_leader_gap", Group.HEADLINES, Impact.DRAW, 3.0F, 3.0F, 3.0F);
 
     // ---------------------------------------------------------------- Lists
 
@@ -323,13 +334,32 @@ public final class MarkdownStyle {
      */
     public final class Headline {
 
+        /** How much bigger than normal text the headline is. */
+        public final FloatOption scale;
+        /** The color of the headline, if it has a color of its own. */
+        public final ColorOption color;
+        public final BooleanOption bold;
+        public final EnumOption<MarkdownHeadlineDecoration> decoration;
         /** The color of the line or dots a headline gets decorated with. */
         public final ColorOption decorationColor;
+        /** The space between the text of the headline and the line below it. */
+        public final FloatOption decorationOffset;
+        /** How thick the line or the dots of the decoration are. A line is never thinner than one screen pixel. */
+        public final FloatOption decorationThickness;
+        /** The space below the text of every render line of the headline, which is where an underline stands. */
+        public final FloatOption linePadding;
         public final FloatOption spaceAbove;
         public final FloatOption spaceBelow;
 
         private Headline(int level) {
             String key = "headline_" + level + "_";
+            this.scale = MarkdownStyle.this.size(key + "scale", Group.HEADLINES, Impact.LAYOUT, pick(level, 2.0F, 1.6F, 1.2F), pick(level, 2.0F, 1.0F, 1.0F), pick(level, 1.6F, 1.3F, 1.1F));
+            this.color = MarkdownStyle.this.optionalColor(key + "color", Group.HEADLINES, Impact.COMPONENTS, NONE, pick(level, PIXEL_ACCENT, PIXEL_ACCENT, WHITE), NONE);
+            this.bold = MarkdownStyle.this.bool(key + "bold", Group.HEADLINES, Impact.PARSE, false, level > 1, true);
+            this.decoration = MarkdownStyle.this.mode(key + "decoration", Group.HEADLINES, Impact.LAYOUT, pick(level, MarkdownHeadlineDecoration.UNDERLINE, MarkdownHeadlineDecoration.UNDERLINE, MarkdownHeadlineDecoration.NONE), pick(level, MarkdownHeadlineDecoration.RULE, MarkdownHeadlineDecoration.LEADER, MarkdownHeadlineDecoration.NONE), pick(level, MarkdownHeadlineDecoration.RULE, MarkdownHeadlineDecoration.NONE, MarkdownHeadlineDecoration.NONE));
+            this.decorationOffset = MarkdownStyle.this.size(key + "decoration_offset", Group.HEADLINES, Impact.LAYOUT, 1.0F, 3.0F, 4.0F);
+            this.decorationThickness = MarkdownStyle.this.size(key + "decoration_thickness", Group.HEADLINES, Impact.LAYOUT, 0.5F, 1.0F, 1.0F);
+            this.linePadding = MarkdownStyle.this.size(key + "line_padding", Group.HEADLINES, Impact.LAYOUT, pick(level, 8.0F, 8.0F, 6.0F), 0.0F, 0.0F);
             this.spaceAbove = MarkdownStyle.this.size(key + "space_above", Group.HEADLINES, Impact.LAYOUT, 0.0F, pick(level, 10.0F, 9.0F, 7.0F), pick(level, 14.0F, 12.0F, 10.0F));
             this.spaceBelow = MarkdownStyle.this.size(key + "space_below", Group.HEADLINES, Impact.LAYOUT, 0.0F, pick(level, 6.0F, 4.0F, 3.0F), pick(level, 7.0F, 6.0F, 5.0F));
             this.decorationColor = MarkdownStyle.this.color(key + "decoration_color", Group.HEADLINES, Impact.DRAW, rgb(169, 169, 169), PIXEL_ACCENT_DIM, MarkdownStyle.this.theme(theme -> theme.ui_interface_generic_text_color, 46));

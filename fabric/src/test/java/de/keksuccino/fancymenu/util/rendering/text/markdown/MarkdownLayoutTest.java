@@ -35,7 +35,7 @@ class MarkdownLayoutTest {
             if (last.text.endsWith(" ")) expectedWidth -= CHAR_WIDTH * last.getScale();
 
             assertEquals(Math.max(0, expectedWidth), width);
-            assertEquals(expectedHeight, height);
+            assertEquals(line.paddingTop + expectedHeight + line.paddingBottom, height);
             line.updateSize();
             assertEquals(width, line.getLineWidth());
             assertEquals(height, line.getLineHeight());
