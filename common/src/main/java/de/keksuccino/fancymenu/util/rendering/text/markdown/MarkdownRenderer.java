@@ -834,6 +834,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
      */
     public void resetHovered() {
         this.interactions.resetHovered(this.fragments);
+        this.layout.resetHoveredPieces();
     }
 
     protected void updateTextHoverEvents() {
@@ -855,7 +856,8 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
 
     /**
      * Only returns the fragments that react to input, which are the link-like ones and tables that contain link-like fragments.
-     * Every input event walks all children, and most fragments of a text are plain words.
+     * Every input event walks all children, and most fragments of a text are plain words.<br>
+     * A fragment the layout split over several lines is here as its first piece only. Clicks reach the other ones through {@link #getChildAt(double, double)}.
      */
     @Override
     @NotNull
@@ -879,6 +881,19 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
             }
         }
         return Optional.empty();
+    }
+
+    /**
+     * In this Minecraft version, a container sends a click to its {@link #children()} only, which hold none of the pieces behind the first one
+     * of a fragment the layout split over several lines. A click no child handled goes to the fragment under the mouse, so it reaches those pieces.
+     */
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (FocuslessContainerEventHandler.super.mouseClicked(mouseX, mouseY, button)) return true;
+        GuiEventListener fragment = this.getChildAt(mouseX, mouseY).orElse(null);
+        if ((fragment == null) || !fragment.mouseClicked(mouseX, mouseY, button)) return false;
+        if (button == 0) this.setDragging(true);
+        return true;
     }
 
     @Override

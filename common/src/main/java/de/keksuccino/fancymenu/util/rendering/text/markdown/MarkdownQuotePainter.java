@@ -86,7 +86,7 @@ final class MarkdownQuotePainter {
      * The whole render line counts and not only the last fragment of the quote, because other fragments of the line can be taller.
      */
     static float getBottom(@NotNull MarkdownTextFragment.QuoteContext context) {
-        MarkdownTextFragment end = context.quoteFragments.get(context.quoteFragments.size() - 1);
+        MarkdownTextFragment end = context.quoteFragments.get(context.quoteFragments.size() - 1).getLastPiece();
         float lastLineHeight = (end.parentLine != null) ? end.parentLine.getLineHeight() : end.getRenderHeight();
         return end.getRenderLineY() + lastLineHeight;
     }
