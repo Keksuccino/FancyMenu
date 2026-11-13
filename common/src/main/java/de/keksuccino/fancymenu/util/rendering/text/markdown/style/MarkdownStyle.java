@@ -5,10 +5,12 @@ import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyleO
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyleOption.ColorOption;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyleOption.EnumOption;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyleOption.FloatOption;
+import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyleOption.FontOption;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyleOption.Group;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyleOption.Impact;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyleOption.LookColor;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UITheme;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -45,6 +47,14 @@ public final class MarkdownStyle {
     private static final LookColor PIXEL_FRAME = rgb(57, 65, 95);
     private static final LookColor PIXEL_INK = rgba(8, 10, 22, 209);
     private static final LookColor PIXEL_MINT = rgb(180, 240, 198);
+    /**
+     * The font the pixel look draws code with: a pixel font whose glyphs all are 5 pixels wide, with the 7 pixels tall capital letters, the 5 pixels
+     * tall lowercase letters and the 9 pixels tall lines of the Minecraft font. It has the printable characters of ASCII.<br>
+     * The font is a bitmap font, which every Minecraft version loads. Minecraft takes the advance of a bitmap glyph from its rightmost pixel
+     * that is not fully transparent, so every glyph that does not reach the fifth column of its cell has a pixel with an alpha of 1 there.
+     * Without those pixels, narrow glyphs like "." would get a smaller advance and the font would not be fixed-width anymore.
+     */
+    public static final Identifier PIXEL_CODE_FONT = Identifier.fromNamespaceAndPath("fancymenu", "markdown_code");
     /** How much of the text color the muted text of the neutral look keeps. The rest is the background color. */
     private static final float MUTED_TEXT_STRENGTH = 0.7F;
 
@@ -198,6 +208,11 @@ public final class MarkdownStyle {
     public final FloatOption inlineCodePaddingTop = this.size("inline_code_padding_top", Group.CODE, Impact.DRAW, 2.0F, 1.0F, 1.0F);
     /** How far the background of inline code reaches below the line of its text. */
     public final FloatOption inlineCodePaddingBottom = this.size("inline_code_padding_bottom", Group.CODE, Impact.DRAW, 0.0F, 0.0F, 1.0F);
+    /**
+     * The font of inline code and code blocks, if they have another font than the text around them. Only the Minecraft font gets replaced,
+     * so code keeps the smooth UI font. Characters the font has no glyph for keep the font of the text.
+     */
+    public final FontOption codeFont = this.font("code_font", Group.CODE, Impact.PARSE, null, PIXEL_CODE_FONT, null);
     public final ColorOption codeBlockBackgroundColor = this.color("code_block_background_color", Group.CODE, Impact.DRAW, rgb(86, 86, 86), PIXEL_INK, this.theme(theme -> theme.ui_interface_generic_text_color, 18));
     /** The color of the text of code blocks, if it has another color than normal text. */
     public final ColorOption codeBlockTextColor = this.optionalColor("code_block_text_color", Group.CODE, Impact.COMPONENTS, NONE, PIXEL_MINT, NONE);
@@ -460,6 +475,10 @@ public final class MarkdownStyle {
 
     private <E extends Enum<E>> EnumOption<E> mode(String key, Group group, Impact impact, E classicValue, E pixelValue, E neutralValue) {
         return new EnumOption<>(this, key, group, impact, classicValue, pixelValue, neutralValue);
+    }
+
+    private FontOption font(String key, Group group, Impact impact, @Nullable Identifier classicValue, @Nullable Identifier pixelValue, @Nullable Identifier neutralValue) {
+        return new FontOption(this, key, group, impact, classicValue, pixelValue, neutralValue);
     }
 
     private ColorOption color(String key, Group group, Impact impact, LookColor classicValue, LookColor pixelValue, LookColor neutralValue) {

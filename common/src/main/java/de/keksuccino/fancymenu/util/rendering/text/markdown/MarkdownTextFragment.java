@@ -224,7 +224,8 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     @NotNull
     protected MarkdownFixedWidthText getFixedWidthText() {
         Component component = this.getRenderComponent();
-        if (this.fixedWidthText == null) this.fixedWidthText = MarkdownFixedWidthText.of(this.parent, component.getString(), component.getStyle());
+        // The component of text with characters the font of code does not have keeps that font in its parts
+        if (this.fixedWidthText == null) this.fixedWidthText = MarkdownFixedWidthText.of(this.parent, component.getString(), this.parent.textFont.withCodeFont(component.getStyle()));
         return this.fixedWidthText;
     }
 
@@ -241,7 +242,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     @NotNull
     protected Component buildRenderComponent(boolean forWidthCalculation) {
         int trailingSpaceMode = this.getTrailingSpaceMode();
-        return createRenderComponent(this.buildRenderStyle(forWidthCalculation), this.buildRenderText(trailingSpaceMode), trailingSpaceMode == TRAILING_SPACE_SEPARATE);
+        return this.parent.textFont.component(this.buildRenderStyle(forWidthCalculation), this.buildRenderText(trailingSpaceMode), trailingSpaceMode == TRAILING_SPACE_SEPARATE);
     }
 
     @NotNull
@@ -296,9 +297,9 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             style = style.withColor(this.textColor.getColorInt());
         }
         if (this.codeBlockContext != null) {
-            // Code shows its text as it is, in the color the style gives it
+            // Code shows its text as it is, in the color and the font the style gives it
             MarkdownStyleOption.ColorOption codeColor = this.codeBlockContext.singleLine ? this.parent.style.inlineCodeTextColor : this.parent.style.codeBlockTextColor;
-            style = codeColor.isSet() ? Style.EMPTY.withColor(codeColor.argb()) : Style.EMPTY;
+            style = this.parent.textFont.withCodeFont(codeColor.isSet() ? Style.EMPTY.withColor(codeColor.argb()) : Style.EMPTY);
         }
         if (this.plainText) {
             style = Style.EMPTY;

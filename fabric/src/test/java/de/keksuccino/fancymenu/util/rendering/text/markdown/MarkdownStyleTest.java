@@ -8,8 +8,10 @@ import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyleO
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyleOption.ColorOption;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyleOption.EnumOption;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyleOption.FloatOption;
+import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyleOption.FontOption;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyleOption.Impact;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -252,6 +254,8 @@ class MarkdownStyleTest {
             color.set(DrawableColor.of(12, 34, (color.argb() & 0xFF) ^ 0x55, 200));
         } else if (option instanceof EnumOption<?> mode) {
             setNextValue(mode);
+        } else if (option instanceof FontOption font) {
+            font.set(Identifier.fromNamespaceAndPath("test", (font.get() == null) ? "font" : (font.get().getPath() + "_other")));
         }
         assertNotEquals(before, option.getValue(), () -> "value of " + option.getKey() + " did not change");
     }
@@ -267,6 +271,9 @@ class MarkdownStyleTest {
         if ((option instanceof ColorOption color) && (value != null)) {
             // An equal color in another object is the same value
             color.set(DrawableColor.of((color.argb() >> 16) & 0xFF, (color.argb() >> 8) & 0xFF, color.argb() & 0xFF, color.argb() >>> 24));
+        } else if ((option instanceof FontOption font) && (value != null)) {
+            // An equal identifier in another object is the same value
+            font.set(Identifier.fromNamespaceAndPath(font.get().getNamespace(), font.get().getPath()));
         } else {
             option.setValue((T) value);
         }
