@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.rendering.text.color.TextColorFormatter;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.CalloutType;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.CodeBlockContext;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.HeadlineType;
@@ -34,6 +33,7 @@ public class MarkdownParser {
     private static final String FORMATTING_CODE_FONT_PREFIX = "%!!";
     private static final String FORMATTING_CODE_FONT_SUFFIX = "%!!%";
     private static final char PERCENTAGE_CHAR = '%';
+    private static final char AMPERSAND_CHAR = '&';
     private static final String FORMATTING_CODE_HEX_COLOR_PREFIX = "%#";
     private static final String FORMATTING_CODE_HEX_COLOR_SUFFIX = "%#%";
     private static final char ASTERISK_CHAR = '*';
@@ -57,6 +57,7 @@ public class MarkdownParser {
     private static final String FORMATTING_CODE_QUOTE_PREFIX = "> ";
     private static final String FORMATTING_CODE_CALLOUT_PREFIX = "[!";
     private static final CalloutType[] CALLOUT_TYPES = CalloutType.values();
+    private static final MarkdownRenderer.MarkdownLineAlignment[] LINE_ALIGNMENTS = MarkdownRenderer.MarkdownLineAlignment.values();
     private static final String SPACE = " ";
     private static final char SPACE_CHAR = ' ';
     private static final char MINUS_CHAR = '-';
@@ -114,12 +115,13 @@ public class MarkdownParser {
     /**
      * Parses text that has its tables found already.
      *
-     * <p>The loop reads the text once and never copies the rest of it. Everything that looks ahead is either limited to
+     * <p>The text gets read twice. {@link MarkdownStructure} reads it first and finds everything that decides how the loop here has to read
+     * each character. The loop then builds the fragments from that, and decides on its own only about the formats that need a marker
+     * to close them: bold, italic and struck through text, fonts and colors.</p>
+     *
+     * <p>Both read the text once and never copy the rest of it. Everything that looks ahead is either limited to
      * the current line, stops at the first character that settles the answer, or goes through {@link MarkerLookahead}.
      * This keeps the parsing time linear to the text length, so every new lookahead has to follow the same rules.</p>
-     *
-     * <p>The loop jumps over the lines of a table and adds one fragment for all of them. A table that it reaches inside a code block
-     * or plain text is no table, but text of that block, so the loop reads its lines like every other line then.</p>
      *
      * @param tables The tables of the text, in the order of their lines.
      */
@@ -129,25 +131,18 @@ public class MarkdownParser {
         List<MarkdownTextFragment> fragments = new ArrayList<>();
 
         FragmentBuilder builder = new FragmentBuilder(renderer);
-        boolean extendedBulletListMarkers = renderer.isExtendedBulletListMarkersEnabled();
-        MarkerLookahead lookahead = new MarkerLookahead(markdownText, extendedBulletListMarkers, tables);
-        boolean numberedLists = renderer.isNumberedListsEnabled();
-        boolean callouts = renderer.isCalloutsEnabled();
+        MarkerLookahead lookahead = new MarkerLookahead(markdownText, renderer.isExtendedBulletListMarkersEnabled(), tables);
+        MarkdownStructure structure = new MarkdownStructure(markdownText, parseMarkdown, tables, lookahead, renderer.isExtendedBulletListMarkersEnabled(), renderer.isNumberedListsEnabled(), renderer.isCalloutsEnabled());
+        // The structure made the lookahead read tables as text where it found them inside code blocks and plain text, and the loop does that again when it gets there
+        lookahead.readNoTableAsText();
         boolean queueNewLine = true;
         boolean italicUnderscore = false;
         boolean strikethroughDouble = false;
-        int charsToSkip = 0;
-        boolean preserveStartOfLineWhileSkipping = false;
-        boolean skipLine = false;
         boolean lineHandledByWholeLineConstruct = false;
         MarkdownTextFragment lastBuiltFragment = null;
-        boolean lastLineWasHeadline = false;
-        //Index of the square bracket that ends the label of the open link, and of the round bracket that ends its target
-        int linkLabelEnd = -1;
-        int linkTargetEnd = -1;
 
         int textLength = markdownText.length();
-        //Index of the line break that ends the line of the current index, or the text length if it is the last line
+        //Index of the line break that ends a line, or the text length for the last line. It only gets brought up to the line of the current index where the loop needs it.
         int lineEnd = -1;
         //The tables follow the order of their lines, so the loop only ever has to look out for the next one
         int nextTable = 0;
@@ -161,129 +156,204 @@ public class MarkdownParser {
             queueNewLine = false;
             if (isStartOfLine) lineHandledByWholeLineConstruct = false;
 
-            if (lineEnd < index) lineEnd = getLineEnd(markdownText, index);
-            //Length of the part of the current line that starts at the current index
-            int remainingLineLength = lineEnd - index;
+            MarkdownStructure.Event event = structure.getEventAt(index);
 
-            // Check for a table
             if (index == nextTableStart) {
-                Table table = tables.get(nextTable);
+                // A table without its event is text of a code block or of plain text, so the markers in its lines count
+                if (event != MarkdownStructure.Event.TABLE) lookahead.readTableAsText(tables.get(nextTable));
                 nextTable++;
                 nextTableStart = (nextTable < tables.size()) ? tables.get(nextTable).start() : -1;
-                if ((builder.codeBlockContext != null) || builder.plainText) {
-                    // Inside a code block or plain text, the lines of the table are text like every other line of it
-                    lookahead.readTableAsText(table);
-                } else {
-                    MarkdownTextFragment tableFragment = new MarkdownTextFragment(renderer, "[TABLE]");
-                    tableFragment.table = true;
-                    tableFragment.tableContext = table.tableContext();
-                    tableFragment.naturalLineBreakAfter = true;
-                    // Inherit current alignment from builder
-                    tableFragment.alignment = builder.alignment;
-                    lastBuiltFragment = addFragment(fragments, tableFragment);
+            }
+
+            if (event != MarkdownStructure.Event.NONE) {
+                switch (event) {
+                    case TABLE: {
+                        Table table = tables.get(structure.getEventValue());
+                        MarkdownTextFragment tableFragment = new MarkdownTextFragment(renderer, "[TABLE]");
+                        tableFragment.table = true;
+                        tableFragment.tableContext = table.tableContext();
+                        tableFragment.naturalLineBreakAfter = true;
+                        // Inherit current alignment from builder
+                        tableFragment.alignment = builder.alignment;
+                        lastBuiltFragment = addFragment(fragments, tableFragment);
+                        break;
+                    }
+                    case SKIPPED_LINE_BREAK:
+                    case QUOTE_EMPTY_LINE:
+                        break;
+                    case FORMATTING_CODE: {
+                        // The formatting gets applied before Markdown, so its state survives the word-sized fragments built below
+                        ChatFormatting vanillaFormatting = (c == ChatFormatting.PREFIX_CODE) ? MinecraftFormattingState.getSectionFormattingAt(markdownText, index) : MinecraftFormattingState.getAmpersandFormattingAt(markdownText, index);
+                        if (!builder.text.isEmpty()) {
+                            lastBuiltFragment = addFragment(fragments, builder.build(false, false));
+                        }
+                        builder.minecraftFormatting = (vanillaFormatting != null) ? builder.minecraftFormatting.apply(vanillaFormatting) : builder.minecraftFormatting.apply(Objects.requireNonNull(MinecraftFormattingState.getCustomFormattingAt(markdownText, index)));
+                        // A following isolated space must be built with the new formatting state instead of being folded
+                        // into the fragment before this formatting boundary by the whitespace optimization below.
+                        lastBuiltFragment = null;
+                        // Skips the character of the code. A code at the start of a line leaves that start to what follows it.
+                        index++;
+                        queueNewLine = isStartOfLine;
+                        break;
+                    }
+                    case ESCAPE:
+                        builder.text.append(markdownText.charAt(index + 1));
+                        index++;
+                        break;
+                    case HEADLINE: {
+                        int hashtags = structure.getEventValue();
+                        builder.headlineType = (hashtags == 1) ? HeadlineType.BIGGEST : ((hashtags == 2) ? HeadlineType.BIGGER : HeadlineType.BIG);
+                        // Skips the hashtags behind this one and the space
+                        index += hashtags;
+                        break;
+                    }
+                    case LIST_ITEM: {
+                        // The marker of an item follows 2 spaces for every level below the first one
+                        int markerStart = structure.getEventValue();
+                        int markerEnd = structure.getSecondEventValue();
+                        builder.bulletListLevel = ((markerStart - index) / 2) + 1;
+                        builder.bulletListItemStart = true;
+                        builder.listItemMarker = getListItemMarker(markdownText.charAt(markerStart));
+                        builder.listItemNumber = (builder.listItemMarker == ListItemMarker.NUMBER) ? markdownText.substring(markerStart, markerEnd) : null;
+                        // Skips the indent, the marker and the space behind it
+                        index = markerEnd;
+                        break;
+                    }
+                    case HYPERLINK_IMAGE: {
+                        HyperlinkImage hyperlinkImage = structure.getHyperlinkImage(structure.getEventValue());
+                        builder.hyperlink = new Hyperlink();
+                        builder.hyperlink.link = hyperlinkImage.link();
+                        setImageToBuilder(builder, hyperlinkImage.imageSource(), hyperlinkImage.imageAltText());
+                        lastBuiltFragment = addFragment(fragments, builder.build(true, true));
+                        setImageToBuilder(builder, null, null);
+                        builder.hyperlink = null;
+                        break;
+                    }
+                    case IMAGE: {
+                        int labelStart = index + FORMATTING_CODE_IMAGE_PREFIX.length();
+                        int labelEnd = structure.getEventValue();
+                        int sourceEnd = structure.getSecondEventValue();
+                        setImageToBuilder(builder, markdownText.substring(labelEnd + FORMATTING_CODE_HYPERLINK_INNER_PREFIX.length(), sourceEnd), unescape(markdownText, labelStart, labelEnd));
+                        lastBuiltFragment = addFragment(fragments, builder.build(true, true));
+                        setImageToBuilder(builder, null, null);
+                        break;
+                    }
+                    case LINK_OPEN: {
+                        String hyperlink = markdownText.substring(structure.getEventValue() + FORMATTING_CODE_HYPERLINK_INNER_PREFIX.length(), structure.getSecondEventValue());
+                        if (isStartOfLine || !builder.text.isEmpty()) {
+                            // Text that ends with a space is built already, so what is left here continues in the link without a gap
+                            lastBuiltFragment = addFragment(fragments, builder.build(false, false));
+                        }
+                        String clickEventId = getTextClickEventId(hyperlink);
+                        String hoverEventId = (clickEventId == null) ? getTextHoverEventId(hyperlink) : null;
+                        if (clickEventId != null) {
+                            builder.clickEvent = new MarkdownTextFragment.TextClickEvent(clickEventId);
+                        } else if (hoverEventId != null) {
+                            builder.hoverEvent = new MarkdownTextFragment.TextHoverEvent(hoverEventId);
+                        } else {
+                            builder.hyperlink = new Hyperlink();
+                            builder.hyperlink.link = hyperlink;
+                        }
+                        break;
+                    }
+                    case LINK_CLOSE:
+                        // The end of the link is not marked as the end of a word here. A space behind the link joins this fragment and marks it,
+                        // and a line break behind the link gets a fragment of its own, like behind every other inline format.
+                        lastBuiltFragment = addFragment(fragments, builder.build(false, false));
+                        builder.hyperlink = null;
+                        builder.clickEvent = null;
+                        builder.hoverEvent = null;
+                        // Skips the target of the link
+                        index = structure.getEventValue();
+                        break;
+                    case QUOTE_OPEN:
+                        builder.quoteContext = new QuoteContext();
+                        // Skips the space of the prefix
+                        index++;
+                        break;
+                    case QUOTE_PREFIX:
+                        index++;
+                        break;
+                    case CALLOUT:
+                        // The marker line shows nothing. Its empty fragment is what keeps a callout without a body in the parsed text.
+                        builder.quoteContext = new QuoteContext();
+                        builder.quoteContext.calloutType = CALLOUT_TYPES[structure.getEventValue()];
+                        builder.calloutMarker = true;
+                        lastBuiltFragment = addFragment(fragments, builder.build(true, true));
+                        break;
+                    case QUOTE_END:
+                        builder.quoteContext = null; //it's important to disable quote BEFORE building the fragment
+                        lastBuiltFragment = addFragment(fragments, builder.build(true, true));
+                        queueNewLine = true;
+                        break;
+                    case SEPARATION_LINE:
+                        builder.separationLine = true;
+                        builder.clearText().text.append(FORMATTING_CODE_SEPARATION_LINE_PREFIX);
+                        lastBuiltFragment = addFragment(fragments, builder.build(true, true));
+                        break;
+                    case CODE_OPEN:
+                        if (isStartOfLine || !builder.text.isEmpty()) {
+                            lastBuiltFragment = addFragment(fragments, builder.build(false, false));
+                        }
+                        builder.codeBlockContext = new CodeBlockContext();
+                        builder.codeBlockContext.singleLine = true;
+                        break;
+                    case CODE_CLOSE:
+                        lastBuiltFragment = addFragment(fragments, builder.build(false, false));
+                        builder.codeBlockContext = null;
+                        break;
+                    case CODE_BLOCK_OPEN:
+                        builder.codeBlockContext = new CodeBlockContext();
+                        builder.codeBlockContext.singleLine = false;
+                        break;
+                    case CODE_BLOCK_CLOSE:
+                        builder.codeBlockContext = null;
+                        break;
+                    case PLAIN_TEXT_OPEN:
+                        if (isStartOfLine || !builder.text.isEmpty()) {
+                            lastBuiltFragment = addFragment(fragments, builder.build(false, false));
+                        }
+                        builder.plainText = true;
+                        // Skips the second character of the marker
+                        index++;
+                        break;
+                    case PLAIN_TEXT_CLOSE:
+                        lastBuiltFragment = addFragment(fragments, builder.build(false, false));
+                        builder.plainText = false;
+                        index++;
+                        break;
+                    case PLAIN_TEXT_BLOCK_OPEN:
+                        builder.plainText = true;
+                        break;
+                    case PLAIN_TEXT_BLOCK_CLOSE:
+                        builder.plainText = false;
+                        break;
+                    case ALIGNMENT:
+                        builder.alignment = LINE_ALIGNMENTS[structure.getEventValue()];
+                        break;
+                    default:
+                        break;
+                }
+                if (event.wholeLine) {
+                    // Nothing else of the line gets read, and the line break that ends it builds no fragment
                     lineHandledByWholeLineConstruct = true;
                     builder.headlineType = HeadlineType.NONE;
                     builder.separationLine = false;
                     queueNewLine = true;
-                    // The loop continues behind the line break that ends the last line of the table
-                    index = table.end();
-                    continue;
-                }
-            }
-
-            //Skip empty line under headline
-            if ((c == NEWLINE_CHAR) && lastLineWasHeadline) {
-                lastLineWasHeadline = false;
-                int nextLineStart = index + 1;
-                if (containsOnly(markdownText, nextLineStart, getLineEnd(markdownText, nextLineStart), IS_SPACE)) {
-                    continue;
-                }
-            }
-
-            //Skip Chars
-            if (charsToSkip > 0) {
-                charsToSkip--;
-                if (preserveStartOfLineWhileSkipping) {
-                    queueNewLine = true;
-                    if (charsToSkip == 0) preserveStartOfLineWhileSkipping = false;
-                }
-                continue;
-            }
-
-            //Skip Line
-            if ((c != NEWLINE_CHAR) && skipLine) {
-                continue;
-            }
-            if ((c == NEWLINE_CHAR) && skipLine) {
-                lineHandledByWholeLineConstruct = true;
-                builder.headlineType = HeadlineType.NONE;
-                builder.separationLine = false;
-                skipLine = false;
-                queueNewLine = true;
-                continue;
-            }
-
-            // Parse formatting before Markdown so its state survives the word-sized fragments built below. Ampersand
-            // codes are handled here, after Markdown destinations are skipped, so URL query parameters stay intact.
-            ChatFormatting vanillaFormatting = c == ChatFormatting.PREFIX_CODE ? MinecraftFormattingState.getSectionFormattingAt(markdownText, index) : c == '&' ? MinecraftFormattingState.getAmpersandFormattingAt(markdownText, index) : null;
-            TextColorFormatter customFormatting = c == ChatFormatting.PREFIX_CODE && vanillaFormatting == null ? MinecraftFormattingState.getCustomFormattingAt(markdownText, index) : null;
-            if ((vanillaFormatting != null) || (customFormatting != null)) {
-                if (!builder.text.isEmpty()) {
-                    lastBuiltFragment = addFragment(fragments, builder.build(false, false));
-                }
-                builder.minecraftFormatting = vanillaFormatting != null ? builder.minecraftFormatting.apply(vanillaFormatting) : builder.minecraftFormatting.apply(Objects.requireNonNull(customFormatting));
-                // A following isolated space must be built with the new formatting state instead of being folded
-                // into the fragment before this formatting boundary by the whitespace optimization below.
-                lastBuiltFragment = null;
-                charsToSkip = 1;
-                if (isStartOfLine) {
-                    queueNewLine = true;
-                    preserveStartOfLineWhileSkipping = true;
+                    if (lineEnd < index) lineEnd = getLineEnd(markdownText, index);
+                    // The lines of a table count as one line, which ends at the line break behind the last one
+                    index = (event == MarkdownStructure.Event.TABLE) ? tables.get(structure.getEventValue()).end() : lineEnd;
                 }
                 continue;
             }
 
             if (parseMarkdown) {
 
-                //Handle Escapes
-                if ((c == BACKSLASH_CHAR) && (builder.codeBlockContext == null) && !builder.plainText) {
-                    int nextIndex = index + 1;
-                    if (nextIndex < textLength) {
-                        char nextChar = markdownText.charAt(nextIndex);
-                        if (isEscapableMarkdownCharacter(nextChar)) {
-                            builder.text.append(nextChar);
-                            charsToSkip = 1;
-                            continue;
-                        }
-                    }
-                }
-
-                //Handle Headline
-                if (isStartOfLine && (c == HASHTAG_CHAR) && (builder.codeBlockContext == null) && !builder.plainText) {
-                    if (builder.headlineType == HeadlineType.NONE) {
-                        if (markdownText.startsWith(HEADLINE_PREFIX_BIGGEST, index)) {
-                            builder.headlineType = HeadlineType.BIGGEST;
-                            charsToSkip = 1;
-                        }
-                        if (markdownText.startsWith(HEADLINE_PREFIX_BIGGER, index)) {
-                            builder.headlineType = HeadlineType.BIGGER;
-                            charsToSkip = 2;
-                        }
-                        if (markdownText.startsWith(HEADLINE_PREFIX_BIG, index)) {
-                            builder.headlineType = HeadlineType.BIG;
-                            charsToSkip = 3;
-                        }
-                        if (builder.headlineType != HeadlineType.NONE) {
-                            lastLineWasHeadline = true;
-                            continue;
-                        }
-                    }
-                }
-
                 //Handle Fonts
                 if (c == PERCENTAGE_CHAR) {
                     if (markdownText.startsWith(FORMATTING_CODE_FONT_PREFIX, index) && !markdownText.startsWith(FORMATTING_CODE_FONT_SUFFIX, index) && (builder.font == null) && (builder.codeBlockContext == null) && !builder.plainText) {
                         int fontNameStart = index + FORMATTING_CODE_FONT_PREFIX.length();
+                        if (lineEnd < index) lineEnd = getLineEnd(markdownText, index);
                         int fontNameEnd = indexOf(markdownText, PERCENTAGE_CHAR, fontNameStart, lineEnd);
                         if ((fontNameEnd != -1) && containsOnly(markdownText, fontNameStart, fontNameEnd, IS_RESOURCE_NAME_CHARACTER) && lookahead.existsFrom(LookaheadMarker.FONT_SUFFIX, index)) {
                             ResourceLocation font = null;
@@ -295,7 +365,7 @@ public class MarkdownParser {
                                     lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                                 }
                                 builder.font = font;
-                                charsToSkip = fontNameEnd - index;
+                                index = fontNameEnd;
                                 continue;
                             }
                         }
@@ -303,7 +373,7 @@ public class MarkdownParser {
                     if (markdownText.startsWith(FORMATTING_CODE_FONT_SUFFIX, index) && (builder.font != null)) {
                         lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                         builder.font = null;
-                        charsToSkip = 3;
+                        index += 3;
                         continue;
                     }
                 }
@@ -312,6 +382,7 @@ public class MarkdownParser {
                 if (c == PERCENTAGE_CHAR) {
                     if (markdownText.startsWith(FORMATTING_CODE_HEX_COLOR_PREFIX, index) && !markdownText.startsWith(FORMATTING_CODE_HEX_COLOR_SUFFIX, index) && (builder.textColor == null) && (builder.codeBlockContext == null) && !builder.plainText) {
                         int colorStart = index + FORMATTING_CODE_HEX_COLOR_PREFIX.length();
+                        if (lineEnd < index) lineEnd = getLineEnd(markdownText, index);
                         int colorEnd = indexOf(markdownText, PERCENTAGE_CHAR, colorStart, lineEnd);
                         if ((colorEnd != -1) && lookahead.existsFrom(LookaheadMarker.HEX_COLOR_SUFFIX, index)) {
                             DrawableColor color = DrawableColor.ofHtml(markdownText.substring(colorStart, colorEnd));
@@ -320,7 +391,7 @@ public class MarkdownParser {
                                     lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                                 }
                                 builder.textColor = color;
-                                charsToSkip = colorEnd - index;
+                                index = colorEnd;
                                 continue;
                             }
                         }
@@ -328,33 +399,8 @@ public class MarkdownParser {
                     if (markdownText.startsWith(FORMATTING_CODE_HEX_COLOR_SUFFIX, index) && (builder.textColor != null)) {
                         lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                         builder.textColor = null;
-                        charsToSkip = 2;
+                        index += 2;
                         continue;
-                    }
-                }
-
-                // Handle List Items (all levels)
-                // Markers that are format markers as well start a list item first, so this has to come before the formats
-                if (isStartOfLine && (builder.codeBlockContext == null) && !builder.plainText) {
-                    // The marker of an item follows 2 spaces for every level below the first one
-                    int markerStart = index;
-                    while ((markerStart < lineEnd) && (markdownText.charAt(markerStart) == SPACE_CHAR)) markerStart++;
-                    int markerEnd = getListItemMarkerEnd(markdownText, markerStart, extendedBulletListMarkers, numberedLists);
-                    if (markerEnd != -1) {
-                        int indent = markerStart - index;
-
-                        if (indent <= MAX_LIST_ITEM_INDENT) {
-                            // Skips the indent, the marker and the space behind it. The current char is consumed already.
-                            charsToSkip = markerEnd - index;
-
-                            // Configure builder
-                            builder.bulletListLevel = (indent / 2) + 1;
-                            builder.bulletListItemStart = true;
-                            builder.listItemMarker = getListItemMarker(markdownText.charAt(markerStart));
-                            builder.listItemNumber = (builder.listItemMarker == ListItemMarker.NUMBER) ? markdownText.substring(markerStart, markerEnd) : null;
-
-                            continue;
-                        }
                     }
                 }
 
@@ -366,7 +412,7 @@ public class MarkdownParser {
                                 lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                             }
                             builder.bold = true;
-                            charsToSkip = 1;
+                            index++;
                             continue;
                         }
                     }
@@ -374,7 +420,7 @@ public class MarkdownParser {
                         if (markdownText.startsWith(FORMATTING_CODE_BOLD_PREFIX_SUFFIX, index)) {
                             lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                             builder.bold = false;
-                            charsToSkip = 1;
+                            index++;
                             continue;
                         }
                     }
@@ -430,7 +476,7 @@ public class MarkdownParser {
                             // Without a later double marker, the two tildes are text like every other marker that never gets closed.
                             // As two single markers, they would open and close around nothing and vanish.
                             builder.text.append(c).append(c);
-                            charsToSkip = 1;
+                            index++;
                             continue;
                         }
                         if (opensDouble || lookahead.existsFrom(LookaheadMarker.STRIKETHROUGH, index + 1)) {
@@ -439,250 +485,16 @@ public class MarkdownParser {
                             }
                             builder.strikethrough = true;
                             strikethroughDouble = opensDouble;
-                            if (opensDouble) charsToSkip = 1;
+                            if (opensDouble) index++;
                             continue;
                         }
                     }
                     if (builder.strikethrough && (!strikethroughDouble || isDoubleMarker)) {
                         lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                         builder.strikethrough = false;
-                        if (strikethroughDouble) charsToSkip = 1;
+                        if (strikethroughDouble) index++;
                         strikethroughDouble = false;
                         continue;
-                    }
-                }
-
-                //Handle Hyperlink Image
-                if (isStartOfLine && (c == OPEN_SQUARE_BRACKETS_CHAR) && (builder.codeBlockContext == null) && !builder.plainText) {
-                    if (markdownText.startsWith(FORMATTING_CODE_HYPERLINK_IMAGE_PREFIX, index)) {
-                        HyperlinkImage hyperlinkImage = getHyperlinkImageFromLine(markdownText.substring(index, lineEnd));
-                        if (hyperlinkImage != null) {
-                            builder.hyperlink = new Hyperlink();
-                            builder.hyperlink.link = hyperlinkImage.link();
-                            setImageToBuilder(builder, hyperlinkImage.imageSource(), hyperlinkImage.imageAltText());
-                            lastBuiltFragment = addFragment(fragments, builder.build(true, true));
-                            setImageToBuilder(builder, null, null);
-                            builder.hyperlink = null;
-                            skipLine = true;
-                            continue;
-                        }
-                    }
-                }
-
-                //Handle Image
-                if (isStartOfLine && (c == EXCLAMATION_MARK_CHAR) && (builder.codeBlockContext == null) && !builder.plainText) {
-                    if (markdownText.startsWith(FORMATTING_CODE_IMAGE_PREFIX, index)) {
-                        int labelStart = index + FORMATTING_CODE_IMAGE_PREFIX.length();
-                        int labelEnd = getLinkLabelEnd(markdownText, labelStart);
-                        int sourceStart = labelEnd + FORMATTING_CODE_HYPERLINK_INNER_PREFIX.length();
-                        int sourceEnd = (labelEnd != -1) ? getLinkTargetEnd(markdownText, sourceStart) : -1;
-                        if (sourceEnd != -1) {
-                            setImageToBuilder(builder, markdownText.substring(sourceStart, sourceEnd), unescape(markdownText, labelStart, labelEnd));
-                            lastBuiltFragment = addFragment(fragments, builder.build(true, true));
-                            setImageToBuilder(builder, null, null);
-                            skipLine = true;
-                            continue;
-                        }
-                    }
-                }
-
-                //Handle Hyperlink
-                if ((c == OPEN_SQUARE_BRACKETS_CHAR) && (builder.hyperlink == null) && (builder.clickEvent == null) && (builder.hoverEvent == null) && (builder.codeBlockContext == null) && !builder.plainText) {
-                    int labelEnd = getLinkLabelEnd(markdownText, index + 1);
-                    int targetEnd = (labelEnd != -1) ? getLinkTargetEnd(markdownText, labelEnd + FORMATTING_CODE_HYPERLINK_INNER_PREFIX.length()) : -1;
-                    if (targetEnd != -1) {
-                        String hyperlink = markdownText.substring(labelEnd + FORMATTING_CODE_HYPERLINK_INNER_PREFIX.length(), targetEnd);
-                        if (isStartOfLine || !builder.text.isEmpty()) {
-                            // Text that ends with a space is built already, so what is left here continues in the link without a gap
-                            lastBuiltFragment = addFragment(fragments, builder.build(false, false));
-                        }
-                        linkLabelEnd = labelEnd;
-                        linkTargetEnd = targetEnd;
-                        String clickEventId = getTextClickEventId(hyperlink);
-                        if (clickEventId != null) {
-                            builder.clickEvent = new MarkdownTextFragment.TextClickEvent(clickEventId);
-                            continue;
-                        }
-                        String hoverEventId = getTextHoverEventId(hyperlink);
-                        if (hoverEventId != null) {
-                            builder.hoverEvent = new MarkdownTextFragment.TextHoverEvent(hoverEventId);
-                            continue;
-                        }
-                        builder.hyperlink = new Hyperlink();
-                        builder.hyperlink.link = hyperlink;
-                        continue;
-                    }
-                }
-                // The link ends at the bracket its label was found to end at when it opened, and at no other one.
-                // The characters behind that bracket are exactly the target that was read back then, so skipping them never cuts into other text.
-                if (index == linkLabelEnd) {
-                    // The end of the link is not marked as the end of a word here. A space behind the link joins this fragment and marks it,
-                    // and a line break behind the link gets a fragment of its own, like behind every other inline format.
-                    lastBuiltFragment = addFragment(fragments, builder.build(false, false));
-                    charsToSkip = linkTargetEnd - index;
-                    builder.hyperlink = null;
-                    builder.clickEvent = null;
-                    builder.hoverEvent = null;
-                    linkLabelEnd = -1;
-                    linkTargetEnd = -1;
-                    continue;
-                }
-
-                //Handle Quote
-                if (isStartOfLine && (c == GREATER_THAN_CHAR) && (builder.codeBlockContext == null) && !builder.plainText) {
-                    // The prefix opens a quote, and lines of an open quote that start with it stay part of that quote without showing it
-                    if (markdownText.startsWith(FORMATTING_CODE_QUOTE_PREFIX, index)) {
-                        if (builder.quoteContext == null) {
-                            builder.quoteContext = new QuoteContext();
-                            CalloutType calloutType = callouts ? getCalloutType(markdownText, index + FORMATTING_CODE_QUOTE_PREFIX.length(), lineEnd) : null;
-                            if (calloutType != null) {
-                                // The marker line shows nothing. Its empty fragment is what keeps a callout without a body in the parsed text.
-                                builder.quoteContext.calloutType = calloutType;
-                                builder.calloutMarker = true;
-                                lastBuiltFragment = addFragment(fragments, builder.build(true, true));
-                                skipLine = true;
-                                continue;
-                            }
-                        }
-                        charsToSkip = 1;
-                        continue;
-                    }
-                    // A line with nothing but the quote character is an empty line of the open quote
-                    if ((builder.quoteContext != null) && (remainingLineLength == 1)) {
-                        continue;
-                    }
-                }
-                if (isStartOfLine && (builder.quoteContext != null)) {
-                    if (containsOnly(markdownText, index, lineEnd, IS_TRIMMED_WHITESPACE)) {
-                        builder.quoteContext = null; //it's important to disable quote BEFORE building the fragment
-                        lastBuiltFragment = addFragment(fragments, builder.build(true, true));
-                        queueNewLine = true;
-                        continue;
-                    }
-                }
-
-                //Handle Separation Line
-                if (isStartOfLine && (c == MINUS_CHAR) && (builder.codeBlockContext == null) && !builder.plainText) {
-                    if (markdownText.startsWith(FORMATTING_CODE_SEPARATION_LINE_PREFIX, index) && containsOnly(markdownText, index, lineEnd, IS_SEPARATION_LINE_CHARACTER)) {
-                        builder.separationLine = true;
-                        builder.clearText().text.append(FORMATTING_CODE_SEPARATION_LINE_PREFIX);
-                        lastBuiltFragment = addFragment(fragments, builder.build(true, true));
-                        skipLine = true;
-                        continue;
-                    }
-                }
-
-                //Handle Code Block Single Line
-                if ((c == GRAVE_ACCENT_CHAR) && !builder.plainText) {
-                    if (builder.codeBlockContext == null) {
-                        // A grave accent with a second one right behind it opens nothing: the second one would close the block around nothing,
-                        // and both would vanish. That keeps the marker of a multi-line block that never gets closed in the text as well.
-                        // The block ends at a grave accent of the same line that does not start a multi-line marker.
-                        // The last grave accent of every row of grave accents is one, so any later one in the line means there is such an end.
-                        if (!markdownText.startsWith(FORMATTING_CODE_CODE_BLOCK_SINGLE_LINE_EMPTY, index) && lookahead.existsBetween(LookaheadMarker.CODE_BLOCK_SINGLE_LINE, index + 1, lineEnd)) {
-                            if (isStartOfLine || !builder.text.isEmpty()) {
-                                lastBuiltFragment = addFragment(fragments, builder.build(false, false));
-                            }
-                            builder.codeBlockContext = new CodeBlockContext();
-                            builder.codeBlockContext.singleLine = true;
-                            continue;
-                        }
-                    }
-                    if ((builder.codeBlockContext != null) && builder.codeBlockContext.singleLine) {
-                        if (!markdownText.startsWith(FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX, index)) {
-                            lastBuiltFragment = addFragment(fragments, builder.build(false, false));
-                            builder.codeBlockContext = null;
-                            continue;
-                        }
-                    }
-                }
-
-                //Handle Code Block Multi Line
-                if (isStartOfLine && (c == GRAVE_ACCENT_CHAR) && (remainingLineLength == 3) && !builder.plainText) {
-                    if (builder.codeBlockContext == null) {
-                        if (markdownText.startsWith(FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX, index) && lookahead.existsFrom(LookaheadMarker.CODE_BLOCK_MULTI_LINE_END, index + 3)) {
-                            builder.codeBlockContext = new CodeBlockContext();
-                            builder.codeBlockContext.singleLine = false;
-                            skipLine = true;
-                            continue;
-                        }
-                    }
-                    if ((builder.codeBlockContext != null) && !builder.codeBlockContext.singleLine) {
-                        if (markdownText.startsWith(FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX, index)) {
-                            builder.codeBlockContext = null;
-                            skipLine = true;
-                            continue;
-                        }
-                    }
-                }
-
-                //Handle Plain Text Single Line
-                if ((c == SEMICOLON_CHAR) && !markdownText.startsWith(FORMATTING_CODE_PLAIN_TEXT_MULTI_LINE_PREFIX_SUFFIX, index)) {
-                    if (!builder.plainText) {
-                        if (markdownText.startsWith(FORMATTING_CODE_PLAIN_TEXT_SINGLE_LINE_PREFIX_SUFFIX, index) && lookahead.existsFrom(LookaheadMarker.PLAIN_TEXT_SINGLE_LINE, index + 2)) {
-                            if (isStartOfLine || !builder.text.isEmpty()) {
-                                lastBuiltFragment = addFragment(fragments, builder.build(false, false));
-                            }
-                            builder.plainText = true;
-                            charsToSkip = 1;
-                            continue;
-                        }
-                    }
-                    if (builder.plainText) {
-                        if (markdownText.startsWith(FORMATTING_CODE_PLAIN_TEXT_SINGLE_LINE_PREFIX_SUFFIX, index)) {
-                            lastBuiltFragment = addFragment(fragments, builder.build(false, false));
-                            builder.plainText = false;
-                            charsToSkip = 1;
-                            continue;
-                        }
-                    }
-                }
-
-                //Handle Plain Text Multi Line
-                if (isStartOfLine && (c == SEMICOLON_CHAR) && (remainingLineLength == 3)) {
-                    if (markdownText.startsWith(FORMATTING_CODE_PLAIN_TEXT_MULTI_LINE_PREFIX_SUFFIX, index)) {
-                        if (!builder.plainText && lookahead.existsFrom(LookaheadMarker.PLAIN_TEXT_MULTI_LINE_END, index + 3)) {
-                            builder.plainText = true;
-                            skipLine = true;
-                            continue;
-                        }
-                        if (builder.plainText) {
-                            builder.plainText = false;
-                            skipLine = true;
-                            continue;
-                        }
-                    }
-                }
-
-                //Handle Alignment : Centered
-                if (isStartOfLine && (c == CIRCUMFLEX_CHAR) && (remainingLineLength == 3)) {
-                    if (markdownText.startsWith(FORMATTING_CODE_ALIGNMENT_CENTERED_PREFIX_SUFFIX, index) && (builder.codeBlockContext == null)) {
-                        if ((builder.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT) && lookahead.existsFrom(LookaheadMarker.ALIGNMENT_CENTERED_END, index + 3)) {
-                            builder.alignment = MarkdownRenderer.MarkdownLineAlignment.CENTERED;
-                            skipLine = true;
-                            continue;
-                        }
-                        if (builder.alignment == MarkdownRenderer.MarkdownLineAlignment.CENTERED) {
-                            builder.alignment = MarkdownRenderer.MarkdownLineAlignment.LEFT;
-                            skipLine = true;
-                            continue;
-                        }
-                    }
-                }
-
-                //Handle Alignment : Right
-                if (isStartOfLine && (c == VERTICAL_BAR_CHAR) && (remainingLineLength == 3)) {
-                    if (markdownText.startsWith(FORMATTING_CODE_ALIGNMENT_RIGHT_PREFIX_SUFFIX, index) && (builder.codeBlockContext == null)) {
-                        if ((builder.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT) && lookahead.existsFrom(LookaheadMarker.ALIGNMENT_RIGHT_END, index + 3)) {
-                            builder.alignment = MarkdownRenderer.MarkdownLineAlignment.RIGHT;
-                            skipLine = true;
-                            continue;
-                        }
-                        if (builder.alignment == MarkdownRenderer.MarkdownLineAlignment.RIGHT) {
-                            builder.alignment = MarkdownRenderer.MarkdownLineAlignment.LEFT;
-                            skipLine = true;
-                            continue;
-                        }
                     }
                 }
 
@@ -726,7 +538,7 @@ public class MarkdownParser {
 
         // Whole-line constructs already handle or suppress their fragment before consuming the source line. Building
         // again at EOF would turn a terminal construct (such as a closing alignment marker) into an empty render line.
-        if (!skipLine && !lineHandledByWholeLineConstruct) fragments.add(builder.build(true, true));
+        if (!lineHandledByWholeLineConstruct) fragments.add(builder.build(true, true));
 
         return fragments;
 
@@ -762,6 +574,16 @@ public class MarkdownParser {
             default:
                 return false;
         }
+    }
+
+    /**
+     * Returns if a Minecraft formatting code starts at the given index: a section sign or an ampersand with the character of a Vanilla formatting
+     * behind it, or a section sign with the character of a custom text color formatter behind it.
+     */
+    protected static boolean isFormattingCode(@NotNull String text, int index) {
+        char prefix = text.charAt(index);
+        if (prefix == ChatFormatting.PREFIX_CODE) return (MinecraftFormattingState.getSectionFormattingAt(text, index) != null) || (MinecraftFormattingState.getCustomFormattingAt(text, index) != null);
+        return (prefix == AMPERSAND_CHAR) && (MinecraftFormattingState.getAmpersandFormattingAt(text, index) != null);
     }
 
     protected static boolean isCharacterEscaped(@NotNull String markdownText, int index) {
@@ -1127,13 +949,7 @@ public class MarkdownParser {
     @NotNull
     private static LeadingFormattingTokens splitLeadingFormattingTokens(@NotNull String line) {
         int index = 0;
-        while ((index + 1) < line.length()) {
-            char prefix = line.charAt(index);
-            ChatFormatting vanillaFormatting = prefix == ChatFormatting.PREFIX_CODE ? MinecraftFormattingState.getSectionFormattingAt(line, index) : prefix == '&' ? MinecraftFormattingState.getAmpersandFormattingAt(line, index) : null;
-            TextColorFormatter customFormatting = prefix == ChatFormatting.PREFIX_CODE && vanillaFormatting == null ? MinecraftFormattingState.getCustomFormattingAt(line, index) : null;
-            if ((vanillaFormatting == null) && (customFormatting == null)) break;
-            index += 2;
-        }
+        while (((index + 1) < line.length()) && isFormattingCode(line, index)) index += 2;
         return new LeadingFormattingTokens(line.substring(0, index), line.substring(index));
     }
 
@@ -1270,6 +1086,460 @@ public class MarkdownParser {
     }
 
     /**
+     * The structure of a Markdown text: where its formatting codes, escaped characters, headlines, list items, images, links, quotes,
+     * separation lines, code, plain text, aligned blocks and tables are.
+     *
+     * <p>The structure gets found in one pass over the text, before the parser builds fragments. It holds everything that depends on nothing
+     * but the text in front of it and on the markers {@link MarkerLookahead} finds behind it. The parser asks for the {@link Event} of
+     * every character it reads, and decides on its own only about the formats that need a marker to close them.</p>
+     *
+     * <p>The pass jumps over everything its events make the parser skip, like the target of a link or the rest of a line. It does not know
+     * what the parser skips on its own: the name of a font, the value of a color and the second character of a format marker.
+     * None of these can hold a character that starts an event, so the pass reads them like text. Whatever else the parser skips
+     * on its own has to keep it that way, or it has to become an event.</p>
+     */
+    protected static class MarkdownStructure {
+
+        /**
+         * TRUE for every character that can be an event, or change what the pass knows about the text, when it is not the first character of a line.<br>
+         * The pass reads all other characters only at the start of a line, so a character that is missing here never becomes an event inside of a line.
+         */
+        protected static final boolean[] INSIDE_LINE_EVENT_CHARACTERS = new boolean[ChatFormatting.PREFIX_CODE + 1];
+        static {
+            for (char character : new char[] {NEWLINE_CHAR, ChatFormatting.PREFIX_CODE, AMPERSAND_CHAR, BACKSLASH_CHAR, OPEN_SQUARE_BRACKETS_CHAR, CLOSE_SQUARE_BRACKETS_CHAR, GRAVE_ACCENT_CHAR, SEMICOLON_CHAR}) {
+                INSIDE_LINE_EVENT_CHARACTERS[character] = true;
+            }
+        }
+
+        /** Every event takes this many values in {@link #events}: its index in the text, the ordinal of its {@link Event} and its two values. */
+        protected static final int EVENT_SIZE = 4;
+        protected static final Event[] EVENT_TYPES = Event.values();
+
+        protected int[] events = new int[0];
+        /** Index behind the last value in {@link #events}. */
+        protected int eventsEnd = 0;
+        /** Index in {@link #events} of the first event the parser has not read. */
+        protected int nextEvent = 0;
+        /** Index in the text of the first event the parser has not read, or the highest integer if it has read all of them. */
+        protected int nextEventIndex = Integer.MAX_VALUE;
+        protected int eventValue;
+        protected int secondEventValue;
+        protected final List<HyperlinkImage> hyperlinkImages = new ArrayList<>();
+
+        /**
+         * Reads the text once and finds all of its events.
+         *
+         * @param parseMarkdown If the text is Markdown. Other text only has formatting codes.
+         * @param tables The tables of the text, in the order of their lines.
+         * @param lookahead Finds the markers that close what the pass is about to open. The pass makes it read the tables as text that are inside of code blocks and plain text.
+         */
+        protected MarkdownStructure(@NotNull String text, boolean parseMarkdown, @NotNull List<Table> tables, @NotNull MarkerLookahead lookahead, boolean extendedBulletListMarkers, boolean numberedLists, boolean callouts) {
+
+            int length = text.length();
+            boolean queueNewLine = true;
+            boolean headlineLine = false;
+            boolean code = false;
+            boolean singleLineCode = false;
+            boolean plainText = false;
+            boolean quote = false;
+            MarkdownRenderer.MarkdownLineAlignment alignment = MarkdownRenderer.MarkdownLineAlignment.LEFT;
+            //Index of the square bracket that ends the label of the open link, and of the round bracket that ends its target
+            int linkLabelEnd = -1;
+            int linkTargetEnd = -1;
+            //Index of the line break that ends the line of the current index, or the text length if it is the last line
+            int lineEnd = -1;
+            //The tables follow the order of their lines, so the loop only ever has to look out for the next one
+            int nextTable = 0;
+            int nextTableStart = tables.isEmpty() ? -1 : tables.get(0).start();
+
+            for (int index = 0; index < length; index++) {
+
+                char c = text.charAt(index);
+
+                boolean isStartOfLine = queueNewLine;
+                // Most characters are somewhere inside of a line and start nothing there
+                if (!isStartOfLine && ((c >= INSIDE_LINE_EVENT_CHARACTERS.length) || !INSIDE_LINE_EVENT_CHARACTERS[c])) continue;
+                queueNewLine = false;
+
+                if (lineEnd < index) lineEnd = getLineEnd(text, index);
+                //Length of the part of the current line that starts at the current index
+                int remainingLineLength = lineEnd - index;
+
+                // Check for a table
+                if (index == nextTableStart) {
+                    Table table = tables.get(nextTable);
+                    nextTable++;
+                    nextTableStart = (nextTable < tables.size()) ? tables.get(nextTable).start() : -1;
+                    if (code || plainText) {
+                        // Inside a code block or plain text, the lines of the table are text like every other line of it
+                        lookahead.readTableAsText(table);
+                    } else {
+                        this.addEvent(index, Event.TABLE, nextTable - 1, 0);
+                        index = table.end();
+                        queueNewLine = true;
+                        continue;
+                    }
+                }
+
+                //Skip empty line under headline
+                if ((c == NEWLINE_CHAR) && headlineLine) {
+                    headlineLine = false;
+                    int nextLineStart = index + 1;
+                    if (containsOnly(text, nextLineStart, getLineEnd(text, nextLineStart), IS_SPACE)) {
+                        // The line behind this line break does not count as started, so nothing in it gets read as the start of a line
+                        this.addEvent(index, Event.SKIPPED_LINE_BREAK, 0, 0);
+                        continue;
+                    }
+                }
+
+                // Formatting codes come before Markdown. Ampersand codes are found here, behind the targets of links that got skipped, so URL query parameters stay intact.
+                if (((c == ChatFormatting.PREFIX_CODE) || (c == AMPERSAND_CHAR)) && isFormattingCode(text, index)) {
+                    this.addEvent(index, Event.FORMATTING_CODE, 0, 0);
+                    index++;
+                    queueNewLine = isStartOfLine;
+                    continue;
+                }
+
+                if (parseMarkdown) {
+
+                    boolean markdown = !code && !plainText;
+
+                    //Handle Escapes
+                    if ((c == BACKSLASH_CHAR) && markdown && ((index + 1) < length) && isEscapableMarkdownCharacter(text.charAt(index + 1))) {
+                        this.addEvent(index, Event.ESCAPE, 0, 0);
+                        index++;
+                        continue;
+                    }
+
+                    //Handle Headline
+                    if (isStartOfLine && (c == HASHTAG_CHAR) && markdown) {
+                        // The prefix has one hashtag for the biggest headline and one more for every smaller one
+                        int hashtags = text.startsWith(HEADLINE_PREFIX_BIGGEST, index) ? 1 : (text.startsWith(HEADLINE_PREFIX_BIGGER, index) ? 2 : (text.startsWith(HEADLINE_PREFIX_BIG, index) ? 3 : 0));
+                        if (hashtags > 0) {
+                            this.addEvent(index, Event.HEADLINE, hashtags, 0);
+                            headlineLine = true;
+                            // Skips the hashtags behind this one and the space
+                            index += hashtags;
+                            continue;
+                        }
+                    }
+
+                    // Handle List Items (all levels)
+                    // Markers that are format markers as well start a list item first
+                    if (isStartOfLine && markdown) {
+                        // The marker of an item follows 2 spaces for every level below the first one
+                        int markerStart = index;
+                        while ((markerStart < lineEnd) && (text.charAt(markerStart) == SPACE_CHAR)) markerStart++;
+                        int markerEnd = getListItemMarkerEnd(text, markerStart, extendedBulletListMarkers, numberedLists);
+                        if ((markerEnd != -1) && ((markerStart - index) <= MAX_LIST_ITEM_INDENT)) {
+                            this.addEvent(index, Event.LIST_ITEM, markerStart, markerEnd);
+                            index = markerEnd;
+                            continue;
+                        }
+                    }
+
+                    //Handle Hyperlink Image
+                    if (isStartOfLine && (c == OPEN_SQUARE_BRACKETS_CHAR) && markdown && text.startsWith(FORMATTING_CODE_HYPERLINK_IMAGE_PREFIX, index)) {
+                        HyperlinkImage hyperlinkImage = getHyperlinkImageFromLine(text.substring(index, lineEnd));
+                        if (hyperlinkImage != null) {
+                            this.hyperlinkImages.add(hyperlinkImage);
+                            this.addEvent(index, Event.HYPERLINK_IMAGE, this.hyperlinkImages.size() - 1, 0);
+                            index = lineEnd;
+                            queueNewLine = true;
+                            continue;
+                        }
+                    }
+
+                    //Handle Image
+                    if (isStartOfLine && (c == EXCLAMATION_MARK_CHAR) && markdown && text.startsWith(FORMATTING_CODE_IMAGE_PREFIX, index)) {
+                        int labelEnd = getLinkLabelEnd(text, index + FORMATTING_CODE_IMAGE_PREFIX.length());
+                        int sourceEnd = (labelEnd != -1) ? getLinkTargetEnd(text, labelEnd + FORMATTING_CODE_HYPERLINK_INNER_PREFIX.length()) : -1;
+                        if (sourceEnd != -1) {
+                            this.addEvent(index, Event.IMAGE, labelEnd, sourceEnd);
+                            index = lineEnd;
+                            queueNewLine = true;
+                            continue;
+                        }
+                    }
+
+                    //Handle Hyperlink
+                    if ((c == OPEN_SQUARE_BRACKETS_CHAR) && (linkLabelEnd == -1) && markdown) {
+                        int labelEnd = getLinkLabelEnd(text, index + 1);
+                        int targetEnd = (labelEnd != -1) ? getLinkTargetEnd(text, labelEnd + FORMATTING_CODE_HYPERLINK_INNER_PREFIX.length()) : -1;
+                        if (targetEnd != -1) {
+                            this.addEvent(index, Event.LINK_OPEN, labelEnd, targetEnd);
+                            linkLabelEnd = labelEnd;
+                            linkTargetEnd = targetEnd;
+                            continue;
+                        }
+                    }
+                    // The link ends at the bracket its label was found to end at when it opened, and at no other one.
+                    // The characters behind that bracket are exactly the target that was read back then, so skipping them never cuts into other text.
+                    if (index == linkLabelEnd) {
+                        this.addEvent(index, Event.LINK_CLOSE, linkTargetEnd, 0);
+                        index = linkTargetEnd;
+                        linkLabelEnd = -1;
+                        linkTargetEnd = -1;
+                        continue;
+                    }
+
+                    //Handle Quote
+                    if (isStartOfLine && (c == GREATER_THAN_CHAR) && markdown) {
+                        // The prefix opens a quote, and lines of an open quote that start with it stay part of that quote without showing it
+                        if (text.startsWith(FORMATTING_CODE_QUOTE_PREFIX, index)) {
+                            if (!quote) {
+                                quote = true;
+                                CalloutType calloutType = callouts ? getCalloutType(text, index + FORMATTING_CODE_QUOTE_PREFIX.length(), lineEnd) : null;
+                                if (calloutType != null) {
+                                    this.addEvent(index, Event.CALLOUT, calloutType.ordinal(), 0);
+                                    index = lineEnd;
+                                    queueNewLine = true;
+                                    continue;
+                                }
+                                this.addEvent(index, Event.QUOTE_OPEN, 0, 0);
+                            } else {
+                                this.addEvent(index, Event.QUOTE_PREFIX, 0, 0);
+                            }
+                            index++;
+                            continue;
+                        }
+                        // A line with nothing but the quote character is an empty line of the open quote
+                        if (quote && (remainingLineLength == 1)) {
+                            this.addEvent(index, Event.QUOTE_EMPTY_LINE, 0, 0);
+                            continue;
+                        }
+                    }
+                    if (isStartOfLine && quote && containsOnly(text, index, lineEnd, IS_TRIMMED_WHITESPACE)) {
+                        quote = false;
+                        // The rest of the line still counts as the start of a line
+                        this.addEvent(index, Event.QUOTE_END, 0, 0);
+                        queueNewLine = true;
+                        continue;
+                    }
+
+                    //Handle Separation Line
+                    if (isStartOfLine && (c == MINUS_CHAR) && markdown && text.startsWith(FORMATTING_CODE_SEPARATION_LINE_PREFIX, index) && containsOnly(text, index, lineEnd, IS_SEPARATION_LINE_CHARACTER)) {
+                        this.addEvent(index, Event.SEPARATION_LINE, 0, 0);
+                        index = lineEnd;
+                        queueNewLine = true;
+                        continue;
+                    }
+
+                    //Handle Code Block Single Line
+                    if ((c == GRAVE_ACCENT_CHAR) && !plainText) {
+                        // A grave accent with a second one right behind it opens nothing: the second one would close the block around nothing,
+                        // and both would vanish. That keeps the marker of a multi-line block that never gets closed in the text as well.
+                        // The block ends at a grave accent of the same line that does not start a multi-line marker.
+                        // The last grave accent of every row of grave accents is one, so any later one in the line means there is such an end.
+                        if (!code && !text.startsWith(FORMATTING_CODE_CODE_BLOCK_SINGLE_LINE_EMPTY, index) && lookahead.existsBetween(LookaheadMarker.CODE_BLOCK_SINGLE_LINE, index + 1, lineEnd)) {
+                            this.addEvent(index, Event.CODE_OPEN, 0, 0);
+                            code = true;
+                            singleLineCode = true;
+                            continue;
+                        }
+                        if (code && singleLineCode && !text.startsWith(FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX, index)) {
+                            this.addEvent(index, Event.CODE_CLOSE, 0, 0);
+                            code = false;
+                            continue;
+                        }
+                    }
+
+                    //Handle Code Block Multi Line
+                    if (isStartOfLine && (c == GRAVE_ACCENT_CHAR) && (remainingLineLength == 3) && !plainText && text.startsWith(FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX, index)) {
+                        if (!code && lookahead.existsFrom(LookaheadMarker.CODE_BLOCK_MULTI_LINE_END, index + 3)) {
+                            this.addEvent(index, Event.CODE_BLOCK_OPEN, 0, 0);
+                            code = true;
+                            singleLineCode = false;
+                            index = lineEnd;
+                            queueNewLine = true;
+                            continue;
+                        }
+                        if (code && !singleLineCode) {
+                            this.addEvent(index, Event.CODE_BLOCK_CLOSE, 0, 0);
+                            code = false;
+                            index = lineEnd;
+                            queueNewLine = true;
+                            continue;
+                        }
+                    }
+
+                    //Handle Plain Text Single Line
+                    if ((c == SEMICOLON_CHAR) && !text.startsWith(FORMATTING_CODE_PLAIN_TEXT_MULTI_LINE_PREFIX_SUFFIX, index) && text.startsWith(FORMATTING_CODE_PLAIN_TEXT_SINGLE_LINE_PREFIX_SUFFIX, index)) {
+                        if (!plainText && lookahead.existsFrom(LookaheadMarker.PLAIN_TEXT_SINGLE_LINE, index + 2)) {
+                            this.addEvent(index, Event.PLAIN_TEXT_OPEN, 0, 0);
+                            plainText = true;
+                            index++;
+                            continue;
+                        }
+                        if (plainText) {
+                            this.addEvent(index, Event.PLAIN_TEXT_CLOSE, 0, 0);
+                            plainText = false;
+                            index++;
+                            continue;
+                        }
+                    }
+
+                    //Handle Plain Text Multi Line
+                    if (isStartOfLine && (c == SEMICOLON_CHAR) && (remainingLineLength == 3) && text.startsWith(FORMATTING_CODE_PLAIN_TEXT_MULTI_LINE_PREFIX_SUFFIX, index)) {
+                        if (!plainText && lookahead.existsFrom(LookaheadMarker.PLAIN_TEXT_MULTI_LINE_END, index + 3)) {
+                            this.addEvent(index, Event.PLAIN_TEXT_BLOCK_OPEN, 0, 0);
+                            plainText = true;
+                            index = lineEnd;
+                            queueNewLine = true;
+                            continue;
+                        }
+                        if (plainText) {
+                            this.addEvent(index, Event.PLAIN_TEXT_BLOCK_CLOSE, 0, 0);
+                            plainText = false;
+                            index = lineEnd;
+                            queueNewLine = true;
+                            continue;
+                        }
+                    }
+
+                    //Handle Alignment
+                    if (isStartOfLine && (remainingLineLength == 3) && !code && ((c == CIRCUMFLEX_CHAR) || (c == VERTICAL_BAR_CHAR))) {
+                        boolean centered = (c == CIRCUMFLEX_CHAR);
+                        MarkdownRenderer.MarkdownLineAlignment blockAlignment = centered ? MarkdownRenderer.MarkdownLineAlignment.CENTERED : MarkdownRenderer.MarkdownLineAlignment.RIGHT;
+                        if (text.startsWith(centered ? FORMATTING_CODE_ALIGNMENT_CENTERED_PREFIX_SUFFIX : FORMATTING_CODE_ALIGNMENT_RIGHT_PREFIX_SUFFIX, index)) {
+                            // The marker opens its block in text that is not aligned, and closes it again
+                            MarkdownRenderer.MarkdownLineAlignment newAlignment = null;
+                            if ((alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT) && lookahead.existsFrom(centered ? LookaheadMarker.ALIGNMENT_CENTERED_END : LookaheadMarker.ALIGNMENT_RIGHT_END, index + 3)) {
+                                newAlignment = blockAlignment;
+                            } else if (alignment == blockAlignment) {
+                                newAlignment = MarkdownRenderer.MarkdownLineAlignment.LEFT;
+                            }
+                            if (newAlignment != null) {
+                                this.addEvent(index, Event.ALIGNMENT, newAlignment.ordinal(), 0);
+                                alignment = newAlignment;
+                                index = lineEnd;
+                                queueNewLine = true;
+                                continue;
+                            }
+                        }
+                    }
+
+                }
+
+                if (c == NEWLINE_CHAR) queueNewLine = true;
+
+            }
+
+            if (this.eventsEnd > 0) this.nextEventIndex = this.events[0];
+
+        }
+
+        protected void addEvent(int index, @NotNull Event event, int value, int secondValue) {
+            if (this.eventsEnd == this.events.length) this.events = Arrays.copyOf(this.events, Math.max(16 * EVENT_SIZE, this.events.length * 2));
+            this.events[this.eventsEnd++] = index;
+            this.events[this.eventsEnd++] = event.ordinal();
+            this.events[this.eventsEnd++] = value;
+            this.events[this.eventsEnd++] = secondValue;
+        }
+
+        /**
+         * Returns the event at the given index of the text, which is {@link Event#NONE} for most characters.<br>
+         * The parser asks for every character it reads, in the order of the text. The values of a returned event
+         * are {@link #getEventValue()} and {@link #getSecondEventValue()} until the next event gets returned.
+         */
+        @NotNull
+        protected Event getEventAt(int index) {
+            if (index < this.nextEventIndex) return Event.NONE;
+            Event event = Event.NONE;
+            if (index == this.nextEventIndex) {
+                event = EVENT_TYPES[this.events[this.nextEvent + 1]];
+                this.eventValue = this.events[this.nextEvent + 2];
+                this.secondEventValue = this.events[this.nextEvent + 3];
+            }
+            // Events in front of the index are ones the parser jumped over
+            while ((this.nextEvent < this.eventsEnd) && (this.events[this.nextEvent] <= index)) this.nextEvent += EVENT_SIZE;
+            this.nextEventIndex = (this.nextEvent < this.eventsEnd) ? this.events[this.nextEvent] : Integer.MAX_VALUE;
+            return event;
+        }
+
+        protected int getEventValue() {
+            return this.eventValue;
+        }
+
+        protected int getSecondEventValue() {
+            return this.secondEventValue;
+        }
+
+        @NotNull
+        protected HyperlinkImage getHyperlinkImage(int index) {
+            return this.hyperlinkImages.get(index);
+        }
+
+        /**
+         * What the parser does at a character of the text. The comments name the two values of every event that has some.
+         */
+        protected enum Event {
+
+            /** Nothing: the character is text, or part of a format the parser decides about on its own. */
+            NONE(false),
+            /** A table starts, which takes all of its lines. Value: the index of the table in the list of tables. */
+            TABLE(true),
+            /** The line break behind a headline gets skipped, because the line behind it is empty. */
+            SKIPPED_LINE_BREAK(false),
+            /** A Minecraft formatting code starts, which is this character and the next one. */
+            FORMATTING_CODE(false),
+            /** The backslash of an escaped character, which makes the next character text. */
+            ESCAPE(false),
+            /** The prefix of a headline starts. Value: the number of hashtags of the prefix, which is 1 for the biggest headline and 3 for the smallest one. */
+            HEADLINE(false),
+            /** A list item starts with its indent, its marker and a space. Values: the index of the marker, and the index of the space behind it. */
+            LIST_ITEM(false),
+            /** A line that is an image with a hyperlink. Value: the index of the image for {@link #getHyperlinkImage(int)}. */
+            HYPERLINK_IMAGE(true),
+            /** A line that is an image. Values: the index of the bracket that ends its alternative text, and the index of the bracket that ends its source. */
+            IMAGE(true),
+            /** A link, or a text with a click or hover event, starts. Values: the index of the bracket that ends its label, and the index of the bracket that ends its target. */
+            LINK_OPEN(false),
+            /** The label of the open link ends, and its target follows. Value: the index of the bracket that ends the target. */
+            LINK_CLOSE(false),
+            /** The prefix of a quote line that opens a quote. */
+            QUOTE_OPEN(false),
+            /** The prefix of a line of the open quote. */
+            QUOTE_PREFIX(false),
+            /** The marker line of a callout, which opens a quote. Value: the ordinal of the callout type. */
+            CALLOUT(true),
+            /** The quote character of an empty line of the open quote. */
+            QUOTE_EMPTY_LINE(false),
+            /** The first character of the empty line that ends the open quote. */
+            QUOTE_END(false),
+            /** A line that is a separation line. */
+            SEPARATION_LINE(true),
+            /** The marker that opens code inside of a line. */
+            CODE_OPEN(false),
+            /** The marker that closes code inside of a line. */
+            CODE_CLOSE(false),
+            /** The marker line that opens a code block. */
+            CODE_BLOCK_OPEN(true),
+            /** The marker line that closes a code block. */
+            CODE_BLOCK_CLOSE(true),
+            /** The two characters that open plain text. */
+            PLAIN_TEXT_OPEN(false),
+            /** The two characters that close plain text. */
+            PLAIN_TEXT_CLOSE(false),
+            /** The marker line that opens plain text. */
+            PLAIN_TEXT_BLOCK_OPEN(true),
+            /** The marker line that closes plain text. */
+            PLAIN_TEXT_BLOCK_CLOSE(true),
+            /** The marker line that opens or closes an aligned block. Value: the ordinal of the alignment of the lines behind it. */
+            ALIGNMENT(true);
+
+            /** If the event stands for everything up to the end of its line, so the parser reads nothing else of that line. */
+            protected final boolean wholeLine;
+
+            Event(boolean wholeLine) {
+                this.wholeLine = wholeLine;
+            }
+
+        }
+
+    }
+
+    /**
      * The markers the parser looks ahead for to find out if something it is about to open gets closed again.
      */
     protected enum LookaheadMarker {
@@ -1353,6 +1623,13 @@ public class MarkdownParser {
          */
         protected void readTableAsText(@NotNull Table table) {
             this.textTableEnd = table.end();
+        }
+
+        /**
+         * Makes the markers in the lines of all tables count for nothing again.
+         */
+        protected void readNoTableAsText() {
+            this.textTableEnd = -1;
         }
 
         /**
