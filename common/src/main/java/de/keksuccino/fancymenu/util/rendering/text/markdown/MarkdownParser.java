@@ -152,18 +152,10 @@ public class MarkdownParser {
         //The tables follow the order of their lines, so the loop only ever has to look out for the next one
         int nextTable = 0;
         int nextTableStart = tables.isEmpty() ? -1 : tables.get(0).start();
-        //If the loop reads one more line break behind the text, which a table that ends the text has behind it when the loop reads its lines as text
-        boolean lineBreakBehindText = false;
 
-        for (int index = 0; (index < textLength) || lineBreakBehindText; index++) {
+        for (int index = 0; index < textLength; index++) {
 
-            char c;
-            if (index < textLength) {
-                c = markdownText.charAt(index);
-            } else {
-                c = NEWLINE_CHAR;
-                lineBreakBehindText = false;
-            }
+            char c = markdownText.charAt(index);
 
             boolean isStartOfLine = queueNewLine;
             queueNewLine = false;
@@ -181,7 +173,6 @@ public class MarkdownParser {
                 if ((builder.codeBlockContext != null) || builder.plainText) {
                     // Inside a code block or plain text, the lines of the table are text like every other line of it
                     lookahead.readTableAsText(table);
-                    lineBreakBehindText = (table.end() == textLength);
                 } else {
                     MarkdownTextFragment tableFragment = new MarkdownTextFragment(renderer, "[TABLE]");
                     tableFragment.table = true;
