@@ -159,7 +159,9 @@ final class MarkdownLayout {
 
         float realInnerWidth = renderer.getRealWidth() - renderer.border - renderer.border;
         float lineOffsetY = renderer.border;
+        int lineIndex = 0;
         for (MarkdownTextLine line : lines) {
+            line.index = lineIndex++;
             float lineAlignmentOffsetX = 0;
             if (line.isAlignmentAllowed(line.alignment)) {
                 if (line.alignment == MarkdownRenderer.MarkdownLineAlignment.CENTERED) {
