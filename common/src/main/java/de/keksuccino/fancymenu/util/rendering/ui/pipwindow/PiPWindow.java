@@ -78,6 +78,9 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     private int height;
     private int minWidth = DEFAULT_MIN_WIDTH;
     private int minHeight = DEFAULT_MIN_HEIGHT;
+    /** The smallest size the screen of the body can have, in the coordinates of that screen. Zero is no minimum. */
+    private int minBodyWidth = 0;
+    private int minBodyHeight = 0;
     private int titleBarHeight = DEFAULT_TITLE_BAR_HEIGHT;
     private int borderThickness = DEFAULT_BORDER_THICKNESS;
     private int resizeMargin = DEFAULT_RESIZE_MARGIN;
@@ -1157,11 +1160,13 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     public int getMinimumWidth() {
-        return Math.max(1, getScaledMinimumWidthForBodyScale());
+        int min = Math.max(1, getScaledMinimumWidthForBodyScale());
+        return Math.max(min, getScaledMinimumSizeForBody(this.minBodyWidth, getScaledBorderThickness() * 2));
     }
 
     public int getMinimumHeight() {
         int min = Math.max(1, getScaledMinimumHeightForBodyScale());
+        min = Math.max(min, getScaledMinimumSizeForBody(this.minBodyHeight, getScaledBorderThickness() * 2 + getScaledTitleBarHeight()));
         return Math.max(min, getLayoutMinimumHeight());
     }
 
@@ -1190,6 +1195,21 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     public PiPWindow setMinSize(int minWidth, int minHeight) {
         this.minWidth = Math.max(1, minWidth);
         this.minHeight = Math.max(1, minHeight);
+        setSize(this.width, this.height);
+        return this;
+    }
+
+    /**
+     * Sets the smallest size the screen of the body can have, in the coordinates of that screen. Zero sets no minimum.
+     * <p>
+     * The frame around the body has a scale of its own and gets rounded to whole GUI pixels, so the room a window of a given size
+     * leaves for its body differs by a few units between GUI scales and UI scales. This minimum is for bodies that need an exact
+     * amount of room: the window is always big enough for it, whatever the scales are, and gets checked every render tick like
+     * the minimum of {@link #setMinSize(int, int)}.
+     */
+    public PiPWindow setMinBodySize(int minBodyWidth, int minBodyHeight) {
+        this.minBodyWidth = Math.max(0, minBodyWidth);
+        this.minBodyHeight = Math.max(0, minBodyHeight);
         setSize(this.width, this.height);
         return this;
     }
@@ -1992,16 +2012,27 @@ public class PiPWindow extends AbstractContainerEventHandler implements Renderab
     }
 
     private int getScaledScreenSize(int bodySize) {
+        return PiPWindowBodySizing.screenSize(bodySize, getScreenRenderScaleFactorSafe());
+    }
+
+    /**
+     * Returns the size the window has to have for the screen of its body to be at least as big as given, or zero if the screen has no minimum.
+     *
+     * @param frameSize The size of the parts of the frame next to the body, in GUI pixels.
+     */
+    private int getScaledMinimumSizeForBody(int minBodySize, int frameSize) {
+        if (minBodySize <= 0) {
+            return 0;
+        }
+        return PiPWindowBodySizing.bodySizeForScreenSize(minBodySize, getScreenRenderScaleFactorSafe()) + frameSize;
+    }
+
+    private double getScreenRenderScaleFactorSafe() {
         double renderScale = getScreenRenderScaleFactor();
         if (!Double.isFinite(renderScale) || renderScale <= 0.0) {
-            renderScale = 1.0;
+            return 1.0;
         }
-        double scaledSize = (double) bodySize / renderScale;
-        int result = (int) scaledSize;
-        if (scaledSize > (double) result) {
-            result++;
-        }
-        return Math.max(1, result);
+        return renderScale;
     }
 
     private double getScreenRenderScaleFactor() {
