@@ -246,6 +246,21 @@ public final class MarkdownStyle {
 
     // ---------------------------------------------------------------- Images
 
+    public final EnumOption<MarkdownImageScaling> imageScaling = this.mode("image_scaling", Group.IMAGES, Impact.LAYOUT, MarkdownImageScaling.NATIVE, MarkdownImageScaling.WHOLE_MULTIPLE, MarkdownImageScaling.NATIVE);
+    /** The biggest factor an image gets enlarged by with {@link MarkdownImageScaling#WHOLE_MULTIPLE}. */
+    public final FloatOption imageMaxScale = this.size("image_max_scale", Group.IMAGES, Impact.LAYOUT, 1.0F, 1.0F, 3.0F, 1.0F);
+    public final EnumOption<MarkdownImageAlignment> imageAlignment = this.mode("image_alignment", Group.IMAGES, Impact.LAYOUT, MarkdownImageAlignment.TEXT, MarkdownImageAlignment.CENTER, MarkdownImageAlignment.TEXT);
+    /** The thickness of each of the two lines of the frame around an image. 0 leaves the frame away. */
+    public final FloatOption imageFrameWidth = this.size("image_frame_width", Group.IMAGES, Impact.LAYOUT, 0.0F, 0.0F, 1.0F, 0.0F);
+    /** The color of the outer line of the frame around an image, if it has one. */
+    public final ColorOption imageFrameOuterColor = this.optionalColor("image_frame_outer_color", Group.IMAGES, Impact.DRAW, NONE, rgb(4, 5, 11), NONE);
+    /** The color of the inner line of the frame around an image, if it has one. */
+    public final ColorOption imageFrameInnerColor = this.optionalColor("image_frame_inner_color", Group.IMAGES, Impact.DRAW, NONE, PIXEL_FRAME, NONE);
+    /** If the alternative text of an image shows as a caption below it. */
+    public final BooleanOption imageCaption = this.bool("image_caption", Group.IMAGES, Impact.LAYOUT, false, true, false);
+    public final ColorOption imageCaptionColor = this.color("image_caption_color", Group.IMAGES, Impact.DRAW, rgb(169, 169, 169), PIXEL_DIM, this.theme(theme -> theme.ui_interface_widget_label_color_inactive));
+    /** The space between an image and its caption. */
+    public final FloatOption imageCaptionGap = this.size("image_caption_gap", Group.IMAGES, Impact.LAYOUT, 3.0F, 3.0F, 4.0F);
     public final FloatOption imageSpaceAbove = this.size("image_space_above", Group.IMAGES, Impact.LAYOUT, 0.0F, 6.0F, 8.0F);
     public final FloatOption imageSpaceBelow = this.size("image_space_below", Group.IMAGES, Impact.LAYOUT, 0.0F, 6.0F, 8.0F);
 
