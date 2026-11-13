@@ -24,7 +24,6 @@ import java.util.function.IntPredicate;
 
 public class MarkdownParser {
 
-    private static final String EMPTY_STRING = "";
     private static final char NEWLINE_CHAR = '\n';
     private static final String NEWLINE = "\n";
     private static final String HEADLINE_PREFIX_BIGGEST = "# ";
@@ -772,12 +771,14 @@ public class MarkdownParser {
         if (line.startsWith(FORMATTING_CODE_HYPERLINK_IMAGE_PREFIX)) {
             int imageStart = line.indexOf(FORMATTING_CODE_IMAGE_PREFIX, 1);
             while (imageStart != -1) {
-                String imageLink = getImageFromLine(line, imageStart);
-                if (imageLink != null) {
-                    // The hyperlink is what remains of the line without the image, which ends at its first closing round bracket
-                    String image = line.substring(imageStart, line.indexOf(CLOSE_ROUND_BRACKETS_CHAR, imageStart) + 1);
-                    String hyperLink = getHyperlinkFromLine(line.replace(image, EMPTY_STRING), 0);
-                    return (hyperLink != null) ? ListUtils.of(imageLink, hyperLink) : null;
+                int imageLabelEnd = getLinkLabelEnd(line, imageStart + FORMATTING_CODE_IMAGE_PREFIX.length());
+                int imageSourceStart = imageLabelEnd + FORMATTING_CODE_HYPERLINK_INNER_PREFIX.length();
+                int imageEnd = (imageLabelEnd != -1) ? getLinkTargetEnd(line, imageSourceStart) : -1;
+                if (imageEnd != -1) {
+                    // The hyperlink is what remains of the line without the image. The image ends at the bracket that closes its source,
+                    // which is not the first closing round bracket behind its start if its label holds round brackets as well.
+                    String hyperLink = getHyperlinkFromLine(line.substring(0, imageStart) + line.substring(imageEnd + 1), 0);
+                    return (hyperLink != null) ? ListUtils.of(line.substring(imageSourceStart, imageEnd), hyperLink) : null;
                 }
                 imageStart = line.indexOf(FORMATTING_CODE_IMAGE_PREFIX, imageStart + 1);
             }
