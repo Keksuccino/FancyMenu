@@ -221,7 +221,12 @@ public class MarkdownTextLine implements Renderable {
             if (first.quoteContext != null) {
                 // The panel of a quote has its padding above the first and below the last line of the quote
                 if (first.isInRenderLineOf(first.quoteContext.getQuoteStart())) this.paddingTop += MarkdownQuotePainter.getPaddingTop(this.parent);
-                if (first.isInRenderLineOf(first.quoteContext.getQuoteEnd())) this.paddingBottom += MarkdownQuotePainter.getPaddingBottom(this.parent);
+                if (first.isInRenderLineOf(first.quoteContext.getQuoteEnd())) {
+                    this.paddingBottom += MarkdownQuotePainter.getPaddingBottom(this.parent);
+                } else if (first.calloutMarker) {
+                    // The label of a callout keeps a bit more distance to the text below it than lines keep to each other
+                    this.paddingBottom += this.parent.scaling.sized(this.parent.style.calloutHeaderGap.get());
+                }
             }
             if ((first.codeBlockContext != null) && !first.codeBlockContext.singleLine) {
                 // The panel of a code block has its padding above the first and below the last line of the block
