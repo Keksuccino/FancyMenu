@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.text.markdown;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class MarkdownQuoteLineTest {
@@ -21,6 +22,25 @@ class MarkdownQuoteLineTest {
         // Containers like scroll areas clip the border in front of the text area, so nothing may get drawn in there
         assertTrue(lineX >= (30 + border), "the line starts inside the border");
         assertTrue((lineX + MarkdownTextFragment.QUOTE_LINE_WIDTH) <= quote.parentLine.fragments.get(0).getTextX(), "the line reaches into the quote text");
+    }
+
+    @ParameterizedTest
+    @ValueSource(floats = {2.0F, 6.0F, 15.0F})
+    void lineOfARightAlignedQuoteMirrorsTheLineOfALeftAlignedQuote(float border) {
+        MarkdownTestRenderer renderer = new MarkdownTestRenderer("> left quote\n\n|||\n> right quote\n|||", 400);
+        renderer.setBorder(border);
+        renderer.setX(30).setY(50);
+        renderer.tick();
+        MarkdownTextFragment right = renderer.fragmentContaining("right");
+        float textAreaLeft = 30 + border;
+        float textAreaRight = 30 + renderer.getRealWidth() - border;
+
+        float leftLineStart = renderer.fragmentContaining("left").getLeftQuoteLineX();
+        float rightLineEnd = right.getRightQuoteLineX() + MarkdownTextFragment.QUOTE_LINE_WIDTH;
+
+        assertEquals(leftLineStart - textAreaLeft, textAreaRight - rightLineEnd);
+        MarkdownTextFragment lastOfLine = right.parentLine.fragments.get(right.parentLine.fragments.size() - 1);
+        assertTrue(right.getRightQuoteLineX() >= (lastOfLine.getTextX() + lastOfLine.getTextWidth()), "the line reaches into the quote text");
     }
 
 }
