@@ -115,7 +115,7 @@ public class MarkdownParser {
 
         List<MarkdownTextFragment> fragments = new ArrayList<>();
 
-        FragmentBuilder builder = new FragmentBuilder(renderer, parseMarkdown);
+        FragmentBuilder builder = new FragmentBuilder(renderer);
         MarkerLookahead lookahead = new MarkerLookahead(markdownText);
         boolean queueNewLine = true;
         boolean italicUnderscore = false;
@@ -688,32 +688,6 @@ public class MarkdownParser {
         return fragment;
     }
 
-    @NotNull
-    protected static String unescapeMarkdownText(@NotNull String text) {
-        int firstBackslash = text.indexOf(BACKSLASH_CHAR);
-        if (firstBackslash == -1) {
-            return text;
-        }
-        int length = text.length();
-        StringBuilder result = new StringBuilder(length);
-        result.append(text, 0, firstBackslash);
-        // Every escape skips the character it escapes, so a row of backslashes gets consumed in pairs from its start.
-        // A backslash this loop reaches is therefore never escaped itself and needs no look back.
-        for (int i = firstBackslash; i < length; i++) {
-            char c = text.charAt(i);
-            if ((c == BACKSLASH_CHAR) && (i + 1 < length)) {
-                char next = text.charAt(i + 1);
-                if (isEscapableMarkdownCharacter(next)) {
-                    result.append(next);
-                    i++;
-                    continue;
-                }
-            }
-            result.append(c);
-        }
-        return result.toString();
-    }
-
     protected static boolean isEscapableMarkdownCharacter(char character) {
         switch (character) {
             case BACKSLASH_CHAR:
@@ -1200,7 +1174,6 @@ public class MarkdownParser {
     protected static class FragmentBuilder {
 
         protected final MarkdownRenderer renderer;
-        protected final boolean parseMarkdownEnabled;
         protected final StringBuilder text = new StringBuilder();
         protected DrawableColor textColor = null;
         protected ResourceSupplier<ITexture> imageSupplier = null;
@@ -1226,18 +1199,13 @@ public class MarkdownParser {
         protected boolean plainText = false;
         protected MarkdownTextFragment.TableContext tableContext = null;
 
-        protected FragmentBuilder(MarkdownRenderer renderer, boolean parseMarkdownEnabled) {
+        protected FragmentBuilder(MarkdownRenderer renderer) {
             this.renderer = renderer;
-            this.parseMarkdownEnabled = parseMarkdownEnabled;
         }
 
         @NotNull
         protected MarkdownTextFragment build(boolean naturalLineBreakAfter, boolean endOfWord) {
-            String fragmentText = this.text.toString();
-            if (this.parseMarkdownEnabled && !this.plainText && (this.codeBlockContext == null)) {
-                fragmentText = unescapeMarkdownText(fragmentText);
-            }
-            MarkdownTextFragment frag = new MarkdownTextFragment(this.renderer, fragmentText);
+            MarkdownTextFragment frag = new MarkdownTextFragment(this.renderer, this.text.toString());
             frag.font = font;
             frag.textColor = textColor;
             frag.imageSupplier = imageSupplier;
