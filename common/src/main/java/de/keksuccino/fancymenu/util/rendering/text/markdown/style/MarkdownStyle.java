@@ -108,6 +108,11 @@ public final class MarkdownStyle {
     /** If every line gets moved onto whole screen pixels, so the Minecraft font does not shimmer while the text scrolls. Otherwise only centered lines do. */
     public final BooleanOption snapPositions = this.bool("snap_positions", Group.TEXT, Impact.DRAW, false, true, false);
     /**
+     * If the line through struck through text of the Minecraft font sits on the pixel grid of the font and is as wide as the text.
+     * Otherwise the font draws it, half a pixel above that and one pixel wider. The smooth UI font always draws its own line.
+     */
+    public final BooleanOption snapStrikethrough = this.bool("snap_strikethrough", Group.TEXT, Impact.COMPONENTS, false, true, false);
+    /**
      * If lines are as tall as the letters of the font, down to their descenders. Otherwise lines of the smooth UI font have its tight
      * line height, which ends at the baseline of the text. Lines of the Minecraft font are 9 pixels tall either way.
      */

@@ -1,15 +1,19 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
+import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownLook;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.junit.jupiter.api.Test;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class MarkdownStrikethroughTest {
+
+    private static final int CHAR_WIDTH = 6;
 
     @Test
     void lineThroughStruckTextEndsBehindItsLastWord() {
@@ -64,6 +68,65 @@ class MarkdownStrikethroughTest {
 
         assertEquals(plain.fragmentContaining("struck").unscaledTextWidth, struck.fragmentContaining("struck").unscaledTextWidth);
         assertEquals(plain.fragmentContaining("b").x, struck.fragmentContaining("b").x);
+    }
+
+    @Test
+    void fontDrawsTheLineUnlessTheStyleKeepsItOnThePixelGrid() {
+        MarkdownTestRenderer renderer = new MarkdownTestRenderer("a ~~struck~~ b", 400);
+        renderer.setParentRenderScale(3.0F);
+        renderer.tick();
+        MarkdownTextFragment struck = renderer.fragmentContaining("struck");
+
+        assertFalse(MarkdownStrikethroughPainter.drawsLine(struck));
+        assertEquals("struck", struckThroughText(struck.getRenderComponent()));
+
+        renderer.getStyle().applyLook(MarkdownLook.PIXEL);
+        renderer.tick();
+        struck = renderer.fragmentContaining("struck");
+
+        assertTrue(MarkdownStrikethroughPainter.drawsLine(struck));
+        assertEquals("", struckThroughText(struck.getRenderComponent()));
+        assertEquals("struck ", struck.getRenderComponent().getString());
+        assertFalse(MarkdownStrikethroughPainter.drawsLine(renderer.fragmentContaining("b")));
+
+        // Changing the option alone reaches the text without a new parse
+        int parses = renderer.parses;
+        renderer.getStyle().snapStrikethrough.set(false);
+        renderer.tick();
+
+        assertEquals(parses, renderer.parses);
+        assertFalse(MarkdownStrikethroughPainter.drawsLine(struck));
+        assertEquals("struck", struckThroughText(struck.getRenderComponent()));
+    }
+
+    @Test
+    void lineOnThePixelGridIsAsWideAsTheStruckText() {
+        MarkdownTestRenderer renderer = new MarkdownTestRenderer("~~first second~~ b", 400);
+        renderer.setParentRenderScale(3.0F);
+        renderer.getStyle().applyLook(MarkdownLook.PIXEL);
+        renderer.tick();
+
+        // The line runs through the space between two struck through words, and ends behind the last one
+        assertEquals(6 * CHAR_WIDTH, MarkdownStrikethroughPainter.getLineWidth(renderer.fragmentContaining("first")));
+        assertEquals(6 * CHAR_WIDTH, MarkdownStrikethroughPainter.getLineWidth(renderer.fragmentContaining("second")));
+
+        renderer.setTextBaseScale(2.0F);
+        renderer.tick();
+
+        assertEquals(6 * CHAR_WIDTH * 2, MarkdownStrikethroughPainter.getLineWidth(renderer.fragmentContaining("second")));
+    }
+
+    @Test
+    void lineOnThePixelGridEndsBehindTheLastWordOfALineTheTextWrapsAt() {
+        MarkdownTestRenderer renderer = new MarkdownTestRenderer("a ~~first second~~ b", 80);
+        renderer.setParentRenderScale(3.0F);
+        renderer.getStyle().applyLook(MarkdownLook.PIXEL);
+        renderer.setAutoLineBreakingEnabled(true);
+        renderer.tick();
+        MarkdownTextFragment first = renderer.fragmentContaining("first");
+
+        assertTrue(first.autoLineBreakAfter);
+        assertEquals(5 * CHAR_WIDTH, MarkdownStrikethroughPainter.getLineWidth(first));
     }
 
     /**
