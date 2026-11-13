@@ -50,9 +50,11 @@ final class MarkdownPaint {
             UIBase.renderRoundedRect(graphics, minX, minY, maxX - minX, maxY - minY, topRadius, topRadius, bottomRadius, bottomRadius, color);
             return;
         }
-        if (topRadius > 0.0F) RenderingUtils.fillF(graphics, minX + topRadius, minY, maxX - topRadius, minY + topRadius, color);
-        RenderingUtils.fillF(graphics, minX, minY + topRadius, maxX, maxY - bottomRadius, color);
-        if (bottomRadius > 0.0F) RenderingUtils.fillF(graphics, minX + bottomRadius, maxY - bottomRadius, maxX - bottomRadius, maxY, color);
+        // Nothing else gets drawn between the rectangles of the box, so they get drawn as one batch
+        if (topRadius > 0.0F) RenderingUtils.batchFillF(graphics, minX + topRadius, minY, maxX - topRadius, minY + topRadius, color);
+        RenderingUtils.batchFillF(graphics, minX, minY + topRadius, maxX, maxY - bottomRadius, color);
+        if (bottomRadius > 0.0F) RenderingUtils.batchFillF(graphics, minX + bottomRadius, maxY - bottomRadius, maxX - bottomRadius, maxY, color);
+        graphics.flush();
     }
 
     /**
@@ -72,13 +74,16 @@ final class MarkdownPaint {
         }
         // Without cut corners, the horizontal edges own the corners, so no pixel gets drawn twice
         float verticalInset = Math.max(radius, thickness);
+        // Nothing else gets drawn between the two edges of a color, so they get drawn as one batch
         if ((topLeftColor >>> 24) != 0) {
-            RenderingUtils.fillF(graphics, minX + radius, minY, maxX - radius, minY + thickness, topLeftColor);
-            RenderingUtils.fillF(graphics, minX, minY + verticalInset, minX + thickness, maxY - verticalInset, topLeftColor);
+            RenderingUtils.batchFillF(graphics, minX + radius, minY, maxX - radius, minY + thickness, topLeftColor);
+            RenderingUtils.batchFillF(graphics, minX, minY + verticalInset, minX + thickness, maxY - verticalInset, topLeftColor);
+            graphics.flush();
         }
         if ((bottomRightColor >>> 24) != 0) {
-            RenderingUtils.fillF(graphics, minX + radius, maxY - thickness, maxX - radius, maxY, bottomRightColor);
-            RenderingUtils.fillF(graphics, maxX - thickness, minY + verticalInset, maxX, maxY - verticalInset, bottomRightColor);
+            RenderingUtils.batchFillF(graphics, minX + radius, maxY - thickness, maxX - radius, maxY, bottomRightColor);
+            RenderingUtils.batchFillF(graphics, maxX - thickness, minY + verticalInset, maxX, maxY - verticalInset, bottomRightColor);
+            graphics.flush();
         }
     }
 

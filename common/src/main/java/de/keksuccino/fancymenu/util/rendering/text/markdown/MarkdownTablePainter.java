@@ -255,20 +255,22 @@ final class MarkdownTablePainter {
      * Draws the lines of a full grid onto the cells of the table.
      */
     private static void renderGrid(@NotNull GuiGraphics graphics, @NotNull MarkdownRenderer renderer, @NotNull TableContext table, float tableX, float tableY, float rowsEndY, float lineThickness, int lineColor) {
+        // Nothing else gets drawn between the lines of the grid, so all of them get drawn as one batch
         float y = tableY;
         for (int i = 0; i <= table.rows.size(); i++) {
-            RenderingUtils.fillF(graphics, tableX, y, tableX + table.totalWidth, y + lineThickness, lineColor);
+            RenderingUtils.batchFillF(graphics, tableX, y, tableX + table.totalWidth, y + lineThickness, lineColor);
             if (i < table.rows.size()) y += table.rows.get(i).height;
         }
         if (table.hasHeader && isHeaderRow(renderer, table, 0)) {
             float headerY = tableY + table.rows.get(0).height;
-            RenderingUtils.fillF(graphics, tableX, headerY, tableX + table.totalWidth, headerY + renderer.scaling.sized(renderer.style.tableHeaderSeparatorThickness.get()), renderer.getRenderColor(renderer.style.tableHeaderSeparatorColor));
+            RenderingUtils.batchFillF(graphics, tableX, headerY, tableX + table.totalWidth, headerY + renderer.scaling.sized(renderer.style.tableHeaderSeparatorThickness.get()), renderer.getRenderColor(renderer.style.tableHeaderSeparatorColor));
         }
         float x = tableX;
         for (int i = 0; i <= table.columnWidths.length; i++) {
-            RenderingUtils.fillF(graphics, x, tableY, x + lineThickness, rowsEndY + lineThickness, lineColor);
+            RenderingUtils.batchFillF(graphics, x, tableY, x + lineThickness, rowsEndY + lineThickness, lineColor);
             if (i < table.columnWidths.length) x += table.columnWidths[i];
         }
+        graphics.flush();
     }
 
 }
