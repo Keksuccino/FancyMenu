@@ -219,6 +219,64 @@ class MarkdownParserHyperlinkTest {
         assertEquals("event(1)", fragmentContaining(event, "click").clickEvent.identifier);
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"[label `code](target) more` rest", "[label ;;plain](target) more;; rest", "[label `code](click:event) more` rest", "[label ;;plain](hover:event) more;; rest"})
+    void endOfALabelInsideCodeOrPlainTextIsTextAndEndsNoLink(String text) {
+        List<MarkdownTextFragment> fragments = parse(text);
+
+        for (MarkdownTextFragment fragment : fragments) {
+            assertNull(fragment.hyperlink);
+            assertNull(fragment.clickEvent);
+            assertNull(fragment.hoverEvent);
+        }
+        // Only the markers of the code or plain text are gone
+        assertEquals(text.replace("`", "").replace(";;", ""), joinText(fragments));
+        assertTrue(fragmentContaining(fragments, "](").plainText || (fragmentContaining(fragments, "](").codeBlockContext != null));
+        assertTrue(fragmentContaining(fragments, "more").plainText || (fragmentContaining(fragments, "more").codeBlockContext != null));
+        assertFalse(fragmentContaining(fragments, "rest").plainText || (fragmentContaining(fragments, "rest").codeBlockContext != null));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"[label `code](inner) more` rest](target) behind", "[label ;;plain](inner) more;; rest](target) behind"})
+    void labelEndsBehindCodeOrPlainTextThatHoldsABracket(String text) {
+        List<MarkdownTextFragment> fragments = parse(text);
+        MarkdownTextFragment link = fragmentContaining(fragments, "label");
+
+        assertEquals("target", link.hyperlink.link);
+        assertSame(link.hyperlink, fragmentContaining(fragments, "](inner)").hyperlink);
+        assertSame(link.hyperlink, fragmentContaining(fragments, "rest").hyperlink);
+        assertNull(fragmentContaining(fragments, "behind").hyperlink);
+        assertEquals(text.replace("`", "").replace(";;", "").replace("[", "").replace("](target)", ""), joinText(fragments));
+    }
+
+    @Test
+    void labelDoesNotEndInAnotherLineBehindPlainTextThatHoldsABracket() {
+        List<MarkdownTextFragment> fragments = parse("[label ;;plain](inner)\nmore;; rest](target) behind");
+
+        assertTrue(fragments.stream().allMatch(fragment -> fragment.hyperlink == null));
+        assertEquals("[label plain](inner)more rest](target) behind", joinText(fragments));
+    }
+
+    @Test
+    void labelThatEndsInsideCodeThatNeverClosesIsNoLink() {
+        // The plain text inside of the code holds the grave accent that would close the code
+        List<MarkdownTextFragment> fragments = parse("[label `code](target) ;;plain` more;;");
+
+        assertTrue(fragments.stream().allMatch(fragment -> fragment.hyperlink == null));
+        assertEquals("[label code](target) plain` more", joinText(fragments));
+    }
+
+    @Test
+    void codeInsideALabelKeepsTheLink() {
+        List<MarkdownTextFragment> fragments = parse("[label `code` more](target) rest");
+        MarkdownTextFragment code = fragmentContaining(fragments, "code");
+
+        assertNotNull(code.codeBlockContext);
+        assertEquals("target", code.hyperlink.link);
+        assertSame(code.hyperlink, fragmentContaining(fragments, "more").hyperlink);
+        assertNull(fragmentContaining(fragments, "rest").hyperlink);
+    }
+
     /**
      * Returns the fragment texts of all render lines the text gets at the given width, measured with 6 pixels per character.
      */
