@@ -151,6 +151,13 @@ public final class MarkdownStyle {
     public final EnumOption<MarkdownMarkerShape> listAsteriskMarkerShape = this.mode("list_asterisk_marker_shape", Group.LISTS, Impact.DRAW, MarkdownMarkerShape.STAR, MarkdownMarkerShape.STAR, MarkdownMarkerShape.STAR);
     public final ColorOption listAsteriskMarkerColor = this.color("list_asterisk_marker_color", Group.LISTS, Impact.DRAW, rgb(255, 170, 0), PIXEL_ACCENT, this.theme(theme -> theme.warning_color));
 
+    public final ColorOption listNumberColor = this.color("list_number_color", Group.LISTS, Impact.DRAW, rgb(169, 169, 169), PIXEL_ACCENT, this.theme(theme -> theme.ui_interface_widget_label_color_inactive));
+    public final EnumOption<MarkdownNumberAlignment> listNumberAlignment = this.mode("list_number_alignment", Group.LISTS, Impact.DRAW, MarkdownNumberAlignment.RIGHT, MarkdownNumberAlignment.RIGHT, MarkdownNumberAlignment.RIGHT);
+    /** What the text of numbered items gets indented by on top of the indent of other items, to make room for their numbers. */
+    public final FloatOption listNumberIndent = this.size("list_number_indent", Group.LISTS, Impact.LAYOUT, 6.0F, 6.0F, 6.0F);
+    /** The space between the number of an item and its text. */
+    public final FloatOption listNumberGap = this.size("list_number_gap", Group.LISTS, Impact.DRAW, 3.0F, 3.0F, 4.0F);
+
     // ---------------------------------------------------------------- Links and text events
 
     public final ColorOption hyperlinkColor = this.color("hyperlink_color", Group.LINKS, Impact.COMPONENTS, rgb(7, 113, 252), PIXEL_LINK, this.theme(theme -> theme.input_field_suggestions_text_color_selected));
