@@ -100,6 +100,11 @@ public final class MarkdownTestRenderer extends MarkdownRenderer {
     static final class TestFont extends Font {
 
         int charWidth = 6;
+        /**
+         * The width of every character of a script without spaces between words, like a Han ideograph or a Kana, which fonts make wider than Latin letters.
+         * They are as wide as all other characters while this is 0.
+         */
+        int spacelessCharWidth = 0;
         /** The texts of all fragments that got measured, in order. */
         final List<String> measuredFragmentTexts = new ArrayList<>();
 
@@ -109,14 +114,20 @@ public final class MarkdownTestRenderer extends MarkdownRenderer {
 
         @Override
         public int width(String text) {
-            return text.length() * this.charWidth;
+            int width = text.length() * this.charWidth;
+            if (this.spacelessCharWidth != 0) {
+                for (int i = 0; i < text.length(); i++) {
+                    if (MarkdownLineBreaks.isSpaceless(text.charAt(i))) width += this.spacelessCharWidth - this.charWidth;
+                }
+            }
+            return width;
         }
 
         @Override
         public int width(FormattedText text) {
             String string = text.getString();
             this.measuredFragmentTexts.add(string);
-            return string.length() * this.charWidth;
+            return this.width(string);
         }
 
     }
