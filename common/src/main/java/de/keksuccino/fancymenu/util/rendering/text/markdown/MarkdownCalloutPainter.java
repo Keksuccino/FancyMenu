@@ -48,7 +48,7 @@ final class MarkdownCalloutPainter {
                 return MarkdownPixelArt.CALLOUT_ICON_SIZE;
             case SMOOTH:
                 // A bit taller than a capital letter, because icons fill their area less than letters do
-                return renderer.getFontMetrics().baseline * SMOOTH_ICON_SCALE;
+                return renderer.textFont.metrics().baseline * SMOOTH_ICON_SCALE;
             default:
                 return 0.0F;
         }
@@ -71,7 +71,7 @@ final class MarkdownCalloutPainter {
         float size = getIconSize(renderer) * scale;
         if (renderer.style.calloutIcons.get() == MarkdownCalloutIcons.SMOOTH) {
             // The middle of the icon is the middle of the capital letters of the label
-            return marker.getTextY() + ((renderer.getFontMetrics().baseline * scale) - size) / 2;
+            return marker.getTextY() + ((renderer.textFont.metrics().baseline * scale) - size) / 2;
         }
         // Pixel art stands in the middle of the line of the label, on whole pixels of the text, which keeps it on the grid of the font
         return marker.getTextY() + ((float) Math.floor(((marker.getTextRenderHeight() - size) / 2) / scale) * scale);
@@ -93,7 +93,7 @@ final class MarkdownCalloutPainter {
             float size = getIconSize(renderer) * scale;
             getIcon(marker.quoteContext.calloutType).render(graphics, x, y, size, size, color);
         } else {
-            MarkdownPixelArt.calloutIcon(graphics, marker.quoteContext.calloutType.ordinal(), x, y, scale, color, renderer.getRenderColor(renderer.style.calloutIconDetailColor), renderer.hasTextShadow());
+            MarkdownPixelArt.calloutIcon(graphics, marker.quoteContext.calloutType.ordinal(), x, y, scale, color, renderer.getRenderColor(renderer.style.calloutIconDetailColor), renderer.textFont.hasShadow());
         }
     }
 

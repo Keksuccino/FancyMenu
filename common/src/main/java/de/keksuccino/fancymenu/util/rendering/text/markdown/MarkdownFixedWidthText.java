@@ -31,7 +31,7 @@ final class MarkdownFixedWidthText {
      */
     static float getCellWidth(@NotNull MarkdownRenderer renderer) {
         float cellWidth = renderer.style.codeBlockCellWidth.get();
-        return (cellWidth > 0.0F) ? cellWidth : renderer.getFontMetrics().cellWidth;
+        return (cellWidth > 0.0F) ? cellWidth : renderer.textFont.metrics().cellWidth;
     }
 
     /**
@@ -44,7 +44,7 @@ final class MarkdownFixedWidthText {
     @NotNull
     static MarkdownFixedWidthText of(@NotNull MarkdownRenderer renderer, @NotNull String text, @NotNull Style style) {
         float cellWidth = getCellWidth(renderer);
-        boolean pixelFont = renderer.getFontMetrics().pixelFont;
+        boolean pixelFont = renderer.textFont.metrics().pixelFont;
         List<Component> runs = new ArrayList<>();
         List<Float> offsets = new ArrayList<>();
         StringBuilder run = new StringBuilder();
@@ -60,7 +60,7 @@ final class MarkdownFixedWidthText {
                 continue;
             }
             String character = new String(Character.toChars(codePoint));
-            float width = renderer.getUnscaledTextWidth(character);
+            float width = renderer.textFont.width(character);
             float inset = Math.max(0.0F, (cellWidth - width) / 2.0F);
             // The Minecraft font only stays sharp on whole pixels
             if (pixelFont) inset = (float) Math.floor(inset);
@@ -106,7 +106,7 @@ final class MarkdownFixedWidthText {
      */
     void render(@NotNull GuiGraphicsExtractor graphics, @NotNull MarkdownRenderer renderer, int color) {
         for (int i = 0; i < this.runs.length; i++) {
-            renderer.renderText(graphics, this.runs[i], this.offsets[i], 0.0F, color, false);
+            renderer.textFont.draw(graphics, this.runs[i], this.offsets[i], 0.0F, color, false);
         }
     }
 
