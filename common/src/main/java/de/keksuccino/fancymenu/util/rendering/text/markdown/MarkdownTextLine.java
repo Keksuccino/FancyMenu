@@ -160,6 +160,21 @@ public class MarkdownTextLine implements Renderable {
             }
         }
         this.blockType = MarkdownBlockType.of(this);
+        if (this.blockType == MarkdownBlockType.IMAGE) {
+            switch (this.parent.style.imageAlignment.get()) {
+                case LEFT:
+                    this.alignment = MarkdownRenderer.MarkdownLineAlignment.LEFT;
+                    break;
+                case CENTER:
+                    this.alignment = MarkdownRenderer.MarkdownLineAlignment.CENTERED;
+                    break;
+                case RIGHT:
+                    this.alignment = MarkdownRenderer.MarkdownLineAlignment.RIGHT;
+                    break;
+                default:
+                    break;
+            }
+        }
     }
 
     /**
@@ -173,6 +188,7 @@ public class MarkdownTextLine implements Renderable {
         float height = 0;
         MarkdownTextFragment last = null;
         for (MarkdownTextFragment frag : this.fragments) {
+            if (frag.imageSupplier != null) MarkdownImagePainter.updateCaption(frag);
             width += frag.getRenderWidth();
             float fragmentHeight = frag.getRenderHeight();
             if (fragmentHeight > height) {
