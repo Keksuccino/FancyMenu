@@ -100,6 +100,8 @@ class MarkdownRendererRefreshTest {
                 renderer -> renderer.setBulletListIndent(20),
                 renderer -> renderer.setBulletListSpacing(9),
                 renderer -> renderer.setTableCellPadding(3),
+                renderer -> renderer.setTableLineThickness(2),
+                renderer -> renderer.setTableMargin(10),
                 renderer -> renderer.setAutoLineBreakingEnabled(false)
         ).map(Arguments::of);
     }
@@ -144,6 +146,7 @@ class MarkdownRendererRefreshTest {
         renderer.setCodeBlockMultiLineColor(DrawableColor.BLACK);
         renderer.setTableLineColor(DrawableColor.BLACK);
         renderer.setParentRenderScale(2.0F);
+        renderer.setVisibleVerticalRange(0, 100);
         renderer.tick();
         renderer.getRealHeight();
 
