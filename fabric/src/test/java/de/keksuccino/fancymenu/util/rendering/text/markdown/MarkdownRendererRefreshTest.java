@@ -175,6 +175,18 @@ class MarkdownRendererRefreshTest {
     }
 
     @Test
+    void settingTheSameTextAgainDoesNotParseAgain() {
+        MarkdownTestRenderer renderer = new MarkdownTestRenderer(TEXT, 200);
+        renderer.tick();
+
+        renderer.setText(TEXT);
+        renderer.tick();
+
+        assertEquals(1, renderer.parses);
+        assertEquals(1, renderer.layouts);
+    }
+
+    @Test
     void refreshRendererParsesAgain() {
         MarkdownTestRenderer renderer = new MarkdownTestRenderer(TEXT, 200);
         renderer.tick();

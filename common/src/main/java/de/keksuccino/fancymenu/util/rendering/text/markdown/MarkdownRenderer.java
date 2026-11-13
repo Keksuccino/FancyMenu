@@ -238,13 +238,17 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
 
     /**
      * Builds the render text again when the text got changed or one of its placeholders has a new value.
+     * The text only needs a new parse when that results in a different render text.
      */
     protected void updateRenderText() {
-        String replaced = PlaceholderParser.replacePlaceholders(this.textPlaceholders);
-        boolean placeholdersChanged = (this.lastTextPlaceholders == null) || (replaced.hashCode() != this.lastTextPlaceholders.hashCode());
-        if ((this.renderText == null) || placeholdersChanged) {
-            this.renderText = this.buildRenderText();
-            this.parseNeeded = true;
+        // A text without placeholders has nothing that changes on its own, so asking the placeholder parser every frame would be a waste
+        String replaced = this.textPlaceholders.isEmpty() ? EMPTY_STRING : PlaceholderParser.replacePlaceholders(this.textPlaceholders);
+        if ((this.renderText == null) || !replaced.equals(this.lastTextPlaceholders)) {
+            String newRenderText = this.buildRenderText();
+            if (!newRenderText.equals(this.renderText)) {
+                this.renderText = newRenderText;
+                this.parseNeeded = true;
+            }
         }
         this.lastTextPlaceholders = replaced;
     }
