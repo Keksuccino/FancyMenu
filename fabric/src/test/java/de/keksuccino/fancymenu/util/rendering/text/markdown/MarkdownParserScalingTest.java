@@ -67,6 +67,8 @@ class MarkdownParserScalingTest {
         BULLET_LIST_ITEMS("- a\n  - b\n" + " ".repeat(40) + "- c\n"),
         SEPARATION_LINES("---\n--- - -\n"),
         TABLES("| a | b |\n| :-- | --: |\n| c | d |\n\n"),
+        TABLE_SYNTAX_IN_CODE_BLOCKS("```\n| a | b |\n| --- | --- |\n\n| ;; | ** |\n| --- | --- |\n```\n"),
+        TABLE_SYNTAX_IN_ONE_PLAIN_TEXT_BLOCK("| a | ;; |\n| --- | --- |\n\n;;;\n"),
         TABLE_CELLS_IN_ONE_ROW("| a "),
         TABLE_SEPARATOR_CELLS_IN_ONE_ROW("| --- "),
         FORMATTING_CODES("§c&l§ra ");
