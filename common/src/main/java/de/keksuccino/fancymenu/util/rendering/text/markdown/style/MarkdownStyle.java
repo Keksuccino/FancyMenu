@@ -66,6 +66,11 @@ public final class MarkdownStyle {
      * the backgrounds of code blocks. The backgrounds of code blocks stay away from the bottom of their last line by this as well.
      */
     public final FloatOption blockEdgeInset = this.size("block_edge_inset", Group.TEXT, Impact.DRAW, 1.0F, 0.0F, 0.0F);
+    /**
+     * If the empty column of pixels the Minecraft font puts behind every letter is no part of a text where something hugs the text:
+     * underlines with a color of their own, the backgrounds of inline code and the columns of tables. The smooth UI font has no such column.
+     */
+    public final BooleanOption trimGlyphSpacing = this.bool("trim_glyph_spacing", Group.TEXT, Impact.LAYOUT, false, true, true);
     /** If text has a shadow. Text in the smooth UI font never has one. */
     public final BooleanOption textShadow = this.bool("text_shadow", Group.TEXT, Impact.DRAW, true, true, false);
     /** The space between the edges of the renderer and its text area. The outer 2 pixels can get clipped by containers like scroll areas, so it is never smaller. */
@@ -138,6 +143,14 @@ public final class MarkdownStyle {
     public final ColorOption clickEventColor = this.color("click_event_color", Group.LINKS, Impact.COMPONENTS, rgb(7, 113, 252), PIXEL_LINK, this.theme(theme -> theme.input_field_suggestions_text_color_selected));
     /** The color of text that fires a hover event. */
     public final ColorOption hoverEventColor = this.color("hover_event_color", Group.LINKS, Impact.COMPONENTS, rgb(7, 113, 252), PIXEL_LINK, this.theme(theme -> theme.input_field_suggestions_text_color_selected));
+    /** When links and text events are underlined. */
+    public final EnumOption<MarkdownUnderlineMode> linkUnderline = this.mode("link_underline", Group.LINKS, Impact.COMPONENTS, MarkdownUnderlineMode.ON_HOVER, MarkdownUnderlineMode.ALWAYS, MarkdownUnderlineMode.ALWAYS);
+    /** The color of the underline of links and text events, if it has another color than their text. */
+    public final ColorOption linkUnderlineColor = this.optionalColor("link_underline_color", Group.LINKS, Impact.COMPONENTS, NONE, rgb(62, 124, 158), this.theme(theme -> theme.input_field_suggestions_text_color_selected, 110));
+    /** The color of links and text events while the mouse is over them, if they change their color then. */
+    public final ColorOption linkHoverColor = this.optionalColor("link_hover_color", Group.LINKS, Impact.COMPONENTS, NONE, WHITE, NONE);
+    /** The color of the underline of links and text events while the mouse is over them, if it changes then. Only underlines with a color of their own can have it. */
+    public final ColorOption linkHoverUnderlineColor = this.optionalColor("link_hover_underline_color", Group.LINKS, Impact.DRAW, NONE, PIXEL_LINK, this.theme(theme -> theme.input_field_suggestions_text_color_selected));
 
     // ---------------------------------------------------------------- Inline code and code blocks
 
