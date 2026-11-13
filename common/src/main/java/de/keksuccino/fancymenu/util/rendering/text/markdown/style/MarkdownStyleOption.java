@@ -72,16 +72,19 @@ public abstract class MarkdownStyleOption<T> {
     }
 
     public enum Type {
+
         BOOLEAN,
         FLOAT,
         COLOR,
         ENUM
+
     }
 
     /**
      * The part of the text an option belongs to.
      */
     public enum Group {
+
         TEXT,
         HEADLINES,
         LISTS,
@@ -92,12 +95,14 @@ public abstract class MarkdownStyleOption<T> {
         TABLES,
         IMAGES,
         SEPARATORS
+
     }
 
     /**
      * What a changed option makes outdated, from the cheapest to the most expensive thing to do again.
      */
     public enum Impact {
+
         /** Nothing. The value gets read while drawing. */
         DRAW,
         /** The cached render components of fragments, which hold the colors and formats of the text itself. */
@@ -106,6 +111,7 @@ public abstract class MarkdownStyleOption<T> {
         LAYOUT,
         /** The fragments, because the value changes how wide their text gets measured. */
         PARSE
+
     }
 
     public static final class BooleanOption extends MarkdownStyleOption<Boolean> {
