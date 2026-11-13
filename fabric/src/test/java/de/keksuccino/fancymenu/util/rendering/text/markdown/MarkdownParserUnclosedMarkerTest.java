@@ -36,7 +36,7 @@ class MarkdownParserUnclosedMarkerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"```", "```\ncode", "text\n```\nmore", "```java\ncode\n```", "````", "``", "a `` b", "```\n\n"})
+    @ValueSource(strings = {"```", "```\ncode", "text\n```\nmore", "```java\ncode", "```\ncode\n```java", "````", "``", "a `` b", "```\n\n"})
     void graveAccentsWithoutAClosingMarkerStayText(String text) {
         List<MarkdownTextFragment> fragments = parse(text);
 
