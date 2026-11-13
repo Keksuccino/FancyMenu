@@ -127,11 +127,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if (this.imageSupplier != null) {
             MarkdownImagePainter.render(graphics, this);
         } else if (this.separationLine) {
-
-            RenderSystem.enableBlend();
-            RenderingUtils.fillF(graphics, this.parent.x + this.parent.scaling.padding(), this.y, this.parent.x + this.parent.getRealWidth() - this.parent.scaling.padding(), this.y + this.getRenderHeight(), this.parent.getRenderColor(this.parent.style.separatorColor));
-            RenderingUtils.resetShaderColor(graphics);
-
+            MarkdownSeparatorPainter.render(graphics, this);
         } else {
 
             float scale = this.getScale();
@@ -499,6 +495,10 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
         if (this.imageSupplier != null) {
             return MarkdownImagePainter.getHeight(this);
+        }
+
+        if (this.separationLine) {
+            return MarkdownSeparatorPainter.getHeight(this);
         }
 
         return this.getTextRenderHeight();
