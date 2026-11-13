@@ -129,7 +129,7 @@ class MarkdownParserListTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"2 * 3 is six\n* first\n* second", "about ~5 or so\n~ first\n  ~ second", "2 * 3 is six\n  * first\n    * second\nlast"})
+    @ValueSource(strings = {"2 * 3 is six\n* first\n* second", "about ~5 or so\n~ first\n  ~ second", "2 * 3 is six\n  * first\n    * second\nlast", "2 * 3 is six\n§c* first\n§c* second", "about ~5 or so\n&a~ first\n&a~ second"})
     void markerOfAnItemClosesNoFormatThatAMarkerInFrontOfItWouldOpen(String text) {
         List<MarkdownTextFragment> fragments = parseWithExtendedBullets(text);
 
