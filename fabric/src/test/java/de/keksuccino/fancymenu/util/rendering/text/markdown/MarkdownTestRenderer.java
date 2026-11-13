@@ -11,18 +11,19 @@ import java.util.List;
 
 /**
  * A {@link MarkdownRenderer} for tests that works without a running game: it measures text with a fixed width per character,
- * and counts how often it parses its text, lays out its lines and measures the text of a fragment.
+ * and counts how often it parses its text, lays out its lines and measures the text of a fragment.<br>
+ * Tests of other packages can build one to test what they do with a renderer through its public methods.
  */
-final class MarkdownTestRenderer extends MarkdownRenderer {
+public final class MarkdownTestRenderer extends MarkdownRenderer {
 
     /** The UI theme the colors of the neutral look follow. Tests change its colors to act like a theme switch. */
-    final UITheme theme = new UITheme("test", "test");
+    public final UITheme theme = new UITheme("test", "test");
     /** The characters every font of Minecraft has in this renderer, which are the printable characters of ASCII unless a test sets other ones. */
     MarkdownFontCoverage fontCoverage = fontWithCharacters(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~");
     int parses = 0;
     int layouts = 0;
 
-    MarkdownTestRenderer() {
+    public MarkdownTestRenderer() {
         this(new UITheme[1]);
     }
 
