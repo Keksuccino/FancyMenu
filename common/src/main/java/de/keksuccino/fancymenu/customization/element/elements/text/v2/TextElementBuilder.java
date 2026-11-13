@@ -26,6 +26,7 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
         i.baseHeight = 40;
         i.setSource(TextElement.SourceMode.DIRECT, I18n.get("fancymenu.elements.text.placeholder"));
         i.markdownSettings.applyDefaultsOfNewElements();
+        i.background.applyDefaultsOfNewElements();
         return i;
     }
 
