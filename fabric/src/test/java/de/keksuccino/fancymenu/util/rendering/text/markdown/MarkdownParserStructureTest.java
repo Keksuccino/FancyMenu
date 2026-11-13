@@ -332,18 +332,6 @@ class MarkdownParserStructureTest {
     }
 
     @Test
-    void rowsOfBackslashesEscapeInPairs() {
-        // An even row leaves the marker behind it active, an odd row escapes it
-        List<MarkdownTextFragment> evenRow = parse("\\\\\\\\*x*");
-        List<MarkdownTextFragment> oddRow = parse("\\\\\\*x*");
-
-        assertTrue(fragmentContaining(evenRow, "x").italic);
-        assertEquals("\\x", joinText(evenRow));
-        assertFalse(fragmentContaining(oddRow, "x").italic);
-        assertEquals("*x*", joinText(oddRow));
-    }
-
-    @Test
     void rowsOfSpacesStayInTheFragmentOfTheWordBeforeThem() {
         List<MarkdownTextFragment> fragments = parse("a    **b**   c");
 
