@@ -235,7 +235,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                             if (fragment.text.endsWith(" ")) {
                                 endX -= (this.parent.getUnscaledSpaceWidth() * fragment.getScale());
                             }
-                            renderCodeBlockBackground(graphics, codeBlockStartX, fragment.y - 2, endX, fragment.y + fragment.getTextRenderHeight(), this.parent.getRenderColor(this.parent.codeBlockSingleLineColor));
+                            renderCodeBlockBackground(graphics, codeBlockStartX, fragment.getInlineCodeBackgroundTop(), endX, fragment.getInlineCodeBackgroundBottom(), this.parent.getRenderColor(this.parent.codeBlockSingleLineColor));
                             currentCodeBlock = null;
                         }
                     } else {
@@ -321,11 +321,23 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                 if (end.text.endsWith(" ")) {
                     xEnd -= (this.parent.getUnscaledSpaceWidth() * this.getScale());
                 }
-                renderCodeBlockBackground(graphics, this.x, this.y - 2, xEnd, this.y + this.getTextRenderHeight(), this.parent.getRenderColor(this.parent.codeBlockSingleLineColor));
+                renderCodeBlockBackground(graphics, this.x, this.getInlineCodeBackgroundTop(), xEnd, this.getInlineCodeBackgroundBottom(), this.parent.getRenderColor(this.parent.codeBlockSingleLineColor));
             } else if (this.drawsCodeBlockBackground()) {
                 renderCodeBlockBackground(graphics, this.parent.x + this.parent.border, start.getRenderLineY(), this.parent.x + this.parent.getRealWidth() - this.parent.border - 1, end.getRenderLineY() + end.getRenderHeight() - 1, this.parent.getRenderColor(this.parent.codeBlockMultiLineColor));
             }
         }
+    }
+
+    /**
+     * Returns where the background of the inline code span of this fragment starts.<br>
+     * The background belongs to the text, so it follows everything that moves the text inside its line, like the spacing above a list item.
+     */
+    protected float getInlineCodeBackgroundTop() {
+        return this.getTextY() - 2;
+    }
+
+    protected float getInlineCodeBackgroundBottom() {
+        return this.getTextY() + this.getTextRenderHeight();
     }
 
     /**
