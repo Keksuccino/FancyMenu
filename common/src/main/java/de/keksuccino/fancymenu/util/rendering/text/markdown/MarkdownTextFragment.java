@@ -114,14 +114,14 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         } else {
 
             float scale = this.getScale();
-            if (!Float.isFinite(scale) || scale <= 0.0F) return;
+            if (scale <= 0.0F) return;
 
             this.renderCodeBlock(graphics);
 
             com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
             graphics.pose().pushMatrix();
             try {
-                // Vanilla text extraction ultimately accepts integer draw coordinates. Translating to the exact origin before local scaling avoids dividing and truncating the absolute position, which could move glyphs across the parent's clipping boundary.
+                // Vanilla text extraction only accepts integer draw coordinates. Translate to the exact text origin and draw at local zero so a fractional scale never requires dividing and truncating its absolute position, which would move glyphs into the parent's scissor area.
                 graphics.pose().translate(this.getTextX(), this.getTextY());
                 graphics.pose().scale(scale, scale);
                 this.parent.renderText(graphics, this.getRenderComponent(), 0.0F, 0.0F, this.parent.textBaseColor.getColorIntWithAlpha(this.parent.textOpacity), this.parent.textShadow && (this.codeBlockContext == null));
