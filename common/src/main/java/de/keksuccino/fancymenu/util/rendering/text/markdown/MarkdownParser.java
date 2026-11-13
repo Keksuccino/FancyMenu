@@ -1093,6 +1093,11 @@ public class MarkdownParser {
             }
         }
 
+        /** The index of the bracket that ends the label of the open link while no link is open. */
+        protected static final int NO_LINK = -1;
+        /** The index of the bracket that ends the label of the open link while that bracket is not found, because the one found before is text of code or of plain text. */
+        protected static final int LINK_LABEL_END_UNKNOWN = -2;
+
         /** Every event takes this many values in {@link #events}: its index in the text, the ordinal of its {@link Event} and its two values. */
         protected static final int EVENT_SIZE = 4;
         protected static final Event[] EVENT_TYPES = Event.values();
@@ -1128,8 +1133,10 @@ public class MarkdownParser {
             boolean quote = false;
             MarkdownRenderer.MarkdownLineAlignment alignment = MarkdownRenderer.MarkdownLineAlignment.LEFT;
             //Index of the square bracket that ends the label of the open link, and of the round bracket that ends its target
-            int linkLabelEnd = -1;
+            int linkLabelEnd = NO_LINK;
             int linkTargetEnd = -1;
+            //Where the event that opened the open link is in the events
+            int linkOpenEvent = -1;
             //Index of the line break that ends the line of the current index, or the text length if it is the last line
             int lineEnd = -1;
             //The tables follow the order of their lines, so the loop only ever has to look out for the next one
@@ -1148,6 +1155,12 @@ public class MarkdownParser {
                 if (lineEnd < index) lineEnd = getLineEnd(text, index);
                 //Length of the part of the current line that starts at the current index
                 int remainingLineLength = lineEnd - index;
+
+                // A label stays in its line, so a link whose label has no end in this line is none
+                if ((c == NEWLINE_CHAR) && (linkLabelEnd == LINK_LABEL_END_UNKNOWN)) {
+                    this.removeEvent(linkOpenEvent);
+                    linkLabelEnd = NO_LINK;
+                }
 
                 // Check for a table
                 if (index == nextTableStart) {
@@ -1272,24 +1285,28 @@ public class MarkdownParser {
                     }
 
                     //Handle Hyperlink
-                    if ((c == OPEN_SQUARE_BRACKETS_CHAR) && (linkLabelEnd == -1) && markdown) {
+                    if ((c == OPEN_SQUARE_BRACKETS_CHAR) && (linkLabelEnd == NO_LINK) && markdown) {
                         int labelEnd = getLinkLabelEnd(text, index + 1);
                         int targetEnd = (labelEnd != -1) ? getLinkTargetEnd(text, labelEnd + FORMATTING_CODE_HYPERLINK_INNER_PREFIX.length()) : -1;
                         if (targetEnd != -1) {
+                            linkOpenEvent = this.eventsEnd;
                             this.addEvent(index, Event.LINK_OPEN, labelEnd, targetEnd);
                             linkLabelEnd = labelEnd;
                             linkTargetEnd = targetEnd;
                             continue;
                         }
                     }
-                    // The link ends at the bracket its label was found to end at when it opened, and at no other one.
+                    // The link ends at the bracket its label was found to end at, and at no other one.
                     // The characters behind that bracket are exactly the target that was read back then, so skipping them never cuts into other text.
                     if (index == linkLabelEnd) {
-                        this.addEvent(index, Event.LINK_CLOSE, linkTargetEnd, 0);
-                        index = linkTargetEnd;
-                        linkLabelEnd = -1;
-                        linkTargetEnd = -1;
-                        continue;
+                        if (markdown) {
+                            this.addEvent(index, Event.LINK_CLOSE, linkTargetEnd, 0);
+                            index = linkTargetEnd;
+                            linkLabelEnd = NO_LINK;
+                            continue;
+                        }
+                        // The bracket is text of code or of plain text that opened inside of the label, so the label ends somewhere behind that
+                        linkLabelEnd = LINK_LABEL_END_UNKNOWN;
                     }
 
                     //Handle Quote
@@ -1349,6 +1366,10 @@ public class MarkdownParser {
                         if (code && singleLineCode && !text.startsWith(FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX, index)) {
                             this.addEvent(index, Event.CODE_CLOSE, 0, 0);
                             code = false;
+                            if (linkLabelEnd == LINK_LABEL_END_UNKNOWN) {
+                                linkLabelEnd = this.findLinkLabelEndAgain(text, linkOpenEvent, index + 1);
+                                linkTargetEnd = this.events[linkOpenEvent + 3];
+                            }
                             continue;
                         }
                     }
@@ -1384,6 +1405,11 @@ public class MarkdownParser {
                             this.addEvent(index, Event.PLAIN_TEXT_CLOSE, 0, 0);
                             plainText = false;
                             index++;
+                            // Plain text can be inside of code, which goes on behind it then
+                            if ((linkLabelEnd == LINK_LABEL_END_UNKNOWN) && !code) {
+                                linkLabelEnd = this.findLinkLabelEndAgain(text, linkOpenEvent, index + 1);
+                                linkTargetEnd = this.events[linkOpenEvent + 3];
+                            }
                             continue;
                         }
                     }
@@ -1434,8 +1460,40 @@ public class MarkdownParser {
 
             }
 
+            // Code or plain text that runs to the end of the text leaves no end for the label it holds the bracket of
+            if (linkLabelEnd == LINK_LABEL_END_UNKNOWN) this.removeEvent(linkOpenEvent);
+
             if (this.eventsEnd > 0) this.nextEventIndex = this.events[0];
 
+        }
+
+        /**
+         * Finds the end of the label of the open link behind code or plain text that held the bracket the label was found to end at before.<br>
+         * The event that opened the link gets the new end of its label and of its target. Without a new end, there is no link, and that event gets removed.
+         *
+         * @param linkOpenEvent Where the event that opened the link is in the events.
+         * @param fromIndex The index behind the code or plain text.
+         * @return The index of the bracket that ends the label, or {@link #NO_LINK}.
+         */
+        protected int findLinkLabelEndAgain(@NotNull String text, int linkOpenEvent, int fromIndex) {
+            int labelEnd = getLinkLabelEnd(text, fromIndex);
+            int targetEnd = (labelEnd != -1) ? getLinkTargetEnd(text, labelEnd + FORMATTING_CODE_HYPERLINK_INNER_PREFIX.length()) : -1;
+            if (targetEnd == -1) {
+                this.removeEvent(linkOpenEvent);
+                return NO_LINK;
+            }
+            this.events[linkOpenEvent + 2] = labelEnd;
+            this.events[linkOpenEvent + 3] = targetEnd;
+            return labelEnd;
+        }
+
+        /**
+         * Makes the parser read the character of an event as if there was no event, which only works for events it has not read.
+         *
+         * @param event Where the event is in the events.
+         */
+        protected void removeEvent(int event) {
+            this.events[event + 1] = Event.NONE.ordinal();
         }
 
         protected void addEvent(int index, @NotNull Event event, int value, int secondValue) {
