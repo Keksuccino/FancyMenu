@@ -26,6 +26,7 @@ import java.util.Objects;
 public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
     protected static final int BULLET_LIST_SPACE_AFTER_INDENT = 5;
+    protected static final int QUOTE_LINE_WIDTH = 2;
     protected static final int TRAILING_SPACE_KEEP = 0;
     protected static final int TRAILING_SPACE_REMOVE = 1;
     protected static final int TRAILING_SPACE_SEPARATE = 2;
@@ -393,12 +394,22 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             float yEnd = end.getRenderLineY() + end.getRenderHeight() + 1;
             RenderSystem.enableBlend();
             if (this.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT) {
-                RenderingUtils.fillF(graphics, this.parent.x, yStart, this.parent.x + 2, yEnd, this.parent.quoteColor.getColorIntWithAlpha(this.parent.textOpacity));
+                float lineX = this.getLeftQuoteLineX();
+                RenderingUtils.fillF(graphics, lineX, yStart, lineX + QUOTE_LINE_WIDTH, yEnd, this.parent.quoteColor.getColorIntWithAlpha(this.parent.textOpacity));
             } else if (this.alignment == MarkdownRenderer.MarkdownLineAlignment.RIGHT) {
                 RenderingUtils.fillF(graphics, this.parent.x + this.parent.getRealWidth() - this.parent.border - 2, yStart, this.parent.x + this.parent.getRealWidth() - this.parent.border - 1, yEnd, this.parent.quoteColor.getColorIntWithAlpha(this.parent.textOpacity));
             }
             RenderingUtils.resetShaderColor(graphics);
         }
+    }
+
+    /**
+     * Returns the X position of the line next to a left-aligned quote.<br>
+     * The line stands at the start of the text area, in the space the quote indent keeps free in front of the text.
+     * It must not reach into the border in front of the text area, because containers like scroll areas clip their content there.
+     */
+    protected float getLeftQuoteLineX() {
+        return this.parent.x + this.parent.border;
     }
 
     /**
