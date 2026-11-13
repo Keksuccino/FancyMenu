@@ -199,12 +199,15 @@ public class Property<T> {
         private final N maxValue;
         @Nullable
         private final List<N> cycleValues;
+        @Nullable
+        private final N step;
 
-        private NumericInputBehavior(@NotNull Mode mode, @Nullable N minValue, @Nullable N maxValue, @Nullable List<N> cycleValues) {
+        private NumericInputBehavior(@NotNull Mode mode, @Nullable N minValue, @Nullable N maxValue, @Nullable List<N> cycleValues, @Nullable N step) {
             this.mode = mode;
             this.minValue = minValue;
             this.maxValue = maxValue;
             this.cycleValues = (cycleValues != null) ? List.copyOf(cycleValues) : null;
+            this.step = step;
         }
 
         @NotNull
@@ -227,6 +230,14 @@ public class Property<T> {
             return this.cycleValues;
         }
 
+        /**
+         * Returns how much one press of an arrow of the number picker changes the value, or NULL if it changes it by 1.
+         */
+        @Nullable
+        public N getStep() {
+            return this.step;
+        }
+
         @NotNull
         public static <N extends Number> Builder<N> builder() {
             return new Builder<>();
@@ -242,6 +253,8 @@ public class Property<T> {
             private N maxValue;
             @Nullable
             private List<N> cycleValues;
+            @Nullable
+            private N step;
 
             @NotNull
             public Builder<N> freeInput() {
@@ -270,9 +283,19 @@ public class Property<T> {
                 return this;
             }
 
+            /**
+             * Sets how much one press of an arrow of the number picker changes the value. Without a step, the arrows change it by 1.<br>
+             * Values that are small most of the time, like factors, need a smaller step to be useful.
+             */
+            @NotNull
+            public Builder<N> step(@NotNull N step) {
+                this.step = Objects.requireNonNull(step);
+                return this;
+            }
+
             @NotNull
             public NumericInputBehavior<N> build() {
-                return new NumericInputBehavior<>(this.mode, this.minValue, this.maxValue, this.cycleValues);
+                return new NumericInputBehavior<>(this.mode, this.minValue, this.maxValue, this.cycleValues, this.step);
             }
         }
     }
@@ -394,6 +417,7 @@ public class Property<T> {
                     undoSnapshot.discard();
                     restoreNumericSnapshots(selectedObjects, originalValues, key);
                 });
+        if (resolvedBehavior.getStep() != null) picker.setStep(resolvedBehavior.getStep().doubleValue());
 
         contextMenu.closeMenuChain();
         PiPWindow window = new PiPWindow(Component.translatable(property.getContextMenuEntryLocalizationKeyBase()))
