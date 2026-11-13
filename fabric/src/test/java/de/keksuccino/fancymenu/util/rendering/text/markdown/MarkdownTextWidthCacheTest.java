@@ -74,7 +74,7 @@ class MarkdownTextWidthCacheTest {
         renderer.tick();
 
         for (MarkdownTextFragment fragment : renderer.fragments) {
-            assertEquals(renderer.getUnscaledTextWidth(fragment.buildRenderComponent(true)), fragment.unscaledTextWidth);
+            assertEquals(renderer.textFont.width(fragment.buildRenderComponent(true)), fragment.unscaledTextWidth);
         }
     }
 

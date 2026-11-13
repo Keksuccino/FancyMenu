@@ -40,7 +40,7 @@ final class MarkdownLayout {
         List<MarkdownTextLine> lines = renderer.lines;
         lines.clear();
         this.linesReplaced = true;
-        this.spaceWidth = renderer.getUnscaledTextWidth(" ");
+        this.spaceWidth = renderer.textFont.width(" ");
 
         boolean queueNewLine = true;
         float padding = renderer.scaling.padding();
@@ -305,7 +305,7 @@ final class MarkdownLayout {
      * The width of a space, measured once per layout, because lines and code blocks need it a lot.
      */
     float getSpaceWidth() {
-        if (Float.isNaN(this.spaceWidth)) this.spaceWidth = this.renderer.getUnscaledTextWidth(" ");
+        if (Float.isNaN(this.spaceWidth)) this.spaceWidth = this.renderer.textFont.width(" ");
         return this.spaceWidth;
     }
 

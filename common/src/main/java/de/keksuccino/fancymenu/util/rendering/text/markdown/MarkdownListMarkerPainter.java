@@ -101,13 +101,13 @@ final class MarkdownListMarkerPainter {
             try {
                 graphics.pose().translate(getNumberX(line), first.getTextY());
                 graphics.pose().scale(scale, scale);
-                renderer.renderText(graphics, line.listNumber, 0.0F, 0.0F, renderer.getRenderColor(renderer.style.listNumberColor), renderer.hasTextShadow());
+                renderer.textFont.draw(graphics, line.listNumber, 0.0F, 0.0F, renderer.getRenderColor(renderer.style.listNumberColor), renderer.textFont.hasShadow());
             } finally {
                 graphics.pose().popMatrix();
             }
             return;
         }
-        MarkdownPaint.marker(graphics, renderer, getMarkerShape(first), getMarkerX(first), getMarkerY(first), renderer.style.listMarkerSize.get() * scale, scale, renderer.getFontMetrics().baseline * scale, renderer.getRenderColor(getMarkerColor(first)));
+        MarkdownPaint.marker(graphics, renderer, getMarkerShape(first), getMarkerX(first), getMarkerY(first), renderer.style.listMarkerSize.get() * scale, scale, renderer.textFont.metrics().baseline * scale, renderer.getRenderColor(getMarkerColor(first)));
     }
 
     /**
@@ -121,7 +121,7 @@ final class MarkdownListMarkerPainter {
         }
         // The number shows the way it got typed
         line.listNumber = Component.literal(first.listItemNumber);
-        line.listNumberWidth = line.parent.getUnscaledTextWidth(first.listItemNumber);
+        line.listNumberWidth = line.parent.textFont.width(first.listItemNumber);
     }
 
     /**
@@ -153,7 +153,7 @@ final class MarkdownListMarkerPainter {
         if (renderer.style.listMarkerAlignment.get() == MarkdownMarkerAlignment.LINE_CENTER) {
             return fragment.getTextY() + (fragment.getTextRenderHeight() * 0.5F) - (size * 0.5F);
         }
-        MarkdownFontMetrics metrics = renderer.getFontMetrics();
+        MarkdownFontMetrics metrics = renderer.textFont.metrics();
         return fragment.getTextY() + ((metrics.baseline - (metrics.xHeight * 0.5F)) * scale) - (size * 0.5F);
     }
 

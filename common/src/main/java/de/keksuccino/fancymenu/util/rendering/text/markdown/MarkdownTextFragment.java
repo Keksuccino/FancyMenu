@@ -21,7 +21,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
@@ -112,7 +111,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     public MarkdownTextFragment(@NotNull MarkdownRenderer parent, @NotNull String text) {
         this.parent = parent;
         this.text = text;
-        this.unscaledTextHeight = this.parent.getUnscaledTextHeight();
+        this.unscaledTextHeight = this.parent.textFont.lineHeight();
     }
 
     @Override
@@ -153,7 +152,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                     if (this.hasFixedWidthCells()) {
                         this.getFixedWidthText().render(graphics, this.parent, color);
                     } else {
-                        this.parent.renderText(graphics, this.getRenderComponent(), 0.0F, 0.0F, color, this.parent.hasTextShadow() && (this.codeBlockContext == null));
+                        this.parent.textFont.draw(graphics, this.getRenderComponent(), 0.0F, 0.0F, color, this.parent.textFont.hasShadow() && (this.codeBlockContext == null));
                     }
                 } finally {
                     graphics.pose().popMatrix();
@@ -589,13 +588,13 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         }
 
         if ((this.clickEvent != null) && this.hovered) {
-            this.parent.fireTextClickEvent(this.clickEvent.identifier);
+            this.parent.interactions.fireClickEvent(this.clickEvent.identifier);
             return true;
         }
 
         // Handle regular hyperlink clicks
         if ((this.hyperlink != null) && this.hovered) {
-            if (this.parent.isHyperlinkAllowed(this.hyperlink.link)) WebUtils.openWebLink(this.hyperlink.link);
+            if (this.parent.interactions.isHyperlinkAllowed(this.hyperlink.link)) WebUtils.openWebLink(this.hyperlink.link);
             return true;
         }
         return false;
