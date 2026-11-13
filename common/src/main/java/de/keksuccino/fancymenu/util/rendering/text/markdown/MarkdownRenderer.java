@@ -84,6 +84,8 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     protected float textBaseScale = 1.0f;
     protected boolean autoLineBreaks = true;
     protected boolean removeHtmlBreaks = true;
+    /** If "+ ", "* " and "~ " start list items like "- " does. */
+    protected boolean extendedBulletListMarkers = false;
     protected boolean textShadow = true;
     protected boolean uiFontRenderingEnabled = false;
     protected float textOpacity = 1.0F;
@@ -395,6 +397,22 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
             this.removeHtmlBreaks = removeHtmlBreaks;
             // Makes the render text get built again
             this.lastTextPlaceholders = null;
+        }
+        return this;
+    }
+
+    public boolean isExtendedBulletListMarkersEnabled() {
+        return this.extendedBulletListMarkers;
+    }
+
+    /**
+     * Sets if "+ ", "* " and "~ " at the start of a line start list items like "- " does.<br>
+     * Fragments tell the marker of their list item with {@link MarkdownTextFragment#listItemMarker}.
+     */
+    public MarkdownRenderer setExtendedBulletListMarkersEnabled(boolean enabled) {
+        if (this.extendedBulletListMarkers != enabled) {
+            this.extendedBulletListMarkers = enabled;
+            this.parseNeeded = true;
         }
         return this;
     }
