@@ -31,13 +31,64 @@ final class MarkdownListMarkerPainter {
     }
 
     /**
-     * Returns if one of the fragments starts a list item with "+". Text with such items reads like patch notes, which changes the markers of its "-" items.
+     * Tells the fragments of every list item if its list has an item that starts with "+". Has to run after every parse.<br>
+     * A list with such an item reads like patch notes, which changes the markers of its "-" items.<br><br>
+     *
+     * A list is a run of lines that start a list item of any level, with nothing between them but blank lines.
+     * Everything else ends it, and so does a line that belongs to another quote than the lines before it.
      */
-    static boolean hasPlusItems(@NotNull List<MarkdownTextFragment> fragments) {
-        for (MarkdownTextFragment fragment : fragments) {
-            if (fragment.bulletListItemStart && (fragment.listItemMarker == MarkdownTextFragment.ListItemMarker.PLUS)) return true;
+    static void markListsWithPlusItems(@NotNull List<MarkdownTextFragment> fragments) {
+        int listStart = -1;
+        boolean listHasPlusItems = false;
+        MarkdownTextFragment.QuoteContext listQuote = null;
+        int lineStart = 0;
+        int size = fragments.size();
+        for (int index = 0; index < size; index++) {
+            // A line of the text ends with the fragment that has the line break behind it
+            if (!fragments.get(index).naturalLineBreakAfter && (index < (size - 1))) continue;
+            MarkdownTextFragment item = null;
+            boolean blank = true;
+            for (int i = lineStart; i <= index; i++) {
+                MarkdownTextFragment fragment = fragments.get(i);
+                if (fragment.bulletListLevel > 0) {
+                    if ((item == null) || fragment.bulletListItemStart) item = fragment;
+                } else if (!isBlank(fragment)) {
+                    blank = false;
+                }
+            }
+            if (item != null) {
+                if ((listStart >= 0) && (item.quoteContext != listQuote)) {
+                    if (listHasPlusItems) markItems(fragments, listStart, lineStart);
+                    listStart = -1;
+                }
+                if (listStart < 0) {
+                    listStart = lineStart;
+                    listHasPlusItems = false;
+                    listQuote = item.quoteContext;
+                }
+                if (item.listItemMarker == MarkdownTextFragment.ListItemMarker.PLUS) listHasPlusItems = true;
+            } else if ((listStart >= 0) && !blank) {
+                if (listHasPlusItems) markItems(fragments, listStart, lineStart);
+                listStart = -1;
+            }
+            lineStart = index + 1;
         }
-        return false;
+        if ((listStart >= 0) && listHasPlusItems) markItems(fragments, listStart, size);
+    }
+
+    /**
+     * Returns if the fragment is nothing but empty space of a line, which is what a blank line is made of.
+     */
+    private static boolean isBlank(@NotNull MarkdownTextFragment fragment) {
+        return fragment.text.isBlank() && (fragment.imageSupplier == null) && !fragment.separationLine && !fragment.calloutMarker
+                && (fragment.headlineType == MarkdownTextFragment.HeadlineType.NONE) && (fragment.tableContext == null) && (fragment.codeBlockContext == null);
+    }
+
+    private static void markItems(@NotNull List<MarkdownTextFragment> fragments, int start, int end) {
+        for (int i = start; i < end; i++) {
+            MarkdownTextFragment fragment = fragments.get(i);
+            if (fragment.bulletListLevel > 0) fragment.listHasPlusItems = true;
+        }
     }
 
     /**
@@ -49,7 +100,7 @@ final class MarkdownListMarkerPainter {
             case ALWAYS:
                 return true;
             case AUTOMATIC:
-                return fragment.parent.textHasPlusListItems;
+                return fragment.listHasPlusItems;
             default:
                 return false;
         }
