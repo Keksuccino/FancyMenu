@@ -11,6 +11,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.resources.language.I18n;
@@ -21,10 +22,9 @@ import org.jetbrains.annotations.Nullable;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 @SuppressWarnings("unused")
@@ -109,7 +109,6 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     /** Decides which hyperlinks open on click. NULL opens all of them. */
     @Nullable
     protected Predicate<String> hyperlinkFilter = null;
-    protected final Set<String> hoveredTextEventIds = new HashSet<>();
     protected float visibleTop = Float.NEGATIVE_INFINITY;
     protected float visibleBottom = Float.POSITIVE_INFINITY;
     /**
@@ -132,6 +131,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     protected final List<MarkdownTextFragment> fragments = new ArrayList<>();
     final MarkdownTextWidthCache textWidthCache = new MarkdownTextWidthCache(this);
     final MarkdownLayout layout = new MarkdownLayout(this);
+    final MarkdownInteractions interactions = new MarkdownInteractions(this);
 
     public MarkdownRenderer() {
         this(Minecraft.getInstance().font);
@@ -255,6 +255,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
                 this.textWidthCache.endParse();
             }
         }
+        this.interactions.collect(this.fragments);
     }
 
     protected void rebuildLines() {
@@ -766,59 +767,15 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
         graphics.drawString(this.font, text, (int)x, (int)y, color, shadow);
     }
 
+    /**
+     * Makes all fragments forget that the mouse was over them.
+     */
     public void resetHovered() {
-        this.resetHovered(this.fragments);
-        this.hoveredTextEventIds.clear();
-    }
-
-    protected void resetHovered(@NotNull List<MarkdownTextFragment> fragments) {
-        for (MarkdownTextFragment fragment : fragments) {
-            fragment.setHovered(false);
-            if (fragment.isTable() && fragment.tableContext != null) {
-                for (MarkdownTextFragment.TableRow row : fragment.tableContext.rows) {
-                    for (MarkdownTextFragment.TableCell cell : row.cells) {
-                        this.resetHovered(cell.fragments);
-                    }
-                }
-            }
-        }
+        this.interactions.resetHovered(this.fragments);
     }
 
     protected void updateTextHoverEvents() {
-        if (this.textEventHandler == null) {
-            this.hoveredTextEventIds.clear();
-            return;
-        }
-        List<MarkdownTextFragment.TextHoverEvent> hoverEvents = new ArrayList<>();
-        this.collectHoverEvents(this.fragments, hoverEvents);
-        Set<String> currentlyHovered = new HashSet<>();
-        for (MarkdownTextFragment.TextHoverEvent hoverEvent : hoverEvents) {
-            if (hoverEvent.isHovered()) {
-                currentlyHovered.add(hoverEvent.identifier);
-            }
-        }
-        for (String eventId : currentlyHovered) {
-            if (!this.hoveredTextEventIds.contains(eventId)) {
-                this.fireTextHoverEvent(eventId);
-            }
-        }
-        this.hoveredTextEventIds.clear();
-        this.hoveredTextEventIds.addAll(currentlyHovered);
-    }
-
-    protected void collectHoverEvents(@NotNull List<MarkdownTextFragment> fragments, @NotNull List<MarkdownTextFragment.TextHoverEvent> events) {
-        for (MarkdownTextFragment fragment : fragments) {
-            if (fragment.hoverEvent != null && !events.contains(fragment.hoverEvent)) {
-                events.add(fragment.hoverEvent);
-            }
-            if (fragment.isTable() && fragment.tableContext != null) {
-                for (MarkdownTextFragment.TableRow row : fragment.tableContext.rows) {
-                    for (MarkdownTextFragment.TableCell cell : row.cells) {
-                        this.collectHoverEvents(cell.fragments, events);
-                    }
-                }
-            }
-        }
+        this.interactions.updateHoverEvents();
     }
 
     public MarkdownRenderer setTextEventHandler(@Nullable TextEventHandler textEventHandler) {
@@ -850,10 +807,32 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
         }
     }
 
+    /**
+     * Only returns the fragments that react to input, which are the link-like ones and tables that contain link-like fragments.
+     * Every input event walks all children, and most fragments of a text are plain words.
+     */
     @Override
     @NotNull
     public List<MarkdownTextFragment> children() {
-        return this.fragments;
+        return this.interactions.interactiveFragments;
+    }
+
+    /**
+     * Returns the fragment under the mouse, no matter if it reacts to input.
+     * {@link #children()} doesn't hold plain fragments, so the fragment gets looked up in the visible lines.
+     */
+    @Override
+    @NotNull
+    public Optional<GuiEventListener> getChildAt(double mouseX, double mouseY) {
+        this.layout.updateVisibleLines();
+        for (int i = this.layout.firstVisibleLine; (i < this.layout.visibleLinesEnd) && (i < this.lines.size()); i++) {
+            MarkdownTextLine line = this.lines.get(i);
+            if (!this.layout.isLineVisible(line)) continue;
+            for (MarkdownTextFragment fragment : line.fragments) {
+                if (fragment.isMouseOver(mouseX, mouseY)) return Optional.of(fragment);
+            }
+        }
+        return Optional.empty();
     }
 
     @Override
