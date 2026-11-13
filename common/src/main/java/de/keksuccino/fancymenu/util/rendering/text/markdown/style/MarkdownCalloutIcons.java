@@ -7,6 +7,8 @@ public enum MarkdownCalloutIcons {
 
     NONE,
     /** Pixel art of 7 by 7 pixels. */
-    PIXEL
+    PIXEL,
+    /** Icons of the UI, as tall as a capital letter of the text. */
+    SMOOTH
 
 }

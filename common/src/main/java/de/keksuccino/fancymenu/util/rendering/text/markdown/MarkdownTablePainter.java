@@ -197,7 +197,9 @@ final class MarkdownTablePainter {
         TableContext table = tableFragment.tableContext;
         boolean frame = (style.tableGrid.get() == MarkdownTableGrid.FRAME);
         float lineThickness = getLineThickness(renderer);
-        float cornerCut = renderer.scaling.sized(style.tableCornerRadius.get());
+        float radius = MarkdownPaint.cornerRadius(renderer, style.tableCornerRadius.get());
+        // The rows of a framed table follow the inside of its round corners
+        float rowRadius = frame ? Math.max(0.0F, radius - lineThickness) : 0.0F;
         float tableX = tableFragment.x;
         float tableY = tableFragment.y;
         float tableWidth = table.totalWidth;
@@ -209,7 +211,7 @@ final class MarkdownTablePainter {
         // Fragments draw things that reach to fragments after them, like the background of inline code, so all of them get their position before the first one renders
         positionCells(tableFragment);
 
-        MarkdownPaint.box(graphics, tableX, tableY, tableX + tableWidth, tableY + tableHeight, cornerCut, renderer.getRenderColor(style.tableBackgroundColor));
+        MarkdownPaint.box(graphics, renderer, tableX, tableY, tableX + tableWidth, tableY + tableHeight, radius, renderer.getRenderColor(style.tableBackgroundColor));
 
         float rowsEndY = tableY;
         for (int rowIndex = 0; rowIndex < table.rows.size(); rowIndex++) {
@@ -217,7 +219,7 @@ final class MarkdownTablePainter {
             float rowY = tableY + row.offsetY;
             rowsEndY = rowY + row.height;
             int background = renderer.getRenderColor(getRowBackgroundColor(renderer, table, rowIndex));
-            if ((background >>> 24) != 0) RenderingUtils.fillF(graphics, cellsX, rowY, cellsX + cellsWidth, rowsEndY, background);
+            MarkdownPaint.box(graphics, renderer, cellsX, rowY, cellsX + cellsWidth, rowsEndY, (rowIndex == 0) ? rowRadius : 0.0F, (rowIndex == (table.rows.size() - 1)) ? rowRadius : 0.0F, background);
             if ((rowIndex == 0) && (headerSeparatorSpace > 0.0F)) {
                 RenderingUtils.fillF(graphics, cellsX, rowsEndY, cellsX + cellsWidth, rowsEndY + headerSeparatorSpace, renderer.getRenderColor(style.tableHeaderSeparatorColor));
             }
@@ -228,7 +230,7 @@ final class MarkdownTablePainter {
 
         int lineColor = renderer.getRenderColor(style.tableLineColor);
         if (frame) {
-            MarkdownPaint.frame(graphics, tableX, tableY, tableX + tableWidth, tableY + tableHeight, lineThickness, cornerCut, lineColor, lineColor);
+            MarkdownPaint.frame(graphics, renderer, tableX, tableY, tableX + tableWidth, tableY + tableHeight, lineThickness, radius, lineColor, lineColor);
         } else {
             renderGrid(graphics, renderer, table, tableX, tableY, rowsEndY, lineThickness, lineColor);
         }

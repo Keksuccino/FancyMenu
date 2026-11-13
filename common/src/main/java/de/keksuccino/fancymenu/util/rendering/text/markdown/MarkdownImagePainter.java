@@ -136,8 +136,8 @@ final class MarkdownImagePainter {
         float width = getImageWidth(fragment);
         float height = getImageHeight(fragment);
         if (lineThickness > 0.0F) {
-            MarkdownPaint.box(graphics, fragment.x, fragment.y, fragment.x + width + (frame * 2), fragment.y + height + (frame * 2), 0.0F, renderer.getRenderColor(style.imageFrameOuterColor));
-            MarkdownPaint.box(graphics, fragment.x + lineThickness, fragment.y + lineThickness, fragment.x + width + frame + lineThickness, fragment.y + height + frame + lineThickness, 0.0F, renderer.getRenderColor(style.imageFrameInnerColor));
+            MarkdownPaint.box(graphics, renderer, fragment.x, fragment.y, fragment.x + width + (frame * 2), fragment.y + height + (frame * 2), 0.0F, renderer.getRenderColor(style.imageFrameOuterColor));
+            MarkdownPaint.box(graphics, renderer, fragment.x + lineThickness, fragment.y + lineThickness, fragment.x + width + frame + lineThickness, fragment.y + height + frame + lineThickness, 0.0F, renderer.getRenderColor(style.imageFrameInnerColor));
         }
         RenderingUtils.setShaderColor(graphics, 1.0F, 1.0F, 1.0F, renderer.textOpacity);
         RenderingUtils.blitF(graphics, location, fragment.x + frame, fragment.y + frame, 0.0F, 0.0F, width, height, width, height);
