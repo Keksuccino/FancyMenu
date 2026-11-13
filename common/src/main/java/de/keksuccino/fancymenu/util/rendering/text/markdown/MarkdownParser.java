@@ -137,6 +137,8 @@ public class MarkdownParser {
         boolean queueNewLine = true;
         boolean italicUnderscore = false;
         boolean strikethroughDouble = false;
+        //Index behind the marker that opened bold text last
+        int boldMarkerEnd = -1;
         boolean lineHandledByWholeLineConstruct = false;
         //The fragment that a space joins when the text of the fragment is what the space follows, which ends the word of that fragment.
         //Markers that open something and the prefixes of lines set it to NULL, so a space behind them becomes a fragment of what they opened.
@@ -404,6 +406,7 @@ public class MarkdownParser {
                             lastBuiltFragment = null;
                             builder.bold = true;
                             index++;
+                            boldMarkerEnd = index + 1;
                             continue;
                         }
                     }
@@ -439,7 +442,9 @@ public class MarkdownParser {
                 //Handle Italic Asterisk
                 if (c == ASTERISK_CHAR) {
                     if (!builder.italic) {
-                        if (!markdownText.startsWith(FORMATTING_CODE_BOLD_PREFIX_SUFFIX, index) && formatMarkers.hasItalicAsteriskEnd(index + 1, builder.bold)) {
+                        // Behind the marker that opened bold text, the asterisk is part of the same row of asterisks. Three asterisks open bold and italic text
+                        // together, and either of them can be the first one to close again. Everywhere else, italic text that opens inside of bold text ends inside of it.
+                        if (!markdownText.startsWith(FORMATTING_CODE_BOLD_PREFIX_SUFFIX, index) && formatMarkers.hasItalicAsteriskEnd(index + 1, builder.bold, builder.bold && (boldMarkerEnd != index))) {
                             buildTextInFrontOfOpeningMarker(fragments, builder, isStartOfLine);
                             lastBuiltFragment = null;
                             builder.italic = true;
@@ -1746,12 +1751,12 @@ public class MarkdownParser {
          * This goes through the rows of asterisks the way the parser will: the pairs of a row open and close bold text, and only an asterisk
          * that is left over ends the italic text. A pair that finds no later pair to close its bold text opens none, which leaves its second asterisk over.</p>
          *
-         * <p>Italic text that opens inside of bold text has to end inside of it as well, so the pair that closes that bold text means there is no end.</p>
+         * <p>Italic text that has to end inside of the bold text it opens in has no end if the pair that closes that bold text comes first.</p>
          *
          * @param boldOpen If the italic text opens inside of bold text.
+         * @param insideOuterBold If the italic text has to end inside of that bold text.
          */
-        protected boolean hasItalicAsteriskEnd(int fromIndex, boolean boldOpen) {
-            boolean insideOuterBold = boldOpen;
+        protected boolean hasItalicAsteriskEnd(int fromIndex, boolean boldOpen, boolean insideOuterBold) {
             int[] asterisks = this.indexes[FormatMarker.ASTERISK.ordinal()];
             int count = this.counts[FormatMarker.ASTERISK.ordinal()];
             int asterisk = this.moveTo(FormatMarker.ASTERISK, fromIndex);
