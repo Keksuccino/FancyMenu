@@ -76,8 +76,11 @@ public class MarkdownParser {
         MarkdownFormatMarkers formatMarkers = structure.getFormatMarkers();
         boolean queueNewLine = true;
         boolean italicUnderscore = false;
+        //Bold text that asterisks opened only closes at asterisks, and bold text that underscores opened only at underscores. Text inside of both is bold until both are closed.
+        boolean boldAsterisk = false;
+        boolean boldUnderscore = false;
         boolean strikethroughDouble = false;
-        //Index behind the marker that opened bold text last
+        //Index behind the asterisks that opened bold text last
         int boldMarkerEnd = -1;
         //Index of the last percent sign of the marker of a font or color the loop read last. The loop reads that percent sign once more,
         //because it can be the first one of the next marker as well: markers that share a percent sign all work that way.
@@ -352,23 +355,45 @@ public class MarkdownParser {
 
                 //Handle Bold
                 if (c == ASTERISK_CHAR) {
-                    if (!builder.bold) {
+                    if (!boldAsterisk) {
                         if (markdownText.startsWith(FORMATTING_CODE_BOLD_PREFIX_SUFFIX, index) && formatMarkers.existsFrom(FormatMarker.ASTERISK_PAIR, index + 2)) {
                             buildTextInFrontOfOpeningMarker(fragments, builder, isStartOfLine);
                             lastBuiltFragment = null;
+                            boldAsterisk = true;
                             builder.bold = true;
                             index++;
                             boldMarkerEnd = index + 1;
                             continue;
                         }
                     }
-                    if (builder.bold) {
+                    if (boldAsterisk) {
                         if (markdownText.startsWith(FORMATTING_CODE_BOLD_PREFIX_SUFFIX, index)) {
                             lastBuiltFragment = addFragment(fragments, builder.build(false, false));
-                            builder.bold = false;
+                            boldAsterisk = false;
+                            builder.bold = boldUnderscore;
                             index++;
                             continue;
                         }
+                    }
+                }
+
+                //Handle Bold Underscore
+                // Two underscores work like two asterisks, but only where the structure found them able to open or close bold text, which they are not inside of a word
+                if (c == UNDERSCORE_CHAR) {
+                    if (!boldUnderscore && formatMarkers.isAt(FormatMarker.UNDERSCORE_PAIR_OPEN, index) && formatMarkers.existsFrom(FormatMarker.UNDERSCORE_PAIR_CLOSE, index + 2)) {
+                        buildTextInFrontOfOpeningMarker(fragments, builder, isStartOfLine);
+                        lastBuiltFragment = null;
+                        boldUnderscore = true;
+                        builder.bold = true;
+                        index++;
+                        continue;
+                    }
+                    if (boldUnderscore && formatMarkers.isAt(FormatMarker.UNDERSCORE_PAIR_CLOSE, index)) {
+                        lastBuiltFragment = addFragment(fragments, builder.build(false, false));
+                        boldUnderscore = false;
+                        builder.bold = boldAsterisk;
+                        index++;
+                        continue;
                     }
                 }
 
@@ -396,7 +421,7 @@ public class MarkdownParser {
                     if (!builder.italic) {
                         // Behind the marker that opened bold text, the asterisk is part of the same row of asterisks. Three asterisks open bold and italic text
                         // together, and either of them can be the first one to close again. Everywhere else, italic text that opens inside of bold text ends inside of it.
-                        if (!markdownText.startsWith(FORMATTING_CODE_BOLD_PREFIX_SUFFIX, index) && formatMarkers.hasItalicAsteriskEnd(index + 1, builder.bold, builder.bold && (boldMarkerEnd != index))) {
+                        if (!markdownText.startsWith(FORMATTING_CODE_BOLD_PREFIX_SUFFIX, index) && formatMarkers.hasItalicAsteriskEnd(index + 1, boldAsterisk, boldAsterisk && (boldMarkerEnd != index))) {
                             buildTextInFrontOfOpeningMarker(fragments, builder, isStartOfLine);
                             lastBuiltFragment = null;
                             builder.italic = true;

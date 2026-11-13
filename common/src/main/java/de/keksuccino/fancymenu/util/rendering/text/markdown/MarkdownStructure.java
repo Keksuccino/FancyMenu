@@ -85,8 +85,6 @@ final class MarkdownStructure {
         boolean quote = false;
         int centeredAlignmentMarkers = 0;
         int rightAlignmentMarkers = 0;
-        //Index of the last underscore that is no part of an event, code or plain text
-        int previousUnderscore = Integer.MIN_VALUE;
         //Index of the square bracket that ends the label of the open link, and of the round bracket that ends its target
         int linkLabelEnd = NO_LINK;
         int linkTargetEnd = -1;
@@ -195,11 +193,14 @@ final class MarkdownStructure {
                         case ASTERISK_CHAR:
                             formatMarkers.addPaired(FormatMarker.ASTERISK, FormatMarker.ASTERISK_PAIR, index);
                             continue;
-                        case UNDERSCORE_CHAR:
-                            // Underscores in a row are text. The one behind this one gets read the same way this one does, so looking at the text is enough for it.
-                            if ((previousUnderscore != (index - 1)) && ((index + 1 == length) || (text.charAt(index + 1) != UNDERSCORE_CHAR))) formatMarkers.add(FormatMarker.UNDERSCORE, index);
-                            previousUnderscore = index;
+                        case UNDERSCORE_CHAR: {
+                            // All underscores of a row get read the same way this one does, so looking at the text is enough for the ones behind it
+                            int rowEnd = index + 1;
+                            while ((rowEnd < length) && (text.charAt(rowEnd) == UNDERSCORE_CHAR)) rowEnd++;
+                            this.addUnderscoreMarkers(text, index, rowEnd);
+                            index = rowEnd - 1;
                             continue;
+                        }
                         case TILDE_CHAR:
                             formatMarkers.addPaired(FormatMarker.TILDE, FormatMarker.TILDE_PAIR, index);
                             continue;
@@ -432,6 +433,42 @@ final class MarkdownStructure {
 
         if (this.eventsEnd > 0) this.nextEventIndex = this.events[0];
 
+    }
+
+    /**
+     * Adds the format markers of a row of underscores that the parser reads as text or markers.
+     *
+     * <p>A single underscore opens and closes italic text wherever it is. Two underscores open and close bold text, but only where they are no part of a word:
+     * they open in front of something that is no whitespace, if no letter or digit is in front of them, and close behind something that is no whitespace,
+     * if no letter or digit follows them. That is how "__init__" becomes the bold word "init" while "my__var__name" stays as it is.
+     * Three underscores that can open or close are both markers at once, the two for bold text first. Every other row is text.</p>
+     *
+     * @param rowStart The index of the first underscore of the row.
+     * @param rowEnd The index behind the last underscore of the row.
+     */
+    private void addUnderscoreMarkers(@NotNull String text, int rowStart, int rowEnd) {
+        int rowLength = rowEnd - rowStart;
+        if (rowLength == 1) {
+            this.formatMarkers.add(FormatMarker.UNDERSCORE, rowStart);
+            return;
+        }
+        if (rowLength > 3) return;
+        // What stands next to the row counts without the formatting codes in between, which are not shown
+        int before = rowStart - 1;
+        while ((before > 0) && isFormattingCodeCharacter(text, before)) before -= 2;
+        int behind = rowEnd;
+        while (((behind + 1) < text.length()) && isFormattingCode(text, behind)) behind += 2;
+        boolean whitespaceBefore = (before < 0) || isWhitespace(text.charAt(before));
+        boolean whitespaceBehind = (behind >= text.length()) || isWhitespace(text.charAt(behind));
+        boolean canOpen = !whitespaceBehind && (whitespaceBefore || !Character.isLetterOrDigit(text.charAt(before)));
+        boolean canClose = !whitespaceBefore && (whitespaceBehind || !Character.isLetterOrDigit(text.charAt(behind)));
+        if (canOpen) this.formatMarkers.add(FormatMarker.UNDERSCORE_PAIR_OPEN, rowStart);
+        if (canClose) this.formatMarkers.add(FormatMarker.UNDERSCORE_PAIR_CLOSE, rowStart);
+        if ((rowLength == 3) && (canOpen || canClose)) this.formatMarkers.add(FormatMarker.UNDERSCORE, rowStart + 2);
+    }
+
+    private static boolean isWhitespace(char character) {
+        return Character.isWhitespace(character) || Character.isSpaceChar(character);
     }
 
     /**
