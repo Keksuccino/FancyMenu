@@ -89,6 +89,8 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     protected boolean extendedBulletListMarkers = false;
     /** If a number with a "." or ")" and a space behind it starts a list item. */
     protected boolean numberedLists = false;
+    /** If a quote that starts with a marker line like "> [!NOTE]" is a callout. */
+    protected boolean callouts = false;
     protected boolean textShadow = true;
     protected boolean uiFontRenderingEnabled = false;
     protected float textOpacity = 1.0F;
@@ -432,6 +434,23 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     public MarkdownRenderer setNumberedListsEnabled(boolean enabled) {
         if (this.numberedLists != enabled) {
             this.numberedLists = enabled;
+            this.parseNeeded = true;
+        }
+        return this;
+    }
+
+    public boolean isCalloutsEnabled() {
+        return this.callouts;
+    }
+
+    /**
+     * Sets if a quote whose first line holds nothing but a callout marker, like "> [!NOTE]", is a callout.<br>
+     * The quote context of a callout tells its type with {@link MarkdownTextFragment.QuoteContext#calloutType}. The marker line shows no text
+     * and becomes one empty fragment, which has {@link MarkdownTextFragment#calloutMarker} set.
+     */
+    public MarkdownRenderer setCalloutsEnabled(boolean enabled) {
+        if (this.callouts != enabled) {
+            this.callouts = enabled;
             this.parseNeeded = true;
         }
         return this;

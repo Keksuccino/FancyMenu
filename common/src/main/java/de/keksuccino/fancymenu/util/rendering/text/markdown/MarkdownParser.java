@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.text.markdown;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.text.color.TextColorFormatter;
+import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.CalloutType;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.CodeBlockContext;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.HeadlineType;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.Hyperlink;
@@ -54,6 +55,8 @@ public class MarkdownParser {
     private static final String OPEN_SQUARE_BRACKETS = "[";
     private static final char GREATER_THAN_CHAR = '>';
     private static final String FORMATTING_CODE_QUOTE_PREFIX = "> ";
+    private static final String FORMATTING_CODE_CALLOUT_PREFIX = "[!";
+    private static final CalloutType[] CALLOUT_TYPES = CalloutType.values();
     private static final String SPACE = " ";
     private static final char SPACE_CHAR = ' ';
     private static final char MINUS_CHAR = '-';
@@ -120,6 +123,7 @@ public class MarkdownParser {
         MarkerLookahead lookahead = new MarkerLookahead(markdownText);
         boolean extendedBulletListMarkers = renderer.isExtendedBulletListMarkersEnabled();
         boolean numberedLists = renderer.isNumberedListsEnabled();
+        boolean callouts = renderer.isCalloutsEnabled();
         boolean queueNewLine = true;
         boolean italicUnderscore = false;
         boolean strikethroughDouble = false;
@@ -509,7 +513,18 @@ public class MarkdownParser {
                 if (isStartOfLine && (c == GREATER_THAN_CHAR) && (builder.codeBlockContext == null) && !builder.plainText) {
                     // The prefix opens a quote, and lines of an open quote that start with it stay part of that quote without showing it
                     if (markdownText.startsWith(FORMATTING_CODE_QUOTE_PREFIX, index)) {
-                        if (builder.quoteContext == null) builder.quoteContext = new QuoteContext();
+                        if (builder.quoteContext == null) {
+                            builder.quoteContext = new QuoteContext();
+                            CalloutType calloutType = callouts ? getCalloutType(markdownText, index + FORMATTING_CODE_QUOTE_PREFIX.length(), lineEnd) : null;
+                            if (calloutType != null) {
+                                // The marker line shows nothing. Its empty fragment is what keeps a callout without a body in the parsed text.
+                                builder.quoteContext.calloutType = calloutType;
+                                builder.calloutMarker = true;
+                                lastBuiltFragment = addFragment(fragments, builder.build(true, true));
+                                skipLine = true;
+                                continue;
+                            }
+                        }
                         charsToSkip = 1;
                         continue;
                     }
@@ -792,6 +807,24 @@ public class MarkdownParser {
             if (!allowedCharacter.test(text.charAt(i))) return false;
         }
         return true;
+    }
+
+    /**
+     * Returns the type of the callout marker ("[!NOTE]") that fills the text between the two indexes, or NULL if that text is no callout marker.<br>
+     * The case of the type does not matter, and nothing but spaces may follow the marker.
+     */
+    @Nullable
+    protected static CalloutType getCalloutType(@NotNull String text, int start, int end) {
+        if (!text.startsWith(FORMATTING_CODE_CALLOUT_PREFIX, start)) return null;
+        int typeStart = start + FORMATTING_CODE_CALLOUT_PREFIX.length();
+        for (CalloutType type : CALLOUT_TYPES) {
+            String name = type.name();
+            int typeEnd = typeStart + name.length();
+            if ((typeEnd < end) && (text.charAt(typeEnd) == CLOSE_SQUARE_BRACKETS_CHAR) && text.regionMatches(true, typeStart, name, 0, name.length()) && containsOnly(text, typeEnd + 1, end, IS_SPACE)) {
+                return type;
+            }
+        }
+        return null;
     }
 
     /**
@@ -1309,6 +1342,7 @@ public class MarkdownParser {
         @NotNull
         protected HeadlineType headlineType = HeadlineType.NONE;
         protected QuoteContext quoteContext = null;
+        protected boolean calloutMarker = false;
         protected CodeBlockContext codeBlockContext = null;
         protected ResourceLocation font = null;
         protected boolean plainText = false;
@@ -1353,6 +1387,8 @@ public class MarkdownParser {
             }
             frag.headlineType = headlineType;
             frag.quoteContext = quoteContext;
+            frag.calloutMarker = calloutMarker;
+            calloutMarker = false;
             if (quoteContext != null) {
                 quoteContext.quoteFragments.add(frag);
             }
