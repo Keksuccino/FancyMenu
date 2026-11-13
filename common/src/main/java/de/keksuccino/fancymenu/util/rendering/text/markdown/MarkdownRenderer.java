@@ -3,16 +3,12 @@ package de.keksuccino.fancymenu.util.rendering.text.markdown;
 import net.minecraft.client.gui.GuiGraphics;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
-import de.keksuccino.fancymenu.util.rendering.RenderScaleUtil;
-import de.keksuccino.fancymenu.util.rendering.RenderTranslationUtil;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyle;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyleOption;
-import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothFont;
 import de.keksuccino.fancymenu.util.rendering.ui.FocuslessContainerEventHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UITheme;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
-import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.Renderable;
@@ -20,7 +16,6 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.resources.language.I18n;
-import net.minecraft.network.chat.Component;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -110,9 +105,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     protected final List<MarkdownTextFragment> fragments = new ArrayList<>();
     final MarkdownTextWidthCache textWidthCache = new MarkdownTextWidthCache(this);
     final MarkdownScaling scaling = new MarkdownScaling(this);
-    /** The metrics of the font the fragments got parsed with. NULL until they get asked for the first time after a parse. */
-    @Nullable
-    private MarkdownFontMetrics fontMetrics = null;
+    final MarkdownTextFont textFont = new MarkdownTextFont(this);
     final MarkdownLayout layout = new MarkdownLayout(this);
     final MarkdownInteractions interactions = new MarkdownInteractions(this);
 
@@ -145,45 +138,9 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
         for (int i = this.layout.firstVisibleLine; (i < this.layout.visibleLinesEnd) && (i < this.lines.size()); i++) {
             MarkdownTextLine line = this.lines.get(i);
             if (!this.layout.isLineVisible(line)) continue;
-            line.offsetX = this.getRenderOffsetX(line);
+            line.offsetX = this.scaling.lineOffsetX(line);
             line.render(graphics, mouseX, mouseY, partial);
         }
-    }
-
-    protected float getRenderOffsetX(@NotNull MarkdownTextLine line) {
-        if (this.style.snapPositions.get()) {
-            return this.scaling.snapX(this.x + line.layoutOffsetX) - this.x;
-        }
-        if ((line.alignment == MarkdownLineAlignment.CENTERED) && !this.uiFontRenderingEnabled && line.isAlignmentAllowed(line.alignment)) {
-            // Odd-width centering can land on half GUI pixels. Vanilla bitmap text needs a physical-pixel-aligned origin, while UI fonts support fractional origins.
-            float renderTranslationX = RenderTranslationUtil.getCurrentRenderTranslationX();
-            return RenderScaleUtil.snapGuiCoordinateToPixel(this.x + line.layoutOffsetX, this.getRenderScale(), renderTranslationX) - this.x;
-        }
-        return line.layoutOffsetX;
-    }
-
-    /**
-     * Returns the metrics of the font the text gets drawn with.<br>
-     * Whatever changes the font makes the text get parsed again, so the metrics only get looked up once per parse.
-     */
-    @NotNull
-    protected MarkdownFontMetrics getFontMetrics() {
-        if (this.fontMetrics == null) this.fontMetrics = MarkdownFontMetrics.of(this);
-        return this.fontMetrics;
-    }
-
-    /**
-     * Returns the GUI scale the renderer gets drawn at, without what the render pose scales on top of it.
-     */
-    protected float getBaseRenderScale() {
-        return (this.parentRenderScale != null) ? this.parentRenderScale : (float)Minecraft.getInstance().getWindow().getGuiScale();
-    }
-
-    /**
-     * Returns how many screen pixels a GUI pixel of the renderer covers right now.
-     */
-    protected float getRenderScale() {
-        return (this.parentRenderScale != null) ? this.parentRenderScale : RenderScaleUtil.getCurrentRenderScale();
     }
 
     public void tick() {
@@ -272,7 +229,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
 
     protected void rebuildFragments() {
         this.fragments.clear();
-        this.fontMetrics = null;
+        this.textFont.forgetMetrics();
         if (this.renderText != null) {
             this.textWidthCache.beginParse();
             try {
@@ -867,66 +824,16 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     }
 
     /**
-     * Returns the color the given color gets drawn in, which has the alpha of the color multiplied with the opacity of the text.
+     * Returns the color the given color of the style gets drawn in, which has the alpha of the color multiplied with the opacity of the text.
      */
-    protected int getRenderColor(@NotNull DrawableColor color) {
-        return applyOpacity(color.getColorInt(), this.textOpacity);
-    }
-
     protected int getRenderColor(@NotNull MarkdownStyleOption.ColorOption color) {
-        return applyOpacity(color.argb(), this.textOpacity);
-    }
-
-    protected static int applyOpacity(int color, float opacity) {
-        int alpha = (int)((color >>> 24) * opacity);
-        return (color & 0x00FFFFFF) | (alpha << 24);
-    }
-
-    protected float getUnscaledTextWidth(@NotNull Component text) {
-        if (this.uiFontRenderingEnabled) {
-            return UIBase.getUITextWidth(text, UIBase.getUITextSizeNormal());
-        }
-        return this.font.width(text);
-    }
-
-    protected float getUnscaledTextWidth(@NotNull String text) {
-        if (this.uiFontRenderingEnabled) {
-            return UIBase.getUITextWidth(text, UIBase.getUITextSizeNormal());
-        }
-        return this.font.width(text);
-    }
-
-    protected float getUnscaledTextHeight() {
-        if (this.uiFontRenderingEnabled) {
-            float height = UIBase.getUITextHeight(UIBase.getUITextSizeNormal());
-            if (this.style.fullLineHeight.get() && !UIBase.shouldUseMinecraftFontForUIRendering()) {
-                // The line height of the UI font ends at its baseline, so its descenders hang out of the line
-                SmoothFont uiFont = UIBase.getUIFont();
-                float size = UIBase.getUITextSizeNormal();
-                height = Math.max(height, uiFont.getAscent(size) + uiFont.getYOffset(size) + uiFont.getDescent(size));
-            }
-            return height;
-        }
-        return this.font.lineHeight;
+        int argb = color.argb();
+        int alpha = (int)((argb >>> 24) * this.textOpacity);
+        return (argb & 0x00FFFFFF) | (alpha << 24);
     }
 
     protected float getUnscaledSpaceWidth() {
         return this.layout.getSpaceWidth();
-    }
-
-    /**
-     * Returns if text and the pixel art that goes with it get drawn with a shadow. The UI font has none, whatever the style says.
-     */
-    protected boolean hasTextShadow() {
-        return this.style.textShadow.get() && !this.uiFontRenderingEnabled;
-    }
-
-    protected void renderText(@NotNull GuiGraphics graphics, @NotNull Component text, float x, float y, int color, boolean shadow) {
-        if (this.uiFontRenderingEnabled) {
-            UIBase.renderText(graphics, text, x, y, color, UIBase.getUITextSizeNormal());
-            return;
-        }
-        graphics.drawString(this.font, text, (int)x, (int)y, color, shadow);
     }
 
     /**
@@ -951,22 +858,6 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     public MarkdownRenderer setHyperlinkFilter(@Nullable Predicate<String> hyperlinkFilter) {
         this.hyperlinkFilter = hyperlinkFilter;
         return this;
-    }
-
-    protected boolean isHyperlinkAllowed(@NotNull String link) {
-        return (this.hyperlinkFilter == null) || this.hyperlinkFilter.test(link);
-    }
-
-    protected void fireTextClickEvent(@NotNull String eventId) {
-        if (this.textEventHandler != null) {
-            this.textEventHandler.onTextClickEvent(eventId);
-        }
-    }
-
-    protected void fireTextHoverEvent(@NotNull String eventId) {
-        if (this.textEventHandler != null) {
-            this.textEventHandler.onTextHoverEvent(eventId);
-        }
     }
 
     /**
