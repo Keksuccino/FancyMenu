@@ -15,7 +15,7 @@ import java.util.Arrays;
  */
 final class MarkdownFormatMarkers {
 
-    static final int[] NO_INDEXES = new int[0];
+    private static final int[] NO_INDEXES = new int[0];
 
     /** The indexes of the markers in the text, for every {@link FormatMarker}. */
     final int[][] indexes = new int[FormatMarker.COUNT][];
@@ -64,7 +64,7 @@ final class MarkdownFormatMarkers {
     /**
      * Returns where in the indexes of the given type the first marker at or after the given index is, which is their count if there is none.
      */
-    int moveTo(@NotNull FormatMarker marker, int fromIndex) {
+    private int moveTo(@NotNull FormatMarker marker, int fromIndex) {
         int type = marker.ordinal();
         int[] indexes = this.indexes[type];
         int count = this.counts[type];
