@@ -266,7 +266,21 @@ public final class MarkdownStyle {
 
     // ---------------------------------------------------------------- Separators
 
+    public final EnumOption<MarkdownSeparatorStyle> separatorStyle = this.mode("separator_style", Group.SEPARATORS, Impact.LAYOUT, MarkdownSeparatorStyle.LINE, MarkdownSeparatorStyle.ORNAMENT, MarkdownSeparatorStyle.LINE);
+    /** The color of the line or lines of a separator. */
     public final ColorOption separatorColor = this.color("separator_color", Group.SEPARATORS, Impact.DRAW, rgb(169, 169, 169), PIXEL_ACCENT_DIM, this.theme(theme -> theme.ui_interface_generic_text_color, 46));
+    public final FloatOption separatorThickness = this.size("separator_thickness", Group.SEPARATORS, Impact.LAYOUT, 1.0F, 1.0F, 1.0F);
+    /** The shape in the middle of a {@link MarkdownSeparatorStyle#ORNAMENT} separator. */
+    public final EnumOption<MarkdownMarkerShape> separatorOrnamentShape = this.mode("separator_ornament_shape", Group.SEPARATORS, Impact.DRAW, MarkdownMarkerShape.DIAMOND, MarkdownMarkerShape.DIAMOND, MarkdownMarkerShape.DIAMOND);
+    public final ColorOption separatorOrnamentColor = this.color("separator_ornament_color", Group.SEPARATORS, Impact.DRAW, rgb(169, 169, 169), PIXEL_ACCENT, this.theme(theme -> theme.input_field_suggestions_text_color_selected));
+    /** The width and height of the area the ornament stands in. Pixel art ornaments are 5 pixels big and stand in the middle of it. */
+    public final FloatOption separatorOrnamentSize = this.size("separator_ornament_size", Group.SEPARATORS, Impact.LAYOUT, 5.0F, 5.0F, 5.0F);
+    /** The space between the ornament and the lines next to it. */
+    public final FloatOption separatorOrnamentGap = this.size("separator_ornament_gap", Group.SEPARATORS, Impact.DRAW, 2.0F, 2.0F, 2.0F);
+    /** The longest each of the two lines next to the ornament gets. 0 lets them reach to the edges of the text area. */
+    public final FloatOption separatorReach = this.size("separator_reach", Group.SEPARATORS, Impact.DRAW, 0.0F, 0.0F, 62.0F, 0.0F);
+    /** How much of the outer end of the lines next to the ornament fades out through dithering. */
+    public final FloatOption separatorFadeLength = this.size("separator_fade_length", Group.SEPARATORS, Impact.DRAW, 0.0F, 0.0F, 26.0F, 0.0F);
     public final FloatOption separatorSpaceAbove = this.size("separator_space_above", Group.SEPARATORS, Impact.LAYOUT, 0.0F, 7.0F, 8.0F);
     public final FloatOption separatorSpaceBelow = this.size("separator_space_below", Group.SEPARATORS, Impact.LAYOUT, 0.0F, 7.0F, 8.0F);
 
