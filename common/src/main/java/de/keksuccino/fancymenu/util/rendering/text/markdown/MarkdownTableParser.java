@@ -170,7 +170,8 @@ final class MarkdownTableParser {
         if (trimmed.startsWith(VERTICAL_BAR)) {
             trimmed = trimmed.substring(1);
         }
-        if (trimmed.endsWith(VERTICAL_BAR) && !isFormattingCodeCharacter(trimmed, trimmed.length() - 1)) {
+        // A pipe that is text of the last cell is not the pipe that closes the row
+        if (!trimmed.isEmpty() && isCellSeparator(trimmed, trimmed.length() - 1)) {
             trimmed = trimmed.substring(0, trimmed.length() - 1);
         }
         List<String> parts = splitByUnescapedPipes(trimmed);
