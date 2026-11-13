@@ -135,7 +135,7 @@ class MarkdownImageLayoutTest {
         for (MarkdownTextLine line : renderer.lines) {
             float lineHeight = 0;
             for (MarkdownTextFragment fragment : line.fragments) lineHeight = Math.max(lineHeight, fragment.getRenderHeight());
-            assertEquals(lineHeight, line.getLineHeight());
+            assertEquals(line.paddingTop + lineHeight + line.paddingBottom, line.getLineHeight());
             height += lineHeight + renderer.getLineSpacing();
         }
         assertEquals(height + (renderer.getBorder() * 2), renderer.getRealHeight());
