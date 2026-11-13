@@ -155,6 +155,34 @@ class MarkdownStyleTest {
     }
 
     @Test
+    void mutedTextOfTheNeutralLookSitsBetweenTheTextAndTheBackgroundOfTheUiTheme() {
+        MarkdownTestRenderer renderer = new MarkdownTestRenderer();
+        MarkdownStyle style = renderer.getStyle();
+        style.applyLook(MarkdownLook.NEUTRAL);
+        renderer.theme.ui_interface_generic_text_color = DrawableColor.of(250, 100, 0);
+        renderer.theme.ui_interface_background_color = DrawableColor.of(50, 100, 200);
+        renderer.tick();
+
+        for (ColorOption muted : List.of(style.quoteTextColor, style.imageCaptionColor, style.listNumberColor)) {
+            int color = muted.argb();
+            assertEquals(0xFF, color >>> 24);
+            int red = (color >> 16) & 0xFF;
+            int blue = color & 0xFF;
+            // Closer to the text than to the background, but not the text color itself
+            assertTrue((red > 150) && (red < 250), "red " + red);
+            assertEquals(100, (color >> 8) & 0xFF);
+            assertTrue((blue > 0) && (blue < 100), "blue " + blue);
+        }
+
+        // A dark theme with light text gets a muted color between its own two colors
+        renderer.theme.ui_interface_generic_text_color = DrawableColor.of(255, 255, 255);
+        renderer.theme.ui_interface_background_color = DrawableColor.of(0, 0, 0);
+        renderer.tick();
+        int gray = style.quoteTextColor.argb() & 0xFF;
+        assertTrue((gray > 127) && (gray < 255), "gray " + gray);
+    }
+
+    @Test
     void colorThatGetsSetStopsFollowingTheUiTheme() {
         MarkdownTestRenderer renderer = new MarkdownTestRenderer();
         MarkdownStyle style = renderer.getStyle();
