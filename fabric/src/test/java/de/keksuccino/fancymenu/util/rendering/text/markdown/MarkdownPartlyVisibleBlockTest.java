@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 class MarkdownPartlyVisibleBlockTest {
 
@@ -56,58 +57,70 @@ class MarkdownPartlyVisibleBlockTest {
     }
 
     @Test
-    void quoteLineGetsDrawnByTheLastFragmentOfTheQuoteWhileThatOneIsVisible() {
+    void quotePanelGetsDrawnByTheFirstLineOfTheQuoteWhileThatOneIsVisible() {
         MarkdownTestRenderer renderer = new MarkdownTestRenderer(QUOTE, 400);
         renderer.tick();
 
-        assertEquals(List.of(lastFragmentOfLine(renderer, "three")), quoteLineDrawers(renderer));
+        assertEquals(List.of(firstFragmentOfLine(renderer, "one")), quotePanelDrawers(renderer));
 
-        // The last line of the quote is only partly inside the visible range
-        renderer.setVisibleVerticalRange(0, renderer.fragmentContaining("three").parentLine.offsetY);
+        // The first line of the quote is only partly inside the visible range
+        MarkdownTextLine firstLine = renderer.fragmentContaining("one").parentLine;
+        renderer.setVisibleVerticalRange(firstLine.offsetY + firstLine.getLineHeight(), 1000);
 
-        assertEquals(List.of(lastFragmentOfLine(renderer, "three")), quoteLineDrawers(renderer));
+        assertEquals(List.of(firstFragmentOfLine(renderer, "one")), quotePanelDrawers(renderer));
     }
 
     @Test
-    void quoteLineGetsDrawnByTheLastVisibleLineOfTheQuote() {
+    void quotePanelGetsDrawnByTheFirstVisibleLineOfTheQuote() {
         MarkdownTestRenderer renderer = new MarkdownTestRenderer(QUOTE, 400);
         renderer.tick();
 
-        renderer.setVisibleVerticalRange(0, renderer.fragmentContaining("three").parentLine.offsetY - 1);
-        assertEquals(List.of(lastFragmentOfLine(renderer, "two")), quoteLineDrawers(renderer));
+        renderer.setVisibleVerticalRange(renderer.fragmentContaining("two").parentLine.offsetY, 1000);
+        assertEquals(List.of(firstFragmentOfLine(renderer, "two")), quotePanelDrawers(renderer));
 
-        renderer.setVisibleVerticalRange(0, renderer.fragmentContaining("two").parentLine.offsetY - 1);
-        assertEquals(List.of(lastFragmentOfLine(renderer, "one")), quoteLineDrawers(renderer));
+        renderer.setVisibleVerticalRange(renderer.fragmentContaining("three").parentLine.offsetY, 1000);
+        assertEquals(List.of(firstFragmentOfLine(renderer, "three")), quotePanelDrawers(renderer));
 
-        renderer.setVisibleVerticalRange(0, renderer.fragmentContaining("one").parentLine.offsetY - 1);
-        assertEquals(List.of(), quoteLineDrawers(renderer));
+        renderer.setVisibleVerticalRange(renderer.fragmentContaining("after").parentLine.offsetY, 1000);
+        assertEquals(List.of(), quotePanelDrawers(renderer));
     }
 
     @Test
-    void quoteLineStartsAtTheFirstLineOfTheQuoteNoMatterWhichLinesAreVisible() {
+    void quotePanelGetsDrawnOnceWhenATableSplitsTheLinesOfTheQuote() {
+        // A table inside a quote is no part of the quote, which goes on behind it
+        MarkdownTestRenderer renderer = new MarkdownTestRenderer("> one\n| a | b |\n| --- | --- |\n| c | d |\ntwo\n\nafter", 400);
+        renderer.tick();
+        assertSame(renderer.fragmentContaining("one").quoteContext, renderer.fragmentContaining("two").quoteContext);
+
+        assertEquals(List.of(firstFragmentOfLine(renderer, "one")), quotePanelDrawers(renderer));
+
+        renderer.setVisibleVerticalRange(renderer.tableFragment(0).parentLine.offsetY, 1000);
+        assertEquals(List.of(firstFragmentOfLine(renderer, "two")), quotePanelDrawers(renderer));
+    }
+
+    @Test
+    void quotePanelCoversTheWholeQuoteNoMatterWhichLinesAreVisible() {
         MarkdownTestRenderer renderer = new MarkdownTestRenderer(QUOTE, 400);
         renderer.tick();
         MarkdownTextFragment first = renderer.fragmentContaining("one").parentLine.fragments.get(0);
+        MarkdownTextLine lastLine = renderer.fragmentContaining("three").parentLine;
 
         // Scrolling moves the renderer, and lines outside the visible range don't render, so their fragments don't get moved
         renderer.setY(-500);
-        renderer.setVisibleVerticalRange(-500 + renderer.fragmentContaining("two").parentLine.offsetY, 1000);
+        renderer.setVisibleVerticalRange(-500 + renderer.fragmentContaining("two").parentLine.offsetY, -500 + renderer.fragmentContaining("two").parentLine.offsetY + 1);
 
-        assertEquals(-500 + first.parentLine.offsetY, first.quoteContext.getQuoteStart().getRenderLineY());
+        assertEquals(-500 + first.parentLine.offsetY, MarkdownQuotePainter.getTop(first.quoteContext));
+        assertEquals(-500 + lastLine.offsetY + lastLine.getLineHeight(), MarkdownQuotePainter.getBottom(first.quoteContext));
     }
 
-    private static MarkdownTextFragment lastFragmentOfLine(MarkdownTestRenderer renderer, String textInLine) {
-        List<MarkdownTextFragment> fragments = renderer.fragmentContaining(textInLine).parentLine.fragments;
-        return fragments.get(fragments.size() - 1);
-    }
-
-    private static List<MarkdownTextFragment> quoteLineDrawers(MarkdownTestRenderer renderer) {
+    /**
+     * Returns the first fragments of the lines that draw the panel of their quote.
+     */
+    private static List<MarkdownTextFragment> quotePanelDrawers(MarkdownTestRenderer renderer) {
         List<MarkdownTextFragment> drawers = new ArrayList<>();
         for (MarkdownTextLine line : renderer.lines) {
             if (!renderer.layout.isLineVisible(line)) continue;
-            for (MarkdownTextFragment fragment : line.fragments) {
-                if ((fragment.quoteContext != null) && fragment.drawsQuoteLine()) drawers.add(fragment);
-            }
+            if ((line.fragments.get(0).quoteContext != null) && line.drawsQuotePanel()) drawers.add(line.fragments.get(0));
         }
         return drawers;
     }
