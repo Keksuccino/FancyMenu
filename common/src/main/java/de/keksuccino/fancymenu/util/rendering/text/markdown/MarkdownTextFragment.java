@@ -653,6 +653,14 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     }
 
     public float getRenderWidth() {
+        return this.getRenderWidth(this.naturalLineBreakAfter || this.autoLineBreakAfter);
+    }
+
+    /**
+     * Returns the width the fragment has as the last or as another fragment of its render line.<br>
+     * The layout has to know what a fragment adds to a line when the line ends behind it before it decides that the line does.
+     */
+    protected float getRenderWidth(boolean endOfRenderLine) {
 
         // Handle table width - return actual table width for proper alignment
         if (this.isTable()) {
@@ -672,7 +680,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if ((this.quoteContext != null) && this.startOfRenderLine && (this.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT)) {
             f += this.parent.quoteIndent * this.getScale();
         }
-        if ((this.quoteContext != null) && (this.naturalLineBreakAfter || this.autoLineBreakAfter) && (this.alignment == MarkdownRenderer.MarkdownLineAlignment.RIGHT)) {
+        if ((this.quoteContext != null) && endOfRenderLine && (this.alignment == MarkdownRenderer.MarkdownLineAlignment.RIGHT)) {
             f += this.parent.quoteIndent;
         }
         if (this.bulletListLevel > 0 && this.startOfRenderLine) {
@@ -686,7 +694,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if ((this.codeBlockContext != null) && this.codeBlockContext.singleLine && (this.codeBlockContext.getBlockStart() == this)) {
             f += this.getScale();
         }
-        if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && (this.autoLineBreakAfter || this.naturalLineBreakAfter)) {
+        if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && endOfRenderLine) {
             f += 10 * this.getScale();
         }
         if ((this.codeBlockContext != null) && this.codeBlockContext.singleLine && (this.codeBlockContext.getBlockEnd() == this)) {
