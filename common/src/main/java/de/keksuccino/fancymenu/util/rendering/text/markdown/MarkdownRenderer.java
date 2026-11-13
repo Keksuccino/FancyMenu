@@ -97,6 +97,8 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
      */
     protected int fragmentStyleVersion = 0;
     protected final MarkdownStyle style;
+    /** If the text has list items that start with "+", which makes it read like patch notes. Looked up once per parse. */
+    protected boolean textHasPlusListItems = false;
     protected final List<MarkdownTextLine> lines = new ArrayList<>();
     protected final List<MarkdownTextFragment> fragments = new ArrayList<>();
     final MarkdownTextWidthCache textWidthCache = new MarkdownTextWidthCache(this);
@@ -269,6 +271,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
             try {
                 this.fragments.addAll(MarkdownParser.parse(this, this.renderText, this.parseMarkdown));
                 MarkdownTablePainter.prepareHeaders(this, this.fragments);
+                this.textHasPlusListItems = MarkdownListMarkerPainter.hasPlusItems(this.fragments);
             } finally {
                 this.textWidthCache.endParse();
             }

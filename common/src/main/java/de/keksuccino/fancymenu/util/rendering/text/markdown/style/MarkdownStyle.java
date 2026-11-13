@@ -136,6 +136,20 @@ public final class MarkdownStyle {
     public final FloatOption listSpaceBelow = this.size("list_space_below", Group.LISTS, Impact.LAYOUT, 0.0F, 5.0F, 6.0F);
     /** The options of the three list levels. Deeper levels look like the third one. */
     private final ListLevel[] listLevels = {new ListLevel(1), new ListLevel(2), new ListLevel(3)};
+    /** The marker of list items that start with "+", which stands for things that got added. */
+    public final EnumOption<MarkdownMarkerShape> listPlusMarkerShape = this.mode("list_plus_marker_shape", Group.LISTS, Impact.DRAW, MarkdownMarkerShape.PLUS, MarkdownMarkerShape.PLUS, MarkdownMarkerShape.PLUS);
+    public final ColorOption listPlusMarkerColor = this.color("list_plus_marker_color", Group.LISTS, Impact.DRAW, rgb(85, 255, 85), rgb(134, 223, 108), this.theme(theme -> theme.success_color));
+    /** When list items that start with "-" get the marker for things that got removed instead of the marker of their list level. */
+    public final EnumOption<MarkdownRemovedMarkerMode> listMinusMarkerMode = this.mode("list_minus_marker_mode", Group.LISTS, Impact.DRAW, MarkdownRemovedMarkerMode.AUTOMATIC, MarkdownRemovedMarkerMode.AUTOMATIC, MarkdownRemovedMarkerMode.AUTOMATIC);
+    /** The marker of list items that start with "-", where it stands for things that got removed. */
+    public final EnumOption<MarkdownMarkerShape> listMinusMarkerShape = this.mode("list_minus_marker_shape", Group.LISTS, Impact.DRAW, MarkdownMarkerShape.MINUS, MarkdownMarkerShape.MINUS, MarkdownMarkerShape.MINUS);
+    public final ColorOption listMinusMarkerColor = this.color("list_minus_marker_color", Group.LISTS, Impact.DRAW, rgb(255, 85, 85), rgb(255, 123, 107), this.theme(theme -> theme.error_color));
+    /** The marker of list items that start with "~", which stands for things that got changed. */
+    public final EnumOption<MarkdownMarkerShape> listTildeMarkerShape = this.mode("list_tilde_marker_shape", Group.LISTS, Impact.DRAW, MarkdownMarkerShape.WAVE, MarkdownMarkerShape.WAVE, MarkdownMarkerShape.WAVE);
+    public final ColorOption listTildeMarkerColor = this.color("list_tilde_marker_color", Group.LISTS, Impact.DRAW, rgb(85, 255, 255), PIXEL_LINK, this.theme(theme -> theme.info_color));
+    /** The marker of list items that start with "*", which stands for highlights. */
+    public final EnumOption<MarkdownMarkerShape> listAsteriskMarkerShape = this.mode("list_asterisk_marker_shape", Group.LISTS, Impact.DRAW, MarkdownMarkerShape.STAR, MarkdownMarkerShape.STAR, MarkdownMarkerShape.STAR);
+    public final ColorOption listAsteriskMarkerColor = this.color("list_asterisk_marker_color", Group.LISTS, Impact.DRAW, rgb(255, 170, 0), PIXEL_ACCENT, this.theme(theme -> theme.warning_color));
 
     // ---------------------------------------------------------------- Links and text events
 
