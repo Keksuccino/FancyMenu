@@ -15,8 +15,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * A single underscore opens and closes italic text. Two underscores open and close bold text like two asterisks do, but not inside of a word:
- * "__init__" is the bold word "init", and "my__var__name" stays as it is. Three underscores are both markers at once.
+ * A single underscore opens and closes italic text and two underscores open and close bold text like asterisks do, but not inside of a word:
+ * "_init_" is the italic and "__init__" the bold word "init", while "my_var_name" and "my__var__name" stay as they are. Three underscores are both markers at once.
  */
 class MarkdownParserUnderscoreTest {
 
@@ -155,6 +155,94 @@ class MarkdownParserUnderscoreTest {
         assertEquals("_italic rest", joinText(fragments));
         assertTrue(fragmentContaining(fragments, "italic").italic);
         assertFalse(fragmentContaining(fragments, "rest").italic);
+    }
+
+    /**
+     * The words say how they have to be formatted: "italic" or "none".
+     */
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "_italic_ none", "none _italic_", "none _italic_ none", "_italic italic_ none", "(_italic_) none", "\"_italic_\" none", "_italic_, none", "none _italic_.",
+            "_italic_\nnone", "none\n_italic_", "_italic_ none _italic_", "§c_italic_§r none", "none §c_italic_ none", "_italic §citalic_ none", "none/_italic_/none"
+    })
+    void singleUnderscoresAroundWordsOpenAndCloseItalicText(String text) {
+        List<MarkdownTextFragment> fragments = parse(text);
+
+        assertEquals(text.replaceAll("§.", "").replaceAll("[_\n]", ""), joinText(fragments));
+        for (MarkdownTextFragment fragment : fragments) {
+            String word = fragment.text.replaceAll("[ ()\",./]", "");
+            if (word.isEmpty()) continue;
+            assertEquals(word.equals("italic"), fragment.italic, () -> text + " <" + fragment.text + ">");
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            // Inside of a word
+            "snake_case_name", "config/my_mod/some_file.json", "2_000_000", "my_var and other_var", "a_b_c d_e_f", "日本_語_です", "_a_b", "a_b_",
+            // Without an underscore that can open, or without a later one that can close
+            "open_ text_", "_open _text", "a _ b _ c", "_ a _", "before _ inside_ after", "before_ inside_ after", "_open", "open_", "_", "a_ _b"
+    })
+    void singleUnderscoresThatAreNoMarkersStayText(String text) {
+        List<MarkdownTextFragment> fragments = parse(text);
+
+        assertEquals(text, joinText(fragments));
+        assertTrue(fragments.stream().noneMatch(fragment -> fragment.bold || fragment.italic));
+    }
+
+    @Test
+    void underscoreInsideOfAWordClosesNoItalicText() {
+        List<MarkdownTextFragment> closed = parse("_italic snake_case italic_ rest");
+        List<MarkdownTextFragment> open = parse("_open snake_case rest");
+
+        assertEquals("italic snake_case italic rest", joinText(closed));
+        assertTrue(fragmentContaining(closed, "snake_case").italic);
+        assertTrue(closed.get(closed.size() - 2).italic);
+        assertFalse(fragmentContaining(closed, "rest").italic);
+        assertEquals("_open snake_case rest", joinText(open));
+        assertTrue(open.stream().noneMatch(fragment -> fragment.italic));
+    }
+
+    @Test
+    void italicWordNextToWordsWithUnderscores() {
+        List<MarkdownTextFragment> fragments = parse("set max_stack_size in _your_ config/my_mod/some_file.json to 2_000_000");
+
+        assertEquals("set max_stack_size in your config/my_mod/some_file.json to 2_000_000", joinText(fragments));
+        for (MarkdownTextFragment fragment : fragments) {
+            assertEquals(fragment.text.trim().equals("your"), fragment.italic, () -> "<" + fragment.text + ">");
+        }
+    }
+
+    @Test
+    void formattingCodeNextToAnUnderscoreInsideOfAWordMakesItNoMarker() {
+        List<MarkdownTextFragment> fragments = parse("snake§c_case_§rname");
+
+        assertEquals("snake_case_name", joinText(fragments));
+        assertTrue(fragments.stream().noneMatch(fragment -> fragment.italic));
+    }
+
+    @Test
+    void thirdUnderscoreOfARowOnlyDoesWhatTheRowCanDo() {
+        // The row can open but not close, so its last underscore is no end of the italic text in front of it
+        List<MarkdownTextFragment> fragments = parse("_open ___text");
+
+        assertEquals("_open ___text", joinText(fragments));
+        assertTrue(fragments.stream().noneMatch(fragment -> fragment.bold || fragment.italic));
+    }
+
+    @Test
+    void asterisksInsideOfWordsStillOpenAndCloseItalicAndBoldText() {
+        List<MarkdownTextFragment> italic = parse("snake*case*name");
+        List<MarkdownTextFragment> bold = parse("snake**case**name");
+
+        assertEquals("snakecasename", joinText(italic));
+        assertTrue(fragmentContaining(italic, "case").italic);
+        assertFalse(fragmentContaining(italic, "snake").italic);
+        assertFalse(fragmentContaining(italic, "name").italic);
+        assertEquals("snakecasename", joinText(bold));
+        assertTrue(fragmentContaining(bold, "case").bold);
+        assertFalse(fragmentContaining(bold, "snake").bold);
+        assertFalse(fragmentContaining(bold, "name").bold);
     }
 
 }
