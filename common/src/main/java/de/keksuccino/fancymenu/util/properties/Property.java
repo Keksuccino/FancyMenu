@@ -1760,6 +1760,44 @@ public class Property<T> {
      */
     @NotNull
     public static ColorProperty hexColorProperty(@NotNull String key, @Nullable String defaultValue, @Nullable String currentValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        return buildHexColorProperty(key, defaultValue, currentValue, placeholders, false, contextMenuEntryLocalizationKeyBase);
+    }
+
+    /**
+     * Creates a hex color {@link String} property for a color that can be left away, like a background that is optional.
+     * <p>
+     * The property works like the one of {@link #hexColorProperty(String, String, String, boolean, String)}, but its context menu entry
+     * has an extra option that gives it no color, which sets its value to {@link ColorProperty#NO_COLOR}.
+     * Unlike a missing value, that value gets saved, so the property does not fall back to its default value when it gets loaded.
+     * </p>
+     *
+     * @param key the unique key used for lookup and serialization
+     * @param defaultValue the value used when no current value is present
+     * @param currentValue the initial current value
+     * @param placeholders whether placeholder tokens are allowed in input
+     * @param contextMenuEntryLocalizationKeyBase translation key base for the entry label
+     * @return a configured hex color string property
+     */
+    @NotNull
+    public static ColorProperty optionalHexColorProperty(@NotNull String key, @Nullable String defaultValue, @Nullable String currentValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        return buildHexColorProperty(key, defaultValue, currentValue, placeholders, true, contextMenuEntryLocalizationKeyBase);
+    }
+
+    /**
+     * Convenience overload that uses {@code defaultValue} as the initial current value.
+     *
+     * @see #optionalHexColorProperty(String, String, String, boolean, String)
+     */
+    @NotNull
+    public static ColorProperty optionalHexColorProperty(@NotNull String key, @Nullable String defaultValue, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
+        return optionalHexColorProperty(key, defaultValue, defaultValue, placeholders, contextMenuEntryLocalizationKeyBase);
+    }
+
+    /**
+     * @param optional whether the context menu entry has an option that gives the property no color
+     */
+    @NotNull
+    private static ColorProperty buildHexColorProperty(@NotNull String key, @Nullable String defaultValue, @Nullable String currentValue, boolean placeholders, boolean optional, @NotNull String contextMenuEntryLocalizationKeyBase) {
         ColorProperty p = new ColorProperty(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
         p.deserializationCodec = consumes -> consumes;
         p.serializationCodec = consumes -> consumes;
@@ -1890,6 +1928,26 @@ public class Property<T> {
 
             }
 
+            if (optional) {
+
+                subMenu.addClickableEntry("no_color", Component.translatable("fancymenu.context_menu.entries.color.no_color"),
+                                (contextMenu, entry) -> {
+                                    ContextMenuBuilder.StackContext<? extends PropertyHolder> stack = builder.stack(entry, consumes -> consumes.getProperty(key) != null);
+                                    if (!stack.isPrimary() || stack.isEmpty()) {
+                                        return;
+                                    }
+                                    builder.saveSnapshot();
+                                    builder.applyStackAppliers(entry, null);
+                                })
+                        .setStackable(true)
+                        .setStackApplier((stackEntry, value) -> {
+                            ColorProperty resolved = (ColorProperty) builder.self().getProperty(key);
+                            if (resolved != null) resolved.set(ColorProperty.NO_COLOR);
+                        })
+                        .setIcon(MaterialIcons.FORMAT_COLOR_RESET);
+
+            }
+
             subMenu.addSeparatorEntry("separator_before_reset");
 
             subMenu.addClickableEntry("reset_to_default", Component.translatable("fancymenu.common_components.reset"),
@@ -1917,7 +1975,7 @@ public class Property<T> {
                             Component valueComponent;
                             ColorProperty resolved = (ColorProperty) selectedObjects.get(0).getProperty(key);
                             String val = (resolved != null) ? resolved.get() : property.getDefault();
-                            if (val == null) {
+                            if ((val == null) || val.equals(ColorProperty.NO_COLOR)) {
                                 valueComponent = Component.literal("---").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().error_color.getColorInt()));
                             } else {
                                 if (Minecraft.getInstance().font.width(val) > 150) {
@@ -2788,6 +2846,12 @@ public class Property<T> {
     }
 
     public static class ColorProperty extends Property<String> {
+
+        /**
+         * The value of a property that got no color on purpose. Only the properties of {@link #optionalHexColorProperty(String, String, String, boolean, String)}
+         * offer it in their context menu entries, and whoever reads such a property has to check for it before it asks for the color.
+         */
+        public static final String NO_COLOR = "";
 
         @Nullable
         private DrawableColor cachedDrawable = null;
