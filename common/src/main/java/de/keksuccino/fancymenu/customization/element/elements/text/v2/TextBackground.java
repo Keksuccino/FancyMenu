@@ -38,6 +38,11 @@ public final class TextBackground {
     public final Property.BooleanProperty nineSlice;
     public final Property.IntegerProperty nineSliceBorderX;
     public final Property.IntegerProperty nineSliceBorderY;
+    /**
+     * If the texture of the user gets repeated instead of stretched, which keeps a pattern in it at its size. A nine-sliced texture repeats
+     * its edges and its center the way button backgrounds do, and a texture that is not nine-sliced gets repeated as a whole.
+     */
+    public final Property.BooleanProperty tile;
 
     private final int[] area = new int[4];
 
@@ -52,6 +57,7 @@ public final class TextBackground {
         this.nineSlice = holder.putProperty(Property.booleanProperty("background_nine_slice", true, "fancymenu.elements.buttons.textures.nine_slice"));
         this.nineSliceBorderX = holder.putProperty(Property.integerProperty("background_nine_slice_border_x", PANEL_TEXTURE_BORDER, "fancymenu.elements.buttons.textures.nine_slice.border_x"));
         this.nineSliceBorderY = holder.putProperty(Property.integerProperty("background_nine_slice_border_y", PANEL_TEXTURE_BORDER, "fancymenu.elements.buttons.textures.nine_slice.border_y"));
+        this.tile = holder.putProperty(Property.booleanProperty("background_tile", false, LOCALIZATION_KEY_BASE + "tile"));
     }
 
     /**
@@ -75,6 +81,8 @@ public final class TextBackground {
         int borderX = PANEL_TEXTURE_BORDER;
         int borderY = PANEL_TEXTURE_BORDER;
         boolean nineSliced = true;
+        // The built-in panel has nothing in it that stretching would bend out of shape, and stretching is fewer pieces to draw
+        boolean tiled = false;
         ResourceSupplier<ITexture> supplier = this.texture.get();
         if (supplier != null) {
             ITexture custom = supplier.get();
@@ -86,12 +94,15 @@ public final class TextBackground {
             nineSliced = this.nineSlice.getBoolean();
             borderX = Math.max(0, this.nineSliceBorderX.getInteger());
             borderY = Math.max(0, this.nineSliceBorderY.getInteger());
+            tiled = this.tile.getBoolean();
         }
         int[] area = this.updateArea(x, y, width, height, scrollArea.isVerticalScrollBarVisible(), scrollArea.isHorizontalScrollBarVisible());
         int color = RenderingUtils.multiplyAlphaInColor(-1, opacity);
         if (nineSliced) {
-            // Stretched instead of tiled, which keeps it at nine pieces for every size of the element
-            RenderingUtils.blitNineSlicedTexture(graphics, RenderPipelines.GUI_TEXTURED, location, area[0], area[1], area[2], area[3], textureWidth, textureHeight, borderY, borderX, borderY, borderX, color, true);
+            // A stretched texture is nine pieces for every size of the element, a tiled one is a piece per repetition
+            RenderingUtils.blitNineSlicedTexture(graphics, RenderPipelines.GUI_TEXTURED, location, area[0], area[1], area[2], area[3], textureWidth, textureHeight, borderY, borderX, borderY, borderX, color, !tiled);
+        } else if (tiled) {
+            RenderingUtils.blitRepeat(graphics, RenderPipelines.GUI_TEXTURED, location, area[0], area[1], area[2], area[3], textureWidth, textureHeight, color);
         } else {
             graphics.blit(RenderPipelines.GUI_TEXTURED, location, area[0], area[1], 0.0F, 0.0F, area[2], area[3], textureWidth, textureHeight, textureWidth, textureHeight, color);
         }
