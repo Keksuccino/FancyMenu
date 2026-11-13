@@ -52,6 +52,19 @@ class MarkdownListMarkerTest {
     }
 
     @Test
+    void markerOfAnItemInsideAQuoteStaysNextToTheTextOfTheItem() {
+        // A quote goes on over the lines behind it until a blank line ends it, so the second line is a list item of the quote
+        MarkdownTestRenderer renderer = new MarkdownTestRenderer("- plain\n\n> quote\n- quoted", 400);
+        renderer.setX(30).setY(50);
+        renderer.tick();
+        MarkdownTextFragment plain = renderer.fragmentContaining("plain");
+        MarkdownTextFragment quoted = renderer.fragmentContaining("quoted");
+
+        assertEquals(plain.getTextX() + renderer.getQuoteIndent(), quoted.getTextX());
+        assertEquals(plain.getTextX() - MarkdownListMarkerPainter.getMarkerX(plain), quoted.getTextX() - MarkdownListMarkerPainter.getMarkerX(quoted));
+    }
+
+    @Test
     void markerScalesWithTheTextOfItsItem() {
         MarkdownTestRenderer renderer = pixelRenderer("- item");
         renderer.setTextBaseScale(2.0F);
