@@ -56,10 +56,12 @@ class MarkdownTextScaleTest {
         renderer.setBulletListSpacing(4);
         renderer.setTextBaseScale(2.0F);
         renderer.tick();
-        MarkdownTextFragment bullet = renderer.fragmentContaining("bullet");
+        MarkdownTextLine bullet = renderer.fragmentContaining("bullet").parentLine;
+        MarkdownTextLine second = renderer.fragmentContaining("second").parentLine;
 
-        assertEquals((LINE_HEIGHT * 2) + 8, bullet.parentLine.getLineHeight());
-        assertEquals(bullet.y + 8, bullet.getTextY());
+        assertEquals(LINE_HEIGHT * 2, bullet.getLineHeight());
+        assertEquals(2 + 8, bullet.offsetY);
+        assertEquals(bullet.offsetY + bullet.getLineHeight() + 2 + 8, second.offsetY);
     }
 
     @Test
@@ -80,7 +82,10 @@ class MarkdownTextScaleTest {
 
         assertEquals(LINE_HEIGHT + 10, renderer.fragmentContaining("first").parentLine.getLineHeight());
         assertEquals(("middle".length() * CHAR_WIDTH) + 10 + 10, renderer.fragmentContaining("middle").getRenderWidth());
-        assertEquals(LINE_HEIGHT + 3, renderer.fragmentContaining("bullet").parentLine.getLineHeight());
+        MarkdownTextLine bullet = renderer.fragmentContaining("bullet").parentLine;
+        MarkdownTextLine beforeBullet = renderer.lines.get(renderer.lines.indexOf(bullet) - 1);
+        assertEquals(LINE_HEIGHT, bullet.getLineHeight());
+        assertEquals(beforeBullet.offsetY + beforeBullet.getLineHeight() + 2 + 3, bullet.offsetY);
         MarkdownTextFragment codeEnd = renderer.fragmentContaining("code");
         assertEquals((codeEnd.text.length() * CHAR_WIDTH) + 1, codeEnd.getRenderWidth());
     }
