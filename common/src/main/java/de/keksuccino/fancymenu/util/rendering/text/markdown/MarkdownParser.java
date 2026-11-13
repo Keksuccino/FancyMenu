@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.util.rendering.text.color.TextColorFormatter;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.CodeBlockContext;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.HeadlineType;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.Hyperlink;
+import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.ListItemMarker;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.QuoteContext;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
@@ -55,7 +56,6 @@ public class MarkdownParser {
     private static final String FORMATTING_CODE_QUOTE_PREFIX = "> ";
     private static final String SPACE = " ";
     private static final char SPACE_CHAR = ' ';
-    private static final String FORMATTING_CODE_BULLET_LIST_PREFIX = "- ";
     private static final char MINUS_CHAR = '-';
     private static final char PLUS_CHAR = '+';
     private static final char DOT_CHAR = '.';
@@ -114,6 +114,7 @@ public class MarkdownParser {
 
         FragmentBuilder builder = new FragmentBuilder(renderer);
         MarkerLookahead lookahead = new MarkerLookahead(markdownText);
+        boolean extendedBulletListMarkers = renderer.isExtendedBulletListMarkersEnabled();
         boolean queueNewLine = true;
         boolean italicUnderscore = false;
         boolean strikethroughDouble = false;
@@ -308,6 +309,30 @@ public class MarkdownParser {
                     }
                 }
 
+                // Handle List Items (all levels)
+                // Markers that are format markers as well start a list item first, so this has to come before the formats
+                if (isStartOfLine && (builder.codeBlockContext == null) && !builder.plainText) {
+                    // The marker of an item follows 2 spaces for every level below the first one
+                    int markerStart = index;
+                    while ((markerStart < lineEnd) && (markdownText.charAt(markerStart) == SPACE_CHAR)) markerStart++;
+                    int markerEnd = getListItemMarkerEnd(markdownText, markerStart, extendedBulletListMarkers);
+                    if (markerEnd != -1) {
+                        int level = ((markerStart - index) / 2) + 1;
+
+                        if (level <= 10) {
+                            // Skips the indent, the marker and the space behind it. The current char is consumed already.
+                            charsToSkip = markerEnd - index;
+
+                            // Configure builder
+                            builder.bulletListLevel = level;
+                            builder.bulletListItemStart = true;
+                            builder.listItemMarker = getListItemMarker(markdownText.charAt(markerStart));
+
+                            continue;
+                        }
+                    }
+                }
+
                 //Handle Bold
                 if ((c == ASTERISK_CHAR) && !isCharacterEscaped(markdownText, index)) {
                     if (!builder.bold && (builder.codeBlockContext == null) && !builder.plainText) {
@@ -496,26 +521,6 @@ public class MarkdownParser {
                     }
                 }
 
-                // Handle Bullet Lists (all levels)
-                if (isStartOfLine && (builder.codeBlockContext == null) && !builder.plainText) {
-                    // Match any bullet list prefix (supports 2 spaces per level)
-                    int indentSpaces = getBulletListIndent(markdownText, index);
-                    if (indentSpaces != -1) {
-                        int level = (indentSpaces / 2) + 1;
-
-                        if (level <= 10) {
-                            // Calculate characters to skip (indent + "- "), subtract one because the current char is already consumed
-                            charsToSkip = indentSpaces + 1;
-
-                            // Configure builder
-                            builder.bulletListLevel = level;
-                            builder.bulletListItemStart = true;
-
-                            continue;
-                        }
-                    }
-                }
-
                 //Handle Separation Line
                 if (isStartOfLine && (c == MINUS_CHAR) && (builder.codeBlockContext == null) && !builder.plainText) {
                     if (markdownText.startsWith(FORMATTING_CODE_SEPARATION_LINE_PREFIX, index) && containsOnly(markdownText, index, lineEnd, IS_SEPARATION_LINE_CHARACTER)) {
@@ -670,6 +675,7 @@ public class MarkdownParser {
                 builder.headlineType = HeadlineType.NONE;
                 builder.separationLine = false;
                 builder.bulletListLevel = 0;
+                builder.listItemMarker = ListItemMarker.NONE;
                 queueNewLine = true;
             }
 
@@ -782,12 +788,34 @@ public class MarkdownParser {
     }
 
     /**
-     * Returns the number of spaces in front of the bullet list prefix the line at the given index starts with, or -1 if it does not start with one.
+     * Returns the index of the space behind the list item marker that starts at the given index, or -1 if no list item starts there.<br>
+     * A list item starts with its marker and a space. The marker is "-" or, if the extended markers are enabled, "+", "*" or "~".
      */
-    protected static int getBulletListIndent(@NotNull String text, int lineStart) {
-        int prefixStart = lineStart;
-        while ((prefixStart < text.length()) && (text.charAt(prefixStart) == SPACE_CHAR)) prefixStart++;
-        return text.startsWith(FORMATTING_CODE_BULLET_LIST_PREFIX, prefixStart) ? (prefixStart - lineStart) : -1;
+    protected static int getListItemMarkerEnd(@NotNull String text, int markerStart, boolean extendedBulletListMarkers) {
+        if (markerStart >= text.length()) return -1;
+        ListItemMarker marker = getListItemMarker(text.charAt(markerStart));
+        if ((marker == ListItemMarker.NONE) || (!extendedBulletListMarkers && (marker != ListItemMarker.DASH))) return -1;
+        int markerEnd = markerStart + 1;
+        return text.startsWith(SPACE, markerEnd) ? markerEnd : -1;
+    }
+
+    /**
+     * Returns the marker of the list items that start with the given character, or NONE if no list item starts with it.
+     */
+    @NotNull
+    protected static ListItemMarker getListItemMarker(char character) {
+        switch (character) {
+            case MINUS_CHAR:
+                return ListItemMarker.DASH;
+            case PLUS_CHAR:
+                return ListItemMarker.PLUS;
+            case ASTERISK_CHAR:
+                return ListItemMarker.ASTERISK;
+            case TILDE_CHAR:
+                return ListItemMarker.TILDE;
+            default:
+                return ListItemMarker.NONE;
+        }
     }
 
     @Nullable
@@ -1237,6 +1265,8 @@ public class MarkdownParser {
         protected boolean bulletListItemStart = false;
         protected int bulletListLevel = 0;
         @NotNull
+        protected ListItemMarker listItemMarker = ListItemMarker.NONE;
+        @NotNull
         protected MarkdownRenderer.MarkdownLineAlignment alignment = MarkdownRenderer.MarkdownLineAlignment.LEFT;
         protected Hyperlink hyperlink = null;
         protected MarkdownTextFragment.TextClickEvent clickEvent = null;
@@ -1269,6 +1299,7 @@ public class MarkdownParser {
             frag.strikethrough = strikethrough;
             frag.minecraftFormatting = minecraftFormatting;
             frag.bulletListLevel = bulletListLevel;
+            frag.listItemMarker = listItemMarker;
             frag.bulletListItemStart = bulletListItemStart;
             bulletListItemStart = false;
             frag.alignment = alignment;
