@@ -10,13 +10,6 @@ import org.jetbrains.annotations.NotNull;
  */
 final class MarkdownFontMetrics {
 
-    /**
-     * The font of Minecraft draws its letters on a grid of 9 rows: capital letters fill the upper 7 rows, the 8th row holds descenders,
-     * and the 9th one stays empty. Lowercase letters like "x" are 5 rows tall,
-     * underlines fill the 9th row, and every letter is followed by one empty column. Resource packs draw other letters onto the same grid, and the font has no way to ask it for these numbers.
-     */
-    private static final MarkdownFontMetrics MINECRAFT = new MarkdownFontMetrics(7.0F, 5.0F, 1.0F, 1.0F, 1.0F);
-
     /** The distance from the top of a line to the baseline its letters stand on. */
     final float baseline;
     /** The height of lowercase letters without an ascender, like "x". */
@@ -26,13 +19,19 @@ final class MarkdownFontMetrics {
     final float underlineThickness;
     /** The width of the empty space the font puts behind the last letter of a text. */
     final float glyphSpacing;
+    /** The width of the letter "m", which is what the cells of fixed-width text are as wide as by default. */
+    final float cellWidth;
+    /** If the font is made of pixels, which only stay sharp at whole positions. */
+    final boolean pixelFont;
 
-    private MarkdownFontMetrics(float baseline, float xHeight, float underlineOffset, float underlineThickness, float glyphSpacing) {
+    private MarkdownFontMetrics(float baseline, float xHeight, float underlineOffset, float underlineThickness, float glyphSpacing, float cellWidth, boolean pixelFont) {
         this.baseline = baseline;
         this.xHeight = xHeight;
         this.underlineOffset = underlineOffset;
         this.underlineThickness = underlineThickness;
         this.glyphSpacing = glyphSpacing;
+        this.cellWidth = cellWidth;
+        this.pixelFont = pixelFont;
     }
 
     /**
@@ -40,11 +39,17 @@ final class MarkdownFontMetrics {
      */
     @NotNull
     static MarkdownFontMetrics of(@NotNull MarkdownRenderer renderer) {
+        float cellWidth = renderer.getUnscaledTextWidth("m");
         // The UI draws with the Minecraft font if the user prefers it or the smooth font failed to load
-        if (!renderer.uiFontRenderingEnabled || UIBase.shouldUseMinecraftFontForUIRendering()) return MINECRAFT;
+        if (!renderer.uiFontRenderingEnabled || UIBase.shouldUseMinecraftFontForUIRendering()) {
+            // The font of Minecraft draws its letters on a grid of 9 rows: capital letters fill the upper 7 rows, the 8th row holds descenders,
+            // and underlines fill the 9th one. Lowercase letters like "x" are 5 rows tall, and every letter is followed by one empty column.
+            // Resource packs draw other letters onto the same grid, and the font has no way to ask it for these numbers.
+            return new MarkdownFontMetrics(7.0F, 5.0F, 1.0F, 1.0F, 1.0F, cellWidth, true);
+        }
         SmoothFont font = UIBase.getUIFont();
         float size = UIBase.getUITextSizeNormal();
-        return new MarkdownFontMetrics(font.getAscent(size) + font.getYOffset(size), font.getXHeight(size), font.getUnderlineOffset(size), font.getUnderlineThickness(size), 0.0F);
+        return new MarkdownFontMetrics(font.getAscent(size) + font.getYOffset(size), font.getXHeight(size), font.getUnderlineOffset(size), font.getUnderlineThickness(size), 0.0F, cellWidth, false);
     }
 
 }
