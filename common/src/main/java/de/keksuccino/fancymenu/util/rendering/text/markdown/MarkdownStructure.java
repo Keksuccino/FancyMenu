@@ -295,7 +295,8 @@ final class MarkdownStructure {
                         continue;
                     }
                 }
-                if (isStartOfLine && quote && containsOnly(text, index, lineEnd, IS_TRIMMED_WHITESPACE)) {
+                // An empty line ends the quote. Empty lines of a code block or of plain text inside of the quote are text of those.
+                if (isStartOfLine && quote && markdown && containsOnly(text, index, lineEnd, IS_TRIMMED_WHITESPACE)) {
                     quote = false;
                     // The rest of the line still counts as the start of a line
                     this.addEvent(index, Event.QUOTE_END, 0, 0);
