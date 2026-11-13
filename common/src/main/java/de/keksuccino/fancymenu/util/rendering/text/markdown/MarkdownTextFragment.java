@@ -64,6 +64,13 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
      */
     @NotNull
     public ListItemMarker listItemMarker = ListItemMarker.NONE;
+    /**
+     * The number of the numbered list item of this fragment exactly as it was typed, with the "." or ")" behind it, like "1." or "07)".
+     * NULL if the marker of the item is not {@link ListItemMarker#NUMBER}.<br>
+     * It is set on the same fragments as {@link #listItemMarker}.
+     */
+    @Nullable
+    public String listItemNumber = null;
     @NotNull
     public MarkdownRenderer.MarkdownLineAlignment alignment = MarkdownRenderer.MarkdownLineAlignment.LEFT;
     public Hyperlink hyperlink = null;
@@ -898,7 +905,8 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         DASH, // -
         PLUS, // +
         ASTERISK, // *
-        TILDE // ~
+        TILDE, // ~
+        NUMBER // 1. or 1)
     }
 
     public static class TableContext {
