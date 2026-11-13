@@ -40,7 +40,7 @@ final class MarkdownHeadlinePainter {
         float right = renderer.x + renderer.getRealWidth() - scaling.padding() - scaling.sized(renderer.style.blockEdgeInset.get());
         float thickness = scaling.sized(headline.decorationThickness.get());
         // Half a GUI pixel is a whole screen pixel from a GUI scale of 2 on. Below that, a thinner line would vanish between two screen pixels.
-        if (renderer.getGuiScale() <= 1.0F) thickness = Math.max(thickness, 1.0F);
+        if (renderer.getBaseRenderScale() <= 1.0F) thickness = Math.max(thickness, 1.0F);
         int color = renderer.getRenderColor(headline.decorationColor);
         if (decoration == MarkdownHeadlineDecoration.LEADER) {
             if (line.alignment != MarkdownRenderer.MarkdownLineAlignment.LEFT) return;
