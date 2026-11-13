@@ -1394,7 +1394,8 @@ public class MarkdownParser {
                     }
 
                     //Handle Plain Text Single Line
-                    if ((c == SEMICOLON_CHAR) && !text.startsWith(FORMATTING_CODE_PLAIN_TEXT_MULTI_LINE_PREFIX_SUFFIX, index) && text.startsWith(FORMATTING_CODE_PLAIN_TEXT_SINGLE_LINE_PREFIX_SUFFIX, index)) {
+                    // Plain text opens nowhere inside of code, where its markers are text like everything else
+                    if ((c == SEMICOLON_CHAR) && !code && !text.startsWith(FORMATTING_CODE_PLAIN_TEXT_MULTI_LINE_PREFIX_SUFFIX, index) && text.startsWith(FORMATTING_CODE_PLAIN_TEXT_SINGLE_LINE_PREFIX_SUFFIX, index)) {
                         if (!plainText && lookahead.existsFrom(LookaheadMarker.PLAIN_TEXT_SINGLE_LINE, index + 2)) {
                             this.addEvent(index, Event.PLAIN_TEXT_OPEN, 0, 0);
                             plainText = true;
@@ -1405,8 +1406,7 @@ public class MarkdownParser {
                             this.addEvent(index, Event.PLAIN_TEXT_CLOSE, 0, 0);
                             plainText = false;
                             index++;
-                            // Plain text can be inside of code, which goes on behind it then
-                            if ((linkLabelEnd == LINK_LABEL_END_UNKNOWN) && !code) {
+                            if (linkLabelEnd == LINK_LABEL_END_UNKNOWN) {
                                 linkLabelEnd = this.findLinkLabelEndAgain(text, linkOpenEvent, index + 1);
                                 linkTargetEnd = this.events[linkOpenEvent + 3];
                             }
@@ -1415,7 +1415,7 @@ public class MarkdownParser {
                     }
 
                     //Handle Plain Text Multi Line
-                    if (isStartOfLine && (c == SEMICOLON_CHAR) && (remainingLineLength == 3) && text.startsWith(FORMATTING_CODE_PLAIN_TEXT_MULTI_LINE_PREFIX_SUFFIX, index)) {
+                    if (isStartOfLine && (c == SEMICOLON_CHAR) && !code && (remainingLineLength == 3) && text.startsWith(FORMATTING_CODE_PLAIN_TEXT_MULTI_LINE_PREFIX_SUFFIX, index)) {
                         if (!plainText && lookahead.existsFrom(LookaheadMarker.PLAIN_TEXT_MULTI_LINE_END, index + 3)) {
                             this.addEvent(index, Event.PLAIN_TEXT_BLOCK_OPEN, 0, 0);
                             plainText = true;
@@ -1460,7 +1460,8 @@ public class MarkdownParser {
 
             }
 
-            // Code or plain text that runs to the end of the text leaves no end for the label it holds the bracket of
+            // A link needs the end of its label. Code and plain text always close before the text ends, so this only happens
+            // if something else took the marker that closes them, like a custom formatting code that uses a character of that marker.
             if (linkLabelEnd == LINK_LABEL_END_UNKNOWN) this.removeEvent(linkOpenEvent);
 
             if (this.eventsEnd > 0) this.nextEventIndex = this.events[0];
