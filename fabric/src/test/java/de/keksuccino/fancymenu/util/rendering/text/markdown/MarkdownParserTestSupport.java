@@ -28,7 +28,18 @@ final class MarkdownParserTestSupport {
     }
 
     static List<MarkdownTextFragment> parse(String text) {
-        return MarkdownParser.parse(new MarkdownRenderer(TEST_FONT), text, true);
+        return parse(renderer(), text);
+    }
+
+    /**
+     * Parses the text with the settings of the given renderer, which is how tests switch on the syntax that is off by default.
+     */
+    static List<MarkdownTextFragment> parse(MarkdownRenderer renderer, String text) {
+        return MarkdownParser.parse(renderer, text, true);
+    }
+
+    static MarkdownRenderer renderer() {
+        return new MarkdownRenderer(TEST_FONT);
     }
 
     static MarkdownTextFragment fragmentContaining(List<MarkdownTextFragment> fragments, String text) {
