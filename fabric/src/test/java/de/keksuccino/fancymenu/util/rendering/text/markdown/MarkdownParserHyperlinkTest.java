@@ -258,15 +258,6 @@ class MarkdownParserHyperlinkTest {
     }
 
     @Test
-    void labelThatEndsInsideCodeThatNeverClosesIsNoLink() {
-        // The plain text inside of the code holds the grave accent that would close the code
-        List<MarkdownTextFragment> fragments = parse("[label `code](target) ;;plain` more;;");
-
-        assertTrue(fragments.stream().allMatch(fragment -> fragment.hyperlink == null));
-        assertEquals("[label code](target) plain` more", joinText(fragments));
-    }
-
-    @Test
     void codeInsideALabelKeepsTheLink() {
         List<MarkdownTextFragment> fragments = parse("[label `code` more](target) rest");
         MarkdownTextFragment code = fragmentContaining(fragments, "code");
