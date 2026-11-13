@@ -23,6 +23,18 @@ public enum MarkdownMarkerShape {
     /** Pixel art: a star. */
     STAR,
     /** Pixel art: a diamond. */
-    DIAMOND
+    DIAMOND,
+    /** A smooth filled circle as big as the marker size of the style. */
+    DISC,
+    /** A smooth circle line as big as the marker size of the style. */
+    RING,
+    /** An icon of the UI: a plus sign. Icons are as tall as a capital letter of the text. */
+    ICON_ADD,
+    /** An icon of the UI: a minus sign. */
+    ICON_REMOVE,
+    /** An icon of the UI: a pen. */
+    ICON_EDIT,
+    /** An icon of the UI: a star. */
+    ICON_STAR
 
 }

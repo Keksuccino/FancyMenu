@@ -41,7 +41,7 @@ final class MarkdownSeparatorPainter {
         float center = left + scaling.snapOffset((right - left) / 2);
         float ornamentLeft = center - ((float) Math.floor(style.separatorOrnamentSize.get() / 2) * pixel);
         float ornamentRight = ornamentLeft + ornamentSize;
-        MarkdownPaint.marker(graphics, renderer, style.separatorOrnamentShape.get(), ornamentLeft, fragment.y + ((height - ornamentSize) / 2), ornamentSize, pixel, renderer.getRenderColor(style.separatorOrnamentColor));
+        MarkdownPaint.marker(graphics, renderer, style.separatorOrnamentShape.get(), ornamentLeft, fragment.y + ((height - ornamentSize) / 2), ornamentSize, pixel, ornamentSize, renderer.getRenderColor(style.separatorOrnamentColor));
 
         // Both lines are equally long and stay one pixel away from the edges of the text area
         float lineY = fragment.y + ((height - thickness) / 2);

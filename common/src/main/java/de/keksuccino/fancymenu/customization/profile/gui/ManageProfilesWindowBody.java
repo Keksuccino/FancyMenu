@@ -8,8 +8,8 @@ import de.keksuccino.fancymenu.customization.profile.ProfileTasks;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.input.FileDragTracker;
 import de.keksuccino.fancymenu.util.input.InputConstants;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.ScrollableMarkdownRenderer;
+import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownLook;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.UISounds;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -315,8 +315,9 @@ public class ManageProfilesWindowBody extends PiPWindowBody {
 
     private void styleDescriptionRenderer() {
         this.descriptionRenderer.getMarkdownRenderer().setAutoLineBreakingEnabled(true);
-        this.descriptionRenderer.getMarkdownRenderer().setTextBaseColor(DrawableColor.of(ProfileUiRendering.getTextColor()));
-        this.descriptionRenderer.getMarkdownRenderer().setTextShadow(false);
+        this.descriptionRenderer.getMarkdownRenderer().getStyle().applyLook(MarkdownLook.NEUTRAL);
+        // The window can have a blurred background, which has a text color of its own
+        this.descriptionRenderer.getMarkdownRenderer().getStyle().textColor.follow(ProfileUiRendering::getTextColor);
         this.descriptionRenderer.getMarkdownRenderer().setUIFontRenderingEnabled(true);
         // Descriptions come from other users, so links must never open local files or programs
         this.descriptionRenderer.getMarkdownRenderer().setHyperlinkFilter(link -> ProfileMetadata.parseWebUri(link) != null);
