@@ -16,6 +16,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.resources.language.I18n;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -34,7 +35,12 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
      * so the renderer always has to ask it for its placeholders with {@link PlaceholderParser#replacePlaceholdersWithoutLengthLimit(String, boolean)}.
      */
     private static final int MAX_TEXT_LENGTH = 45000;
+    private static final String NEWLINE_PERCENT = "%n%";
+    private static final String NEWLINE = "\n";
+    private static final String NEWLINE_R = "\r";
+    private static final String NEWLINE_ESCAPED = "\\n";
     private static final String EMPTY_STRING = "";
+    private static final String HTML_BREAK = "<br>";
 
     protected boolean parseMarkdown = true;
     @NotNull
@@ -244,7 +250,11 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     @NotNull
     protected String buildRenderText() {
         String t = PlaceholderParser.replacePlaceholdersWithoutLengthLimit(this.text, true);
-        return MarkdownRenderTextNormalizer.normalize(t, this.removeHtmlBreaks);
+        t = StringUtils.replace(t, NEWLINE_PERCENT, NEWLINE);
+        t = StringUtils.replace(t, NEWLINE_R, NEWLINE);
+        t = StringUtils.replace(t, NEWLINE_ESCAPED, NEWLINE);
+        if (this.removeHtmlBreaks) t = StringUtils.replace(t, HTML_BREAK, EMPTY_STRING);
+        return t;
     }
 
     /**

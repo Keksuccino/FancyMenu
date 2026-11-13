@@ -433,7 +433,9 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     }
 
     public float getTextRenderX() {
-        return MarkdownTextPositioning.calculateRenderCoordinate(this.getTextX(), this.getScale());
+        float scale = this.getScale();
+        if (scale <= 0.0F) return 0.0F;
+        return this.getTextX() / scale;
     }
 
     /**
@@ -491,7 +493,9 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     }
 
     public float getTextRenderY() {
-        return MarkdownTextPositioning.calculateRenderCoordinate(this.getTextY(), this.getScale());
+        float scale = this.getScale();
+        if (scale <= 0.0F) return 0.0F;
+        return this.getTextY() / scale;
     }
 
     public float getRenderWidth() {
