@@ -130,7 +130,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             });
         } else if (this.separationLine) {
 
-            RenderingUtils.fillF(graphics, this.parent.x + this.parent.border, this.y, this.parent.x + this.parent.getRealWidth() - this.parent.border, this.y + this.getRenderHeight(), this.parent.separationLineColor.getColorIntWithAlpha(this.parent.textOpacity));
+            RenderingUtils.fillF(graphics, this.parent.x + this.parent.border, this.y, this.parent.x + this.parent.getRealWidth() - this.parent.border, this.y + this.getRenderHeight(), this.parent.getRenderColor(this.parent.separationLineColor));
             RenderingUtils.resetShaderColor(graphics);
 
         } else {
@@ -145,7 +145,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                 // Vanilla text extraction only accepts integer draw coordinates. Translate to the exact text origin and draw at local zero so a fractional scale never requires dividing and truncating its absolute position, which would move glyphs into the parent's scissor area.
                 graphics.pose().translate(this.getTextX(), this.getTextY());
                 graphics.pose().scale(scale, scale);
-                this.parent.renderText(graphics, this.getRenderComponent(), 0.0F, 0.0F, this.parent.textBaseColor.getColorIntWithAlpha(this.parent.textOpacity), this.parent.textShadow && (this.codeBlockContext == null));
+                this.parent.renderText(graphics, this.getRenderComponent(), 0.0F, 0.0F, this.parent.getRenderColor(this.parent.textBaseColor), this.parent.textShadow && (this.codeBlockContext == null));
             } finally {
                 graphics.pose().popMatrix();
             }
@@ -181,7 +181,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             float currentX = tableX;
 
             // Draw row background
-            RenderingUtils.fillF(graphics, tableX, currentY, tableX + actualTableWidth, currentY + rowHeight, this.tableContext.getRowBackgroundColor(this.parent, rowIndex).getColorIntWithAlpha(this.parent.textOpacity));
+            RenderingUtils.fillF(graphics, tableX, currentY, tableX + actualTableWidth, currentY + rowHeight, this.parent.getRenderColor(this.tableContext.getRowBackgroundColor(this.parent, rowIndex)));
 
             // Render cells
             for (int cellIndex = 0; cellIndex < row.cells.size(); cellIndex++) {
@@ -229,7 +229,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                             if (fragment.text.endsWith(" ")) {
                                 endX -= (this.parent.getUnscaledSpaceWidth() * fragment.getScale());
                             }
-                            renderCodeBlockBackground(graphics, codeBlockStartX, fragment.y - 2, endX, fragment.y + fragment.getTextRenderHeight(), this.parent.codeBlockSingleLineColor.getColorIntWithAlpha(this.parent.textOpacity));
+                            renderCodeBlockBackground(graphics, codeBlockStartX, fragment.y - 2, endX, fragment.y + fragment.getTextRenderHeight(), this.parent.getRenderColor(this.parent.codeBlockSingleLineColor));
                             currentCodeBlock = null;
                         }
                     } else {
@@ -256,7 +256,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         }
 
         // Draw table borders
-        int lineColor = this.parent.tableLineColor.getColorIntWithAlpha(this.parent.textOpacity);
+        int lineColor = this.parent.getRenderColor(this.parent.tableLineColor);
         float lineThickness = this.parent.tableLineThickness;
 
         // Horizontal lines
@@ -315,9 +315,9 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                 if (end.text.endsWith(" ")) {
                     xEnd -= (this.parent.getUnscaledSpaceWidth() * this.getScale());
                 }
-                renderCodeBlockBackground(graphics, this.x, this.y - 2, xEnd, this.y + this.getTextRenderHeight(), this.parent.codeBlockSingleLineColor.getColorIntWithAlpha(this.parent.textOpacity));
+                renderCodeBlockBackground(graphics, this.x, this.y - 2, xEnd, this.y + this.getTextRenderHeight(), this.parent.getRenderColor(this.parent.codeBlockSingleLineColor));
             } else if (this.drawsCodeBlockBackground()) {
-                renderCodeBlockBackground(graphics, this.parent.x + this.parent.border, start.getRenderLineY(), this.parent.x + this.parent.getRealWidth() - this.parent.border - 1, end.getRenderLineY() + end.getRenderHeight() - 1, this.parent.codeBlockMultiLineColor.getColorIntWithAlpha(this.parent.textOpacity));
+                renderCodeBlockBackground(graphics, this.parent.x + this.parent.border, start.getRenderLineY(), this.parent.x + this.parent.getRealWidth() - this.parent.border - 1, end.getRenderLineY() + end.getRenderHeight() - 1, this.parent.getRenderColor(this.parent.codeBlockMultiLineColor));
             }
         }
     }
@@ -355,7 +355,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             float scale = (this.parent.parentRenderScale != null) ? this.parent.parentRenderScale : (float)WindowHandler.getGuiScale();
             float lineThickness = (scale > 1) ? 0.5f : 1f;
             float lineY = this.y + this.getTextRenderHeight() + 1;
-            RenderingUtils.fillF(graphics, this.parent.x + this.parent.border, lineY, this.parent.x + this.parent.getRealWidth() - this.parent.border - 1, lineY + lineThickness, this.parent.headlineUnderlineColor.getColorIntWithAlpha(this.parent.textOpacity));
+            RenderingUtils.fillF(graphics, this.parent.x + this.parent.border, lineY, this.parent.x + this.parent.getRealWidth() - this.parent.border - 1, lineY + lineThickness, this.parent.getRenderColor(this.parent.headlineUnderlineColor));
             RenderingUtils.resetShaderColor(graphics);
         }
     }
@@ -367,10 +367,10 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             float yEnd = end.getRenderLineY() + end.getRenderHeight() + 1;
             if (this.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT) {
                 float lineX = this.getLeftQuoteLineX();
-                RenderingUtils.fillF(graphics, lineX, yStart, lineX + QUOTE_LINE_WIDTH, yEnd, this.parent.quoteColor.getColorIntWithAlpha(this.parent.textOpacity));
+                RenderingUtils.fillF(graphics, lineX, yStart, lineX + QUOTE_LINE_WIDTH, yEnd, this.parent.getRenderColor(this.parent.quoteColor));
             } else if (this.alignment == MarkdownRenderer.MarkdownLineAlignment.RIGHT) {
                 float lineX = this.getRightQuoteLineX();
-                RenderingUtils.fillF(graphics, lineX, yStart, lineX + QUOTE_LINE_WIDTH, yEnd, this.parent.quoteColor.getColorIntWithAlpha(this.parent.textOpacity));
+                RenderingUtils.fillF(graphics, lineX, yStart, lineX + QUOTE_LINE_WIDTH, yEnd, this.parent.getRenderColor(this.parent.quoteColor));
             }
             RenderingUtils.resetShaderColor(graphics);
         }
@@ -417,7 +417,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             // Vertical centering using text baseline
             final float textBaselineY = this.getTextY() + (this.parent.getUnscaledTextHeight() * scale * 0.5f) - (bulletSize * 0.5f);
 
-            RenderingUtils.fillF(graphics, bulletX, textBaselineY, bulletX + bulletSize, textBaselineY + bulletSize, this.parent.bulletListDotColor.getColorIntWithAlpha(this.parent.textOpacity));
+            RenderingUtils.fillF(graphics, bulletX, textBaselineY, bulletX + bulletSize, textBaselineY + bulletSize, this.parent.getRenderColor(this.parent.bulletListDotColor));
         }
     }
 
