@@ -93,7 +93,7 @@ final class MarkdownPaint {
         if ((shape == MarkdownMarkerShape.NONE) || ((color >>> 24) == 0)) return;
         if (MarkdownPixelArt.isMarker(shape)) {
             float inset = (size - (MarkdownPixelArt.MARKER_SIZE * pixelSize)) * 0.5F;
-            MarkdownPixelArt.marker(graphics, shape, x + inset, y + inset, pixelSize, color, renderer.hasTextShadow());
+            MarkdownPixelArt.marker(graphics, shape, x + inset, y + inset, pixelSize, color, renderer.textFont.hasShadow());
             return;
         }
         MaterialIcon icon = getIcon(shape);
