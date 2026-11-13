@@ -58,6 +58,12 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     MinecraftFormattingState minecraftFormatting = MinecraftFormattingState.EMPTY;
     public boolean bulletListItemStart = false;
     public int bulletListLevel = 0;
+    /**
+     * The marker the list item of this fragment starts with, or NONE if the fragment is not part of a list item.<br>
+     * It is set on the same fragments as {@link #bulletListLevel}: on all fragments of the line the item starts in.
+     */
+    @NotNull
+    public ListItemMarker listItemMarker = ListItemMarker.NONE;
     @NotNull
     public MarkdownRenderer.MarkdownLineAlignment alignment = MarkdownRenderer.MarkdownLineAlignment.LEFT;
     public Hyperlink hyperlink = null;
@@ -888,6 +894,17 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         BIG, // ###
         BIGGER, // ##
         BIGGEST // #
+    }
+
+    /**
+     * The marker a list item starts with.
+     */
+    public enum ListItemMarker {
+        NONE,
+        DASH, // -
+        PLUS, // +
+        ASTERISK, // *
+        TILDE // ~
     }
 
     public static class TableContext {
