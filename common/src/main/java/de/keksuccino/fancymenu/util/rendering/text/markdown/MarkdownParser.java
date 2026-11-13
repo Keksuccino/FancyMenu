@@ -622,6 +622,7 @@ public class MarkdownParser {
             frag.tableContext = tableContext;
             frag.naturalLineBreakAfter = naturalLineBreakAfter;
             frag.endOfWord = endOfWord;
+            frag.breaksInside = MarkdownLineBreaks.hasBreak(frag.text);
             frag.updateWidth();
             this.clearText();
             return frag;
