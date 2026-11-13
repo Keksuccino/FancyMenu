@@ -26,7 +26,6 @@ import java.util.Objects;
 
 public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
-    protected static final int QUOTE_LINE_WIDTH = 2;
     protected static final int TRAILING_SPACE_KEEP = 0;
     protected static final int TRAILING_SPACE_REMOVE = 1;
     protected static final int TRAILING_SPACE_SEPARATE = 2;
@@ -166,8 +165,6 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
             if (this.isLinkLike()) MarkdownLinkPainter.renderUnderline(graphics, this);
 
-            this.renderQuoteLine(graphics);
-
         }
 
     }
@@ -304,61 +301,6 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     protected float getRenderLineY() {
         if (this.parentLine == null) return this.y;
         return this.parentLine.getRenderY();
-    }
-
-    protected void renderQuoteLine(GuiGraphicsExtractor graphics) {
-        if ((this.quoteContext != null) && this.drawsQuoteLine()) {
-            float yStart = Objects.requireNonNull(this.quoteContext.getQuoteStart()).getRenderLineY() - 2;
-            float yEnd = this.getQuoteLineBottom();
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
-            if (this.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT) {
-                float lineX = this.getLeftQuoteLineX();
-                RenderingUtils.fillF(graphics, lineX, yStart, lineX + QUOTE_LINE_WIDTH, yEnd, this.parent.getRenderColor(this.parent.style.quoteBarColor));
-            } else if (this.alignment == MarkdownRenderer.MarkdownLineAlignment.RIGHT) {
-                float lineX = this.getRightQuoteLineX();
-                RenderingUtils.fillF(graphics, lineX, yStart, lineX + QUOTE_LINE_WIDTH, yEnd, this.parent.getRenderColor(this.parent.style.quoteBarColor));
-            }
-            RenderingUtils.resetShaderColor(graphics);
-        }
-    }
-
-    /**
-     * Returns where the line next to the quote of this fragment ends, which is right below the last render line of the quote.<br>
-     * The whole render line counts and not only the last fragment of the quote, because the first fragment of a line can make it
-     * taller than the others, like the one that starts a list item.
-     */
-    protected float getQuoteLineBottom() {
-        MarkdownTextFragment end = Objects.requireNonNull(this.quoteContext.getQuoteEnd());
-        float lastLineHeight = (end.parentLine != null) ? end.parentLine.getLineHeight() : end.getRenderHeight();
-        return end.getRenderLineY() + lastLineHeight + 1;
-    }
-
-    /**
-     * Returns the X position of the line next to a left-aligned quote.<br>
-     * The line stands at the start of the text area, in the space the quote indent keeps free in front of the text.
-     * It must not reach into the border in front of the text area, because containers like scroll areas clip their content there.
-     */
-    protected float getLeftQuoteLineX() {
-        return this.parent.x + this.parent.scaling.padding();
-    }
-
-    /**
-     * Returns the X position of the line next to a right-aligned quote, which ends where the text area ends.
-     */
-    protected float getRightQuoteLineX() {
-        return this.parent.x + this.parent.getRealWidth() - this.parent.scaling.padding() - QUOTE_LINE_WIDTH;
-    }
-
-    /**
-     * The line next to a quote gets drawn once per frame: by the last fragment of the quote,
-     * or, when that one is outside the visible range, by the last fragment of the last line of the quote that is inside of it.
-     */
-    protected boolean drawsQuoteLine() {
-        if (this.quoteContext.getQuoteEnd() == this) return true;
-        if ((this.parentLine == null) || (this.parentLine.fragments.get(this.parentLine.fragments.size()-1) != this)) return false;
-        MarkdownTextLine nextLine = this.parentLine.getNextLine();
-        if ((nextLine == null) || nextLine.isVisible()) return false;
-        return nextLine.fragments.get(0).quoteContext == this.quoteContext;
     }
 
     /**
@@ -589,8 +531,12 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         MarkdownStyle style = this.parent.style;
         float space = 0.0F;
         if (this.startOfRenderLine) {
+            // A quote keeps its indent free on the side of its bar, which is the side it is aligned to, and its padding on the other side
             if ((this.quoteContext != null) && (this.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT)) {
                 space += style.quoteIndent.get();
+            }
+            if ((this.quoteContext != null) && (this.alignment == MarkdownRenderer.MarkdownLineAlignment.RIGHT)) {
+                space += style.quotePaddingSide.get();
             }
             if (this.bulletListLevel > 0) {
                 space += MarkdownListMarkerPainter.getTextIndent(this);
@@ -614,6 +560,9 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if (endOfRenderLine) {
             if ((this.quoteContext != null) && (this.alignment == MarkdownRenderer.MarkdownLineAlignment.RIGHT)) {
                 space += style.quoteIndent.get();
+            }
+            if ((this.quoteContext != null) && (this.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT)) {
+                space += style.quotePaddingSide.get();
             }
             if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine) {
                 space += style.codeBlockPaddingHorizontal.get();
