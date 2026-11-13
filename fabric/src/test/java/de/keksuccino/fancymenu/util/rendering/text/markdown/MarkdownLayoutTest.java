@@ -233,6 +233,27 @@ class MarkdownLayoutTest {
         assertEquals(expected, visibleLines(renderer));
     }
 
+    @Test
+    void fullLineHeightChangesNothingForTextInTheMinecraftFont() {
+        MarkdownTestRenderer renderer = new MarkdownTestRenderer(document(3), 180);
+        renderer.getStyle().fullLineHeight.set(false);
+        renderer.tick();
+        float lineHeight = renderer.textFont.lineHeight();
+        float height = renderer.getRealHeight();
+        float width = renderer.getRealWidth();
+        int lines = renderer.lines.size();
+
+        renderer.getStyle().fullLineHeight.set(true);
+        renderer.tick();
+
+        assertFalse(renderer.isUIFontRenderingEnabled());
+        assertEquals(LINE_HEIGHT, lineHeight);
+        assertEquals(lineHeight, renderer.textFont.lineHeight());
+        assertEquals(height, renderer.getRealHeight());
+        assertEquals(width, renderer.getRealWidth());
+        assertEquals(lines, renderer.lines.size());
+    }
+
     private static List<MarkdownTextLine> visibleLines(MarkdownTestRenderer renderer) {
         renderer.layout.updateVisibleLines();
         List<MarkdownTextLine> visible = new ArrayList<>();
