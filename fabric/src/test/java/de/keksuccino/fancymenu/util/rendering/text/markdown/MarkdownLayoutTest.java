@@ -44,7 +44,8 @@ class MarkdownLayoutTest {
 
     @Test
     void linesStackWithTheLineSpacingBetweenThem() {
-        MarkdownTestRenderer renderer = new MarkdownTestRenderer(document(20), 180);
+        // Blocks without a space of their own above or below them
+        MarkdownTestRenderer renderer = new MarkdownTestRenderer("## Headline\n\nA paragraph with **bold** words and `inline code` that wraps around in a narrow renderer.\n\n> quote\n\n```\ncode\nmore code\n```\n\nlast", 180);
         renderer.setLineSpacing(4);
         renderer.setBorder(6);
         renderer.setX(30).setY(50);
