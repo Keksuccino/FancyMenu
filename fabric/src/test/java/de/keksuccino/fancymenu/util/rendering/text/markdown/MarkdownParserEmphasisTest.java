@@ -74,6 +74,56 @@ class MarkdownParserEmphasisTest {
         assertEquals("italic *rest", joinText(fragments));
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "snake_case and [link](https://example.invalid/some_page) and more",
+            "2 * 3 and [link](https://example.invalid/*) and more",
+            "about ~5 and [link](https://example.invalid/~user) and more",
+            "about ~~5 and [link](https://example.invalid/~~user) and more",
+            "**open and [link](https://example.invalid/**) and more",
+            "snake_case and [click](click:some_event) and more",
+            "snake_case\n![alternative text](some_image.png)\nand more",
+            "snake_case\n![alternative_text](image.png)\nand more",
+            "snake_case\n[![alternative_text](some_image.png)](https://example.invalid/some_page)\nand more"
+    })
+    void markerInsideALinkTargetOrAnImageLineClosesNothing(String text) {
+        List<MarkdownTextFragment> fragments = parse(text);
+
+        for (MarkdownTextFragment fragment : fragments) {
+            assertFalse(fragment.bold);
+            assertFalse(fragment.italic);
+            assertFalse(fragment.strikethrough);
+        }
+        assertTrue(joinText(fragments).endsWith("and more"));
+        // The text in front of the link or image keeps its marker
+        int textEnd = text.length();
+        for (char linkOrLineStart : new char[] {'[', '!', '\n'}) {
+            int index = text.indexOf(linkOrLineStart);
+            if ((index != -1) && (index < textEnd)) textEnd = index;
+        }
+        assertTrue(joinText(fragments).startsWith(text.substring(0, textEnd)));
+    }
+
+    @Test
+    void markerBehindALinkStillCloses() {
+        List<MarkdownTextFragment> fragments = parse("_italic [link](https://example.invalid/some_page) italic_ and more");
+
+        assertTrue(fragmentContaining(fragments, "italic").italic);
+        assertTrue(fragmentContaining(fragments, "link").italic);
+        assertEquals("https://example.invalid/some_page", fragmentContaining(fragments, "link").hyperlink.link);
+        assertFalse(fragmentContaining(fragments, "more").italic);
+        assertEquals("italic link italic and more", joinText(fragments));
+    }
+
+    @Test
+    void markerInTextThatOnlyLooksLikeALinkTargetStaysAMarker() {
+        // No link can end at a closing square bracket that is escaped, so this is no target
+        List<MarkdownTextFragment> fragments = parse("_italic \\](some_text) italic_ and more");
+
+        assertFalse(fragmentContaining(fragments, "more").italic);
+        assertTrue(fragmentContaining(fragments, "italic").italic);
+    }
+
     @Test
     void italicTextsNextToEachOtherAndSingleAsterisksWithoutPartnerStillWork() {
         List<MarkdownTextFragment> fragments = parse("*one* and *two* and * three");
