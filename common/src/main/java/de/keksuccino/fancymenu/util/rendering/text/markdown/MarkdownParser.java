@@ -95,13 +95,14 @@ public class MarkdownParser {
         Objects.requireNonNull(markdownText);
 
         List<TableLine> tables = new ArrayList<>();
+        String tableSourceText = markdownText;
 
         // Pre-process tables if markdown parsing is enabled
         if (parseMarkdown) {
             markdownText = preprocessTables(renderer, markdownText, tables);
         }
 
-        return parseFragments(renderer, markdownText, parseMarkdown, tables);
+        return parseFragments(renderer, markdownText, parseMarkdown, tables, tableSourceText);
 
     }
 
@@ -112,10 +113,14 @@ public class MarkdownParser {
      * the current line, stops at the first character that settles the answer, or goes through {@link MarkerLookahead}.
      * This keeps the parsing time linear to the text length, so every new lookahead has to follow the same rules.</p>
      *
+     * <p>A table that the loop reaches inside a code block or plain text is no table, but text of that block. The loop then reads the
+     * lines of the table from the text they were cut out of, and returns to the line break the table left behind afterwards.</p>
+     *
      * @param tables The tables that were cut out of the text, in the order of their lines.
+     * @param tableSourceText The text the tables were cut out of.
      */
     @NotNull
-    protected static List<MarkdownTextFragment> parseFragments(@NotNull MarkdownRenderer renderer, @NotNull String markdownText, boolean parseMarkdown, @NotNull List<TableLine> tables) {
+    protected static List<MarkdownTextFragment> parseFragments(@NotNull MarkdownRenderer renderer, @NotNull String markdownText, boolean parseMarkdown, @NotNull List<TableLine> tables, @NotNull String tableSourceText) {
 
         List<MarkdownTextFragment> fragments = new ArrayList<>();
 
@@ -137,14 +142,33 @@ public class MarkdownParser {
         int linkLabelEnd = -1;
         int linkTargetEnd = -1;
 
-        final int textLength = markdownText.length();
+        //Index behind the last character the loop reads in the current text
+        int textLength = markdownText.length();
         //Index of the line break that ends the line of the current index, or the text length if it is the last line
         int lineEnd = -1;
         //The tables follow the order of their lines, so the loop only ever has to look out for the next one
         int nextTable = 0;
         int nextTableLine = tables.isEmpty() ? -1 : tables.get(0).lineIndex();
+        //Set while the loop reads the lines of a table as text: where and with what it continues in the text the table was cut out of
+        String resumeText = null;
+        int resumeIndex = -1;
+        int resumeNextTableLine = -1;
+        MarkerLookahead resumeLookahead = null;
+        MarkerLookahead tableSourceLookahead = null;
 
-        for (int index = 0; index < textLength; index++) {
+        for (int index = 0; ; index++) {
+
+            if (index >= textLength) {
+                if (resumeText == null) break;
+                // The lines of the table are read, so the loop continues with the line break the table left behind, which ends its last line
+                markdownText = resumeText;
+                textLength = markdownText.length();
+                index = resumeIndex;
+                nextTableLine = resumeNextTableLine;
+                lookahead = resumeLookahead;
+                lineEnd = -1;
+                resumeText = null;
+            }
 
             char c = markdownText.charAt(index);
 
@@ -158,15 +182,35 @@ public class MarkdownParser {
 
             // Check for a table
             if (index == nextTableLine) {
+                TableLine table = tables.get(nextTable);
+                nextTable++;
+                nextTableLine = (nextTable < tables.size()) ? tables.get(nextTable).lineIndex() : -1;
+                if ((builder.codeBlockContext != null) || builder.plainText) {
+                    // Inside a code block or plain text, the lines of the table are text like every other line of it.
+                    // The loop reads them from the text they were cut out of and then returns to this line break.
+                    resumeText = markdownText;
+                    resumeIndex = index;
+                    resumeNextTableLine = nextTableLine;
+                    resumeLookahead = lookahead;
+                    if (tableSourceLookahead == null) tableSourceLookahead = new MarkerLookahead(tableSourceText);
+                    // Markers behind the lines of the table get searched in the text the loop returns to, which has no tables in it
+                    tableSourceLookahead.limit(table.sourceEnd(), lookahead, index);
+                    lookahead = tableSourceLookahead;
+                    markdownText = tableSourceText;
+                    textLength = table.sourceEnd();
+                    nextTableLine = -1;
+                    lineEnd = -1;
+                    index = table.sourceStart() - 1;
+                    queueNewLine = isStartOfLine;
+                    continue;
+                }
                 MarkdownTextFragment tableFragment = new MarkdownTextFragment(renderer, "[TABLE]");
                 tableFragment.table = true;
-                tableFragment.tableContext = tables.get(nextTable).tableContext();
+                tableFragment.tableContext = table.tableContext();
                 tableFragment.naturalLineBreakAfter = true;
                 // Inherit current alignment from builder
                 tableFragment.alignment = builder.alignment;
                 lastBuiltFragment = addFragment(fragments, tableFragment);
-                nextTable++;
-                nextTableLine = (nextTable < tables.size()) ? tables.get(nextTable).lineIndex() : -1;
                 // The line of a table is empty, so the character at its index is the line break that ends it
                 lineHandledByWholeLineConstruct = true;
                 builder.headlineType = HeadlineType.NONE;
@@ -1104,8 +1148,10 @@ public class MarkdownParser {
      * A table that was cut out of the text.
      *
      * @param lineIndex The index of the empty line the table left behind in the text.
+     * @param sourceStart The index of the first character of the table in the text it was cut out of.
+     * @param sourceEnd The index behind the last character of the table in the text it was cut out of, which is the line break behind its last line or the end of that text.
      */
-    protected record TableLine(int lineIndex, @NotNull MarkdownTextFragment.TableContext tableContext) {
+    protected record TableLine(int lineIndex, @NotNull MarkdownTextFragment.TableContext tableContext, int sourceStart, int sourceEnd) {
     }
 
     /**
@@ -1123,6 +1169,8 @@ public class MarkdownParser {
 
         String[] lines = markdownText.split(NEWLINE);
         StringBuilder result = new StringBuilder(markdownText.length());
+        // Index of the current line in the text
+        int lineStart = 0;
         
         for (int i = 0; i < lines.length; i++) {
             String currentLine = lines[i];
@@ -1130,6 +1178,7 @@ public class MarkdownParser {
             
             // Check if this is the start of a table
             if (isTableRow(currentLine) && nextLine != null && isTableSeparatorLine(nextLine)) {
+                int tableStart = lineStart;
                 // Parse the table
                 MarkdownTextFragment.TableContext tableContext = new MarkdownTextFragment.TableContext();
                 List<MarkdownTextFragment.TableCell.TableCellAlignment> alignments = parseTableAlignments(nextLine);
@@ -1156,6 +1205,7 @@ public class MarkdownParser {
                 tableContext.rows.add(headerRow);
                 
                 // Skip the separator line
+                lineStart += currentLine.length() + nextLine.length() + 2;
                 i += 2;
                 
                 // Parse data rows
@@ -1177,15 +1227,18 @@ public class MarkdownParser {
                         dataRow.cells.add(cell);
                     }
                     tableContext.rows.add(dataRow);
+                    lineStart += lines[i].length() + 1;
                     i++;
                 }
                 
-                // Store the table with the index of the empty line it leaves behind in the result
-                tables.add(new TableLine(result.length(), tableContext));
+                // Store the table with the index of the empty line it leaves behind in the result.
+                // Every line of the table was counted with a line break behind it, and the one behind its last line is no part of the table.
+                tables.add(new TableLine(result.length(), tableContext, tableStart, lineStart - 1));
                 result.append(NEWLINE);
                 i--; // Adjust because the loop will increment
             } else {
                 result.append(currentLine);
+                lineStart += currentLine.length() + 1;
                 if (i < lines.length - 1) {
                     result.append(NEWLINE);
                 }
@@ -1201,7 +1254,7 @@ public class MarkdownParser {
      */
     @NotNull
     protected static List<MarkdownTextFragment> parseTableCell(@NotNull MarkdownRenderer renderer, @NotNull String cellText) {
-        return parseFragments(renderer, cellText, true, Collections.emptyList());
+        return parseFragments(renderer, cellText, true, Collections.emptyList(), cellText);
     }
 
     protected static boolean containsUnescapedPipe(@NotNull String line) {
@@ -1280,30 +1333,49 @@ public class MarkdownParser {
         @NotNull
         protected final String text;
         protected final int[] nextOccurrences = new int[LookaheadMarker.COUNT];
+        /** Markers only get found in front of this index. */
+        protected int end;
+        /** Where a search continues that found nothing in front of the end, or NULL if it ends there. */
+        @Nullable
+        protected MarkerLookahead continuation = null;
+        protected int continuationIndex;
 
         protected MarkerLookahead(@NotNull String text) {
             this.text = text;
+            this.end = text.length();
             Arrays.fill(this.nextOccurrences, NOT_SEARCHED);
         }
 
         /**
-         * Returns the index of the first occurrence of the marker at or after the given index, or -1 if there is none.
+         * Makes the lookahead only find markers in front of the given index of its text, and continue every search that
+         * finds none there at the given index of another lookahead.<br>
+         * The end has to be at or behind every index a search started at before.
+         */
+        protected void limit(int end, @NotNull MarkerLookahead continuation, int continuationIndex) {
+            this.end = end;
+            this.continuation = continuation;
+            this.continuationIndex = continuationIndex;
+        }
+
+        /**
+         * Returns the index of the first occurrence of the marker at or after the given index of the text of this lookahead, or -1 if there is none.
          */
         protected int indexOf(@NotNull LookaheadMarker marker, int fromIndex) {
+            // The remembered occurrence is the next one in the whole text, so it stays right when the end moves
             int nextOccurrence = this.nextOccurrences[marker.ordinal()];
-            if (nextOccurrence == NOT_FOUND) return NOT_FOUND;
-            if (nextOccurrence < fromIndex) {
+            if ((nextOccurrence != NOT_FOUND) && (nextOccurrence < fromIndex)) {
                 nextOccurrence = this.text.indexOf(marker.marker, fromIndex);
                 this.nextOccurrences[marker.ordinal()] = nextOccurrence;
             }
-            return nextOccurrence;
+            return (nextOccurrence < this.end) ? nextOccurrence : NOT_FOUND;
         }
 
         /**
          * Returns if the marker starts at or after the given index.
          */
         protected boolean existsFrom(@NotNull LookaheadMarker marker, int fromIndex) {
-            return this.indexOf(marker, fromIndex) != NOT_FOUND;
+            if (this.indexOf(marker, fromIndex) != NOT_FOUND) return true;
+            return (this.continuation != null) && this.continuation.existsFrom(marker, this.continuationIndex);
         }
 
         /**
