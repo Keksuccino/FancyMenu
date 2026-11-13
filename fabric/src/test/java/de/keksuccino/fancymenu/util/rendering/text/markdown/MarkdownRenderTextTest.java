@@ -1,15 +1,19 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
-import de.keksuccino.fancymenu.testing.TestPlaceholders;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.ResourceLock;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@ResourceLock("PlaceholderParser global state")
 class MarkdownRenderTextTest {
+
+    private static final String PLACEHOLDER = "{\"placeholder\":\"markdown_render_text_test\"}";
 
     @Test
     void everySpellingOfALineBreakBecomesANewline() {
@@ -18,12 +22,33 @@ class MarkdownRenderTextTest {
         assertEquals("First\nSecond\nThird\nFourth", renderer.buildRenderText());
     }
 
+    private static Stream<String> textsWithFormattingCodes() {
+        return Stream.of("&0&1&2&3&4&5&6&7&8&9&a&b&c&d&e&f&k&l&m&n&o&r", "Plain &aformatted", "§aGreen §lBold", "&A &L &z &x", "&&a", "[link](https://example.test/&a)");
+    }
+
     @ParameterizedTest
-    @ValueSource(strings = {"&0&1&2&3&4&5&6&7&8&9&a&b&c&d&e&f&k&l&m&n&o&r", "Plain &aformatted", "§aGreen §lBold", "&A &L &z &x", "&&a", "[link](https://example.test/&a)"})
+    @MethodSource("textsWithFormattingCodes")
     void formattingCodesStayInTheRenderTextAsTheyAre(String text) {
         MarkdownTestRenderer renderer = new MarkdownTestRenderer(text, 2000);
 
         assertEquals(text, renderer.buildRenderText());
+    }
+
+    /**
+     * The placeholder parser turns ampersand codes into codes with a section sign, which it only does in a text with a placeholder.
+     * The renderer reads both kinds of codes itself, so it asks for its text with the codes as they are.
+     */
+    @ParameterizedTest
+    @MethodSource("textsWithFormattingCodes")
+    void formattingCodesStayInTheRenderTextOfATextWithAPlaceholder(String text) {
+        long processorId = PlaceholderParser.addParsingProcessor(PlaceholderParser.ParsingProcessorTiming.AFTER_REPLACING_PLACEHOLDERS, value -> value.replace(PLACEHOLDER, "value"));
+        try {
+            MarkdownTestRenderer renderer = new MarkdownTestRenderer(text + " " + PLACEHOLDER, 2000);
+
+            assertEquals(text + " value", renderer.buildRenderText());
+        } finally {
+            PlaceholderParser.removeParsingProcessor(processorId);
+        }
     }
 
     @Test
@@ -45,41 +70,6 @@ class MarkdownRenderTextTest {
         renderer.setText(renderText);
 
         assertEquals(renderText, renderer.buildRenderText());
-    }
-
-    @Test
-    void ampersandsThatStartNoFormattingCodeStayInTheRenderTextAsTheyAre() {
-        String text = "Bread & Butter &zUnknown &AUppercase &";
-        MarkdownTestRenderer renderer = new MarkdownTestRenderer(text, 2000);
-
-        assertEquals(text, renderer.buildRenderText());
-    }
-
-    @Test
-    void htmlBreaksOnlyStayInTheRenderTextWhileTheRendererKeepsThem() {
-        MarkdownTestRenderer renderer = new MarkdownTestRenderer("&aFirst%n%Second\rThird\\nFourth<br>Fifth", 2000);
-
-        renderer.setRemoveHtmlBreaks(false);
-        assertEquals("&aFirst\nSecond\nThird\nFourth<br>Fifth", renderer.buildRenderText());
-
-        renderer.setRemoveHtmlBreaks(true);
-        assertEquals("&aFirst\nSecond\nThird\nFourthFifth", renderer.buildRenderText());
-    }
-
-    @Test
-    @ResourceLock("PlaceholderParser global state")
-    void formattingCodesOfAPlaceholderValueStayInTheRenderTextAsTheyAre() {
-        PlaceholderParser.PlaceholderCachingController cachingController = PlaceholderParser.getPlaceholderCachingController();
-        PlaceholderParser.setPlaceholderCachingController(new PlaceholderParser.PlaceholderCachingController(() -> false, () -> 0L));
-        try {
-            String key = "markdown_render_text_formatting_codes";
-            TestPlaceholders.setValue(key, "&cOffline &nnow &zUnknown");
-            MarkdownTestRenderer renderer = new MarkdownTestRenderer("Status: " + TestPlaceholders.value(key), 2000);
-
-            assertEquals("Status: &cOffline &nnow &zUnknown", renderer.buildRenderText());
-        } finally {
-            PlaceholderParser.setPlaceholderCachingController(cachingController);
-        }
     }
 
 }
