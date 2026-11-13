@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.FocuslessContainerEventHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UITheme;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
@@ -106,6 +107,9 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     protected final List<MarkdownTextFragment> fragments = new ArrayList<>();
     final MarkdownTextWidthCache textWidthCache = new MarkdownTextWidthCache(this);
     final MarkdownScaling scaling = new MarkdownScaling(this);
+    /** The metrics of the font the fragments got parsed with. NULL until they get asked for the first time after a parse. */
+    @Nullable
+    private MarkdownFontMetrics fontMetrics = null;
     final MarkdownLayout layout = new MarkdownLayout(this);
     final MarkdownInteractions interactions = new MarkdownInteractions(this);
 
@@ -153,6 +157,23 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
             return RenderScaleUtil.snapGuiCoordinateToPixel(this.x + line.layoutOffsetX, this.getRenderScale(), renderTranslationX) - this.x;
         }
         return line.layoutOffsetX;
+    }
+
+    /**
+     * Returns the metrics of the font the text gets drawn with.<br>
+     * Whatever changes the font makes the text get parsed again, so the metrics only get looked up once per parse.
+     */
+    @NotNull
+    protected MarkdownFontMetrics getFontMetrics() {
+        if (this.fontMetrics == null) this.fontMetrics = MarkdownFontMetrics.of(this);
+        return this.fontMetrics;
+    }
+
+    /**
+     * Returns the GUI scale the renderer gets drawn at, without what the render pose scales on top of it.
+     */
+    protected float getGuiScale() {
+        return (this.parentRenderScale != null) ? this.parentRenderScale : (float)Minecraft.getInstance().getWindow().getGuiScale();
     }
 
     /**
@@ -248,6 +269,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
 
     protected void rebuildFragments() {
         this.fragments.clear();
+        this.fontMetrics = null;
         if (this.renderText != null) {
             this.textWidthCache.beginParse();
             try {
