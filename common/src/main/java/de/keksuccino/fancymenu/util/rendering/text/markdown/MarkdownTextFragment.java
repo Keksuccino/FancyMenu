@@ -181,27 +181,13 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
         
         // Render rows
-        int dataRowIndex = 0; // Track data rows separately for alternating colors
         for (int rowIndex = 0; rowIndex < this.tableContext.rows.size(); rowIndex++) {
             TableRow row = this.tableContext.rows.get(rowIndex);
             float rowHeight = row.height;
             float currentX = tableX;
 
             // Draw row background
-            if (row.isHeader && this.parent.tableShowHeader) {
-                // Header background
-                RenderingUtils.fillF(graphics, tableX, currentY, tableX + actualTableWidth, currentY + rowHeight, this.parent.tableHeaderBackgroundColor.getColorIntWithAlpha(this.parent.textOpacity));
-            } else if (!row.isHeader) {
-                // Regular row background - alternate between two colors
-                if (this.parent.tableAlternateRowColors && dataRowIndex % 2 == 1) {
-                    // Alternate rows
-                    RenderingUtils.fillF(graphics, tableX, currentY, tableX + actualTableWidth, currentY + rowHeight, this.parent.tableAlternateRowColor.getColorIntWithAlpha(this.parent.textOpacity));
-                } else {
-                    // Base rows
-                    RenderingUtils.fillF(graphics, tableX, currentY, tableX + actualTableWidth, currentY + rowHeight, this.parent.tableRowBackgroundColor.getColorIntWithAlpha(this.parent.textOpacity));
-                }
-                dataRowIndex++;
-            }
+            RenderingUtils.fillF(graphics, tableX, currentY, tableX + actualTableWidth, currentY + rowHeight, this.tableContext.getRowBackgroundColor(this.parent, rowIndex).getColorIntWithAlpha(this.parent.textOpacity));
 
             // Render cells
             for (int cellIndex = 0; cellIndex < row.cells.size(); cellIndex++) {
@@ -1002,6 +988,25 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             for (float width : this.columnWidths) {
                 this.totalWidth += width;
             }
+        }
+
+        /**
+         * Returns the background color of the row at the given index.<br>
+         * The header row only looks like a header while the renderer shows table headers. Otherwise it is a row like every other
+         * one, so the colors alternate from the first row of the table and not from the first row behind the header.
+         */
+        @NotNull
+        public DrawableColor getRowBackgroundColor(@NotNull MarkdownRenderer renderer, int rowIndex) {
+            if (this.isHeaderRow(renderer, rowIndex)) return renderer.tableHeaderBackgroundColor;
+            int alternatingIndex = this.isHeaderRow(renderer, 0) ? (rowIndex - 1) : rowIndex;
+            return (renderer.tableAlternateRowColors && ((alternatingIndex % 2) == 1)) ? renderer.tableAlternateRowColor : renderer.tableRowBackgroundColor;
+        }
+
+        /**
+         * Returns if the row at the given index gets shown as the header of the table.
+         */
+        public boolean isHeaderRow(@NotNull MarkdownRenderer renderer, int rowIndex) {
+            return renderer.tableShowHeader && (rowIndex < this.rows.size()) && this.rows.get(rowIndex).isHeader;
         }
 
         public float getRowHeight(TableRow row) {
