@@ -779,6 +779,18 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
         return this;
     }
 
+    /**
+     * Returns the color the given color gets drawn in, which has the alpha of the color multiplied with the opacity of the text.
+     */
+    protected int getRenderColor(@NotNull DrawableColor color) {
+        return applyOpacity(color.getColorInt(), this.textOpacity);
+    }
+
+    protected static int applyOpacity(int color, float opacity) {
+        int alpha = (int)((color >>> 24) * opacity);
+        return (color & 0x00FFFFFF) | (alpha << 24);
+    }
+
     protected float getUnscaledTextWidth(@NotNull Component text) {
         if (this.uiFontRenderingEnabled) {
             return UIBase.getUITextWidth(text, UIBase.getUITextSizeNormal());
