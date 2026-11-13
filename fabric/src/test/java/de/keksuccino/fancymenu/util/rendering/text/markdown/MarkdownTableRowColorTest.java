@@ -17,10 +17,10 @@ class MarkdownTableRowColorTest {
         MarkdownTestRenderer renderer = renderer();
         MarkdownTextFragment.TableContext table = renderer.tableFragment(0).tableContext;
 
-        assertSame(HEADER, table.getRowBackgroundColor(renderer, 0).get());
-        assertSame(ROW, table.getRowBackgroundColor(renderer, 1).get());
-        assertSame(ALTERNATE, table.getRowBackgroundColor(renderer, 2).get());
-        assertSame(ROW, table.getRowBackgroundColor(renderer, 3).get());
+        assertSame(HEADER, MarkdownTablePainter.getRowBackgroundColor(renderer, table, 0).get());
+        assertSame(ROW, MarkdownTablePainter.getRowBackgroundColor(renderer, table, 1).get());
+        assertSame(ALTERNATE, MarkdownTablePainter.getRowBackgroundColor(renderer, table, 2).get());
+        assertSame(ROW, MarkdownTablePainter.getRowBackgroundColor(renderer, table, 3).get());
     }
 
     @Test
@@ -29,10 +29,10 @@ class MarkdownTableRowColorTest {
         renderer.setTableShowHeader(false);
         MarkdownTextFragment.TableContext table = renderer.tableFragment(0).tableContext;
 
-        assertSame(ROW, table.getRowBackgroundColor(renderer, 0).get());
-        assertSame(ALTERNATE, table.getRowBackgroundColor(renderer, 1).get());
-        assertSame(ROW, table.getRowBackgroundColor(renderer, 2).get());
-        assertSame(ALTERNATE, table.getRowBackgroundColor(renderer, 3).get());
+        assertSame(ROW, MarkdownTablePainter.getRowBackgroundColor(renderer, table, 0).get());
+        assertSame(ALTERNATE, MarkdownTablePainter.getRowBackgroundColor(renderer, table, 1).get());
+        assertSame(ROW, MarkdownTablePainter.getRowBackgroundColor(renderer, table, 2).get());
+        assertSame(ALTERNATE, MarkdownTablePainter.getRowBackgroundColor(renderer, table, 3).get());
     }
 
     @Test
@@ -41,9 +41,9 @@ class MarkdownTableRowColorTest {
         renderer.setTableAlternateRowColors(false);
         MarkdownTextFragment.TableContext table = renderer.tableFragment(0).tableContext;
 
-        assertSame(HEADER, table.getRowBackgroundColor(renderer, 0).get());
+        assertSame(HEADER, MarkdownTablePainter.getRowBackgroundColor(renderer, table, 0).get());
         for (int row = 1; row < table.rows.size(); row++) {
-            assertSame(ROW, table.getRowBackgroundColor(renderer, row).get());
+            assertSame(ROW, MarkdownTablePainter.getRowBackgroundColor(renderer, table, row).get());
         }
     }
 
