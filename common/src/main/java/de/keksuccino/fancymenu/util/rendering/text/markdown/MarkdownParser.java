@@ -69,6 +69,7 @@ public class MarkdownParser {
     private static final String FORMATTING_CODE_SEPARATION_LINE_PREFIX = "---";
     private static final char GRAVE_ACCENT_CHAR = '`';
     private static final String FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX = "```";
+    private static final String FORMATTING_CODE_CODE_BLOCK_SINGLE_LINE_EMPTY = "``";
     private static final char SEMICOLON_CHAR = ';';
     private static final String FORMATTING_CODE_PLAIN_TEXT_SINGLE_LINE_PREFIX_SUFFIX = ";;";
     private static final String FORMATTING_CODE_PLAIN_TEXT_MULTI_LINE_PREFIX_SUFFIX = ";;;";
@@ -455,9 +456,15 @@ public class MarkdownParser {
                 if ((c == TILDE_CHAR) && !isCharacterEscaped(markdownText, index)) {
                     boolean isDoubleMarker = markdownText.startsWith(FORMATTING_CODE_STRIKETHROUGH_DOUBLE_PREFIX_SUFFIX, index);
                     if (!builder.strikethrough && (builder.codeBlockContext == null) && !builder.plainText) {
-                        // Two tildes open as one double marker if a later double marker closes them, and only a double marker
-                        // closes them then. Without a later one, they are two single markers that open and close right away.
+                        // Two tildes open as one double marker if a later double marker closes them, and only a double marker closes them then
                         boolean opensDouble = isDoubleMarker && lookahead.existsFrom(LookaheadMarker.STRIKETHROUGH_DOUBLE, index + 2);
+                        if (isDoubleMarker && !opensDouble) {
+                            // Without a later double marker, the two tildes are text like every other marker that never gets closed.
+                            // As two single markers, they would open and close around nothing and vanish.
+                            builder.text.append(c).append(c);
+                            charsToSkip = 1;
+                            continue;
+                        }
                         if (opensDouble || lookahead.existsFrom(LookaheadMarker.STRIKETHROUGH, index + 1)) {
                             if (isStartOfLine || !builder.text.isEmpty()) {
                                 lastBuiltFragment = addFragment(fragments, builder.build(false, false));
@@ -600,9 +607,11 @@ public class MarkdownParser {
                 //Handle Code Block Single Line
                 if ((c == GRAVE_ACCENT_CHAR) && !builder.plainText) {
                     if (builder.codeBlockContext == null) {
+                        // A grave accent with a second one right behind it opens nothing: the second one would close the block around nothing,
+                        // and both would vanish. That keeps the marker of a multi-line block that never gets closed in the text as well.
                         // The block ends at a grave accent of the same line that does not start a multi-line marker.
                         // The last grave accent of every row of grave accents is one, so any later one in the line means there is such an end.
-                        if (!markdownText.startsWith(FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX, index) && lookahead.existsBetween(LookaheadMarker.CODE_BLOCK_SINGLE_LINE, index + 1, lineEnd)) {
+                        if (!markdownText.startsWith(FORMATTING_CODE_CODE_BLOCK_SINGLE_LINE_EMPTY, index) && lookahead.existsBetween(LookaheadMarker.CODE_BLOCK_SINGLE_LINE, index + 1, lineEnd)) {
                             if (isStartOfLine || !builder.text.isEmpty()) {
                                 lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                             }
