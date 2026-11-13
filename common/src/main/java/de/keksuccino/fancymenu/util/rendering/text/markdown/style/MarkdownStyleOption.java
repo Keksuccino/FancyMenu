@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown.style;
 
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
@@ -76,7 +77,8 @@ public abstract class MarkdownStyleOption<T> {
         BOOLEAN,
         FLOAT,
         COLOR,
-        ENUM
+        ENUM,
+        FONT
 
     }
 
@@ -436,6 +438,67 @@ public abstract class MarkdownStyleOption<T> {
         public DrawableColor getLookValue(@NotNull MarkdownLook look) {
             LookColor lookColor = this.lookColor(look);
             return lookColor.set ? lookColor.resolve() : null;
+        }
+
+    }
+
+    /**
+     * The identifier of a font of Minecraft, like "minecraft:uniform". The font can be unset, which means that whatever it is for keeps its own font.
+     */
+    public static final class FontOption extends MarkdownStyleOption<Identifier> {
+
+        @Nullable
+        private final Identifier classicValue;
+        @Nullable
+        private final Identifier pixelValue;
+        @Nullable
+        private final Identifier neutralValue;
+        @Nullable
+        private Identifier value;
+
+        FontOption(@NotNull MarkdownStyle style, @NotNull String key, @NotNull Group group, @NotNull Impact impact, @Nullable Identifier classicValue, @Nullable Identifier pixelValue, @Nullable Identifier neutralValue) {
+            super(style, key, group, impact);
+            this.classicValue = classicValue;
+            this.pixelValue = pixelValue;
+            this.neutralValue = neutralValue;
+            this.value = classicValue;
+        }
+
+        public boolean isSet() {
+            return this.value != null;
+        }
+
+        @Nullable
+        public Identifier get() {
+            return this.value;
+        }
+
+        public void set(@Nullable Identifier value) {
+            if (Objects.equals(this.value, value)) return;
+            this.value = value;
+            this.changed();
+        }
+
+        @Override
+        public @NotNull Type getType() {
+            return Type.FONT;
+        }
+
+        @Override
+        @Nullable
+        public Identifier getValue() {
+            return this.value;
+        }
+
+        @Override
+        public void setValue(@Nullable Identifier value) {
+            this.set(value);
+        }
+
+        @Override
+        @Nullable
+        public Identifier getLookValue(@NotNull MarkdownLook look) {
+            return (look == MarkdownLook.PIXEL) ? this.pixelValue : (look == MarkdownLook.NEUTRAL) ? this.neutralValue : this.classicValue;
         }
 
     }
