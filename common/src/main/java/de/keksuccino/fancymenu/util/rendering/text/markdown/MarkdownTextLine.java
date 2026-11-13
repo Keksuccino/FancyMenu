@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -26,6 +27,11 @@ public class MarkdownTextLine implements Renderable {
     /** The kind of block the line is a part of. Set when the line gets prepared. */
     @NotNull
     protected MarkdownBlockType blockType = MarkdownBlockType.PARAGRAPH;
+    /** The number of the numbered list item that starts in this line, the way it got typed. NULL if no such item does. Set when the line gets prepared. */
+    @Nullable
+    protected Component listNumber = null;
+    /** The width of the number, in pixels of text at its normal size. */
+    protected float listNumberWidth;
     /** TRUE for a blank line that takes no space, because the style makes it nothing but the end of the block in front of it. Set by the layout. */
     protected boolean collapsed = false;
     /** The position of the line in the lines of its renderer. Set by the layout. */
@@ -160,6 +166,7 @@ public class MarkdownTextLine implements Renderable {
             }
         }
         this.blockType = MarkdownBlockType.of(this);
+        MarkdownListMarkerPainter.prepareNumber(this);
         if (this.blockType == MarkdownBlockType.IMAGE) {
             switch (this.parent.style.imageAlignment.get()) {
                 case LEFT:

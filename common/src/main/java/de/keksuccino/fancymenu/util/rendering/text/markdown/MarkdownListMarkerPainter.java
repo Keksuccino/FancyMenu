@@ -2,9 +2,11 @@ package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownMarkerAlignment;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownMarkerShape;
+import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownNumberAlignment;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyle;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyleOption;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
@@ -22,7 +24,10 @@ final class MarkdownListMarkerPainter {
      */
     static float getTextIndent(@NotNull MarkdownTextFragment fragment) {
         MarkdownStyle style = fragment.parent.style;
-        return (style.listIndent.get() * fragment.bulletListLevel) + style.listTextOffset.get();
+        float indent = (style.listIndent.get() * fragment.bulletListLevel) + style.listTextOffset.get();
+        // Numbers are wider than markers
+        if (fragment.listItemMarker == MarkdownTextFragment.ListItemMarker.NUMBER) indent += style.listNumberIndent.get();
+        return indent;
     }
 
     /**
@@ -91,7 +96,45 @@ final class MarkdownListMarkerPainter {
         MarkdownRenderer renderer = line.parent;
         MarkdownTextFragment first = line.fragments.get(0);
         float scale = first.getScale();
+        if (line.listNumber != null) {
+            graphics.pose().pushPose();
+            try {
+                graphics.pose().translate(getNumberX(line), first.getTextY(), 0.0F);
+                graphics.pose().scale(scale, scale, 1.0F);
+                renderer.renderText(graphics, line.listNumber, 0.0F, 0.0F, renderer.getRenderColor(renderer.style.listNumberColor), renderer.hasTextShadow());
+            } finally {
+                graphics.pose().popPose();
+            }
+            return;
+        }
         MarkdownPaint.marker(graphics, renderer, getMarkerShape(first), getMarkerX(first), getMarkerY(first), renderer.style.listMarkerSize.get() * scale, scale, renderer.getRenderColor(getMarkerColor(first)));
+    }
+
+    /**
+     * Gives the line the number of the numbered list item that starts in it, or none if no such item does.
+     */
+    static void prepareNumber(@NotNull MarkdownTextLine line) {
+        MarkdownTextFragment first = line.fragments.isEmpty() ? null : line.fragments.get(0);
+        if ((first == null) || !first.bulletListItemStart || (first.listItemMarker != MarkdownTextFragment.ListItemMarker.NUMBER) || (first.listItemNumber == null)) {
+            line.listNumber = null;
+            return;
+        }
+        // The number shows the way it got typed
+        line.listNumber = Component.literal(first.listItemNumber);
+        line.listNumberWidth = line.parent.getUnscaledTextWidth(first.listItemNumber);
+    }
+
+    /**
+     * Returns where the number of the numbered list item starts that starts in the given line.
+     */
+    static float getNumberX(@NotNull MarkdownTextLine line) {
+        MarkdownStyle style = line.parent.style;
+        MarkdownTextFragment first = line.fragments.get(0);
+        float scale = first.getScale();
+        if (style.listNumberAlignment.get() == MarkdownNumberAlignment.RIGHT) {
+            return first.getTextX() - ((style.listNumberGap.get() + line.listNumberWidth) * scale);
+        }
+        return first.getTextX() - ((style.listNumberIndent.get() + style.listMarkerGap.get() + style.listMarkerSize.get()) * scale);
     }
 
     /**
