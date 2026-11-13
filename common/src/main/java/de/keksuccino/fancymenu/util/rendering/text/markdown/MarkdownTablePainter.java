@@ -154,7 +154,7 @@ final class MarkdownTablePainter {
     private static float getVisibleTextWidth(@NotNull MarkdownRenderer renderer, @NotNull TableCell cell) {
         if (!renderer.style.trimGlyphSpacing.get() || cell.fragments.isEmpty()) return cell.textWidth;
         MarkdownTextFragment last = cell.fragments.get(cell.fragments.size() - 1);
-        return Math.max(0.0F, cell.textWidth - (renderer.getFontMetrics().glyphSpacing * last.getScale()));
+        return Math.max(0.0F, cell.textWidth - (renderer.textFont.metrics().glyphSpacing * last.getScale()));
     }
 
     private static float getLineThickness(@NotNull MarkdownRenderer renderer) {

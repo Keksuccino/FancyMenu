@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.text.markdown;
 import de.keksuccino.fancymenu.util.rendering.RenderScaleUtil;
 import de.keksuccino.fancymenu.util.rendering.RenderTranslationUtil;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyle;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -33,10 +34,26 @@ final class MarkdownScaling {
     boolean updateRenderScale() {
         MarkdownStyle style = this.renderer.style;
         if (!style.snapTextScale.get() && !style.snapPositions.get()) return false;
-        float scale = this.renderer.getRenderScale();
+        float scale = this.currentRenderScale();
         if (!Float.isFinite(scale) || (scale <= 0.0F) || (scale == this.renderScale)) return false;
         this.renderScale = scale;
         return style.snapTextScale.get();
+    }
+
+    /**
+     * Returns how many screen pixels a GUI pixel of the renderer covers right now.
+     */
+    float currentRenderScale() {
+        Float parentScale = this.renderer.parentRenderScale;
+        return (parentScale != null) ? parentScale : RenderScaleUtil.getCurrentRenderScale();
+    }
+
+    /**
+     * Returns the GUI scale the renderer gets drawn at, without what the render pose scales on top of it.
+     */
+    float baseRenderScale() {
+        Float parentScale = this.renderer.parentRenderScale;
+        return (parentScale != null) ? parentScale : (float) WindowHandler.getGuiScale();
     }
 
     /**
@@ -105,6 +122,22 @@ final class MarkdownScaling {
     float snapX(float x) {
         if (!this.renderer.style.snapPositions.get()) return x;
         return RenderScaleUtil.snapGuiCoordinateToPixel(x, this.renderScale, this.renderTranslationX);
+    }
+
+    /**
+     * Returns how far right of the renderer the line starts when it gets drawn, which is where the layout put it,
+     * moved to a position the font of the renderer stays sharp at.
+     */
+    float lineOffsetX(@NotNull MarkdownTextLine line) {
+        MarkdownRenderer renderer = this.renderer;
+        if (renderer.style.snapPositions.get()) {
+            return this.snapX(renderer.x + line.layoutOffsetX) - renderer.x;
+        }
+        if ((line.alignment == MarkdownRenderer.MarkdownLineAlignment.CENTERED) && !renderer.uiFontRenderingEnabled && line.isAlignmentAllowed(line.alignment)) {
+            // Odd-width centering can land on half GUI pixels. Vanilla bitmap text needs a physical-pixel-aligned origin, while UI fonts support fractional origins.
+            return RenderScaleUtil.snapGuiCoordinateToPixel(renderer.x + line.layoutOffsetX, this.currentRenderScale(), RenderTranslationUtil.getCurrentRenderTranslationX()) - renderer.x;
+        }
+        return line.layoutOffsetX;
     }
 
     /**

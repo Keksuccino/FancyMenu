@@ -115,7 +115,7 @@ class MarkdownScalingTest {
         renderer.tick();
 
         for (MarkdownTextLine line : renderer.lines) {
-            assertOnScreenPixel(renderer.getX() + renderer.getRenderOffsetX(line), 3.0F);
+            assertOnScreenPixel(renderer.getX() + renderer.scaling.lineOffsetX(line), 3.0F);
             assertOnScreenPixel(line.getRenderY(), 3.0F);
             for (MarkdownTextFragment fragment : line.fragments) {
                 assertEquals(line.getRenderY(), fragment.getRenderLineY());
@@ -153,7 +153,7 @@ class MarkdownScalingTest {
 
         for (MarkdownTextLine line : renderer.lines) {
             assertEquals(renderer.getY() + line.offsetY, line.getRenderY());
-            assertEquals(line.offsetX, renderer.getRenderOffsetX(line));
+            assertEquals(line.offsetX, renderer.scaling.lineOffsetX(line));
         }
     }
 

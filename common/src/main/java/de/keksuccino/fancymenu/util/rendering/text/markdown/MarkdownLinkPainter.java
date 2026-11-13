@@ -46,7 +46,7 @@ final class MarkdownLinkPainter {
         float width = fragment.unscaledTextWidth;
         // The space behind the last word of a link is drawn behind the link, and the one at the end of a line is not drawn at all
         if (fragment.getTrailingSpaceMode() != MarkdownTextFragment.TRAILING_SPACE_KEEP) width -= fragment.unscaledTrailingSpaceWidth;
-        if (renderer.style.trimGlyphSpacing.get()) width -= renderer.getFontMetrics().glyphSpacing;
+        if (renderer.style.trimGlyphSpacing.get()) width -= renderer.textFont.metrics().glyphSpacing;
         return Math.max(0.0F, width) * fragment.getScale();
     }
 
@@ -54,14 +54,14 @@ final class MarkdownLinkPainter {
         MarkdownStyleOption.ColorOption colorOption = getUnderlineColor(fragment);
         if (colorOption == null) return;
         MarkdownRenderer renderer = fragment.parent;
-        MarkdownFontMetrics metrics = renderer.getFontMetrics();
+        MarkdownFontMetrics metrics = renderer.textFont.metrics();
         float scale = fragment.getScale();
         float x = fragment.getTextX();
         float y = fragment.getTextY() + ((metrics.baseline + metrics.underlineOffset) * scale);
         float width = getUnderlineWidth(fragment);
         float thickness = metrics.underlineThickness * scale;
         int color = renderer.getRenderColor(colorOption);
-        if (renderer.hasTextShadow()) {
+        if (renderer.textFont.hasShadow()) {
             RenderingUtils.fillF(graphics, x + scale, y + scale, x + scale + width, y + scale + thickness, MarkdownPixelArt.shadowColor(color));
         }
         RenderingUtils.fillF(graphics, x, y, x + width, y + thickness, color);
