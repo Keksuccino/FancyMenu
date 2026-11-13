@@ -692,7 +692,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             f += this.parent.quoteIndent * this.getScale();
         }
         if ((this.quoteContext != null) && endOfRenderLine && (this.alignment == MarkdownRenderer.MarkdownLineAlignment.RIGHT)) {
-            f += this.parent.quoteIndent;
+            f += this.parent.quoteIndent * this.getScale();
         }
         if (this.bulletListLevel > 0 && this.startOfRenderLine) {
             float bulletSpace = (this.parent.bulletListIndent * this.bulletListLevel * this.getScale()) + (BULLET_LIST_SPACE_AFTER_INDENT * this.getScale());
