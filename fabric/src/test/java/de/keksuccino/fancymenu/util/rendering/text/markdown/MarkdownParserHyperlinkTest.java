@@ -4,15 +4,19 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownParserTestSupport.fragmentContaining;
 import static de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownParserTestSupport.joinText;
 import static de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownParserTestSupport.parse;
+import static de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownParserTestSupport.texts;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * The comments show the Markdown source without the escaping of the Java strings.
@@ -84,6 +88,64 @@ class MarkdownParserHyperlinkTest {
         assertEquals("a \\] b c", joinText(fragments));
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"https://example.invalid", "click:event", "hover:event"})
+    void spaceBehindALinkJoinsItsLastFragmentAndEndsItsWord(String target) {
+        List<MarkdownTextFragment> fragments = parse("[two words](" + target + ") next");
+        MarkdownTextFragment last = fragmentContaining(fragments, "words");
+
+        assertEquals("words ", last.text);
+        assertTrue(last.endOfWord);
+        assertEquals("next", fragments.get(fragments.indexOf(last) + 1).text);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"next", ".", ")", "**bold**"})
+    void textDirectlyBehindALinkStaysInItsWord(String textBehindLink) {
+        MarkdownTextFragment link = fragmentContaining(parse("[link](https://example.invalid)" + textBehindLink), "link");
+
+        assertEquals("link", link.text);
+        assertFalse(link.endOfWord);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"word[link](https://example.invalid)", "word [link](https://example.invalid)"})
+    void textInFrontOfALinkOnlyEndsItsWordWithASpace(String text) {
+        MarkdownTextFragment word = fragmentContaining(parse(text), "word");
+
+        assertEquals(text.contains("word "), word.endOfWord);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"[link](https://example.invalid)\nnext", "[link](https://example.invalid)"})
+    void lineEndBehindALinkGetsAFragmentOfItsOwn(String text) {
+        List<MarkdownTextFragment> fragments = parse(text);
+        MarkdownTextFragment link = fragmentContaining(fragments, "link");
+        MarkdownTextFragment lineEnd = fragments.get(fragments.indexOf(link) + 1);
+
+        assertFalse(link.endOfWord);
+        assertFalse(link.naturalLineBreakAfter);
+        assertEquals("", lineEnd.text);
+        assertTrue(lineEnd.naturalLineBreakAfter);
+    }
+
+    @Test
+    void lineWrapsBehindTheSpaceThatFollowsALink() {
+        // The label and the word behind it are too wide for one line
+        assertEquals(List.of(List.of("", "alonglinklabel "), List.of("next")), renderLines("[alonglinklabel](https://example.invalid) next", 100));
+    }
+
+    @Test
+    void lineDoesNotWrapBetweenALinkAndTheTextDirectlyBehindIt() {
+        // "aa bb" fits into the line and the "cc" behind the link does not, but it belongs to the word the link ends in
+        assertEquals(List.of(List.of("aa ", "bb", "cc "), List.of("dd")), renderLines("aa [bb](https://example.invalid)cc dd", 40));
+    }
+
+    @Test
+    void lineBreakBehindALinkThatIsWiderThanTheRendererAddsNoEmptyLine() {
+        assertEquals(List.of(List.of("", "averyveryverylonglinklabel", ""), List.of("next")), renderLines("[averyveryverylonglinklabel](https://example.invalid)\nnext", 60));
+    }
+
     @Test
     void escapedBracketsAreTextOfAnImageLabel() {
         // ![a\]b](image.png)
@@ -91,6 +153,17 @@ class MarkdownParserHyperlinkTest {
 
         assertEquals(1, fragments.size());
         assertEquals("image.png", fragments.get(0).imageSupplier.getSourceWithoutPrefix());
+    }
+
+    /**
+     * Returns the fragment texts of all render lines the text gets at the given width, measured with 6 pixels per character.
+     */
+    private static List<List<String>> renderLines(String text, float width) {
+        MarkdownTestRenderer renderer = new MarkdownTestRenderer(text, width);
+        renderer.tick();
+        List<List<String>> lines = new ArrayList<>();
+        for (MarkdownTextLine line : renderer.lines) lines.add(texts(line.fragments));
+        return lines;
     }
 
 }

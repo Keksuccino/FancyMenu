@@ -436,9 +436,8 @@ public class MarkdownParser {
                     if (targetEnd != -1) {
                         String hyperlink = markdownText.substring(labelEnd + FORMATTING_CODE_HYPERLINK_INNER_PREFIX.length(), targetEnd);
                         if (isStartOfLine || !builder.text.isEmpty()) {
-                            // Check if current text ends with space to set endOfWord properly
-                            boolean endsWithSpace = !builder.text.isEmpty() && (builder.text.charAt(builder.text.length() - 1) == SPACE_CHAR);
-                            lastBuiltFragment = addFragment(fragments, builder.build(false, endsWithSpace));
+                            // Text that ends with a space is built already, so what is left here continues in the link without a gap
+                            lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                         }
                         linkLabelEnd = labelEnd;
                         linkTargetEnd = targetEnd;
@@ -460,15 +459,10 @@ public class MarkdownParser {
                 // The link ends at the bracket its label was found to end at when it opened, and at no other one.
                 // The characters behind that bracket are exactly the target that was read back then, so skipping them never cuts into other text.
                 if (index == linkLabelEnd) {
-                    // Check if there's whitespace after the closing parenthesis to determine endOfWord
-                    int skipLength = linkTargetEnd - index;
-                    boolean hasSpaceAfter = false;
-                    if (index + skipLength < textLength) {
-                        char afterChar = markdownText.charAt(index + skipLength);
-                        hasSpaceAfter = (afterChar == SPACE_CHAR) || (afterChar == NEWLINE_CHAR);
-                    }
-                    lastBuiltFragment = addFragment(fragments, builder.build(false, hasSpaceAfter));
-                    charsToSkip = skipLength;
+                    // The end of the link is not marked as the end of a word here. A space behind the link joins this fragment and marks it,
+                    // and a line break behind the link gets a fragment of its own, like behind every other inline format.
+                    lastBuiltFragment = addFragment(fragments, builder.build(false, false));
+                    charsToSkip = linkTargetEnd - index;
                     builder.hyperlink = null;
                     builder.clickEvent = null;
                     builder.hoverEvent = null;
