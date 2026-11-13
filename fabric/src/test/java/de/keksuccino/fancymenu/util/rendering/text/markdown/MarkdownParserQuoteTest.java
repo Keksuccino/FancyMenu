@@ -128,6 +128,44 @@ class MarkdownParserQuoteTest {
         assertOneQuote(fragments);
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"```", ";;;"})
+    void emptyLineInsideABlockOfAQuoteDoesNotEndTheQuote(String blockMarker) {
+        List<MarkdownTextFragment> fragments = parse("> quote\n" + blockMarker + "\nfirst\n\n   \nsecond\n" + blockMarker + "\nstill quote\n\nafter");
+        QuoteContext quote = fragmentContaining(fragments, "quote").quoteContext;
+        MarkdownTextFragment second = fragmentContaining(fragments, "second");
+
+        assertNotNull(quote);
+        assertSame(quote, fragmentContaining(fragments, "first").quoteContext);
+        assertSame(quote, second.quoteContext);
+        assertTrue(second.plainText || (second.codeBlockContext != null));
+        assertSame(quote, fragmentContaining(fragments, "still").quoteContext);
+        assertNull(fragmentContaining(fragments, "after").quoteContext);
+        // The quote has the line that opens it, the four lines of the block, two of which are empty, and the line behind the block
+        assertEquals(6, quote.quoteFragments.stream().filter(fragment -> fragment.naturalLineBreakAfter).count());
+    }
+
+    @Test
+    void emptyLineInsidePlainTextThatSpansLinesOfAQuoteDoesNotEndTheQuote() {
+        List<MarkdownTextFragment> fragments = parse("> quote ;;plain\n\nmore;; still\n\nafter");
+        QuoteContext quote = fragmentContaining(fragments, "quote").quoteContext;
+
+        assertNotNull(quote);
+        assertTrue(fragmentContaining(fragments, "more").plainText);
+        assertSame(quote, fragmentContaining(fragments, "more").quoteContext);
+        assertSame(quote, fragmentContaining(fragments, "still").quoteContext);
+        assertNull(fragmentContaining(fragments, "after").quoteContext);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"```", ";;;"})
+    void emptyLineBehindABlockOfAQuoteEndsTheQuote(String blockMarker) {
+        List<MarkdownTextFragment> fragments = parse("> quote\n" + blockMarker + "\ninside\n" + blockMarker + "\n\nafter");
+
+        assertNotNull(fragmentContaining(fragments, "inside").quoteContext);
+        assertNull(fragmentContaining(fragments, "after").quoteContext);
+    }
+
     private static void assertOneQuote(List<MarkdownTextFragment> fragments) {
         QuoteContext quote = fragments.get(0).quoteContext;
         assertNotNull(quote);
