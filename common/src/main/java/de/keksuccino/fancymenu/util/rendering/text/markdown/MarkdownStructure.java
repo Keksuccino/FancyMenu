@@ -340,7 +340,7 @@ final class MarkdownStructure {
                     int markerEnd = index + FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX.length();
                     // The marker that opens a block can have an info string behind it, like the name of a language, which is no part of the block.
                     // A grave accent behind the marker makes the line text with code inside of it instead.
-                    if (!code && (indexOf(text, GRAVE_ACCENT_CHAR, markerEnd, lineEnd) == -1) && lookahead.existsFrom(LookaheadMarker.CODE_BLOCK_MULTI_LINE_END, lineEnd)) {
+                    if (!code && (indexOfMarkerCharacter(text, GRAVE_ACCENT_CHAR, markerEnd, lineEnd) == -1) && lookahead.existsFrom(LookaheadMarker.CODE_BLOCK_MULTI_LINE_END, lineEnd)) {
                         this.addEvent(index, Event.CODE_BLOCK_OPEN, 0, 0);
                         code = true;
                         singleLineCode = false;
@@ -705,7 +705,8 @@ final class MarkdownStructure {
                     Table table = outsideTables ? this.getTableTouchedBy(marker, nextOccurrence) : null;
                     if (table != null) {
                         nextOccurrence = this.text.indexOf(marker.marker, table.end());
-                    } else if (marker.line && !this.isMarkerLine(marker, nextOccurrence)) {
+                    } else if (isFormattingCodeCharacter(this.text, nextOccurrence) || (marker.line && !this.isMarkerLine(marker, nextOccurrence))) {
+                        // The character of a formatting code is no marker, whatever it is
                         nextOccurrence = this.text.indexOf(marker.marker, nextOccurrence + 1);
                     } else {
                         break;
