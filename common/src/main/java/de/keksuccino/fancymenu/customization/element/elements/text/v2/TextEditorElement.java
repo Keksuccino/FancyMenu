@@ -223,7 +223,13 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.background.texture.desc")))
                 .setIcon(MaterialIcons.IMAGE);
 
-        // The built-in panel always gets nine-sliced the way it needs it, so the nine-slice settings only do something for a texture of the user
+        // The built-in panel always gets drawn the way it needs it, so everything below only does something for a texture of the user
+        background.tile.buildContextMenuEntryAndAddTo(backgroundMenu, this)
+                .setStackable(true)
+                .addIsActiveSupplier((menu, entry) -> background.texture.get() != null)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.background.tile.desc")))
+                .setIcon(MaterialIcons.GRID_VIEW);
+
         background.nineSlice.buildContextMenuEntryAndAddTo(backgroundMenu, this)
                 .setStackable(true)
                 .addIsActiveSupplier((menu, entry) -> background.texture.get() != null)
