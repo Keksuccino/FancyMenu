@@ -3,8 +3,10 @@ package de.keksuccino.fancymenu.util.rendering.text.markdown;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownMarkerAlignment;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownMarkerShape;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyle;
+import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyleOption;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import org.jetbrains.annotations.NotNull;
+import java.util.List;
 
 /**
  * Measures and draws the markers in front of list items.<br>
@@ -24,17 +26,72 @@ final class MarkdownListMarkerPainter {
     }
 
     /**
+     * Returns if one of the fragments starts a list item with "+". Text with such items reads like patch notes, which changes the markers of its "-" items.
+     */
+    static boolean hasPlusItems(@NotNull List<MarkdownTextFragment> fragments) {
+        for (MarkdownTextFragment fragment : fragments) {
+            if (fragment.bulletListItemStart && (fragment.listItemMarker == MarkdownTextFragment.ListItemMarker.PLUS)) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Returns if the list item the fragment starts has the marker for removed things instead of the marker of its list level.
+     */
+    static boolean isRemovedItem(@NotNull MarkdownTextFragment fragment) {
+        if ((fragment.listItemMarker != MarkdownTextFragment.ListItemMarker.DASH) || (fragment.bulletListLevel != 1)) return false;
+        switch (fragment.parent.style.listMinusMarkerMode.get()) {
+            case ALWAYS:
+                return true;
+            case AUTOMATIC:
+                return fragment.parent.textHasPlusListItems;
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * Returns the shape of the marker of the list item the fragment starts. The character the item starts with decides,
+     * and items that start with "-" have the marker of their list level unless they stand for removed things.
+     */
+    @NotNull
+    static MarkdownMarkerShape getMarkerShape(@NotNull MarkdownTextFragment fragment) {
+        MarkdownStyle style = fragment.parent.style;
+        switch (fragment.listItemMarker) {
+            case PLUS:
+                return style.listPlusMarkerShape.get();
+            case TILDE:
+                return style.listTildeMarkerShape.get();
+            case ASTERISK:
+                return style.listAsteriskMarkerShape.get();
+            default:
+                return isRemovedItem(fragment) ? style.listMinusMarkerShape.get() : style.listLevel(fragment.bulletListLevel).markerShape.get();
+        }
+    }
+
+    @NotNull
+    static MarkdownStyleOption.ColorOption getMarkerColor(@NotNull MarkdownTextFragment fragment) {
+        MarkdownStyle style = fragment.parent.style;
+        switch (fragment.listItemMarker) {
+            case PLUS:
+                return style.listPlusMarkerColor;
+            case TILDE:
+                return style.listTildeMarkerColor;
+            case ASTERISK:
+                return style.listAsteriskMarkerColor;
+            default:
+                return isRemovedItem(fragment) ? style.listMinusMarkerColor : style.listLevel(fragment.bulletListLevel).markerColor;
+        }
+    }
+
+    /**
      * Draws the marker of the list item that starts in the given line.
      */
     static void render(@NotNull GuiGraphics graphics, @NotNull MarkdownTextLine line) {
         MarkdownRenderer renderer = line.parent;
-        MarkdownStyle style = renderer.style;
         MarkdownTextFragment first = line.fragments.get(0);
-        MarkdownStyle.ListLevel level = style.listLevel(first.bulletListLevel);
-        MarkdownMarkerShape shape = level.markerShape.get();
-        if (shape == MarkdownMarkerShape.NONE) return;
         float scale = first.getScale();
-        MarkdownPaint.marker(graphics, renderer, shape, getMarkerX(first), getMarkerY(first), style.listMarkerSize.get() * scale, scale, renderer.getRenderColor(level.markerColor));
+        MarkdownPaint.marker(graphics, renderer, getMarkerShape(first), getMarkerX(first), getMarkerY(first), renderer.style.listMarkerSize.get() * scale, scale, renderer.getRenderColor(getMarkerColor(first)));
     }
 
     /**
