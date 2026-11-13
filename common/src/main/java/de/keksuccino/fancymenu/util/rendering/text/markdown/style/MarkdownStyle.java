@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.text.markdown.style;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyleOption.BooleanOption;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyleOption.ColorOption;
+import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyleOption.EnumOption;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyleOption.FloatOption;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyleOption.Group;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyleOption.Impact;
@@ -32,6 +33,7 @@ import java.util.function.Supplier;
  */
 public final class MarkdownStyle {
 
+    private static final LookColor NONE = LookColor.NONE;
     private static final LookColor WHITE = rgb(255, 255, 255);
     // The palette of the pixel look
     private static final LookColor PIXEL_TEXT = rgb(236, 229, 211);
@@ -63,8 +65,35 @@ public final class MarkdownStyle {
     public final BooleanOption textShadow = this.bool("text_shadow", Group.TEXT, Impact.DRAW, true, true, false);
     /** The space between the edges of the renderer and its text area. The outer 2 pixels can get clipped by containers like scroll areas, so it is never smaller. */
     public final FloatOption padding = this.size("padding", Group.TEXT, Impact.LAYOUT, 2.0F, 2.0F, 4.0F, 4.0F);
+    /** The color of bold text, if it has a color of its own. Text of headlines keeps the color of its headline. */
+    public final ColorOption boldTextColor = this.optionalColor("bold_text_color", Group.TEXT, Impact.COMPONENTS, NONE, WHITE, NONE);
     /** The space between two lines of the same block, like the lines of a paragraph. */
     public final FloatOption lineSpacing = this.size("line_spacing", Group.TEXT, Impact.LAYOUT, 2.0F, 2.0F, 3.0F);
+    /** What a blank line of the text becomes. */
+    public final EnumOption<MarkdownBlankLineMode> blankLineMode = this.mode("blank_line_mode", Group.TEXT, Impact.LAYOUT, MarkdownBlankLineMode.EMPTY_LINE, MarkdownBlankLineMode.PARAGRAPH_GAP, MarkdownBlankLineMode.PARAGRAPH_GAP);
+    /** If blank lines that follow each other count as one. Otherwise every blank line behind the first one of a row is an empty line. */
+    public final BooleanOption collapseBlankLines = this.bool("collapse_blank_lines", Group.TEXT, Impact.LAYOUT, false, true, true);
+    /** How the spaces above and below the blocks of the text come together. */
+    public final EnumOption<MarkdownBlockGapMode> blockGapMode = this.mode("block_gap_mode", Group.TEXT, Impact.LAYOUT, MarkdownBlockGapMode.ADD, MarkdownBlockGapMode.LARGEST, MarkdownBlockGapMode.LARGEST);
+    public final FloatOption paragraphSpaceAbove = this.size("paragraph_space_above", Group.TEXT, Impact.LAYOUT, 0.0F, 5.0F, 6.0F);
+    public final FloatOption paragraphSpaceBelow = this.size("paragraph_space_below", Group.TEXT, Impact.LAYOUT, 0.0F, 5.0F, 6.0F);
+    /**
+     * If the sizes of the style that the classic look keeps at a fixed size grow with the scale of the text, like everything else:
+     * the padding, the line spacing, the spaces around blocks, and the paddings and lines of headlines, quotes and tables.
+     */
+    public final BooleanOption scaleSizesWithText = this.bool("scale_sizes_with_text", Group.TEXT, Impact.LAYOUT, false, true, true);
+    /**
+     * If the scale of text gets rounded so that one pixel of the font covers a whole number of screen pixels, at every GUI scale and text scale.
+     * That keeps the Minecraft font sharp and makes text a bit smaller or bigger than its scale says.
+     */
+    public final BooleanOption snapTextScale = this.bool("snap_text_scale", Group.TEXT, Impact.LAYOUT, false, true, false);
+    /** If every line gets moved onto whole screen pixels, so the Minecraft font does not shimmer while the text scrolls. Otherwise only centered lines do. */
+    public final BooleanOption snapPositions = this.bool("snap_positions", Group.TEXT, Impact.DRAW, false, true, false);
+    /**
+     * If lines are as tall as the letters of the font, down to their descenders. Otherwise lines of the smooth UI font have its tight
+     * line height, which ends at the baseline of the text. Lines of the Minecraft font are 9 pixels tall either way.
+     */
+    public final BooleanOption fullLineHeight = this.bool("full_line_height", Group.TEXT, Impact.PARSE, false, true, true);
 
     // ---------------------------------------------------------------- Headlines
 
@@ -75,8 +104,12 @@ public final class MarkdownStyle {
 
     /** How far every list level indents its items. */
     public final FloatOption listIndent = this.size("list_indent", Group.LISTS, Impact.LAYOUT, 8.0F, 9.0F, 10.0F);
-    /** The space above every list item. */
-    public final FloatOption listItemSpacing = this.size("list_item_spacing", Group.LISTS, Impact.LAYOUT, 3.0F, 3.0F, 3.0F);
+    /** The space between two list items that follow each other. */
+    public final FloatOption listItemSpacing = this.size("list_item_spacing", Group.LISTS, Impact.LAYOUT, 3.0F, 3.0F, 4.0F);
+    /** The space above the first item of a list. */
+    public final FloatOption listSpaceAbove = this.size("list_space_above", Group.LISTS, Impact.LAYOUT, 3.0F, 4.0F, 6.0F);
+    /** The space below the last item of a list. */
+    public final FloatOption listSpaceBelow = this.size("list_space_below", Group.LISTS, Impact.LAYOUT, 0.0F, 5.0F, 6.0F);
     /** The options of the three list levels. Deeper levels look like the third one. */
     private final ListLevel[] listLevels = {new ListLevel(1), new ListLevel(2), new ListLevel(3)};
 
@@ -92,6 +125,8 @@ public final class MarkdownStyle {
 
     public final ColorOption inlineCodeBackgroundColor = this.color("inline_code_background_color", Group.CODE, Impact.DRAW, rgb(115, 115, 115), PIXEL_INK, this.theme(theme -> theme.ui_interface_generic_text_color, 26));
     public final ColorOption codeBlockBackgroundColor = this.color("code_block_background_color", Group.CODE, Impact.DRAW, rgb(86, 86, 86), PIXEL_INK, this.theme(theme -> theme.ui_interface_generic_text_color, 18));
+    public final FloatOption codeBlockSpaceAbove = this.size("code_block_space_above", Group.CODE, Impact.LAYOUT, 0.0F, 6.0F, 8.0F);
+    public final FloatOption codeBlockSpaceBelow = this.size("code_block_space_below", Group.CODE, Impact.LAYOUT, 0.0F, 6.0F, 8.0F);
 
     // ---------------------------------------------------------------- Quotes
 
@@ -101,13 +136,15 @@ public final class MarkdownStyle {
     /** The space between the edge of the text area and the text of a quote, which holds the bar. */
     public final FloatOption quoteIndent = this.size("quote_indent", Group.QUOTES, Impact.LAYOUT, 8.0F, 8.0F, 10.0F);
     public final BooleanOption quoteItalic = this.bool("quote_italic", Group.QUOTES, Impact.PARSE, false, false, false);
+    public final FloatOption quoteSpaceAbove = this.size("quote_space_above", Group.QUOTES, Impact.LAYOUT, 0.0F, 6.0F, 8.0F);
+    public final FloatOption quoteSpaceBelow = this.size("quote_space_below", Group.QUOTES, Impact.LAYOUT, 0.0F, 6.0F, 8.0F);
 
     // ---------------------------------------------------------------- Tables
 
     /** The space between the text of a cell and the edges of the cell. */
     public final FloatOption tableCellPadding = this.size("table_cell_padding", Group.TABLES, Impact.LAYOUT, 8.0F, 4.0F, 5.0F);
-    /** The space above and below a table. */
-    public final FloatOption tableMargin = this.size("table_margin", Group.TABLES, Impact.LAYOUT, 4.0F, 6.0F, 6.0F);
+    public final FloatOption tableSpaceAbove = this.size("table_space_above", Group.TABLES, Impact.LAYOUT, 4.0F, 6.0F, 8.0F);
+    public final FloatOption tableSpaceBelow = this.size("table_space_below", Group.TABLES, Impact.LAYOUT, 4.0F, 6.0F, 8.0F);
     /** If the first row of a table looks like a header. Otherwise it is a row like every other one. */
     public final BooleanOption tableShowHeader = this.bool("table_show_header", Group.TABLES, Impact.DRAW, true, true, true);
     public final ColorOption tableHeaderBackgroundColor = this.color("table_header_background_color", Group.TABLES, Impact.DRAW, rgb(50, 50, 50), rgba(255, 201, 77, 41), this.theme(theme -> theme.ui_interface_generic_text_color, 20));
@@ -118,9 +155,16 @@ public final class MarkdownStyle {
     public final ColorOption tableLineColor = this.color("table_line_color", Group.TABLES, Impact.DRAW, rgb(120, 120, 120), PIXEL_FRAME, this.theme(theme -> theme.ui_interface_generic_text_color, 46));
     public final FloatOption tableLineThickness = this.size("table_line_thickness", Group.TABLES, Impact.LAYOUT, 1.0F, 1.0F, 1.0F);
 
+    // ---------------------------------------------------------------- Images
+
+    public final FloatOption imageSpaceAbove = this.size("image_space_above", Group.IMAGES, Impact.LAYOUT, 0.0F, 6.0F, 8.0F);
+    public final FloatOption imageSpaceBelow = this.size("image_space_below", Group.IMAGES, Impact.LAYOUT, 0.0F, 6.0F, 8.0F);
+
     // ---------------------------------------------------------------- Separators
 
     public final ColorOption separatorColor = this.color("separator_color", Group.SEPARATORS, Impact.DRAW, rgb(169, 169, 169), PIXEL_ACCENT_DIM, this.theme(theme -> theme.ui_interface_generic_text_color, 46));
+    public final FloatOption separatorSpaceAbove = this.size("separator_space_above", Group.SEPARATORS, Impact.LAYOUT, 0.0F, 7.0F, 8.0F);
+    public final FloatOption separatorSpaceBelow = this.size("separator_space_below", Group.SEPARATORS, Impact.LAYOUT, 0.0F, 7.0F, 8.0F);
 
     /**
      * @param listener Gets told about every change to the style.
@@ -232,8 +276,16 @@ public final class MarkdownStyle {
         return new FloatOption(this, key, group, impact, minimum, classicValue, pixelValue, neutralValue);
     }
 
+    private <E extends Enum<E>> EnumOption<E> mode(String key, Group group, Impact impact, E classicValue, E pixelValue, E neutralValue) {
+        return new EnumOption<>(this, key, group, impact, classicValue, pixelValue, neutralValue);
+    }
+
     private ColorOption color(String key, Group group, Impact impact, LookColor classicValue, LookColor pixelValue, LookColor neutralValue) {
         return new ColorOption(this, key, group, impact, false, classicValue, pixelValue, neutralValue);
+    }
+
+    private ColorOption optionalColor(String key, Group group, Impact impact, LookColor classicValue, LookColor pixelValue, LookColor neutralValue) {
+        return new ColorOption(this, key, group, impact, true, classicValue, pixelValue, neutralValue);
     }
 
     private static LookColor rgb(int red, int green, int blue) {
@@ -242,6 +294,13 @@ public final class MarkdownStyle {
 
     private static LookColor rgba(int red, int green, int blue, int alpha) {
         return LookColor.of((alpha << 24) | (red << 16) | (green << 8) | blue);
+    }
+
+    /**
+     * Returns the value of the given level out of one value per level.
+     */
+    private static <T> T pick(int level, T first, T second, T third) {
+        return (level == 1) ? first : (level == 2) ? second : third;
     }
 
     /**
@@ -266,9 +325,13 @@ public final class MarkdownStyle {
 
         /** The color of the line or dots a headline gets decorated with. */
         public final ColorOption decorationColor;
+        public final FloatOption spaceAbove;
+        public final FloatOption spaceBelow;
 
         private Headline(int level) {
             String key = "headline_" + level + "_";
+            this.spaceAbove = MarkdownStyle.this.size(key + "space_above", Group.HEADLINES, Impact.LAYOUT, 0.0F, pick(level, 10.0F, 9.0F, 7.0F), pick(level, 14.0F, 12.0F, 10.0F));
+            this.spaceBelow = MarkdownStyle.this.size(key + "space_below", Group.HEADLINES, Impact.LAYOUT, 0.0F, pick(level, 6.0F, 4.0F, 3.0F), pick(level, 7.0F, 6.0F, 5.0F));
             this.decorationColor = MarkdownStyle.this.color(key + "decoration_color", Group.HEADLINES, Impact.DRAW, rgb(169, 169, 169), PIXEL_ACCENT_DIM, MarkdownStyle.this.theme(theme -> theme.ui_interface_generic_text_color, 46));
         }
 
@@ -284,7 +347,7 @@ public final class MarkdownStyle {
 
         private ListLevel(int level) {
             String key = "list_level_" + level + "_";
-            this.markerColor = MarkdownStyle.this.color(key + "marker_color", Group.LISTS, Impact.DRAW, rgb(169, 169, 169), (level == 1) ? PIXEL_ACCENT : PIXEL_DIM, MarkdownStyle.this.theme(theme -> (level == 1) ? theme.bullet_list_dot_color_1 : (level == 2) ? theme.bullet_list_dot_color_2 : theme.bullet_list_dot_color_3));
+            this.markerColor = MarkdownStyle.this.color(key + "marker_color", Group.LISTS, Impact.DRAW, rgb(169, 169, 169), pick(level, PIXEL_ACCENT, PIXEL_DIM, PIXEL_DIM), MarkdownStyle.this.theme(theme -> pick(level, theme.bullet_list_dot_color_1, theme.bullet_list_dot_color_2, theme.bullet_list_dot_color_3)));
         }
 
     }
