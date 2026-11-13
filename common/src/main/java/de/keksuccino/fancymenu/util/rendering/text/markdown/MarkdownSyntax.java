@@ -122,16 +122,34 @@ final class MarkdownSyntax {
         return (prefix == AMPERSAND_CHAR) && (MinecraftFormattingState.getAmpersandFormattingAt(text, index) != null);
     }
 
+    /**
+     * Returns if the character at the given index is the character of a Minecraft formatting code, which the parser reads together with the section sign
+     * or ampersand in front of it. Such a character is no part of a Markdown marker, whatever it is: custom text color formatters can use any character.
+     *
+     * <p>The parser reads from left to right. A character in front of the index that could start a code is the character of a code itself
+     * if the one in front of it starts a code as well, so what counts is how many such characters stand in a row.</p>
+     */
+    static boolean isFormattingCodeCharacter(@NotNull String text, int index) {
+        int codeStarts = 0;
+        for (int i = index - 1; (i >= 0) && isFormattingCode(text, i); i--) codeStarts++;
+        return (codeStarts % 2) == 1;
+    }
+
+    /**
+     * Returns the index of the first occurrence of the character between the two indexes that is not the character of a formatting code, or -1 if there is none.
+     */
+    static int indexOfMarkerCharacter(@NotNull String text, char character, int start, int end) {
+        int index = indexOf(text, character, start, end);
+        while ((index != -1) && isFormattingCodeCharacter(text, index)) index = indexOf(text, character, index + 1, end);
+        return index;
+    }
+
     static boolean isCharacterEscaped(@NotNull String markdownText, int index) {
-        if (index <= 0) return false;
-        int backslashCount = 0;
-        for (int i = index - 1; i >= 0; i--) {
-            if (markdownText.charAt(i) == BACKSLASH_CHAR) {
-                backslashCount++;
-            } else {
-                break;
-            }
-        }
+        int firstBackslash = index;
+        while ((firstBackslash > 0) && (markdownText.charAt(firstBackslash - 1) == BACKSLASH_CHAR)) firstBackslash--;
+        int backslashCount = index - firstBackslash;
+        // A backslash that is the character of a formatting code escapes nothing
+        if ((backslashCount > 0) && isFormattingCodeCharacter(markdownText, firstBackslash)) backslashCount--;
         return (backslashCount % 2) == 1;
     }
 
@@ -343,7 +361,7 @@ final class MarkdownSyntax {
      * A valid label stays in its line and ends at the first square bracket that is not escaped. That bracket has to be a closing
      * one with the target of the link right behind it ("](").
      *
-     * <p>Escaped characters get skipped the same way the parser reads them, so the parser always reaches the bracket this returns.</p>
+     * <p>Formatting codes and escaped characters get skipped the same way the parser reads them, so the parser always reaches the bracket this returns.</p>
      *
      * <p>The search stops at the first square bracket or line break it reaches, so the label search of one link ends before the label of the
      * next link starts. {@link #getLinkTargetEnd(String, int)} stops at the first closing square bracket or line break at the latest, which is in front
@@ -353,6 +371,11 @@ final class MarkdownSyntax {
         int length = text.length();
         for (int i = labelStart; i < length; i++) {
             char c = text.charAt(i);
+            // The character of a formatting code is no bracket and no backslash, whatever it is
+            if (((c == ChatFormatting.PREFIX_CODE) || (c == AMPERSAND_CHAR)) && isFormattingCode(text, i)) {
+                i++;
+                continue;
+            }
             if ((c == NEWLINE_CHAR) || (c == OPEN_SQUARE_BRACKETS_CHAR)) return -1;
             if (c == CLOSE_SQUARE_BRACKETS_CHAR) return text.startsWith(FORMATTING_CODE_HYPERLINK_INNER_PREFIX, i) ? i : -1;
             if ((c == BACKSLASH_CHAR) && (i + 1 < length) && isEscapableMarkdownCharacter(text.charAt(i + 1))) i++;
