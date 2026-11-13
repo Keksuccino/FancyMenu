@@ -24,4 +24,18 @@ class MarkdownRightAlignedQuoteTest {
         }
     }
 
+    @Test
+    void indentScalesWithTheTextLikeTheIndentOfLeftAlignedQuotes() {
+        MarkdownTestRenderer renderer = new MarkdownTestRenderer("> left\n\n|||\n> right\n|||", 2000);
+        renderer.setQuoteIndent(8);
+        renderer.setTextBaseScale(2.0F);
+        renderer.tick();
+        MarkdownTextFragment left = renderer.fragmentContaining("left");
+        MarkdownTextFragment right = renderer.fragmentContaining("right");
+
+        assertEquals(("left".length() * CHAR_WIDTH * 2) + 16, left.getRenderWidth());
+        assertEquals(("right".length() * CHAR_WIDTH * 2) + 16, right.getRenderWidth());
+        assertEquals(right.getRenderWidth(), right.parentLine.getLineWidth());
+    }
+
 }
