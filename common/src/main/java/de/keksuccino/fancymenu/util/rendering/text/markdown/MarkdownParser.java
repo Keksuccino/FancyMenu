@@ -79,6 +79,12 @@ public class MarkdownParser {
         boolean strikethroughDouble = false;
         //Index behind the marker that opened bold text last
         int boldMarkerEnd = -1;
+        //Index of the last percent sign of the marker of a font or color the loop read last. The loop reads that percent sign once more,
+        //because it can be the first one of the next marker as well: markers that share a percent sign all work that way.
+        int sharedPercentSign = -1;
+        //Index of the percent sign that ends the prefix of the font and of the color that opened last. The suffix that closes them starts behind it.
+        int fontPrefixEnd = -1;
+        int colorPrefixEnd = -1;
         boolean lineHandledByWholeLineConstruct = false;
         //The fragment that a space joins when the text of the fragment is what the space follows, which ends the word of that fragment.
         //Markers that open something and the prefixes of lines set it to NULL, so a space behind them becomes a fragment of what they opened.
@@ -297,15 +303,18 @@ public class MarkdownParser {
                                 buildTextInFrontOfOpeningMarker(fragments, builder, isStartOfLine);
                                 lastBuiltFragment = null;
                                 builder.font = font;
-                                index = fontNameEnd;
+                                fontPrefixEnd = fontNameEnd;
+                                sharedPercentSign = fontNameEnd;
+                                index = fontNameEnd - 1;
                                 continue;
                             }
                         }
                     }
-                    if (markdownText.startsWith(FORMATTING_CODE_FONT_SUFFIX, index) && (builder.font != null)) {
+                    if (markdownText.startsWith(FORMATTING_CODE_FONT_SUFFIX, index) && (builder.font != null) && (index != fontPrefixEnd)) {
                         lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                         builder.font = null;
-                        index += 3;
+                        sharedPercentSign = index + FORMATTING_CODE_FONT_SUFFIX.length() - 1;
+                        index = sharedPercentSign - 1;
                         continue;
                     }
                 }
@@ -323,17 +332,22 @@ public class MarkdownParser {
                                 buildTextInFrontOfOpeningMarker(fragments, builder, isStartOfLine);
                                 lastBuiltFragment = null;
                                 builder.textColor = color;
-                                index = colorEnd;
+                                colorPrefixEnd = colorEnd;
+                                sharedPercentSign = colorEnd;
+                                index = colorEnd - 1;
                                 continue;
                             }
                         }
                     }
-                    if (markdownText.startsWith(FORMATTING_CODE_HEX_COLOR_SUFFIX, index) && (builder.textColor != null)) {
+                    if (markdownText.startsWith(FORMATTING_CODE_HEX_COLOR_SUFFIX, index) && (builder.textColor != null) && (index != colorPrefixEnd)) {
                         lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                         builder.textColor = null;
-                        index += 2;
+                        sharedPercentSign = index + FORMATTING_CODE_HEX_COLOR_SUFFIX.length() - 1;
+                        index = sharedPercentSign - 1;
                         continue;
                     }
+                    // The percent sign was the last character of a marker and starts no other one, so it is no text
+                    if (index == sharedPercentSign) continue;
                 }
 
                 //Handle Bold
