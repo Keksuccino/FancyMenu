@@ -37,6 +37,9 @@ import java.util.function.Supplier;
 
 public class TextElement extends AbstractElement {
 
+    /** The space next to the text area that a scroll bar has its grabber in. The grabbers are outside of the element. */
+    public static final int SCROLL_BAR_SPACE = 12;
+
     @NotNull
     protected SourceMode sourceMode = SourceMode.DIRECT;
     @Nullable
@@ -61,6 +64,7 @@ public class TextElement extends AbstractElement {
     public final Property.ColorProperty scrollGrabberColorHexHover = putProperty(Property.hexColorProperty("grabber_color_hover", null, true, "fancymenu.elements.text.scroll_grabber_color.hover"));
     public final MarkdownSettings markdownSettings = new MarkdownSettings(this, this.markdownRenderer);
     public final Property<ScrollGrabberDesign> scrollGrabberDesign = putProperty(ScrollGrabberDesign.buildProperty());
+    public final TextBackground background = new TextBackground(this);
 
     protected List<String> lastLines;
     protected IText lastIText;
@@ -88,8 +92,8 @@ public class TextElement extends AbstractElement {
                 super.updateScrollArea();
                 //Manually update scroll bar area size, so the grabbers are outside the area
                 if (ScreenUtils.getScreen() != null) {
-                    this.verticalScrollBar.scrollAreaEndX = TextElement.this.getAbsoluteX() + TextElement.this.getAbsoluteWidth() + 12;
-                    this.horizontalScrollBar.scrollAreaEndY = TextElement.this.getAbsoluteY() + TextElement.this.getAbsoluteHeight() + 12;
+                    this.verticalScrollBar.scrollAreaEndX = TextElement.this.getAbsoluteX() + TextElement.this.getAbsoluteWidth() + SCROLL_BAR_SPACE;
+                    this.horizontalScrollBar.scrollAreaEndY = TextElement.this.getAbsoluteY() + TextElement.this.getAbsoluteHeight() + SCROLL_BAR_SPACE;
                 }
             }
             @Override
@@ -170,10 +174,17 @@ public class TextElement extends AbstractElement {
 
                 this.markdownRenderer.setTextOpacity(this.opacity);
 
-                this.scrollArea.setX(this.getAbsoluteX(), true);
-                this.scrollArea.setY(this.getAbsoluteY(), true);
-                this.scrollArea.setWidth(this.getAbsoluteWidth(), true);
-                this.scrollArea.setHeight(this.getAbsoluteHeight(), true);
+                int x = this.getAbsoluteX();
+                int y = this.getAbsoluteY();
+                int width = this.getAbsoluteWidth();
+                int height = this.getAbsoluteHeight();
+
+                this.background.render(graphics, x, y, width, height, this.scrollArea, this.opacity);
+
+                this.scrollArea.setX(x, true);
+                this.scrollArea.setY(y, true);
+                this.scrollArea.setWidth(width, true);
+                this.scrollArea.setHeight(height, true);
                 this.scrollArea.extractRenderState(graphics, mouseX, mouseY, partial);
 
             } catch (Exception e) {
