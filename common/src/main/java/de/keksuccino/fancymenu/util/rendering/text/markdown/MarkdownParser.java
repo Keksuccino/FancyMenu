@@ -992,24 +992,10 @@ public class MarkdownParser {
                 List<MarkdownTextFragment.TableCell.TableCellAlignment> alignments = parseTableAlignments(nextLine);
                 
                 // Parse header row
-                List<String> headerCells = parseTableRow(currentLine);
                 MarkdownTextFragment.TableRow headerRow = new MarkdownTextFragment.TableRow(renderer);
                 headerRow.isHeader = true;
                 tableContext.hasHeader = true;
-                
-                for (int j = 0; j < headerCells.size(); j++) {
-                    MarkdownTextFragment.TableCell cell = new MarkdownTextFragment.TableCell();
-                    if (j < alignments.size()) {
-                        cell.alignment = alignments.get(j);
-                    }
-                    // Parse the cell content as markdown
-                    List<MarkdownTextFragment> cellFragments = parseTableCell(renderer, headerCells.get(j));
-                    for (MarkdownTextFragment frag : cellFragments) {
-                        frag.tableContext = tableContext;
-                    }
-                    cell.fragments.addAll(cellFragments);
-                    headerRow.cells.add(cell);
-                }
+                addTableCells(renderer, tableContext, headerRow, currentLine, alignments);
                 tableContext.rows.add(headerRow);
                 
                 // Skip the separator line
@@ -1018,22 +1004,8 @@ public class MarkdownParser {
                 
                 // Parse data rows
                 while (i < lines.length && isTableRow(lines[i])) {
-                    List<String> dataCells = parseTableRow(lines[i]);
                     MarkdownTextFragment.TableRow dataRow = new MarkdownTextFragment.TableRow(renderer);
-                    
-                    for (int j = 0; j < dataCells.size(); j++) {
-                        MarkdownTextFragment.TableCell cell = new MarkdownTextFragment.TableCell();
-                        if (j < alignments.size()) {
-                            cell.alignment = alignments.get(j);
-                        }
-                        // Parse the cell content as markdown
-                        List<MarkdownTextFragment> cellFragments = parseTableCell(renderer, dataCells.get(j));
-                        for (MarkdownTextFragment frag : cellFragments) {
-                            frag.tableContext = tableContext;
-                        }
-                        cell.fragments.addAll(cellFragments);
-                        dataRow.cells.add(cell);
-                    }
+                    addTableCells(renderer, tableContext, dataRow, lines[i], alignments);
                     tableContext.rows.add(dataRow);
                     lineStart += lines[i].length() + 1;
                     i++;
@@ -1048,6 +1020,28 @@ public class MarkdownParser {
         }
         
         return tables;
+    }
+
+    /**
+     * Parses the cells of the given line of a table and adds them to the given row of it.
+     *
+     * @param alignments The alignments of the columns of the table. Cells in columns behind the last one keep their default alignment.
+     */
+    protected static void addTableCells(@NotNull MarkdownRenderer renderer, @NotNull MarkdownTextFragment.TableContext tableContext, @NotNull MarkdownTextFragment.TableRow row, @NotNull String line, @NotNull List<MarkdownTextFragment.TableCell.TableCellAlignment> alignments) {
+        List<String> cells = parseTableRow(line);
+        for (int j = 0; j < cells.size(); j++) {
+            MarkdownTextFragment.TableCell cell = new MarkdownTextFragment.TableCell();
+            if (j < alignments.size()) {
+                cell.alignment = alignments.get(j);
+            }
+            // Parse the cell content as markdown
+            List<MarkdownTextFragment> cellFragments = parseTableCell(renderer, cells.get(j));
+            for (MarkdownTextFragment frag : cellFragments) {
+                frag.tableContext = tableContext;
+            }
+            cell.fragments.addAll(cellFragments);
+            row.cells.add(cell);
+        }
     }
 
     /**
@@ -1098,10 +1092,10 @@ public class MarkdownParser {
      * <p>The markers of those formats close nothing where the structure makes the parser read them as text or skip them. Only the pass
      * knows where that is, so it collects all other ones as {@link MarkdownFormatMarkers} for the parser.</p>
      *
-     * <p>The pass jumps over everything its events make the parser skip, like the target of a link or the rest of a line. It does not know
-     * what the parser skips on its own: the name of a font, the value of a color and the second character of a format marker.
-     * None of these can hold a character that starts an event, so the pass reads them like text. Whatever else the parser skips
-     * on its own has to keep it that way, or it has to become an event.</p>
+     * <p>The pass jumps over everything its events make the parser skip, like the target of a link or the rest of a line. What the parser
+     * skips on its own are the prefix of a font or color it opens, and the rest of a marker that opens or closes a format.
+     * None of these can hold a character that starts an event, so the pass reads them like text. It only jumps over the names of fonts,
+     * whose underscores are no format markers. Whatever else the parser skips on its own has to keep it that way, or it has to become an event.</p>
      */
     protected static class MarkdownStructure {
 
@@ -1124,8 +1118,9 @@ public class MarkdownParser {
         /** Every event takes this many values in {@link #events}: its index in the text, the ordinal of its {@link Event} and its two values. */
         protected static final int EVENT_SIZE = 4;
         protected static final Event[] EVENT_TYPES = Event.values();
+        protected static final int[] NO_EVENTS = new int[0];
 
-        protected int[] events = new int[0];
+        protected int[] events = NO_EVENTS;
         /** Index behind the last value in {@link #events}. */
         protected int eventsEnd = 0;
         /** Index in {@link #events} of the first event the parser has not read. */
@@ -1134,7 +1129,9 @@ public class MarkdownParser {
         protected int nextEventIndex = Integer.MAX_VALUE;
         protected int eventValue;
         protected int secondEventValue;
-        protected final List<HyperlinkImage> hyperlinkImages = new ArrayList<>();
+        /** The images of the {@link Event#HYPERLINK_IMAGE} events. NULL until the first one gets found. */
+        @Nullable
+        protected List<HyperlinkImage> hyperlinkImages = null;
         protected final MarkdownFormatMarkers formatMarkers = new MarkdownFormatMarkers();
 
         /**
@@ -1296,6 +1293,7 @@ public class MarkdownParser {
                     if (isStartOfLine && (c == OPEN_SQUARE_BRACKETS_CHAR) && markdown && text.startsWith(FORMATTING_CODE_HYPERLINK_IMAGE_PREFIX, index)) {
                         HyperlinkImage hyperlinkImage = getHyperlinkImageFromLine(text.substring(index, lineEnd));
                         if (hyperlinkImage != null) {
+                            if (this.hyperlinkImages == null) this.hyperlinkImages = new ArrayList<>();
                             this.hyperlinkImages.add(hyperlinkImage);
                             this.addEvent(index, Event.HYPERLINK_IMAGE, this.hyperlinkImages.size() - 1, 0);
                             index = lineEnd;
@@ -1580,7 +1578,8 @@ public class MarkdownParser {
                 this.eventValue = this.events[this.nextEvent + 2];
                 this.secondEventValue = this.events[this.nextEvent + 3];
             }
-            // Events in front of the index are ones the parser jumped over
+            // The parser reads the character of every event, so this moves on by one event. Doing it in a loop keeps an event
+            // the parser jumped over, which is a mistake in the parser or the pass, from holding back all events behind it.
             while ((this.nextEvent < this.eventsEnd) && (this.events[this.nextEvent] <= index)) this.nextEvent += EVENT_SIZE;
             this.nextEventIndex = (this.nextEvent < this.eventsEnd) ? this.events[this.nextEvent] : Integer.MAX_VALUE;
             return event;
@@ -1596,7 +1595,7 @@ public class MarkdownParser {
 
         @NotNull
         protected HyperlinkImage getHyperlinkImage(int index) {
-            return this.hyperlinkImages.get(index);
+            return Objects.requireNonNull(this.hyperlinkImages).get(index);
         }
 
         @NotNull
