@@ -79,6 +79,11 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
      */
     @Nullable
     public String listItemNumber = null;
+    /**
+     * If the list of the item of this fragment has an item that starts with "+". {@link MarkdownListMarkerPainter#markListsWithPlusItems(List)} looks it up.<br>
+     * It is set on the same fragments as {@link #listItemMarker}.
+     */
+    protected boolean listHasPlusItems = false;
     @NotNull
     public MarkdownRenderer.MarkdownLineAlignment alignment = MarkdownRenderer.MarkdownLineAlignment.LEFT;
     public Hyperlink hyperlink = null;
