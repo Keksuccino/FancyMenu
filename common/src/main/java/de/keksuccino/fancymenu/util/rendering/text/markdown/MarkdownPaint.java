@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownMarkerShape;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import org.jetbrains.annotations.NotNull;
 
@@ -24,6 +25,22 @@ final class MarkdownPaint {
         RenderingUtils.fillF(graphics, minX + cornerCut, minY, maxX - cornerCut, minY + cornerCut, color);
         RenderingUtils.fillF(graphics, minX, minY + cornerCut, maxX, maxY - cornerCut, color);
         RenderingUtils.fillF(graphics, minX + cornerCut, maxY - cornerCut, maxX - cornerCut, maxY, color);
+    }
+
+    /**
+     * Draws a marker shape into a square area.
+     *
+     * @param size The width and height of the area. Shapes with a size of their own, like pixel art, stand in the middle of it.
+     * @param pixelSize The size one pixel of pixel art gets drawn with.
+     */
+    static void marker(@NotNull GuiGraphicsExtractor graphics, @NotNull MarkdownRenderer renderer, @NotNull MarkdownMarkerShape shape, float x, float y, float size, float pixelSize, int color) {
+        if ((shape == MarkdownMarkerShape.NONE) || ((color >>> 24) == 0)) return;
+        if (MarkdownPixelArt.isMarker(shape)) {
+            float inset = (size - (MarkdownPixelArt.MARKER_SIZE * pixelSize)) * 0.5F;
+            MarkdownPixelArt.marker(graphics, shape, x + inset, y + inset, pixelSize, color, renderer.hasTextShadow());
+        } else {
+            RenderingUtils.fillF(graphics, x, y, x + size, y + size, color);
+        }
     }
 
     /**

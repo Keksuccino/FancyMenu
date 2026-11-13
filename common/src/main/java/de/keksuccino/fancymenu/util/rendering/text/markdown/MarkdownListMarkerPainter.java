@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
-import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownMarkerAlignment;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownMarkerShape;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyle;
@@ -35,17 +34,7 @@ final class MarkdownListMarkerPainter {
         MarkdownMarkerShape shape = level.markerShape.get();
         if (shape == MarkdownMarkerShape.NONE) return;
         float scale = first.getScale();
-        float size = style.listMarkerSize.get() * scale;
-        float x = getMarkerX(first);
-        float y = getMarkerY(first);
-        int color = renderer.getRenderColor(level.markerColor);
-        if (MarkdownPixelArt.isMarker(shape)) {
-            // Pixel art has its own size and stands in the middle of the marker area
-            float inset = (size - (MarkdownPixelArt.MARKER_SIZE * scale)) * 0.5F;
-            MarkdownPixelArt.marker(graphics, shape, x + inset, y + inset, scale, color, renderer.hasTextShadow());
-        } else {
-            RenderingUtils.fillF(graphics, x, y, x + size, y + size, color);
-        }
+        MarkdownPaint.marker(graphics, renderer, shape, getMarkerX(first), getMarkerY(first), style.listMarkerSize.get() * scale, scale, renderer.getRenderColor(level.markerColor));
     }
 
     /**
