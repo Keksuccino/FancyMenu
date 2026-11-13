@@ -39,8 +39,8 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     public float y;
     public float unscaledTextWidth;
     /**
-     * How much of {@link #unscaledTextWidth} is the space at the end of link-like text. The width gets measured before the layout knows where
-     * the fragment ends up, and the space is no part of the link when the fragment ends its link or its line ({@link #getTrailingSpaceMode()}).
+     * How much of {@link #unscaledTextWidth} is the space at the end of link-like or struck through text. The width gets measured before the layout
+     * knows where the fragment ends up, and the space is no part of that text when the fragment ends it or its line ({@link #getTrailingSpaceMode()}).
      */
     protected float unscaledTrailingSpaceWidth;
     public float unscaledTextHeight;
@@ -146,6 +146,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             // The fragments that only end a line and the ones of blank lines have nothing to draw
             if (!this.text.isEmpty() || this.calloutMarker) {
                 int color = this.parent.getRenderColor(this.parent.style.textColor);
+                if (this.strikethrough) MarkdownStrikethroughPainter.render(graphics, this, true);
                 com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
                 graphics.pose().pushMatrix();
                 try {
@@ -163,6 +164,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             }
             RenderingUtils.resetShaderColor(graphics);
 
+            if (this.strikethrough) MarkdownStrikethroughPainter.render(graphics, this, false);
             if (this.isLinkLike()) MarkdownLinkPainter.renderUnderline(graphics, this);
 
         }
@@ -264,7 +266,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if (this.bold) {
             style = style.withBold(true);
         }
-        if (this.strikethrough && !forWidthCalculation) {
+        if (this.strikethrough && !forWidthCalculation && !MarkdownStrikethroughPainter.drawsLine(this)) {
             style = style.withStrikethrough(true);
         }
         if (this.quoteContext != null) {
@@ -346,6 +348,13 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         return (linkLike ? this.isLastLinkLikeFragment() : this.strikethroughEnd) ? TRAILING_SPACE_SEPARATE : TRAILING_SPACE_KEEP;
     }
 
+    /**
+     * Returns the unscaled width of the text without the space at its end, if that space is no part of the link-like or struck through text of the fragment.
+     */
+    protected float getUnscaledStyledTextWidth() {
+        return (this.getTrailingSpaceMode() != TRAILING_SPACE_KEEP) ? (this.unscaledTextWidth - this.unscaledTrailingSpaceWidth) : this.unscaledTextWidth;
+    }
+
     @NotNull
     protected String buildRenderText(int trailingSpaceMode) {
         // The fragment of the marker line of a callout has no text and shows the label of the callout
@@ -396,7 +405,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         Style style = this.buildRenderStyle(true);
         this.unscaledTextWidth = this.parent.textWidthCache.getWidth(style, renderText, trailingSpaceMode == TRAILING_SPACE_SEPARATE);
         if (trailingSpaceMode == TRAILING_SPACE_KEEP) {
-            if (this.isLinkLike() && renderText.endsWith(" ")) this.unscaledTrailingSpaceWidth = this.unscaledTextWidth - this.parent.textWidthCache.getWidth(style, renderText.substring(0, renderText.length() - 1), false);
+            if ((this.isLinkLike() || this.strikethrough) && renderText.endsWith(" ")) this.unscaledTrailingSpaceWidth = this.unscaledTextWidth - this.parent.textWidthCache.getWidth(style, renderText.substring(0, renderText.length() - 1), false);
         } else if (trailingSpaceMode == TRAILING_SPACE_SEPARATE) {
             this.unscaledTrailingSpaceWidth = this.unscaledTextWidth - this.parent.textWidthCache.getWidth(style, renderText, false);
         }
