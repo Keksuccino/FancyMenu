@@ -128,6 +128,9 @@ final class MarkdownSyntax {
      *
      * <p>The parser reads from left to right. A character in front of the index that could start a code is the character of a code itself
      * if the one in front of it starts a code as well, so what counts is how many such characters stand in a row.</p>
+     *
+     * <p>An ampersand code inside of code is text, which this does not know about. That is fine as long as the character of an ampersand code
+     * can only be a letter or a digit: no marker is made of those, and none of them starts a code.</p>
      */
     static boolean isFormattingCodeCharacter(@NotNull String text, int index) {
         int codeStarts = 0;
