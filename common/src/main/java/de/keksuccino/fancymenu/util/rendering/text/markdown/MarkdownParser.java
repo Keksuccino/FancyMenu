@@ -398,9 +398,10 @@ public class MarkdownParser {
                 }
 
                 //Handle Italic Underscore
-                if ((c == UNDERSCORE_CHAR) && formatMarkers.isAt(FormatMarker.UNDERSCORE, index)) {
+                // A single underscore works like a single asterisk, but only where the structure found it able to open or close italic text, which it is not inside of a word
+                if (c == UNDERSCORE_CHAR) {
                     if (!builder.italic) {
-                        if (formatMarkers.existsFrom(FormatMarker.UNDERSCORE, index + 1)) {
+                        if (formatMarkers.isAt(FormatMarker.UNDERSCORE_OPEN, index) && formatMarkers.existsFrom(FormatMarker.UNDERSCORE_CLOSE, index + 1)) {
                             buildTextInFrontOfOpeningMarker(fragments, builder, isStartOfLine);
                             lastBuiltFragment = null;
                             builder.italic = true;
@@ -408,7 +409,7 @@ public class MarkdownParser {
                             continue;
                         }
                     }
-                    if (builder.italic && italicUnderscore) {
+                    if (builder.italic && italicUnderscore && formatMarkers.isAt(FormatMarker.UNDERSCORE_CLOSE, index)) {
                         lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                         builder.italic = false;
                         italicUnderscore = false;
