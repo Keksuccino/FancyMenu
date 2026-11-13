@@ -49,11 +49,12 @@ final class MarkdownListMarkerPainter {
     }
 
     /**
-     * Returns where the area of the marker of the list item starts that the given fragment starts.
+     * Returns where the area of the marker of the list item starts that the given fragment starts.<br>
+     * The marker keeps its place in front of the text of the item, whatever else indents that text, like a quote the item is a part of.
      */
     static float getMarkerX(@NotNull MarkdownTextFragment fragment) {
         MarkdownStyle style = fragment.parent.style;
-        return fragment.x + ((getTextIndent(fragment) - style.listMarkerGap.get() - style.listMarkerSize.get()) * fragment.getScale());
+        return fragment.getTextX() - ((style.listMarkerGap.get() + style.listMarkerSize.get()) * fragment.getScale());
     }
 
     static float getMarkerY(@NotNull MarkdownTextFragment fragment) {
