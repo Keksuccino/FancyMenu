@@ -12,8 +12,8 @@ import java.util.List;
  *
  * Fonts draw text as a whole and decide where every character goes, so every character that needs to move would need a draw call of its own.
  * To keep those few, the text gets cut into runs: a run is a row of characters the font puts into their cells by itself, because each of them
- * is exactly as wide as a cell. That is the case for most letters and digits of the Minecraft font. Narrower characters get centered in their cell
- * and start a run of their own, and spaces get no run at all.
+ * is exactly as wide as a cell. That is the case for most letters and digits of the Minecraft font, and for all characters of a fixed-width font
+ * the style gives code. Narrower characters get centered in their cell and start a run of their own, and spaces get no run at all.
  */
 final class MarkdownFixedWidthText {
 
@@ -41,13 +41,21 @@ final class MarkdownFixedWidthText {
         return text.codePointCount(0, text.length()) * getCellWidth(renderer);
     }
 
+    /**
+     * @param style The style of the text. Characters the font of code has no glyph for get drawn without the font of that style.
+     */
     @NotNull
     static MarkdownFixedWidthText of(@NotNull MarkdownRenderer renderer, @NotNull String text, @NotNull Style style) {
+        MarkdownTextFont textFont = renderer.textFont;
         float cellWidth = getCellWidth(renderer);
-        boolean pixelFont = renderer.textFont.metrics().pixelFont;
+        boolean pixelFont = textFont.metrics().pixelFont;
+        // Only text in another font than the one of the renderer has to get measured with its style
+        boolean ownFont = textFont.getCodeFont() != null;
+        Style textFontStyle = ownFont ? style.withFont(null) : style;
         List<Component> runs = new ArrayList<>();
         List<Float> offsets = new ArrayList<>();
         StringBuilder run = new StringBuilder();
+        Style runStyle = style;
         float runOffset = 0.0F;
         // Where the font puts the next character of the current run
         float pen = 0.0F;
@@ -56,26 +64,28 @@ final class MarkdownFixedWidthText {
             int codePoint = text.codePointAt(index);
             index += Character.charCount(codePoint);
             if (Character.isWhitespace(codePoint)) {
-                flush(runs, offsets, run, runOffset, style);
+                flush(runs, offsets, run, runOffset, runStyle);
                 continue;
             }
             String character = new String(Character.toChars(codePoint));
-            float width = renderer.textFont.width(character);
+            Style characterStyle = textFont.codeFontHas(codePoint) ? style : textFontStyle;
+            float width = ownFont ? textFont.width(Component.literal(character).setStyle(characterStyle)) : textFont.width(character);
             float inset = Math.max(0.0F, (cellWidth - width) / 2.0F);
             // The Minecraft font only stays sharp on whole pixels
             if (pixelFont) inset = (float) Math.floor(inset);
             float position = (cell * cellWidth) + inset;
-            if ((run.length() > 0) && (Math.abs(pen - position) > 0.001F)) {
-                flush(runs, offsets, run, runOffset, style);
+            if ((run.length() > 0) && ((Math.abs(pen - position) > 0.001F) || (characterStyle != runStyle))) {
+                flush(runs, offsets, run, runOffset, runStyle);
             }
             if (run.length() == 0) {
+                runStyle = characterStyle;
                 runOffset = position;
                 pen = position;
             }
             run.append(character);
             pen += width;
         }
-        flush(runs, offsets, run, runOffset, style);
+        flush(runs, offsets, run, runOffset, runStyle);
         float[] offsetArray = new float[offsets.size()];
         for (int i = 0; i < offsetArray.length; i++) offsetArray[i] = offsets.get(i);
         return new MarkdownFixedWidthText(runs.toArray(new Component[0]), offsetArray);

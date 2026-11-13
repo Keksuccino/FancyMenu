@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown.style;
 
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
@@ -76,7 +77,8 @@ public abstract class MarkdownStyleOption<T> {
         BOOLEAN,
         FLOAT,
         COLOR,
-        ENUM
+        ENUM,
+        FONT
 
     }
 
@@ -436,6 +438,67 @@ public abstract class MarkdownStyleOption<T> {
         public DrawableColor getLookValue(@NotNull MarkdownLook look) {
             LookColor lookColor = this.lookColor(look);
             return lookColor.set ? lookColor.resolve() : null;
+        }
+
+    }
+
+    /**
+     * The identifier of a font of Minecraft, like "minecraft:uniform". The font can be unset, which means that whatever it is for keeps its own font.
+     */
+    public static final class FontOption extends MarkdownStyleOption<ResourceLocation> {
+
+        @Nullable
+        private final ResourceLocation classicValue;
+        @Nullable
+        private final ResourceLocation pixelValue;
+        @Nullable
+        private final ResourceLocation neutralValue;
+        @Nullable
+        private ResourceLocation value;
+
+        FontOption(@NotNull MarkdownStyle style, @NotNull String key, @NotNull Group group, @NotNull Impact impact, @Nullable ResourceLocation classicValue, @Nullable ResourceLocation pixelValue, @Nullable ResourceLocation neutralValue) {
+            super(style, key, group, impact);
+            this.classicValue = classicValue;
+            this.pixelValue = pixelValue;
+            this.neutralValue = neutralValue;
+            this.value = classicValue;
+        }
+
+        public boolean isSet() {
+            return this.value != null;
+        }
+
+        @Nullable
+        public ResourceLocation get() {
+            return this.value;
+        }
+
+        public void set(@Nullable ResourceLocation value) {
+            if (Objects.equals(this.value, value)) return;
+            this.value = value;
+            this.changed();
+        }
+
+        @Override
+        public @NotNull Type getType() {
+            return Type.FONT;
+        }
+
+        @Override
+        @Nullable
+        public ResourceLocation getValue() {
+            return this.value;
+        }
+
+        @Override
+        public void setValue(@Nullable ResourceLocation value) {
+            this.set(value);
+        }
+
+        @Override
+        @Nullable
+        public ResourceLocation getLookValue(@NotNull MarkdownLook look) {
+            return (look == MarkdownLook.PIXEL) ? this.pixelValue : (look == MarkdownLook.NEUTRAL) ? this.neutralValue : this.classicValue;
         }
 
     }
