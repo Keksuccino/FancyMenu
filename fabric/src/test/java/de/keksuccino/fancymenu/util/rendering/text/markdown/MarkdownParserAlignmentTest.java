@@ -76,7 +76,17 @@ class MarkdownParserAlignmentTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"^^^x", "^^^ ", "^^^^", " ^^^", "x^^^"})
+    @CsvSource({"^^^,' ',CENTERED", "^^^,'   ',CENTERED", "^^^,'\t',CENTERED", "|||,' ',RIGHT", "|||,' \t ',RIGHT", "|||,'\r',RIGHT"})
+    void markerLinesWithWhitespaceBehindThemOpenAndCloseTheBlock(String marker, String whitespace, MarkdownLineAlignment alignment) {
+        List<MarkdownTextFragment> fragments = parse("before\n" + marker + whitespace + "\ninside\n" + marker + whitespace + "\nafter");
+
+        assertEquals(List.of("before", "inside", "after"), texts(fragments));
+        assertEquals(alignment, fragmentContaining(fragments, "inside").alignment);
+        assertEquals(MarkdownLineAlignment.LEFT, fragmentContaining(fragments, "after").alignment);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"^^^x", "^^^ x", "^^^^", " ^^^", "x^^^"})
     void lineThatIsMoreThanTheMarkerIsNoClosingLine(String line) {
         List<MarkdownTextFragment> fragments = parse("^^^\ninside\n" + line + "\nafter");
 
