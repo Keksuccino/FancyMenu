@@ -185,7 +185,7 @@ final class MarkdownLayout {
                     lineAlignmentOffsetX = Math.max(0, realInnerWidth - line.lineWidth);
                 }
             }
-            line.layoutOffsetX = padding + lineAlignmentOffsetX;
+            line.layoutOffsetX = padding + renderer.scaling.snapOffset(lineAlignmentOffsetX);
             line.offsetX = line.layoutOffsetX;
             blankLineRow = (line.blockType == MarkdownBlockType.BLANK) ? (blankLineRow + 1) : 0;
             line.collapsed = (blankLineRow > 0) && MarkdownBlockSpacing.isCollapsedBlankLine(renderer, blankLineRow);
