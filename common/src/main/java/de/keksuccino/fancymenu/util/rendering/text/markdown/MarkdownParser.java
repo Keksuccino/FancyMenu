@@ -117,10 +117,11 @@ public class MarkdownParser {
      *
      * <p>The text gets read twice. {@link MarkdownStructure} reads it first and finds everything that decides how the loop here has to read
      * each character. The loop then builds the fragments from that, and decides on its own only about the formats that need a marker
-     * to close them: bold, italic and struck through text, fonts and colors.</p>
+     * to close them: bold, italic and struck through text, fonts and colors. It opens one of them only if {@link MarkdownFormatMarkers}
+     * knows a marker behind it that the loop will read as a marker, so no format stays open because its closing marker turned out to be text.</p>
      *
      * <p>Both read the text once and never copy the rest of it. Everything that looks ahead is either limited to
-     * the current line, stops at the first character that settles the answer, or goes through {@link MarkerLookahead}.
+     * the current line, stops at the first character that settles the answer, or goes through {@link MarkerLookahead} or {@link MarkdownFormatMarkers}.
      * This keeps the parsing time linear to the text length, so every new lookahead has to follow the same rules.</p>
      *
      * @param tables The tables of the text, in the order of their lines.
@@ -131,10 +132,8 @@ public class MarkdownParser {
         List<MarkdownTextFragment> fragments = new ArrayList<>();
 
         FragmentBuilder builder = new FragmentBuilder(renderer);
-        MarkerLookahead lookahead = new MarkerLookahead(markdownText, renderer.isExtendedBulletListMarkersEnabled(), tables);
-        MarkdownStructure structure = new MarkdownStructure(markdownText, parseMarkdown, tables, lookahead, renderer.isExtendedBulletListMarkersEnabled(), renderer.isNumberedListsEnabled(), renderer.isCalloutsEnabled());
-        // The structure made the lookahead read tables as text where it found them inside code blocks and plain text, and the loop does that again when it gets there
-        lookahead.readNoTableAsText();
+        MarkdownStructure structure = new MarkdownStructure(markdownText, parseMarkdown, tables, renderer.isExtendedBulletListMarkersEnabled(), renderer.isNumberedListsEnabled(), renderer.isCalloutsEnabled());
+        MarkdownFormatMarkers formatMarkers = structure.getFormatMarkers();
         boolean queueNewLine = true;
         boolean italicUnderscore = false;
         boolean strikethroughDouble = false;
@@ -144,9 +143,6 @@ public class MarkdownParser {
         int textLength = markdownText.length();
         //Index of the line break that ends a line, or the text length for the last line. It only gets brought up to the line of the current index where the loop needs it.
         int lineEnd = -1;
-        //The tables follow the order of their lines, so the loop only ever has to look out for the next one
-        int nextTable = 0;
-        int nextTableStart = tables.isEmpty() ? -1 : tables.get(0).start();
 
         for (int index = 0; index < textLength; index++) {
 
@@ -157,13 +153,6 @@ public class MarkdownParser {
             if (isStartOfLine) lineHandledByWholeLineConstruct = false;
 
             MarkdownStructure.Event event = structure.getEventAt(index);
-
-            if (index == nextTableStart) {
-                // A table without its event is text of a code block or of plain text, so the markers in its lines count
-                if (event != MarkdownStructure.Event.TABLE) lookahead.readTableAsText(tables.get(nextTable));
-                nextTable++;
-                nextTableStart = (nextTable < tables.size()) ? tables.get(nextTable).start() : -1;
-            }
 
             if (event != MarkdownStructure.Event.NONE) {
                 switch (event) {
@@ -347,15 +336,16 @@ public class MarkdownParser {
                 continue;
             }
 
-            if (parseMarkdown) {
+            // Inside of code and plain text, the markers of the formats are text
+            if (parseMarkdown && (builder.codeBlockContext == null) && !builder.plainText) {
 
                 //Handle Fonts
                 if (c == PERCENTAGE_CHAR) {
-                    if (markdownText.startsWith(FORMATTING_CODE_FONT_PREFIX, index) && !markdownText.startsWith(FORMATTING_CODE_FONT_SUFFIX, index) && (builder.font == null) && (builder.codeBlockContext == null) && !builder.plainText) {
+                    if (markdownText.startsWith(FORMATTING_CODE_FONT_PREFIX, index) && !markdownText.startsWith(FORMATTING_CODE_FONT_SUFFIX, index) && (builder.font == null)) {
                         int fontNameStart = index + FORMATTING_CODE_FONT_PREFIX.length();
                         if (lineEnd < index) lineEnd = getLineEnd(markdownText, index);
                         int fontNameEnd = indexOf(markdownText, PERCENTAGE_CHAR, fontNameStart, lineEnd);
-                        if ((fontNameEnd != -1) && containsOnly(markdownText, fontNameStart, fontNameEnd, IS_RESOURCE_NAME_CHARACTER) && lookahead.existsFrom(LookaheadMarker.FONT_SUFFIX, index)) {
+                        if ((fontNameEnd != -1) && containsOnly(markdownText, fontNameStart, fontNameEnd, IS_RESOURCE_NAME_CHARACTER) && formatMarkers.existsFrom(FormatMarker.FONT_SUFFIX, index)) {
                             ResourceLocation font = null;
                             try {
                                 font = new ResourceLocation(markdownText.substring(fontNameStart, fontNameEnd));
@@ -380,11 +370,11 @@ public class MarkdownParser {
 
                 //Handle Color Formatting
                 if (c == PERCENTAGE_CHAR) {
-                    if (markdownText.startsWith(FORMATTING_CODE_HEX_COLOR_PREFIX, index) && !markdownText.startsWith(FORMATTING_CODE_HEX_COLOR_SUFFIX, index) && (builder.textColor == null) && (builder.codeBlockContext == null) && !builder.plainText) {
+                    if (markdownText.startsWith(FORMATTING_CODE_HEX_COLOR_PREFIX, index) && !markdownText.startsWith(FORMATTING_CODE_HEX_COLOR_SUFFIX, index) && (builder.textColor == null)) {
                         int colorStart = index + FORMATTING_CODE_HEX_COLOR_PREFIX.length();
                         if (lineEnd < index) lineEnd = getLineEnd(markdownText, index);
                         int colorEnd = indexOf(markdownText, PERCENTAGE_CHAR, colorStart, lineEnd);
-                        if ((colorEnd != -1) && lookahead.existsFrom(LookaheadMarker.HEX_COLOR_SUFFIX, index)) {
+                        if ((colorEnd != -1) && formatMarkers.existsFrom(FormatMarker.COLOR_SUFFIX, index)) {
                             DrawableColor color = DrawableColor.ofHtml(markdownText.substring(colorStart, colorEnd));
                             if (color != DrawableColor.EMPTY) {
                                 if (isStartOfLine || !builder.text.isEmpty()) {
@@ -405,9 +395,9 @@ public class MarkdownParser {
                 }
 
                 //Handle Bold
-                if ((c == ASTERISK_CHAR) && !isCharacterEscaped(markdownText, index)) {
-                    if (!builder.bold && (builder.codeBlockContext == null) && !builder.plainText) {
-                        if (markdownText.startsWith(FORMATTING_CODE_BOLD_PREFIX_SUFFIX, index) && lookahead.existsFrom(LookaheadMarker.BOLD, index + 2)) {
+                if (c == ASTERISK_CHAR) {
+                    if (!builder.bold) {
+                        if (markdownText.startsWith(FORMATTING_CODE_BOLD_PREFIX_SUFFIX, index) && formatMarkers.existsFrom(FormatMarker.ASTERISK_PAIR, index + 2)) {
                             if (isStartOfLine || !builder.text.isEmpty()) {
                                 lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                             }
@@ -427,9 +417,9 @@ public class MarkdownParser {
                 }
 
                 //Handle Italic Underscore
-                if ((c == UNDERSCORE_CHAR) && !isCharacterEscaped(markdownText, index)) {
-                    if (!builder.italic && (builder.codeBlockContext == null) && !builder.plainText) {
-                        if (lookahead.existsFrom(LookaheadMarker.ITALIC_UNDERSCORE, index + 1)) {
+                if (c == UNDERSCORE_CHAR) {
+                    if (!builder.italic) {
+                        if (formatMarkers.existsFrom(FormatMarker.UNDERSCORE, index + 1)) {
                             if (isStartOfLine || !builder.text.isEmpty()) {
                                 lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                             }
@@ -447,9 +437,9 @@ public class MarkdownParser {
                 }
 
                 //Handle Italic Asterisk
-                if ((c == ASTERISK_CHAR) && !isCharacterEscaped(markdownText, index)) {
-                    if (!builder.italic && (builder.codeBlockContext == null) && !builder.plainText) {
-                        if (!markdownText.startsWith(FORMATTING_CODE_BOLD_PREFIX_SUFFIX, index) && lookahead.hasItalicAsteriskEnd(index + 1, builder.bold)) {
+                if (c == ASTERISK_CHAR) {
+                    if (!builder.italic) {
+                        if (!markdownText.startsWith(FORMATTING_CODE_BOLD_PREFIX_SUFFIX, index) && formatMarkers.hasItalicAsteriskEnd(index + 1, builder.bold)) {
                             if (isStartOfLine || !builder.text.isEmpty()) {
                                 lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                             }
@@ -467,11 +457,11 @@ public class MarkdownParser {
                 }
 
                 //Handle Strikethrough
-                if ((c == TILDE_CHAR) && !isCharacterEscaped(markdownText, index)) {
+                if (c == TILDE_CHAR) {
                     boolean isDoubleMarker = markdownText.startsWith(FORMATTING_CODE_STRIKETHROUGH_DOUBLE_PREFIX_SUFFIX, index);
-                    if (!builder.strikethrough && (builder.codeBlockContext == null) && !builder.plainText) {
+                    if (!builder.strikethrough) {
                         // Two tildes open as one double marker if a later double marker closes them, and only a double marker closes them then
-                        boolean opensDouble = isDoubleMarker && lookahead.existsFrom(LookaheadMarker.STRIKETHROUGH_DOUBLE, index + 2);
+                        boolean opensDouble = isDoubleMarker && formatMarkers.existsFrom(FormatMarker.TILDE_PAIR, index + 2);
                         if (isDoubleMarker && !opensDouble) {
                             // Without a later double marker, the two tildes are text like every other marker that never gets closed.
                             // As two single markers, they would open and close around nothing and vanish.
@@ -479,7 +469,7 @@ public class MarkdownParser {
                             index++;
                             continue;
                         }
-                        if (opensDouble || lookahead.existsFrom(LookaheadMarker.STRIKETHROUGH, index + 1)) {
+                        if (opensDouble || formatMarkers.existsFrom(FormatMarker.TILDE, index + 1)) {
                             if (isStartOfLine || !builder.text.isEmpty()) {
                                 lastBuiltFragment = addFragment(fragments, builder.build(false, false));
                             }
@@ -747,17 +737,6 @@ public class MarkdownParser {
             }
         }
         return null;
-    }
-
-    /**
-     * Returns if the line between the two indexes is an image or an image that is a hyperlink.
-     */
-    protected static boolean isImageLine(@NotNull String text, int lineStart, int lineEnd) {
-        if (text.startsWith(FORMATTING_CODE_IMAGE_PREFIX, lineStart)) {
-            int labelEnd = getLinkLabelEnd(text, lineStart + FORMATTING_CODE_IMAGE_PREFIX.length());
-            return (labelEnd != -1) && (getLinkTargetEnd(text, labelEnd + FORMATTING_CODE_HYPERLINK_INNER_PREFIX.length()) != -1);
-        }
-        return text.startsWith(FORMATTING_CODE_HYPERLINK_IMAGE_PREFIX, lineStart) && (getHyperlinkImageFromLine(text.substring(lineStart, lineEnd)) != null);
     }
 
     /**
@@ -1093,6 +1072,9 @@ public class MarkdownParser {
      * but the text in front of it and on the markers {@link MarkerLookahead} finds behind it. The parser asks for the {@link Event} of
      * every character it reads, and decides on its own only about the formats that need a marker to close them.</p>
      *
+     * <p>The markers of those formats close nothing where the structure makes the parser read them as text or skip them. Only the pass
+     * knows where that is, so it collects all other ones as {@link MarkdownFormatMarkers} for the parser.</p>
+     *
      * <p>The pass jumps over everything its events make the parser skip, like the target of a link or the rest of a line. It does not know
      * what the parser skips on its own: the name of a font, the value of a color and the second character of a format marker.
      * None of these can hold a character that starts an event, so the pass reads them like text. Whatever else the parser skips
@@ -1101,12 +1083,12 @@ public class MarkdownParser {
     protected static class MarkdownStructure {
 
         /**
-         * TRUE for every character that can be an event, or change what the pass knows about the text, when it is not the first character of a line.<br>
-         * The pass reads all other characters only at the start of a line, so a character that is missing here never becomes an event inside of a line.
+         * TRUE for every character that can be an event or a format marker, or change what the pass knows about the text, when it is not the first character of a line.<br>
+         * The pass reads all other characters only at the start of a line, so a character that is missing here never becomes one of these inside of a line.
          */
         protected static final boolean[] INSIDE_LINE_EVENT_CHARACTERS = new boolean[ChatFormatting.PREFIX_CODE + 1];
         static {
-            for (char character : new char[] {NEWLINE_CHAR, ChatFormatting.PREFIX_CODE, AMPERSAND_CHAR, BACKSLASH_CHAR, OPEN_SQUARE_BRACKETS_CHAR, CLOSE_SQUARE_BRACKETS_CHAR, GRAVE_ACCENT_CHAR, SEMICOLON_CHAR}) {
+            for (char character : new char[] {NEWLINE_CHAR, ChatFormatting.PREFIX_CODE, AMPERSAND_CHAR, BACKSLASH_CHAR, OPEN_SQUARE_BRACKETS_CHAR, CLOSE_SQUARE_BRACKETS_CHAR, GRAVE_ACCENT_CHAR, SEMICOLON_CHAR, ASTERISK_CHAR, UNDERSCORE_CHAR, TILDE_CHAR, PERCENTAGE_CHAR}) {
                 INSIDE_LINE_EVENT_CHARACTERS[character] = true;
             }
         }
@@ -1125,16 +1107,18 @@ public class MarkdownParser {
         protected int eventValue;
         protected int secondEventValue;
         protected final List<HyperlinkImage> hyperlinkImages = new ArrayList<>();
+        protected final MarkdownFormatMarkers formatMarkers = new MarkdownFormatMarkers();
 
         /**
-         * Reads the text once and finds all of its events.
+         * Reads the text once and finds all of its events and format markers.
          *
          * @param parseMarkdown If the text is Markdown. Other text only has formatting codes.
          * @param tables The tables of the text, in the order of their lines.
-         * @param lookahead Finds the markers that close what the pass is about to open. The pass makes it read the tables as text that are inside of code blocks and plain text.
          */
-        protected MarkdownStructure(@NotNull String text, boolean parseMarkdown, @NotNull List<Table> tables, @NotNull MarkerLookahead lookahead, boolean extendedBulletListMarkers, boolean numberedLists, boolean callouts) {
+        protected MarkdownStructure(@NotNull String text, boolean parseMarkdown, @NotNull List<Table> tables, boolean extendedBulletListMarkers, boolean numberedLists, boolean callouts) {
 
+            MarkerLookahead lookahead = new MarkerLookahead(text, tables);
+            MarkdownFormatMarkers formatMarkers = this.formatMarkers;
             int length = text.length();
             boolean queueNewLine = true;
             boolean headlineLine = false;
@@ -1235,6 +1219,31 @@ public class MarkdownParser {
                             this.addEvent(index, Event.LIST_ITEM, markerStart, markerEnd);
                             index = markerEnd;
                             continue;
+                        }
+                    }
+
+                    // Format markers. The pass gets here for exactly the characters the parser reads as text or as a format marker:
+                    // everything else is escaped, part of code or plain text, or belongs to an event the parser takes it for.
+                    if (markdown) {
+                        switch (c) {
+                            case ASTERISK_CHAR:
+                                formatMarkers.addPaired(FormatMarker.ASTERISK, FormatMarker.ASTERISK_PAIR, index);
+                                continue;
+                            case UNDERSCORE_CHAR:
+                                formatMarkers.add(FormatMarker.UNDERSCORE, index);
+                                continue;
+                            case TILDE_CHAR:
+                                formatMarkers.addPaired(FormatMarker.TILDE, FormatMarker.TILDE_PAIR, index);
+                                continue;
+                            case PERCENTAGE_CHAR:
+                                if (text.startsWith(FORMATTING_CODE_FONT_SUFFIX, index)) {
+                                    formatMarkers.add(FormatMarker.FONT_SUFFIX, index);
+                                } else if (text.startsWith(FORMATTING_CODE_HEX_COLOR_SUFFIX, index)) {
+                                    formatMarkers.add(FormatMarker.COLOR_SUFFIX, index);
+                                }
+                                continue;
+                            default:
+                                break;
                         }
                     }
 
@@ -1470,6 +1479,11 @@ public class MarkdownParser {
             return this.hyperlinkImages.get(index);
         }
 
+        @NotNull
+        protected MarkdownFormatMarkers getFormatMarkers() {
+            return this.formatMarkers;
+        }
+
         /**
          * What the parser does at a character of the text. The comments name the two values of every event that has some.
          */
@@ -1540,50 +1554,159 @@ public class MarkdownParser {
     }
 
     /**
-     * The markers the parser looks ahead for to find out if something it is about to open gets closed again.
+     * The format markers of a Markdown text that the parser reads as markers when it gets to them, in the order of the text.
+     *
+     * <p>{@link MarkdownStructure} adds them while it reads the text. It leaves out every marker the parser reads as text or skips:
+     * escaped ones, the ones inside of code and plain text, and the ones in something like the target of a link or the marker of a list item.
+     * The parser asks here if a format it is about to open gets closed again, so it only opens a format in front of a marker that really closes it.</p>
+     *
+     * <p>The parser has to ask in the order of the text: no question may start in front of the index an earlier question for the same marker started at.
+     * Every question then only moves forward through the markers, which keeps all questions together linear to their number.</p>
      */
-    protected enum LookaheadMarker {
+    protected static class MarkdownFormatMarkers {
 
-        FONT_SUFFIX(FORMATTING_CODE_FONT_SUFFIX, false),
-        HEX_COLOR_SUFFIX(FORMATTING_CODE_HEX_COLOR_SUFFIX, false),
-        BOLD(FORMATTING_CODE_BOLD_PREFIX_SUFFIX, true),
-        ITALIC_UNDERSCORE(String.valueOf(UNDERSCORE_CHAR), true),
-        STRIKETHROUGH(String.valueOf(TILDE_CHAR), true),
-        STRIKETHROUGH_DOUBLE(FORMATTING_CODE_STRIKETHROUGH_DOUBLE_PREFIX_SUFFIX, true),
-        // A grave accent closes its block even behind a backslash, because nothing gets escaped inside the block
-        CODE_BLOCK_SINGLE_LINE(String.valueOf(GRAVE_ACCENT_CHAR), false),
-        PLAIN_TEXT_SINGLE_LINE(FORMATTING_CODE_PLAIN_TEXT_SINGLE_LINE_PREFIX_SUFFIX, false),
-        // Multi-line blocks end at a marker that starts a line, no matter what follows it in that line
-        CODE_BLOCK_MULTI_LINE_END(NEWLINE + FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX, false),
-        PLAIN_TEXT_MULTI_LINE_END(NEWLINE + FORMATTING_CODE_PLAIN_TEXT_MULTI_LINE_PREFIX_SUFFIX, false),
-        ALIGNMENT_CENTERED_END(NEWLINE + FORMATTING_CODE_ALIGNMENT_CENTERED_PREFIX_SUFFIX, false),
-        ALIGNMENT_RIGHT_END(NEWLINE + FORMATTING_CODE_ALIGNMENT_RIGHT_PREFIX_SUFFIX, false);
+        protected static final int[] NO_INDEXES = new int[0];
 
-        protected static final int COUNT = values().length;
+        /** The indexes of the markers in the text, for every {@link FormatMarker}. */
+        protected final int[][] indexes = new int[FormatMarker.COUNT][];
+        protected final int[] counts = new int[FormatMarker.COUNT];
+        /** For every {@link FormatMarker}, where in its indexes the first marker is that is not in front of the last question. */
+        protected final int[] next = new int[FormatMarker.COUNT];
 
-        @NotNull
-        protected final String marker;
-        /** If a backslash in front of the marker turns it into text, which makes the parser never close anything at it. */
-        protected final boolean escapable;
+        protected MarkdownFormatMarkers() {
+            Arrays.fill(this.indexes, NO_INDEXES);
+        }
 
-        LookaheadMarker(@NotNull String marker, boolean escapable) {
-            this.marker = marker;
-            this.escapable = escapable;
+        protected void add(@NotNull FormatMarker marker, int index) {
+            int type = marker.ordinal();
+            int count = this.counts[type];
+            if (count == this.indexes[type].length) this.indexes[type] = Arrays.copyOf(this.indexes[type], Math.max(16, count * 2));
+            this.indexes[type][count] = index;
+            this.counts[type] = count + 1;
+        }
+
+        /**
+         * Adds a marker that forms a pair with a marker of the same type right in front of it.
+         *
+         * @param pair The type of the pairs, which get added with the index of their first marker.
+         */
+        protected void addPaired(@NotNull FormatMarker marker, @NotNull FormatMarker pair, int index) {
+            int count = this.counts[marker.ordinal()];
+            if ((count > 0) && (this.indexes[marker.ordinal()][count - 1] == (index - 1))) this.add(pair, index - 1);
+            this.add(marker, index);
+        }
+
+        /**
+         * Returns if there is a marker of the given type at or after the given index.
+         */
+        protected boolean existsFrom(@NotNull FormatMarker marker, int fromIndex) {
+            return this.moveTo(marker, fromIndex) < this.counts[marker.ordinal()];
+        }
+
+        /**
+         * Returns where in the indexes of the given type the first marker at or after the given index is, which is their count if there is none.
+         */
+        protected int moveTo(@NotNull FormatMarker marker, int fromIndex) {
+            int type = marker.ordinal();
+            int[] indexes = this.indexes[type];
+            int count = this.counts[type];
+            int next = this.next[type];
+            while ((next < count) && (indexes[next] < fromIndex)) next++;
+            this.next[type] = next;
+            return next;
+        }
+
+        /**
+         * Returns if italic text that a single asterisk opens gets closed by an asterisk at or after the given index.
+         *
+         * <p>Italic text ends at an asterisk that has no second one behind it, but the parser reads asterisks in pairs as markers of bold text first.
+         * This goes through the rows of asterisks the way the parser will: the pairs of a row open and close bold text, and only an asterisk
+         * that is left over ends the italic text. A pair that finds no later pair to close its bold text opens none, which leaves its second asterisk over.</p>
+         *
+         * <p>Italic text that opens inside of bold text has to end inside of it as well, so the pair that closes that bold text means there is no end.</p>
+         *
+         * @param boldOpen If the italic text opens inside of bold text.
+         */
+        protected boolean hasItalicAsteriskEnd(int fromIndex, boolean boldOpen) {
+            boolean insideOuterBold = boldOpen;
+            int[] asterisks = this.indexes[FormatMarker.ASTERISK.ordinal()];
+            int count = this.counts[FormatMarker.ASTERISK.ordinal()];
+            int asterisk = this.moveTo(FormatMarker.ASTERISK, fromIndex);
+            while (asterisk < count) {
+                // A row is made of asterisks that follow each other without anything in between
+                int rowStart = asterisk;
+                asterisk++;
+                while ((asterisk < count) && (asterisks[asterisk] == (asterisks[asterisk - 1] + 1))) asterisk++;
+                int rowLength = asterisk - rowStart;
+                if ((rowLength % 2) == 1) return true;
+                for (int pair = 0; pair < (rowLength / 2); pair++) {
+                    if (boldOpen && insideOuterBold) return false;
+                    boldOpen = !boldOpen;
+                }
+            }
+            // Bold text that is still open here was opened by a pair without a later pair, so it is none and the second asterisk of that pair is the end
+            return boldOpen && !insideOuterBold;
         }
 
     }
 
     /**
-     * Finds the next occurrence of {@link LookaheadMarker}s for the loop of the parser, which only moves forward.
+     * The types of {@link MarkdownFormatMarkers}.
+     */
+    protected enum FormatMarker {
+
+        ASTERISK,
+        /** Two asterisks in a row, which open and close bold text. */
+        ASTERISK_PAIR,
+        UNDERSCORE,
+        TILDE,
+        /** Two tildes in a row, which open and close struck through text like a single one does. */
+        TILDE_PAIR,
+        /** The marker that closes a font. */
+        FONT_SUFFIX,
+        /** The marker that closes a color. */
+        COLOR_SUFFIX;
+
+        protected static final int COUNT = values().length;
+
+    }
+
+    /**
+     * The markers {@link MarkdownStructure} looks ahead for to find out if something it is about to open gets closed again.
+     */
+    protected enum LookaheadMarker {
+
+        // A grave accent closes its block even behind a backslash, because nothing gets escaped inside the block
+        CODE_BLOCK_SINGLE_LINE(String.valueOf(GRAVE_ACCENT_CHAR)),
+        PLAIN_TEXT_SINGLE_LINE(FORMATTING_CODE_PLAIN_TEXT_SINGLE_LINE_PREFIX_SUFFIX),
+        // Multi-line blocks end at a marker that starts a line, no matter what follows it in that line
+        CODE_BLOCK_MULTI_LINE_END(NEWLINE + FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX),
+        PLAIN_TEXT_MULTI_LINE_END(NEWLINE + FORMATTING_CODE_PLAIN_TEXT_MULTI_LINE_PREFIX_SUFFIX),
+        ALIGNMENT_CENTERED_END(NEWLINE + FORMATTING_CODE_ALIGNMENT_CENTERED_PREFIX_SUFFIX),
+        ALIGNMENT_RIGHT_END(NEWLINE + FORMATTING_CODE_ALIGNMENT_RIGHT_PREFIX_SUFFIX);
+
+        protected static final int COUNT = values().length;
+
+        @NotNull
+        protected final String marker;
+
+        LookaheadMarker(@NotNull String marker) {
+            this.marker = marker;
+        }
+
+    }
+
+    /**
+     * Finds the next occurrence of {@link LookaheadMarker}s for {@link MarkdownStructure}, which only moves forward through the text.
      *
-     * <p>A found occurrence answers every following search for its marker until the loop has moved past it, and a failed
+     * <p>A found occurrence answers every following search for its marker until the structure has moved past it, and a failed
      * search answers every following search for the rest of the text. All searches for one marker together read the text
      * only once that way, no matter how many markers without a closing one the text holds.</p>
      *
      * <p>This only works as long as the searches for a marker never start at a smaller index than an earlier one did.</p>
      *
      * <p>The parser jumps over tables, so a marker that touches a table closes nothing. A table inside a code block or plain text is text
-     * of that block instead: while the parser reads the lines of such a table, the markers in those lines count like all other ones.</p>
+     * of that block instead: while the structure reads the lines of such a table, the markers in those lines count like all other ones.</p>
      */
     protected static class MarkerLookahead {
 
@@ -1592,8 +1715,6 @@ public class MarkdownParser {
 
         @NotNull
         protected final String text;
-        /** If "*" and "~" start list items, which makes the parser skip them as the markers of those items. */
-        protected final boolean extendedBulletListMarkers;
         /** The tables of the text, in the order of their lines. */
         @NotNull
         protected final List<Table> tables;
@@ -1603,16 +1724,11 @@ public class MarkdownParser {
         protected final int[] nextOccurrencesOutsideTables = new int[LookaheadMarker.COUNT];
         /** For every marker, the index of the first table that does not end in front of {@link #nextOccurrencesOutsideTables its next occurrence outside of tables}. */
         protected final int[] nextTables = new int[LookaheadMarker.COUNT];
-        /** The index behind the table whose lines the parser reads as text, which is smaller than the index of the parser when it reads no table. */
+        /** The index behind the table whose lines the structure reads as text, which is smaller than the index of the structure when it reads no table. */
         protected int textTableEnd = -1;
-        /** Start and end index of every part of the text {@link #findSkippedRanges()} found, in ascending order. NULL until the first marker gets checked. */
-        @Nullable
-        protected int[] skippedRanges = null;
-        protected int skippedRangeCount = 0;
 
-        protected MarkerLookahead(@NotNull String text, boolean extendedBulletListMarkers, @NotNull List<Table> tables) {
+        protected MarkerLookahead(@NotNull String text, @NotNull List<Table> tables) {
             this.text = text;
-            this.extendedBulletListMarkers = extendedBulletListMarkers;
             this.tables = tables;
             Arrays.fill(this.nextOccurrences, NOT_SEARCHED);
             Arrays.fill(this.nextOccurrencesOutsideTables, NOT_SEARCHED);
@@ -1626,15 +1742,7 @@ public class MarkdownParser {
         }
 
         /**
-         * Makes the markers in the lines of all tables count for nothing again.
-         */
-        protected void readNoTableAsText() {
-            this.textTableEnd = -1;
-        }
-
-        /**
-         * Returns the index of the first occurrence of the marker at or after the given index, or -1 if there is none.<br>
-         * Occurrences of markers that can be escaped do not count where {@link #isNoMarker(int)} applies or where they are the marker of a list item.
+         * Returns the index of the first occurrence of the marker at or after the given index, or -1 if there is none.
          */
         protected int indexOf(@NotNull LookaheadMarker marker, int fromIndex) {
             if (fromIndex < this.textTableEnd) {
@@ -1655,15 +1763,10 @@ public class MarkdownParser {
             int nextOccurrence = nextOccurrences[marker.ordinal()];
             if ((nextOccurrence != NOT_FOUND) && (nextOccurrence < fromIndex)) {
                 nextOccurrence = this.text.indexOf(marker.marker, fromIndex);
-                while (nextOccurrence != NOT_FOUND) {
-                    Table table = outsideTables ? this.getTableTouchedBy(marker, nextOccurrence) : null;
-                    if (table != null) {
+                if (outsideTables) {
+                    Table table;
+                    while ((nextOccurrence != NOT_FOUND) && ((table = this.getTableTouchedBy(marker, nextOccurrence)) != null)) {
                         nextOccurrence = this.text.indexOf(marker.marker, table.end());
-                    } else if (marker.escapable && (this.isNoMarker(nextOccurrence) || ((marker.marker.length() == 1) && this.isListItemMarker(nextOccurrence)))) {
-                        // What the parser reads as text or skips closes nothing, so the search goes on behind it
-                        nextOccurrence = this.text.indexOf(marker.marker, nextOccurrence + 1);
-                    } else {
-                        break;
                     }
                 }
                 nextOccurrences[marker.ordinal()] = nextOccurrence;
@@ -1687,141 +1790,10 @@ public class MarkdownParser {
         }
 
         /**
-         * Returns the table the given index is part of, or NULL if there is none.
-         */
-        @Nullable
-        protected Table getTableAt(int index) {
-            int low = 0;
-            int high = this.tables.size() - 1;
-            while (low <= high) {
-                int middle = (low + high) >>> 1;
-                Table table = this.tables.get(middle);
-                if (index < table.start()) {
-                    high = middle - 1;
-                } else if (index >= table.end()) {
-                    low = middle + 1;
-                } else {
-                    return table;
-                }
-            }
-            return null;
-        }
-
-        /**
          * Returns if the marker starts at or after the given index.
          */
         protected boolean existsFrom(@NotNull LookaheadMarker marker, int fromIndex) {
             return this.indexOf(marker, fromIndex) != NOT_FOUND;
-        }
-
-        /**
-         * Returns if italic text that a single asterisk opens gets closed by an asterisk at or after the given index.
-         *
-         * <p>Italic text ends at an asterisk that has no second one behind it, but the parser reads asterisks in pairs as markers of bold text first.
-         * This goes through the rows of asterisks the way the parser will: the pairs of a row open and close bold text, and only an asterisk
-         * that is left over ends the italic text. A pair that finds no later pair to close its bold text opens none, which leaves its second asterisk over.</p>
-         *
-         * <p>Italic text that opens inside of bold text has to end inside of it as well, so the pair that closes that bold text means there is no end.</p>
-         *
-         * @param boldOpen If the italic text opens inside of bold text.
-         */
-        protected boolean hasItalicAsteriskEnd(int fromIndex, boolean boldOpen) {
-            boolean insideOuterBold = boldOpen;
-            int length = this.text.length();
-            int index = fromIndex;
-            while (true) {
-                int rowStart = this.text.indexOf(ASTERISK_CHAR, index);
-                if (rowStart == NOT_FOUND) break;
-                if (rowStart >= this.textTableEnd) {
-                    // The parser jumps over all tables but the one it reads as text
-                    Table table = this.getTableAt(rowStart);
-                    if (table != null) {
-                        index = table.end();
-                        continue;
-                    }
-                }
-                index = rowStart + 1;
-                // An asterisk that is no marker or the marker of a list item is no part of a row. The row starts behind it then.
-                if (this.isNoMarker(rowStart) || this.isListItemMarker(rowStart)) continue;
-                while ((index < length) && (this.text.charAt(index) == ASTERISK_CHAR)) index++;
-                int rowLength = index - rowStart;
-                if ((rowLength % 2) == 1) return true;
-                for (int pair = 0; pair < (rowLength / 2); pair++) {
-                    if (boldOpen && insideOuterBold) return false;
-                    boldOpen = !boldOpen;
-                }
-            }
-            // Bold text that is still open here was opened by a pair without a later pair, so it is none and the second asterisk of that pair is the end
-            return boldOpen && !insideOuterBold;
-        }
-
-        /**
-         * Returns if a marker at the given index closes nothing, because the parser reads it as text or never reaches it:
-         * it is escaped, or it is part of the target of a link or image, or of a line that is an image.
-         */
-        protected boolean isNoMarker(int index) {
-            if (isCharacterEscaped(this.text, index)) return true;
-            if (this.skippedRanges == null) this.findSkippedRanges();
-            int low = 0;
-            int high = (this.skippedRangeCount / 2) - 1;
-            while (low <= high) {
-                int middle = (low + high) >>> 1;
-                if (index < this.skippedRanges[middle * 2]) {
-                    high = middle - 1;
-                } else if (index >= this.skippedRanges[(middle * 2) + 1]) {
-                    low = middle + 1;
-                } else {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        /**
-         * Returns if the character at the given index looks like the marker of a list item that an asterisk or a tilde starts,
-         * which makes the parser skip it instead of closing a format with it.<br>
-         * Like {@link #findSkippedRanges()}, this only looks at the text, and is wrong in the same harmless way if the parser reads the line as text.
-         */
-        protected boolean isListItemMarker(int index) {
-            if (!this.extendedBulletListMarkers || (getListItemMarkerEnd(this.text, index, true, false) == -1)) return false;
-            // The marker follows the indent of its item, which is nothing but spaces
-            int indentStart = index;
-            while ((indentStart > 0) && (this.text.charAt(indentStart - 1) == SPACE_CHAR) && ((index - indentStart) < MAX_LIST_ITEM_INDENT)) indentStart--;
-            return ((index - indentStart) <= MAX_LIST_ITEM_INDENT) && ((indentStart == 0) || (this.text.charAt(indentStart - 1) == NEWLINE_CHAR));
-        }
-
-        /**
-         * Finds all parts of the text that look like something the parser skips: targets of links and images, and whole lines that are images.<br>
-         * This only looks at the text and not at what the parser makes of the text around it, so it can take a part for skipped that the parser reads.
-         * A marker in such a part then is no end for a marker in front of it, which stays text for that reason.
-         * That is the harmless way to be wrong: the other way, a format never gets closed and runs to the end of the text.
-         */
-        protected void findSkippedRanges() {
-            String text = this.text;
-            int[] ranges = new int[16];
-            int count = 0;
-            int lineStart = 0;
-            int lineEnd = getLineEnd(text, 0);
-            boolean imageLine = isImageLine(text, lineStart, lineEnd);
-            int targetOpening = text.indexOf(FORMATTING_CODE_HYPERLINK_INNER_PREFIX);
-            while (targetOpening != -1) {
-                while (lineEnd < targetOpening) {
-                    lineStart = lineEnd + 1;
-                    lineEnd = getLineEnd(text, lineStart);
-                    imageLine = isImageLine(text, lineStart, lineEnd);
-                }
-                int rangeStart = imageLine ? lineStart : (targetOpening + FORMATTING_CODE_HYPERLINK_INNER_PREFIX.length());
-                // No link ends at an escaped bracket, so there is no target behind one
-                int rangeEnd = imageLine ? lineEnd : (isCharacterEscaped(text, targetOpening) ? -1 : getLinkTargetEnd(text, rangeStart));
-                if (rangeEnd != -1) {
-                    if (count == ranges.length) ranges = Arrays.copyOf(ranges, count * 2);
-                    ranges[count++] = rangeStart;
-                    ranges[count++] = rangeEnd;
-                }
-                targetOpening = text.indexOf(FORMATTING_CODE_HYPERLINK_INNER_PREFIX, (rangeEnd != -1) ? rangeEnd : rangeStart);
-            }
-            this.skippedRanges = ranges;
-            this.skippedRangeCount = count;
         }
 
         /**
