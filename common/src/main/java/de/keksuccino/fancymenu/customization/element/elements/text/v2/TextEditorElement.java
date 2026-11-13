@@ -97,6 +97,8 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
 
         MarkdownSettingsMenu.addTo(this.rightClickMenu, this, editorElement -> editorElement.element.markdownSettings);
 
+        this.addBackgroundMenu();
+
         this.rightClickMenu.addSeparatorEntry("separator_after_markdown");
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "set_scrolling", TextEditorElement.class,
@@ -190,5 +192,54 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
 
     }
 
+    private void addBackgroundMenu() {
+
+        TextBackground background = this.element.background;
+
+        ContextMenu backgroundMenu = new ContextMenu();
+        this.rightClickMenu.addSubMenuEntry("background", Component.translatable("fancymenu.elements.text.background"), backgroundMenu)
+                .setStackable(true)
+                .setIcon(MaterialIcons.WALLPAPER);
+
+        background.enabled.buildContextMenuEntryAndAddTo(backgroundMenu, this)
+                .setStackable(true)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.background.enabled.desc")))
+                .setIcon(MaterialIcons.WALLPAPER);
+
+        background.padding.buildContextMenuEntryAndAddTo(backgroundMenu, this)
+                .setStackable(true)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.background.padding.desc")))
+                .setIcon(MaterialIcons.PADDING_ICON);
+
+        background.behindScrollBars.buildContextMenuEntryAndAddTo(backgroundMenu, this)
+                .setStackable(true)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.background.behind_scroll_bars.desc")))
+                .setIcon(MaterialIcons.EXPAND_CONTENT);
+
+        backgroundMenu.addSeparatorEntry("separator_before_background_texture").setStackable(true);
+
+        background.texture.buildContextMenuEntryAndAddTo(backgroundMenu, this)
+                .setStackable(true)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.background.texture.desc")))
+                .setIcon(MaterialIcons.IMAGE);
+
+        // The built-in panel always gets nine-sliced the way it needs it, so the nine-slice settings only do something for a texture of the user
+        background.nineSlice.buildContextMenuEntryAndAddTo(backgroundMenu, this)
+                .setStackable(true)
+                .addIsActiveSupplier((menu, entry) -> background.texture.get() != null)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.background.nine_slice.desc")))
+                .setIcon(MaterialIcons.GRID_GUIDES);
+
+        background.nineSliceBorderX.buildContextMenuEntryAndAddTo(backgroundMenu, this)
+                .setStackable(true)
+                .addIsActiveSupplier((menu, entry) -> background.texture.get() != null)
+                .setIcon(MaterialIcons.BORDER_HORIZONTAL);
+
+        background.nineSliceBorderY.buildContextMenuEntryAndAddTo(backgroundMenu, this)
+                .setStackable(true)
+                .addIsActiveSupplier((menu, entry) -> background.texture.get() != null)
+                .setIcon(MaterialIcons.BORDER_VERTICAL);
+
+    }
 
 }
