@@ -25,6 +25,22 @@ class MarkdownQuoteLineTest {
     }
 
     @ParameterizedTest
+    @ValueSource(strings = {"> quote\nlast line\n\nafter", "> quote\n- last line\n\nafter", "> quote\n# last line\n\nafter"})
+    void lineOfAQuoteReachesBelowTheTextOfItsLastLine(String text) {
+        MarkdownTestRenderer renderer = new MarkdownTestRenderer(text, 400);
+        renderer.setBulletListSpacing(7);
+        renderer.setX(30).setY(50);
+        renderer.tick();
+        MarkdownTextFragment quote = renderer.fragmentContaining("quote");
+        MarkdownTextFragment last = renderer.fragmentContaining("last");
+
+        float bottom = quote.getQuoteLineBottom();
+
+        // A quote goes on over the lines behind it until a blank line ends it, so its last line can be a list item or a headline
+        assertTrue(bottom >= (last.getTextY() + last.getTextHeight()), "the line ends above the bottom of the last line of the quote");
+    }
+
+    @ParameterizedTest
     @ValueSource(floats = {2.0F, 6.0F, 15.0F})
     void lineOfARightAlignedQuoteMirrorsTheLineOfALeftAlignedQuote(float border) {
         MarkdownTestRenderer renderer = new MarkdownTestRenderer("> left quote\n\n|||\n> right quote\n|||", 400);
