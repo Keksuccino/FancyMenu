@@ -27,18 +27,19 @@ public class WelcomeWindowBody extends PiPWindowBody {
     private static final int BORDER = 40;
     private static final Component TITLE = Component.translatable("fancymenu.welcome.screen.title");
 
-    public static final int PIP_WINDOW_WIDTH = 490;
-    /** The window is as tall as its text needs it, but never taller than this. A longer text scrolls. */
-    public static final int MAX_PIP_WINDOW_HEIGHT = 340;
+    /** The width the body of the window has at least, which is the width its text gets measured with. */
+    private static final int MIN_BODY_WIDTH = 488;
+    /** The body is as tall as its text needs it, but never taller than this. A longer text scrolls. */
+    private static final int MAX_BODY_HEIGHT = 317;
 
     private ScrollableMarkdownRenderer markdownRenderer;
 
     public static void openInWindow() {
-        int height = getFittingWindowHeight();
         PiPWindow window = new PiPWindow(new WelcomeWindowBody())
                 .setForceFancyMenuUiScale(true)
-                .setMinSize(PIP_WINDOW_WIDTH, height)
-                .setSize(PIP_WINDOW_WIDTH, height)
+                .setMinBodySize(MIN_BODY_WIDTH, getFittingBodyHeight())
+                // The window is as small as the size of its body lets it be
+                .setSize(1, 1)
                 .setAlwaysOnTop(true)
                 .setForceFocus(true)
                 .setBlockMinecraftScreenInputs(true)
@@ -47,13 +48,12 @@ public class WelcomeWindowBody extends PiPWindowBody {
     }
 
     /**
-     * Returns the height the window needs to show its whole text, which is longer in some languages than in others.
+     * Returns the height the body needs to show its whole text, which is longer in some languages than in others.<br>
+     * The text gets measured with the smallest width the body can have. A wider body never makes it taller.
      */
-    private static int getFittingWindowHeight() {
-        int bodyWidth = PIP_WINDOW_WIDTH - (PiPWindow.DEFAULT_BORDER_THICKNESS * 2);
-        ScrollableMarkdownRenderer text = new ScrollableMarkdownRenderer(0.0F, 0.0F, getTextAreaWidth(bodyWidth), 0.0F);
-        int bodyHeight = MARGIN + (int) setUpText(text) + MARGIN + BUTTON_HEIGHT + MARGIN;
-        return Math.min(MAX_PIP_WINDOW_HEIGHT, bodyHeight + PiPWindow.DEFAULT_TITLE_BAR_HEIGHT + (PiPWindow.DEFAULT_BORDER_THICKNESS * 2));
+    private static int getFittingBodyHeight() {
+        ScrollableMarkdownRenderer text = new ScrollableMarkdownRenderer(0.0F, 0.0F, getTextAreaWidth(MIN_BODY_WIDTH), 0.0F);
+        return Math.min(MAX_BODY_HEIGHT, MARGIN + (int) setUpText(text) + MARGIN + BUTTON_HEIGHT + MARGIN);
     }
 
     private static int getTextAreaWidth(int bodyWidth) {
@@ -71,8 +71,14 @@ public class WelcomeWindowBody extends PiPWindowBody {
         renderer.getStyle().applyLook(MarkdownLook.NEUTRAL);
         renderer.setUIFontRenderingEnabled(true);
         renderer.setOptimalWidth(text.getScrollArea().getInnerWidth());
-        // Whole pixels, so the area is never a fraction of a pixel too short for its text, which would make it scroll
-        return (float) Math.ceil(renderer.getRealHeight()) + (text.getScrollArea().getBorderThickness() * 2);
+        // The body gets drawn at the UI scale, where the UI font is one size bigger on small UI scales, so the text has to get measured like that
+        UIBase.startUIScaleRendering();
+        try {
+            // Whole pixels, so the area is never a fraction of a pixel too short for its text, which would make it scroll
+            return (float) Math.ceil(renderer.getRealHeight()) + (text.getScrollArea().getBorderThickness() * 2);
+        } finally {
+            UIBase.stopUIScaleRendering();
+        }
     }
 
     private WelcomeWindowBody() {
