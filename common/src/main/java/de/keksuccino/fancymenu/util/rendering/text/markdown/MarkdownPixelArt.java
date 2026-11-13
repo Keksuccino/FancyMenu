@@ -26,6 +26,8 @@ final class MarkdownPixelArt {
     private static final int CELL_SIZE = 8;
     /** The size of the pixel art markers, which fill the cells of the first row of the texture. */
     static final int MARKER_SIZE = 5;
+    /** The size of the pixel art callout icons. Their shapes fill the cells of the second row of the texture, and their details the cells of the third row. */
+    static final int CALLOUT_ICON_SIZE = 7;
 
     private MarkdownPixelArt() {
     }
@@ -41,6 +43,22 @@ final class MarkdownPixelArt {
         float size = MARKER_SIZE * pixelSize;
         if (shadow) RenderingUtils.blitF(graphics, RenderPipelines.GUI_TEXTURED, TEXTURE, x + pixelSize, y + pixelSize, cell * CELL_SIZE, 0, size, size, MARKER_SIZE, MARKER_SIZE, TEXTURE_WIDTH, TEXTURE_HEIGHT, shadowColor(color));
         RenderingUtils.blitF(graphics, RenderPipelines.GUI_TEXTURED, TEXTURE, x, y, cell * CELL_SIZE, 0, size, size, MARKER_SIZE, MARKER_SIZE, TEXTURE_WIDTH, TEXTURE_HEIGHT, color);
+    }
+
+    /**
+     * Draws a pixel art callout icon. An icon has two layers with a color of their own: its shape and the details inside of it.
+     *
+     * @param type The position of the icon in the second and third row of the texture, which is the ordinal of its callout type.
+     */
+    static void calloutIcon(@NotNull GuiGraphicsExtractor graphics, int type, float x, float y, float pixelSize, int color, int detailColor, boolean shadow) {
+        float size = CALLOUT_ICON_SIZE * pixelSize;
+        float u = type * CELL_SIZE;
+        if (shadow) {
+            RenderingUtils.blitF(graphics, RenderPipelines.GUI_TEXTURED, TEXTURE, x + pixelSize, y + pixelSize, u, CELL_SIZE, size, size, CALLOUT_ICON_SIZE, CALLOUT_ICON_SIZE, TEXTURE_WIDTH, TEXTURE_HEIGHT, shadowColor(color));
+            RenderingUtils.blitF(graphics, RenderPipelines.GUI_TEXTURED, TEXTURE, x + pixelSize, y + pixelSize, u, CELL_SIZE * 2, size, size, CALLOUT_ICON_SIZE, CALLOUT_ICON_SIZE, TEXTURE_WIDTH, TEXTURE_HEIGHT, shadowColor(detailColor));
+        }
+        RenderingUtils.blitF(graphics, RenderPipelines.GUI_TEXTURED, TEXTURE, x, y, u, CELL_SIZE, size, size, CALLOUT_ICON_SIZE, CALLOUT_ICON_SIZE, TEXTURE_WIDTH, TEXTURE_HEIGHT, color);
+        RenderingUtils.blitF(graphics, RenderPipelines.GUI_TEXTURED, TEXTURE, x, y, u, CELL_SIZE * 2, size, size, CALLOUT_ICON_SIZE, CALLOUT_ICON_SIZE, TEXTURE_WIDTH, TEXTURE_HEIGHT, detailColor);
     }
 
     /**
