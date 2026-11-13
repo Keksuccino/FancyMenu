@@ -263,15 +263,17 @@ class MarkdownRendererRefreshTest {
         MarkdownTestRenderer renderer = new MarkdownTestRenderer(TEXT, 200);
         renderer.setLineSpacing(3);
         renderer.setBorder(5);
-        float expectedHeight = 0;
         float expectedWidth = 0;
+        float previousLineEnd = 5;
         renderer.tick();
         for (MarkdownTextLine line : renderer.lines) {
-            expectedHeight += line.getLineHeight() + 3;
+            assertTrue(line.offsetY >= previousLineEnd, "line starts above the end of the line in front of it");
+            previousLineEnd = line.offsetY + line.getLineHeight();
             expectedWidth = Math.max(expectedWidth, line.getLineWidth());
         }
 
-        assertEquals(expectedHeight + 10, renderer.getRealHeight());
+        // The last line is followed by the line spacing and the border
+        assertEquals(previousLineEnd + 3 + 5, renderer.getRealHeight());
         assertEquals(Math.max(expectedWidth + 10, 200), renderer.getRealWidth());
     }
 
