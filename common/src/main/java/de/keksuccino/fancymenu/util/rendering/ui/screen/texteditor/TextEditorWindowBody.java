@@ -43,7 +43,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.*;
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
@@ -57,6 +56,9 @@ public class TextEditorWindowBody extends PiPWindowBody {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final HashMap<String, String> COMPILED_SINGLE_LINE_STRINGS = new HashMap<>();
+    private static final Pattern LINE_BREAK_PATTERN = Pattern.compile("\\R");
+    /** The number of columns from one tab stop to the next, used to replace tabs with spaces. */
+    private static final int TAB_WIDTH = 4;
 
     public static final String NEWLINE_CODE = "%!n!%";
     public static final String SPACE_CODE = "%!s!%";
@@ -1335,6 +1337,43 @@ public class TextEditorWindowBody extends PiPWindowBody {
         }
     }
 
+    /**
+     * Splits the text at every kind of line break, not only at {@code \n}.<br>
+     * Text from the clipboard can separate its lines with a lone {@code \r} (Microsoft Word, Excel, classic Mac text), a vertical tab
+     * (manual line breaks in Word) or a Unicode line or paragraph separator. The lines of the editor silently drop all of these
+     * characters, so the whole text would end up in a single line otherwise.
+     */
+    @NotNull
+    static String[] splitIntoLines(@NotNull String text) {
+        return LINE_BREAK_PATTERN.split(text, -1);
+    }
+
+    /**
+     * Replaces every tab in the line with spaces up to the next tab stop, so indentation and tab-aligned columns survive.<br>
+     * The lines of the editor silently drop tabs like all other control characters, and its indentation is made of spaces.
+     *
+     * @param startColumn the column the line starts at, which is not 0 when the line gets inserted behind other text
+     * @return the line itself when it holds no tabs
+     */
+    @NotNull
+    static String expandTabs(@NotNull String line, int startColumn) {
+        int firstTab = line.indexOf('\t');
+        if (firstTab < 0) return line;
+        StringBuilder expanded = new StringBuilder(line.length() + TAB_WIDTH * 2).append(line, 0, firstTab);
+        for (int i = firstTab; i < line.length(); i++) {
+            char c = line.charAt(i);
+            if (c == '\t') {
+                int spaces = TAB_WIDTH - ((startColumn + expanded.length()) % TAB_WIDTH);
+                for (int s = 0; s < spaces; s++) {
+                    expanded.append(' ');
+                }
+            } else {
+                expanded.append(c);
+            }
+        }
+        return expanded.toString();
+    }
+
     public void pasteText(String text) {
         try {
             if ((text != null) && !text.isEmpty()) {
@@ -1358,11 +1397,12 @@ public class TextEditorWindowBody extends PiPWindowBody {
                 }
                 focusedLine.setValue(textBeforeCursor);
                 focusedLine.setCursorPosition(textBeforeCursor.length());
-                String[] lines = new String[]{text};
-                if (text.contains("\n")) {
-                    lines = text.split("\n", -1);
+                String[] lines = splitIntoLines(text);
+                for (int i = 0; i < lines.length; i++) {
+                    // The first line continues the text in front of the cursor, so its tab stops count from the start of that text
+                    lines[i] = expandTabs(lines[i], (i == 0) ? textBeforeCursor.length() : 0);
                 }
-                Array.set(lines, lines.length-1, lines[lines.length-1] + textAfterCursor);
+                lines[lines.length-1] = lines[lines.length-1] + textAfterCursor;
                 if (lines.length == 1) {
                     this.getFocusedLine().insertText(lines[0]);
                 } else if (lines.length > 1) {
