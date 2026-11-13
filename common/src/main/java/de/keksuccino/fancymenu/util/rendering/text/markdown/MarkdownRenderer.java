@@ -122,6 +122,11 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
      */
     protected boolean layoutNeeded = false;
     protected boolean refreshing = false;
+    /**
+     * Counts the changes to settings that the render components of fragments get built from without the fragments knowing:
+     * the colors of quotes, hyperlinks and text events, the text case and italic quotes. Fragments cache their component per version.
+     */
+    protected int fragmentStyleVersion = 0;
     protected final List<MarkdownTextLine> lines = new ArrayList<>();
     protected final List<MarkdownTextFragment> fragments = new ArrayList<>();
     final MarkdownTextWidthCache textWidthCache = new MarkdownTextWidthCache(this);
@@ -558,6 +563,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
 
     public MarkdownRenderer setHyperlinkColor(@NotNull DrawableColor hyperlinkColor) {
         this.hyperlinkColor = Objects.requireNonNull(hyperlinkColor);
+        this.fragmentStyleVersion++;
         return this;
     }
 
@@ -568,6 +574,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
 
     public MarkdownRenderer setTextClickEventColor(@NotNull DrawableColor textClickEventColor) {
         this.textClickEventColor = Objects.requireNonNull(textClickEventColor);
+        this.fragmentStyleVersion++;
         return this;
     }
 
@@ -578,6 +585,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
 
     public MarkdownRenderer setTextHoverEventColor(@NotNull DrawableColor textHoverEventColor) {
         this.textHoverEventColor = Objects.requireNonNull(textHoverEventColor);
+        this.fragmentStyleVersion++;
         return this;
     }
 
@@ -588,6 +596,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
 
     public MarkdownRenderer setQuoteColor(@NotNull DrawableColor quoteColor) {
         this.quoteColor = Objects.requireNonNull(quoteColor);
+        this.fragmentStyleVersion++;
         return this;
     }
 
@@ -597,7 +606,12 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     }
 
     public MarkdownRenderer setTextCase(@NotNull TextCase textCase) {
-        this.textCase = Objects.requireNonNull(textCase);
+        if (this.textCase != Objects.requireNonNull(textCase)) {
+            this.textCase = textCase;
+            this.fragmentStyleVersion++;
+            // Fragments measure their text in the case it gets rendered in
+            this.parseNeeded = true;
+        }
         return this;
     }
 
@@ -679,7 +693,12 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     }
 
     public MarkdownRenderer setQuoteItalic(boolean quoteItalic) {
-        this.quoteItalic = quoteItalic;
+        if (this.quoteItalic != quoteItalic) {
+            this.quoteItalic = quoteItalic;
+            this.fragmentStyleVersion++;
+            // Fragments measure their text in the style it gets rendered in
+            this.parseNeeded = true;
+        }
         return this;
     }
 
@@ -866,7 +885,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
 
     protected void resetHovered(@NotNull List<MarkdownTextFragment> fragments) {
         for (MarkdownTextFragment fragment : fragments) {
-            fragment.hovered = false;
+            fragment.setHovered(false);
             if (fragment.isTable() && fragment.tableContext != null) {
                 for (MarkdownTextFragment.TableRow row : fragment.tableContext.rows) {
                     for (MarkdownTextFragment.TableCell cell : row.cells) {
