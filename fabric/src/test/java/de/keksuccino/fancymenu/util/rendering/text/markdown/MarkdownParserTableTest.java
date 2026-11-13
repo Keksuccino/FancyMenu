@@ -175,6 +175,18 @@ class MarkdownParserTableTest {
     }
 
     @Test
+    void escapedPipeAtTheEndOfARowIsTextOfItsLastCell() {
+        // | a | b \|
+        MarkdownTextFragment table = tableFragment(parse("| a | b \\|\n| --- | --- |\n| c | d |"));
+        List<TableCell> headerCells = table.tableContext.rows.get(0).cells;
+
+        assertEquals(2, headerCells.size());
+        assertEquals("a", joinText(headerCells.get(0).fragments));
+        assertEquals("b |", joinText(headerCells.get(1).fragments));
+        assertEquals("d", joinText(table.tableContext.rows.get(1).cells.get(1).fragments));
+    }
+
+    @Test
     void closingMarkerOfAPlainTextBlockIsFoundBehindTableSyntaxInIt() {
         // The table lines are no part of the text the block markers get searched in, the lines around them are
         List<MarkdownTextFragment> fragments = parse(";;;\n| a |\n| --- |\n;;;\n**bold**");
