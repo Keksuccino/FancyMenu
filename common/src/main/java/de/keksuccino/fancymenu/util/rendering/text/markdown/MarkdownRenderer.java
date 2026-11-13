@@ -877,6 +877,13 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
         return this.layout.getSpaceWidth();
     }
 
+    /**
+     * Returns if text and the pixel art that goes with it get drawn with a shadow. The UI font has none, whatever the style says.
+     */
+    protected boolean hasTextShadow() {
+        return this.style.textShadow.get() && !this.uiFontRenderingEnabled;
+    }
+
     protected void renderText(@NotNull GuiGraphics graphics, @NotNull Component text, float x, float y, int color, boolean shadow) {
         if (this.uiFontRenderingEnabled) {
             UIBase.renderText(graphics, text, x, y, color, UIBase.getUITextSizeNormal());
