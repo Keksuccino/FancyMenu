@@ -51,6 +51,7 @@ import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 /**
@@ -1441,6 +1442,72 @@ public class Property<T> {
     @NotNull
     public static Property<SoundSource> soundSourceProperty(@NotNull String key, @NotNull SoundSource defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
         return soundSourceProperty(key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase);
+    }
+
+    /**
+     * Creates an enum {@link Property} with an explicit default and current value.
+     * <p>
+     * The property serializes a value by its lowercase {@link Enum#name() name}. Unknown names deserialize to the default value.
+     * Context menus show a stack-aware entry that cycles through all values of the enum.
+     * </p>
+     *
+     * <h3>Example</h3>
+     * <pre>{@code
+     * Property<Alignment> alignment = Property.enumProperty(
+     *     "alignment",
+     *     Alignment.LEFT,
+     *     Alignment.LEFT,
+     *     "fancymenu.menu.entry.alignment",
+     *     value -> "fancymenu.menu.entry.alignment." + value.name().toLowerCase(Locale.ROOT)
+     * );
+     * }</pre>
+     *
+     * <h3>Localization format</h3>
+     * The localization value for {@code contextMenuEntryLocalizationKeyBase} must include a
+     * {@code %s} placeholder (for example {@code "Alignment: %s"}). The mod replaces
+     * {@code %s} dynamically with the localized name of the current value.
+     *
+     * @param key the unique key used for lookup and serialization
+     * @param defaultValue the value used when no current value is present
+     * @param currentValue the initial current value
+     * @param contextMenuEntryLocalizationKeyBase translation key base for the entry label
+     * @param valueLocalizationKeySupplier returns the translation key of the name of a value
+     * @return a configured enum property
+     */
+    @NotNull
+    public static <E extends Enum<E>> Property<E> enumProperty(@NotNull String key, @NotNull E defaultValue, @NotNull E currentValue, @NotNull String contextMenuEntryLocalizationKeyBase, @NotNull ConsumingSupplier<E, String> valueLocalizationKeySupplier) {
+        Property<E> p = new Property<>(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
+        List<E> values = Arrays.asList(defaultValue.getDeclaringClass().getEnumConstants());
+        p.deserializationCodec = consumes -> {
+            for (E value : values) {
+                if (value.name().equalsIgnoreCase(consumes)) return value;
+            }
+            return defaultValue;
+        };
+        p.serializationCodec = consumes -> (consumes != null) ? consumes.name().toLowerCase(Locale.ROOT) : null;
+        p.contextMenuEntrySupplier = (property, builder, menu) -> builder.buildGenericCycleContextMenuEntry(menu, "menu_entry_" + key, values,
+                        consumes -> consumes.getProperty(key) != null,
+                        consumes -> {
+                            Property<E> resolved = (Property<E>) consumes.getProperty(key);
+                            return (resolved != null) ? resolved.tryGetNonNullElse(defaultValue) : defaultValue;
+                        },
+                        (holder, value) -> {
+                            Property<E> resolved = (Property<E>) holder.getProperty(key);
+                            if ((resolved != null) && (value != null)) resolved.set(value);
+                        },
+                        (contextMenu, entry, value) -> Component.translatable(property.getContextMenuEntryLocalizationKeyBase(), Component.translatable(valueLocalizationKeySupplier.get(value)).setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))))
+                .setIcon(MaterialIcons.REPEAT);
+        return p;
+    }
+
+    /**
+     * Convenience overload that uses {@code defaultValue} as the initial current value.
+     *
+     * @see #enumProperty(String, Enum, Enum, String, ConsumingSupplier)
+     */
+    @NotNull
+    public static <E extends Enum<E>> Property<E> enumProperty(@NotNull String key, @NotNull E defaultValue, @NotNull String contextMenuEntryLocalizationKeyBase, @NotNull ConsumingSupplier<E, String> valueLocalizationKeySupplier) {
+        return enumProperty(key, defaultValue, defaultValue, contextMenuEntryLocalizationKeyBase, valueLocalizationKeySupplier);
     }
 
     /**
