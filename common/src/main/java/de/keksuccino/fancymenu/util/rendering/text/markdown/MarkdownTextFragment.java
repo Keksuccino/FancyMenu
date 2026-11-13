@@ -435,7 +435,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     public float getTextRenderX() {
         float scale = this.getScale();
         if (scale <= 0.0F) return 0.0F;
-        return MarkdownTextGeometry.localCoordinate(this.getTextX(), scale);
+        return this.getTextX() / scale;
     }
 
     /**
@@ -495,7 +495,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     public float getTextRenderY() {
         float scale = this.getScale();
         if (scale <= 0.0F) return 0.0F;
-        return MarkdownTextGeometry.localCoordinate(this.getTextY(), scale);
+        return this.getTextY() / scale;
     }
 
     public float getRenderWidth() {
@@ -577,7 +577,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if ((this.imageSupplier != null) && (this.imageSupplier.get() != null)) {
             return RenderingUtils.isXYInArea(mouseX, mouseY, this.x, this.y, this.getRenderWidth(), this.getRenderHeight());
         }
-        return MarkdownTextGeometry.contains(mouseX, mouseY, this.getTextX(), this.getTextY(), this.getTextWidth(), this.getTextHeight());
+        return RenderingUtils.isXYInArea(mouseX, mouseY, this.getTextX(), this.getTextY(), this.getTextWidth(), this.getTextHeight());
     }
 
     @Override
