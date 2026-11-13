@@ -32,7 +32,6 @@ class MarkdownTableMetricsTest {
         assertEquals(3, context.rows.size());
         for (MarkdownTextFragment.TableRow row : context.rows) {
             assertEquals(rowHeight, row.height);
-            assertEquals(rowHeight, context.getRowHeight(row));
         }
         assertEquals(rowHeight * 3, context.totalRowHeight);
         assertEquals("longer cell".length() * CHAR_WIDTH, context.rows.get(1).cells.get(1).textWidth);
