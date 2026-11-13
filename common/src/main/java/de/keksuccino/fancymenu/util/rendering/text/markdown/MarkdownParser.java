@@ -64,6 +64,8 @@ public class MarkdownParser {
     private static final char DOT_CHAR = '.';
     private static final String DOT = ".";
     private static final String CLOSE_ROUND_BRACKETS = ")";
+    /** The indent of the items of the deepest list level, which is level 10. Markers behind a longer indent start no list item. */
+    private static final int MAX_LIST_ITEM_INDENT = 19;
     /** Longer numbers start no list item, like in CommonMark. */
     private static final int MAX_LIST_ITEM_NUMBER_DIGITS = 9;
     private static final String FORMATTING_CODE_SEPARATION_LINE_PREFIX = "---";
@@ -126,8 +128,8 @@ public class MarkdownParser {
         List<MarkdownTextFragment> fragments = new ArrayList<>();
 
         FragmentBuilder builder = new FragmentBuilder(renderer);
-        MarkerLookahead lookahead = new MarkerLookahead(markdownText);
         boolean extendedBulletListMarkers = renderer.isExtendedBulletListMarkersEnabled();
+        MarkerLookahead lookahead = new MarkerLookahead(markdownText, extendedBulletListMarkers);
         boolean numberedLists = renderer.isNumberedListsEnabled();
         boolean callouts = renderer.isCalloutsEnabled();
         boolean queueNewLine = true;
@@ -193,7 +195,7 @@ public class MarkdownParser {
                     resumeIndex = index;
                     resumeNextTableLine = nextTableLine;
                     resumeLookahead = lookahead;
-                    if (tableSourceLookahead == null) tableSourceLookahead = new MarkerLookahead(tableSourceText);
+                    if (tableSourceLookahead == null) tableSourceLookahead = new MarkerLookahead(tableSourceText, extendedBulletListMarkers);
                     // Markers behind the lines of the table get searched in the text the loop returns to, which has no tables in it
                     tableSourceLookahead.limit(table.sourceEnd(), lookahead, index);
                     lookahead = tableSourceLookahead;
@@ -371,14 +373,14 @@ public class MarkdownParser {
                     while ((markerStart < lineEnd) && (markdownText.charAt(markerStart) == SPACE_CHAR)) markerStart++;
                     int markerEnd = getListItemMarkerEnd(markdownText, markerStart, extendedBulletListMarkers, numberedLists);
                     if (markerEnd != -1) {
-                        int level = ((markerStart - index) / 2) + 1;
+                        int indent = markerStart - index;
 
-                        if (level <= 10) {
+                        if (indent <= MAX_LIST_ITEM_INDENT) {
                             // Skips the indent, the marker and the space behind it. The current char is consumed already.
                             charsToSkip = markerEnd - index;
 
                             // Configure builder
-                            builder.bulletListLevel = level;
+                            builder.bulletListLevel = (indent / 2) + 1;
                             builder.bulletListItemStart = true;
                             builder.listItemMarker = getListItemMarker(markdownText.charAt(markerStart));
                             builder.listItemNumber = (builder.listItemMarker == ListItemMarker.NUMBER) ? markdownText.substring(markerStart, markerEnd) : null;
@@ -1361,6 +1363,8 @@ public class MarkdownParser {
 
         @NotNull
         protected final String text;
+        /** If "*" and "~" start list items, which makes the parser skip them as the markers of those items. */
+        protected final boolean extendedBulletListMarkers;
         protected final int[] nextOccurrences = new int[LookaheadMarker.COUNT];
         /** Markers only get found in front of this index. */
         protected int end;
@@ -1373,8 +1377,9 @@ public class MarkdownParser {
         protected int[] skippedRanges = null;
         protected int skippedRangeCount = 0;
 
-        protected MarkerLookahead(@NotNull String text) {
+        protected MarkerLookahead(@NotNull String text, boolean extendedBulletListMarkers) {
             this.text = text;
+            this.extendedBulletListMarkers = extendedBulletListMarkers;
             this.end = text.length();
             Arrays.fill(this.nextOccurrences, NOT_SEARCHED);
         }
@@ -1392,7 +1397,7 @@ public class MarkdownParser {
 
         /**
          * Returns the index of the first occurrence of the marker at or after the given index of the text of this lookahead, or -1 if there is none.<br>
-         * Occurrences of markers that can be escaped do not count where {@link #isNoMarker(int)} applies.
+         * Occurrences of markers that can be escaped do not count where {@link #isNoMarker(int)} applies or where they are the marker of a list item.
          */
         protected int indexOf(@NotNull LookaheadMarker marker, int fromIndex) {
             // The remembered occurrence is the next one in the whole text, so it stays right when the end moves
@@ -1400,7 +1405,7 @@ public class MarkdownParser {
             if ((nextOccurrence != NOT_FOUND) && (nextOccurrence < fromIndex)) {
                 nextOccurrence = this.text.indexOf(marker.marker, fromIndex);
                 // What the parser reads as text or skips closes nothing, so the search goes on behind it
-                while ((nextOccurrence != NOT_FOUND) && marker.escapable && this.isNoMarker(nextOccurrence)) {
+                while ((nextOccurrence != NOT_FOUND) && marker.escapable && (this.isNoMarker(nextOccurrence) || ((marker.marker.length() == 1) && this.isListItemMarker(nextOccurrence)))) {
                     nextOccurrence = this.text.indexOf(marker.marker, nextOccurrence + 1);
                 }
                 this.nextOccurrences[marker.ordinal()] = nextOccurrence;
@@ -1441,8 +1446,8 @@ public class MarkdownParser {
                 int rowStart = this.text.indexOf(ASTERISK_CHAR, index);
                 if ((rowStart == NOT_FOUND) || (rowStart >= this.end)) break;
                 index = rowStart + 1;
-                // An asterisk that is no marker is no part of a row. The row starts behind it then.
-                if (this.isNoMarker(rowStart)) continue;
+                // An asterisk that is no marker or the marker of a list item is no part of a row. The row starts behind it then.
+                if (this.isNoMarker(rowStart) || this.isListItemMarker(rowStart)) continue;
                 while ((index < this.end) && (this.text.charAt(index) == ASTERISK_CHAR)) index++;
                 int rowLength = index - rowStart;
                 if ((rowLength % 2) == 1) return true;
@@ -1476,6 +1481,19 @@ public class MarkdownParser {
                 }
             }
             return false;
+        }
+
+        /**
+         * Returns if the character at the given index looks like the marker of a list item that an asterisk or a tilde starts,
+         * which makes the parser skip it instead of closing a format with it.<br>
+         * Like {@link #findSkippedRanges()}, this only looks at the text, and is wrong in the same harmless way if the parser reads the line as text.
+         */
+        protected boolean isListItemMarker(int index) {
+            if (!this.extendedBulletListMarkers || (getListItemMarkerEnd(this.text, index, true, false) == -1)) return false;
+            // The marker follows the indent of its item, which is nothing but spaces
+            int indentStart = index;
+            while ((indentStart > 0) && (this.text.charAt(indentStart - 1) == SPACE_CHAR) && ((index - indentStart) < MAX_LIST_ITEM_INDENT)) indentStart--;
+            return ((index - indentStart) <= MAX_LIST_ITEM_INDENT) && ((indentStart == 0) || (this.text.charAt(indentStart - 1) == NEWLINE_CHAR));
         }
 
         /**
