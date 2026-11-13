@@ -397,7 +397,8 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                 float lineX = this.getLeftQuoteLineX();
                 RenderingUtils.fillF(graphics, lineX, yStart, lineX + QUOTE_LINE_WIDTH, yEnd, this.parent.quoteColor.getColorIntWithAlpha(this.parent.textOpacity));
             } else if (this.alignment == MarkdownRenderer.MarkdownLineAlignment.RIGHT) {
-                RenderingUtils.fillF(graphics, this.parent.x + this.parent.getRealWidth() - this.parent.border - 2, yStart, this.parent.x + this.parent.getRealWidth() - this.parent.border - 1, yEnd, this.parent.quoteColor.getColorIntWithAlpha(this.parent.textOpacity));
+                float lineX = this.getRightQuoteLineX();
+                RenderingUtils.fillF(graphics, lineX, yStart, lineX + QUOTE_LINE_WIDTH, yEnd, this.parent.quoteColor.getColorIntWithAlpha(this.parent.textOpacity));
             }
             RenderingUtils.resetShaderColor(graphics);
         }
@@ -410,6 +411,13 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
      */
     protected float getLeftQuoteLineX() {
         return this.parent.x + this.parent.border;
+    }
+
+    /**
+     * Returns the X position of the line next to a right-aligned quote, which ends where the text area ends.
+     */
+    protected float getRightQuoteLineX() {
+        return this.parent.x + this.parent.getRealWidth() - this.parent.border - QUOTE_LINE_WIDTH;
     }
 
     /**
