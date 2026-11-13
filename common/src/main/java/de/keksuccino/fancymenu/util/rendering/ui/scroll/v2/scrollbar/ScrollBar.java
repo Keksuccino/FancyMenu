@@ -35,6 +35,8 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
     public Identifier idleBarTexture;
     public Identifier hoverBarTexture;
     public boolean active = true;
+    /** How opaque the grabber gets drawn, between 0 and 1. Textures and colors with an alpha of their own keep it at 1 and get more transparent below that. */
+    public float grabberOpacity = 1.0F;
     protected boolean allowScrollWheel = false;
     protected float grabberScrollSpeed = 1.0F;
     protected float wheelScrollSpeed = 1.0F;
@@ -95,29 +97,20 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
 
         com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
         resetShaderColor(graphics);
-        DrawableColor normalC = this.idleBarColor.get();
-        DrawableColor hoverC = this.hoverBarColor.get();
-        if (this.isGrabberHovered() || this.isGrabberGrabbed()) {
-            if (this.hoverBarTexture != null) {
-                blitF(graphics, this.hoverBarTexture, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight);
-            } else if (hoverC != null) {
-                if (this.roundedGrabber) {
-                    float radius = UIBase.getWidgetCornerRoundingRadius();
-                    renderRoundedRect(graphics, x, y, this.grabberWidth, this.grabberHeight, radius, radius, radius, radius, hoverC.getColorInt());
-                } else {
-                    fillF(graphics, x, y, x + this.grabberWidth, y + this.grabberHeight, hoverC.getColorInt());
-                }
-            }
-        } else {
-            if (this.idleBarTexture != null) {
-                blitF(graphics, this.idleBarTexture, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight);
-            } else if (normalC != null) {
-                if (this.roundedGrabber) {
-                    float radius = UIBase.getWidgetCornerRoundingRadius();
-                    renderRoundedRect(graphics, x, y, this.grabberWidth, this.grabberHeight, radius, radius, radius, radius, normalC.getColorInt());
-                } else {
-                    fillF(graphics, x, y, x + this.grabberWidth, y + this.grabberHeight, normalC.getColorInt());
-                }
+        boolean hovered = this.isGrabberHovered() || this.isGrabberGrabbed();
+        Identifier texture = hovered ? this.hoverBarTexture : this.idleBarTexture;
+        if (texture != null) {
+            blitF(graphics, texture, x, y, 0.0F, 0.0F, this.grabberWidth, this.grabberHeight, this.grabberWidth, this.grabberHeight, multiplyAlphaInColor(-1, this.grabberOpacity));
+            return;
+        }
+        DrawableColor barColor = hovered ? this.hoverBarColor.get() : this.idleBarColor.get();
+        if (barColor != null) {
+            int color = multiplyAlphaInColor(barColor.getColorInt(), this.grabberOpacity);
+            if (this.roundedGrabber) {
+                float radius = UIBase.getWidgetCornerRoundingRadius();
+                renderRoundedRect(graphics, x, y, this.grabberWidth, this.grabberHeight, radius, radius, radius, radius, color);
+            } else {
+                fillF(graphics, x, y, x + this.grabberWidth, y + this.grabberHeight, color);
             }
         }
 
