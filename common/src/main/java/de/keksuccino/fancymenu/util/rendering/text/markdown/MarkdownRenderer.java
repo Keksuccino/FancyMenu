@@ -86,6 +86,8 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     protected boolean removeHtmlBreaks = true;
     /** If "+ ", "* " and "~ " start list items like "- " does. */
     protected boolean extendedBulletListMarkers = false;
+    /** If a number with a "." or ")" and a space behind it starts a list item. */
+    protected boolean numberedLists = false;
     protected boolean textShadow = true;
     protected boolean uiFontRenderingEnabled = false;
     protected float textOpacity = 1.0F;
@@ -407,6 +409,23 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     public MarkdownRenderer setExtendedBulletListMarkersEnabled(boolean enabled) {
         if (this.extendedBulletListMarkers != enabled) {
             this.extendedBulletListMarkers = enabled;
+            this.parseNeeded = true;
+        }
+        return this;
+    }
+
+    public boolean isNumberedListsEnabled() {
+        return this.numberedLists;
+    }
+
+    /**
+     * Sets if a number with a "." or ")" and a space behind it starts a list item at the start of a line, like "1. " or "2) ".<br>
+     * Numbered items use the list level and item start of bullet items. Their fragments have the marker
+     * {@link MarkdownTextFragment.ListItemMarker#NUMBER} and tell their number with {@link MarkdownTextFragment#listItemNumber}.
+     */
+    public MarkdownRenderer setNumberedListsEnabled(boolean enabled) {
+        if (this.numberedLists != enabled) {
+            this.numberedLists = enabled;
             this.parseNeeded = true;
         }
         return this;
