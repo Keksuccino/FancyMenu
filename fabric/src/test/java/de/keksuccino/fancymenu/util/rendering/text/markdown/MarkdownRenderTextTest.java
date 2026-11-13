@@ -1,6 +1,9 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
+import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.testing.TestPlaceholders;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.ResourceLock;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -42,6 +45,41 @@ class MarkdownRenderTextTest {
         renderer.setText(renderText);
 
         assertEquals(renderText, renderer.buildRenderText());
+    }
+
+    @Test
+    void ampersandsThatStartNoFormattingCodeStayInTheRenderTextAsTheyAre() {
+        String text = "Bread & Butter &zUnknown &AUppercase &";
+        MarkdownTestRenderer renderer = new MarkdownTestRenderer(text, 2000);
+
+        assertEquals(text, renderer.buildRenderText());
+    }
+
+    @Test
+    void htmlBreaksOnlyStayInTheRenderTextWhileTheRendererKeepsThem() {
+        MarkdownTestRenderer renderer = new MarkdownTestRenderer("&aFirst%n%Second\rThird\\nFourth<br>Fifth", 2000);
+
+        renderer.setRemoveHtmlBreaks(false);
+        assertEquals("&aFirst\nSecond\nThird\nFourth<br>Fifth", renderer.buildRenderText());
+
+        renderer.setRemoveHtmlBreaks(true);
+        assertEquals("&aFirst\nSecond\nThird\nFourthFifth", renderer.buildRenderText());
+    }
+
+    @Test
+    @ResourceLock("PlaceholderParser global state")
+    void formattingCodesOfAPlaceholderValueStayInTheRenderTextAsTheyAre() {
+        PlaceholderParser.PlaceholderCachingController cachingController = PlaceholderParser.getPlaceholderCachingController();
+        PlaceholderParser.setPlaceholderCachingController(new PlaceholderParser.PlaceholderCachingController(() -> false, () -> 0L));
+        try {
+            String key = "markdown_render_text_formatting_codes";
+            TestPlaceholders.setValue(key, "&cOffline &nnow &zUnknown");
+            MarkdownTestRenderer renderer = new MarkdownTestRenderer("Status: " + TestPlaceholders.value(key), 2000);
+
+            assertEquals("Status: &cOffline &nnow &zUnknown", renderer.buildRenderText());
+        } finally {
+            PlaceholderParser.setPlaceholderCachingController(cachingController);
+        }
     }
 
 }

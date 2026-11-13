@@ -249,16 +249,11 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
 
     @NotNull
     protected String buildRenderText() {
-        return buildRenderText(this.text, this.removeHtmlBreaks);
-    }
-
-    @NotNull
-    static String buildRenderText(@NotNull String text, boolean removeHtmlBreaks) {
-        String t = PlaceholderParser.replacePlaceholdersWithoutLengthLimit(text, true);
+        String t = PlaceholderParser.replacePlaceholdersWithoutLengthLimit(this.text, true);
         t = StringUtils.replace(t, NEWLINE_PERCENT, NEWLINE);
         t = StringUtils.replace(t, NEWLINE_R, NEWLINE);
         t = StringUtils.replace(t, NEWLINE_ESCAPED, NEWLINE);
-        if (removeHtmlBreaks) t = StringUtils.replace(t, HTML_BREAK, EMPTY_STRING);
+        if (this.removeHtmlBreaks) t = StringUtils.replace(t, HTML_BREAK, EMPTY_STRING);
         return t;
     }
 
