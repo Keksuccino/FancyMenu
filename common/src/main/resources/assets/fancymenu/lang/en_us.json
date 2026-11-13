@@ -667,6 +667,7 @@
   "fancymenu.context_menu.entries.choose_or_set.current": "Current: %s",
   "fancymenu.context_menu.entries.color.input_as_string": "Set As Plain Text",
   "fancymenu.context_menu.entries.color.input_via_color_picker": "Set Via Color Picker",
+  "fancymenu.context_menu.entries.color.no_color": "Use No Color",
   "fancymenu.context_menu.entries.number.input_as_string": "Set As Plain Text",
   "fancymenu.context_menu.entries.number.input_via_number_picker": "Set Via Number Picker",
   "fancymenu.credits": "Credits",
