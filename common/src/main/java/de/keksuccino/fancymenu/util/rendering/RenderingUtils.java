@@ -301,6 +301,33 @@ public class RenderingUtils {
                                              int textureWidth, int textureHeight,
                                              int borderTop, int borderRight, int borderBottom, int borderLeft) {
 
+        blitNineSlicedTexture(graphics, texture, x, y, width, height, textureWidth, textureHeight, borderTop, borderRight, borderBottom, borderLeft, false);
+
+    }
+
+    /**
+     * Renders a texture using nine-slice scaling, with edges and center that are either tiled or stretched.
+     *
+     * @param graphics The GuiGraphics instance to use for rendering
+     * @param texture The texture ResourceLocation to render
+     * @param x The x position to render at
+     * @param y The y position to render at
+     * @param width The desired width to render
+     * @param height The desired height to render
+     * @param textureWidth The actual width of the texture
+     * @param textureHeight The actual height of the texture
+     * @param borderTop The size of the top border
+     * @param borderRight The size of the right border
+     * @param borderBottom The size of the bottom border
+     * @param borderLeft The size of the left border
+     * @param stretch If the edges and the center get stretched to their size as one piece each, instead of getting tiled.
+     *                A stretched texture always is nine pieces. A tiled one is one piece per repetition,
+     *                which is a lot for a small texture on a big area.
+     */
+    public static void blitNineSlicedTexture(GuiGraphics graphics, ResourceLocation texture, int x, int y, int width, int height,
+                                             int textureWidth, int textureHeight,
+                                             int borderTop, int borderRight, int borderBottom, int borderLeft, boolean stretch) {
+
         // Correct border sizes if they're too large
         if (borderLeft + borderRight >= textureWidth) {
             float scale = (float)(textureWidth - 2) / (borderLeft + borderRight);
@@ -323,9 +350,32 @@ public class RenderingUtils {
         // Bottom right
         blitAlphaTexture(graphics, texture, x + width - borderRight, y + height - borderBottom, textureWidth - borderRight, textureHeight - borderBottom, borderRight, borderBottom, textureWidth, textureHeight);
 
-        // Edges - Tiled
         int centerWidth = textureWidth - borderLeft - borderRight;
         int centerHeight = textureHeight - borderTop - borderBottom;
+
+        if (stretch) {
+            int innerWidth = width - borderLeft - borderRight;
+            int innerHeight = height - borderTop - borderBottom;
+            if (innerWidth > 0) {
+                // Top edge
+                blitAlphaTextureRegion(graphics, texture, x + borderLeft, y, innerWidth, borderTop, borderLeft, 0.0F, centerWidth, borderTop, textureWidth, textureHeight);
+                // Bottom edge
+                blitAlphaTextureRegion(graphics, texture, x + borderLeft, y + height - borderBottom, innerWidth, borderBottom, borderLeft, textureHeight - borderBottom, centerWidth, borderBottom, textureWidth, textureHeight);
+            }
+            if (innerHeight > 0) {
+                // Left edge
+                blitAlphaTextureRegion(graphics, texture, x, y + borderTop, borderLeft, innerHeight, 0.0F, borderTop, borderLeft, centerHeight, textureWidth, textureHeight);
+                // Right edge
+                blitAlphaTextureRegion(graphics, texture, x + width - borderRight, y + borderTop, borderRight, innerHeight, textureWidth - borderRight, borderTop, borderRight, centerHeight, textureWidth, textureHeight);
+            }
+            if ((innerWidth > 0) && (innerHeight > 0)) {
+                // Center
+                blitAlphaTextureRegion(graphics, texture, x + borderLeft, y + borderTop, innerWidth, innerHeight, borderLeft, borderTop, centerWidth, centerHeight, textureWidth, textureHeight);
+            }
+            return;
+        }
+
+        // Edges - Tiled
 
         // Top edge
         for (int i = borderLeft; i < width - borderRight; i += centerWidth) {
