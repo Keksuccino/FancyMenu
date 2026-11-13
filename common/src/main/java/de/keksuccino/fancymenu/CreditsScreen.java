@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.ScrollableMarkdownRenderer;
+import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownLook;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
@@ -47,9 +48,7 @@ public class CreditsScreen extends Screen {
         }
         // Allow markdown to render once to measure its size before entry culling.
         this.markdownRenderer.getScrollArea().setRenderOnlyEntriesInArea(false);
-        this.markdownRenderer.getMarkdownRenderer().setHeadlineLineColor(UIBase.getUITheme().ui_interface_background_color);
-        this.markdownRenderer.getMarkdownRenderer().setTextBaseColor(UIBase.getUITheme().ui_interface_generic_text_color);
-        this.markdownRenderer.getMarkdownRenderer().setTextShadow(false);
+        this.markdownRenderer.getMarkdownRenderer().getStyle().applyLook(MarkdownLook.NEUTRAL);
         this.markdownRenderer.getMarkdownRenderer().setUIFontRenderingEnabled(true);
         this.addRenderableWidget(this.markdownRenderer);
 

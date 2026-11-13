@@ -29,10 +29,12 @@ class MarkdownListItemMarkerTest {
         assertMarker(renderer, "highlight", style.listAsteriskMarkerShape.get(), style.listAsteriskMarkerColor);
         // Items of a list inside of a list item always have the marker of their level
         assertMarker(renderer, "nested", style.listLevel(2).markerShape.get(), style.listLevel(2).markerColor);
-        assertSame(MarkdownMarkerShape.PLUS, style.listPlusMarkerShape.get());
-        assertSame(MarkdownMarkerShape.MINUS, style.listMinusMarkerShape.get());
-        assertSame(MarkdownMarkerShape.WAVE, style.listTildeMarkerShape.get());
-        assertSame(MarkdownMarkerShape.STAR, style.listAsteriskMarkerShape.get());
+        // The neutral look has the icons of the UI where the other looks have pixel art
+        boolean neutral = (look == MarkdownLook.NEUTRAL);
+        assertSame(neutral ? MarkdownMarkerShape.ICON_ADD : MarkdownMarkerShape.PLUS, style.listPlusMarkerShape.get());
+        assertSame(neutral ? MarkdownMarkerShape.ICON_REMOVE : MarkdownMarkerShape.MINUS, style.listMinusMarkerShape.get());
+        assertSame(neutral ? MarkdownMarkerShape.ICON_EDIT : MarkdownMarkerShape.WAVE, style.listTildeMarkerShape.get());
+        assertSame(neutral ? MarkdownMarkerShape.ICON_STAR : MarkdownMarkerShape.STAR, style.listAsteriskMarkerShape.get());
     }
 
     @Test
