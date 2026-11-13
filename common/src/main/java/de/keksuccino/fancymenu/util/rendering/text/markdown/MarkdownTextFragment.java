@@ -257,10 +257,12 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         int lineColor = this.parent.tableLineColor.getColorIntWithAlpha(this.parent.textOpacity);
         float lineThickness = this.parent.tableLineThickness;
 
+        // Nothing else gets drawn between the lines of the table, so all of them get drawn as one batch
+
         // Horizontal lines
         float y = tableY;
         for (int i = 0; i <= this.tableContext.rows.size(); i++) {
-            RenderingUtils.fillF(graphics, tableX, y, tableX + actualTableWidth, y + lineThickness, lineColor);
+            RenderingUtils.batchFillF(graphics, tableX, y, tableX + actualTableWidth, y + lineThickness, lineColor);
             if (i < this.tableContext.rows.size()) {
                 y += this.tableContext.rows.get(i).height;
             }
@@ -269,18 +271,19 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         // Draw thicker line under header
         if (this.tableContext.hasHeader && this.parent.tableShowHeader && !this.tableContext.rows.isEmpty()) {
             float headerY = tableY + this.tableContext.rows.get(0).height;
-            RenderingUtils.fillF(graphics, tableX, headerY, tableX + actualTableWidth, headerY + lineThickness * 2, lineColor);
+            RenderingUtils.batchFillF(graphics, tableX, headerY, tableX + actualTableWidth, headerY + lineThickness * 2, lineColor);
         }
 
         // Vertical lines
         float x = tableX;
         for (int i = 0; i <= columnWidths.length; i++) {
-            RenderingUtils.fillF(graphics, x, tableY, x + lineThickness, currentY + lineThickness, lineColor);
+            RenderingUtils.batchFillF(graphics, x, tableY, x + lineThickness, currentY + lineThickness, lineColor);
             if (i < columnWidths.length) {
                 x += columnWidths[i];
             }
         }
 
+        graphics.flush();
         RenderingUtils.resetShaderColor(graphics);
     }
 
@@ -343,9 +346,11 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
     protected void renderCodeBlockBackground(GuiGraphics graphics, float minX, float minY, float maxX, float maxY, int color) {
         RenderSystem.enableBlend();
-        RenderingUtils.fillF(graphics, minX+1, minY, maxX-1, minY+1, color);
-        RenderingUtils.fillF(graphics, minX, minY+1, maxX, maxY-1, color);
-        RenderingUtils.fillF(graphics, minX+1, maxY-1, maxX-1, maxY, color);
+        // Nothing else gets drawn between the three rectangles of the background, so they get drawn as one batch
+        RenderingUtils.batchFillF(graphics, minX+1, minY, maxX-1, minY+1, color);
+        RenderingUtils.batchFillF(graphics, minX, minY+1, maxX, maxY-1, color);
+        RenderingUtils.batchFillF(graphics, minX+1, maxY-1, maxX-1, maxY, color);
+        graphics.flush();
         RenderingUtils.resetShaderColor(graphics);
     }
 

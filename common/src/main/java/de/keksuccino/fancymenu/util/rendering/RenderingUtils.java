@@ -758,6 +758,23 @@ public class RenderingUtils {
     }
 
     public static void fillF(@NotNull GuiGraphics graphics, float minX, float minY, float maxX, float maxY, float z, int color) {
+        batchFillF(graphics, minX, minY, maxX, maxY, z, color);
+        // Flush GuiRenderTypes.gui() so later textured blits do not get overdrawn by this untextured quad.
+        graphics.flush();
+    }
+
+    public static void batchFillF(@NotNull GuiGraphics graphics, float minX, float minY, float maxX, float maxY, int color) {
+        batchFillF(graphics, minX, minY, maxX, maxY, 0F, color);
+    }
+
+    /**
+     * Adds a rectangle to the pending batch of GuiRenderTypes.gui() without drawing the batch, so rectangles that directly follow each other
+     * get drawn with one draw call instead of one draw call each. They get drawn in the order they got added, like separate {@link #fillF} calls.<br>
+     * The caller has to call {@link GuiGraphics#flush()} after the last rectangle. Until then, nothing else is allowed to get drawn and no render state
+     * (shader color, blending, scissor) is allowed to change: the whole batch only gets drawn at the flush, so anything drawn in between would end up
+     * below the rectangles added before it, and a changed state would apply to all of them.
+     */
+    public static void batchFillF(@NotNull GuiGraphics graphics, float minX, float minY, float maxX, float maxY, float z, int color) {
         Matrix4f matrix4f = graphics.pose().last().pose();
         if (minX < maxX) {
             float i = minX;
@@ -774,8 +791,6 @@ public class RenderingUtils {
         vertexConsumer.vertex(matrix4f, (float)minX, (float)maxY, (float)z).color(color).endVertex();
         vertexConsumer.vertex(matrix4f, (float)maxX, (float)maxY, (float)z).color(color).endVertex();
         vertexConsumer.vertex(matrix4f, (float)maxX, (float)minY, (float)z).color(color).endVertex();
-        // Flush GuiRenderTypes.gui() so later textured blits do not get overdrawn by this untextured quad.
-        graphics.flush();
     }
 
     public static void blitF(@NotNull GuiGraphics graphics, ResourceLocation location, float x, float y, float f3, float f4, float width, float height, float width2, float height2, int color) {
