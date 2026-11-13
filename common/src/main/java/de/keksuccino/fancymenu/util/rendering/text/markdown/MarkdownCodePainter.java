@@ -83,7 +83,7 @@ final class MarkdownCodePainter {
         MarkdownRenderer renderer = end.parent;
         float right = end.x + end.getRenderWidth();
         if (end.text.endsWith(" ")) right -= renderer.getUnscaledSpaceWidth() * end.getScale();
-        if (renderer.style.trimGlyphSpacing.get()) right -= renderer.getFontMetrics().glyphSpacing * end.getScale();
+        if (renderer.style.trimGlyphSpacing.get()) right -= renderer.textFont.metrics().glyphSpacing * end.getScale();
         return right;
     }
 

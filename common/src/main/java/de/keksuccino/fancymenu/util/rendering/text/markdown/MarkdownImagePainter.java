@@ -9,7 +9,6 @@ import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -105,7 +104,7 @@ final class MarkdownImagePainter {
         StringBuilder line = new StringBuilder();
         float lineWidth = 0.0F;
         for (String word : text.trim().split(" +")) {
-            float wordWidth = renderer.getUnscaledTextWidth(word);
+            float wordWidth = renderer.textFont.width(word);
             if ((line.length() > 0) && ((lineWidth + spaceWidth + wordWidth) > available)) {
                 lines.add(Component.literal(line.toString()));
                 widths.add(lineWidth);
@@ -166,7 +165,7 @@ final class MarkdownImagePainter {
             try {
                 graphics.pose().translate(scaling.snapX(textAreaX + scaling.snapOffset(offset)), y, 0.0F);
                 graphics.pose().scale(scale, scale, scale);
-                renderer.renderText(graphics, caption.lines[i], 0.0F, 0.0F, color, renderer.hasTextShadow());
+                renderer.textFont.draw(graphics, caption.lines[i], 0.0F, 0.0F, color, renderer.textFont.hasShadow());
             } finally {
                 graphics.pose().popPose();
             }

@@ -39,7 +39,7 @@ final class MarkdownFontMetrics {
      */
     @NotNull
     static MarkdownFontMetrics of(@NotNull MarkdownRenderer renderer) {
-        float cellWidth = renderer.getUnscaledTextWidth("m");
+        float cellWidth = renderer.textFont.width("m");
         // The UI draws with the Minecraft font if the user prefers it or the smooth font failed to load
         if (!renderer.uiFontRenderingEnabled || UIBase.shouldUseMinecraftFontForUIRendering()) {
             // The font of Minecraft draws its letters on a grid of 9 rows: capital letters fill the upper 7 rows, the 8th row holds descenders,
