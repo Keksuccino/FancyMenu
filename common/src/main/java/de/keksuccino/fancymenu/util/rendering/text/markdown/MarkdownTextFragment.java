@@ -60,6 +60,8 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     public boolean bold;
     public boolean italic;
     public boolean strikethrough;
+    /** If the struck through text of this fragment is the last of its struck through text. {@link MarkdownStrikethroughPainter#markEnds(List)} looks it up. */
+    protected boolean strikethroughEnd;
     @NotNull
     MinecraftFormattingState minecraftFormatting = MinecraftFormattingState.EMPTY;
     public boolean bulletListItemStart = false;
@@ -225,8 +227,8 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     }
 
     private int getRenderComponentState() {
-        // Only link-like fragments get built differently when they are hovered or at the end of a line
-        if (!this.isLinkLike()) return 0;
+        // Only link-like and struck through fragments get built differently at the end of a line, and only link-like ones when they are hovered
+        if (!this.isLinkLike() && !this.strikethrough) return 0;
         int state = (this.naturalLineBreakAfter || this.autoLineBreakAfter) ? COMPONENT_STATE_LINE_END : 0;
         if ((this.hyperlink != null) && this.hyperlink.isHovered()) state |= COMPONENT_STATE_HYPERLINK_HOVERED;
         if ((this.clickEvent != null) && this.clickEvent.isHovered()) state |= COMPONENT_STATE_CLICK_EVENT_HOVERED;
@@ -244,7 +246,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     protected static Component createRenderComponent(@NotNull Style style, @NotNull String renderText, boolean separateTrailingSpace) {
         MutableComponent comp = Component.literal(renderText).setStyle(style);
         if (separateTrailingSpace) {
-            comp.append(Component.literal(" ").setStyle(Style.EMPTY.withUnderlined(false)));
+            comp.append(Component.literal(" ").setStyle(Style.EMPTY.withUnderlined(false).withStrikethrough(false)));
         }
         return comp;
     }
@@ -333,13 +335,14 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     }
 
     /**
-     * The space at the end of link-like text would look ugly when underlined, so it gets removed at the end of a line
-     * and drawn without the link's style at the end of the link.
+     * The space at the end of link-like or struck through text would look ugly with a line below or through it, so it gets removed
+     * at the end of a line and drawn without the style of that text behind its last word.
      */
     protected int getTrailingSpaceMode() {
-        if (!this.isLinkLike() || !this.text.endsWith(" ")) return TRAILING_SPACE_KEEP;
+        boolean linkLike = this.isLinkLike();
+        if ((!linkLike && !this.strikethrough) || !this.text.endsWith(" ")) return TRAILING_SPACE_KEEP;
         if (this.naturalLineBreakAfter || this.autoLineBreakAfter) return TRAILING_SPACE_REMOVE;
-        return this.isLastLinkLikeFragment() ? TRAILING_SPACE_SEPARATE : TRAILING_SPACE_KEEP;
+        return (linkLike ? this.isLastLinkLikeFragment() : this.strikethroughEnd) ? TRAILING_SPACE_SEPARATE : TRAILING_SPACE_KEEP;
     }
 
     @NotNull
