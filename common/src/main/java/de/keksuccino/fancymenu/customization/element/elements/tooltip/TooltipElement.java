@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.element.elements.tooltip;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.MarkdownSettings;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
@@ -48,9 +49,7 @@ public class TooltipElement extends AbstractElement {
     public boolean interactable = false;
     @NotNull
     public volatile MarkdownRenderer markdownRenderer = new MarkdownRenderer();
-    public final Property.FloatProperty textScale = putProperty(Property.floatProperty("scale", 1.0F, "fancymenu.elements.text.scale"));
-    public final Property.IntegerProperty textBorder = putProperty(Property.integerProperty("text_border", 2, "fancymenu.elements.text.text_border"));
-    public final Property.IntegerProperty lineSpacing = putProperty(Property.integerProperty("line_spacing", 2, "fancymenu.elements.text.line_spacing"));
+    public final MarkdownSettings markdownSettings = new MarkdownSettings(this, this.markdownRenderer);
     protected List<String> lastLines;
     protected IText lastIText;
     protected int cachedRealHeight = 0;
@@ -155,7 +154,7 @@ public class TooltipElement extends AbstractElement {
     }
 
     protected void renderTick() {
-        this.syncMarkdownRendererProperties();
+        this.markdownSettings.tick();
 
         // Update width for markdown renderer (account for padding)
         int paddingX = 6;
@@ -182,23 +181,6 @@ public class TooltipElement extends AbstractElement {
             this.markdownRenderer.setText(t);
         }
         this.lastText = t;
-    }
-
-    protected void syncMarkdownRendererProperties() {
-        float scale = Math.max(0.0F, this.textScale.getFloat());
-        if (this.markdownRenderer.getTextBaseScale() != scale) {
-            this.markdownRenderer.setTextBaseScale(scale);
-        }
-
-        int border = Math.max(0, this.textBorder.getInteger());
-        if ((int)this.markdownRenderer.getBorder() != border) {
-            this.markdownRenderer.setBorder(border);
-        }
-
-        int spacing = Math.max(0, this.lineSpacing.getInteger());
-        if ((int)this.markdownRenderer.getLineSpacing() != spacing) {
-            this.markdownRenderer.setLineSpacing(spacing);
-        }
     }
 
     @Override

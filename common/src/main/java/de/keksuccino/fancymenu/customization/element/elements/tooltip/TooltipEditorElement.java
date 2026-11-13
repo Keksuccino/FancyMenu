@@ -2,9 +2,9 @@ package de.keksuccino.fancymenu.customization.element.elements.tooltip;
 
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.element.editor.EditorElementSettings;
+import de.keksuccino.fancymenu.customization.element.elements.MarkdownSettingsMenu;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -95,21 +95,10 @@ public class TooltipEditorElement extends AbstractEditorElement<TooltipEditorEle
                 .setIsActiveSupplier((menu, entry) -> tooltipElement.sourceMode == TooltipElement.SourceMode.RESOURCE)
                 .setIcon(MaterialIcons.FILE_OPEN);
 
-        // Markdown submenu - using Text element localization
-        ContextMenu markdownMenu = new ContextMenu();
-        this.rightClickMenu.addSubMenuEntry("markdown", Component.translatable("fancymenu.elements.text.markdown"), markdownMenu)
-                .setIcon(MaterialIcons.MENU_BOOK);
-
-        // Text shadow - using Text element localization
-        this.addToggleContextMenuEntryTo(markdownMenu, "text_shadow",
-                TooltipEditorElement.class,
-                e -> ((TooltipElement)e.element).markdownRenderer.isTextShadow(),
-                (e, value) -> ((TooltipElement)e.element).markdownRenderer.setTextShadow(value),
-                "fancymenu.elements.text.shadow")
-                .setIcon(MaterialIcons.SHADOW);
+        this.rightClickMenu.addSeparatorEntry("separator_after_content");
 
         // Text case mode - using Text element localization
-        this.addCycleContextMenuEntryTo(markdownMenu, "text_case",
+        this.addCycleContextMenuEntryTo(this.rightClickMenu, "text_case",
                 List.of(MarkdownRenderer.TextCase.NORMAL, MarkdownRenderer.TextCase.ALL_LOWER, MarkdownRenderer.TextCase.ALL_UPPER),
                 TooltipEditorElement.class,
                 e -> ((TooltipElement)e.element).markdownRenderer.getTextCase(),
@@ -126,42 +115,18 @@ public class TooltipEditorElement extends AbstractEditorElement<TooltipEditorEle
                 .setIcon(MaterialIcons.TEXT_FORMAT);
 
         // Text scale - using Text element localization
-        this.element.textScale.buildContextMenuEntryAndAddTo(markdownMenu, this)
+        this.element.markdownSettings.textScale.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setIcon(MaterialIcons.FORMAT_SIZE);
 
-        // Text color - using Text element localization
-        this.addStringInputContextMenuEntryTo(markdownMenu, "text_color",
-                TooltipEditorElement.class,
-                e -> ((TooltipElement)e.element).markdownRenderer.getTextBaseColor().getHex(),
-                (e, color) -> ((TooltipElement)e.element).markdownRenderer.setTextBaseColor(DrawableColor.of(color)),
-                null, false, false,
-                Component.translatable("fancymenu.elements.text.base_color"),
-                true, "#FFFFFF", null, null)
-                .setIcon(MaterialIcons.PALETTE);
-
-        // Text border - using Text element localization
-        this.element.textBorder.buildContextMenuEntryAndAddTo(markdownMenu, this)
-                .setIcon(MaterialIcons.BORDER_OUTER);
-
-        // Line spacing - using Text element localization
-        this.element.lineSpacing.buildContextMenuEntryAndAddTo(markdownMenu, this)
-                .setIcon(MaterialIcons.FORMAT_LINE_SPACING);
-
         // Auto line wrapping - using Text element localization
-        this.addToggleContextMenuEntryTo(markdownMenu, "auto_line_wrapping",
+        this.addToggleContextMenuEntryTo(this.rightClickMenu, "auto_line_wrapping",
                 TooltipEditorElement.class,
                 e -> ((TooltipElement)e.element).markdownRenderer.isAutoLineBreakingEnabled(),
                 (e, value) -> ((TooltipElement)e.element).markdownRenderer.setAutoLineBreakingEnabled(value),
                 "fancymenu.elements.text.auto_line_wrapping")
                 .setIcon(MaterialIcons.FORMAT_TEXT_WRAP);
 
-        // Parse markdown toggle - using Text element localization
-        this.addToggleContextMenuEntryTo(markdownMenu, "parse_markdown",
-                TooltipEditorElement.class,
-                e -> ((TooltipElement)e.element).markdownRenderer.isParseMarkdown(),
-                (e, value) -> ((TooltipElement)e.element).markdownRenderer.setParseMarkdown(value),
-                "fancymenu.elements.text.markdown.toggle")
-                .setIcon(MaterialIcons.CODE);
+        MarkdownSettingsMenu.addTo(this.rightClickMenu, this, editorElement -> editorElement.element.markdownSettings);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_markdown");
 
