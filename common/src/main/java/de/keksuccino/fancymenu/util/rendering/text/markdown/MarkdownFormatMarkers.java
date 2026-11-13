@@ -114,8 +114,10 @@ final class MarkdownFormatMarkers {
         ASTERISK,
         /** Two asterisks in a row, which open and close bold text. */
         ASTERISK_PAIR,
-        /** An underscore that opens and closes italic text: one without another one next to it, or the last one of three underscores that are markers. */
-        UNDERSCORE,
+        /** An underscore that can open italic text, which it can't inside of a word or in front of whitespace: one without another one next to it, or the last one of three underscores. */
+        UNDERSCORE_OPEN,
+        /** An underscore that can close italic text, which it can't inside of a word or behind whitespace: one without another one next to it, or the last one of three underscores. */
+        UNDERSCORE_CLOSE,
         /** The first one of two underscores that can open bold text, which they can't inside of a word or in front of whitespace. */
         UNDERSCORE_PAIR_OPEN,
         /** The first one of two underscores that can close bold text, which they can't inside of a word or behind whitespace. */

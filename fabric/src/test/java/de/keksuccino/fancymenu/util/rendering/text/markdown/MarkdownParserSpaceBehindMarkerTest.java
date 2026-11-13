@@ -16,7 +16,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * A space right behind a marker that opens something is part of what the marker opens. It does not join the fragment in front of the marker,
- * which is how a space behind the text of a fragment ends the word of that fragment.
+ * which is how a space behind the text of a fragment ends the word of that fragment.<br>
+ * Underscores are no part of this, because they open nothing in front of a space.
  */
 class MarkdownParserSpaceBehindMarkerTest {
 
@@ -26,7 +27,6 @@ class MarkdownParserSpaceBehindMarkerTest {
         PLAIN_TEXT(";;", ";;", fragment -> fragment.plainText),
         BOLD("**", "**", fragment -> fragment.bold),
         ITALIC_ASTERISK("*", "*", fragment -> fragment.italic),
-        ITALIC_UNDERSCORE("_", "_", fragment -> fragment.italic),
         STRIKETHROUGH("~", "~", fragment -> fragment.strikethrough),
         STRIKETHROUGH_DOUBLE("~~", "~~", fragment -> fragment.strikethrough),
         LINK("[", "](target)", fragment -> fragment.hyperlink != null),
