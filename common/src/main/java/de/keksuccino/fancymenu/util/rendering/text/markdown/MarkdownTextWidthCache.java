@@ -70,7 +70,7 @@ final class MarkdownTextWidthCache {
     }
 
     /**
-     * Returns the unscaled width of the text of a fragment, built from the given parts like {@link MarkdownTextFragment#createRenderComponent(Style, String, boolean)} builds it.
+     * Returns the unscaled width of the text of a fragment, built from the given parts like {@link MarkdownTextFont#component(Style, String, boolean)} builds it.
      */
     float getWidth(@NotNull Style style, @NotNull String renderText, boolean separateTrailingSpace) {
         if (!this.parsing) return this.measure(style, renderText, separateTrailingSpace);
@@ -84,7 +84,7 @@ final class MarkdownTextWidthCache {
     }
 
     private float measure(@NotNull Style style, @NotNull String renderText, boolean separateTrailingSpace) {
-        return this.renderer.textFont.width(MarkdownTextFragment.createRenderComponent(style, renderText, separateTrailingSpace));
+        return this.renderer.textFont.width(this.renderer.textFont.component(style, renderText, separateTrailingSpace));
     }
 
     private static final class Key {

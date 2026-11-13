@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
 import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothFont;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -19,7 +20,7 @@ final class MarkdownFontMetrics {
     final float underlineThickness;
     /** The width of the empty space the font puts behind the last letter of a text. */
     final float glyphSpacing;
-    /** The width of the letter "m", which is what the cells of fixed-width text are as wide as by default. */
+    /** The width of the letter "m" in the font of code, which is what the cells of fixed-width text are as wide as by default. */
     final float cellWidth;
     /** If the font is made of pixels, which only stay sharp at whole positions. */
     final boolean pixelFont;
@@ -39,9 +40,9 @@ final class MarkdownFontMetrics {
      */
     @NotNull
     static MarkdownFontMetrics of(@NotNull MarkdownRenderer renderer) {
-        float cellWidth = renderer.textFont.width("m");
-        // The UI draws with the Minecraft font if the user prefers it or the smooth font failed to load
-        if (!renderer.uiFontRenderingEnabled || UIBase.shouldUseMinecraftFontForUIRendering()) {
+        MarkdownTextFont textFont = renderer.textFont;
+        float cellWidth = textFont.width(textFont.component(textFont.withCodeFont(Style.EMPTY), "m", false));
+        if (textFont.isMinecraftFont()) {
             // The font of Minecraft draws its letters on a grid of 9 rows: capital letters fill the upper 7 rows, the 8th row holds descenders,
             // and underlines fill the 9th one. Lowercase letters like "x" are 5 rows tall, and every letter is followed by one empty column.
             // Resource packs draw other letters onto the same grid, and the font has no way to ask it for these numbers.

@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UITheme;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.FormattedText;
@@ -15,6 +17,8 @@ final class MarkdownTestRenderer extends MarkdownRenderer {
 
     /** The UI theme the colors of the neutral look follow. Tests change its colors to act like a theme switch. */
     final UITheme theme = new UITheme("test", "test");
+    /** The characters every font of Minecraft has in this renderer, which are the printable characters of ASCII unless a test sets other ones. */
+    MarkdownFontCoverage fontCoverage = fontWithCharacters(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~");
     int parses = 0;
     int layouts = 0;
 
@@ -26,6 +30,8 @@ final class MarkdownTestRenderer extends MarkdownRenderer {
         // The supplier gets asked after the renderer got built, which is when the theme of this renderer exists
         super(new TestFont(), () -> theme[0]);
         theme[0] = this.theme;
+        // Fonts get read from the resources of the game, so every font of a test has the characters of this definition
+        this.textFont.fontCoverage = font -> this.fontCoverage;
     }
 
     MarkdownTestRenderer(@NotNull String text, float optimalWidth) {
@@ -44,6 +50,23 @@ final class MarkdownTestRenderer extends MarkdownRenderer {
     protected void rebuildLines() {
         this.layouts++;
         super.rebuildLines();
+    }
+
+    /**
+     * Returns the characters of a bitmap font that has the given characters.
+     */
+    @NotNull
+    static MarkdownFontCoverage fontWithCharacters(@NotNull String characters) {
+        JsonArray rows = new JsonArray();
+        rows.add(characters);
+        JsonObject provider = new JsonObject();
+        provider.addProperty("type", "bitmap");
+        provider.add("chars", rows);
+        JsonArray providers = new JsonArray();
+        providers.add(provider);
+        JsonObject definition = new JsonObject();
+        definition.add("providers", providers);
+        return MarkdownFontCoverage.fromDefinitions(List.of(definition));
     }
 
     @NotNull
