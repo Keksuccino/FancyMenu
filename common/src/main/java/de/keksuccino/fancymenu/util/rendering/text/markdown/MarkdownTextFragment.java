@@ -79,6 +79,11 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     @NotNull
     public HeadlineType headlineType = HeadlineType.NONE;
     public QuoteContext quoteContext = null;
+    /**
+     * TRUE for the empty fragment that stands for the marker line of a callout ("> [!NOTE]"). It is the first fragment of the
+     * {@link #quoteContext} of the callout and has its own line, so a callout without a body still has a fragment.
+     */
+    public boolean calloutMarker = false;
     public CodeBlockContext codeBlockContext = null;
     public boolean plainText = false;
     public ResourceLocation font = null;
@@ -841,6 +846,9 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     public static class QuoteContext {
 
         public final List<MarkdownTextFragment> quoteFragments = new ArrayList<>();
+        /** The type of the callout this quote is, or NULL if it is a normal quote. */
+        @Nullable
+        public CalloutType calloutType = null;
 
         @Nullable
         public MarkdownTextFragment getQuoteStart() {
@@ -880,6 +888,18 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         BIG, // ###
         BIGGER, // ##
         BIGGEST // #
+    }
+
+    /**
+     * The types of callouts, which are quotes that start with a marker line like "> [!NOTE]".
+     * The name of a type is what the marker holds, in any case.
+     */
+    public enum CalloutType {
+        NOTE,
+        TIP,
+        IMPORTANT,
+        WARNING,
+        CAUTION
     }
 
     /**
