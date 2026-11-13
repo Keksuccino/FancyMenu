@@ -133,7 +133,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         } else if (this.separationLine) {
 
             com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
-            RenderingUtils.fillF(graphics, this.parent.x + this.parent.style.padding.get(), this.y, this.parent.x + this.parent.getRealWidth() - this.parent.style.padding.get(), this.y + this.getRenderHeight(), this.parent.getRenderColor(this.parent.style.separatorColor));
+            RenderingUtils.fillF(graphics, this.parent.x + this.parent.scaling.padding(), this.y, this.parent.x + this.parent.getRealWidth() - this.parent.scaling.padding(), this.y + this.getRenderHeight(), this.parent.getRenderColor(this.parent.style.separatorColor));
             RenderingUtils.resetShaderColor(graphics);
 
         } else {
@@ -149,7 +149,8 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                 // Vanilla text extraction only accepts integer draw coordinates. Translate to the exact text origin and draw at local zero so a fractional scale never requires dividing and truncating its absolute position, which would move glyphs into the parent's scissor area.
                 graphics.pose().translate(this.getTextX(), this.getTextY());
                 graphics.pose().scale(scale, scale);
-                this.parent.renderText(graphics, this.getRenderComponent(), 0.0F, 0.0F, this.parent.getRenderColor(this.parent.style.textColor), this.parent.style.textShadow.get() && (this.codeBlockContext == null));
+                // The fragments that only end a line and the ones of blank lines have nothing to draw
+                if (!this.text.isEmpty()) this.parent.renderText(graphics, this.getRenderComponent(), 0.0F, 0.0F, this.parent.getRenderColor(this.parent.style.textColor), this.parent.style.textShadow.get() && (this.codeBlockContext == null));
             } finally {
                 graphics.pose().popMatrix();
             }
@@ -169,11 +170,11 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if (this.tableContext == null) return;
 
         float[] columnWidths = this.tableContext.columnWidths;
-        float cellPadding = this.parent.style.tableCellPadding.get();
+        float cellPadding = this.parent.scaling.sized(this.parent.style.tableCellPadding.get());
 
         // Use the fragment's x position which already includes alignment offset
         float tableX = this.x;
-        float tableY = this.y + this.parent.style.tableMargin.get(); // Add margin before table
+        float tableY = this.y;
         float currentY = tableY;
 
         // Use the actual table width for rendering (not the full area width)
@@ -264,7 +265,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
         // Draw table borders
         int lineColor = this.parent.getRenderColor(this.parent.style.tableLineColor);
-        float lineThickness = this.parent.style.tableLineThickness.get();
+        float lineThickness = this.parent.scaling.sized(this.parent.style.tableLineThickness.get());
 
         // Horizontal lines
         float y = tableY;
@@ -324,7 +325,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                 }
                 renderCodeBlockBackground(graphics, this.x, this.getInlineCodeBackgroundTop(), xEnd, this.getInlineCodeBackgroundBottom(), this.parent.getRenderColor(this.parent.style.inlineCodeBackgroundColor));
             } else if (this.drawsCodeBlockBackground()) {
-                renderCodeBlockBackground(graphics, this.parent.x + this.parent.style.padding.get(), start.getRenderLineY(), this.parent.x + this.parent.getRealWidth() - this.parent.style.padding.get() - 1, end.getRenderLineY() + end.getRenderHeight() - 1, this.parent.getRenderColor(this.parent.style.codeBlockBackgroundColor));
+                renderCodeBlockBackground(graphics, this.parent.x + this.parent.scaling.padding(), start.getRenderLineY(), this.parent.x + this.parent.getRealWidth() - this.parent.scaling.padding() - 1, end.getRenderLineY() + end.getRenderHeight() - 1, this.parent.getRenderColor(this.parent.style.codeBlockBackgroundColor));
             }
         }
     }
@@ -359,7 +360,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
      */
     protected float getRenderLineY() {
         if (this.parentLine == null) return this.y;
-        return this.parent.y + this.parentLine.offsetY;
+        return this.parentLine.getRenderY();
     }
 
     protected void renderCodeBlockBackground(GuiGraphicsExtractor graphics, float minX, float minY, float maxX, float maxY, int color) {
@@ -376,7 +377,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             float scale = (this.parent.parentRenderScale != null) ? this.parent.parentRenderScale : (float)WindowHandler.getGuiScale();
             float lineThickness = (scale > 1) ? 0.5f : 1f;
             float lineY = this.y + this.getTextRenderHeight() + 1;
-            RenderingUtils.fillF(graphics, this.parent.x + this.parent.style.padding.get(), lineY, this.parent.x + this.parent.getRealWidth() - this.parent.style.padding.get() - 1, lineY + lineThickness, this.parent.getRenderColor(this.parent.style.headline(this.headlineType.level).decorationColor));
+            RenderingUtils.fillF(graphics, this.parent.x + this.parent.scaling.padding(), lineY, this.parent.x + this.parent.getRealWidth() - this.parent.scaling.padding() - 1, lineY + lineThickness, this.parent.getRenderColor(this.parent.style.headline(this.headlineType.level).decorationColor));
             RenderingUtils.resetShaderColor(graphics);
         }
     }
@@ -414,14 +415,14 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
      * It must not reach into the border in front of the text area, because containers like scroll areas clip their content there.
      */
     protected float getLeftQuoteLineX() {
-        return this.parent.x + this.parent.style.padding.get();
+        return this.parent.x + this.parent.scaling.padding();
     }
 
     /**
      * Returns the X position of the line next to a right-aligned quote, which ends where the text area ends.
      */
     protected float getRightQuoteLineX() {
-        return this.parent.x + this.parent.getRealWidth() - this.parent.style.padding.get() - QUOTE_LINE_WIDTH;
+        return this.parent.x + this.parent.getRealWidth() - this.parent.scaling.padding() - QUOTE_LINE_WIDTH;
     }
 
     /**
@@ -520,6 +521,9 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             if (this.parent.style.quoteItalic.get()) {
                 style = style.withItalic(true);
             }
+        }
+        if (this.bold && this.parent.style.boldTextColor.isSet() && (this.headlineType == HeadlineType.NONE)) {
+            style = style.withColor(this.parent.style.boldTextColor.argb());
         }
         if (this.textColor != null) {
             style = style.withColor(this.textColor.getColorInt());
@@ -665,9 +669,6 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && this.isInRenderLineOf(this.codeBlockContext.getBlockStart())) {
             offsetY += 10;
         }
-        if ((this.bulletListLevel > 0) && (this.parentLine != null) && this.parentLine.bulletListItemStartLine) {
-            offsetY += this.parent.style.listItemSpacing.get();
-        }
         return offsetY;
     }
 
@@ -689,10 +690,10 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if (this.imageSupplier != null) {
             ITexture t = this.imageSupplier.get();
             if (t == null) return 10;
-            if (t.getWidth() <= (this.parent.getRealWidth() - this.parent.style.padding.get() - this.parent.style.padding.get())) {
+            if (t.getWidth() <= (this.parent.getRealWidth() - this.parent.scaling.padding() - this.parent.scaling.padding())) {
                 return t.getWidth();
             }
-            return this.parent.getRealWidth() - this.parent.style.padding.get() - this.parent.style.padding.get();
+            return this.parent.getRealWidth() - this.parent.scaling.padding() - this.parent.scaling.padding();
         }
 
         float f = this.getTextRenderWidth();
@@ -729,9 +730,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if (this.isTable()) {
             float totalHeight = this.tableContext.totalRowHeight;
             // Add line thickness for borders
-            totalHeight += this.parent.style.tableLineThickness.get() * (this.tableContext.rows.size() + 1);
-            // Add margin above and below tables
-            totalHeight += this.parent.style.tableMargin.get() * 2;
+            totalHeight += this.parent.scaling.sized(this.parent.style.tableLineThickness.get()) * (this.tableContext.rows.size() + 1);
             return totalHeight;
         }
 
@@ -748,15 +747,12 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if (this.headlineType == HeadlineType.BIG) {
             f += 6;
         }
-        // The paddings of code blocks and the spacing of bullet items scale with the text, like the text offset they belong to (see getTextY()). Otherwise the text would grow into the next line.
+        // The paddings of code blocks scale with the text, like the text offset they belong to (see getTextY()). Otherwise the text would grow into the next line.
         if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && this.isInRenderLineOf(this.codeBlockContext.getBlockStart())) {
             f += 10 * this.getScale();
         }
         if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && this.isInRenderLineOf(this.codeBlockContext.getBlockEnd())) {
             f += 10 * this.getScale();
-        }
-        if ((this.bulletListLevel > 0) && this.bulletListItemStart) {
-            f += this.parent.style.listItemSpacing.get() * this.getScale();
         }
         return f;
     }
@@ -790,19 +786,13 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if (this.headlineType == HeadlineType.BIG) f = 1.2f;
         if (this.headlineType == HeadlineType.BIGGER) f = 1.6f;
         if (this.headlineType == HeadlineType.BIGGEST) f = 2.0f;
-        float scale = f * this.parent.textBaseScale;
-        return Float.isFinite(scale) && scale > 0.0F ? scale : 0.0F;
+        return this.parent.scaling.textScale(f);
     }
 
     @Override
     public boolean isMouseOver(double mouseX, double mouseY) {
         if (this.isTable()) {
-            // For tables, use the actual table rendering area
-            float tableX = this.x;
-            float tableY = this.y + this.parent.style.tableMargin.get();
-            float tableWidth = this.tableContext.totalWidth;
-            float tableHeight = this.getRenderHeight() - (this.parent.style.tableMargin.get() * 2); // Subtract the margin
-            return RenderingUtils.isXYInArea(mouseX, mouseY, tableX, tableY, tableWidth, tableHeight);
+            return RenderingUtils.isXYInArea(mouseX, mouseY, this.x, this.y, this.tableContext.totalWidth, this.getRenderHeight());
         }
         if ((this.imageSupplier != null) && (this.imageSupplier.get() != null)) {
             return RenderingUtils.isXYInArea(mouseX, mouseY, this.x, this.y, this.getRenderWidth(), this.getRenderHeight());
@@ -1013,7 +1003,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                     }
                     cell.textWidth = textWidth;
                     if (i < columnCount) {
-                        float cellWidth = textWidth + (renderer.style.tableCellPadding.get() * 2);
+                        float cellWidth = textWidth + (renderer.scaling.sized(renderer.style.tableCellPadding.get()) * 2);
                         if (cellWidth > this.columnWidths[i]) {
                             this.columnWidths[i] = cellWidth;
                         }
@@ -1060,7 +1050,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                     maxHeight = cellHeight;
                 }
             }
-            return maxHeight + (row.parent.style.tableCellPadding.get() * 2);
+            return maxHeight + (row.parent.scaling.sized(row.parent.style.tableCellPadding.get()) * 2);
         }
 
     }
