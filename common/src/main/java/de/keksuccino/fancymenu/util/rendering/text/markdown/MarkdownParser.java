@@ -1015,9 +1015,9 @@ public class MarkdownParser {
      *
      * <p>Escaped characters get skipped the same way the parser reads them, so the parser always reaches the bracket this returns.</p>
      *
-     * <p>The search stops at the first bracket or line break it reaches, so the label search of one link ends before the label of the
-     * next link starts. Together with {@link #getLinkTargetEnd(String, int)} doing the same for targets, this keeps the time for
-     * all searches of a text linear to its length, no matter how many brackets it holds.</p>
+     * <p>The search stops at the first square bracket or line break it reaches, so the label search of one link ends before the label of the
+     * next link starts. {@link #getLinkTargetEnd(String, int)} stops at the first closing square bracket or line break at the latest, which is in front
+     * of the next target. Together, this keeps the time for all searches of a text linear to its length, no matter how many brackets it holds.</p>
      */
     protected static int getLinkLabelEnd(@NotNull String text, int labelStart) {
         int length = text.length();
@@ -1032,14 +1032,22 @@ public class MarkdownParser {
 
     /**
      * Returns the index of the round bracket that ends the link target starting at the given index, or -1 if there is no valid target.<br>
-     * A valid target stays in its line and holds no brackets.
+     * A valid target stays in its line and holds no closing square bracket. Round brackets inside of it have to come in pairs,
+     * like in "wiki/Name_(disambiguation)", so the bracket that ends the target is the first closing one without an opening one in the target.
      */
     protected static int getLinkTargetEnd(@NotNull String text, int targetStart) {
         int length = text.length();
+        int openBrackets = 0;
         for (int i = targetStart; i < length; i++) {
             char c = text.charAt(i);
-            if (c == CLOSE_ROUND_BRACKETS_CHAR) return i;
-            if ((c == NEWLINE_CHAR) || (c == OPEN_ROUND_BRACKETS_CHAR) || (c == CLOSE_SQUARE_BRACKETS_CHAR)) return -1;
+            if (c == CLOSE_ROUND_BRACKETS_CHAR) {
+                if (openBrackets == 0) return i;
+                openBrackets--;
+            } else if (c == OPEN_ROUND_BRACKETS_CHAR) {
+                openBrackets++;
+            } else if ((c == NEWLINE_CHAR) || (c == CLOSE_SQUARE_BRACKETS_CHAR)) {
+                return -1;
+            }
         }
         return -1;
     }
