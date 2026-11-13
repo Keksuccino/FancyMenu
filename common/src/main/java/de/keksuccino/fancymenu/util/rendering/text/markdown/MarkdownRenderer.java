@@ -26,7 +26,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.function.UnaryOperator;
 
 @SuppressWarnings("unused")
 public class MarkdownRenderer implements Renderable, FocuslessContainerEventHandler, NarratableEntry, NavigatableWidget {
@@ -250,16 +249,11 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
 
     @NotNull
     protected String buildRenderText() {
-        return preprocessRenderText(this.text, this.removeHtmlBreaks, text -> PlaceholderParser.replacePlaceholdersWithoutLengthLimit(text, true));
-    }
-
-    @NotNull
-    static String preprocessRenderText(@NotNull String rawText, boolean removeHtmlBreaks, @NotNull UnaryOperator<String> placeholderExpander) {
-        String t = placeholderExpander.apply(rawText);
+        String t = PlaceholderParser.replacePlaceholdersWithoutLengthLimit(this.text, true);
         t = StringUtils.replace(t, NEWLINE_PERCENT, NEWLINE);
         t = StringUtils.replace(t, NEWLINE_R, NEWLINE);
         t = StringUtils.replace(t, NEWLINE_ESCAPED, NEWLINE);
-        if (removeHtmlBreaks) t = StringUtils.replace(t, HTML_BREAK, EMPTY_STRING);
+        if (this.removeHtmlBreaks) t = StringUtils.replace(t, HTML_BREAK, EMPTY_STRING);
         return t;
     }
 
