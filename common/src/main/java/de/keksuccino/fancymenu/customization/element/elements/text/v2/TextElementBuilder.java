@@ -3,9 +3,9 @@ package de.keksuccino.fancymenu.customization.element.elements.text.v2;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
+import de.keksuccino.fancymenu.customization.element.elements.LegacyMarkdownSettings;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRenderer;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.resources.language.I18n;
@@ -25,11 +25,14 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
         i.baseWidth = 200;
         i.baseHeight = 40;
         i.setSource(TextElement.SourceMode.DIRECT, I18n.get("fancymenu.elements.text.placeholder"));
+        i.markdownSettings.applyDefaultsOfNewElements();
         return i;
     }
 
     @Override
     public TextElement deserializeElement(@NotNull SerializedElement serialized) {
+
+        LegacyMarkdownSettings.upgradeTextElement(serialized);
 
         //Don't use buildDefaultInstance() here, because updateContent() runs asynchronously and could override the deserialized content with the default one
         TextElement element = new TextElement(this);
@@ -51,12 +54,6 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
                     element.sourceMode = s;
                 }
             }
-        }
-
-        String shadowString = serialized.getValue("shadow");
-        if (shadowString != null) {
-            if (shadowString.equals("false")) element.markdownRenderer.setTextShadow(false);
-            if (shadowString.equals("true")) element.markdownRenderer.setTextShadow(true);
         }
 
         String caseModeString = serialized.getValue("case_mode");
@@ -91,85 +88,6 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
             if (removeHtmlBreaks.equals("false")) element.markdownRenderer.setRemoveHtmlBreaks(false);
         }
 
-        String codeBlockSingleColor = serialized.getValue("code_block_single_color");
-        if (codeBlockSingleColor != null) {
-            element.markdownRenderer.setCodeBlockSingleLineColor(DrawableColor.of(codeBlockSingleColor));
-        }
-        String codeBlockMultiColor = serialized.getValue("code_block_multi_color");
-        if (codeBlockMultiColor != null) {
-            element.markdownRenderer.setCodeBlockMultiLineColor(DrawableColor.of(codeBlockMultiColor));
-        }
-
-        String headlineLineColor = serialized.getValue("headline_line_color");
-        if (headlineLineColor != null) {
-            element.markdownRenderer.setHeadlineLineColor(DrawableColor.of(headlineLineColor));
-        }
-
-        String separationLineColor = serialized.getValue("separation_line_color");
-        if (separationLineColor != null) {
-            element.markdownRenderer.setSeparationLineColor(DrawableColor.of(separationLineColor));
-        }
-
-        String hyperlinkColor = serialized.getValue("hyperlink_color");
-        if (hyperlinkColor != null) {
-            element.markdownRenderer.setHyperlinkColor(DrawableColor.of(hyperlinkColor));
-        }
-        String clickEventColor = serialized.getValue("click_event_color");
-        if (clickEventColor != null) {
-            element.markdownRenderer.setTextClickEventColor(DrawableColor.of(clickEventColor));
-        }
-        String hoverEventColor = serialized.getValue("hover_event_color");
-        if (hoverEventColor != null) {
-            element.markdownRenderer.setTextHoverEventColor(DrawableColor.of(hoverEventColor));
-        }
-
-        String quoteColor = serialized.getValue("quote_color");
-        if (quoteColor != null) {
-            element.markdownRenderer.setQuoteColor(DrawableColor.of(quoteColor));
-        }
-        String quoteItalic = serialized.getValue("quote_italic");
-        if (quoteItalic != null) {
-            if (quoteItalic.equals("true")) element.markdownRenderer.setQuoteItalic(true);
-            if (quoteItalic.equals("false")) element.markdownRenderer.setQuoteItalic(false);
-        }
-
-        String bulletListDotColor = serialized.getValue("bullet_list_dot_color");
-        if (bulletListDotColor != null) {
-            element.markdownRenderer.setBulletListDotColor(DrawableColor.of(bulletListDotColor));
-        }
-        element.markdownRenderer.setParseMarkdown(deserializeBoolean(true, serialized.getValue("parse_markdown")));
-
-        // Table properties
-        String tableShowHeader = serialized.getValue("table_show_header");
-        if (tableShowHeader != null) {
-            element.markdownRenderer.setTableShowHeader(deserializeBoolean(true, tableShowHeader));
-        }
-
-        String tableAlternateRowColors = serialized.getValue("table_alternate_row_colors");
-        if (tableAlternateRowColors != null) {
-            element.markdownRenderer.setTableAlternateRowColors(deserializeBoolean(true, tableAlternateRowColors));
-        }
-
-        String tableLineColor = serialized.getValue("table_line_color");
-        if (tableLineColor != null) {
-            element.markdownRenderer.setTableLineColor(DrawableColor.of(tableLineColor));
-        }
-
-        String tableHeaderBackgroundColor = serialized.getValue("table_header_background_color");
-        if (tableHeaderBackgroundColor != null) {
-            element.markdownRenderer.setTableHeaderBackgroundColor(DrawableColor.of(tableHeaderBackgroundColor));
-        }
-
-        String tableRowBackgroundColor = serialized.getValue("table_row_background_color");
-        if (tableRowBackgroundColor != null) {
-            element.markdownRenderer.setTableRowBackgroundColor(DrawableColor.of(tableRowBackgroundColor));
-        }
-
-        String tableAlternateRowColor = serialized.getValue("table_alternate_row_color");
-        if (tableAlternateRowColor != null) {
-            element.markdownRenderer.setTableAlternateRowColor(DrawableColor.of(tableAlternateRowColor));
-        }
-
         element.markdownRenderer.refreshRenderer();
 
         element.setSource(element.sourceMode, element.source);
@@ -187,7 +105,6 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
             serializeTo.putProperty("source", element.source.replace("\n", "%n%"));
         }
         serializeTo.putProperty("source_mode", element.sourceMode.name);
-        serializeTo.putProperty("shadow", "" + element.markdownRenderer.isTextShadow());
         if (element.markdownRenderer.getTextCase() == MarkdownRenderer.TextCase.ALL_LOWER) {
             serializeTo.putProperty("case_mode", "lower");
         } else if (element.markdownRenderer.getTextCase() == MarkdownRenderer.TextCase.ALL_UPPER) {
@@ -208,27 +125,6 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
         serializeTo.putProperty("enable_scrolling", "" + element.enableScrolling);
         serializeTo.putProperty("auto_line_wrapping", "" + element.markdownRenderer.isAutoLineBreakingEnabled());
         serializeTo.putProperty("remove_html_breaks", "" + element.markdownRenderer.isRemoveHtmlBreaks());
-        serializeTo.putProperty("code_block_single_color", element.markdownRenderer.getCodeBlockSingleLineColor().getHex());
-        serializeTo.putProperty("code_block_multi_color", element.markdownRenderer.getCodeBlockMultiLineColor().getHex());
-        serializeTo.putProperty("headline_line_color", element.markdownRenderer.getHeadlineUnderlineColor().getHex());
-        serializeTo.putProperty("separation_line_color", element.markdownRenderer.getSeparationLineColor().getHex());
-        serializeTo.putProperty("hyperlink_color", element.markdownRenderer.getHyperlinkColor().getHex());
-        serializeTo.putProperty("click_event_color", element.markdownRenderer.getTextClickEventColor().getHex());
-        serializeTo.putProperty("hover_event_color", element.markdownRenderer.getTextHoverEventColor().getHex());
-        serializeTo.putProperty("quote_color", element.markdownRenderer.getQuoteColor().getHex());
-        serializeTo.putProperty("quote_italic", "" + element.markdownRenderer.isQuoteItalic());
-        serializeTo.putProperty("bullet_list_dot_color", element.markdownRenderer.getBulletListDotColor().getHex());
-
-        serializeTo.putProperty("parse_markdown", "" + element.markdownRenderer.isParseMarkdown());
-
-        // Table properties
-        serializeTo.putProperty("table_show_header", "" + element.markdownRenderer.isTableShowHeader());
-        serializeTo.putProperty("table_alternate_row_colors", "" + element.markdownRenderer.isTableAlternateRowColors());
-        serializeTo.putProperty("table_line_color", element.markdownRenderer.getTableLineColor().getHex());
-        serializeTo.putProperty("table_header_background_color", element.markdownRenderer.getTableHeaderBackgroundColor().getHex());
-        serializeTo.putProperty("table_row_background_color", element.markdownRenderer.getTableRowBackgroundColor().getHex());
-        serializeTo.putProperty("table_alternate_row_color", element.markdownRenderer.getTableAlternateRowColor().getHex());
-
         return serializeTo;
         
     }
