@@ -292,6 +292,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
 
             // Tables should always be on their own line
             if (f.isTable()) {
+                f.tableContext.updateMetrics(this);
                 // If there's content on the current line, finish it
                 if (!isStartOfLine && !line.fragments.isEmpty()) {
                     line.prepareLine();
