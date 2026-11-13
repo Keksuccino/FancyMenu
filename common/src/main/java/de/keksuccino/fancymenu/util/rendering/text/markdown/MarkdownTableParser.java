@@ -84,7 +84,7 @@ final class MarkdownTableParser {
      *
      * @param alignments The alignments of the columns of the table. Cells in columns behind the last one keep their default alignment.
      */
-    static void addTableCells(@NotNull MarkdownRenderer renderer, @NotNull MarkdownTextFragment.TableContext tableContext, @NotNull MarkdownTextFragment.TableRow row, @NotNull String line, @NotNull List<MarkdownTextFragment.TableCell.TableCellAlignment> alignments) {
+    private static void addTableCells(@NotNull MarkdownRenderer renderer, @NotNull MarkdownTextFragment.TableContext tableContext, @NotNull MarkdownTextFragment.TableRow row, @NotNull String line, @NotNull List<MarkdownTextFragment.TableCell.TableCellAlignment> alignments) {
         List<String> cells = parseTableRow(line);
         for (int j = 0; j < cells.size(); j++) {
             MarkdownTextFragment.TableCell cell = new MarkdownTextFragment.TableCell();
@@ -106,17 +106,17 @@ final class MarkdownTableParser {
      * A cell is a single line, so it can't hold a table itself.
      */
     @NotNull
-    static List<MarkdownTextFragment> parseTableCell(@NotNull MarkdownRenderer renderer, @NotNull String cellText) {
+    private static List<MarkdownTextFragment> parseTableCell(@NotNull MarkdownRenderer renderer, @NotNull String cellText) {
         return MarkdownParser.parseFragments(renderer, cellText, true, Collections.emptyList());
     }
 
-    static boolean isTableRow(@NotNull String line) {
+    private static boolean isTableRow(@NotNull String line) {
         if (line.indexOf(VERTICAL_BAR_CHAR) == -1) return false;
         String structuralLine = splitLeadingFormattingTokens(line.trim()).content.trim();
         return containsUnescapedPipe(structuralLine) && !isTableSeparatorLine(line);
     }
 
-    static boolean isTableSeparatorLine(@NotNull String line) {
+    private static boolean isTableSeparatorLine(@NotNull String line) {
         if (line.indexOf(VERTICAL_BAR_CHAR) == -1) return false;
         String structuralLine = splitLeadingFormattingTokens(line.trim()).content.trim();
         if (!containsUnescapedPipe(structuralLine)) {
@@ -132,7 +132,7 @@ final class MarkdownTableParser {
      * <p>This reads the line in a loop on purpose. A regular expression goes one call deeper for every cell, which overflows
      * the stack for lines with thousands of cells.</p>
      */
-    static boolean hasOnlyTableSeparatorCells(@NotNull String line) {
+    private static boolean hasOnlyTableSeparatorCells(@NotNull String line) {
         int length = line.length();
         int index = skipWhitespace(line, 0);
         if ((index < length) && (line.charAt(index) == VERTICAL_BAR_CHAR)) index = skipWhitespace(line, index + 1);
@@ -153,7 +153,7 @@ final class MarkdownTableParser {
     /**
      * Returns the index of the first character at or after the given index that is no space, tab, line break, vertical tab, form feed or carriage return.
      */
-    static int skipWhitespace(@NotNull String text, int index) {
+    private static int skipWhitespace(@NotNull String text, int index) {
         while (index < text.length()) {
             char c = text.charAt(index);
             if ((c != SPACE_CHAR) && ((c < '\t') || (c > '\r'))) break;
@@ -163,7 +163,7 @@ final class MarkdownTableParser {
     }
 
     @NotNull
-    static List<String> parseTableRow(@NotNull String line) {
+    private static List<String> parseTableRow(@NotNull String line) {
         List<String> cells = new ArrayList<>();
         LeadingFormattingTokens leadingFormatting = splitLeadingFormattingTokens(line.trim());
         String trimmed = leadingFormatting.content.trim();
@@ -180,7 +180,7 @@ final class MarkdownTableParser {
     }
 
     @NotNull
-    static List<MarkdownTextFragment.TableCell.TableCellAlignment> parseTableAlignments(@NotNull String separatorLine) {
+    private static List<MarkdownTextFragment.TableCell.TableCellAlignment> parseTableAlignments(@NotNull String separatorLine) {
         List<MarkdownTextFragment.TableCell.TableCellAlignment> alignments = new ArrayList<>();
         String trimmed = splitLeadingFormattingTokens(separatorLine.trim()).content.trim();
         if (trimmed.startsWith(VERTICAL_BAR)) {
@@ -213,7 +213,7 @@ final class MarkdownTableParser {
     private record LeadingFormattingTokens(@NotNull String tokens, @NotNull String content) {
     }
 
-    static boolean containsUnescapedPipe(@NotNull String line) {
+    private static boolean containsUnescapedPipe(@NotNull String line) {
         int length = line.length();
         for (int i = 0; i < length; i++) {
             if ((line.charAt(i) == VERTICAL_BAR_CHAR) && !isCharacterEscaped(line, i)) {
@@ -224,7 +224,7 @@ final class MarkdownTableParser {
     }
 
     @NotNull
-    static List<String> splitByUnescapedPipes(@NotNull String line) {
+    private static List<String> splitByUnescapedPipes(@NotNull String line) {
         List<String> parts = new ArrayList<>();
         StringBuilder current = new StringBuilder();
         int length = line.length();
