@@ -3,11 +3,10 @@ package de.keksuccino.fancymenu.customization.element.elements.tooltip;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
+import de.keksuccino.fancymenu.customization.element.elements.LegacyMarkdownSettings;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRenderer;
-import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -24,11 +23,14 @@ public class TooltipElementBuilder extends ElementBuilder<TooltipElement, Toolti
         element.baseWidth = 200;
         element.baseHeight = 40;
         element.setSource(TooltipElement.SourceMode.DIRECT, "------------------");
+        element.markdownSettings.applyDefaultsOfNewElements();
         return element;
     }
 
     @Override
     public TooltipElement deserializeElement(@NotNull SerializedElement serialized) {
+
+        LegacyMarkdownSettings.upgradeTooltipElement(serialized);
 
         // Don't use buildDefaultInstance() here, because updateContent() runs asynchronously and could override the deserialized content with the default one
         TooltipElement element = new TooltipElement(this);
@@ -51,13 +53,6 @@ public class TooltipElementBuilder extends ElementBuilder<TooltipElement, Toolti
 
         element.backgroundTexture = deserializeImageResourceSupplier(serialized.getValue("background_texture"));
         
-        // Markdown renderer settings
-        String shadowString = serialized.getValue("shadow");
-        if (shadowString != null) {
-            if (shadowString.equals("false")) element.markdownRenderer.setTextShadow(false);
-            if (shadowString.equals("true")) element.markdownRenderer.setTextShadow(true);
-        }
-
         String caseModeString = serialized.getValue("case_mode");
         if (caseModeString != null) {
             if (caseModeString.equals("lower")) {
@@ -66,12 +61,6 @@ public class TooltipElementBuilder extends ElementBuilder<TooltipElement, Toolti
             if (caseModeString.equals("upper")) {
                 element.markdownRenderer.setTextCase(MarkdownRenderer.TextCase.ALL_UPPER);
             }
-        }
-
-        String baseColorString = serialized.getValue("base_color");
-        if (baseColorString != null) {
-            DrawableColor c = DrawableColor.of(baseColorString);
-            element.markdownRenderer.setTextBaseColor(c);
         }
 
         String autoLineWrapping = serialized.getValue("auto_line_wrapping");
@@ -85,68 +74,6 @@ public class TooltipElementBuilder extends ElementBuilder<TooltipElement, Toolti
             if (removeHtmlBreaks.equals("true")) element.markdownRenderer.setRemoveHtmlBreaks(true);
             if (removeHtmlBreaks.equals("false")) element.markdownRenderer.setRemoveHtmlBreaks(false);
         }
-
-        // Markdown colors
-        String codeBlockSingleColor = serialized.getValue("code_block_single_color");
-        if (codeBlockSingleColor != null) {
-            element.markdownRenderer.setCodeBlockSingleLineColor(DrawableColor.of(codeBlockSingleColor));
-        }
-        String codeBlockMultiColor = serialized.getValue("code_block_multi_color");
-        if (codeBlockMultiColor != null) {
-            element.markdownRenderer.setCodeBlockMultiLineColor(DrawableColor.of(codeBlockMultiColor));
-        }
-
-        String headlineLineColor = serialized.getValue("headline_line_color");
-        if (headlineLineColor != null) {
-            element.markdownRenderer.setHeadlineLineColor(DrawableColor.of(headlineLineColor));
-        }
-
-        String separationLineColor = serialized.getValue("separation_line_color");
-        if (separationLineColor != null) {
-            element.markdownRenderer.setSeparationLineColor(DrawableColor.of(separationLineColor));
-        }
-
-        String hyperlinkColor = serialized.getValue("hyperlink_color");
-        if (hyperlinkColor != null) {
-            element.markdownRenderer.setHyperlinkColor(DrawableColor.of(hyperlinkColor));
-        }
-        String clickEventColor = serialized.getValue("click_event_color");
-        if (clickEventColor != null) {
-            element.markdownRenderer.setTextClickEventColor(DrawableColor.of(clickEventColor));
-        }
-        String hoverEventColor = serialized.getValue("hover_event_color");
-        if (hoverEventColor != null) {
-            element.markdownRenderer.setTextHoverEventColor(DrawableColor.of(hoverEventColor));
-        }
-
-        String quoteColor = serialized.getValue("quote_color");
-        if (quoteColor != null) {
-            element.markdownRenderer.setQuoteColor(DrawableColor.of(quoteColor));
-        }
-        String quoteIndent = serialized.getValue("quote_indent");
-        if ((quoteIndent != null) && MathUtils.isInteger(quoteIndent)) {
-            element.markdownRenderer.setQuoteIndent(Integer.parseInt(quoteIndent));
-        }
-        String quoteItalic = serialized.getValue("quote_italic");
-        if (quoteItalic != null) {
-            if (quoteItalic.equals("true")) element.markdownRenderer.setQuoteItalic(true);
-            if (quoteItalic.equals("false")) element.markdownRenderer.setQuoteItalic(false);
-        }
-
-        String bulletListDotColor = serialized.getValue("bullet_list_dot_color");
-        if (bulletListDotColor != null) {
-            element.markdownRenderer.setBulletListDotColor(DrawableColor.of(bulletListDotColor));
-        }
-        String bulletListIndent = serialized.getValue("bullet_list_indent");
-        if ((bulletListIndent != null) && MathUtils.isInteger(bulletListIndent)) {
-            element.markdownRenderer.setBulletListIndent(Integer.parseInt(bulletListIndent));
-        }
-        String bulletListSpacing = serialized.getValue("bullet_list_spacing");
-        if ((bulletListSpacing != null) && MathUtils.isInteger(bulletListSpacing)) {
-            element.markdownRenderer.setBulletListSpacing(Integer.parseInt(bulletListSpacing));
-        }
-
-        element.markdownRenderer.setParseMarkdown(deserializeBoolean(true, serialized.getValue("parse_markdown")));
 
         element.markdownRenderer.refreshRenderer();
 
@@ -171,30 +98,13 @@ public class TooltipElementBuilder extends ElementBuilder<TooltipElement, Toolti
             serializeTo.putProperty("background_texture", element.backgroundTexture.getSourceWithPrefix());
         }
         
-        // Markdown renderer settings
-        serializeTo.putProperty("shadow", "" + element.markdownRenderer.isTextShadow());
         if (element.markdownRenderer.getTextCase() == MarkdownRenderer.TextCase.ALL_LOWER) {
             serializeTo.putProperty("case_mode", "lower");
         } else if (element.markdownRenderer.getTextCase() == MarkdownRenderer.TextCase.ALL_UPPER) {
             serializeTo.putProperty("case_mode", "upper");
         }
-        serializeTo.putProperty("base_color", element.markdownRenderer.getTextBaseColor().getHex());
         serializeTo.putProperty("auto_line_wrapping", "" + element.markdownRenderer.isAutoLineBreakingEnabled());
         serializeTo.putProperty("remove_html_breaks", "" + element.markdownRenderer.isRemoveHtmlBreaks());
-        serializeTo.putProperty("code_block_single_color", element.markdownRenderer.getCodeBlockSingleLineColor().getHex());
-        serializeTo.putProperty("code_block_multi_color", element.markdownRenderer.getCodeBlockMultiLineColor().getHex());
-        serializeTo.putProperty("headline_line_color", element.markdownRenderer.getHeadlineUnderlineColor().getHex());
-        serializeTo.putProperty("separation_line_color", element.markdownRenderer.getSeparationLineColor().getHex());
-        serializeTo.putProperty("hyperlink_color", element.markdownRenderer.getHyperlinkColor().getHex());
-        serializeTo.putProperty("click_event_color", element.markdownRenderer.getTextClickEventColor().getHex());
-        serializeTo.putProperty("hover_event_color", element.markdownRenderer.getTextHoverEventColor().getHex());
-        serializeTo.putProperty("quote_color", element.markdownRenderer.getQuoteColor().getHex());
-        serializeTo.putProperty("quote_indent", "" + element.markdownRenderer.getQuoteIndent());
-        serializeTo.putProperty("quote_italic", "" + element.markdownRenderer.isQuoteItalic());
-        serializeTo.putProperty("bullet_list_dot_color", element.markdownRenderer.getBulletListDotColor().getHex());
-        serializeTo.putProperty("bullet_list_indent", "" + element.markdownRenderer.getBulletListIndent());
-        serializeTo.putProperty("bullet_list_spacing", "" + element.markdownRenderer.getBulletListSpacing());
-        serializeTo.putProperty("parse_markdown", "" + element.markdownRenderer.isParseMarkdown());
 
         return serializeTo;
 
