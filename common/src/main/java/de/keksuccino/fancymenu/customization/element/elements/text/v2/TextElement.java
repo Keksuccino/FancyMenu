@@ -34,7 +34,7 @@ import java.util.function.Supplier;
 
 public class TextElement extends AbstractElement {
 
-    /** The space next to the text area that a scroll bar has its grabber in. The grabbers are outside of the element. */
+    /** The space a scroll bar has its grabber in. It lies outside of the element: next to the text area, or next to a background that does not reach behind the scroll bars. */
     public static final int SCROLL_BAR_SPACE = 12;
 
     @NotNull
@@ -87,10 +87,11 @@ public class TextElement extends AbstractElement {
             @Override
             public void updateScrollArea() {
                 super.updateScrollArea();
-                //Manually update scroll bar area size, so the grabbers are outside the area
+                //Manually update scroll bar area size, so the grabbers are outside the area, and outside of a background that does not reach behind them
                 if (Minecraft.getInstance().screen != null) {
-                    this.verticalScrollBar.scrollAreaEndX = TextElement.this.getAbsoluteX() + TextElement.this.getAbsoluteWidth() + SCROLL_BAR_SPACE;
-                    this.horizontalScrollBar.scrollAreaEndY = TextElement.this.getAbsoluteY() + TextElement.this.getAbsoluteHeight() + SCROLL_BAR_SPACE;
+                    int distance = TextElement.this.background.getScrollBarDistance();
+                    this.verticalScrollBar.scrollAreaEndX = TextElement.this.getAbsoluteX() + TextElement.this.getAbsoluteWidth() + distance + SCROLL_BAR_SPACE;
+                    this.horizontalScrollBar.scrollAreaEndY = TextElement.this.getAbsoluteY() + TextElement.this.getAbsoluteHeight() + distance + SCROLL_BAR_SPACE;
                 }
             }
             @Override
