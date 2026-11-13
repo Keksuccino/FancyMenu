@@ -77,7 +77,7 @@ final class MarkdownLayout {
             //Handle Auto Line Break
             if (!isStartOfLine && renderer.isAutoLineBreakingEnabled()) {
                 f.startOfRenderLine = false;
-                if (lastFragment.endOfWord && ((lastFragment.codeBlockContext == null) || lastFragment.codeBlockContext.singleLine) && ((currentLineWidth + f.getRenderWidth() + renderer.border) > renderer.optimalWidth)) {
+                if (lastFragment.endOfWord && !isEmptyLineEnd(f) && ((lastFragment.codeBlockContext == null) || lastFragment.codeBlockContext.singleLine) && ((currentLineWidth + f.getRenderWidth() + renderer.border) > renderer.optimalWidth)) {
                     currentLineWidth = renderer.border;
                     isStartOfLine = true;
                     line.prepareLine();
@@ -112,6 +112,14 @@ final class MarkdownLayout {
 
         this.updateMetrics();
 
+    }
+
+    /**
+     * Returns if the fragment holds nothing and only ends its line. A line never wraps in front of such a fragment:
+     * the line would not get any shorter, and the fragment would become an empty line of its own.
+     */
+    private static boolean isEmptyLineEnd(@NotNull MarkdownTextFragment fragment) {
+        return fragment.naturalLineBreakAfter && fragment.text.isEmpty() && (fragment.imageSupplier == null);
     }
 
     /**
