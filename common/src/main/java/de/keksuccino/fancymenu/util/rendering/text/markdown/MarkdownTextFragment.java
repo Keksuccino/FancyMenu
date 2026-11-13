@@ -21,6 +21,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
@@ -107,6 +108,11 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     public boolean table = false;
     /** TRUE for the fragments in the cells of the header row of a table. Set after every parse. */
     public boolean tableHeader = false;
+    /** If a line may break somewhere inside of the text, at a place {@link MarkdownLineBreaks} allows. Set when the fragment gets built. */
+    protected boolean breaksInside = false;
+    /** What the fragment was before the layout split it into pieces, and the pieces behind the first one. NULL while the fragment is whole. */
+    @Nullable
+    private Pieces pieces = null;
     @Nullable
     private Component renderComponent = null;
     @Nullable
@@ -367,13 +373,14 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if (trailingSpaceMode != TRAILING_SPACE_KEEP) {
             t = t.substring(0, t.length()-1);
         }
-        if (this.parent.textCase == MarkdownRenderer.TextCase.ALL_UPPER) {
-            t = t.toUpperCase();
-        }
-        if (this.parent.textCase == MarkdownRenderer.TextCase.ALL_LOWER) {
-            t = t.toLowerCase();
-        }
-        return t;
+        return this.applyTextCase(t);
+    }
+
+    @NotNull
+    private String applyTextCase(@NotNull String text) {
+        if (this.parent.textCase == MarkdownRenderer.TextCase.ALL_UPPER) return text.toUpperCase();
+        if (this.parent.textCase == MarkdownRenderer.TextCase.ALL_LOWER) return text.toLowerCase();
+        return text;
     }
 
     protected boolean isLinkLike() {
@@ -382,15 +389,20 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
     protected boolean isLastLinkLikeFragment() {
         if (this.hyperlink != null) {
-            return ListUtils.getLast(this.hyperlink.hyperlinkFragments) == this;
+            return isLastPieceOf(this.hyperlink.hyperlinkFragments);
         }
         if (this.clickEvent != null) {
-            return ListUtils.getLast(this.clickEvent.eventFragments) == this;
+            return isLastPieceOf(this.clickEvent.eventFragments);
         }
         if (this.hoverEvent != null) {
-            return ListUtils.getLast(this.hoverEvent.eventFragments) == this;
+            return isLastPieceOf(this.hoverEvent.eventFragments);
         }
         return false;
+    }
+
+    private boolean isLastPieceOf(@NotNull List<MarkdownTextFragment> fragments) {
+        MarkdownTextFragment last = ListUtils.getLast(fragments);
+        return (last != null) && (last.getLastPiece() == this);
     }
 
     /**
@@ -426,6 +438,115 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         if (this.hyperlink != null) this.hyperlink.hoveredFragments += change;
         if (this.clickEvent != null) this.clickEvent.hoveredFragments += change;
         if (this.hoverEvent != null) this.hoverEvent.hoveredFragments += change;
+    }
+
+    /**
+     * Returns the last piece of the fragment, which is the fragment itself while it is whole.
+     */
+    @NotNull
+    protected MarkdownTextFragment getLastPiece() {
+        return ((this.pieces == null) || this.pieces.later.isEmpty()) ? this : this.pieces.later.get(this.pieces.later.size() - 1);
+    }
+
+    /**
+     * Returns the text of the fragment with the text of all of its pieces.
+     */
+    @NotNull
+    protected String getWholeText() {
+        return (this.pieces != null) ? this.pieces.text : this.text;
+    }
+
+    /**
+     * Returns the unscaled width the part of the whole text between the two indexes has as a piece that does not hold the end of the text.
+     *
+     * @param style The style for measuring text of this fragment, which {@link #buildRenderStyle(boolean)} builds.
+     */
+    protected float measurePiece(@NotNull Style style, int start, int end) {
+        return this.parent.textWidthCache.getWidth(style, this.applyTextCase(this.getWholeText().substring(start, end)), false);
+    }
+
+    /**
+     * Adds a piece behind the pieces of this fragment. It is formatted like the fragment and has no text until {@link #setPieceText(MarkdownTextFragment, int, int, float)} gives it one.<br>
+     * The fragment has to be split already, which giving it the text of its first piece does.
+     */
+    @NotNull
+    protected MarkdownTextFragment addPiece() {
+        MarkdownTextFragment piece = new MarkdownTextFragment(this.parent, "");
+        // Everything that describes the text of the fragment. What marks the fragment as the first one of something, like of a list item, stays with the first piece.
+        piece.unscaledTextHeight = this.unscaledTextHeight;
+        piece.textColor = this.textColor;
+        piece.bold = this.bold;
+        piece.italic = this.italic;
+        piece.strikethrough = this.strikethrough;
+        piece.minecraftFormatting = this.minecraftFormatting;
+        piece.bulletListLevel = this.bulletListLevel;
+        piece.listItemMarker = this.listItemMarker;
+        piece.listItemNumber = this.listItemNumber;
+        piece.listHasPlusItems = this.listHasPlusItems;
+        piece.alignment = this.alignment;
+        piece.hyperlink = this.hyperlink;
+        piece.clickEvent = this.clickEvent;
+        piece.hoverEvent = this.hoverEvent;
+        piece.headlineType = this.headlineType;
+        piece.quoteContext = this.quoteContext;
+        piece.codeBlockContext = this.codeBlockContext;
+        piece.plainText = this.plainText;
+        piece.font = this.font;
+        Objects.requireNonNull(this.pieces).later.add(piece);
+        return piece;
+    }
+
+    /**
+     * Gives a piece of this fragment the part of the whole text between the two indexes. The first call splits the fragment.
+     *
+     * @param piece This fragment, which is its own first piece, or a piece that {@link #addPiece()} added.
+     * @param unscaledWidth The width of the part as {@link #measurePiece(Style, int, int)} returns it, or NaN to have the part measured.
+     */
+    protected void setPieceText(@NotNull MarkdownTextFragment piece, int start, int end, float unscaledWidth) {
+        if (this.pieces == null) this.pieces = new Pieces(this);
+        Pieces pieces = this.pieces;
+        boolean endOfFragment = (end == pieces.text.length());
+        piece.text = pieces.text.substring(start, end);
+        piece.renderComponent = null;
+        piece.fixedWidthText = null;
+        // What the fragment is as the last fragment of something belongs to the piece with the end of its text
+        piece.naturalLineBreakAfter = endOfFragment && pieces.naturalLineBreakAfter;
+        piece.endOfWord = endOfFragment && pieces.endOfWord;
+        piece.strikethroughEnd = endOfFragment && pieces.strikethroughEnd;
+        if (endOfFragment || Float.isNaN(unscaledWidth)) {
+            // The end of the text can be a space that gets measured in a way of its own
+            piece.updateWidth();
+        } else {
+            piece.unscaledTextWidth = unscaledWidth;
+            piece.unscaledTrailingSpaceWidth = 0.0F;
+        }
+    }
+
+    /**
+     * Makes the fragment whole again, the way it was before the layout split it. The pieces behind the first one are no part of the text after that.
+     */
+    protected void joinPieces() {
+        Pieces pieces = this.pieces;
+        if (pieces == null) return;
+        this.resetHoveredPieces();
+        this.pieces = null;
+        this.text = pieces.text;
+        this.unscaledTextWidth = pieces.unscaledTextWidth;
+        this.unscaledTrailingSpaceWidth = pieces.unscaledTrailingSpaceWidth;
+        this.naturalLineBreakAfter = pieces.naturalLineBreakAfter;
+        this.endOfWord = pieces.endOfWord;
+        this.strikethroughEnd = pieces.strikethroughEnd;
+        this.renderComponent = null;
+        this.fixedWidthText = null;
+    }
+
+    /**
+     * Makes the pieces behind the first one forget that the mouse was over them. The hyperlink and the text events of the fragment
+     * count their hovered fragments, so a piece has to do this before it goes away.
+     */
+    protected void resetHoveredPieces() {
+        if (this.pieces == null) return;
+        for (MarkdownTextFragment piece : this.pieces.later) piece.setHovered(false);
     }
 
     /**
@@ -477,6 +598,14 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
      * Returns the space the fragment keeps free behind its text, as the last or as another fragment of its render line.
      */
     protected float getTrailingSpace(boolean endOfRenderLine) {
+        return this.getTrailingSpace(endOfRenderLine, true);
+    }
+
+    /**
+     * @param endOfFragment FALSE returns the space a piece of this fragment keeps free that does not hold the end of its text.
+     *                      The layout asks for it before it splits the fragment.
+     */
+    protected float getTrailingSpace(boolean endOfRenderLine, boolean endOfFragment) {
         MarkdownStyle style = this.parent.style;
         float space = 0.0F;
         if (endOfRenderLine) {
@@ -490,7 +619,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                 space += style.codeBlockPaddingHorizontal.get();
             }
         }
-        if ((this.codeBlockContext != null) && this.codeBlockContext.singleLine && (this.codeBlockContext.getBlockEnd() == this)) {
+        if (endOfFragment && (this.codeBlockContext != null) && this.codeBlockContext.singleLine && (this.codeBlockContext.getBlockEnd() == this)) {
             space += style.inlineCodePaddingRight.get();
         }
         return space * this.getScale();
@@ -632,6 +761,38 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     }
 
     /**
+     * A line can end inside of a fragment whose text is of a script without spaces between words. The layout splits such a fragment into
+     * one piece for every line it is in: the fragment itself becomes the first piece and keeps the start of its text, and every other
+     * piece is a new fragment that is formatted like it.<br><br>
+     *
+     * The pieces behind the first one only are in the render lines, and only until the next layout, which starts with the whole fragment again.
+     * They are in none of the lists the parser fills, like the fragments of a hyperlink or of a quote. The first fragment of such a list still is
+     * the right one that way, and whoever needs the last one has to ask it for its {@link MarkdownTextFragment#getLastPiece() last piece}.
+     */
+    private static final class Pieces {
+
+        /** What the fragment was before it got split. */
+        private final String text;
+        private final float unscaledTextWidth;
+        private final float unscaledTrailingSpaceWidth;
+        private final boolean naturalLineBreakAfter;
+        private final boolean endOfWord;
+        private final boolean strikethroughEnd;
+        /** The pieces behind the fragment, which is its own first piece, in the order of the text. */
+        private final List<MarkdownTextFragment> later = new ArrayList<>();
+
+        private Pieces(@NotNull MarkdownTextFragment fragment) {
+            this.text = fragment.text;
+            this.unscaledTextWidth = fragment.unscaledTextWidth;
+            this.unscaledTrailingSpaceWidth = fragment.unscaledTrailingSpaceWidth;
+            this.naturalLineBreakAfter = fragment.naturalLineBreakAfter;
+            this.endOfWord = fragment.endOfWord;
+            this.strikethroughEnd = fragment.strikethroughEnd;
+        }
+
+    }
+
+    /**
      * A part of the text that spans several fragments and gets hovered as a whole: a hyperlink, or a text click or hover event.
      */
     public abstract static class HoverGroup {
@@ -687,9 +848,12 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             return null;
         }
 
+        /**
+         * Returns the last fragment of the quote, which is the last piece of a fragment that got split over several lines.
+         */
         @Nullable
         public MarkdownTextFragment getQuoteEnd() {
-            if (!quoteFragments.isEmpty()) return quoteFragments.get(quoteFragments.size()-1);
+            if (!quoteFragments.isEmpty()) return quoteFragments.get(quoteFragments.size()-1).getLastPiece();
             return null;
         }
 
@@ -706,9 +870,12 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             return null;
         }
 
+        /**
+         * Returns the last fragment of the code, which is the last piece of a fragment that got split over several lines.
+         */
         @Nullable
         public MarkdownTextFragment getBlockEnd() {
-            if (!codeBlockFragments.isEmpty()) return codeBlockFragments.get(codeBlockFragments.size()-1);
+            if (!codeBlockFragments.isEmpty()) return codeBlockFragments.get(codeBlockFragments.size()-1).getLastPiece();
             return null;
         }
 
