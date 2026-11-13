@@ -13,6 +13,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRenderer;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRendererEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollbar.ScrollBar;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
@@ -22,12 +23,14 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Style;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 public class TextElement extends AbstractElement {
 
@@ -54,10 +57,21 @@ public class TextElement extends AbstractElement {
     public final Property.ColorProperty scrollGrabberColorHexNormal = putProperty(Property.hexColorProperty("grabber_color_normal", null, true, "fancymenu.elements.text.scroll_grabber_color.normal"));
     public final Property.ColorProperty scrollGrabberColorHexHover = putProperty(Property.hexColorProperty("grabber_color_hover", null, true, "fancymenu.elements.text.scroll_grabber_color.hover"));
     public final MarkdownSettings markdownSettings = new MarkdownSettings(this, this.markdownRenderer);
+    public final Property<ScrollGrabberDesign> scrollGrabberDesign = putProperty(ScrollGrabberDesign.buildProperty());
 
     protected List<String> lastLines;
     protected IText lastIText;
     protected boolean lastTickShouldRender = false;
+    /** The grabber colors of the UI theme, which the scroll bars of the scroll area start with. */
+    protected final Supplier<DrawableColor> themeGrabberColorNormal;
+    protected final Supplier<DrawableColor> themeGrabberColorHover;
+    /** The grabber colors of the user, read once per frame. The suppliers the scroll bars ask for them are the same objects for every frame. */
+    @Nullable
+    protected DrawableColor customGrabberColorNormal;
+    @Nullable
+    protected DrawableColor customGrabberColorHover;
+    protected final Supplier<DrawableColor> customGrabberColorNormalSupplier = () -> this.customGrabberColorNormal;
+    protected final Supplier<DrawableColor> customGrabberColorHoverSupplier = () -> this.customGrabberColorHover;
 
     public TextElement(@NotNull ElementBuilder<?, ?> builder) {
 
@@ -103,6 +117,10 @@ public class TextElement extends AbstractElement {
         this.scrollArea.horizontalScrollBar.grabberHeight = 10;
         this.scrollArea.backgroundColor = () -> DrawableColor.FULLY_TRANSPARENT;
         this.scrollArea.borderColor = () -> DrawableColor.FULLY_TRANSPARENT;
+
+        this.themeGrabberColorNormal = this.scrollArea.verticalScrollBar.idleBarColor;
+        this.themeGrabberColorHover = this.scrollArea.verticalScrollBar.hoverBarColor;
+        ScrollGrabberDesign.followAppliedLooks(this.scrollGrabberDesign, this.markdownSettings);
 
         this.scrollArea.addEntry(new MarkdownRendererEntry(this.scrollArea, this.markdownRenderer));
         // Ensure markdown can render once to measure its size before culling kicks in.
@@ -213,52 +231,53 @@ public class TextElement extends AbstractElement {
         this.scrollArea.verticalScrollBar.active = (this.scrollArea.getTotalEntryHeight() > this.scrollArea.getInnerHeight()) && this.enableScrolling;
         this.scrollArea.horizontalScrollBar.active = (this.scrollArea.getTotalEntryWidth() > this.scrollArea.getInnerWidth()) && this.enableScrolling;
 
-        //Update scroll grabber colors
-        if (this.scrollGrabberColorHexNormal.get() != null) {
-            DrawableColor c = this.scrollGrabberColorHexNormal.getDrawable();
-            this.scrollArea.verticalScrollBar.idleBarColor = () -> c;
-            this.scrollArea.horizontalScrollBar.idleBarColor = () -> c;
-        }
-        if (this.scrollGrabberColorHexHover.get() != null) {
-            DrawableColor c = this.scrollGrabberColorHexHover.getDrawable();
-            this.scrollArea.verticalScrollBar.hoverBarColor = () -> c;
-            this.scrollArea.horizontalScrollBar.hoverBarColor = () -> c;
-        }
+        this.updateScrollGrabbers();
 
-        //Update scroll grabber textures
-        if (this.verticalScrollGrabberTextureNormal != null) {
-            ITexture r = this.verticalScrollGrabberTextureNormal.get();
-            if (r != null) {
-                this.scrollArea.verticalScrollBar.idleBarTexture = r.getResourceLocation();
-            }
-        } else {
-            this.scrollArea.verticalScrollBar.idleBarTexture = null;
-        }
-        if (this.verticalScrollGrabberTextureHover != null) {
-            ITexture r = this.verticalScrollGrabberTextureHover.get();
-            if (r != null) {
-                this.scrollArea.verticalScrollBar.hoverBarTexture = r.getResourceLocation();
-            }
-        } else {
-            this.scrollArea.verticalScrollBar.hoverBarTexture = null;
-        }
-        if (this.horizontalScrollGrabberTextureNormal != null) {
-            ITexture r = this.horizontalScrollGrabberTextureNormal.get();
-            if (r != null) {
-                this.scrollArea.horizontalScrollBar.idleBarTexture = r.getResourceLocation();
-            }
-        } else {
-            this.scrollArea.horizontalScrollBar.idleBarTexture = null;
-        }
-        if (this.horizontalScrollGrabberTextureHover != null) {
-            ITexture r = this.horizontalScrollGrabberTextureHover.get();
-            if (r != null) {
-                this.scrollArea.horizontalScrollBar.hoverBarTexture = r.getResourceLocation();
-            }
-        } else {
-            this.scrollArea.horizontalScrollBar.hoverBarTexture = null;
-        }
+    }
 
+    /**
+     * Gives the scroll bars the colors and textures of their grabbers.<br>
+     * Textures and colors of the user win. Without any of them, the design of the element decides what the grabbers look like.
+     */
+    protected void updateScrollGrabbers() {
+
+        ScrollBar vertical = this.scrollArea.verticalScrollBar;
+        ScrollBar horizontal = this.scrollArea.horizontalScrollBar;
+
+        this.customGrabberColorNormal = (this.scrollGrabberColorHexNormal.get() != null) ? this.scrollGrabberColorHexNormal.getDrawable() : null;
+        this.customGrabberColorHover = (this.scrollGrabberColorHexHover.get() != null) ? this.scrollGrabberColorHexHover.getDrawable() : null;
+        Supplier<DrawableColor> normalColor = (this.customGrabberColorNormal != null) ? this.customGrabberColorNormalSupplier : this.themeGrabberColorNormal;
+        Supplier<DrawableColor> hoverColor = (this.customGrabberColorHover != null) ? this.customGrabberColorHoverSupplier : this.themeGrabberColorHover;
+        vertical.idleBarColor = normalColor;
+        horizontal.idleBarColor = normalColor;
+        vertical.hoverBarColor = hoverColor;
+        horizontal.hoverBarColor = hoverColor;
+
+        boolean customized = (this.customGrabberColorNormal != null) || (this.customGrabberColorHover != null)
+                || (this.verticalScrollGrabberTextureNormal != null) || (this.verticalScrollGrabberTextureHover != null)
+                || (this.horizontalScrollGrabberTextureNormal != null) || (this.horizontalScrollGrabberTextureHover != null);
+        ScrollGrabberDesign design = this.scrollGrabberDesign.tryGetNonNullElse(ScrollGrabberDesign.THEME_BAR).unlessCustomized(customized);
+        vertical.idleBarTexture = getGrabberTexture(this.verticalScrollGrabberTextureNormal, vertical.idleBarTexture, design.getTexture(true, false));
+        vertical.hoverBarTexture = getGrabberTexture(this.verticalScrollGrabberTextureHover, vertical.hoverBarTexture, design.getTexture(true, true));
+        horizontal.idleBarTexture = getGrabberTexture(this.horizontalScrollGrabberTextureNormal, horizontal.idleBarTexture, design.getTexture(false, false));
+        horizontal.hoverBarTexture = getGrabberTexture(this.horizontalScrollGrabberTextureHover, horizontal.hoverBarTexture, design.getTexture(false, true));
+
+    }
+
+    /**
+     * Returns the texture a grabber gets drawn with, or NULL if it gets drawn in a color.
+     *
+     * @param custom The texture of the user for the grabber, if there is one.
+     * @param current The texture the grabber has right now. A texture of the user that is still loading keeps it in place,
+     *                unless it is a texture of a design, which the user did not ask for anymore.
+     * @param designTexture The texture the design of the element has for the grabber.
+     */
+    @Nullable
+    protected static Identifier getGrabberTexture(@Nullable ResourceSupplier<ITexture> custom, @Nullable Identifier current, @Nullable Identifier designTexture) {
+        if (custom == null) return designTexture;
+        ITexture texture = custom.get();
+        if (texture != null) return texture.getResourceLocation();
+        return ScrollGrabberDesign.isDesignTexture(current) ? null : current;
     }
 
     /**
