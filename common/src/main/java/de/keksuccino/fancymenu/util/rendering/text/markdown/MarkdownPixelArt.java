@@ -1,0 +1,67 @@
+package de.keksuccino.fancymenu.util.rendering.text.markdown;
+
+import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.resources.Identifier;
+import org.jetbrains.annotations.NotNull;
+
+/**
+ * Draws from the pixel art texture of the Markdown renderer, which holds the shapes that are made of single pixels:
+ * markers, icons, and the patterns of dotted and dithered lines.<br><br>
+ *
+ * Every shape is one textured quad, no matter how many pixels it has. A pattern fills a whole row of the texture and repeats in it,
+ * and the texture repeats at its edges, so a line of any length is one quad as well.<br>
+ * The shapes are white and get drawn in the color they are asked for. One pixel of the texture covers the given pixel size on screen,
+ * which only stays sharp while that size is a whole number of screen pixels.
+ */
+final class MarkdownPixelArt {
+
+    private static final Identifier TEXTURE = Identifier.fromNamespaceAndPath("fancymenu", "textures/markdown/pixel_art.png");
+    private static final int TEXTURE_WIDTH = 96;
+    private static final int TEXTURE_HEIGHT = 32;
+
+    private MarkdownPixelArt() {
+    }
+
+    /**
+     * Draws a pattern as a horizontal line that is one pixel of the texture thick.
+     *
+     * @param length The length of the line in pixels of the texture.
+     * @param phase How many pixels of the pattern the line skips at its start.
+     */
+    static void pattern(@NotNull GuiGraphics graphics, @NotNull Pattern pattern, float x, float y, float length, int phase, float pixelSize, int color) {
+        if ((length <= 0.0F) || ((color >>> 24) == 0)) return;
+        RenderingUtils.blitF(graphics, RenderPipelines.GUI_TEXTURED, TEXTURE, x, y, phase, pattern.row, length * pixelSize, pixelSize, length, 1.0F, TEXTURE_WIDTH, TEXTURE_HEIGHT, color);
+    }
+
+    /**
+     * Returns the color of the shadow of something in the given color, which is the color text shadows have.
+     */
+    static int shadowColor(int color) {
+        return (color & 0xFF000000) | ((color >> 2) & 0x003F3F3F);
+    }
+
+    /**
+     * The repeating patterns of the texture. Every pattern is a row of the texture with one opaque pixel at the start of each period.
+     */
+    enum Pattern {
+
+        /** Every second pixel. */
+        HALF(24, 2),
+        /** Every fourth pixel. */
+        QUARTER(26, 4),
+        /** Every third pixel. */
+        THIRD(28, 3);
+
+        private final int row;
+        final int period;
+
+        Pattern(int row, int period) {
+            this.row = row;
+            this.period = period;
+        }
+
+    }
+
+}

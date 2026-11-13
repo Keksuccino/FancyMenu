@@ -4,11 +4,11 @@ import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyle;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyleOption;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Renderable;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -159,8 +159,6 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             this.renderQuoteLine(graphics);
 
             this.renderBulletListDot(graphics);
-
-            this.renderHeadlineUnderline(graphics);
 
         }
 
@@ -371,17 +369,6 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         RenderingUtils.resetShaderColor(graphics);
     }
 
-    protected void renderHeadlineUnderline(GuiGraphics graphics) {
-        if (this.startOfRenderLine && ((this.headlineType == HeadlineType.BIGGER) || (this.headlineType == HeadlineType.BIGGEST))) {
-            com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
-            float scale = (this.parent.parentRenderScale != null) ? this.parent.parentRenderScale : (float)WindowHandler.getGuiScale();
-            float lineThickness = (scale > 1) ? 0.5f : 1f;
-            float lineY = this.y + this.getTextRenderHeight() + 1;
-            RenderingUtils.fillF(graphics, this.parent.x + this.parent.scaling.padding(), lineY, this.parent.x + this.parent.getRealWidth() - this.parent.scaling.padding() - 1, lineY + lineThickness, this.parent.getRenderColor(this.parent.style.headline(this.headlineType.level).decorationColor));
-            RenderingUtils.resetShaderColor(graphics);
-        }
-    }
-
     protected void renderQuoteLine(GuiGraphics graphics) {
         if ((this.quoteContext != null) && this.drawsQuoteLine()) {
             float yStart = Objects.requireNonNull(this.quoteContext.getQuoteStart()).getRenderLineY() - 2;
@@ -522,7 +509,11 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                 style = style.withItalic(true);
             }
         }
-        if (this.bold && this.parent.style.boldTextColor.isSet() && (this.headlineType == HeadlineType.NONE)) {
+        if (this.headlineType != HeadlineType.NONE) {
+            MarkdownStyle.Headline headline = this.parent.style.headline(this.headlineType.level);
+            if (headline.bold.get()) style = style.withBold(true);
+            if (headline.color.isSet()) style = style.withColor(headline.color.argb());
+        } else if (this.bold && this.parent.style.boldTextColor.isSet()) {
             style = style.withColor(this.parent.style.boldTextColor.argb());
         }
         if (this.textColor != null) {
@@ -737,12 +728,6 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         }
 
         float f = this.getTextRenderHeight();
-        if ((this.headlineType == HeadlineType.BIGGER) || (this.headlineType == HeadlineType.BIGGEST)) {
-            f += 8;
-        }
-        if (this.headlineType == HeadlineType.BIG) {
-            f += 6;
-        }
         // The paddings of code blocks scale with the text, like the text offset they belong to (see getTextY()). Otherwise the text would grow into the next line.
         if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && this.isInRenderLineOf(this.codeBlockContext.getBlockStart())) {
             f += 10 * this.getScale();
@@ -778,11 +763,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     }
 
     public float getScale() {
-        float f = 1.0f;
-        if (this.headlineType == HeadlineType.BIG) f = 1.2f;
-        if (this.headlineType == HeadlineType.BIGGER) f = 1.6f;
-        if (this.headlineType == HeadlineType.BIGGEST) f = 2.0f;
-        return this.parent.scaling.textScale(f);
+        return this.parent.scaling.textScale((this.headlineType == HeadlineType.NONE) ? 1.0F : this.parent.style.headline(this.headlineType.level).scale.get());
     }
 
     @Override
