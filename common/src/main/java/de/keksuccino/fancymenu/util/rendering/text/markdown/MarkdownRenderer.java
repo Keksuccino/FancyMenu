@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderScaleUtil;
 import de.keksuccino.fancymenu.util.rendering.RenderTranslationUtil;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyle;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyleOption;
+import de.keksuccino.fancymenu.util.rendering.text.smooth.SmoothFont;
 import de.keksuccino.fancymenu.util.rendering.ui.FocuslessContainerEventHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.theme.UITheme;
@@ -105,6 +106,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     protected final List<MarkdownTextLine> lines = new ArrayList<>();
     protected final List<MarkdownTextFragment> fragments = new ArrayList<>();
     final MarkdownTextWidthCache textWidthCache = new MarkdownTextWidthCache(this);
+    final MarkdownScaling scaling = new MarkdownScaling(this);
     final MarkdownLayout layout = new MarkdownLayout(this);
     final MarkdownInteractions interactions = new MarkdownInteractions(this);
 
@@ -133,6 +135,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
 
     protected void renderVisibleLines(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.layout.updateVisibleLines();
+        this.scaling.updateRenderTranslation();
         for (int i = this.layout.firstVisibleLine; (i < this.layout.visibleLinesEnd) && (i < this.lines.size()); i++) {
             MarkdownTextLine line = this.lines.get(i);
             if (!this.layout.isLineVisible(line)) continue;
@@ -142,13 +145,22 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     }
 
     protected float getRenderOffsetX(@NotNull MarkdownTextLine line) {
+        if (this.style.snapPositions.get()) {
+            return this.scaling.snapX(this.x + line.layoutOffsetX) - this.x;
+        }
         if ((line.alignment == MarkdownLineAlignment.CENTERED) && !this.uiFontRenderingEnabled && line.isAlignmentAllowed(line.alignment)) {
             // Odd-width centering can land on half GUI pixels. Vanilla bitmap text needs a physical-pixel-aligned origin, while UI fonts support fractional origins.
-            float renderScale = this.parentRenderScale != null ? this.parentRenderScale : RenderScaleUtil.getCurrentRenderScale();
             float renderTranslationX = RenderTranslationUtil.getCurrentRenderTranslationX();
-            return RenderScaleUtil.snapGuiCoordinateToPixel(this.x + line.layoutOffsetX, renderScale, renderTranslationX) - this.x;
+            return RenderScaleUtil.snapGuiCoordinateToPixel(this.x + line.layoutOffsetX, this.getRenderScale(), renderTranslationX) - this.x;
         }
         return line.layoutOffsetX;
+    }
+
+    /**
+     * Returns how many screen pixels a GUI pixel of the renderer covers right now.
+     */
+    protected float getRenderScale() {
+        return (this.parentRenderScale != null) ? this.parentRenderScale : RenderScaleUtil.getCurrentRenderScale();
     }
 
     public void tick() {
@@ -197,6 +209,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
             if (startOfFrame) {
                 MarkdownStyleOption.Impact impact = this.style.updateFollowedColors();
                 if (impact != null) this.onStyleChanged(impact);
+                if (this.scaling.updateRenderScale()) this.layoutNeeded = true;
             }
             if (this.skipRefresh) return;
             if (this.parseNeeded) {
@@ -206,6 +219,8 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
             }
             if (this.layoutNeeded) {
                 this.layoutNeeded = false;
+                // Size queries can come before the first frame, which is when nothing told the scaling about the render scale yet
+                this.scaling.updateRenderScale();
                 this.rebuildLines();
             } else if (startOfFrame && this.layout.haveImagesChanged()) {
                 this.layout.updateMetrics();
@@ -636,12 +651,19 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
         return this;
     }
 
+    /**
+     * Returns the space between two list items. The space above the first item of a list is an option of its own in the {@linkplain #getStyle() style}.
+     */
     public float getBulletListSpacing() {
         return this.style.listItemSpacing.get();
     }
 
+    /**
+     * Sets the space above every list item, which includes the first item of a list.
+     */
     public MarkdownRenderer setBulletListSpacing(float bulletListSpacing) {
         this.style.listItemSpacing.set(bulletListSpacing);
+        this.style.listSpaceAbove.set(bulletListSpacing);
         return this;
     }
 
@@ -785,12 +807,19 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
         return this;
     }
 
+    /**
+     * Returns the space above a table. The space below a table is an option of its own in the {@linkplain #getStyle() style}.
+     */
     public float getTableMargin() {
-        return this.style.tableMargin.get();
+        return this.style.tableSpaceAbove.get();
     }
 
+    /**
+     * Sets the space above and below a table.
+     */
     public MarkdownRenderer setTableMargin(float tableMargin) {
-        this.style.tableMargin.set(tableMargin);
+        this.style.tableSpaceAbove.set(tableMargin);
+        this.style.tableSpaceBelow.set(tableMargin);
         return this;
     }
 
@@ -826,7 +855,14 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
 
     protected float getUnscaledTextHeight() {
         if (this.uiFontRenderingEnabled) {
-            return UIBase.getUITextHeight(UIBase.getUITextSizeNormal());
+            float height = UIBase.getUITextHeight(UIBase.getUITextSizeNormal());
+            if (this.style.fullLineHeight.get() && !UIBase.shouldUseMinecraftFontForUIRendering()) {
+                // The line height of the UI font ends at its baseline, so its descenders hang out of the line
+                SmoothFont uiFont = UIBase.getUIFont();
+                float size = UIBase.getUITextSizeNormal();
+                height = Math.max(height, uiFont.getAscent(size) + uiFont.getYOffset(size) + uiFont.getDescent(size));
+            }
+            return height;
         }
         return this.font.lineHeight;
     }

@@ -23,6 +23,11 @@ public class MarkdownTextLine implements Renderable {
     /** The X offset the layout gave the line. {@link #offsetX} can differ from it, because centered lines get snapped to the pixel grid when they render. */
     protected float layoutOffsetX;
     protected boolean containsImages = false;
+    /** The kind of block the line is a part of. Set when the line gets prepared. */
+    @NotNull
+    protected MarkdownBlockType blockType = MarkdownBlockType.PARAGRAPH;
+    /** TRUE for a blank line that takes no space, because the style makes it nothing but the end of the block in front of it. Set by the layout. */
+    protected boolean collapsed = false;
     /** The position of the line in the lines of its renderer. Set by the layout. */
     protected int index = 0;
     protected float lineWidth;
@@ -41,9 +46,10 @@ public class MarkdownTextLine implements Renderable {
 
         // Fragments draw things that reach to fragments after them, like the background of a code span, so all of them get their position before the first one renders
         float textX = this.parent.x + this.offsetX;
+        float textY = this.getRenderY();
         for (MarkdownTextFragment f : this.fragments) {
             f.x = textX;
-            f.y = this.parent.y + this.offsetY;
+            f.y = textY;
             textX += f.getRenderWidth();
         }
         if (shouldRender) {
@@ -52,6 +58,14 @@ public class MarkdownTextLine implements Renderable {
             }
         }
 
+    }
+
+    /**
+     * Returns the Y position of the line for where the renderer is right now.<br>
+     * The fragments of a line only get this position when the line renders, so this is the position to use for lines that can be outside the visible range.
+     */
+    protected float getRenderY() {
+        return this.parent.scaling.snapY(this.parent.y + this.offsetY);
     }
 
     public void prepareLine() {
@@ -102,6 +116,7 @@ public class MarkdownTextLine implements Renderable {
                 last.autoLineBreakAfter = false;
             }
         }
+        this.blockType = MarkdownBlockType.of(this);
     }
 
     /**

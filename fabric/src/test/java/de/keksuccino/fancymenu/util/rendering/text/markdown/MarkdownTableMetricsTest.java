@@ -37,9 +37,12 @@ class MarkdownTableMetricsTest {
         assertEquals(rowHeight * 3, context.totalRowHeight);
         assertEquals("longer cell".length() * CHAR_WIDTH, context.rows.get(1).cells.get(1).textWidth);
         assertEquals(firstColumn + secondColumn, table.getRenderWidth());
-        assertEquals((rowHeight * 3) + (2 * 4) + (3 * 2), table.getRenderHeight());
+        assertEquals((rowHeight * 3) + (2 * 4), table.getRenderHeight());
         assertEquals(table.getRenderWidth(), table.parentLine.getLineWidth());
         assertEquals(table.getRenderHeight(), table.parentLine.getLineHeight());
+        // The margin is space around the line of the table and no part of it
+        assertEquals(2 + 3, table.parentLine.offsetY);
+        assertEquals(2 + 3 + table.getRenderHeight() + 3 + 2 + 2, renderer.getRealHeight());
     }
 
     @Test
@@ -77,19 +80,20 @@ class MarkdownTableMetricsTest {
     }
 
     @Test
-    void mouseIsOverTheTableInsideItsMargins() {
+    void mouseIsOverTheTableButNotOverTheSpaceAroundIt() {
         MarkdownTestRenderer renderer = new MarkdownTestRenderer(TABLE, 400);
         renderer.setTableMargin(10);
         renderer.setX(20).setY(40);
         renderer.tick();
         MarkdownTextFragment table = renderer.tableFragment(0);
-        float tableHeight = table.getRenderHeight() - 20;
+        float tableHeight = table.getRenderHeight();
 
-        assertTrue(table.isMouseOver(table.x, table.y + 10));
-        assertTrue(table.isMouseOver(table.x + table.getRenderWidth() - 0.5F, table.y + 10 + tableHeight - 0.5F));
-        assertFalse(table.isMouseOver(table.x, table.y + 9));
-        assertFalse(table.isMouseOver(table.x + table.getRenderWidth(), table.y + 10));
-        assertFalse(table.isMouseOver(table.x, table.y + 10 + tableHeight));
+        assertEquals(40 + 2 + 10, table.y);
+        assertTrue(table.isMouseOver(table.x, table.y));
+        assertTrue(table.isMouseOver(table.x + table.getRenderWidth() - 0.5F, table.y + tableHeight - 0.5F));
+        assertFalse(table.isMouseOver(table.x, table.y - 1));
+        assertFalse(table.isMouseOver(table.x + table.getRenderWidth(), table.y));
+        assertFalse(table.isMouseOver(table.x, table.y + tableHeight));
     }
 
     @Test

@@ -75,6 +75,8 @@ class MarkdownStyleTest {
     @Test
     void changedOptionMakesTheRendererRedoWhatItsImpactSays() {
         MarkdownTestRenderer renderer = new MarkdownTestRenderer(TEXT, 300);
+        // Rounding to screen pixels asks for the render scale, which only the running game knows otherwise
+        renderer.setParentRenderScale(2.0F);
         renderer.tick();
 
         for (MarkdownStyleOption<?> option : renderer.getStyle().getOptions()) {
