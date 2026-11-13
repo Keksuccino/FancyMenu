@@ -337,8 +337,11 @@ final class MarkdownStructure {
                 }
 
                 //Handle Code Block Multi Line
-                if (isStartOfLine && (c == GRAVE_ACCENT_CHAR) && (remainingLineLength == 3) && !plainText && text.startsWith(FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX, index)) {
-                    if (!code && lookahead.existsFrom(LookaheadMarker.CODE_BLOCK_MULTI_LINE_END, index + 3)) {
+                if (isStartOfLine && (c == GRAVE_ACCENT_CHAR) && !plainText && text.startsWith(FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX, index)) {
+                    int markerEnd = index + FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX.length();
+                    // The marker that opens a block can have an info string behind it, like the name of a language, which is no part of the block.
+                    // A grave accent behind the marker makes the line text with code inside of it instead.
+                    if (!code && (indexOf(text, GRAVE_ACCENT_CHAR, markerEnd, lineEnd) == -1) && lookahead.existsFrom(LookaheadMarker.CODE_BLOCK_MULTI_LINE_END, lineEnd)) {
                         this.addEvent(index, Event.CODE_BLOCK_OPEN, 0, 0);
                         code = true;
                         singleLineCode = false;
@@ -346,7 +349,8 @@ final class MarkdownStructure {
                         queueNewLine = true;
                         continue;
                     }
-                    if (code && !singleLineCode) {
+                    // The marker that closes a block has nothing but whitespace behind it
+                    if (code && !singleLineCode && containsOnly(text, markerEnd, lineEnd, IS_TRIMMED_WHITESPACE)) {
                         this.addEvent(index, Event.CODE_BLOCK_CLOSE, 0, 0);
                         code = false;
                         index = lineEnd;
@@ -608,19 +612,22 @@ final class MarkdownStructure {
     private enum LookaheadMarker {
 
         // A grave accent closes its block even behind a backslash, because nothing gets escaped inside the block
-        CODE_BLOCK_SINGLE_LINE(String.valueOf(GRAVE_ACCENT_CHAR)),
-        PLAIN_TEXT_SINGLE_LINE(FORMATTING_CODE_PLAIN_TEXT_SINGLE_LINE_PREFIX_SUFFIX),
-        // Multi-line blocks end at a marker that starts a line, no matter what follows it in that line
-        CODE_BLOCK_MULTI_LINE_END(NEWLINE + FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX),
-        PLAIN_TEXT_MULTI_LINE_END(NEWLINE + FORMATTING_CODE_PLAIN_TEXT_MULTI_LINE_PREFIX_SUFFIX);
+        CODE_BLOCK_SINGLE_LINE(String.valueOf(GRAVE_ACCENT_CHAR), false),
+        PLAIN_TEXT_SINGLE_LINE(FORMATTING_CODE_PLAIN_TEXT_SINGLE_LINE_PREFIX_SUFFIX, false),
+        CODE_BLOCK_MULTI_LINE_END(FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX, true),
+        // Multi-line plain text ends at a marker that starts a line, no matter what follows it in that line
+        PLAIN_TEXT_MULTI_LINE_END(NEWLINE + FORMATTING_CODE_PLAIN_TEXT_MULTI_LINE_PREFIX_SUFFIX, false);
 
         static final int COUNT = values().length;
 
         @NotNull
         final String marker;
+        /** If the marker only counts where it is a line of its own, which {@link MarkerLookahead#isMarkerLine(LookaheadMarker, int)} tells. */
+        final boolean line;
 
-        LookaheadMarker(@NotNull String marker) {
+        LookaheadMarker(@NotNull String marker, boolean line) {
             this.marker = marker;
+            this.line = line;
         }
 
     }
@@ -692,15 +699,36 @@ final class MarkdownStructure {
             int nextOccurrence = nextOccurrences[marker.ordinal()];
             if ((nextOccurrence != NOT_FOUND) && (nextOccurrence < fromIndex)) {
                 nextOccurrence = this.text.indexOf(marker.marker, fromIndex);
-                if (outsideTables) {
-                    Table table;
-                    while ((nextOccurrence != NOT_FOUND) && ((table = this.getTableTouchedBy(marker, nextOccurrence)) != null)) {
+                while (nextOccurrence != NOT_FOUND) {
+                    Table table = outsideTables ? this.getTableTouchedBy(marker, nextOccurrence) : null;
+                    if (table != null) {
                         nextOccurrence = this.text.indexOf(marker.marker, table.end());
+                    } else if (marker.line && !this.isMarkerLine(marker, nextOccurrence)) {
+                        nextOccurrence = this.text.indexOf(marker.marker, nextOccurrence + 1);
+                    } else {
+                        break;
                     }
                 }
                 nextOccurrences[marker.ordinal()] = nextOccurrence;
             }
             return nextOccurrence;
+        }
+
+        /**
+         * Returns if the marker that starts at the given index is a line of its own, the way the pass reads the line when it gets there:
+         * nothing but whitespace follows the marker, and nothing but formatting codes stands in front of it, which leave the start of a line to what follows them.
+         *
+         * <p>Both checks stop at the first character that does not fit. Checking every occurrence of a marker this way reads
+         * the whitespace behind each one and the formatting codes in front of each one once, which keeps all searches together linear.</p>
+         */
+        boolean isMarkerLine(@NotNull LookaheadMarker marker, int occurrence) {
+            int length = this.text.length();
+            for (int index = occurrence + marker.marker.length(); (index < length) && (this.text.charAt(index) != NEWLINE_CHAR); index++) {
+                if (!IS_TRIMMED_WHITESPACE.test(this.text.charAt(index))) return false;
+            }
+            int lineStart = occurrence;
+            while ((lineStart >= 2) && (this.text.charAt(lineStart - 1) != NEWLINE_CHAR) && isFormattingCode(this.text, lineStart - 2)) lineStart -= 2;
+            return (lineStart == 0) || (this.text.charAt(lineStart - 1) == NEWLINE_CHAR);
         }
 
         /**
