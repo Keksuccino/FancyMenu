@@ -59,6 +59,10 @@ public class MarkdownParser {
     private static final char MINUS_CHAR = '-';
     private static final char PLUS_CHAR = '+';
     private static final char DOT_CHAR = '.';
+    private static final String DOT = ".";
+    private static final String CLOSE_ROUND_BRACKETS = ")";
+    /** Longer numbers start no list item, like in CommonMark. */
+    private static final int MAX_LIST_ITEM_NUMBER_DIGITS = 9;
     private static final String FORMATTING_CODE_SEPARATION_LINE_PREFIX = "---";
     private static final char GRAVE_ACCENT_CHAR = '`';
     private static final String FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX = "```";
@@ -115,6 +119,7 @@ public class MarkdownParser {
         FragmentBuilder builder = new FragmentBuilder(renderer);
         MarkerLookahead lookahead = new MarkerLookahead(markdownText);
         boolean extendedBulletListMarkers = renderer.isExtendedBulletListMarkersEnabled();
+        boolean numberedLists = renderer.isNumberedListsEnabled();
         boolean queueNewLine = true;
         boolean italicUnderscore = false;
         boolean strikethroughDouble = false;
@@ -315,7 +320,7 @@ public class MarkdownParser {
                     // The marker of an item follows 2 spaces for every level below the first one
                     int markerStart = index;
                     while ((markerStart < lineEnd) && (markdownText.charAt(markerStart) == SPACE_CHAR)) markerStart++;
-                    int markerEnd = getListItemMarkerEnd(markdownText, markerStart, extendedBulletListMarkers);
+                    int markerEnd = getListItemMarkerEnd(markdownText, markerStart, extendedBulletListMarkers, numberedLists);
                     if (markerEnd != -1) {
                         int level = ((markerStart - index) / 2) + 1;
 
@@ -327,6 +332,7 @@ public class MarkdownParser {
                             builder.bulletListLevel = level;
                             builder.bulletListItemStart = true;
                             builder.listItemMarker = getListItemMarker(markdownText.charAt(markerStart));
+                            builder.listItemNumber = (builder.listItemMarker == ListItemMarker.NUMBER) ? markdownText.substring(markerStart, markerEnd) : null;
 
                             continue;
                         }
@@ -676,6 +682,7 @@ public class MarkdownParser {
                 builder.separationLine = false;
                 builder.bulletListLevel = 0;
                 builder.listItemMarker = ListItemMarker.NONE;
+                builder.listItemNumber = null;
                 queueNewLine = true;
             }
 
@@ -789,13 +796,33 @@ public class MarkdownParser {
 
     /**
      * Returns the index of the space behind the list item marker that starts at the given index, or -1 if no list item starts there.<br>
-     * A list item starts with its marker and a space. The marker is "-" or, if the extended markers are enabled, "+", "*" or "~".
+     * A list item starts with its marker and a space. The marker is "-", or one of "+", "*" and "~" if the extended bullet markers are enabled,
+     * or a number with a "." or ")" behind it if numbered lists are enabled.
      */
-    protected static int getListItemMarkerEnd(@NotNull String text, int markerStart, boolean extendedBulletListMarkers) {
+    protected static int getListItemMarkerEnd(@NotNull String text, int markerStart, boolean extendedBulletListMarkers, boolean numberedLists) {
         if (markerStart >= text.length()) return -1;
-        ListItemMarker marker = getListItemMarker(text.charAt(markerStart));
-        if ((marker == ListItemMarker.NONE) || (!extendedBulletListMarkers && (marker != ListItemMarker.DASH))) return -1;
-        int markerEnd = markerStart + 1;
+        int markerEnd;
+        switch (getListItemMarker(text.charAt(markerStart))) {
+            case DASH:
+                markerEnd = markerStart + 1;
+                break;
+            case PLUS:
+            case ASTERISK:
+            case TILDE:
+                if (!extendedBulletListMarkers) return -1;
+                markerEnd = markerStart + 1;
+                break;
+            case NUMBER:
+                if (!numberedLists) return -1;
+                // The number ends at its "." or ")"
+                int digitsEnd = markerStart + 1;
+                while ((digitsEnd < text.length()) && ((digitsEnd - markerStart) < MAX_LIST_ITEM_NUMBER_DIGITS) && isDigit(text.charAt(digitsEnd))) digitsEnd++;
+                if (!text.startsWith(DOT, digitsEnd) && !text.startsWith(CLOSE_ROUND_BRACKETS, digitsEnd)) return -1;
+                markerEnd = digitsEnd + 1;
+                break;
+            default:
+                return -1;
+        }
         return text.startsWith(SPACE, markerEnd) ? markerEnd : -1;
     }
 
@@ -814,8 +841,15 @@ public class MarkdownParser {
             case TILDE_CHAR:
                 return ListItemMarker.TILDE;
             default:
-                return ListItemMarker.NONE;
+                return isDigit(character) ? ListItemMarker.NUMBER : ListItemMarker.NONE;
         }
+    }
+
+    /**
+     * Returns if the character is one of the digits 0 to 9. Digits of other writing systems start no numbered list item.
+     */
+    protected static boolean isDigit(char character) {
+        return (character >= '0') && (character <= '9');
     }
 
     @Nullable
@@ -1266,6 +1300,7 @@ public class MarkdownParser {
         protected int bulletListLevel = 0;
         @NotNull
         protected ListItemMarker listItemMarker = ListItemMarker.NONE;
+        protected String listItemNumber = null;
         @NotNull
         protected MarkdownRenderer.MarkdownLineAlignment alignment = MarkdownRenderer.MarkdownLineAlignment.LEFT;
         protected Hyperlink hyperlink = null;
@@ -1300,6 +1335,7 @@ public class MarkdownParser {
             frag.minecraftFormatting = minecraftFormatting;
             frag.bulletListLevel = bulletListLevel;
             frag.listItemMarker = listItemMarker;
+            frag.listItemNumber = listItemNumber;
             frag.bulletListItemStart = bulletListItemStart;
             bulletListItemStart = false;
             frag.alignment = alignment;
