@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -76,6 +77,8 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
     private final Consumer<N> onCancel;
 
     private N currentValue;
+    /** How much one press of an arrow changes the value. */
+    private double step = 1.0D;
     private ExtendedEditBox input;
     private RangeSlider slider;
     private ExtendedButton doneButton;
@@ -109,6 +112,14 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
         this.onValueUpdate = onValueUpdate;
         this.onDone = onDone;
         this.onCancel = onCancel;
+    }
+
+    /**
+     * Sets how much one press of an arrow changes the value, which is 1 by default.
+     */
+    public NumberPickerWindowBody<N> setStep(double step) {
+        this.step = step;
+        return this;
     }
 
     @NotNull
@@ -475,13 +486,25 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
             int nextIndex = Mth.clamp(index + direction, 0, this.cycleValues.size() - 1);
             return this.cycleValues.get(nextIndex);
         }
-        double value = this.currentValue.doubleValue() + direction;
+        double value = stepValue(this.currentValue.doubleValue(), direction, this.step, this.adapter.getRoundingDecimalPlaces());
         if (this.inputMode == InputMode.RANGE_INPUT && (this.minValue != null) && (this.maxValue != null)) {
             double min = Math.min(this.minValue.doubleValue(), this.maxValue.doubleValue());
             double max = Math.max(this.minValue.doubleValue(), this.maxValue.doubleValue());
             value = Mth.clamp(value, min, max);
         }
         return this.adapter.fromSliderValue(value);
+    }
+
+    /**
+     * Returns the given value after one press of an arrow.<br>
+     * Steps with decimals can't get added exactly, which would show up as values like 1.2000000476837158, so their results get rounded
+     * to the decimal places of the picker. Whole steps keep every decimal of the value.
+     *
+     * @param direction 1 for the up arrow, -1 for the down arrow.
+     */
+    static double stepValue(double value, int direction, double step, int decimalPlaces) {
+        double stepped = value + (direction * step);
+        return (step == Math.rint(step)) ? stepped : MathUtils.round(stepped, Math.max(0, decimalPlaces));
     }
 
     @NotNull
