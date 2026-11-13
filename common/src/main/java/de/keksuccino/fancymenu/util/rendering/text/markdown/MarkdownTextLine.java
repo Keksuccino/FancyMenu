@@ -60,10 +60,15 @@ public class MarkdownTextLine implements Renderable {
                 MarkdownTextFragment f = this.fragments.get(i);
                 f.render(graphics, mouseX, mouseY, partial);
                 // What decorates the line as a whole comes right behind the text of its first fragment, so the text of all others ends up on top of it
-                if ((i == 0) && (f.headlineType != MarkdownTextFragment.HeadlineType.NONE)) MarkdownHeadlinePainter.render(graphics, this);
+                if (i == 0) this.renderDecorations(graphics, f);
             }
         }
 
+    }
+
+    private void renderDecorations(@NotNull GuiGraphics graphics, @NotNull MarkdownTextFragment first) {
+        if ((first.bulletListLevel > 0) && first.bulletListItemStart) MarkdownListMarkerPainter.render(graphics, this);
+        if (first.headlineType != MarkdownTextFragment.HeadlineType.NONE) MarkdownHeadlinePainter.render(graphics, this);
     }
 
     /**

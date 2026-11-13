@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownMarkerShape;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
@@ -20,7 +21,58 @@ final class MarkdownPixelArt {
     private static final int TEXTURE_WIDTH = 96;
     private static final int TEXTURE_HEIGHT = 32;
 
+    /** Markers and icons stand in cells of this size, one next to the other. */
+    private static final int CELL_SIZE = 8;
+    /** The size of the pixel art markers, which fill the cells of the first row of the texture. */
+    static final int MARKER_SIZE = 5;
+
     private MarkdownPixelArt() {
+    }
+
+    /**
+     * Draws a pixel art marker.
+     *
+     * @param shadow If the marker has a shadow like text has: one pixel to the right and below, in a darker color.
+     */
+    static void marker(@NotNull GuiGraphics graphics, @NotNull MarkdownMarkerShape shape, float x, float y, float pixelSize, int color, boolean shadow) {
+        int cell = getMarkerCell(shape);
+        if ((cell < 0) || ((color >>> 24) == 0)) return;
+        float size = MARKER_SIZE * pixelSize;
+        if (shadow) blit(graphics, x + pixelSize, y + pixelSize, cell * CELL_SIZE, 0, size, size, MARKER_SIZE, MARKER_SIZE, shadowColor(color));
+        blit(graphics, x, y, cell * CELL_SIZE, 0, size, size, MARKER_SIZE, MARKER_SIZE, color);
+    }
+
+    /**
+     * Returns if the shape is one of the pixel art markers of the texture.
+     */
+    static boolean isMarker(@NotNull MarkdownMarkerShape shape) {
+        return getMarkerCell(shape) >= 0;
+    }
+
+    /**
+     * Returns the position of the marker in the first row of the texture, or -1 if the shape is no pixel art.
+     */
+    private static int getMarkerCell(@NotNull MarkdownMarkerShape shape) {
+        switch (shape) {
+            case CURSOR:
+                return 0;
+            case CURSOR_SMALL:
+                return 1;
+            case DOT:
+                return 2;
+            case PLUS:
+                return 3;
+            case MINUS:
+                return 4;
+            case WAVE:
+                return 5;
+            case STAR:
+                return 6;
+            case DIAMOND:
+                return 7;
+            default:
+                return -1;
+        }
     }
 
     /**
