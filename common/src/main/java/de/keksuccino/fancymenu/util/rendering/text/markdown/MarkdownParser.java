@@ -97,39 +97,40 @@ public class MarkdownParser {
         Objects.requireNonNull(renderer);
         Objects.requireNonNull(markdownText);
 
-        List<TableLine> tables = new ArrayList<>();
-        String tableSourceText = markdownText;
+        List<Table> tables = Collections.emptyList();
 
-        // Pre-process tables if markdown parsing is enabled
         if (parseMarkdown) {
-            markdownText = preprocessTables(renderer, markdownText, tables);
+            // Line breaks at the end of the text add no lines to it
+            int end = markdownText.length();
+            while ((end > 0) && (markdownText.charAt(end - 1) == NEWLINE_CHAR)) end--;
+            markdownText = markdownText.substring(0, end);
+            tables = findTables(renderer, markdownText);
         }
 
-        return parseFragments(renderer, markdownText, parseMarkdown, tables, tableSourceText);
+        return parseFragments(renderer, markdownText, parseMarkdown, tables);
 
     }
 
     /**
-     * Parses text that has its tables cut out already.
+     * Parses text that has its tables found already.
      *
      * <p>The loop reads the text once and never copies the rest of it. Everything that looks ahead is either limited to
      * the current line, stops at the first character that settles the answer, or goes through {@link MarkerLookahead}.
      * This keeps the parsing time linear to the text length, so every new lookahead has to follow the same rules.</p>
      *
-     * <p>A table that the loop reaches inside a code block or plain text is no table, but text of that block. The loop then reads the
-     * lines of the table from the text they were cut out of, and returns to the line break the table left behind afterwards.</p>
+     * <p>The loop jumps over the lines of a table and adds one fragment for all of them. A table that it reaches inside a code block
+     * or plain text is no table, but text of that block, so the loop reads its lines like every other line then.</p>
      *
-     * @param tables The tables that were cut out of the text, in the order of their lines.
-     * @param tableSourceText The text the tables were cut out of.
+     * @param tables The tables of the text, in the order of their lines.
      */
     @NotNull
-    protected static List<MarkdownTextFragment> parseFragments(@NotNull MarkdownRenderer renderer, @NotNull String markdownText, boolean parseMarkdown, @NotNull List<TableLine> tables, @NotNull String tableSourceText) {
+    protected static List<MarkdownTextFragment> parseFragments(@NotNull MarkdownRenderer renderer, @NotNull String markdownText, boolean parseMarkdown, @NotNull List<Table> tables) {
 
         List<MarkdownTextFragment> fragments = new ArrayList<>();
 
         FragmentBuilder builder = new FragmentBuilder(renderer);
         boolean extendedBulletListMarkers = renderer.isExtendedBulletListMarkersEnabled();
-        MarkerLookahead lookahead = new MarkerLookahead(markdownText, extendedBulletListMarkers);
+        MarkerLookahead lookahead = new MarkerLookahead(markdownText, extendedBulletListMarkers, tables);
         boolean numberedLists = renderer.isNumberedListsEnabled();
         boolean callouts = renderer.isCalloutsEnabled();
         boolean queueNewLine = true;
@@ -145,35 +146,24 @@ public class MarkdownParser {
         int linkLabelEnd = -1;
         int linkTargetEnd = -1;
 
-        //Index behind the last character the loop reads in the current text
         int textLength = markdownText.length();
         //Index of the line break that ends the line of the current index, or the text length if it is the last line
         int lineEnd = -1;
         //The tables follow the order of their lines, so the loop only ever has to look out for the next one
         int nextTable = 0;
-        int nextTableLine = tables.isEmpty() ? -1 : tables.get(0).lineIndex();
-        //Set while the loop reads the lines of a table as text: where and with what it continues in the text the table was cut out of
-        String resumeText = null;
-        int resumeIndex = -1;
-        int resumeNextTableLine = -1;
-        MarkerLookahead resumeLookahead = null;
-        MarkerLookahead tableSourceLookahead = null;
+        int nextTableStart = tables.isEmpty() ? -1 : tables.get(0).start();
+        //If the loop reads one more line break behind the text, which a table that ends the text has behind it when the loop reads its lines as text
+        boolean lineBreakBehindText = false;
 
-        for (int index = 0; ; index++) {
+        for (int index = 0; (index < textLength) || lineBreakBehindText; index++) {
 
-            if (index >= textLength) {
-                if (resumeText == null) break;
-                // The lines of the table are read, so the loop continues with the line break the table left behind, which ends its last line
-                markdownText = resumeText;
-                textLength = markdownText.length();
-                index = resumeIndex;
-                nextTableLine = resumeNextTableLine;
-                lookahead = resumeLookahead;
-                lineEnd = -1;
-                resumeText = null;
+            char c;
+            if (index < textLength) {
+                c = markdownText.charAt(index);
+            } else {
+                c = NEWLINE_CHAR;
+                lineBreakBehindText = false;
             }
-
-            char c = markdownText.charAt(index);
 
             boolean isStartOfLine = queueNewLine;
             queueNewLine = false;
@@ -184,50 +174,37 @@ public class MarkdownParser {
             int remainingLineLength = lineEnd - index;
 
             // Check for a table
-            if (index == nextTableLine) {
-                TableLine table = tables.get(nextTable);
+            if (index == nextTableStart) {
+                Table table = tables.get(nextTable);
                 nextTable++;
-                nextTableLine = (nextTable < tables.size()) ? tables.get(nextTable).lineIndex() : -1;
+                nextTableStart = (nextTable < tables.size()) ? tables.get(nextTable).start() : -1;
                 if ((builder.codeBlockContext != null) || builder.plainText) {
-                    // Inside a code block or plain text, the lines of the table are text like every other line of it.
-                    // The loop reads them from the text they were cut out of and then returns to this line break.
-                    resumeText = markdownText;
-                    resumeIndex = index;
-                    resumeNextTableLine = nextTableLine;
-                    resumeLookahead = lookahead;
-                    if (tableSourceLookahead == null) tableSourceLookahead = new MarkerLookahead(tableSourceText, extendedBulletListMarkers);
-                    // Markers behind the lines of the table get searched in the text the loop returns to, which has no tables in it
-                    tableSourceLookahead.limit(table.sourceEnd(), lookahead, index);
-                    lookahead = tableSourceLookahead;
-                    markdownText = tableSourceText;
-                    textLength = table.sourceEnd();
-                    nextTableLine = -1;
-                    lineEnd = -1;
-                    index = table.sourceStart() - 1;
-                    queueNewLine = isStartOfLine;
+                    // Inside a code block or plain text, the lines of the table are text like every other line of it
+                    lookahead.readTableAsText(table);
+                    lineBreakBehindText = (table.end() == textLength);
+                } else {
+                    MarkdownTextFragment tableFragment = new MarkdownTextFragment(renderer, "[TABLE]");
+                    tableFragment.table = true;
+                    tableFragment.tableContext = table.tableContext();
+                    tableFragment.naturalLineBreakAfter = true;
+                    // Inherit current alignment from builder
+                    tableFragment.alignment = builder.alignment;
+                    lastBuiltFragment = addFragment(fragments, tableFragment);
+                    lineHandledByWholeLineConstruct = true;
+                    builder.headlineType = HeadlineType.NONE;
+                    builder.separationLine = false;
+                    queueNewLine = true;
+                    // The loop continues behind the line break that ends the last line of the table
+                    index = table.end();
                     continue;
                 }
-                MarkdownTextFragment tableFragment = new MarkdownTextFragment(renderer, "[TABLE]");
-                tableFragment.table = true;
-                tableFragment.tableContext = table.tableContext();
-                tableFragment.naturalLineBreakAfter = true;
-                // Inherit current alignment from builder
-                tableFragment.alignment = builder.alignment;
-                lastBuiltFragment = addFragment(fragments, tableFragment);
-                // The line of a table is empty, so the character at its index is the line break that ends it
-                lineHandledByWholeLineConstruct = true;
-                builder.headlineType = HeadlineType.NONE;
-                builder.separationLine = false;
-                queueNewLine = true;
-                continue;
             }
 
             //Skip empty line under headline
             if ((c == NEWLINE_CHAR) && lastLineWasHeadline) {
                 lastLineWasHeadline = false;
                 int nextLineStart = index + 1;
-                // The line of a table is empty as well, but stands for the table
-                if ((nextLineStart != nextTableLine) && containsOnly(markdownText, nextLineStart, getLineEnd(markdownText, nextLineStart), IS_SPACE)) {
+                if (containsOnly(markdownText, nextLineStart, getLineEnd(markdownText, nextLineStart), IS_SPACE)) {
                     continue;
                 }
             }
@@ -1173,30 +1150,24 @@ public class MarkdownParser {
     }
 
     /**
-     * A table that was cut out of the text.
+     * A table of the text.
      *
-     * @param lineIndex The index of the empty line the table left behind in the text.
-     * @param sourceStart The index of the first character of the table in the text it was cut out of.
-     * @param sourceEnd The index behind the last character of the table in the text it was cut out of, which is the line break behind its last line or the end of that text.
+     * @param start The index of the first character of the first line of the table.
+     * @param end The index behind the last line of the table, which is the line break that ends that line or the end of the text.
      */
-    protected record TableLine(int lineIndex, @NotNull MarkdownTextFragment.TableContext tableContext, int sourceStart, int sourceEnd) {
+    protected record Table(int start, int end, @NotNull MarkdownTextFragment.TableContext tableContext) {
     }
 
     /**
-     * Cuts all tables out of the text. Every table leaves an empty line behind and gets added to the given list together
-     * with the index of that line, so nothing the text itself holds can stand for a table or get mistaken for one.
+     * Finds all tables of the text and parses their cells. The tables come in the order of their lines.
      */
     @NotNull
-    protected static String preprocessTables(@NotNull MarkdownRenderer renderer, @NotNull String markdownText, @NotNull List<TableLine> tables) {
-        // Tables need pipes. Text without any keeps all of its lines and only loses the line breaks at its end, which is what building it from its lines below does to it as well.
-        if (markdownText.indexOf(VERTICAL_BAR_CHAR) == -1) {
-            int end = markdownText.length();
-            while ((end > 0) && (markdownText.charAt(end - 1) == NEWLINE_CHAR)) end--;
-            return markdownText.substring(0, end);
-        }
+    protected static List<Table> findTables(@NotNull MarkdownRenderer renderer, @NotNull String markdownText) {
+        // Tables need pipes
+        if (markdownText.indexOf(VERTICAL_BAR_CHAR) == -1) return Collections.emptyList();
 
+        List<Table> tables = new ArrayList<>();
         String[] lines = markdownText.split(NEWLINE);
-        StringBuilder result = new StringBuilder(markdownText.length());
         // Index of the current line in the text
         int lineStart = 0;
         
@@ -1259,30 +1230,24 @@ public class MarkdownParser {
                     i++;
                 }
                 
-                // Store the table with the index of the empty line it leaves behind in the result.
-                // Every line of the table was counted with a line break behind it, and the one behind its last line is no part of the table.
-                tables.add(new TableLine(result.length(), tableContext, tableStart, lineStart - 1));
-                result.append(NEWLINE);
+                // Every line of the table was counted with a line break behind it, and the one behind its last line is no part of the table
+                tables.add(new Table(tableStart, lineStart - 1, tableContext));
                 i--; // Adjust because the loop will increment
             } else {
-                result.append(currentLine);
                 lineStart += currentLine.length() + 1;
-                if (i < lines.length - 1) {
-                    result.append(NEWLINE);
-                }
             }
         }
         
-        return result.toString();
+        return tables;
     }
 
     /**
      * Parses the content of a table cell.<br>
-     * A cell is a single line, so it can't hold a table itself and skips the table pre-processing of {@link #parse(MarkdownRenderer, String, boolean)}.
+     * A cell is a single line, so it can't hold a table itself.
      */
     @NotNull
     protected static List<MarkdownTextFragment> parseTableCell(@NotNull MarkdownRenderer renderer, @NotNull String cellText) {
-        return parseFragments(renderer, cellText, true, Collections.emptyList(), cellText);
+        return parseFragments(renderer, cellText, true, Collections.emptyList());
     }
 
     protected static boolean containsUnescapedPipe(@NotNull String line) {
@@ -1355,6 +1320,9 @@ public class MarkdownParser {
      * only once that way, no matter how many markers without a closing one the text holds.</p>
      *
      * <p>This only works as long as the searches for a marker never start at a smaller index than an earlier one did.</p>
+     *
+     * <p>The parser jumps over tables, so a marker that touches a table closes nothing. A table inside a code block or plain text is text
+     * of that block instead: while the parser reads the lines of such a table, the markers in those lines count like all other ones.</p>
      */
     protected static class MarkerLookahead {
 
@@ -1365,60 +1333,117 @@ public class MarkdownParser {
         protected final String text;
         /** If "*" and "~" start list items, which makes the parser skip them as the markers of those items. */
         protected final boolean extendedBulletListMarkers;
+        /** The tables of the text, in the order of their lines. */
+        @NotNull
+        protected final List<Table> tables;
+        /** The next occurrence of every marker in the whole text, tables included. */
         protected final int[] nextOccurrences = new int[LookaheadMarker.COUNT];
-        /** Markers only get found in front of this index. */
-        protected int end;
-        /** Where a search continues that found nothing in front of the end, or NULL if it ends there. */
-        @Nullable
-        protected MarkerLookahead continuation = null;
-        protected int continuationIndex;
+        /** The next occurrence of every marker that touches no table. */
+        protected final int[] nextOccurrencesOutsideTables = new int[LookaheadMarker.COUNT];
+        /** For every marker, the index of the first table that does not end in front of {@link #nextOccurrencesOutsideTables its next occurrence outside of tables}. */
+        protected final int[] nextTables = new int[LookaheadMarker.COUNT];
+        /** The index behind the table whose lines the parser reads as text, which is smaller than the index of the parser when it reads no table. */
+        protected int textTableEnd = -1;
         /** Start and end index of every part of the text {@link #findSkippedRanges()} found, in ascending order. NULL until the first marker gets checked. */
         @Nullable
         protected int[] skippedRanges = null;
         protected int skippedRangeCount = 0;
 
-        protected MarkerLookahead(@NotNull String text, boolean extendedBulletListMarkers) {
+        protected MarkerLookahead(@NotNull String text, boolean extendedBulletListMarkers, @NotNull List<Table> tables) {
             this.text = text;
             this.extendedBulletListMarkers = extendedBulletListMarkers;
-            this.end = text.length();
+            this.tables = tables;
             Arrays.fill(this.nextOccurrences, NOT_SEARCHED);
+            Arrays.fill(this.nextOccurrencesOutsideTables, NOT_SEARCHED);
         }
 
         /**
-         * Makes the lookahead only find markers in front of the given index of its text, and continue every search that
-         * finds none there at the given index of another lookahead.<br>
-         * The end has to be at or behind every index a search started at before.
+         * Makes the markers in the lines of the given table count for as long as the searches start in front of the end of that table.
          */
-        protected void limit(int end, @NotNull MarkerLookahead continuation, int continuationIndex) {
-            this.end = end;
-            this.continuation = continuation;
-            this.continuationIndex = continuationIndex;
+        protected void readTableAsText(@NotNull Table table) {
+            this.textTableEnd = table.end();
         }
 
         /**
-         * Returns the index of the first occurrence of the marker at or after the given index of the text of this lookahead, or -1 if there is none.<br>
+         * Returns the index of the first occurrence of the marker at or after the given index, or -1 if there is none.<br>
          * Occurrences of markers that can be escaped do not count where {@link #isNoMarker(int)} applies or where they are the marker of a list item.
          */
         protected int indexOf(@NotNull LookaheadMarker marker, int fromIndex) {
-            // The remembered occurrence is the next one in the whole text, so it stays right when the end moves
-            int nextOccurrence = this.nextOccurrences[marker.ordinal()];
+            if (fromIndex < this.textTableEnd) {
+                int nextOccurrence = this.indexOf(marker, fromIndex, this.nextOccurrences, false);
+                if ((nextOccurrence != NOT_FOUND) && (nextOccurrence < this.textTableEnd)) return nextOccurrence;
+                // Behind the table it reads as text, the parser jumps over tables again
+                fromIndex = this.textTableEnd;
+            }
+            return this.indexOf(marker, fromIndex, this.nextOccurrencesOutsideTables, true);
+        }
+
+        /**
+         * @param nextOccurrences Where the search remembers the occurrence it finds.
+         * @param outsideTables If occurrences that touch a table do not count.
+         */
+        protected int indexOf(@NotNull LookaheadMarker marker, int fromIndex, int[] nextOccurrences, boolean outsideTables) {
+            // The remembered occurrence is the next one behind every index a search started at before
+            int nextOccurrence = nextOccurrences[marker.ordinal()];
             if ((nextOccurrence != NOT_FOUND) && (nextOccurrence < fromIndex)) {
                 nextOccurrence = this.text.indexOf(marker.marker, fromIndex);
-                // What the parser reads as text or skips closes nothing, so the search goes on behind it
-                while ((nextOccurrence != NOT_FOUND) && marker.escapable && (this.isNoMarker(nextOccurrence) || ((marker.marker.length() == 1) && this.isListItemMarker(nextOccurrence)))) {
-                    nextOccurrence = this.text.indexOf(marker.marker, nextOccurrence + 1);
+                while (nextOccurrence != NOT_FOUND) {
+                    Table table = outsideTables ? this.getTableTouchedBy(marker, nextOccurrence) : null;
+                    if (table != null) {
+                        nextOccurrence = this.text.indexOf(marker.marker, table.end());
+                    } else if (marker.escapable && (this.isNoMarker(nextOccurrence) || ((marker.marker.length() == 1) && this.isListItemMarker(nextOccurrence)))) {
+                        // What the parser reads as text or skips closes nothing, so the search goes on behind it
+                        nextOccurrence = this.text.indexOf(marker.marker, nextOccurrence + 1);
+                    } else {
+                        break;
+                    }
                 }
-                this.nextOccurrences[marker.ordinal()] = nextOccurrence;
+                nextOccurrences[marker.ordinal()] = nextOccurrence;
             }
-            return (nextOccurrence < this.end) ? nextOccurrence : NOT_FOUND;
+            return nextOccurrence;
+        }
+
+        /**
+         * Returns the table that holds at least one character of the marker that starts at the given index, or NULL if there is none.<br>
+         * Like the searches for a marker, this never gets asked for a smaller index than before.
+         */
+        @Nullable
+        protected Table getTableTouchedBy(@NotNull LookaheadMarker marker, int occurrence) {
+            int nextTable = this.nextTables[marker.ordinal()];
+            while ((nextTable < this.tables.size()) && (this.tables.get(nextTable).end() <= occurrence)) nextTable++;
+            this.nextTables[marker.ordinal()] = nextTable;
+            if (nextTable == this.tables.size()) return null;
+            Table table = this.tables.get(nextTable);
+            // Markers that start with a line break can start in front of a table and reach into its first line
+            return ((occurrence + marker.marker.length()) > table.start()) ? table : null;
+        }
+
+        /**
+         * Returns the table the given index is part of, or NULL if there is none.
+         */
+        @Nullable
+        protected Table getTableAt(int index) {
+            int low = 0;
+            int high = this.tables.size() - 1;
+            while (low <= high) {
+                int middle = (low + high) >>> 1;
+                Table table = this.tables.get(middle);
+                if (index < table.start()) {
+                    high = middle - 1;
+                } else if (index >= table.end()) {
+                    low = middle + 1;
+                } else {
+                    return table;
+                }
+            }
+            return null;
         }
 
         /**
          * Returns if the marker starts at or after the given index.
          */
         protected boolean existsFrom(@NotNull LookaheadMarker marker, int fromIndex) {
-            if (this.indexOf(marker, fromIndex) != NOT_FOUND) return true;
-            return (this.continuation != null) && this.continuation.existsFrom(marker, this.continuationIndex);
+            return this.indexOf(marker, fromIndex) != NOT_FOUND;
         }
 
         /**
@@ -1433,22 +1458,24 @@ public class MarkdownParser {
          * @param boldOpen If the italic text opens inside of bold text.
          */
         protected boolean hasItalicAsteriskEnd(int fromIndex, boolean boldOpen) {
-            return this.hasItalicAsteriskEnd(fromIndex, boldOpen, boldOpen);
-        }
-
-        /**
-         * @param insideOuterBold If the italic text opened inside of bold text.
-         * @param boldOpen If bold text is open at the given index, which is the outer bold text or one that opened inside of the italic text.
-         */
-        protected boolean hasItalicAsteriskEnd(int fromIndex, boolean insideOuterBold, boolean boldOpen) {
+            boolean insideOuterBold = boldOpen;
+            int length = this.text.length();
             int index = fromIndex;
             while (true) {
                 int rowStart = this.text.indexOf(ASTERISK_CHAR, index);
-                if ((rowStart == NOT_FOUND) || (rowStart >= this.end)) break;
+                if (rowStart == NOT_FOUND) break;
+                if (rowStart >= this.textTableEnd) {
+                    // The parser jumps over all tables but the one it reads as text
+                    Table table = this.getTableAt(rowStart);
+                    if (table != null) {
+                        index = table.end();
+                        continue;
+                    }
+                }
                 index = rowStart + 1;
                 // An asterisk that is no marker or the marker of a list item is no part of a row. The row starts behind it then.
                 if (this.isNoMarker(rowStart) || this.isListItemMarker(rowStart)) continue;
-                while ((index < this.end) && (this.text.charAt(index) == ASTERISK_CHAR)) index++;
+                while ((index < length) && (this.text.charAt(index) == ASTERISK_CHAR)) index++;
                 int rowLength = index - rowStart;
                 if ((rowLength % 2) == 1) return true;
                 for (int pair = 0; pair < (rowLength / 2); pair++) {
@@ -1456,7 +1483,6 @@ public class MarkdownParser {
                     boldOpen = !boldOpen;
                 }
             }
-            if (this.continuation != null) return this.continuation.hasItalicAsteriskEnd(this.continuationIndex, insideOuterBold, boldOpen);
             // Bold text that is still open here was opened by a pair without a later pair, so it is none and the second asterisk of that pair is the end
             return boldOpen && !insideOuterBold;
         }
