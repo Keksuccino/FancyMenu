@@ -381,8 +381,9 @@ final class MarkdownStructure {
                 }
 
                 //Handle Plain Text Multi Line
-                if (isStartOfLine && (c == SEMICOLON_CHAR) && !code && (remainingLineLength == 3) && text.startsWith(FORMATTING_CODE_PLAIN_TEXT_MULTI_LINE_PREFIX_SUFFIX, index)) {
-                    if (!plainText && lookahead.existsFrom(LookaheadMarker.PLAIN_TEXT_MULTI_LINE_END, index + 3)) {
+                // The marker line has nothing but whitespace behind its marker
+                if (isStartOfLine && (c == SEMICOLON_CHAR) && !code && text.startsWith(FORMATTING_CODE_PLAIN_TEXT_MULTI_LINE_PREFIX_SUFFIX, index) && containsOnly(text, index + FORMATTING_CODE_PLAIN_TEXT_MULTI_LINE_PREFIX_SUFFIX.length(), lineEnd, IS_TRIMMED_WHITESPACE)) {
+                    if (!plainText && lookahead.existsFrom(LookaheadMarker.PLAIN_TEXT_MULTI_LINE_END, lineEnd)) {
                         this.addEvent(index, Event.PLAIN_TEXT_BLOCK_OPEN, 0, 0);
                         plainText = true;
                         index = lineEnd;
@@ -615,7 +616,7 @@ final class MarkdownStructure {
         CODE_BLOCK_SINGLE_LINE(String.valueOf(GRAVE_ACCENT_CHAR), false),
         PLAIN_TEXT_SINGLE_LINE(FORMATTING_CODE_PLAIN_TEXT_SINGLE_LINE_PREFIX_SUFFIX, false),
         CODE_BLOCK_MULTI_LINE_END(FORMATTING_CODE_CODE_BLOCK_MULTI_LINE_PREFIX_SUFFIX, true),
-        // Multi-line plain text ends at a marker that starts a line, no matter what follows it in that line
+        // A line that starts with the marker of multi-line plain text always ends plain text: at that marker, or at the two semicolons that close plain text inside of a line
         PLAIN_TEXT_MULTI_LINE_END(NEWLINE + FORMATTING_CODE_PLAIN_TEXT_MULTI_LINE_PREFIX_SUFFIX, false);
 
         static final int COUNT = values().length;
