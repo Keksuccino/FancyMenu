@@ -15,6 +15,7 @@ import static de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownParse
 import static de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownParserTestSupport.texts;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -155,6 +156,117 @@ class MarkdownParserListTest {
         renderer.tick();
 
         assertEquals(2, renderer.parses);
+    }
+
+    @Test
+    void numberWithDotOrBracketStartsANumberedItem() {
+        List<MarkdownTextFragment> fragments = parseWithNumberedLists("1. first\n2) second\n10. tenth\n007) seventh\n123456789. long");
+
+        assertEquals(List.of("first", "second", "tenth", "seventh", "long"), texts(fragments));
+        assertNumberedItem(fragments.get(0), 1, "1.");
+        assertNumberedItem(fragments.get(1), 1, "2)");
+        assertNumberedItem(fragments.get(2), 1, "10.");
+        assertNumberedItem(fragments.get(3), 1, "007)");
+        assertNumberedItem(fragments.get(4), 1, "123456789.");
+    }
+
+    @Test
+    void numbersStayTextWhileNumberedListsAreSwitchedOff() {
+        List<MarkdownTextFragment> fragments = parse("1. first\n2) second");
+
+        assertEquals("1. first2) second", joinText(fragments));
+        for (MarkdownTextFragment fragment : fragments) {
+            assertEquals(0, fragment.bulletListLevel);
+            assertFalse(fragment.bulletListItemStart);
+            assertEquals(ListItemMarker.NONE, fragment.listItemMarker);
+            assertNull(fragment.listItemNumber);
+        }
+    }
+
+    @Test
+    void numbersStayAsTheyWereTyped() {
+        List<MarkdownTextFragment> fragments = parseWithNumberedLists("5. a\n5. b\n3. c\n0. d");
+
+        assertEquals(List.of("5.", "5.", "3.", "0."), fragments.stream().map(fragment -> fragment.listItemNumber).toList());
+    }
+
+    @Test
+    void numberedAndBulletItemsNestAndMixByTheirIndent() {
+        List<MarkdownTextFragment> fragments = parse(renderer().setNumberedListsEnabled(true).setExtendedBulletListMarkersEnabled(true), "- bullet\n  1. nested\n    + deeper\n      2) deepest\n3. back\n" + " ".repeat(18) + "4. ten\n" + " ".repeat(20) + "5. eleven");
+
+        assertItem(fragmentContaining(fragments, "bullet"), 1, ListItemMarker.DASH);
+        assertNull(fragmentContaining(fragments, "bullet").listItemNumber);
+        assertNumberedItem(fragmentContaining(fragments, "nested"), 2, "1.");
+        assertItem(fragmentContaining(fragments, "deeper"), 3, ListItemMarker.PLUS);
+        assertNumberedItem(fragmentContaining(fragments, "deepest"), 4, "2)");
+        assertNumberedItem(fragmentContaining(fragments, "back"), 1, "3.");
+        assertNumberedItem(fragmentContaining(fragments, "ten"), 10, "4.");
+        assertEquals(0, fragmentContaining(fragments, "eleven").bulletListLevel);
+        assertNull(fragmentContaining(fragments, "eleven").listItemNumber);
+    }
+
+    @Test
+    void allFragmentsOfTheLineOfANumberedItemHaveItsNumber() {
+        List<MarkdownTextFragment> fragments = parseWithNumberedLists("12. one **two** three\nfour");
+
+        for (String word : List.of("one", "two", "three")) {
+            assertEquals(ListItemMarker.NUMBER, fragmentContaining(fragments, word).listItemMarker);
+            assertEquals("12.", fragmentContaining(fragments, word).listItemNumber);
+            assertEquals(1, fragmentContaining(fragments, word).bulletListLevel);
+        }
+        assertTrue(fragmentContaining(fragments, "one").bulletListItemStart);
+        assertFalse(fragmentContaining(fragments, "three").bulletListItemStart);
+        assertEquals(ListItemMarker.NONE, fragmentContaining(fragments, "four").listItemMarker);
+        assertNull(fragmentContaining(fragments, "four").listItemNumber);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"1.text", "1 . text", "1.", "1)", "1", "a1. text", "text 1. more", "1234567890. text", "1: text", "1] text", "\u0661. text", "1\\. text", "\\1. text"})
+    void numberWithoutDotOrBracketAndSpaceOrOutsideTheLineStartIsNoItem(String text) {
+        for (MarkdownTextFragment fragment : parseWithNumberedLists(text)) {
+            assertEquals(0, fragment.bulletListLevel);
+            assertFalse(fragment.bulletListItemStart);
+            assertEquals(ListItemMarker.NONE, fragment.listItemMarker);
+            assertNull(fragment.listItemNumber);
+        }
+    }
+
+    @Test
+    void numberedItemsWorkInsideTableCells() {
+        MarkdownTextFragment table = tableFragment(parse(renderer().setNumberedListsEnabled(true), "| 1. first | 2) second |\n| --- | --- |"));
+
+        assertNumberedItem(fragmentContaining(table.tableContext.rows.get(0).cells.get(0).fragments, "first"), 1, "1.");
+        assertNumberedItem(fragmentContaining(table.tableContext.rows.get(0).cells.get(1).fragments, "second"), 1, "2)");
+    }
+
+    @Test
+    void switchingNumberedListsParsesTheTextAgain() {
+        MarkdownTestRenderer renderer = new MarkdownTestRenderer("1. item", 400);
+        renderer.tick();
+
+        assertFalse(renderer.isNumberedListsEnabled());
+        assertEquals(ListItemMarker.NONE, renderer.fragmentContaining("item").listItemMarker);
+
+        renderer.setNumberedListsEnabled(true);
+        renderer.tick();
+
+        assertTrue(renderer.isNumberedListsEnabled());
+        assertEquals(2, renderer.parses);
+        assertNumberedItem(renderer.fragmentContaining("item"), 1, "1.");
+
+        renderer.setNumberedListsEnabled(true);
+        renderer.tick();
+
+        assertEquals(2, renderer.parses);
+    }
+
+    private static List<MarkdownTextFragment> parseWithNumberedLists(String text) {
+        return parse(renderer().setNumberedListsEnabled(true), text);
+    }
+
+    private static void assertNumberedItem(MarkdownTextFragment itemStart, int level, String number) {
+        assertItem(itemStart, level, ListItemMarker.NUMBER);
+        assertEquals(number, itemStart.listItemNumber);
     }
 
     private static List<MarkdownTextFragment> parseWithExtendedBullets(String text) {
