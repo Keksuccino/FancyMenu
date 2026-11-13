@@ -115,6 +115,13 @@ public final class MarkdownStyle {
 
     /** How far every list level indents its items. */
     public final FloatOption listIndent = this.size("list_indent", Group.LISTS, Impact.LAYOUT, 8.0F, 9.0F, 10.0F);
+    /** What the text of the items of all levels gets indented by on top of the indent of their level. */
+    public final FloatOption listTextOffset = this.size("list_text_offset", Group.LISTS, Impact.LAYOUT, 5.0F, 0.0F, 0.0F);
+    /** The space between the marker of an item and its text. */
+    public final FloatOption listMarkerGap = this.size("list_marker_gap", Group.LISTS, Impact.DRAW, 7.0F, 4.0F, 4.0F);
+    /** The width and height of the area a marker stands in, which a square marker fills. Pixel art markers are 5 pixels big and stand in the middle of it. */
+    public final FloatOption listMarkerSize = this.size("list_marker_size", Group.LISTS, Impact.DRAW, 3.0F, 5.0F, 5.0F);
+    public final EnumOption<MarkdownMarkerAlignment> listMarkerAlignment = this.mode("list_marker_alignment", Group.LISTS, Impact.DRAW, MarkdownMarkerAlignment.LINE_CENTER, MarkdownMarkerAlignment.X_HEIGHT, MarkdownMarkerAlignment.X_HEIGHT);
     /** The space between two list items that follow each other. */
     public final FloatOption listItemSpacing = this.size("list_item_spacing", Group.LISTS, Impact.LAYOUT, 3.0F, 3.0F, 4.0F);
     /** The space above the first item of a list. */
@@ -372,11 +379,14 @@ public final class MarkdownStyle {
      */
     public final class ListLevel {
 
+        /** The shape of the markers in front of the items of the level. */
+        public final EnumOption<MarkdownMarkerShape> markerShape;
         /** The color of the markers in front of the items of the level. */
         public final ColorOption markerColor;
 
         private ListLevel(int level) {
             String key = "list_level_" + level + "_";
+            this.markerShape = MarkdownStyle.this.mode(key + "marker_shape", Group.LISTS, Impact.DRAW, MarkdownMarkerShape.SQUARE, pick(level, MarkdownMarkerShape.CURSOR, MarkdownMarkerShape.CURSOR_SMALL, MarkdownMarkerShape.DOT), MarkdownMarkerShape.SQUARE);
             this.markerColor = MarkdownStyle.this.color(key + "marker_color", Group.LISTS, Impact.DRAW, rgb(169, 169, 169), pick(level, PIXEL_ACCENT, PIXEL_DIM, PIXEL_DIM), MarkdownStyle.this.theme(theme -> pick(level, theme.bullet_list_dot_color_1, theme.bullet_list_dot_color_2, theme.bullet_list_dot_color_3)));
         }
 

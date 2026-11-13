@@ -12,15 +12,18 @@ final class MarkdownFontMetrics {
 
     /**
      * The font of Minecraft draws its letters on a grid of 9 rows: capital letters fill the upper 7 rows, the 8th row holds descenders,
-     * and the 9th one stays empty. Resource packs draw other letters onto the same grid, and the font has no way to ask it for these numbers.
+     * and the 9th one stays empty. Lowercase letters like "x" are 5 rows tall. Resource packs draw other letters onto the same grid, and the font has no way to ask it for these numbers.
      */
-    private static final MarkdownFontMetrics MINECRAFT = new MarkdownFontMetrics(7.0F);
+    private static final MarkdownFontMetrics MINECRAFT = new MarkdownFontMetrics(7.0F, 5.0F);
 
     /** The distance from the top of a line to the baseline its letters stand on. */
     final float baseline;
+    /** The height of lowercase letters without an ascender, like "x". */
+    final float xHeight;
 
-    private MarkdownFontMetrics(float baseline) {
+    private MarkdownFontMetrics(float baseline, float xHeight) {
         this.baseline = baseline;
+        this.xHeight = xHeight;
     }
 
     /**
@@ -32,7 +35,7 @@ final class MarkdownFontMetrics {
         if (!renderer.uiFontRenderingEnabled || UIBase.shouldUseMinecraftFontForUIRendering()) return MINECRAFT;
         SmoothFont font = UIBase.getUIFont();
         float size = UIBase.getUITextSizeNormal();
-        return new MarkdownFontMetrics(font.getAscent(size) + font.getYOffset(size));
+        return new MarkdownFontMetrics(font.getAscent(size) + font.getYOffset(size), font.getXHeight(size));
     }
 
 }

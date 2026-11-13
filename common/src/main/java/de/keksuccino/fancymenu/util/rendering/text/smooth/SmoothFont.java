@@ -55,6 +55,8 @@ public final class SmoothFont implements AutoCloseable {
     private final float strikethroughThickness;
     /** Cap height of the primary font in em, used to center color glyphs vertically. */
     private final float capHeightEm;
+    /** Height of the lowercase letters of the primary font that have no ascender, in em. */
+    private final float xHeightEm;
     private final float colorGlyphScale;
 
     private final SmoothFontSource[] sources;
@@ -112,6 +114,8 @@ public final class SmoothFont implements AutoCloseable {
         this.strikethroughThickness = metrics.getStrikethroughThickness();
         Rectangle2D capBounds = primary.layoutFont(0).createGlyphVector(SmoothFontSource.RENDER_CONTEXT, "H").getVisualBounds();
         this.capHeightEm = (float) capBounds.getHeight() / SmoothFontSource.LAYOUT_SIZE;
+        Rectangle2D xBounds = primary.layoutFont(0).createGlyphVector(SmoothFontSource.RENDER_CONTEXT, "x").getVisualBounds();
+        this.xHeightEm = (float) xBounds.getHeight() / SmoothFontSource.LAYOUT_SIZE;
         this.colorGlyphScale = (colorGlyphScale > 0.0F) ? colorGlyphScale : 1.0F;
 
         this.defaultOrder = new int[this.sources.length];
@@ -166,6 +170,14 @@ public final class SmoothFont implements AutoCloseable {
 
     float capHeightEm() {
         return this.capHeightEm;
+    }
+
+    /**
+     * Returns the height of lowercase letters without an ascender, like "x". Things that belong to a line of text,
+     * like the marker of a list item, look centered when they sit in the middle of that height above the baseline.
+     */
+    public float getXHeight(float size) {
+        return this.xHeightEm * size;
     }
 
     float colorGlyphScale() {
