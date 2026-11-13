@@ -26,7 +26,6 @@ import java.util.Objects;
 
 public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
-    protected static final int BULLET_LIST_SPACE_AFTER_INDENT = 5;
     protected static final int QUOTE_LINE_WIDTH = 2;
     protected static final int TRAILING_SPACE_KEEP = 0;
     protected static final int TRAILING_SPACE_REMOVE = 1;
@@ -157,8 +156,6 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             RenderingUtils.resetShaderColor(graphics);
 
             this.renderQuoteLine(graphics);
-
-            this.renderBulletListDot(graphics);
 
         }
 
@@ -429,24 +426,6 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         return nextLine.fragments.get(0).quoteContext == this.quoteContext;
     }
 
-    protected void renderBulletListDot(GuiGraphics graphics) {
-        if ((this.bulletListLevel > 0) && this.bulletListItemStart) {
-            RenderSystem.enableBlend();
-            final float scale = this.getScale();
-
-            // Calculate dimensions using scale
-            final float bulletSize = 3 * scale;
-
-            // Shift bullet dot one level to the right:
-            final float bulletX = this.x - (5 * scale) + (this.parent.style.listIndent.get() * (this.bulletListLevel) * scale);
-
-            // Vertical centering using text baseline
-            final float textBaselineY = this.getTextY() + (this.parent.getUnscaledTextHeight() * scale * 0.5f) - (bulletSize * 0.5f);
-
-            RenderingUtils.fillF(graphics, bulletX, textBaselineY, bulletX + bulletSize, textBaselineY + bulletSize, this.parent.getRenderColor(this.parent.style.listLevel(this.bulletListLevel).markerColor));
-        }
-    }
-
     /**
      * Returns the component that gets drawn for this fragment.<br>
      * Building it allocates a style chain and a component, so the result stays cached. The cache follows every input that changes without the
@@ -636,9 +615,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         }
 
         if (this.bulletListLevel > 0 && this.startOfRenderLine) {
-            // Now apply the full bullet indent for the first fragment.
-            float bulletIndent = (this.parent.style.listIndent.get() * this.bulletListLevel) + BULLET_LIST_SPACE_AFTER_INDENT;
-            offsetX += bulletIndent;
+            offsetX += MarkdownListMarkerPainter.getTextIndent(this);
         }
 
         if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && this.startOfRenderLine) {
@@ -696,8 +673,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             f += this.parent.style.quoteIndent.get() * this.getScale();
         }
         if (this.bulletListLevel > 0 && this.startOfRenderLine) {
-            float bulletSpace = (this.parent.style.listIndent.get() * this.bulletListLevel * this.getScale()) + (BULLET_LIST_SPACE_AFTER_INDENT * this.getScale());
-            f += bulletSpace;
+            f += MarkdownListMarkerPainter.getTextIndent(this) * this.getScale();
         }
         // The paddings of code blocks scale with the text, like the text offset they belong to (see getTextX()). Otherwise the text would grow out of them.
         if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && this.startOfRenderLine) {
