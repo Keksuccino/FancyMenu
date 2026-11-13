@@ -44,6 +44,7 @@ public final class MarkdownStyle {
     private static final LookColor PIXEL_LINK = rgb(127, 216, 255);
     private static final LookColor PIXEL_FRAME = rgb(57, 65, 95);
     private static final LookColor PIXEL_INK = rgba(8, 10, 22, 209);
+    private static final LookColor PIXEL_MINT = rgb(180, 240, 198);
 
     private final Listener listener;
     private final Supplier<UITheme> theme;
@@ -155,7 +156,34 @@ public final class MarkdownStyle {
     // ---------------------------------------------------------------- Inline code and code blocks
 
     public final ColorOption inlineCodeBackgroundColor = this.color("inline_code_background_color", Group.CODE, Impact.DRAW, rgb(115, 115, 115), PIXEL_INK, this.theme(theme -> theme.ui_interface_generic_text_color, 26));
+    /** The color of inline code, if it has another color than the text around it. */
+    public final ColorOption inlineCodeTextColor = this.optionalColor("inline_code_text_color", Group.CODE, Impact.COMPONENTS, NONE, PIXEL_MINT, NONE);
+    /** The space between the left edge of the background of inline code and its text. */
+    public final FloatOption inlineCodePaddingLeft = this.size("inline_code_padding_left", Group.CODE, Impact.LAYOUT, 1.0F, 2.0F, 3.0F);
+    public final FloatOption inlineCodePaddingRight = this.size("inline_code_padding_right", Group.CODE, Impact.LAYOUT, 1.0F, 2.0F, 3.0F);
+    /** How far the background of inline code reaches above the line of its text. */
+    public final FloatOption inlineCodePaddingTop = this.size("inline_code_padding_top", Group.CODE, Impact.DRAW, 2.0F, 1.0F, 1.0F);
+    /** How far the background of inline code reaches below the line of its text. */
+    public final FloatOption inlineCodePaddingBottom = this.size("inline_code_padding_bottom", Group.CODE, Impact.DRAW, 0.0F, 0.0F, 1.0F);
     public final ColorOption codeBlockBackgroundColor = this.color("code_block_background_color", Group.CODE, Impact.DRAW, rgb(86, 86, 86), PIXEL_INK, this.theme(theme -> theme.ui_interface_generic_text_color, 18));
+    /** The color of the text of code blocks, if it has another color than normal text. */
+    public final ColorOption codeBlockTextColor = this.optionalColor("code_block_text_color", Group.CODE, Impact.COMPONENTS, NONE, PIXEL_MINT, NONE);
+    /** The space between the left and right edge of a code block and its text. */
+    public final FloatOption codeBlockPaddingHorizontal = this.size("code_block_padding_horizontal", Group.CODE, Impact.LAYOUT, 10.0F, 6.0F, 8.0F);
+    /** The space between the upper and lower edge of a code block and its text. */
+    public final FloatOption codeBlockPaddingVertical = this.size("code_block_padding_vertical", Group.CODE, Impact.LAYOUT, 10.0F, 5.0F, 7.0F);
+    /** The color of the upper and left edge of the frame of a code block, if it has one. */
+    public final ColorOption codeBlockFrameTopColor = this.optionalColor("code_block_frame_top_color", Group.CODE, Impact.DRAW, NONE, rgb(4, 5, 11), NONE);
+    /** The color of the lower and right edge of the frame of a code block, if it has one. */
+    public final ColorOption codeBlockFrameBottomColor = this.optionalColor("code_block_frame_bottom_color", Group.CODE, Impact.DRAW, NONE, PIXEL_FRAME, NONE);
+    /** The color of the shadow below the upper edge of a code block, if it has one. */
+    public final ColorOption codeBlockInnerShadowColor = this.optionalColor("code_block_inner_shadow_color", Group.CODE, Impact.DRAW, NONE, rgba(0, 0, 0, 102), NONE);
+    /** If every character of a code block stands in a cell of the same width, so the characters of its lines stand in columns. */
+    public final BooleanOption codeBlockFixedWidth = this.bool("code_block_fixed_width", Group.CODE, Impact.PARSE, false, true, false);
+    /** The width of the cells of a code block with a fixed width. 0 makes them as wide as the letter "m" of the font, which is 6 in the Minecraft font. */
+    public final FloatOption codeBlockCellWidth = this.size("code_block_cell_width", Group.CODE, Impact.PARSE, 0.0F, 0.0F, 0.0F, 0.0F);
+    /** How much of every corner of the backgrounds of inline code and code blocks gets cut off. */
+    public final FloatOption codeCornerRadius = this.size("code_corner_radius", Group.CODE, Impact.DRAW, 1.0F, 1.0F, 3.0F);
     public final FloatOption codeBlockSpaceAbove = this.size("code_block_space_above", Group.CODE, Impact.LAYOUT, 0.0F, 6.0F, 8.0F);
     public final FloatOption codeBlockSpaceBelow = this.size("code_block_space_below", Group.CODE, Impact.LAYOUT, 0.0F, 6.0F, 8.0F);
 

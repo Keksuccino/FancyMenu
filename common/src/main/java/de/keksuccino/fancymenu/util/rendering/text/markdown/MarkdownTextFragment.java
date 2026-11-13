@@ -95,6 +95,8 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     public boolean table = false;
     @Nullable
     private Component renderComponent = null;
+    @Nullable
+    private MarkdownFixedWidthText fixedWidthText = null;
     private int renderComponentState;
     private int renderComponentStyleVersion;
     private int renderComponentCustomColor;
@@ -140,18 +142,25 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             float scale = this.getScale();
             if (scale <= 0.0F) return;
 
-            this.renderCodeBlock(graphics);
+            this.renderInlineCodeBackground(graphics);
 
-            RenderSystem.enableBlend();
-            graphics.pose().pushPose();
-            try {
-                // GuiGraphics' vanilla text path only accepts integer draw coordinates. Translate to the exact float origin first so local scaling cannot truncate the fragment's absolute position.
-                graphics.pose().translate(this.getTextX(), this.getTextY(), 0.0F);
-                graphics.pose().scale(scale, scale, 1.0F);
-                // The fragments that only end a line and the ones of blank lines have nothing to draw
-                if (!this.text.isEmpty()) this.parent.renderText(graphics, this.getRenderComponent(), 0.0F, 0.0F, this.parent.getRenderColor(this.parent.style.textColor), this.parent.hasTextShadow() && (this.codeBlockContext == null));
-            } finally {
-                graphics.pose().popPose();
+            // The fragments that only end a line and the ones of blank lines have nothing to draw
+            if (!this.text.isEmpty()) {
+                int color = this.parent.getRenderColor(this.parent.style.textColor);
+                RenderSystem.enableBlend();
+                graphics.pose().pushPose();
+                try {
+                    // GuiGraphics' vanilla text path only accepts integer draw coordinates. Translate to the exact float origin first so local scaling cannot truncate the fragment's absolute position.
+                    graphics.pose().translate(this.getTextX(), this.getTextY(), 0.0F);
+                    graphics.pose().scale(scale, scale, 1.0F);
+                    if (this.hasFixedWidthCells()) {
+                        this.getFixedWidthText().render(graphics, this.parent, color);
+                    } else {
+                        this.parent.renderText(graphics, this.getRenderComponent(), 0.0F, 0.0F, color, this.parent.hasTextShadow() && (this.codeBlockContext == null));
+                    }
+                } finally {
+                    graphics.pose().popPose();
+                }
             }
             RenderingUtils.resetShaderColor(graphics);
 
@@ -206,10 +215,9 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                     alignmentOffset = cellWidth - cellPadding * 2 - cell.textWidth;
                 }
 
-                // First pass: position fragments and render code block backgrounds
+                // First pass: position fragments and render the backgrounds of inline code
                 float fragmentX = textX + alignmentOffset;
-                float codeBlockStartX = -1;
-                MarkdownTextFragment.CodeBlockContext currentCodeBlock = null;
+                MarkdownTextFragment codeStart = null;
 
                 for (int fragIndex = 0; fragIndex < cell.fragments.size(); fragIndex++) {
                     MarkdownTextFragment fragment = cell.fragments.get(fragIndex);
@@ -217,28 +225,15 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                     fragment.x = fragmentX;
                     fragment.y = textY;
 
-                    // Track and render code block backgrounds
-                    if (fragment.codeBlockContext != null && fragment.codeBlockContext.singleLine) {
-                        if (currentCodeBlock == null || currentCodeBlock != fragment.codeBlockContext) {
-                            // Start of a new code block
-                            currentCodeBlock = fragment.codeBlockContext;
-                            codeBlockStartX = fragment.x;
-                        }
-
-                        // Check if this is the last fragment of the code block
-                        boolean isLastFragment = (fragIndex == cell.fragments.size() - 1) || (fragIndex + 1 < cell.fragments.size() && cell.fragments.get(fragIndex + 1).codeBlockContext != currentCodeBlock);
-
+                    if ((fragment.codeBlockContext != null) && fragment.codeBlockContext.singleLine) {
+                        if ((codeStart == null) || (codeStart.codeBlockContext != fragment.codeBlockContext)) codeStart = fragment;
+                        boolean isLastFragment = (fragIndex == cell.fragments.size() - 1) || (cell.fragments.get(fragIndex + 1).codeBlockContext != fragment.codeBlockContext);
                         if (isLastFragment) {
-                            // Render the code block background
-                            float endX = fragment.x + fragment.getRenderWidth();
-                            if (fragment.text.endsWith(" ")) {
-                                endX -= (this.parent.getUnscaledSpaceWidth() * fragment.getScale());
-                            }
-                            renderCodeBlockBackground(graphics, codeBlockStartX, fragment.getInlineCodeBackgroundTop(), endX, fragment.getInlineCodeBackgroundBottom(), this.parent.getRenderColor(this.parent.style.inlineCodeBackgroundColor));
-                            currentCodeBlock = null;
+                            MarkdownCodePainter.renderInline(graphics, codeStart, fragment);
+                            codeStart = null;
                         }
                     } else {
-                        currentCodeBlock = null;
+                        codeStart = null;
                     }
 
                     // The paddings of inline code are part of the width of its fragments, like in a line of text
@@ -295,64 +290,14 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         RenderingUtils.resetShaderColor(graphics);
     }
 
-    protected void renderCodeBlock(GuiGraphics graphics) {
-        if (this.codeBlockContext == null) return;
-
-        // Check if this fragment is inside a table cell (has tableContext but is not the table itself)
-        boolean isInTableCell = this.tableContext != null && !this.isTable();
-
-        // Skip code block background rendering for fragments inside table cells
-        // (handled in renderTable method)
-        if (isInTableCell) {
-            return;
-        }
-
-        // Normal code block rendering (outside tables)
-        if (this.parentLine != null) {
-            MarkdownTextFragment start = this.codeBlockContext.getBlockStart();
-            MarkdownTextFragment end = this.codeBlockContext.getBlockEnd();
-            if (this.codeBlockContext.singleLine) {
-                MarkdownTextLine.SingleLineCodeBlockPart part = this.parentLine.singleLineCodeBlockStartEndPairs.get(this.codeBlockContext);
-                if (part == null) return;
-                start = part.start;
-                end = part.end;
-            }
-            if ((start == null) || (end == null)) return;
-            if (this.codeBlockContext.singleLine) {
-                if (start != this) return;
-                float xEnd = end.x + end.getRenderWidth();
-                if (end.text.endsWith(" ")) {
-                    xEnd -= (this.parent.getUnscaledSpaceWidth() * this.getScale());
-                }
-                renderCodeBlockBackground(graphics, this.x, this.getInlineCodeBackgroundTop(), xEnd, this.getInlineCodeBackgroundBottom(), this.parent.getRenderColor(this.parent.style.inlineCodeBackgroundColor));
-            } else if (this.drawsCodeBlockBackground()) {
-                renderCodeBlockBackground(graphics, this.parent.x + this.parent.scaling.padding(), start.getRenderLineY(), this.parent.x + this.parent.getRealWidth() - this.parent.scaling.padding() - 1, end.getRenderLineY() + end.getRenderHeight() - 1, this.parent.getRenderColor(this.parent.style.codeBlockBackgroundColor));
-            }
-        }
-    }
-
     /**
-     * Returns where the background of the inline code span of this fragment starts.<br>
-     * The background belongs to the text, so it follows everything that moves the text inside its line, like the spacing above a list item.
+     * Draws the background of the inline code of this fragment, if the fragment is the first one of that code in its line.
+     * Fragments in table cells have no line, so the table draws the backgrounds of the code in its cells.
      */
-    protected float getInlineCodeBackgroundTop() {
-        return this.getTextY() - 2;
-    }
-
-    protected float getInlineCodeBackgroundBottom() {
-        return this.getTextY() + this.getTextRenderHeight();
-    }
-
-    /**
-     * The background of a multi-line code block gets drawn once per frame, before the text of the block: by the first fragment of the block,
-     * or, when that one is outside the visible range, by the first fragment of the first line of the block that is inside of it.
-     */
-    protected boolean drawsCodeBlockBackground() {
-        if (this.codeBlockContext.getBlockStart() == this) return true;
-        if ((this.parentLine == null) || (this.parentLine.fragments.get(0) != this)) return false;
-        MarkdownTextLine previousLine = this.parentLine.getPreviousLine();
-        if ((previousLine == null) || previousLine.isVisible()) return false;
-        return previousLine.fragments.get(previousLine.fragments.size()-1).codeBlockContext == this.codeBlockContext;
+    protected void renderInlineCodeBackground(GuiGraphics graphics) {
+        if ((this.codeBlockContext == null) || !this.codeBlockContext.singleLine || (this.parentLine == null)) return;
+        MarkdownTextLine.SingleLineCodeBlockPart part = this.parentLine.singleLineCodeBlockStartEndPairs.get(this.codeBlockContext);
+        if ((part != null) && (part.start == this) && (part.end != null)) MarkdownCodePainter.renderInline(graphics, this, part.end);
     }
 
     /**
@@ -362,16 +307,6 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     protected float getRenderLineY() {
         if (this.parentLine == null) return this.y;
         return this.parentLine.getRenderY();
-    }
-
-    protected void renderCodeBlockBackground(GuiGraphics graphics, float minX, float minY, float maxX, float maxY, int color) {
-        RenderSystem.enableBlend();
-        // Nothing else gets drawn between the three rectangles of the background, so they get drawn as one batch
-        RenderingUtils.batchFillF(graphics, minX+1, minY, maxX-1, minY+1, color);
-        RenderingUtils.batchFillF(graphics, minX, minY+1, maxX, maxY-1, color);
-        RenderingUtils.batchFillF(graphics, minX+1, maxY-1, maxX-1, maxY, color);
-        graphics.flush();
-        RenderingUtils.resetShaderColor(graphics);
     }
 
     protected void renderQuoteLine(GuiGraphics graphics) {
@@ -443,11 +378,29 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         int customColor = this.minecraftFormatting.getCurrentCustomColor();
         if ((this.renderComponent == null) || (this.renderComponentState != state) || (this.renderComponentStyleVersion != this.parent.fragmentStyleVersion) || (this.renderComponentCustomColor != customColor)) {
             this.renderComponent = this.buildRenderComponent(false);
+            this.fixedWidthText = null;
             this.renderComponentState = state;
             this.renderComponentStyleVersion = this.parent.fragmentStyleVersion;
             this.renderComponentCustomColor = customColor;
         }
         return this.renderComponent;
+    }
+
+    /**
+     * Returns if the text of the fragment gets set into cells of the same width, which is what the style can do with the text of code blocks.
+     */
+    protected boolean hasFixedWidthCells() {
+        return (this.codeBlockContext != null) && !this.codeBlockContext.singleLine && this.parent.style.codeBlockFixedWidth.get();
+    }
+
+    /**
+     * Returns the text of the fragment set into cells. It gets built from the render component and stays cached as long as that one does.
+     */
+    @NotNull
+    protected MarkdownFixedWidthText getFixedWidthText() {
+        Component component = this.getRenderComponent();
+        if (this.fixedWidthText == null) this.fixedWidthText = MarkdownFixedWidthText.of(this.parent, component.getString(), component.getStyle());
+        return this.fixedWidthText;
     }
 
     private int getRenderComponentState() {
@@ -507,7 +460,9 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             style = style.withColor(this.textColor.getColorInt());
         }
         if (this.codeBlockContext != null) {
-            style = Style.EMPTY;
+            // Code shows its text as it is, in the color the style gives it
+            MarkdownStyleOption.ColorOption codeColor = this.codeBlockContext.singleLine ? this.parent.style.inlineCodeTextColor : this.parent.style.codeBlockTextColor;
+            style = codeColor.isSet() ? Style.EMPTY.withColor(codeColor.argb()) : Style.EMPTY;
         }
         if (this.plainText) {
             style = Style.EMPTY;
@@ -593,8 +548,14 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
      */
     protected void updateWidth() {
         this.renderComponent = null;
+        this.fixedWidthText = null;
         int trailingSpaceMode = this.getTrailingSpaceMode();
-        this.unscaledTextWidth = this.parent.textWidthCache.getWidth(this.buildRenderStyle(true), this.buildRenderText(trailingSpaceMode), trailingSpaceMode == TRAILING_SPACE_SEPARATE);
+        String renderText = this.buildRenderText(trailingSpaceMode);
+        if (this.hasFixedWidthCells()) {
+            this.unscaledTextWidth = MarkdownFixedWidthText.getWidth(this.parent, renderText);
+            return;
+        }
+        this.unscaledTextWidth = this.parent.textWidthCache.getWidth(this.buildRenderStyle(true), renderText, trailingSpaceMode == TRAILING_SPACE_SEPARATE);
     }
 
     /**
@@ -623,40 +584,54 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         return MarkdownTextGeometry.localCoordinate(this.getTextX(), scale);
     }
 
-    protected float getTextRenderOffsetX() {
-        float offsetX = 0.0F;
-
-        if ((this.quoteContext != null) && this.startOfRenderLine && (this.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT)) {
-            offsetX += this.parent.style.quoteIndent.get();
+    /**
+     * Returns the space the fragment keeps free in front of its text. The first fragment of a render line holds the indents and paddings
+     * of the line, and the first fragment of inline code holds the padding of its background. All of it scales with the text of the fragment.
+     */
+    protected float getLeadingSpace() {
+        MarkdownStyle style = this.parent.style;
+        float space = 0.0F;
+        if (this.startOfRenderLine) {
+            if ((this.quoteContext != null) && (this.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT)) {
+                space += style.quoteIndent.get();
+            }
+            if (this.bulletListLevel > 0) {
+                space += MarkdownListMarkerPainter.getTextIndent(this);
+            }
+            if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine) {
+                space += style.codeBlockPaddingHorizontal.get();
+            }
         }
-
-        if (this.bulletListLevel > 0 && this.startOfRenderLine) {
-            offsetX += MarkdownListMarkerPainter.getTextIndent(this);
-        }
-
-        if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && this.startOfRenderLine) {
-            offsetX += 10;
-        }
-
         if ((this.codeBlockContext != null) && this.codeBlockContext.singleLine && (this.codeBlockContext.getBlockStart() == this)) {
-            offsetX += 1;
+            space += style.inlineCodePaddingLeft.get();
         }
+        return space * this.getScale();
+    }
 
-        return offsetX;
+    /**
+     * Returns the space the fragment keeps free behind its text, as the last or as another fragment of its render line.
+     */
+    protected float getTrailingSpace(boolean endOfRenderLine) {
+        MarkdownStyle style = this.parent.style;
+        float space = 0.0F;
+        if (endOfRenderLine) {
+            if ((this.quoteContext != null) && (this.alignment == MarkdownRenderer.MarkdownLineAlignment.RIGHT)) {
+                space += style.quoteIndent.get();
+            }
+            if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine) {
+                space += style.codeBlockPaddingHorizontal.get();
+            }
+        }
+        if ((this.codeBlockContext != null) && this.codeBlockContext.singleLine && (this.codeBlockContext.getBlockEnd() == this)) {
+            space += style.inlineCodePaddingRight.get();
+        }
+        return space * this.getScale();
     }
 
     public float getTextRenderY() {
         float scale = this.getScale();
         if (scale <= 0.0F) return 0.0F;
         return MarkdownTextGeometry.localCoordinate(this.getTextY(), scale);
-    }
-
-    protected float getTextRenderOffsetY() {
-        float offsetY = 0.0F;
-        if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && this.isInRenderLineOf(this.codeBlockContext.getBlockStart())) {
-            offsetY += 10;
-        }
-        return offsetY;
     }
 
     public float getRenderWidth() {
@@ -683,33 +658,13 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             return this.parent.getRealWidth() - this.parent.scaling.padding() - this.parent.scaling.padding();
         }
 
-        float f = this.getTextRenderWidth();
-        if ((this.quoteContext != null) && this.startOfRenderLine && (this.alignment == MarkdownRenderer.MarkdownLineAlignment.LEFT)) {
-            f += this.parent.style.quoteIndent.get() * this.getScale();
-        }
-        if ((this.quoteContext != null) && endOfRenderLine && (this.alignment == MarkdownRenderer.MarkdownLineAlignment.RIGHT)) {
-            f += this.parent.style.quoteIndent.get() * this.getScale();
-        }
-        if (this.bulletListLevel > 0 && this.startOfRenderLine) {
-            f += MarkdownListMarkerPainter.getTextIndent(this) * this.getScale();
-        }
-        // The paddings of code blocks scale with the text, like the text offset they belong to (see getTextX()). Otherwise the text would grow out of them.
-        if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && this.startOfRenderLine) {
-            f += 10 * this.getScale();
-        }
-        if ((this.codeBlockContext != null) && this.codeBlockContext.singleLine && (this.codeBlockContext.getBlockStart() == this)) {
-            f += this.getScale();
-        }
-        if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && endOfRenderLine) {
-            f += 10 * this.getScale();
-        }
-        if ((this.codeBlockContext != null) && this.codeBlockContext.singleLine && (this.codeBlockContext.getBlockEnd() == this)) {
-            f += this.getScale();
-        }
-        return f;
+        return this.getLeadingSpace() + this.getTextRenderWidth() + this.getTrailingSpace(endOfRenderLine);
 
     }
 
+    /**
+     * Returns the height of what the fragment shows. The paddings above and below it belong to its line.
+     */
     public float getRenderHeight() {
 
         // Handle table height
@@ -726,15 +681,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             return t.getAspectRatio().getAspectRatioHeight((int)this.getRenderWidth());
         }
 
-        float f = this.getTextRenderHeight();
-        // The paddings of code blocks scale with the text, like the text offset they belong to (see getTextY()). Otherwise the text would grow into the next line.
-        if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && this.isInRenderLineOf(this.codeBlockContext.getBlockStart())) {
-            f += 10 * this.getScale();
-        }
-        if ((this.codeBlockContext != null) && !this.codeBlockContext.singleLine && this.isInRenderLineOf(this.codeBlockContext.getBlockEnd())) {
-            f += 10 * this.getScale();
-        }
-        return f;
+        return this.getTextRenderHeight();
     }
 
     public float getTextRenderWidth() {
@@ -746,11 +693,11 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     }
 
     public float getTextX() {
-        return MarkdownTextGeometry.screenOrigin(this.x, this.getTextRenderOffsetX(), this.getScale());
+        return this.x + this.getLeadingSpace();
     }
 
     public float getTextY() {
-        return MarkdownTextGeometry.screenOrigin(this.y, this.getTextRenderOffsetY(), this.getScale());
+        return this.y + ((this.parentLine != null) ? this.parentLine.paddingTop : 0.0F);
     }
 
     public float getTextWidth() {
