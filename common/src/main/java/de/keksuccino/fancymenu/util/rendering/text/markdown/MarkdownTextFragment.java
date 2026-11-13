@@ -39,6 +39,11 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     public float x;
     public float y;
     public float unscaledTextWidth;
+    /**
+     * How much of {@link #unscaledTextWidth} is the space at the end of link-like text. The width gets measured before the layout knows where
+     * the fragment ends up, and the space is no part of the link when the fragment ends its link or its line ({@link #getTrailingSpaceMode()}).
+     */
+    protected float unscaledTrailingSpaceWidth;
     public float unscaledTextHeight;
     public boolean startOfRenderLine = false;
     public boolean naturalLineBreakAfter;
@@ -379,13 +384,20 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     protected void updateWidth() {
         this.renderComponent = null;
         this.fixedWidthText = null;
+        this.unscaledTrailingSpaceWidth = 0.0F;
         int trailingSpaceMode = this.getTrailingSpaceMode();
         String renderText = this.buildRenderText(trailingSpaceMode);
         if (this.hasFixedWidthCells()) {
             this.unscaledTextWidth = MarkdownFixedWidthText.getWidth(this.parent, renderText);
             return;
         }
-        this.unscaledTextWidth = this.parent.textWidthCache.getWidth(this.buildRenderStyle(true), renderText, trailingSpaceMode == TRAILING_SPACE_SEPARATE);
+        Style style = this.buildRenderStyle(true);
+        this.unscaledTextWidth = this.parent.textWidthCache.getWidth(style, renderText, trailingSpaceMode == TRAILING_SPACE_SEPARATE);
+        if (trailingSpaceMode == TRAILING_SPACE_KEEP) {
+            if (this.isLinkLike() && renderText.endsWith(" ")) this.unscaledTrailingSpaceWidth = this.unscaledTextWidth - this.parent.textWidthCache.getWidth(style, renderText.substring(0, renderText.length() - 1), false);
+        } else if (trailingSpaceMode == TRAILING_SPACE_SEPARATE) {
+            this.unscaledTrailingSpaceWidth = this.unscaledTextWidth - this.parent.textWidthCache.getWidth(style, renderText, false);
+        }
     }
 
     /**

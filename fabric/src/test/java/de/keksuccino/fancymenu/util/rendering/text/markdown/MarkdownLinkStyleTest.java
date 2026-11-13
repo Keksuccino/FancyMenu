@@ -109,6 +109,23 @@ class MarkdownLinkStyleTest {
     }
 
     @Test
+    void underlineEndsBehindTheLastLetterOfALineTheLinkWrapsAt() {
+        // The line has room for "a first" and the space behind it, but not for the second word of the link
+        MarkdownTestRenderer renderer = new MarkdownTestRenderer("a [first second](https://example.invalid) b", 80);
+        renderer.setParentRenderScale(3.0F);
+        renderer.getStyle().applyLook(MarkdownLook.PIXEL);
+        renderer.setAutoLineBreakingEnabled(true);
+        renderer.tick();
+        MarkdownTextFragment first = renderer.fragmentContaining("first");
+        MarkdownTextFragment second = renderer.fragmentContaining("second");
+
+        assertTrue(first.autoLineBreakAfter);
+        assertNotSame(first.parentLine, second.parentLine);
+        assertEquals((5 * CHAR_WIDTH) - 1, MarkdownLinkPainter.getUnderlineWidth(first));
+        assertEquals((6 * CHAR_WIDTH) - 1, MarkdownLinkPainter.getUnderlineWidth(second));
+    }
+
+    @Test
     void hoverColorIsOptional() {
         MarkdownTestRenderer renderer = new MarkdownTestRenderer("[link](https://example.invalid)", 400);
         renderer.tick();
