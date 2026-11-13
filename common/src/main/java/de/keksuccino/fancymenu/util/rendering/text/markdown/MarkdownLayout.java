@@ -43,7 +43,8 @@ final class MarkdownLayout {
         this.spaceWidth = renderer.getUnscaledTextWidth(" ");
 
         boolean queueNewLine = true;
-        float currentLineWidth = renderer.style.padding.get();
+        float padding = renderer.scaling.padding();
+        float currentLineWidth = padding;
         MarkdownTextFragment lastFragment = null;
         MarkdownTextLine line = new MarkdownTextLine(renderer);
 
@@ -69,7 +70,7 @@ final class MarkdownLayout {
                 lines.add(line);
                 // Reset for next line
                 line = new MarkdownTextLine(renderer);
-                currentLineWidth = renderer.style.padding.get();
+                currentLineWidth = padding;
                 queueNewLine = true;
                 continue;
             }
@@ -78,8 +79,8 @@ final class MarkdownLayout {
             if (!isStartOfLine && renderer.isAutoLineBreakingEnabled()) {
                 f.startOfRenderLine = false;
                 // The fragment has to fit as the last one of the line, because that is what it becomes when the next fragment wraps
-                if (lastFragment.endOfWord && !isEmptyLineEnd(f) && ((lastFragment.codeBlockContext == null) || lastFragment.codeBlockContext.singleLine) && ((currentLineWidth + f.getRenderWidth(true) + renderer.style.padding.get()) > renderer.optimalWidth)) {
-                    currentLineWidth = renderer.style.padding.get();
+                if (lastFragment.endOfWord && !isEmptyLineEnd(f) && ((lastFragment.codeBlockContext == null) || lastFragment.codeBlockContext.singleLine) && ((currentLineWidth + f.getRenderWidth(true) + padding) > renderer.optimalWidth)) {
+                    currentLineWidth = padding;
                     isStartOfLine = true;
                     line.prepareLine();
                     lines.add(line);
@@ -95,7 +96,7 @@ final class MarkdownLayout {
 
             //Handle Natural Line Break
             if (f.naturalLineBreakAfter) {
-                currentLineWidth = renderer.style.padding.get();
+                currentLineWidth = padding;
                 queueNewLine = true;
                 line.prepareLine();
                 lines.add(line);
@@ -132,6 +133,7 @@ final class MarkdownLayout {
 
         MarkdownRenderer renderer = this.renderer;
         List<MarkdownTextLine> lines = renderer.lines;
+        float padding = renderer.scaling.padding();
         boolean containsImages = false;
 
         // Images get measured against the real width, so the real width they see has to be the one of all lines without images
@@ -144,7 +146,7 @@ final class MarkdownLayout {
             }
         }
         renderer.realWidth = maxLineWidth;
-        renderer.realWidth += renderer.style.padding.get() + renderer.style.padding.get();
+        renderer.realWidth += padding + padding;
 
         this.measuredImages.clear();
         if (containsImages) {
@@ -160,17 +162,16 @@ final class MarkdownLayout {
             }
             // An image is never wider than the real width it got measured against, so this doesn't change the size of the images
             renderer.realWidth = maxLineWidth;
-            renderer.realWidth += renderer.style.padding.get() + renderer.style.padding.get();
+            renderer.realWidth += padding + padding;
         }
 
-        renderer.realHeight = 0;
-        for (MarkdownTextLine line : lines) {
-            renderer.realHeight += line.lineHeight + renderer.style.lineSpacing.get();
-        }
-        renderer.realHeight += renderer.style.padding.get() + renderer.style.padding.get();
-
-        float realInnerWidth = renderer.getRealWidth() - renderer.style.padding.get() - renderer.style.padding.get();
-        float lineOffsetY = renderer.style.padding.get();
+        float realInnerWidth = renderer.getRealWidth() - padding - padding;
+        float lineOffsetY = padding;
+        // Lines only stay sorted by their position while no space between two of them is negative
+        boolean sorted = true;
+        MarkdownTextLine previousLine = null;
+        boolean collapsedBlankLineBetween = false;
+        int blankLineRow = 0;
         int lineIndex = 0;
         for (MarkdownTextLine line : lines) {
             line.index = lineIndex++;
@@ -184,16 +185,30 @@ final class MarkdownLayout {
                     lineAlignmentOffsetX = Math.max(0, realInnerWidth - line.lineWidth);
                 }
             }
-            line.layoutOffsetX = renderer.style.padding.get() + lineAlignmentOffsetX;
+            line.layoutOffsetX = padding + lineAlignmentOffsetX;
             line.offsetX = line.layoutOffsetX;
+            blankLineRow = (line.blockType == MarkdownBlockType.BLANK) ? (blankLineRow + 1) : 0;
+            line.collapsed = (blankLineRow > 0) && MarkdownBlockSpacing.isCollapsedBlankLine(renderer, blankLineRow);
+            if (line.collapsed) {
+                // The line stays where the content in front of it ends and takes no space, so the blocks around it are all that makes the space between them
+                line.lineHeight = 0;
+                collapsedBlankLineBetween = true;
+            } else {
+                float space = (previousLine == null) ? MarkdownBlockSpacing.aboveFirst(renderer, line) : MarkdownBlockSpacing.between(renderer, previousLine, line, collapsedBlankLineBetween);
+                if (space < 0.0F) sorted = false;
+                lineOffsetY += space;
+                previousLine = line;
+                collapsedBlankLineBetween = false;
+            }
             line.offsetY = lineOffsetY;
             // Lines outside the visible range don't render, so this is where their fragments get a position
             line.onRender(null, 0, 0, 0, false);
-            lineOffsetY += line.lineHeight + renderer.style.lineSpacing.get();
+            lineOffsetY += line.lineHeight;
         }
+        if (previousLine != null) lineOffsetY += MarkdownBlockSpacing.belowLast(renderer, previousLine);
+        renderer.realHeight = lineOffsetY + padding;
 
-        // Line heights are never negative, so only a negative line spacing can move a line above the one before it
-        this.linesSortedByPosition = (renderer.style.lineSpacing.get() >= 0.0F);
+        this.linesSortedByPosition = sorted;
 
     }
 
