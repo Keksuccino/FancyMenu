@@ -32,6 +32,9 @@ public class MarkdownTextLine implements Renderable {
     protected int index = 0;
     protected float lineWidth;
     protected float lineHeight;
+    /** The space the line keeps free above and below its fragments, like the padding of a panel that starts or ends in the line. Both are part of the line height. */
+    protected float paddingTop;
+    protected float paddingBottom;
 
     public MarkdownTextLine(@NotNull MarkdownRenderer parent) {
         this.parent = parent;
@@ -53,8 +56,11 @@ public class MarkdownTextLine implements Renderable {
             textX += f.getRenderWidth();
         }
         if (shouldRender) {
-            for (MarkdownTextFragment f : this.fragments) {
+            for (int i = 0; i < this.fragments.size(); i++) {
+                MarkdownTextFragment f = this.fragments.get(i);
                 f.extractRenderState(graphics, mouseX, mouseY, partial);
+                // What decorates the line as a whole comes right behind the text of its first fragment, so the text of all others ends up on top of it
+                if ((i == 0) && (f.headlineType != MarkdownTextFragment.HeadlineType.NONE)) MarkdownHeadlinePainter.render(graphics, this);
             }
         }
 
@@ -145,8 +151,13 @@ public class MarkdownTextLine implements Renderable {
         if (width < 0) {
             width = 0;
         }
+        this.paddingTop = 0;
+        this.paddingBottom = 0;
+        if ((last != null) && (this.fragments.get(0).headlineType != MarkdownTextFragment.HeadlineType.NONE)) {
+            this.paddingBottom += MarkdownHeadlinePainter.getLinePaddingBottom(this);
+        }
         this.lineWidth = width;
-        this.lineHeight = height;
+        this.lineHeight = this.paddingTop + height + this.paddingBottom;
     }
 
     public float getLineWidth() {
