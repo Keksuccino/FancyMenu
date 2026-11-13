@@ -45,6 +45,8 @@ public final class MarkdownStyle {
     private static final LookColor PIXEL_FRAME = rgb(57, 65, 95);
     private static final LookColor PIXEL_INK = rgba(8, 10, 22, 209);
     private static final LookColor PIXEL_MINT = rgb(180, 240, 198);
+    /** How much of the text color the muted text of the neutral look keeps. The rest is the background color. */
+    private static final float MUTED_TEXT_STRENGTH = 0.7F;
 
     private final Listener listener;
     private final Supplier<UITheme> theme;
@@ -72,6 +74,11 @@ public final class MarkdownStyle {
      * underlines with a color of their own, the backgrounds of inline code and the columns of tables. The smooth UI font has no such column.
      */
     public final BooleanOption trimGlyphSpacing = this.bool("trim_glyph_spacing", Group.TEXT, Impact.LAYOUT, false, true, true);
+    /**
+     * If the corners of backgrounds and frames are smooth arcs, like the ones of the widgets of the UI, which never are rounder than
+     * the UI theme makes its widgets. Otherwise a corner radius cuts a square of its size out of every corner, the way pixel art rounds corners.
+     */
+    public final BooleanOption smoothCorners = this.bool("smooth_corners", Group.TEXT, Impact.DRAW, false, false, true);
     /** If text has a shadow. Text in the smooth UI font never has one. */
     public final BooleanOption textShadow = this.bool("text_shadow", Group.TEXT, Impact.DRAW, true, true, false);
     /** The space between the edges of the renderer and its text area. The outer 2 pixels can get clipped by containers like scroll areas, so it is never smaller. */
@@ -86,8 +93,8 @@ public final class MarkdownStyle {
     public final BooleanOption collapseBlankLines = this.bool("collapse_blank_lines", Group.TEXT, Impact.LAYOUT, false, true, true);
     /** How the spaces above and below the blocks of the text come together. */
     public final EnumOption<MarkdownBlockGapMode> blockGapMode = this.mode("block_gap_mode", Group.TEXT, Impact.LAYOUT, MarkdownBlockGapMode.ADD, MarkdownBlockGapMode.LARGEST, MarkdownBlockGapMode.LARGEST);
-    public final FloatOption paragraphSpaceAbove = this.size("paragraph_space_above", Group.TEXT, Impact.LAYOUT, 0.0F, 5.0F, 6.0F);
-    public final FloatOption paragraphSpaceBelow = this.size("paragraph_space_below", Group.TEXT, Impact.LAYOUT, 0.0F, 5.0F, 6.0F);
+    public final FloatOption paragraphSpaceAbove = this.size("paragraph_space_above", Group.TEXT, Impact.LAYOUT, 0.0F, 5.0F, 8.0F);
+    public final FloatOption paragraphSpaceBelow = this.size("paragraph_space_below", Group.TEXT, Impact.LAYOUT, 0.0F, 5.0F, 8.0F);
     /**
      * If the sizes of the style that the classic look keeps at a fixed size grow with the scale of the text, like everything else:
      * the padding, the line spacing, the spaces around blocks, and the paddings and lines of headlines, quotes and tables.
@@ -120,38 +127,38 @@ public final class MarkdownStyle {
     // ---------------------------------------------------------------- Lists
 
     /** How far every list level indents its items. */
-    public final FloatOption listIndent = this.size("list_indent", Group.LISTS, Impact.LAYOUT, 8.0F, 9.0F, 10.0F);
+    public final FloatOption listIndent = this.size("list_indent", Group.LISTS, Impact.LAYOUT, 8.0F, 9.0F, 12.0F);
     /** What the text of the items of all levels gets indented by on top of the indent of their level. */
     public final FloatOption listTextOffset = this.size("list_text_offset", Group.LISTS, Impact.LAYOUT, 5.0F, 0.0F, 0.0F);
     /** The space between the marker of an item and its text. */
-    public final FloatOption listMarkerGap = this.size("list_marker_gap", Group.LISTS, Impact.DRAW, 7.0F, 4.0F, 4.0F);
+    public final FloatOption listMarkerGap = this.size("list_marker_gap", Group.LISTS, Impact.DRAW, 7.0F, 4.0F, 5.0F);
     /** The width and height of the area a marker stands in, which a square marker fills. Pixel art markers are 5 pixels big and stand in the middle of it. */
-    public final FloatOption listMarkerSize = this.size("list_marker_size", Group.LISTS, Impact.DRAW, 3.0F, 5.0F, 5.0F);
+    public final FloatOption listMarkerSize = this.size("list_marker_size", Group.LISTS, Impact.DRAW, 3.0F, 5.0F, 4.0F);
     public final EnumOption<MarkdownMarkerAlignment> listMarkerAlignment = this.mode("list_marker_alignment", Group.LISTS, Impact.DRAW, MarkdownMarkerAlignment.LINE_CENTER, MarkdownMarkerAlignment.X_HEIGHT, MarkdownMarkerAlignment.X_HEIGHT);
     /** The space between two list items that follow each other. */
     public final FloatOption listItemSpacing = this.size("list_item_spacing", Group.LISTS, Impact.LAYOUT, 3.0F, 3.0F, 4.0F);
     /** The space above the first item of a list. */
     public final FloatOption listSpaceAbove = this.size("list_space_above", Group.LISTS, Impact.LAYOUT, 3.0F, 4.0F, 6.0F);
     /** The space below the last item of a list. */
-    public final FloatOption listSpaceBelow = this.size("list_space_below", Group.LISTS, Impact.LAYOUT, 0.0F, 5.0F, 6.0F);
+    public final FloatOption listSpaceBelow = this.size("list_space_below", Group.LISTS, Impact.LAYOUT, 0.0F, 5.0F, 8.0F);
     /** The options of the three list levels. Deeper levels look like the third one. */
     private final ListLevel[] listLevels = {new ListLevel(1), new ListLevel(2), new ListLevel(3)};
     /** The marker of list items that start with "+", which stands for things that got added. */
-    public final EnumOption<MarkdownMarkerShape> listPlusMarkerShape = this.mode("list_plus_marker_shape", Group.LISTS, Impact.DRAW, MarkdownMarkerShape.PLUS, MarkdownMarkerShape.PLUS, MarkdownMarkerShape.PLUS);
+    public final EnumOption<MarkdownMarkerShape> listPlusMarkerShape = this.mode("list_plus_marker_shape", Group.LISTS, Impact.DRAW, MarkdownMarkerShape.PLUS, MarkdownMarkerShape.PLUS, MarkdownMarkerShape.ICON_ADD);
     public final ColorOption listPlusMarkerColor = this.color("list_plus_marker_color", Group.LISTS, Impact.DRAW, rgb(85, 255, 85), rgb(134, 223, 108), this.theme(theme -> theme.success_color));
     /** When list items that start with "-" get the marker for things that got removed instead of the marker of their list level. */
     public final EnumOption<MarkdownRemovedMarkerMode> listMinusMarkerMode = this.mode("list_minus_marker_mode", Group.LISTS, Impact.DRAW, MarkdownRemovedMarkerMode.AUTOMATIC, MarkdownRemovedMarkerMode.AUTOMATIC, MarkdownRemovedMarkerMode.AUTOMATIC);
     /** The marker of list items that start with "-", where it stands for things that got removed. */
-    public final EnumOption<MarkdownMarkerShape> listMinusMarkerShape = this.mode("list_minus_marker_shape", Group.LISTS, Impact.DRAW, MarkdownMarkerShape.MINUS, MarkdownMarkerShape.MINUS, MarkdownMarkerShape.MINUS);
+    public final EnumOption<MarkdownMarkerShape> listMinusMarkerShape = this.mode("list_minus_marker_shape", Group.LISTS, Impact.DRAW, MarkdownMarkerShape.MINUS, MarkdownMarkerShape.MINUS, MarkdownMarkerShape.ICON_REMOVE);
     public final ColorOption listMinusMarkerColor = this.color("list_minus_marker_color", Group.LISTS, Impact.DRAW, rgb(255, 85, 85), rgb(255, 123, 107), this.theme(theme -> theme.error_color));
     /** The marker of list items that start with "~", which stands for things that got changed. */
-    public final EnumOption<MarkdownMarkerShape> listTildeMarkerShape = this.mode("list_tilde_marker_shape", Group.LISTS, Impact.DRAW, MarkdownMarkerShape.WAVE, MarkdownMarkerShape.WAVE, MarkdownMarkerShape.WAVE);
+    public final EnumOption<MarkdownMarkerShape> listTildeMarkerShape = this.mode("list_tilde_marker_shape", Group.LISTS, Impact.DRAW, MarkdownMarkerShape.WAVE, MarkdownMarkerShape.WAVE, MarkdownMarkerShape.ICON_EDIT);
     public final ColorOption listTildeMarkerColor = this.color("list_tilde_marker_color", Group.LISTS, Impact.DRAW, rgb(85, 255, 255), PIXEL_LINK, this.theme(theme -> theme.info_color));
     /** The marker of list items that start with "*", which stands for highlights. */
-    public final EnumOption<MarkdownMarkerShape> listAsteriskMarkerShape = this.mode("list_asterisk_marker_shape", Group.LISTS, Impact.DRAW, MarkdownMarkerShape.STAR, MarkdownMarkerShape.STAR, MarkdownMarkerShape.STAR);
+    public final EnumOption<MarkdownMarkerShape> listAsteriskMarkerShape = this.mode("list_asterisk_marker_shape", Group.LISTS, Impact.DRAW, MarkdownMarkerShape.STAR, MarkdownMarkerShape.STAR, MarkdownMarkerShape.ICON_STAR);
     public final ColorOption listAsteriskMarkerColor = this.color("list_asterisk_marker_color", Group.LISTS, Impact.DRAW, rgb(255, 170, 0), PIXEL_ACCENT, this.theme(theme -> theme.warning_color));
 
-    public final ColorOption listNumberColor = this.color("list_number_color", Group.LISTS, Impact.DRAW, rgb(169, 169, 169), PIXEL_ACCENT, this.theme(theme -> theme.ui_interface_widget_label_color_inactive));
+    public final ColorOption listNumberColor = this.color("list_number_color", Group.LISTS, Impact.DRAW, rgb(169, 169, 169), PIXEL_ACCENT, this.mutedThemeText());
     public final EnumOption<MarkdownNumberAlignment> listNumberAlignment = this.mode("list_number_alignment", Group.LISTS, Impact.DRAW, MarkdownNumberAlignment.RIGHT, MarkdownNumberAlignment.RIGHT, MarkdownNumberAlignment.RIGHT);
     /** What the text of numbered items gets indented by on top of the indent of other items, to make room for their numbers. */
     public final FloatOption listNumberIndent = this.size("list_number_indent", Group.LISTS, Impact.LAYOUT, 6.0F, 6.0F, 6.0F);
@@ -194,9 +201,9 @@ public final class MarkdownStyle {
     /** The space between the upper and lower edge of a code block and its text. */
     public final FloatOption codeBlockPaddingVertical = this.size("code_block_padding_vertical", Group.CODE, Impact.LAYOUT, 10.0F, 5.0F, 7.0F);
     /** The color of the upper and left edge of the frame of a code block, if it has one. */
-    public final ColorOption codeBlockFrameTopColor = this.optionalColor("code_block_frame_top_color", Group.CODE, Impact.DRAW, NONE, rgb(4, 5, 11), NONE);
+    public final ColorOption codeBlockFrameTopColor = this.optionalColor("code_block_frame_top_color", Group.CODE, Impact.DRAW, NONE, rgb(4, 5, 11), this.theme(theme -> theme.ui_interface_generic_text_color, 30));
     /** The color of the lower and right edge of the frame of a code block, if it has one. */
-    public final ColorOption codeBlockFrameBottomColor = this.optionalColor("code_block_frame_bottom_color", Group.CODE, Impact.DRAW, NONE, PIXEL_FRAME, NONE);
+    public final ColorOption codeBlockFrameBottomColor = this.optionalColor("code_block_frame_bottom_color", Group.CODE, Impact.DRAW, NONE, PIXEL_FRAME, this.theme(theme -> theme.ui_interface_generic_text_color, 30));
     /** The color of the shadow below the upper edge of a code block, if it has one. */
     public final ColorOption codeBlockInnerShadowColor = this.optionalColor("code_block_inner_shadow_color", Group.CODE, Impact.DRAW, NONE, rgba(0, 0, 0, 102), NONE);
     /** If every character of a code block stands in a cell of the same width, so the characters of its lines stand in columns. */
@@ -210,13 +217,13 @@ public final class MarkdownStyle {
 
     // ---------------------------------------------------------------- Quotes
 
-    public final ColorOption quoteTextColor = this.color("quote_text_color", Group.QUOTES, Impact.COMPONENTS, rgb(129, 129, 129), PIXEL_SOFT, this.theme(theme -> theme.ui_interface_widget_label_color_inactive));
+    public final ColorOption quoteTextColor = this.color("quote_text_color", Group.QUOTES, Impact.COMPONENTS, rgb(129, 129, 129), PIXEL_SOFT, this.mutedThemeText());
     /** The color of the bar next to a quote. */
     public final ColorOption quoteBarColor = this.color("quote_bar_color", Group.QUOTES, Impact.DRAW, rgb(129, 129, 129), PIXEL_ACCENT, this.theme(theme -> theme.ui_interface_generic_text_color, 72));
     /** The space between the edge of the text area and the text of a quote, which holds the bar. */
-    public final FloatOption quoteIndent = this.size("quote_indent", Group.QUOTES, Impact.LAYOUT, 8.0F, 8.0F, 10.0F);
+    public final FloatOption quoteIndent = this.size("quote_indent", Group.QUOTES, Impact.LAYOUT, 8.0F, 8.0F, 11.0F);
     public final BooleanOption quoteItalic = this.bool("quote_italic", Group.QUOTES, Impact.PARSE, false, false, false);
-    public final FloatOption quoteBarWidth = this.size("quote_bar_width", Group.QUOTES, Impact.DRAW, 2.0F, 2.0F, 2.0F);
+    public final FloatOption quoteBarWidth = this.size("quote_bar_width", Group.QUOTES, Impact.DRAW, 2.0F, 2.0F, 3.0F);
     public final EnumOption<MarkdownQuoteBarPosition> quoteBarPosition = this.mode("quote_bar_position", Group.QUOTES, Impact.DRAW, MarkdownQuoteBarPosition.INSIDE, MarkdownQuoteBarPosition.INSIDE, MarkdownQuoteBarPosition.INSIDE);
     /** How far the bar reaches above the first line of its quote. */
     public final FloatOption quoteBarOverhangTop = this.size("quote_bar_overhang_top", Group.QUOTES, Impact.DRAW, 2.0F, 0.0F, 0.0F);
@@ -244,7 +251,9 @@ public final class MarkdownStyle {
             new Callout("warning", rgb(255, 170, 0), rgb(255, 162, 77), rgba(255, 162, 77, 28), theme -> theme.warning_color),
             new Callout("caution", rgb(255, 85, 85), rgb(255, 123, 107), rgba(255, 123, 107, 28), theme -> theme.error_color)
     };
-    public final EnumOption<MarkdownCalloutIcons> calloutIcons = this.mode("callout_icons", Group.CALLOUTS, Impact.LAYOUT, MarkdownCalloutIcons.PIXEL, MarkdownCalloutIcons.PIXEL, MarkdownCalloutIcons.PIXEL);
+    /** The color of the text of callouts, if it has another color than the text of quotes. */
+    public final ColorOption calloutTextColor = this.optionalColor("callout_text_color", Group.CALLOUTS, Impact.COMPONENTS, NONE, NONE, this.theme(theme -> theme.ui_interface_generic_text_color));
+    public final EnumOption<MarkdownCalloutIcons> calloutIcons = this.mode("callout_icons", Group.CALLOUTS, Impact.LAYOUT, MarkdownCalloutIcons.PIXEL, MarkdownCalloutIcons.PIXEL, MarkdownCalloutIcons.SMOOTH);
     /** The color of the details inside of pixel art callout icons, like the mark of the warning sign. */
     public final ColorOption calloutIconDetailColor = this.color("callout_icon_detail_color", Group.CALLOUTS, Impact.DRAW, rgb(12, 15, 30), rgb(12, 15, 30), rgb(12, 15, 30));
     /** The space between the icon of a callout and its label. */
@@ -298,7 +307,7 @@ public final class MarkdownStyle {
     public final ColorOption imageFrameInnerColor = this.optionalColor("image_frame_inner_color", Group.IMAGES, Impact.DRAW, NONE, PIXEL_FRAME, NONE);
     /** If the alternative text of an image shows as a caption below it. */
     public final BooleanOption imageCaption = this.bool("image_caption", Group.IMAGES, Impact.LAYOUT, false, true, false);
-    public final ColorOption imageCaptionColor = this.color("image_caption_color", Group.IMAGES, Impact.DRAW, rgb(169, 169, 169), PIXEL_DIM, this.theme(theme -> theme.ui_interface_widget_label_color_inactive));
+    public final ColorOption imageCaptionColor = this.color("image_caption_color", Group.IMAGES, Impact.DRAW, rgb(169, 169, 169), PIXEL_DIM, this.mutedThemeText());
     /** The space between an image and its caption. */
     public final FloatOption imageCaptionGap = this.size("image_caption_gap", Group.IMAGES, Impact.LAYOUT, 3.0F, 3.0F, 4.0F);
     public final FloatOption imageSpaceAbove = this.size("image_space_above", Group.IMAGES, Impact.LAYOUT, 0.0F, 6.0F, 8.0F);
@@ -311,18 +320,18 @@ public final class MarkdownStyle {
     public final ColorOption separatorColor = this.color("separator_color", Group.SEPARATORS, Impact.DRAW, rgb(169, 169, 169), PIXEL_ACCENT_DIM, this.theme(theme -> theme.ui_interface_generic_text_color, 46));
     public final FloatOption separatorThickness = this.size("separator_thickness", Group.SEPARATORS, Impact.LAYOUT, 1.0F, 1.0F, 1.0F);
     /** The shape in the middle of a {@link MarkdownSeparatorStyle#ORNAMENT} separator. */
-    public final EnumOption<MarkdownMarkerShape> separatorOrnamentShape = this.mode("separator_ornament_shape", Group.SEPARATORS, Impact.DRAW, MarkdownMarkerShape.DIAMOND, MarkdownMarkerShape.DIAMOND, MarkdownMarkerShape.DIAMOND);
+    public final EnumOption<MarkdownMarkerShape> separatorOrnamentShape = this.mode("separator_ornament_shape", Group.SEPARATORS, Impact.DRAW, MarkdownMarkerShape.DIAMOND, MarkdownMarkerShape.DIAMOND, MarkdownMarkerShape.DISC);
     public final ColorOption separatorOrnamentColor = this.color("separator_ornament_color", Group.SEPARATORS, Impact.DRAW, rgb(169, 169, 169), PIXEL_ACCENT, this.theme(theme -> theme.input_field_suggestions_text_color_selected));
     /** The width and height of the area the ornament stands in. Pixel art ornaments are 5 pixels big and stand in the middle of it. */
     public final FloatOption separatorOrnamentSize = this.size("separator_ornament_size", Group.SEPARATORS, Impact.LAYOUT, 5.0F, 5.0F, 5.0F);
     /** The space between the ornament and the lines next to it. */
-    public final FloatOption separatorOrnamentGap = this.size("separator_ornament_gap", Group.SEPARATORS, Impact.DRAW, 2.0F, 2.0F, 2.0F);
+    public final FloatOption separatorOrnamentGap = this.size("separator_ornament_gap", Group.SEPARATORS, Impact.DRAW, 2.0F, 2.0F, 4.0F);
     /** The longest each of the two lines next to the ornament gets. 0 lets them reach to the edges of the text area. */
     public final FloatOption separatorReach = this.size("separator_reach", Group.SEPARATORS, Impact.DRAW, 0.0F, 0.0F, 62.0F, 0.0F);
     /** How much of the outer end of the lines next to the ornament fades out through dithering. */
     public final FloatOption separatorFadeLength = this.size("separator_fade_length", Group.SEPARATORS, Impact.DRAW, 0.0F, 0.0F, 26.0F, 0.0F);
-    public final FloatOption separatorSpaceAbove = this.size("separator_space_above", Group.SEPARATORS, Impact.LAYOUT, 0.0F, 7.0F, 8.0F);
-    public final FloatOption separatorSpaceBelow = this.size("separator_space_below", Group.SEPARATORS, Impact.LAYOUT, 0.0F, 7.0F, 8.0F);
+    public final FloatOption separatorSpaceAbove = this.size("separator_space_above", Group.SEPARATORS, Impact.LAYOUT, 0.0F, 7.0F, 10.0F);
+    public final FloatOption separatorSpaceBelow = this.size("separator_space_below", Group.SEPARATORS, Impact.LAYOUT, 0.0F, 7.0F, 10.0F);
 
     /**
      * @param listener Gets told about every change to the style.
@@ -487,6 +496,24 @@ public final class MarkdownStyle {
     }
 
     /**
+     * A color for text that steps back behind normal text: the text color of the UI theme, moved towards the background color of the theme.<br>
+     * The inactive label color of the theme is made for disabled widgets and too faint for text that still has to be read.
+     */
+    private LookColor mutedThemeText() {
+        return LookColor.following(() -> {
+            UITheme theme = this.theme.get();
+            int text = theme.ui_interface_generic_text_color.getColorInt();
+            int background = theme.ui_interface_background_color.getColorInt();
+            return 0xFF000000 | (mutedChannel(text, background, 16) << 16) | (mutedChannel(text, background, 8) << 8) | mutedChannel(text, background, 0);
+        });
+    }
+
+    private static int mutedChannel(int text, int background, int shift) {
+        int backgroundChannel = (background >> shift) & 0xFF;
+        return backgroundChannel + Math.round((((text >> shift) & 0xFF) - backgroundChannel) * MUTED_TEXT_STRENGTH);
+    }
+
+    /**
      * The options of one headline level.
      */
     public final class Headline {
@@ -514,7 +541,7 @@ public final class MarkdownStyle {
             this.color = MarkdownStyle.this.optionalColor(key + "color", Group.HEADLINES, Impact.COMPONENTS, NONE, pick(level, PIXEL_ACCENT, PIXEL_ACCENT, WHITE), NONE);
             this.bold = MarkdownStyle.this.bool(key + "bold", Group.HEADLINES, Impact.PARSE, false, level > 1, true);
             this.decoration = MarkdownStyle.this.mode(key + "decoration", Group.HEADLINES, Impact.LAYOUT, pick(level, MarkdownHeadlineDecoration.UNDERLINE, MarkdownHeadlineDecoration.UNDERLINE, MarkdownHeadlineDecoration.NONE), pick(level, MarkdownHeadlineDecoration.RULE, MarkdownHeadlineDecoration.LEADER, MarkdownHeadlineDecoration.NONE), pick(level, MarkdownHeadlineDecoration.RULE, MarkdownHeadlineDecoration.NONE, MarkdownHeadlineDecoration.NONE));
-            this.decorationOffset = MarkdownStyle.this.size(key + "decoration_offset", Group.HEADLINES, Impact.LAYOUT, 1.0F, 3.0F, 4.0F);
+            this.decorationOffset = MarkdownStyle.this.size(key + "decoration_offset", Group.HEADLINES, Impact.LAYOUT, 1.0F, 3.0F, 3.0F);
             this.decorationThickness = MarkdownStyle.this.size(key + "decoration_thickness", Group.HEADLINES, Impact.LAYOUT, 0.5F, 1.0F, 1.0F);
             this.linePadding = MarkdownStyle.this.size(key + "line_padding", Group.HEADLINES, Impact.LAYOUT, pick(level, 8.0F, 8.0F, 6.0F), 0.0F, 0.0F);
             this.spaceAbove = MarkdownStyle.this.size(key + "space_above", Group.HEADLINES, Impact.LAYOUT, 0.0F, pick(level, 10.0F, 9.0F, 7.0F), pick(level, 14.0F, 12.0F, 10.0F));
@@ -536,7 +563,7 @@ public final class MarkdownStyle {
 
         private ListLevel(int level) {
             String key = "list_level_" + level + "_";
-            this.markerShape = MarkdownStyle.this.mode(key + "marker_shape", Group.LISTS, Impact.DRAW, MarkdownMarkerShape.SQUARE, pick(level, MarkdownMarkerShape.CURSOR, MarkdownMarkerShape.CURSOR_SMALL, MarkdownMarkerShape.DOT), MarkdownMarkerShape.SQUARE);
+            this.markerShape = MarkdownStyle.this.mode(key + "marker_shape", Group.LISTS, Impact.DRAW, MarkdownMarkerShape.SQUARE, pick(level, MarkdownMarkerShape.CURSOR, MarkdownMarkerShape.CURSOR_SMALL, MarkdownMarkerShape.DOT), pick(level, MarkdownMarkerShape.DISC, MarkdownMarkerShape.RING, MarkdownMarkerShape.DISC));
             this.markerColor = MarkdownStyle.this.color(key + "marker_color", Group.LISTS, Impact.DRAW, rgb(169, 169, 169), pick(level, PIXEL_ACCENT, PIXEL_DIM, PIXEL_DIM), MarkdownStyle.this.theme(theme -> pick(level, theme.bullet_list_dot_color_1, theme.bullet_list_dot_color_2, theme.bullet_list_dot_color_3)));
         }
 

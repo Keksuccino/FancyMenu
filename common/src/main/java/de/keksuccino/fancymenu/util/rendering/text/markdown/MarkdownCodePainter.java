@@ -40,17 +40,17 @@ final class MarkdownCodePainter {
         if ((start == null) || (end == null) || (start.parentLine == null) || (end.parentLine == null)) return;
         float inset = scaling.sized(style.blockEdgeInset.get());
         float pixel = scaling.sized(1.0F);
-        float cornerCut = scaling.sized(style.codeCornerRadius.get());
+        float radius = MarkdownPaint.cornerRadius(renderer, style.codeCornerRadius.get());
         float minX = renderer.x + scaling.padding();
         float maxX = renderer.x + renderer.getRealWidth() - scaling.padding() - inset;
         float minY = start.parentLine.getRenderY();
         float maxY = end.parentLine.getRenderY() + end.parentLine.getLineHeight() - inset;
-        MarkdownPaint.box(graphics, minX, minY, maxX, maxY, cornerCut, renderer.getRenderColor(style.codeBlockBackgroundColor));
+        MarkdownPaint.box(graphics, renderer, minX, minY, maxX, maxY, radius, renderer.getRenderColor(style.codeBlockBackgroundColor));
         if (style.codeBlockInnerShadowColor.isSet()) {
             // The shadow the upper edge of the frame throws onto the panel
             RenderingUtils.fillF(graphics, minX + pixel, minY + pixel, maxX - pixel, minY + (pixel * 2), renderer.getRenderColor(style.codeBlockInnerShadowColor));
         }
-        MarkdownPaint.frame(graphics, minX, minY, maxX, maxY, pixel, cornerCut, renderer.getRenderColor(style.codeBlockFrameTopColor), renderer.getRenderColor(style.codeBlockFrameBottomColor));
+        MarkdownPaint.frame(graphics, renderer, minX, minY, maxX, maxY, pixel, radius, renderer.getRenderColor(style.codeBlockFrameTopColor), renderer.getRenderColor(style.codeBlockFrameBottomColor));
         RenderingUtils.resetShaderColor(graphics);
     }
 
@@ -59,7 +59,7 @@ final class MarkdownCodePainter {
      */
     static void renderInline(@NotNull GuiGraphics graphics, @NotNull MarkdownTextFragment start, @NotNull MarkdownTextFragment end) {
         MarkdownRenderer renderer = start.parent;
-        MarkdownPaint.box(graphics, start.x, getInlineTop(start), getInlineRight(end), getInlineBottom(start), renderer.scaling.sized(renderer.style.codeCornerRadius.get()), renderer.getRenderColor(renderer.style.inlineCodeBackgroundColor));
+        MarkdownPaint.box(graphics, renderer, start.x, getInlineTop(start), getInlineRight(end), getInlineBottom(start), MarkdownPaint.cornerRadius(renderer, renderer.style.codeCornerRadius.get()), renderer.getRenderColor(renderer.style.inlineCodeBackgroundColor));
         RenderingUtils.resetShaderColor(graphics);
     }
 
