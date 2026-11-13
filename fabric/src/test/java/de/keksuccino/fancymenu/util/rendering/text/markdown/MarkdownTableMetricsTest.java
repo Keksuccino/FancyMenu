@@ -46,6 +46,21 @@ class MarkdownTableMetricsTest {
     }
 
     @Test
+    void inlineCodeInACellTakesTheSameSpaceAsInALineOfText() {
+        MarkdownTestRenderer renderer = new MarkdownTestRenderer("a `code` b\n\n| a `code` b |\n| --- |\n| x |", 400);
+        renderer.setTableCellPadding(5);
+        renderer.tick();
+        MarkdownTextFragment.TableContext context = renderer.tableFragment(0).tableContext;
+        MarkdownTextFragment.TableCell cell = context.rows.get(0).cells.get(0);
+        float lineWidth = renderer.fragmentContaining("code").parentLine.getLineWidth();
+
+        // The paddings of the code are part of the cell, so the column has room for the background of the code
+        assertTrue(lineWidth > ("a code b".length() * CHAR_WIDTH));
+        assertEquals(lineWidth, cell.textWidth);
+        assertEquals(lineWidth + 10, context.columnWidths[0]);
+    }
+
+    @Test
     void tableGetsMeasuredOncePerLayout() {
         MarkdownTestRenderer renderer = new MarkdownTestRenderer(TABLE, 400);
         renderer.tick();

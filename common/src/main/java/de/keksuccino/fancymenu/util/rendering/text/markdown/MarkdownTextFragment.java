@@ -222,7 +222,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                         if (currentCodeBlock == null || currentCodeBlock != fragment.codeBlockContext) {
                             // Start of a new code block
                             currentCodeBlock = fragment.codeBlockContext;
-                            codeBlockStartX = fragment.x - 1;
+                            codeBlockStartX = fragment.x;
                         }
 
                         // Check if this is the last fragment of the code block
@@ -230,7 +230,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
                         if (isLastFragment) {
                             // Render the code block background
-                            float endX = fragment.x + fragment.getRenderWidth() + 1;
+                            float endX = fragment.x + fragment.getRenderWidth();
                             if (fragment.text.endsWith(" ")) {
                                 endX -= (this.parent.getUnscaledSpaceWidth() * fragment.getScale());
                             }
@@ -241,7 +241,8 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                         currentCodeBlock = null;
                     }
 
-                    fragmentX += fragment.getTextRenderWidth();
+                    // The paddings of inline code are part of the width of its fragments, like in a line of text
+                    fragmentX += fragment.getRenderWidth();
                 }
 
                 // Second pass: render the fragments
@@ -970,7 +971,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                     TableCell cell = row.cells.get(i);
                     float textWidth = 0;
                     for (MarkdownTextFragment fragment : cell.fragments) {
-                        textWidth += fragment.getTextRenderWidth();
+                        textWidth += fragment.getRenderWidth();
                     }
                     cell.textWidth = textWidth;
                     if (i < columnCount) {
@@ -1044,7 +1045,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
         public final List<MarkdownTextFragment> fragments = new ArrayList<>();
         public TableCellAlignment alignment = TableCellAlignment.LEFT;
-        /** Width of all fragments of the cell together. Measured by {@link TableContext#updateMetrics(MarkdownRenderer)}. */
+        /** Width of all fragments of the cell together, with the paddings of the inline code in it. Measured by {@link TableContext#updateMetrics(MarkdownRenderer)}. */
         public float textWidth = 0;
 
         public enum TableCellAlignment {
