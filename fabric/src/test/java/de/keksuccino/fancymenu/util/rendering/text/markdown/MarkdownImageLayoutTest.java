@@ -10,6 +10,8 @@ import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import java.io.InputStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -90,6 +92,40 @@ class MarkdownImageLayoutTest {
         assertRealHeightMatchesLines(renderer);
         // Lines wrap the same with every image size, so the lines only get measured and positioned again
         assertEquals(layouts, renderer.layouts);
+    }
+
+    /**
+     * Textures load on another thread, so the size of an image can arrive at any moment, also while the layout measures the line of the image.
+     * The texture of this test gets its size at a different one of the looks the layout takes at it in every round.
+     *
+     * @param readsBetweenValues How many looks at the texture lie between the arrival of its width, its height and its aspect ratio. They arrive together with 0.
+     */
+    @ParameterizedTest
+    @ValueSource(ints = {0, 1, 2, 3, 4, 5, 6})
+    void imageThatFinishesLoadingWhileItsLineGetsMeasuredStillGetsItsSize(int readsBetweenValues) {
+        for (int loadsAtRead = 1; loadsAtRead <= 60; loadsAtRead++) {
+            String round = "loads at read " + loadsAtRead;
+            TestImage image = new TestImage(0, 0);
+            LoadingTexture texture = new LoadingTexture(100, 50, readsBetweenValues);
+            image.texture = texture;
+            MarkdownTestRenderer renderer = rendererWithImage("IMAGE\ntext", 200, image);
+            MarkdownTextFragment fragment = renderer.fragmentContaining("IMAGE");
+            float textLineOffset = renderer.fragmentContaining("text").parentLine.offsetY;
+            assertEquals(10, fragment.parentLine.getLineHeight(), round);
+
+            texture.readsUntilLoading = loadsAtRead;
+            // The layout measures all lines again, and looks at the image once per frame after that
+            renderer.setOptimalWidth(201);
+            for (int frame = 0; !texture.isLoaded(); frame++) {
+                assertTrue(frame < 100, round);
+                renderer.tick();
+            }
+            renderer.tick();
+
+            assertEquals(50, fragment.parentLine.getLineHeight(), round);
+            assertEquals(100, fragment.parentLine.getLineWidth(), round);
+            assertEquals(textLineOffset + 40, renderer.fragmentContaining("text").parentLine.offsetY, round);
+        }
     }
 
     @Test
@@ -294,10 +330,68 @@ class MarkdownImageLayoutTest {
 
     }
 
-    private static final class TestTexture implements ITexture {
+    /**
+     * A texture that loads the way the textures of the game do: it has the size of a placeholder until its width, its height and
+     * its aspect ratio arrive one after the other. Another thread sets them there, which can happen between any two looks at the texture.
+     */
+    private static final class LoadingTexture extends TestTexture {
 
-        private int width;
-        private int height;
+        private final int loadedWidth;
+        private final int loadedHeight;
+        private final int readsBetweenValues;
+        private AspectRatio aspectRatio = new AspectRatio(10, 10);
+        /** How many looks at the texture are left until its width arrives. It does not load while this is 0. */
+        private int readsUntilLoading = 0;
+        private int valuesToArrive = 3;
+        private int readsUntilNextValue = 0;
+
+        private LoadingTexture(int loadedWidth, int loadedHeight, int readsBetweenValues) {
+            super(10, 10);
+            this.loadedWidth = loadedWidth;
+            this.loadedHeight = loadedHeight;
+            this.readsBetweenValues = readsBetweenValues;
+        }
+
+        private boolean isLoaded() {
+            return this.valuesToArrive == 0;
+        }
+
+        private void onRead() {
+            if ((this.readsUntilLoading > 0) && (--this.readsUntilLoading == 0)) this.readsUntilNextValue = 1;
+            if ((this.readsUntilNextValue == 0) || (--this.readsUntilNextValue > 0)) return;
+            do {
+                if (this.valuesToArrive == 3) this.width = this.loadedWidth;
+                if (this.valuesToArrive == 2) this.height = this.loadedHeight;
+                if (this.valuesToArrive == 1) this.aspectRatio = new AspectRatio(this.loadedWidth, this.loadedHeight);
+                this.valuesToArrive--;
+            } while ((this.valuesToArrive > 0) && (this.readsBetweenValues == 0));
+            if (this.valuesToArrive > 0) this.readsUntilNextValue = this.readsBetweenValues;
+        }
+
+        @Override
+        public int getWidth() {
+            this.onRead();
+            return super.getWidth();
+        }
+
+        @Override
+        public int getHeight() {
+            this.onRead();
+            return super.getHeight();
+        }
+
+        @Override
+        public @NotNull AspectRatio getAspectRatio() {
+            this.onRead();
+            return this.aspectRatio;
+        }
+
+    }
+
+    private static class TestTexture implements ITexture {
+
+        protected int width;
+        protected int height;
 
         private TestTexture(int width, int height) {
             this.width = width;
