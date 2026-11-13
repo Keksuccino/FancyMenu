@@ -215,19 +215,34 @@ public final class MarkdownStyle {
 
     // ---------------------------------------------------------------- Tables
 
-    /** The space between the text of a cell and the edges of the cell. */
-    public final FloatOption tableCellPadding = this.size("table_cell_padding", Group.TABLES, Impact.LAYOUT, 8.0F, 4.0F, 5.0F);
+    /** The space between the left edge of a cell and its text. */
+    public final FloatOption tableCellPaddingLeft = this.size("table_cell_padding_left", Group.TABLES, Impact.LAYOUT, 8.0F, 4.0F, 6.0F);
+    public final FloatOption tableCellPaddingRight = this.size("table_cell_padding_right", Group.TABLES, Impact.LAYOUT, 8.0F, 4.0F, 6.0F);
+    public final FloatOption tableCellPaddingTop = this.size("table_cell_padding_top", Group.TABLES, Impact.LAYOUT, 8.0F, 3.0F, 4.0F);
+    public final FloatOption tableCellPaddingBottom = this.size("table_cell_padding_bottom", Group.TABLES, Impact.LAYOUT, 8.0F, 1.0F, 4.0F);
     public final FloatOption tableSpaceAbove = this.size("table_space_above", Group.TABLES, Impact.LAYOUT, 4.0F, 6.0F, 8.0F);
     public final FloatOption tableSpaceBelow = this.size("table_space_below", Group.TABLES, Impact.LAYOUT, 4.0F, 6.0F, 8.0F);
     /** If the first row of a table looks like a header. Otherwise it is a row like every other one. */
-    public final BooleanOption tableShowHeader = this.bool("table_show_header", Group.TABLES, Impact.DRAW, true, true, true);
+    public final BooleanOption tableShowHeader = this.bool("table_show_header", Group.TABLES, Impact.PARSE, true, true, true);
     public final ColorOption tableHeaderBackgroundColor = this.color("table_header_background_color", Group.TABLES, Impact.DRAW, rgb(50, 50, 50), rgba(255, 201, 77, 41), this.theme(theme -> theme.ui_interface_generic_text_color, 20));
+    /** The color of the text of a table header, if it has another color than normal text. */
+    public final ColorOption tableHeaderTextColor = this.optionalColor("table_header_text_color", Group.TABLES, Impact.COMPONENTS, NONE, PIXEL_ACCENT, NONE);
+    public final BooleanOption tableHeaderBold = this.bool("table_header_bold", Group.TABLES, Impact.PARSE, false, true, true);
+    /** The color of the line below a table header. */
+    public final ColorOption tableHeaderSeparatorColor = this.color("table_header_separator_color", Group.TABLES, Impact.DRAW, rgb(120, 120, 120), PIXEL_ACCENT_DIM, this.theme(theme -> theme.ui_interface_generic_text_color, 46));
+    public final FloatOption tableHeaderSeparatorThickness = this.size("table_header_separator_thickness", Group.TABLES, Impact.LAYOUT, 2.0F, 1.0F, 1.0F);
     public final ColorOption tableRowBackgroundColor = this.color("table_row_background_color", Group.TABLES, Impact.DRAW, rgb(40, 40, 40), rgba(0, 0, 0, 0), rgba(0, 0, 0, 0));
     /** If every second row has the alternate row background. */
     public final BooleanOption tableAlternateRows = this.bool("table_alternate_rows", Group.TABLES, Impact.DRAW, true, true, true);
     public final ColorOption tableAlternateRowBackgroundColor = this.color("table_alternate_row_background_color", Group.TABLES, Impact.DRAW, rgb(60, 60, 60), rgba(255, 255, 255, 13), this.theme(theme -> theme.ui_interface_generic_text_color, 9));
+    /** The color behind the whole table, below the backgrounds of its rows, if it has one. */
+    public final ColorOption tableBackgroundColor = this.optionalColor("table_background_color", Group.TABLES, Impact.DRAW, NONE, rgba(8, 10, 22, 128), NONE);
+    /** Which lines a table has. */
+    public final EnumOption<MarkdownTableGrid> tableGrid = this.mode("table_grid", Group.TABLES, Impact.LAYOUT, MarkdownTableGrid.FULL, MarkdownTableGrid.FRAME, MarkdownTableGrid.FRAME);
     public final ColorOption tableLineColor = this.color("table_line_color", Group.TABLES, Impact.DRAW, rgb(120, 120, 120), PIXEL_FRAME, this.theme(theme -> theme.ui_interface_generic_text_color, 46));
     public final FloatOption tableLineThickness = this.size("table_line_thickness", Group.TABLES, Impact.LAYOUT, 1.0F, 1.0F, 1.0F);
+    /** How much of every corner of the background and the frame of a table gets cut off. */
+    public final FloatOption tableCornerRadius = this.size("table_corner_radius", Group.TABLES, Impact.DRAW, 0.0F, 1.0F, 3.0F);
 
     // ---------------------------------------------------------------- Images
 

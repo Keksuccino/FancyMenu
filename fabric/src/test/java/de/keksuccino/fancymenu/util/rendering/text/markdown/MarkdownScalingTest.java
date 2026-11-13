@@ -127,6 +127,25 @@ class MarkdownScalingTest {
     }
 
     @Test
+    void snappedPositionsKeepCenteredLinesOnTheGridOfTheStyle() {
+        // The line is 18 pixels wide, so it has half a pixel left over when it gets centered in a text area with an odd width
+        MarkdownTestRenderer renderer = new MarkdownTestRenderer("^^^\nmid\n^^^", 109);
+        renderer.setParentRenderScale(3.0F);
+        renderer.getStyle().applyLook(MarkdownLook.PIXEL);
+        renderer.tick();
+        MarkdownTextLine line = renderer.fragmentContaining("mid").parentLine;
+
+        assertEquals(4 + 41, line.offsetX);
+
+        renderer.getStyle().snapPositions.set(false);
+        renderer.setOptimalWidth(110);
+        renderer.setOptimalWidth(109);
+        renderer.tick();
+
+        assertEquals(4 + 41.5F, renderer.fragmentContaining("mid").parentLine.offsetX);
+    }
+
+    @Test
     void positionsStayAsTheyAreWithoutSnapping() {
         MarkdownTestRenderer renderer = new MarkdownTestRenderer("one\ntwo", 200);
         renderer.setX(10.4F).setY(-37.77F);
