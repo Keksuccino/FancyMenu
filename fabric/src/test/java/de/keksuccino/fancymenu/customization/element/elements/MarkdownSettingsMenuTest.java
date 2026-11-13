@@ -13,6 +13,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -36,10 +38,26 @@ class MarkdownSettingsMenuTest {
         List<MarkdownStyleOption<?>> entries = new ArrayList<>();
         collectOptions(MarkdownSettingsMenu.LAYOUT, element, entries);
 
+        List<MarkdownStyleOption<?>> leftOut = optionsWithoutEffect(element);
         for (MarkdownStyleOption<?> option : element.style().getOptions()) {
-            assertEquals(1, entries.stream().filter(entry -> entry == option).count(), option::getKey);
+            assertEquals(leftOut.contains(option) ? 0 : 1, entries.stream().filter(entry -> entry == option).count(), option::getKey);
         }
-        assertEquals(element.style().getOptions().size(), entries.size());
+        assertEquals(element.style().getOptions().size() - leftOut.size(), entries.size());
+    }
+
+    @Test
+    void optionsWithoutAnEntryNeedTheUiFontThatElementsNeverDrawWith() throws IOException {
+        // The only options the menu leaves out are the ones for the smooth UI font
+        TestElement element = new TestElement();
+        assertEquals(List.of(element.style().fullLineHeight), optionsWithoutEffect(element));
+
+        // An element that starts to draw its text with the UI font has to offer them
+        Path elements = repositoryRoot().resolve("common/src/main/java/de/keksuccino/fancymenu/customization/element/elements");
+        for (String source : List.of("text/v2/TextElement.java", "tooltip/TooltipElement.java")) {
+            String code = Files.readString(elements.resolve(source), StandardCharsets.UTF_8);
+            assertTrue(code.contains("MarkdownSettings"), source);
+            assertFalse(code.contains("setUIFontRenderingEnabled"), source);
+        }
     }
 
     @Test
@@ -77,8 +95,14 @@ class MarkdownSettingsMenuTest {
         TestElement element = new TestElement();
         List<String> missing = new ArrayList<>();
 
+        List<MarkdownStyleOption<?>> leftOut = optionsWithoutEffect(element);
         for (MarkdownStyleOption<?> option : element.style().getOptions()) {
             String key = element.property(option).getContextMenuEntryLocalizationKeyBase();
+            if (leftOut.contains(option)) {
+                // An option without an entry needs no name
+                assertFalse(english.has(key), key);
+                continue;
+            }
             if (!english.has(key)) {
                 missing.add(key);
                 continue;
@@ -105,6 +129,23 @@ class MarkdownSettingsMenuTest {
         requireKey(english, "fancymenu.context_menu.entries.color.no_color", missing);
 
         assertTrue(missing.isEmpty(), () -> "missing in en_us.json: " + missing);
+    }
+
+    @NotNull
+    private static List<MarkdownStyleOption<?>> optionsWithoutEffect(@NotNull TestElement element) {
+        List<MarkdownStyleOption<?>> options = new ArrayList<>();
+        MarkdownSettingsMenu.WITHOUT_EFFECT_IN_ELEMENTS.forEach(option -> options.add(option.apply(element.style())));
+        return options;
+    }
+
+    @NotNull
+    private static Path repositoryRoot() {
+        Path current = Path.of("").toAbsolutePath().normalize();
+        while (current != null) {
+            if (Files.isRegularFile(current.resolve("settings.gradle")) || Files.isRegularFile(current.resolve("settings.gradle.kts"))) return current;
+            current = current.getParent();
+        }
+        throw new IllegalStateException("Repository root not found");
     }
 
     private static void requireKey(@NotNull JsonObject english, @NotNull String key, @NotNull List<String> missing) {
