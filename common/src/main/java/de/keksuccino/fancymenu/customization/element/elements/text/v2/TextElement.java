@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.element.elements.text.v2;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.MarkdownSettings;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
@@ -50,18 +51,9 @@ public class TextElement extends AbstractElement {
     @NotNull
     public volatile ScrollArea scrollArea;
 
-    public final Property.ColorProperty baseColor = putProperty(Property.hexColorProperty("base_color", DrawableColor.WHITE.getHex(), true, "fancymenu.elements.text.base_color"));
     public final Property.ColorProperty scrollGrabberColorHexNormal = putProperty(Property.hexColorProperty("grabber_color_normal", null, true, "fancymenu.elements.text.scroll_grabber_color.normal"));
     public final Property.ColorProperty scrollGrabberColorHexHover = putProperty(Property.hexColorProperty("grabber_color_hover", null, true, "fancymenu.elements.text.scroll_grabber_color.hover"));
-    public final Property.FloatProperty textScale = putProperty(Property.floatProperty("scale", 1.0F, "fancymenu.elements.text.scale"));
-    public final Property.IntegerProperty textBorder = putProperty(Property.integerProperty("text_border", 2, "fancymenu.elements.text.text_border"));
-    public final Property.IntegerProperty lineSpacing = putProperty(Property.integerProperty("line_spacing", 2, "fancymenu.elements.text.line_spacing"));
-    public final Property.IntegerProperty quoteIndent = putProperty(Property.integerProperty("quote_indent", 8, "fancymenu.elements.text.markdown.quote.indent"));
-    public final Property.IntegerProperty bulletListIndent = putProperty(Property.integerProperty("bullet_list_indent", 8, "fancymenu.elements.text.markdown.bullet_list.indent"));
-    public final Property.IntegerProperty bulletListSpacing = putProperty(Property.integerProperty("bullet_list_spacing", 3, "fancymenu.elements.text.markdown.bullet_list.spacing"));
-    public final Property.FloatProperty tableLineThickness = putProperty(Property.floatProperty("table_line_thickness", 1.0F, "fancymenu.elements.text.markdown.tables.line_thickness"));
-    public final Property.FloatProperty tableCellPadding = putProperty(Property.floatProperty("table_cell_padding", 8.0F, "fancymenu.elements.text.markdown.tables.cell_padding"));
-    public final Property.FloatProperty tableMargin = putProperty(Property.floatProperty("table_margin", 4.0F, "fancymenu.elements.text.markdown.tables.margin"));
+    public final MarkdownSettings markdownSettings = new MarkdownSettings(this, this.markdownRenderer);
 
     protected List<String> lastLines;
     protected IText lastIText;
@@ -189,7 +181,7 @@ public class TextElement extends AbstractElement {
 
     protected void renderTick() {
 
-        this.syncMarkdownRendererProperties();
+        this.markdownSettings.tick();
 
         //If IText instance or its content changes, update element
         if (this.sourceMode == SourceMode.RESOURCE) {
@@ -263,58 +255,6 @@ public class TextElement extends AbstractElement {
             this.scrollArea.horizontalScrollBar.hoverBarTexture = null;
         }
 
-    }
-
-    protected void syncMarkdownRendererProperties() {
-        String baseColorHex = this.baseColor.getHex();
-        if (!Objects.equals(this.markdownRenderer.getTextBaseColor().getHex(), baseColorHex)) {
-            this.markdownRenderer.setTextBaseColor(this.baseColor.getDrawable());
-        }
-
-        float scale = Math.max(0.0F, this.textScale.getFloat());
-        if (this.markdownRenderer.getTextBaseScale() != scale) {
-            this.markdownRenderer.setTextBaseScale(scale);
-        }
-
-        int border = Math.max(0, this.textBorder.getInteger());
-        if ((int)this.markdownRenderer.getBorder() != border) {
-            this.markdownRenderer.setBorder(border);
-        }
-
-        int spacing = Math.max(0, this.lineSpacing.getInteger());
-        if ((int)this.markdownRenderer.getLineSpacing() != spacing) {
-            this.markdownRenderer.setLineSpacing(spacing);
-        }
-
-        int quoteIndentValue = Math.max(0, this.quoteIndent.getInteger());
-        if ((int)this.markdownRenderer.getQuoteIndent() != quoteIndentValue) {
-            this.markdownRenderer.setQuoteIndent(quoteIndentValue);
-        }
-
-        int bulletIndentValue = Math.max(0, this.bulletListIndent.getInteger());
-        if ((int)this.markdownRenderer.getBulletListIndent() != bulletIndentValue) {
-            this.markdownRenderer.setBulletListIndent(bulletIndentValue);
-        }
-
-        int bulletSpacingValue = Math.max(0, this.bulletListSpacing.getInteger());
-        if ((int)this.markdownRenderer.getBulletListSpacing() != bulletSpacingValue) {
-            this.markdownRenderer.setBulletListSpacing(bulletSpacingValue);
-        }
-
-        float lineThickness = Math.max(0.0F, this.tableLineThickness.getFloat());
-        if (this.markdownRenderer.getTableLineThickness() != lineThickness) {
-            this.markdownRenderer.setTableLineThickness(lineThickness);
-        }
-
-        float cellPadding = Math.max(0.0F, this.tableCellPadding.getFloat());
-        if (this.markdownRenderer.getTableCellPadding() != cellPadding) {
-            this.markdownRenderer.setTableCellPadding(cellPadding);
-        }
-
-        float margin = Math.max(0.0F, this.tableMargin.getFloat());
-        if (this.markdownRenderer.getTableMargin() != margin) {
-            this.markdownRenderer.setTableMargin(margin);
-        }
     }
 
     /**
