@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
+import de.keksuccino.fancymenu.util.rendering.ui.theme.UITheme;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.FormattedText;
 import org.jetbrains.annotations.NotNull;
@@ -12,11 +13,19 @@ import java.util.List;
  */
 final class MarkdownTestRenderer extends MarkdownRenderer {
 
+    /** The UI theme the colors of the neutral look follow. Tests change its colors to act like a theme switch. */
+    final UITheme theme = new UITheme("test", "test");
     int parses = 0;
     int layouts = 0;
 
     MarkdownTestRenderer() {
-        super(new TestFont());
+        this(new UITheme[1]);
+    }
+
+    private MarkdownTestRenderer(UITheme[] theme) {
+        // The supplier gets asked after the renderer got built, which is when the theme of this renderer exists
+        super(new TestFont(), () -> theme[0]);
+        theme[0] = this.theme;
     }
 
     MarkdownTestRenderer(@NotNull String text, float optimalWidth) {

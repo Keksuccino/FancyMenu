@@ -5,8 +5,11 @@ import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderScaleUtil;
 import de.keksuccino.fancymenu.util.rendering.RenderTranslationUtil;
+import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyle;
+import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyleOption;
 import de.keksuccino.fancymenu.util.rendering.ui.FocuslessContainerEventHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.theme.UITheme;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -19,13 +22,13 @@ import net.minecraft.network.chat.Component;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 @SuppressWarnings("unused")
 public class MarkdownRenderer implements Renderable, FocuslessContainerEventHandler, NarratableEntry, NavigatableWidget {
@@ -56,30 +59,6 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     protected float realWidth;
     protected float realHeight;
     @NotNull
-    protected DrawableColor codeBlockSingleLineColor = DrawableColor.of(new Color(115, 115, 115));
-    @NotNull
-    protected DrawableColor codeBlockMultiLineColor = DrawableColor.of(new Color(86, 86, 86));
-    @NotNull
-    protected DrawableColor headlineUnderlineColor = DrawableColor.of(new Color(169, 169, 169));
-    @NotNull
-    protected DrawableColor separationLineColor = DrawableColor.of(new Color(169, 169, 169));
-    @NotNull
-    protected DrawableColor hyperlinkColor = DrawableColor.of(new Color(7, 113, 252));
-    @NotNull
-    protected DrawableColor textClickEventColor = DrawableColor.of(new Color(7, 113, 252));
-    @NotNull
-    protected DrawableColor textHoverEventColor = DrawableColor.of(new Color(7, 113, 252));
-    @NotNull
-    protected DrawableColor quoteColor = DrawableColor.of(new Color(129, 129, 129));
-    protected float quoteIndent = 8;
-    protected boolean quoteItalic = false;
-    @NotNull
-    protected DrawableColor bulletListDotColor = DrawableColor.of(new Color(169, 169, 169));
-    protected float bulletListIndent = 8;
-    protected float bulletListSpacing = 3;
-    @NotNull
-    protected DrawableColor textBaseColor = DrawableColor.WHITE;
-    @NotNull
     protected TextCase textCase = TextCase.NORMAL;
     protected float textBaseScale = 1.0f;
     protected boolean autoLineBreaks = true;
@@ -90,29 +69,13 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     protected boolean numberedLists = false;
     /** If a quote that starts with a marker line like "> [!NOTE]" is a callout. */
     protected boolean callouts = false;
-    protected boolean textShadow = true;
     protected boolean uiFontRenderingEnabled = false;
     protected float textOpacity = 1.0F;
-    protected float lineSpacing = 2;
-    protected float border = 2;
     public boolean skipRefresh = false;
     @Nullable
     protected Float parentRenderScale = null;
     @NotNull
     protected final Font font;
-    @NotNull
-    protected DrawableColor tableLineColor = DrawableColor.of(new Color(120, 120, 120));
-    @NotNull
-    protected DrawableColor tableHeaderBackgroundColor = DrawableColor.of(new Color(50, 50, 50));
-    @NotNull
-    protected DrawableColor tableRowBackgroundColor = DrawableColor.of(new Color(40, 40, 40));
-    @NotNull
-    protected DrawableColor tableAlternateRowColor = DrawableColor.of(new Color(60, 60, 60));
-    protected float tableLineThickness = 1.0f;
-    protected float tableCellPadding = 8.0f;
-    protected float tableMargin = 4.0f;
-    protected boolean tableAlternateRowColors = true;
-    protected boolean tableShowHeader = true;
     protected boolean dragging;
     @Nullable
     protected TextEventHandler textEventHandler = null;
@@ -134,9 +97,10 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     protected boolean refreshing = false;
     /**
      * Counts the changes to settings that the render components of fragments get built from without the fragments knowing:
-     * the colors of quotes, hyperlinks and text events, the text case and italic quotes. Fragments cache their component per version.
+     * the text case and every option of the style that is part of the components. Fragments cache their component per version.
      */
     protected int fragmentStyleVersion = 0;
+    protected final MarkdownStyle style;
     protected final List<MarkdownTextLine> lines = new ArrayList<>();
     protected final List<MarkdownTextFragment> fragments = new ArrayList<>();
     final MarkdownTextWidthCache textWidthCache = new MarkdownTextWidthCache(this);
@@ -148,7 +112,15 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     }
 
     MarkdownRenderer(@NotNull Font font) {
+        this(font, () -> UIBase.getUITheme());
+    }
+
+    /**
+     * @param theme The UI theme the colors of the neutral look follow.
+     */
+    MarkdownRenderer(@NotNull Font font, @NotNull Supplier<UITheme> theme) {
         this.font = Objects.requireNonNull(font);
+        this.style = new MarkdownStyle(this::onStyleChanged, theme);
     }
 
     @Override
@@ -221,6 +193,10 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
             if (startOfFrame || (this.lastTextPlaceholders == null)) {
                 this.updateRenderText();
             }
+            if (startOfFrame) {
+                MarkdownStyleOption.Impact impact = this.style.updateFollowedColors();
+                if (impact != null) this.onStyleChanged(impact);
+            }
             if (this.skipRefresh) return;
             if (this.parseNeeded) {
                 this.parseNeeded = false;
@@ -280,6 +256,34 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
         t = StringUtils.replace(t, NEWLINE_ESCAPED, NEWLINE);
         if (this.removeHtmlBreaks) t = StringUtils.replace(t, HTML_BREAK, EMPTY_STRING);
         return t;
+    }
+
+    /**
+     * Returns the style of the renderer, which holds every option that decides how the text looks.
+     */
+    @NotNull
+    public MarkdownStyle getStyle() {
+        return this.style;
+    }
+
+    /**
+     * Marks what a change to the style made outdated.
+     */
+    protected void onStyleChanged(@NotNull MarkdownStyleOption.Impact impact) {
+        switch (impact) {
+            case PARSE:
+                this.fragmentStyleVersion++;
+                this.parseNeeded = true;
+                break;
+            case LAYOUT:
+                this.layoutNeeded = true;
+                break;
+            case COMPONENTS:
+                this.fragmentStyleVersion++;
+                break;
+            default:
+                break;
+        }
     }
 
     public boolean isParseMarkdown() {
@@ -452,85 +456,96 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
 
     @NotNull
     public DrawableColor getSeparationLineColor() {
-        return this.separationLineColor;
+        return Objects.requireNonNull(this.style.separatorColor.get());
     }
 
     public MarkdownRenderer setSeparationLineColor(@NotNull DrawableColor separationLineColor) {
-        this.separationLineColor = separationLineColor;
+        this.style.separatorColor.set(separationLineColor);
         return this;
     }
 
     @NotNull
     public DrawableColor getCodeBlockSingleLineColor() {
-        return this.codeBlockSingleLineColor;
+        return Objects.requireNonNull(this.style.inlineCodeBackgroundColor.get());
     }
 
     public MarkdownRenderer setCodeBlockSingleLineColor(@NotNull DrawableColor codeBlockSingleLineColor) {
-        this.codeBlockSingleLineColor = codeBlockSingleLineColor;
+        this.style.inlineCodeBackgroundColor.set(codeBlockSingleLineColor);
         return this;
     }
 
     @NotNull
     public DrawableColor getCodeBlockMultiLineColor() {
-        return this.codeBlockMultiLineColor;
+        return Objects.requireNonNull(this.style.codeBlockBackgroundColor.get());
     }
 
     public MarkdownRenderer setCodeBlockMultiLineColor(@NotNull DrawableColor codeBlockMultiLineColor) {
-        this.codeBlockMultiLineColor = codeBlockMultiLineColor;
+        this.style.codeBlockBackgroundColor.set(codeBlockMultiLineColor);
         return this;
     }
 
+    /**
+     * Returns the color the biggest headlines get decorated with. Every headline level has a color of its own in the {@linkplain #getStyle() style}.
+     */
     @NotNull
     public DrawableColor getHeadlineUnderlineColor() {
-        return this.headlineUnderlineColor;
+        return Objects.requireNonNull(this.style.headline(1).decorationColor.get());
     }
 
+    /**
+     * Sets the color the headlines of all levels get decorated with.
+     */
     public MarkdownRenderer setHeadlineLineColor(@NotNull DrawableColor headlineUnderlineColor) {
-        this.headlineUnderlineColor = headlineUnderlineColor;
+        for (int level = 1; level <= 3; level++) {
+            this.style.headline(level).decorationColor.set(headlineUnderlineColor);
+        }
         return this;
     }
 
     @NotNull
     public DrawableColor getHyperlinkColor() {
-        return this.hyperlinkColor;
+        return Objects.requireNonNull(this.style.hyperlinkColor.get());
     }
 
     public MarkdownRenderer setHyperlinkColor(@NotNull DrawableColor hyperlinkColor) {
-        this.hyperlinkColor = Objects.requireNonNull(hyperlinkColor);
-        this.fragmentStyleVersion++;
+        this.style.hyperlinkColor.set(hyperlinkColor);
         return this;
     }
 
     @NotNull
     public DrawableColor getTextClickEventColor() {
-        return this.textClickEventColor;
+        return Objects.requireNonNull(this.style.clickEventColor.get());
     }
 
     public MarkdownRenderer setTextClickEventColor(@NotNull DrawableColor textClickEventColor) {
-        this.textClickEventColor = Objects.requireNonNull(textClickEventColor);
-        this.fragmentStyleVersion++;
+        this.style.clickEventColor.set(textClickEventColor);
         return this;
     }
 
     @NotNull
     public DrawableColor getTextHoverEventColor() {
-        return this.textHoverEventColor;
+        return Objects.requireNonNull(this.style.hoverEventColor.get());
     }
 
     public MarkdownRenderer setTextHoverEventColor(@NotNull DrawableColor textHoverEventColor) {
-        this.textHoverEventColor = Objects.requireNonNull(textHoverEventColor);
-        this.fragmentStyleVersion++;
+        this.style.hoverEventColor.set(textHoverEventColor);
         return this;
     }
 
+    /**
+     * Returns the color of the text of quotes. The bar next to a quote has a color of its own in the {@linkplain #getStyle() style}.
+     */
     @NotNull
     public DrawableColor getQuoteColor() {
-        return this.quoteColor;
+        return Objects.requireNonNull(this.style.quoteTextColor.get());
     }
 
+    /**
+     * Sets the color of the text of quotes and of the bar next to them.
+     */
     public MarkdownRenderer setQuoteColor(@NotNull DrawableColor quoteColor) {
-        this.quoteColor = Objects.requireNonNull(quoteColor);
-        this.fragmentStyleVersion++;
+        this.style.quoteTextColor.set(quoteColor);
+        this.style.quoteBarColor.set(quoteColor);
         return this;
     }
 
@@ -563,11 +578,11 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
 
     @NotNull
     public DrawableColor getTextBaseColor() {
-        return this.textBaseColor;
+        return Objects.requireNonNull(this.style.textColor.get());
     }
 
     public MarkdownRenderer setTextBaseColor(@NotNull DrawableColor textBaseColor) {
-        this.textBaseColor = textBaseColor;
+        this.style.textColor.set(textBaseColor);
         return this;
     }
 
@@ -588,72 +603,66 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
         return this;
     }
 
+    /**
+     * Returns the color of the markers in front of the items of the first list level. Every list level has a color of its own in the {@linkplain #getStyle() style}.
+     */
     @NotNull
     public DrawableColor getBulletListDotColor() {
-        return this.bulletListDotColor;
+        return Objects.requireNonNull(this.style.listLevel(1).markerColor.get());
     }
 
+    /**
+     * Sets the color of the markers in front of the items of all list levels.
+     */
     public MarkdownRenderer setBulletListDotColor(@NotNull DrawableColor bulletListDotColor) {
-        this.bulletListDotColor = bulletListDotColor;
+        for (int level = 1; level <= 3; level++) {
+            this.style.listLevel(level).markerColor.set(bulletListDotColor);
+        }
         return this;
     }
 
     public float getBulletListIndent() {
-        return this.bulletListIndent;
+        return this.style.listIndent.get();
     }
 
     public MarkdownRenderer setBulletListIndent(float bulletListIndent) {
-        if (this.bulletListIndent != bulletListIndent) {
-            this.bulletListIndent = bulletListIndent;
-            this.layoutNeeded = true;
-        }
+        this.style.listIndent.set(bulletListIndent);
         return this;
     }
 
     public float getBulletListSpacing() {
-        return this.bulletListSpacing;
+        return this.style.listItemSpacing.get();
     }
 
     public MarkdownRenderer setBulletListSpacing(float bulletListSpacing) {
-        if (this.bulletListSpacing != bulletListSpacing) {
-            this.bulletListSpacing = bulletListSpacing;
-            this.layoutNeeded = true;
-        }
+        this.style.listItemSpacing.set(bulletListSpacing);
         return this;
     }
 
     public boolean isQuoteItalic() {
-        return this.quoteItalic;
+        return this.style.quoteItalic.get();
     }
 
     public MarkdownRenderer setQuoteItalic(boolean quoteItalic) {
-        if (this.quoteItalic != quoteItalic) {
-            this.quoteItalic = quoteItalic;
-            this.fragmentStyleVersion++;
-            // Fragments measure their text in the style it gets rendered in
-            this.parseNeeded = true;
-        }
+        this.style.quoteItalic.set(quoteItalic);
         return this;
     }
 
     public float getQuoteIndent() {
-        return this.quoteIndent;
+        return this.style.quoteIndent.get();
     }
 
     public MarkdownRenderer setQuoteIndent(float quoteIndent) {
-        if (this.quoteIndent != quoteIndent) {
-            this.quoteIndent = quoteIndent;
-            this.layoutNeeded = true;
-        }
+        this.style.quoteIndent.set(quoteIndent);
         return this;
     }
 
     public boolean isTextShadow() {
-        return this.textShadow;
+        return this.style.textShadow.get();
     }
 
     public MarkdownRenderer setTextShadow(boolean textShadow) {
-        this.textShadow = textShadow;
+        this.style.textShadow.set(textShadow);
         return this;
     }
 
@@ -671,121 +680,111 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     }
 
     public float getLineSpacing() {
-        return this.lineSpacing;
+        return this.style.lineSpacing.get();
     }
 
     public MarkdownRenderer setLineSpacing(float lineSpacing) {
-        if (this.lineSpacing != lineSpacing) {
-            this.lineSpacing = lineSpacing;
-            this.layoutNeeded = true;
-        }
+        this.style.lineSpacing.set(lineSpacing);
         return this;
     }
 
+    /**
+     * Returns the space between the edges of the renderer and its text area, which is the padding of the {@linkplain #getStyle() style}.
+     */
     public float getBorder() {
-        return Math.max(2.0F, this.border); // Cap min border size at 2, so text doesn't get cut off
+        return this.style.padding.get();
     }
 
+    /**
+     * Sets the space between the edges of the renderer and its text area. It is at least 2, so text doesn't get cut off by containers that clip their edges.
+     */
     public MarkdownRenderer setBorder(float border) {
-        border = Math.max(2.0F, border); // Cap min border size at 2, so text doesn't get cut off
-        if (this.border != border) {
-            this.border = border;
-            this.layoutNeeded = true;
-        }
+        this.style.padding.set(border);
         return this;
     }
 
     @NotNull
     public DrawableColor getTableLineColor() {
-        return this.tableLineColor;
+        return Objects.requireNonNull(this.style.tableLineColor.get());
     }
 
     public MarkdownRenderer setTableLineColor(@NotNull DrawableColor tableLineColor) {
-        this.tableLineColor = tableLineColor;
+        this.style.tableLineColor.set(tableLineColor);
         return this;
     }
 
     @NotNull
     public DrawableColor getTableHeaderBackgroundColor() {
-        return this.tableHeaderBackgroundColor;
+        return Objects.requireNonNull(this.style.tableHeaderBackgroundColor.get());
     }
 
     public MarkdownRenderer setTableHeaderBackgroundColor(@NotNull DrawableColor tableHeaderBackgroundColor) {
-        this.tableHeaderBackgroundColor = tableHeaderBackgroundColor;
+        this.style.tableHeaderBackgroundColor.set(tableHeaderBackgroundColor);
         return this;
     }
 
     @NotNull
     public DrawableColor getTableRowBackgroundColor() {
-        return this.tableRowBackgroundColor;
+        return Objects.requireNonNull(this.style.tableRowBackgroundColor.get());
     }
 
     public MarkdownRenderer setTableRowBackgroundColor(@NotNull DrawableColor tableRowBackgroundColor) {
-        this.tableRowBackgroundColor = tableRowBackgroundColor;
+        this.style.tableRowBackgroundColor.set(tableRowBackgroundColor);
         return this;
     }
 
     @NotNull
     public DrawableColor getTableAlternateRowColor() {
-        return this.tableAlternateRowColor;
+        return Objects.requireNonNull(this.style.tableAlternateRowBackgroundColor.get());
     }
 
     public MarkdownRenderer setTableAlternateRowColor(@NotNull DrawableColor tableAlternateRowColor) {
-        this.tableAlternateRowColor = tableAlternateRowColor;
+        this.style.tableAlternateRowBackgroundColor.set(tableAlternateRowColor);
         return this;
     }
 
     public float getTableLineThickness() {
-        return this.tableLineThickness;
+        return this.style.tableLineThickness.get();
     }
 
     public MarkdownRenderer setTableLineThickness(float tableLineThickness) {
-        if (this.tableLineThickness != tableLineThickness) {
-            this.tableLineThickness = tableLineThickness;
-            this.layoutNeeded = true;
-        }
+        this.style.tableLineThickness.set(tableLineThickness);
         return this;
     }
 
     public float getTableCellPadding() {
-        return this.tableCellPadding;
+        return this.style.tableCellPadding.get();
     }
 
     public MarkdownRenderer setTableCellPadding(float tableCellPadding) {
-        if (this.tableCellPadding != tableCellPadding) {
-            this.tableCellPadding = tableCellPadding;
-            this.layoutNeeded = true;
-        }
+        this.style.tableCellPadding.set(tableCellPadding);
         return this;
     }
 
     public boolean isTableAlternateRowColors() {
-        return this.tableAlternateRowColors;
+        return this.style.tableAlternateRows.get();
     }
 
     public MarkdownRenderer setTableAlternateRowColors(boolean tableAlternateRowColors) {
-        this.tableAlternateRowColors = tableAlternateRowColors;
+        this.style.tableAlternateRows.set(tableAlternateRowColors);
         return this;
     }
 
     public boolean isTableShowHeader() {
-        return this.tableShowHeader;
+        return this.style.tableShowHeader.get();
     }
 
     public MarkdownRenderer setTableShowHeader(boolean tableShowHeader) {
-        this.tableShowHeader = tableShowHeader;
+        this.style.tableShowHeader.set(tableShowHeader);
         return this;
     }
 
     public float getTableMargin() {
-        return this.tableMargin;
+        return this.style.tableMargin.get();
     }
 
     public MarkdownRenderer setTableMargin(float tableMargin) {
-        if (this.tableMargin != tableMargin) {
-            this.tableMargin = tableMargin;
-            this.layoutNeeded = true;
-        }
+        this.style.tableMargin.set(tableMargin);
         return this;
     }
 
@@ -794,6 +793,10 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
      */
     protected int getRenderColor(@NotNull DrawableColor color) {
         return applyOpacity(color.getColorInt(), this.textOpacity);
+    }
+
+    protected int getRenderColor(@NotNull MarkdownStyleOption.ColorOption color) {
+        return applyOpacity(color.argb(), this.textOpacity);
     }
 
     protected static int applyOpacity(int color, float opacity) {
