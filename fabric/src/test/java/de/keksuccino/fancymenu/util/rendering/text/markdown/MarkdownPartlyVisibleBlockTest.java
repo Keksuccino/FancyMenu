@@ -12,7 +12,7 @@ class MarkdownPartlyVisibleBlockTest {
     private static final String CODE_BLOCK = "before\n```\ncode one\ncode two\ncode three\ncode four\n```\nafter";
 
     @Test
-    void codeBlockBackgroundGetsDrawnByItsFirstFragmentWhileThatOneIsVisible() {
+    void codeBlockBackgroundGetsDrawnByItsFirstLineWhileThatOneIsVisible() {
         MarkdownTestRenderer renderer = new MarkdownTestRenderer(CODE_BLOCK, 400);
         renderer.tick();
 
@@ -116,13 +116,14 @@ class MarkdownPartlyVisibleBlockTest {
         return renderer.fragmentContaining(textInLine).parentLine.fragments.get(0);
     }
 
+    /**
+     * Returns the first fragments of the lines that draw the panel of their code block.
+     */
     private static List<MarkdownTextFragment> codeBlockBackgroundDrawers(MarkdownTestRenderer renderer) {
         List<MarkdownTextFragment> drawers = new ArrayList<>();
         for (MarkdownTextLine line : renderer.lines) {
             if (!renderer.layout.isLineVisible(line)) continue;
-            for (MarkdownTextFragment fragment : line.fragments) {
-                if ((fragment.codeBlockContext != null) && !fragment.codeBlockContext.singleLine && fragment.drawsCodeBlockBackground()) drawers.add(fragment);
-            }
+            if ((line.blockType == MarkdownBlockType.CODE_BLOCK) && line.drawsCodeBlockPanel()) drawers.add(line.fragments.get(0));
         }
         return drawers;
     }
