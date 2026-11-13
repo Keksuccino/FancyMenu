@@ -46,6 +46,9 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     public boolean autoLineBreakAfter;
     public boolean endOfWord;
     public ResourceSupplier<ITexture> imageSupplier = null;
+    /** The alternative text of the image of this fragment, without the backslashes of its escaped characters. NULL if the fragment is no image. */
+    @Nullable
+    public String imageAltText = null;
     public boolean separationLine;
     public DrawableColor textColor = null;
     public boolean bold;

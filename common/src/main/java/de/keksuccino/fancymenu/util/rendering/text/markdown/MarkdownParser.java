@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
-import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.text.color.TextColorFormatter;
@@ -402,13 +401,13 @@ public class MarkdownParser {
                 //Handle Hyperlink Image
                 if (isStartOfLine && (c == OPEN_SQUARE_BRACKETS_CHAR) && (builder.codeBlockContext == null) && !builder.plainText) {
                     if (markdownText.startsWith(FORMATTING_CODE_HYPERLINK_IMAGE_PREFIX, index)) {
-                        List<String> hyperlinkImage = getHyperlinkImageFromLine(markdownText.substring(index, lineEnd));
+                        HyperlinkImage hyperlinkImage = getHyperlinkImageFromLine(markdownText.substring(index, lineEnd));
                         if (hyperlinkImage != null) {
                             builder.hyperlink = new Hyperlink();
-                            builder.hyperlink.link = hyperlinkImage.get(1);
-                            setImageToBuilder(builder, hyperlinkImage.get(0));
+                            builder.hyperlink.link = hyperlinkImage.link();
+                            setImageToBuilder(builder, hyperlinkImage.imageSource(), hyperlinkImage.imageAltText());
                             lastBuiltFragment = addFragment(fragments, builder.build(true, true));
-                            builder.imageSupplier = null;
+                            setImageToBuilder(builder, null, null);
                             builder.hyperlink = null;
                             skipLine = true;
                             continue;
@@ -418,13 +417,18 @@ public class MarkdownParser {
 
                 //Handle Image
                 if (isStartOfLine && (c == EXCLAMATION_MARK_CHAR) && (builder.codeBlockContext == null) && !builder.plainText) {
-                    String imageLink = getImageFromLine(markdownText, index);
-                    if (imageLink != null) {
-                        setImageToBuilder(builder, imageLink);
-                        lastBuiltFragment = addFragment(fragments, builder.build(true, true));
-                        builder.imageSupplier = null;
-                        skipLine = true;
-                        continue;
+                    if (markdownText.startsWith(FORMATTING_CODE_IMAGE_PREFIX, index)) {
+                        int labelStart = index + FORMATTING_CODE_IMAGE_PREFIX.length();
+                        int labelEnd = getLinkLabelEnd(markdownText, labelStart);
+                        int sourceStart = labelEnd + FORMATTING_CODE_HYPERLINK_INNER_PREFIX.length();
+                        int sourceEnd = (labelEnd != -1) ? getLinkTargetEnd(markdownText, sourceStart) : -1;
+                        if (sourceEnd != -1) {
+                            setImageToBuilder(builder, markdownText.substring(sourceStart, sourceEnd), unescape(markdownText, labelStart, labelEnd));
+                            lastBuiltFragment = addFragment(fragments, builder.build(true, true));
+                            setImageToBuilder(builder, null, null);
+                            skipLine = true;
+                            continue;
+                        }
                     }
                 }
 
@@ -724,8 +728,28 @@ public class MarkdownParser {
         return (backslashCount % 2) == 1;
     }
 
-    protected static void setImageToBuilder(@NotNull FragmentBuilder builder, @NotNull String imageSource) {
-        builder.imageSupplier = ResourceSupplier.image(imageSource);
+    /**
+     * Makes the builder build image fragments with the given source and alternative text, or no image fragments if the source is NULL.
+     */
+    protected static void setImageToBuilder(@NotNull FragmentBuilder builder, @Nullable String imageSource, @Nullable String imageAltText) {
+        builder.imageSupplier = (imageSource != null) ? ResourceSupplier.image(imageSource) : null;
+        builder.imageAltText = imageAltText;
+    }
+
+    /**
+     * Returns the text between the two indexes without the backslashes of its escaped characters.
+     */
+    @NotNull
+    protected static String unescape(@NotNull String text, int start, int end) {
+        int firstBackslash = indexOf(text, BACKSLASH_CHAR, start, end);
+        if (firstBackslash == -1) return text.substring(start, end);
+        StringBuilder unescaped = new StringBuilder(end - start).append(text, start, firstBackslash);
+        for (int i = firstBackslash; i < end; i++) {
+            // The character behind the backslash of an escape gets added as it is, even if it is a backslash as well
+            if ((text.charAt(i) == BACKSLASH_CHAR) && (i + 1 < end) && isEscapableMarkdownCharacter(text.charAt(i + 1))) i++;
+            unescaped.append(text.charAt(i));
+        }
+        return unescaped.toString();
     }
 
     /**
@@ -767,18 +791,19 @@ public class MarkdownParser {
     }
 
     @Nullable
-    protected static List<String> getHyperlinkImageFromLine(@NotNull String line) {
+    protected static HyperlinkImage getHyperlinkImageFromLine(@NotNull String line) {
         if (line.startsWith(FORMATTING_CODE_HYPERLINK_IMAGE_PREFIX)) {
             int imageStart = line.indexOf(FORMATTING_CODE_IMAGE_PREFIX, 1);
             while (imageStart != -1) {
-                int imageLabelEnd = getLinkLabelEnd(line, imageStart + FORMATTING_CODE_IMAGE_PREFIX.length());
+                int imageLabelStart = imageStart + FORMATTING_CODE_IMAGE_PREFIX.length();
+                int imageLabelEnd = getLinkLabelEnd(line, imageLabelStart);
                 int imageSourceStart = imageLabelEnd + FORMATTING_CODE_HYPERLINK_INNER_PREFIX.length();
                 int imageEnd = (imageLabelEnd != -1) ? getLinkTargetEnd(line, imageSourceStart) : -1;
                 if (imageEnd != -1) {
                     // The hyperlink is what remains of the line without the image. The image ends at the bracket that closes its source,
                     // which is not the first closing round bracket behind its start if its label holds round brackets as well.
                     String hyperLink = getHyperlinkFromLine(line.substring(0, imageStart) + line.substring(imageEnd + 1), 0);
-                    return (hyperLink != null) ? ListUtils.of(line.substring(imageSourceStart, imageEnd), hyperLink) : null;
+                    return (hyperLink != null) ? new HyperlinkImage(line.substring(imageSourceStart, imageEnd), unescape(line, imageLabelStart, imageLabelEnd), hyperLink) : null;
                 }
                 imageStart = line.indexOf(FORMATTING_CODE_IMAGE_PREFIX, imageStart + 1);
             }
@@ -787,12 +812,9 @@ public class MarkdownParser {
     }
 
     /**
-     * Returns the source of the image that starts at the given index, or NULL if there is no valid image.
+     * An image that is a hyperlink ("[![alternative text](image source)](link)").
      */
-    @Nullable
-    protected static String getImageFromLine(@NotNull String text, int imageStart) {
-        if (!text.startsWith(FORMATTING_CODE_IMAGE_PREFIX, imageStart)) return null;
-        return getLinkTarget(text, imageStart + FORMATTING_CODE_IMAGE_PREFIX.length());
+    protected record HyperlinkImage(@NotNull String imageSource, @NotNull String imageAltText, @NotNull String link) {
     }
 
     @Nullable
@@ -1205,6 +1227,7 @@ public class MarkdownParser {
         protected final StringBuilder text = new StringBuilder();
         protected DrawableColor textColor = null;
         protected ResourceSupplier<ITexture> imageSupplier = null;
+        protected String imageAltText = null;
         protected boolean separationLine = false;
         protected boolean bold = false;
         protected boolean italic = false;
@@ -1236,6 +1259,7 @@ public class MarkdownParser {
             frag.font = font;
             frag.textColor = textColor;
             frag.imageSupplier = imageSupplier;
+            frag.imageAltText = imageAltText;
             frag.separationLine = separationLine;
             if (separationLine) {
                 frag.unscaledTextHeight = 1;
