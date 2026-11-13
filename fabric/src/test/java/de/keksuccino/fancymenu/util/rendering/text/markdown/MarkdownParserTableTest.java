@@ -1,14 +1,19 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
+import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.HeadlineType;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.TableCell;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment.TableRow;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.List;
 
+import static de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownParserTestSupport.TEST_FONT;
 import static de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownParserTestSupport.joinText;
 import static de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownParserTestSupport.parse;
 import static de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownParserTestSupport.tableFragment;
+import static de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownParserTestSupport.texts;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -45,6 +50,78 @@ class MarkdownParserTableTest {
 
         // The click is inside the table and on the cell fragment, which both sit at the origin
         assertFalse(table.mouseClicked(1.0D, table.parent.tableMargin + 1.0D, 0));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"[TABLE_0]", "[TABLE_1]", "[TABLE_x]", "[TABLE_", "[TABLE_0] and more", "[TABLE]"})
+    void linesThatLookLikeTableMarkersStayText(String line) {
+        List<MarkdownTextFragment> withoutTable = parse("above\n" + line + "\nbelow");
+        List<MarkdownTextFragment> withTable = parse("| a | b |\n| --- | --- |\n" + line + "\nbelow");
+        List<MarkdownTextFragment> withoutMarkdown = MarkdownParser.parse(new MarkdownRenderer(TEST_FONT), "above\n" + line + "\nbelow", false);
+
+        assertEquals("above" + line + "below", joinText(withoutTable));
+        assertTrue(withoutTable.stream().noneMatch(MarkdownTextFragment::isTable));
+        assertEquals(TABLE_FRAGMENT_TEXT + line + "below", joinText(withTable));
+        assertEquals(1, withTable.stream().filter(MarkdownTextFragment::isTable).count());
+        assertTrue(withTable.get(0).isTable());
+        assertEquals("above" + line + "below", joinText(withoutMarkdown));
+    }
+
+    @Test
+    void cellThatLooksLikeATableMarkerKeepsItsText() {
+        List<MarkdownTextFragment> fragments = parse("| a | b |\n| --- | --- |\n\n| [TABLE_0] | d |\n| --- | --- |");
+        List<MarkdownTextFragment> tables = fragments.stream().filter(MarkdownTextFragment::isTable).toList();
+
+        assertEquals(2, tables.size());
+        List<TableCell> cells = tables.get(1).tableContext.rows.get(0).cells;
+        assertEquals(2, cells.size());
+        assertEquals("[TABLE_0]", joinText(cells.get(0).fragments));
+        assertTrue(cells.get(0).fragments.stream().noneMatch(MarkdownTextFragment::isTable));
+        assertEquals("d", joinText(cells.get(1).fragments));
+    }
+
+    @Test
+    void tableDoesNotCloseAnUnderscoreInFrontOfIt() {
+        List<MarkdownTextFragment> fragments = parse("snake_case\n| a | b |\n| --- | --- |\nafter");
+
+        assertEquals(List.of("snake_case", TABLE_FRAGMENT_TEXT, "after"), texts(fragments));
+        for (MarkdownTextFragment fragment : fragments) assertFalse(fragment.italic);
+    }
+
+    @Test
+    void tableDirectlyBelowAHeadlineKeepsTheHeadlineInItsOwnLine() {
+        List<MarkdownTextFragment> direct = parse("# Title\n| a | b |\n| --- | --- |\ntext");
+        List<MarkdownTextFragment> withEmptyLine = parse("# Title\n\n| a | b |\n| --- | --- |\ntext");
+
+        for (List<MarkdownTextFragment> fragments : List.of(direct, withEmptyLine)) {
+            assertEquals(List.of("Title", TABLE_FRAGMENT_TEXT, "text"), texts(fragments));
+            assertEquals(HeadlineType.BIGGEST, fragments.get(0).headlineType);
+            assertTrue(fragments.get(0).naturalLineBreakAfter);
+            assertTrue(fragments.get(1).isTable());
+            assertEquals(HeadlineType.NONE, fragments.get(2).headlineType);
+        }
+    }
+
+    @Test
+    void tablesKeepTheirPlaceBetweenTheLinesAroundThem() {
+        List<MarkdownTextFragment> fragments = parse("first\n| a | b |\n| --- | --- |\n| c | d |\nsecond\n\n| e |\n| --- |\n| f |\n| g |");
+        List<MarkdownTextFragment> tables = fragments.stream().filter(MarkdownTextFragment::isTable).toList();
+
+        assertEquals(List.of("first", TABLE_FRAGMENT_TEXT, "second", "", TABLE_FRAGMENT_TEXT), texts(fragments));
+        assertEquals(2, tables.get(0).tableContext.rows.size());
+        assertEquals("c", joinText(tables.get(0).tableContext.rows.get(1).cells.get(0).fragments));
+        assertEquals(3, tables.get(1).tableContext.rows.size());
+        assertEquals("g", joinText(tables.get(1).tableContext.rows.get(2).cells.get(0).fragments));
+    }
+
+    @Test
+    void tableTakesOverTheAlignmentOfItsBlock() {
+        List<MarkdownTextFragment> fragments = parse("^^^\n| a | b |\n| --- | --- |\n^^^\n| c | d |\n| --- | --- |");
+        List<MarkdownTextFragment> tables = fragments.stream().filter(MarkdownTextFragment::isTable).toList();
+
+        assertEquals(2, fragments.size());
+        assertEquals(MarkdownRenderer.MarkdownLineAlignment.CENTERED, tables.get(0).alignment);
+        assertEquals(MarkdownRenderer.MarkdownLineAlignment.LEFT, tables.get(1).alignment);
     }
 
 }
