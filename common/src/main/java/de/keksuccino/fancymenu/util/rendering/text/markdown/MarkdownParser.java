@@ -138,6 +138,8 @@ public class MarkdownParser {
         boolean italicUnderscore = false;
         boolean strikethroughDouble = false;
         boolean lineHandledByWholeLineConstruct = false;
+        //The fragment that a space joins when the text of the fragment is what the space follows, which ends the word of that fragment.
+        //Markers that open something and the prefixes of lines set it to NULL, so a space behind them becomes a fragment of what they opened.
         MarkdownTextFragment lastBuiltFragment = null;
 
         int textLength = markdownText.length();
@@ -192,6 +194,7 @@ public class MarkdownParser {
                     case HEADLINE: {
                         int hashtags = structure.getEventValue();
                         builder.headlineType = (hashtags == 1) ? HeadlineType.BIGGEST : ((hashtags == 2) ? HeadlineType.BIGGER : HeadlineType.BIG);
+                        lastBuiltFragment = null;
                         // Skips the hashtags behind this one and the space
                         index += hashtags;
                         break;
@@ -204,6 +207,7 @@ public class MarkdownParser {
                         builder.bulletListItemStart = true;
                         builder.listItemMarker = getListItemMarker(markdownText.charAt(markerStart));
                         builder.listItemNumber = (builder.listItemMarker == ListItemMarker.NUMBER) ? markdownText.substring(markerStart, markerEnd) : null;
+                        lastBuiltFragment = null;
                         // Skips the indent, the marker and the space behind it
                         index = markerEnd;
                         break;
@@ -229,10 +233,9 @@ public class MarkdownParser {
                     }
                     case LINK_OPEN: {
                         String hyperlink = markdownText.substring(structure.getEventValue() + FORMATTING_CODE_HYPERLINK_INNER_PREFIX.length(), structure.getSecondEventValue());
-                        if (isStartOfLine || !builder.text.isEmpty()) {
-                            // Text that ends with a space is built already, so what is left here continues in the link without a gap
-                            lastBuiltFragment = addFragment(fragments, builder.build(false, false));
-                        }
+                        // Text that ends with a space is built already, so what is left here continues in the link without a gap
+                        buildTextInFrontOfOpeningMarker(fragments, builder, isStartOfLine);
+                        lastBuiltFragment = null;
                         String clickEventId = getTextClickEventId(hyperlink);
                         String hoverEventId = (clickEventId == null) ? getTextHoverEventId(hyperlink) : null;
                         if (clickEventId != null) {
@@ -257,10 +260,12 @@ public class MarkdownParser {
                         break;
                     case QUOTE_OPEN:
                         builder.quoteContext = new QuoteContext();
+                        lastBuiltFragment = null;
                         // Skips the space of the prefix
                         index++;
                         break;
                     case QUOTE_PREFIX:
+                        lastBuiltFragment = null;
                         index++;
                         break;
                     case CALLOUT:
@@ -281,9 +286,8 @@ public class MarkdownParser {
                         lastBuiltFragment = addFragment(fragments, builder.build(true, true));
                         break;
                     case CODE_OPEN:
-                        if (isStartOfLine || !builder.text.isEmpty()) {
-                            lastBuiltFragment = addFragment(fragments, builder.build(false, false));
-                        }
+                        buildTextInFrontOfOpeningMarker(fragments, builder, isStartOfLine);
+                        lastBuiltFragment = null;
                         builder.codeBlockContext = new CodeBlockContext();
                         builder.codeBlockContext.singleLine = true;
                         break;
@@ -299,9 +303,8 @@ public class MarkdownParser {
                         builder.codeBlockContext = null;
                         break;
                     case PLAIN_TEXT_OPEN:
-                        if (isStartOfLine || !builder.text.isEmpty()) {
-                            lastBuiltFragment = addFragment(fragments, builder.build(false, false));
-                        }
+                        buildTextInFrontOfOpeningMarker(fragments, builder, isStartOfLine);
+                        lastBuiltFragment = null;
                         builder.plainText = true;
                         // Skips the second character of the marker
                         index++;
@@ -351,9 +354,8 @@ public class MarkdownParser {
                                 font = ResourceLocation.parse(markdownText.substring(index + FORMATTING_CODE_FONT_PREFIX.length(), fontNameEnd));
                             } catch (Exception ignore) {}
                             if (font != null) {
-                                if (isStartOfLine || !builder.text.isEmpty()) {
-                                    lastBuiltFragment = addFragment(fragments, builder.build(false, false));
-                                }
+                                buildTextInFrontOfOpeningMarker(fragments, builder, isStartOfLine);
+                                lastBuiltFragment = null;
                                 builder.font = font;
                                 index = fontNameEnd;
                                 continue;
@@ -378,9 +380,8 @@ public class MarkdownParser {
                         if ((colorEnd != -1) && formatMarkers.existsFrom(FormatMarker.COLOR_SUFFIX, colorEnd + 1)) {
                             DrawableColor color = DrawableColor.ofHtml(markdownText.substring(colorStart, colorEnd));
                             if (color != DrawableColor.EMPTY) {
-                                if (isStartOfLine || !builder.text.isEmpty()) {
-                                    lastBuiltFragment = addFragment(fragments, builder.build(false, false));
-                                }
+                                buildTextInFrontOfOpeningMarker(fragments, builder, isStartOfLine);
+                                lastBuiltFragment = null;
                                 builder.textColor = color;
                                 index = colorEnd;
                                 continue;
@@ -399,9 +400,8 @@ public class MarkdownParser {
                 if (c == ASTERISK_CHAR) {
                     if (!builder.bold) {
                         if (markdownText.startsWith(FORMATTING_CODE_BOLD_PREFIX_SUFFIX, index) && formatMarkers.existsFrom(FormatMarker.ASTERISK_PAIR, index + 2)) {
-                            if (isStartOfLine || !builder.text.isEmpty()) {
-                                lastBuiltFragment = addFragment(fragments, builder.build(false, false));
-                            }
+                            buildTextInFrontOfOpeningMarker(fragments, builder, isStartOfLine);
+                            lastBuiltFragment = null;
                             builder.bold = true;
                             index++;
                             continue;
@@ -421,9 +421,8 @@ public class MarkdownParser {
                 if ((c == UNDERSCORE_CHAR) && formatMarkers.isAt(FormatMarker.UNDERSCORE, index)) {
                     if (!builder.italic) {
                         if (formatMarkers.existsFrom(FormatMarker.UNDERSCORE, index + 1)) {
-                            if (isStartOfLine || !builder.text.isEmpty()) {
-                                lastBuiltFragment = addFragment(fragments, builder.build(false, false));
-                            }
+                            buildTextInFrontOfOpeningMarker(fragments, builder, isStartOfLine);
+                            lastBuiltFragment = null;
                             builder.italic = true;
                             italicUnderscore = true;
                             continue;
@@ -441,9 +440,8 @@ public class MarkdownParser {
                 if (c == ASTERISK_CHAR) {
                     if (!builder.italic) {
                         if (!markdownText.startsWith(FORMATTING_CODE_BOLD_PREFIX_SUFFIX, index) && formatMarkers.hasItalicAsteriskEnd(index + 1, builder.bold)) {
-                            if (isStartOfLine || !builder.text.isEmpty()) {
-                                lastBuiltFragment = addFragment(fragments, builder.build(false, false));
-                            }
+                            buildTextInFrontOfOpeningMarker(fragments, builder, isStartOfLine);
+                            lastBuiltFragment = null;
                             builder.italic = true;
                             continue;
                         }
@@ -471,9 +469,8 @@ public class MarkdownParser {
                             continue;
                         }
                         if (opensDouble || formatMarkers.existsFrom(FormatMarker.TILDE, index + 1)) {
-                            if (isStartOfLine || !builder.text.isEmpty()) {
-                                lastBuiltFragment = addFragment(fragments, builder.build(false, false));
-                            }
+                            buildTextInFrontOfOpeningMarker(fragments, builder, isStartOfLine);
+                            lastBuiltFragment = null;
                             builder.strikethrough = true;
                             strikethroughDouble = opensDouble;
                             if (opensDouble) index++;
@@ -533,6 +530,14 @@ public class MarkdownParser {
 
         return fragments;
 
+    }
+
+    /**
+     * Builds the text in front of a marker that opens something, so the text behind the marker starts a new fragment.<br>
+     * A marker at the start of a line gets a fragment in front of it as well, which has no text then.
+     */
+    protected static void buildTextInFrontOfOpeningMarker(@NotNull List<MarkdownTextFragment> fragments, @NotNull FragmentBuilder builder, boolean isStartOfLine) {
+        if (isStartOfLine || !builder.text.isEmpty()) fragments.add(builder.build(false, false));
     }
 
     protected static MarkdownTextFragment addFragment(List<MarkdownTextFragment> fragments, MarkdownTextFragment fragment) {
