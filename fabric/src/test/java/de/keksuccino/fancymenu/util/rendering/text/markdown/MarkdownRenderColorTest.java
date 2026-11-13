@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyleOption.ColorOption;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -10,7 +11,8 @@ class MarkdownRenderColorTest {
     @Test
     void opaqueColorGetsTheOpacityOfTheTextAsItsAlpha() {
         MarkdownTestRenderer renderer = new MarkdownTestRenderer();
-        DrawableColor color = DrawableColor.of(10, 20, 30);
+        ColorOption color = renderer.getStyle().separatorColor;
+        color.set(DrawableColor.of(10, 20, 30));
 
         assertEquals(0xFF0A141E, renderer.getRenderColor(color));
         renderer.setTextOpacity(0.5F);
@@ -22,7 +24,8 @@ class MarkdownRenderColorTest {
     @Test
     void translucentColorKeepsItsOwnAlpha() {
         MarkdownTestRenderer renderer = new MarkdownTestRenderer();
-        DrawableColor color = DrawableColor.of(10, 20, 30, 128);
+        ColorOption color = renderer.getStyle().separatorColor;
+        color.set(DrawableColor.of(10, 20, 30, 128));
 
         assertEquals(0x800A141E, renderer.getRenderColor(color));
         renderer.setTextOpacity(0.5F);
@@ -32,10 +35,12 @@ class MarkdownRenderColorTest {
     @Test
     void fullyTransparentColorStaysInvisibleAtEveryOpacity() {
         MarkdownTestRenderer renderer = new MarkdownTestRenderer();
+        ColorOption color = renderer.getStyle().separatorColor;
+        color.set(DrawableColor.FULLY_TRANSPARENT);
 
-        assertEquals(0, renderer.getRenderColor(DrawableColor.FULLY_TRANSPARENT) >>> 24);
+        assertEquals(0, renderer.getRenderColor(color) >>> 24);
         renderer.setTextOpacity(0.5F);
-        assertEquals(0, renderer.getRenderColor(DrawableColor.FULLY_TRANSPARENT) >>> 24);
+        assertEquals(0, renderer.getRenderColor(color) >>> 24);
     }
 
 }

@@ -53,8 +53,8 @@ final class MarkdownTextWidthCache {
         this.widths = reused;
         this.widths.clear();
         int reloads = resourceReloads;
-        float probeWidth = this.renderer.getUnscaledTextWidth(PROBE_TEXT);
-        float probeHeight = this.renderer.getUnscaledTextHeight();
+        float probeWidth = this.renderer.textFont.width(PROBE_TEXT);
+        float probeHeight = this.renderer.textFont.lineHeight();
         if ((reloads != this.measuredResourceReloads) || (probeWidth != this.measuredProbeWidth) || (probeHeight != this.measuredProbeHeight)) {
             this.lastParseWidths.clear();
             this.measuredResourceReloads = reloads;
@@ -84,7 +84,7 @@ final class MarkdownTextWidthCache {
     }
 
     private float measure(@NotNull Style style, @NotNull String renderText, boolean separateTrailingSpace) {
-        return this.renderer.getUnscaledTextWidth(MarkdownTextFragment.createRenderComponent(style, renderText, separateTrailingSpace));
+        return this.renderer.textFont.width(MarkdownTextFragment.createRenderComponent(style, renderText, separateTrailingSpace));
     }
 
     private static final class Key {

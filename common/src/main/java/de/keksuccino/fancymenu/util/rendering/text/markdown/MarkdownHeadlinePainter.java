@@ -40,13 +40,13 @@ final class MarkdownHeadlinePainter {
         float right = renderer.x + renderer.getRealWidth() - scaling.padding() - scaling.sized(renderer.style.blockEdgeInset.get());
         float thickness = scaling.sized(headline.decorationThickness.get());
         // Half a GUI pixel is a whole screen pixel from a GUI scale of 2 on. Below that, a thinner line would vanish between two screen pixels.
-        if (renderer.getBaseRenderScale() <= 1.0F) thickness = Math.max(thickness, 1.0F);
+        if (renderer.scaling.baseRenderScale() <= 1.0F) thickness = Math.max(thickness, 1.0F);
         int color = renderer.getRenderColor(headline.decorationColor);
         if (decoration == MarkdownHeadlineDecoration.LEADER) {
             if (line.alignment != MarkdownRenderer.MarkdownLineAlignment.LEFT) return;
             float start = first.x + line.getLineWidth() + scaling.sized(renderer.style.headlineLeaderGap.get());
             // The dots stand on the baseline of the headline
-            float y = first.getTextY() + (renderer.getFontMetrics().baseline * first.getScale()) - thickness;
+            float y = first.getTextY() + (renderer.textFont.metrics().baseline * first.getScale()) - thickness;
             MarkdownPixelArt.pattern(graphics, MarkdownPixelArt.Pattern.THIRD, start, y, (float) Math.floor((right - start) / thickness), 0, thickness, color);
             return;
         }

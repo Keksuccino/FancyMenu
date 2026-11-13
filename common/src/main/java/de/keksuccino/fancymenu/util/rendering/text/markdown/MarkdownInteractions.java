@@ -78,9 +78,27 @@ final class MarkdownInteractions {
         for (int i = 0; i < this.hoverEvents.size(); i++) {
             MarkdownTextFragment.TextHoverEvent event = this.hoverEvents.get(i);
             if (event.isHovered() && this.hoveredEventIds.add(event.identifier)) {
-                this.renderer.fireTextHoverEvent(event.identifier);
+                this.fireHoverEvent(event.identifier);
             }
         }
+    }
+
+    private void fireHoverEvent(@NotNull String eventId) {
+        if (this.renderer.textEventHandler != null) this.renderer.textEventHandler.onTextHoverEvent(eventId);
+    }
+
+    /**
+     * Tells the handler of the renderer that text with the given click event got clicked.
+     */
+    void fireClickEvent(@NotNull String eventId) {
+        if (this.renderer.textEventHandler != null) this.renderer.textEventHandler.onTextClickEvent(eventId);
+    }
+
+    /**
+     * Returns if a click on a hyperlink with the given target opens it.
+     */
+    boolean isHyperlinkAllowed(@NotNull String link) {
+        return (this.renderer.hyperlinkFilter == null) || this.renderer.hyperlinkFilter.test(link);
     }
 
     private boolean isAnyHoverEventHovered() {
