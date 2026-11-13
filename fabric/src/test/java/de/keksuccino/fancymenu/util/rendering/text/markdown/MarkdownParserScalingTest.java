@@ -108,7 +108,21 @@ class MarkdownParserScalingTest {
         FONT_AND_COLOR_PREFIXES_THAT_END_IN_A_SUFFIX("%!!a%!!% %#f00%#% "),
         ALIGNMENT_MARKERS_WITHOUT_END("^^^\na\n|||\nb\n```\n^^^\n|||\n```\n"),
         ALIGNMENT_BLOCKS("^^^\na\n^^^\n|||\nb\n|||\n;;;\n^^^\n|||\n;;;\n"),
-        SPACES_BEHIND_OPENING_MARKERS("* a* ` b` [ c](d) #  e\n-  f\n>  g\n");
+        SPACES_BEHIND_OPENING_MARKERS("* a* ` b` [ c](d) #  e\n-  f\n>  g\n"),
+        CODE_BLOCKS_WITH_INFO_STRINGS("```java\na\n``` \n```{b}\nc\n```\t\n"),
+        CODE_BLOCK_MARKERS_WITH_INFO_STRINGS_WITHOUT_END("```java\na\n"),
+        CODE_BLOCK_MARKERS_BEHIND_ONE_THAT_NO_LINE_CLOSES("```\na\n```b\n ```\n```` \n"),
+        CODE_BLOCK_MARKERS_IN_ONE_LINE("``` "),
+        CODE_BLOCK_MARKERS_BEHIND_FORMATTING_CODES("§c§l§r```a\n§c§l§r```\n§c x§l```\n"),
+        FORMATTING_CODES_IN_ONE_LINE_IN_FRONT_OF_CODE_BLOCK_MARKERS("§c``` "),
+        PLAIN_TEXT_BLOCKS_WITH_WHITESPACE_BEHIND_THEIR_MARKERS(";;; \na\n;;;\t\n;;;x\n"),
+        ALIGNMENT_MARKERS_WITH_WHITESPACE_BEHIND_THEM("^^^ \na\n^^^\t\n|||  \nb\n||| x\n"),
+        QUOTES_WITH_EMPTY_LINES_IN_CODE_BLOCKS("> a\n```\nb\n\nc\n```\n\n> d\n;;;\n\n;;;\n\n"),
+        FONT_AND_COLOR_MARKERS_THAT_SHARE_PERCENT_SIGNS("%!!a%#f00%!!%#%b %#f00%!!a%c%!!%#%!!%#f00% "),
+        PERCENT_SIGNS("%!!%#%!!%#%"),
+        FORMATTING_CODES_IN_LINK_LABELS("[a §cb &lc](d) [e §c](f "),
+        FORMATTING_CODE_PREFIXES("§§&&§` &&; §§] "),
+        ESCAPED_PIPES_AT_THE_END_OF_TABLE_ROWS("| a | b \\|\n| --- | --- |\n| c \\|\n\n");
 
         private final String text;
 
