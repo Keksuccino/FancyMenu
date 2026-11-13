@@ -234,6 +234,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
             try {
                 this.fragments.addAll(MarkdownParser.parse(this, this.renderText, this.parseMarkdown));
                 MarkdownTablePainter.prepareHeaders(this, this.fragments);
+                MarkdownStrikethroughPainter.markEnds(this.fragments);
                 this.textHasPlusListItems = MarkdownListMarkerPainter.hasPlusItems(this.fragments);
             } finally {
                 this.textWidthCache.endParse();
