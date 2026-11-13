@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
+import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -176,12 +177,15 @@ final class MarkdownLayout {
         if (containsImages) {
             for (MarkdownTextLine line : lines) {
                 if (!line.containsImages) continue;
+                // Textures load on another thread, so an image can get its size at any moment. What a texture says gets remembered before its line
+                // gets measured with it: a size that arrives in between then differs from the remembered one, which gets the line measured again.
+                // Remembering it after measuring would hide such a size for good and leave the line at the size of an image that is not loaded.
+                for (MarkdownTextFragment f : line.fragments) {
+                    if (f.imageSupplier != null) this.measuredImages.add(new MeasuredImage(f));
+                }
                 line.updateSize();
                 if (line.lineWidth > maxLineWidth) {
                     maxLineWidth = line.lineWidth;
-                }
-                for (MarkdownTextFragment f : line.fragments) {
-                    if (f.imageSupplier != null) this.measuredImages.add(new MeasuredImage(f));
                 }
             }
             // An image is never wider than the real width it got measured against, so this doesn't change the size of the images
@@ -333,6 +337,11 @@ final class MarkdownLayout {
         return this.spaceWidth;
     }
 
+    /**
+     * What the texture of an image said about its size right before the line of the image got measured.<br>
+     * A texture that loads sets its width, its height and its aspect ratio one after the other, and the size of an image comes from its width
+     * and its aspect ratio, so all of them count: the line got measured with something else as soon as one of them differs.
+     */
     private static final class MeasuredImage {
 
         private final MarkdownTextFragment fragment;
@@ -340,18 +349,33 @@ final class MarkdownLayout {
         private final ITexture texture;
         private final int width;
         private final int height;
+        private final int aspectRatioWidth;
+        private final int aspectRatioHeight;
 
         private MeasuredImage(@NotNull MarkdownTextFragment fragment) {
             this.fragment = fragment;
             this.texture = fragment.imageSupplier.get();
-            this.width = (this.texture != null) ? this.texture.getWidth() : 0;
-            this.height = (this.texture != null) ? this.texture.getHeight() : 0;
+            if (this.texture != null) {
+                this.width = this.texture.getWidth();
+                this.height = this.texture.getHeight();
+                AspectRatio aspectRatio = this.texture.getAspectRatio();
+                this.aspectRatioWidth = aspectRatio.getInputWidth();
+                this.aspectRatioHeight = aspectRatio.getInputHeight();
+            } else {
+                this.width = 0;
+                this.height = 0;
+                this.aspectRatioWidth = 0;
+                this.aspectRatioHeight = 0;
+            }
         }
 
         private boolean hasChanged() {
             ITexture current = this.fragment.imageSupplier.get();
             if (current != this.texture) return true;
-            return (current != null) && ((current.getWidth() != this.width) || (current.getHeight() != this.height));
+            if (current == null) return false;
+            if ((current.getWidth() != this.width) || (current.getHeight() != this.height)) return true;
+            AspectRatio aspectRatio = current.getAspectRatio();
+            return (aspectRatio.getInputWidth() != this.aspectRatioWidth) || (aspectRatio.getInputHeight() != this.aspectRatioHeight);
         }
 
     }
