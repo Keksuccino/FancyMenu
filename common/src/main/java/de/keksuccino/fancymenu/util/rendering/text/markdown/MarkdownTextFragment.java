@@ -135,8 +135,10 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
             this.renderInlineCodeBackground(graphics);
 
+            if (this.calloutMarker) MarkdownCalloutPainter.renderIcon(graphics, this);
+
             // The fragments that only end a line and the ones of blank lines have nothing to draw
-            if (!this.text.isEmpty()) {
+            if (!this.text.isEmpty() || this.calloutMarker) {
                 int color = this.parent.getRenderColor(this.parent.style.textColor);
                 RenderSystem.enableBlend();
                 graphics.pose().pushPose();
@@ -265,7 +267,12 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
                 style = style.withItalic(true);
             }
         }
-        if (this.headlineType != HeadlineType.NONE) {
+        if (this.calloutMarker) {
+            // The label of a callout
+            MarkdownStyle.Callout callout = MarkdownCalloutPainter.getCallout(this.parent, this.quoteContext);
+            if (callout != null) style = style.withColor(callout.color.argb());
+            if (this.parent.style.calloutLabelBold.get()) style = style.withBold(true);
+        } else if (this.headlineType != HeadlineType.NONE) {
             MarkdownStyle.Headline headline = this.parent.style.headline(this.headlineType.level);
             if (headline.bold.get()) style = style.withBold(true);
             if (headline.color.isSet()) style = style.withColor(headline.color.argb());
@@ -332,7 +339,8 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
 
     @NotNull
     protected String buildRenderText(int trailingSpaceMode) {
-        String t = this.text;
+        // The fragment of the marker line of a callout has no text and shows the label of the callout
+        String t = (this.calloutMarker && (this.quoteContext != null) && (this.quoteContext.calloutType != null)) ? MarkdownCalloutPainter.getLabel(this.quoteContext.calloutType) : this.text;
         if (trailingSpaceMode != TRAILING_SPACE_KEEP) {
             t = t.substring(0, t.length()-1);
         }
@@ -417,6 +425,9 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             }
             if ((this.quoteContext != null) && (this.alignment == MarkdownRenderer.MarkdownLineAlignment.RIGHT)) {
                 space += style.quotePaddingSide.get();
+            }
+            if (this.calloutMarker) {
+                space += MarkdownCalloutPainter.getIconSpace(this.parent);
             }
             if (this.bulletListLevel > 0) {
                 space += MarkdownListMarkerPainter.getTextIndent(this);

@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.rendering.text.markdown;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownQuoteBarPosition;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyle;
+import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyleOption;
 import net.minecraft.client.gui.GuiGraphics;
 import org.jetbrains.annotations.NotNull;
 
@@ -37,18 +38,37 @@ final class MarkdownQuotePainter {
         MarkdownStyle style = renderer.style;
         MarkdownScaling scaling = renderer.scaling;
         MarkdownTextFragment.QuoteContext context = line.fragments.get(0).quoteContext;
+        MarkdownStyleOption.ColorOption background = getBackgroundColor(renderer, context);
         float top = getTop(context);
         float bottom = getBottom(context);
-        if (style.quoteBackgroundColor.isSet()) {
+        if (background.isSet()) {
             float left = renderer.x + scaling.padding();
             float right = renderer.x + renderer.getRealWidth() - scaling.padding();
-            MarkdownPaint.box(graphics, left, top, right, bottom, scaling.sized(style.quoteCornerRadius.get()), renderer.getRenderColor(style.quoteBackgroundColor));
+            MarkdownPaint.box(graphics, left, top, right, bottom, scaling.sized(style.quoteCornerRadius.get()), renderer.getRenderColor(background));
         }
         if (hasBar(context)) {
             float barX = getBarX(context);
-            RenderingUtils.fillF(graphics, barX, top - scaling.sized(style.quoteBarOverhangTop.get()), barX + getBarWidth(renderer), bottom + scaling.sized(style.quoteBarOverhangBottom.get()), renderer.getRenderColor(style.quoteBarColor));
+            RenderingUtils.fillF(graphics, barX, top - scaling.sized(style.quoteBarOverhangTop.get()), barX + getBarWidth(renderer), bottom + scaling.sized(style.quoteBarOverhangBottom.get()), renderer.getRenderColor(getBarColor(renderer, context)));
         }
         RenderingUtils.resetShaderColor(graphics);
+    }
+
+    /**
+     * Returns the color of the bar of the quote. A callout is a quote in the color of its type.
+     */
+    @NotNull
+    static MarkdownStyleOption.ColorOption getBarColor(@NotNull MarkdownRenderer renderer, @NotNull MarkdownTextFragment.QuoteContext context) {
+        MarkdownStyle.Callout callout = MarkdownCalloutPainter.getCallout(renderer, context);
+        return (callout != null) ? callout.color : renderer.style.quoteBarColor;
+    }
+
+    /**
+     * Returns the color of the panel behind the quote, which can be unset. A callout whose type has no panel color has the panel of normal quotes.
+     */
+    @NotNull
+    static MarkdownStyleOption.ColorOption getBackgroundColor(@NotNull MarkdownRenderer renderer, @NotNull MarkdownTextFragment.QuoteContext context) {
+        MarkdownStyle.Callout callout = MarkdownCalloutPainter.getCallout(renderer, context);
+        return ((callout != null) && callout.backgroundColor.isSet()) ? callout.backgroundColor : renderer.style.quoteBackgroundColor;
     }
 
     /**
