@@ -1927,8 +1927,6 @@
   "fancymenu.elements.text.markdown.style.code_font.desc": "The font of inline code and code blocks,\nlike minecraft:uniform or\nfancymenu:markdown_code.\n\nLeave it empty to give code the same font\nas the text around it.",
   "fancymenu.elements.text.markdown.style.collapse_blank_lines": "Merge Blank Lines: %s",
   "fancymenu.elements.text.markdown.style.collapse_blank_lines.desc": "Treats several blank lines in a row\nlike a single one.",
-  "fancymenu.elements.text.markdown.style.full_line_height": "Full Line Height: %s",
-  "fancymenu.elements.text.markdown.style.full_line_height.desc": "Makes lines tall enough for letters that\nreach below the line, like g or y.\n\nThis only changes text in FancyMenu's smooth\nUI font. Lines in the Minecraft font always\nhave the same height.",
   "fancymenu.elements.text.markdown.style.headline.bold": "Bold: %s",
   "fancymenu.elements.text.markdown.style.headline.color": "Color",
   "fancymenu.elements.text.markdown.style.headline.color.desc": "With no color, the headline uses\nthe normal text color.",

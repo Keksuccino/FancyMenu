@@ -41,7 +41,15 @@ public final class MarkdownSettingsMenu<H extends PropertyHolder> {
     static final int MOST_VALUES_TO_CYCLE_THROUGH = 4;
 
     /**
-     * The entries of the settings in the order they show up in, sub menus included. Every option of the style stands in it exactly once.<br>
+     * The options of the style the menu leaves out, because they never change anything for an element.<br>
+     * Elements always draw their text with the Minecraft font, and these options only do something for text in the smooth UI font,
+     * which only FancyMenu's own screens draw Markdown with. They are properties like all other options, so the saved data of an element holds the whole style.
+     */
+    static final List<Function<MarkdownStyle, MarkdownStyleOption<?>>> WITHOUT_EFFECT_IN_ELEMENTS = List.of(style -> style.fullLineHeight);
+
+    /**
+     * The entries of the settings in the order they show up in, sub menus included. Every option of the style stands in it exactly once,
+     * except for {@link #WITHOUT_EFFECT_IN_ELEMENTS}.<br>
      * The options of the headline levels, the list levels and the callout types have a sub menu per level or type,
      * and what switches a kind of Markdown syntax on stands in front of the options of that syntax.
      */
@@ -72,8 +80,7 @@ public final class MarkdownSettingsMenu<H extends PropertyHolder> {
                             option(style -> style.snapTextScale),
                             option(style -> style.snapPositions),
                             option(style -> style.snapStrikethrough),
-                            option(style -> style.trimGlyphSpacing),
-                            option(style -> style.fullLineHeight))),
+                            option(style -> style.trimGlyphSpacing))),
             menu("headlines", MaterialIcons.TITLE,
                     headlineLevel(1),
                     headlineLevel(2),
