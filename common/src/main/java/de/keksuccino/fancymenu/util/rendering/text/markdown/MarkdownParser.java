@@ -341,14 +341,14 @@ public class MarkdownParser {
 
                 //Handle Fonts
                 if (c == PERCENTAGE_CHAR) {
-                    if (markdownText.startsWith(FORMATTING_CODE_FONT_PREFIX, index) && !markdownText.startsWith(FORMATTING_CODE_FONT_SUFFIX, index) && (builder.font == null)) {
-                        int fontNameStart = index + FORMATTING_CODE_FONT_PREFIX.length();
+                    if (builder.font == null) {
                         if (lineEnd < index) lineEnd = getLineEnd(markdownText, index);
-                        int fontNameEnd = indexOf(markdownText, PERCENTAGE_CHAR, fontNameStart, lineEnd);
-                        if ((fontNameEnd != -1) && containsOnly(markdownText, fontNameStart, fontNameEnd, IS_RESOURCE_NAME_CHARACTER) && formatMarkers.existsFrom(FormatMarker.FONT_SUFFIX, index)) {
+                        int fontNameEnd = getFontPrefixEnd(markdownText, index, lineEnd);
+                        // The suffix has to start behind the prefix. The last character of the prefix can start something that looks like a suffix, which closes nothing.
+                        if ((fontNameEnd != -1) && formatMarkers.existsFrom(FormatMarker.FONT_SUFFIX, fontNameEnd + 1)) {
                             ResourceLocation font = null;
                             try {
-                                font = ResourceLocation.parse(markdownText.substring(fontNameStart, fontNameEnd));
+                                font = ResourceLocation.parse(markdownText.substring(index + FORMATTING_CODE_FONT_PREFIX.length(), fontNameEnd));
                             } catch (Exception ignore) {}
                             if (font != null) {
                                 if (isStartOfLine || !builder.text.isEmpty()) {
@@ -374,7 +374,8 @@ public class MarkdownParser {
                         int colorStart = index + FORMATTING_CODE_HEX_COLOR_PREFIX.length();
                         if (lineEnd < index) lineEnd = getLineEnd(markdownText, index);
                         int colorEnd = indexOf(markdownText, PERCENTAGE_CHAR, colorStart, lineEnd);
-                        if ((colorEnd != -1) && formatMarkers.existsFrom(FormatMarker.COLOR_SUFFIX, index)) {
+                        // Like the suffix of a font, the suffix has to start behind the prefix
+                        if ((colorEnd != -1) && formatMarkers.existsFrom(FormatMarker.COLOR_SUFFIX, colorEnd + 1)) {
                             DrawableColor color = DrawableColor.ofHtml(markdownText.substring(colorStart, colorEnd));
                             if (color != DrawableColor.EMPTY) {
                                 if (isStartOfLine || !builder.text.isEmpty()) {
@@ -611,6 +612,18 @@ public class MarkdownParser {
             unescaped.append(text.charAt(i));
         }
         return unescaped.toString();
+    }
+
+    /**
+     * Returns the index of the percent sign that ends the font prefix ("%!!font_name%") starting at the given index, or -1 if no font prefix starts there.
+     *
+     * @param lineEnd The index of the line break that ends the line of the given index, or the text length if it is the last line.
+     */
+    protected static int getFontPrefixEnd(@NotNull String text, int index, int lineEnd) {
+        if (!text.startsWith(FORMATTING_CODE_FONT_PREFIX, index) || text.startsWith(FORMATTING_CODE_FONT_SUFFIX, index)) return -1;
+        int nameStart = index + FORMATTING_CODE_FONT_PREFIX.length();
+        int nameEnd = indexOf(text, PERCENTAGE_CHAR, nameStart, lineEnd);
+        return ((nameEnd != -1) && containsOnly(text, nameStart, nameEnd, IS_RESOURCE_NAME_CHARACTER)) ? nameEnd : -1;
     }
 
     /**
@@ -1258,6 +1271,10 @@ public class MarkdownParser {
                                     formatMarkers.add(FormatMarker.FONT_SUFFIX, index);
                                 } else if (text.startsWith(FORMATTING_CODE_HEX_COLOR_SUFFIX, index)) {
                                     formatMarkers.add(FormatMarker.COLOR_SUFFIX, index);
+                                } else {
+                                    // The underscores in the name of a font are no markers, even if the prefix stays text because nothing closes the font
+                                    int fontPrefixEnd = getFontPrefixEnd(text, index, lineEnd);
+                                    if (fontPrefixEnd != -1) index = fontPrefixEnd - 1;
                                 }
                                 continue;
                             default:
