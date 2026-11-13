@@ -417,7 +417,7 @@ public class MarkdownParser {
                 }
 
                 //Handle Italic Underscore
-                if (c == UNDERSCORE_CHAR) {
+                if ((c == UNDERSCORE_CHAR) && formatMarkers.isAt(FormatMarker.UNDERSCORE, index)) {
                     if (!builder.italic) {
                         if (formatMarkers.existsFrom(FormatMarker.UNDERSCORE, index + 1)) {
                             if (isStartOfLine || !builder.text.isEmpty()) {
@@ -1133,6 +1133,8 @@ public class MarkdownParser {
             boolean quote = false;
             int centeredAlignmentMarkers = 0;
             int rightAlignmentMarkers = 0;
+            //Index of the last underscore that is no part of an event, code or plain text
+            int previousUnderscore = Integer.MIN_VALUE;
             //Index of the square bracket that ends the label of the open link, and of the round bracket that ends its target
             int linkLabelEnd = NO_LINK;
             int linkTargetEnd = -1;
@@ -1244,7 +1246,9 @@ public class MarkdownParser {
                                 formatMarkers.addPaired(FormatMarker.ASTERISK, FormatMarker.ASTERISK_PAIR, index);
                                 continue;
                             case UNDERSCORE_CHAR:
-                                formatMarkers.add(FormatMarker.UNDERSCORE, index);
+                                // Underscores in a row are text. The one behind this one gets read the same way this one does, so looking at the text is enough for it.
+                                if ((previousUnderscore != (index - 1)) && ((index + 1 == length) || (text.charAt(index + 1) != UNDERSCORE_CHAR))) formatMarkers.add(FormatMarker.UNDERSCORE, index);
+                                previousUnderscore = index;
                                 continue;
                             case TILDE_CHAR:
                                 formatMarkers.addPaired(FormatMarker.TILDE, FormatMarker.TILDE_PAIR, index);
@@ -1693,6 +1697,14 @@ public class MarkdownParser {
         }
 
         /**
+         * Returns if there is a marker of the given type at the given index.
+         */
+        protected boolean isAt(@NotNull FormatMarker marker, int index) {
+            int next = this.moveTo(marker, index);
+            return (next < this.counts[marker.ordinal()]) && (this.indexes[marker.ordinal()][next] == index);
+        }
+
+        /**
          * Returns where in the indexes of the given type the first marker at or after the given index is, which is their count if there is none.
          */
         protected int moveTo(@NotNull FormatMarker marker, int fromIndex) {
@@ -1747,6 +1759,7 @@ public class MarkdownParser {
         ASTERISK,
         /** Two asterisks in a row, which open and close bold text. */
         ASTERISK_PAIR,
+        /** An underscore without another one next to it. Underscores in a row are text, like the ones of "__init__". */
         UNDERSCORE,
         TILDE,
         /** Two tildes in a row, which open and close struck through text like a single one does. */
