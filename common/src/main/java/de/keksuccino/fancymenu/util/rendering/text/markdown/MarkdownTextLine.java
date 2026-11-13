@@ -56,6 +56,7 @@ public class MarkdownTextLine implements Renderable {
             textX += f.getRenderWidth();
         }
         if (shouldRender) {
+            if ((this.blockType == MarkdownBlockType.CODE_BLOCK) && this.drawsCodeBlockPanel()) MarkdownCodePainter.renderBlock(graphics, this);
             for (int i = 0; i < this.fragments.size(); i++) {
                 MarkdownTextFragment f = this.fragments.get(i);
                 f.render(graphics, mouseX, mouseY, partial);
@@ -64,6 +65,19 @@ public class MarkdownTextLine implements Renderable {
             }
         }
 
+    }
+
+    /**
+     * The panel of a code block gets drawn once per frame, before the text of the block: by the first line of the block,
+     * or, when that one is outside the visible range, by the first line of the block that is inside of it.
+     */
+    protected boolean drawsCodeBlockPanel() {
+        MarkdownTextFragment.CodeBlockContext context = this.fragments.get(0).codeBlockContext;
+        MarkdownTextFragment start = context.getBlockStart();
+        if ((start != null) && (start.parentLine == this)) return true;
+        MarkdownTextLine previousLine = this.getPreviousLine();
+        if ((previousLine == null) || previousLine.isVisible()) return false;
+        return previousLine.fragments.get(previousLine.fragments.size() - 1).codeBlockContext == context;
     }
 
     private void renderDecorations(@NotNull GuiGraphics graphics, @NotNull MarkdownTextFragment first) {
@@ -158,8 +172,16 @@ public class MarkdownTextLine implements Renderable {
         }
         this.paddingTop = 0;
         this.paddingBottom = 0;
-        if ((last != null) && (this.fragments.get(0).headlineType != MarkdownTextFragment.HeadlineType.NONE)) {
-            this.paddingBottom += MarkdownHeadlinePainter.getLinePaddingBottom(this);
+        if (last != null) {
+            MarkdownTextFragment first = this.fragments.get(0);
+            if (first.headlineType != MarkdownTextFragment.HeadlineType.NONE) {
+                this.paddingBottom += MarkdownHeadlinePainter.getLinePaddingBottom(this);
+            }
+            if ((first.codeBlockContext != null) && !first.codeBlockContext.singleLine) {
+                // The panel of a code block has its padding above the first and below the last line of the block
+                if (first.isInRenderLineOf(first.codeBlockContext.getBlockStart())) this.paddingTop += MarkdownCodePainter.getBlockPaddingVertical(this.parent);
+                if (first.isInRenderLineOf(first.codeBlockContext.getBlockEnd())) this.paddingBottom += MarkdownCodePainter.getBlockPaddingVertical(this.parent);
+            }
         }
         this.lineWidth = width;
         this.lineHeight = this.paddingTop + height + this.paddingBottom;

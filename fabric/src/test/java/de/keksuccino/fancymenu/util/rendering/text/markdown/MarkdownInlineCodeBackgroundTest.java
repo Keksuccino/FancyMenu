@@ -17,8 +17,8 @@ class MarkdownInlineCodeBackgroundTest {
         renderer.tick();
         MarkdownTextFragment code = renderer.fragmentContaining("code");
 
-        float top = code.getInlineCodeBackgroundTop();
-        float bottom = code.getInlineCodeBackgroundBottom();
+        float top = MarkdownCodePainter.getInlineTop(code);
+        float bottom = MarkdownCodePainter.getInlineBottom(code);
 
         assertTrue(top <= code.getTextY(), "the background starts below the top of its text");
         assertTrue((code.getTextY() - top) <= 2.0F, "the background starts too far above its text");
