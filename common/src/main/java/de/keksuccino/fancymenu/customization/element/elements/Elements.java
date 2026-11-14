@@ -16,6 +16,7 @@ import de.keksuccino.fancymenu.customization.element.elements.jsonmodel.JsonMode
 import de.keksuccino.fancymenu.customization.element.elements.musiccontroller.MusicControllerElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.playerentity.v1.PlayerEntityElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.progressbar.ProgressBarElementBuilder;
+import de.keksuccino.fancymenu.customization.element.elements.scrollarea.ScrollAreaElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.shape.circle.CircleShapeElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.shape.rectangle.RectangleShapeElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.slideshow.SlideshowElementBuilder;
@@ -35,6 +36,7 @@ public class Elements {
     public static final CheckboxElementBuilder CHECKBOX = new CheckboxElementBuilder();
     public static final TextElementBuilder TEXT_V2 = new TextElementBuilder();
     public static final TooltipElementBuilder TOOLTIP = new TooltipElementBuilder();
+    public static final ScrollAreaElementBuilder SCROLL_AREA = new ScrollAreaElementBuilder();
     public static final TickerElementBuilder TICKER = new TickerElementBuilder();
     public static final PlayerEntityElementBuilder PLAYER_ENTITY_V1 = new PlayerEntityElementBuilder();
     public static final ImageElementBuilder IMAGE = new ImageElementBuilder();
@@ -63,6 +65,7 @@ public class Elements {
         ElementRegistry.register(CHECKBOX);
         ElementRegistry.register(TEXT_V2);
         ElementRegistry.register(TOOLTIP);
+        ElementRegistry.register(SCROLL_AREA);
         ElementRegistry.register(TICKER);
         ElementRegistry.register(PLAYER_ENTITY_V1);
         ElementRegistry.register(IMAGE);

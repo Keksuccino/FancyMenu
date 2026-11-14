@@ -1,6 +1,8 @@
 package de.keksuccino.fancymenu.customization.element;
 
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -11,9 +13,13 @@ import java.util.Objects;
  * Hands the mouse input a screen sends to a widget of an element on to that widget in the untransformed space of the element,
  * which is the space the element renders the widget in. Rotated and tilted elements register these instead of their widgets,
  * so the widgets react to the mouse where they appear on the screen.<br>
- * Use {@link #of(AbstractElement, GuiEventListener)}, which keeps the input routing of FancyMenu UI components for widgets that are one.
+ * Widgets of children of a container always get registered through these: they map the mouse into a scaled content,
+ * and they keep input away from everything the container cuts off or does not show.<br>
+ * The listener is what the screen knows of the widget: it is what gets the focus, and it is as focusable and navigatable as the widget is.<br>
+ * Use {@link #of(AbstractElement, GuiEventListener)} or {@link #ofChildWidget(AbstractElement, GuiEventListener)}, which keep the input routing
+ * of FancyMenu UI components for widgets that are one.
  */
-public class ElementSpaceInputListener implements GuiEventListener, NarratableEntry {
+public class ElementSpaceInputListener implements GuiEventListener, NarratableEntry, NavigatableWidget {
 
     @NotNull
     protected final AbstractElement element;
@@ -21,30 +27,55 @@ public class ElementSpaceInputListener implements GuiEventListener, NarratableEn
     protected final GuiEventListener widget;
     @NotNull
     protected final NarratableEntry narratable;
+    /** Where a click gets told to be that no widget is at. */
+    private static final double CLICK_NEXT_TO_WIDGET = -100000.0D;
+    /** If the rotation and the tilt of the element get taken out of the mouse. Widgets that work them out themselves only get the scale of a container taken out. */
+    protected final boolean unrotatesMouse;
 
+    /**
+     * Wraps a widget that knows nothing about the rotation and the tilt of its element.
+     */
     @NotNull
     public static <T extends GuiEventListener & NarratableEntry> ElementSpaceInputListener of(@NotNull AbstractElement element, @NotNull T widget) {
-        // FancyMenu UI components get every click and scroll, not only the hovered ones, so the listener has to stay one of them
-        return (widget instanceof FancyMenuUiComponent) ? new UiComponent(element, widget) : new ElementSpaceInputListener(element, widget);
+        return create(element, widget, true);
     }
 
-    protected <T extends GuiEventListener & NarratableEntry> ElementSpaceInputListener(@NotNull AbstractElement element, @NotNull T widget) {
+    /**
+     * Wraps a widget an element registers as it is, for an element that is a child of a container. Such a widget
+     * works out the rotation and the tilt of its element on its own, if it follows them at all.
+     */
+    @NotNull
+    public static <T extends GuiEventListener & NarratableEntry> ElementSpaceInputListener ofChildWidget(@NotNull AbstractElement element, @NotNull T widget) {
+        return create(element, widget, false);
+    }
+
+    @NotNull
+    private static <T extends GuiEventListener & NarratableEntry> ElementSpaceInputListener create(@NotNull AbstractElement element, @NotNull T widget, boolean unrotatesMouse) {
+        // FancyMenu UI components get every click and scroll, not only the hovered ones, so the listener has to stay one of them
+        return (widget instanceof FancyMenuUiComponent) ? new UiComponent(element, widget, unrotatesMouse) : new ElementSpaceInputListener(element, widget, unrotatesMouse);
+    }
+
+    /**
+     * Returns the widget the listener hands its input on to, or the listener itself if it is none of these.
+     */
+    @NotNull
+    public static GuiEventListener unwrap(@NotNull GuiEventListener listener) {
+        return (listener instanceof ElementSpaceInputListener wrapper) ? wrapper.widget : listener;
+    }
+
+    protected <T extends GuiEventListener & NarratableEntry> ElementSpaceInputListener(@NotNull AbstractElement element, @NotNull T widget, boolean unrotatesMouse) {
         this.element = Objects.requireNonNull(element);
         this.widget = Objects.requireNonNull(widget);
         this.narratable = widget;
-    }
-
-    @NotNull
-    public GuiEventListener getWidget() {
-        return this.widget;
+        this.unrotatesMouse = unrotatesMouse;
     }
 
     protected double toElementSpaceX(double mouseX, double mouseY) {
-        return this.element.untransformMouseX(mouseX, mouseY);
+        return this.unrotatesMouse ? this.element.untransformMouseX(mouseX, mouseY) : this.element.unscaleMouseX(mouseX, mouseY);
     }
 
     protected double toElementSpaceY(double mouseX, double mouseY) {
-        return this.element.untransformMouseY(mouseX, mouseY);
+        return this.unrotatesMouse ? this.element.untransformMouseY(mouseX, mouseY) : this.element.unscaleMouseY(mouseX, mouseY);
     }
 
     @Override
@@ -54,6 +85,11 @@ public class ElementSpaceInputListener implements GuiEventListener, NarratableEn
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (!this.element.isScreenPointVisibleInContainer(mouseX, mouseY)) {
+            // Widgets of this game version let go of the focus themselves when a click lands next to them, so they get told about this one as a click far away from them
+            this.widget.mouseClicked(CLICK_NEXT_TO_WIDGET, CLICK_NEXT_TO_WIDGET, button);
+            return false;
+        }
         return this.widget.mouseClicked(this.toElementSpaceX(mouseX, mouseY), this.toElementSpaceY(mouseX, mouseY), button);
     }
 
@@ -74,16 +110,19 @@ public class ElementSpaceInputListener implements GuiEventListener, NarratableEn
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        if (!this.element.isScreenPointVisibleInContainer(mouseX, mouseY)) return false;
         return this.widget.mouseScrolled(this.toElementSpaceX(mouseX, mouseY), this.toElementSpaceY(mouseX, mouseY), delta);
     }
 
     @Override
     public boolean isMouseOver(double mouseX, double mouseY) {
+        if (!this.element.isScreenPointVisibleInContainer(mouseX, mouseY)) return false;
         return this.widget.isMouseOver(this.toElementSpaceX(mouseX, mouseY), this.toElementSpaceY(mouseX, mouseY));
     }
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (!this.element.isShownByContainer()) return false;
         return this.widget.keyPressed(keyCode, scanCode, modifiers);
     }
 
@@ -94,11 +133,21 @@ public class ElementSpaceInputListener implements GuiEventListener, NarratableEn
 
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
+        if (!this.element.isShownByContainer()) return false;
         return this.widget.charTyped(codePoint, modifiers);
     }
 
+    /**
+     * The focus goes to this listener and not to the widget: a screen gives it to what answers with TRUE here, which is what it has
+     * in its list. A widget that does not show takes no focus.
+     */
     @Override
     public boolean changeFocus(boolean focus) {
+        if (!this.element.isShownByContainer()) {
+            // A widget that has the focus lets go of it when it gets asked to change it, which it still has to do when its container stopped showing it
+            if ((this.widget instanceof AbstractWidget abstractWidget) && abstractWidget.isFocused()) this.widget.changeFocus(focus);
+            return false;
+        }
         return this.widget.changeFocus(focus);
     }
 
@@ -117,10 +166,30 @@ public class ElementSpaceInputListener implements GuiEventListener, NarratableEn
         this.narratable.updateNarration(output);
     }
 
+    @Override
+    public boolean isFocusable() {
+        return !(this.widget instanceof NavigatableWidget navigatable) || navigatable.isFocusable();
+    }
+
+    @Override
+    public void setFocusable(boolean focusable) {
+        if (this.widget instanceof NavigatableWidget navigatable) navigatable.setFocusable(focusable);
+    }
+
+    @Override
+    public boolean isNavigatable() {
+        return !(this.widget instanceof NavigatableWidget navigatable) || navigatable.isNavigatable();
+    }
+
+    @Override
+    public void setNavigatable(boolean navigatable) {
+        if (this.widget instanceof NavigatableWidget navigatableWidget) navigatableWidget.setNavigatable(navigatable);
+    }
+
     private static class UiComponent extends ElementSpaceInputListener implements FancyMenuUiComponent {
 
-        private <T extends GuiEventListener & NarratableEntry> UiComponent(@NotNull AbstractElement element, @NotNull T widget) {
-            super(element, widget);
+        private <T extends GuiEventListener & NarratableEntry> UiComponent(@NotNull AbstractElement element, @NotNull T widget, boolean unrotatesMouse) {
+            super(element, widget, unrotatesMouse);
         }
 
     }

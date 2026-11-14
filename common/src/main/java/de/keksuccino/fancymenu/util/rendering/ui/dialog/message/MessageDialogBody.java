@@ -44,6 +44,14 @@ public class MessageDialogBody extends PiPWindowBody {
     private ExtendedButton acceptButton;
     @Nullable
     private ExtendedButton okayButton;
+    @Nullable
+    private ExtendedButton alternativeButton;
+    @Nullable
+    private Component acceptLabel;
+    @Nullable
+    private Component alternativeLabel;
+    @Nullable
+    private Runnable alternativeAction;
 
     private long delayEnd = -1;
     private boolean forceOkOnly = false;
@@ -158,11 +166,19 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
             this.okayButton.setX((this.width - BUTTON_WIDTH) / 2);
             this.okayButton.setY(y);
         } else if (this.cancelButton != null && this.acceptButton != null) {
-            int totalWidth = (BUTTON_WIDTH * 2) + BUTTON_GAP;
-            int startX = (this.width - totalWidth) / 2;
-            this.cancelButton.setX(startX);
+            int buttonCount = (this.alternativeButton != null) ? 3 : 2;
+            int totalWidth = (BUTTON_WIDTH * buttonCount) + (BUTTON_GAP * (buttonCount - 1));
+            int x = (this.width - totalWidth) / 2;
+            this.cancelButton.setX(x);
             this.cancelButton.setY(y);
-            this.acceptButton.setX(startX + BUTTON_WIDTH + BUTTON_GAP);
+            x += BUTTON_WIDTH + BUTTON_GAP;
+            // The other way to go on sits between canceling and accepting
+            if (this.alternativeButton != null) {
+                this.alternativeButton.setX(x);
+                this.alternativeButton.setY(y);
+                x += BUTTON_WIDTH + BUTTON_GAP;
+            }
+            this.acceptButton.setX(x);
             this.acceptButton.setY(y);
         }
     }
@@ -179,6 +195,10 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
         if (this.acceptButton != null) {
             this.removeWidget(this.acceptButton);
             this.acceptButton = null;
+        }
+        if (this.alternativeButton != null) {
+            this.removeWidget(this.alternativeButton);
+            this.alternativeButton = null;
         }
 
         if (isOkOnlyMode()) {
@@ -200,7 +220,21 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
             this.addRenderableWidget(this.cancelButton);
             UIBase.applyDefaultWidgetSkinTo(this.cancelButton, UIBase.shouldBlur());
 
-            this.acceptButton = new ExtendedButton(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT, Component.translatable("fancymenu.common_components.accept"), (button) -> {
+            if ((this.alternativeLabel != null) && (this.alternativeAction != null)) {
+                this.alternativeButton = new ExtendedButton(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT, this.alternativeLabel, (button) -> {
+                    if (!canAccept()) return;
+                    this.alternativeAction.run();
+                    this.closeWindow();
+                });
+                this.alternativeButton.setIsActiveSupplier(consumes -> canAccept());
+                this.alternativeButton.setUITooltipSupplier(consumes -> buildDelayTooltip());
+                this.alternativeButton.setFocusable(false);
+                this.alternativeButton.setNavigatable(false);
+                this.addRenderableWidget(this.alternativeButton);
+                UIBase.applyDefaultWidgetSkinTo(this.alternativeButton, UIBase.shouldBlur());
+            }
+
+            this.acceptButton = new ExtendedButton(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT, (this.acceptLabel != null) ? this.acceptLabel : Component.translatable("fancymenu.common_components.accept"), (button) -> {
                 handleResult(true);
             });
             this.acceptButton.setIsActiveSupplier(consumes -> canAccept());
@@ -235,6 +269,34 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
             rebuildButtons();
         }
         return this;
+    }
+
+    /**
+     * Sets what the button that accepts the dialog says, for dialogs where "Accept" would not tell what happens.
+     */
+    public MessageDialogBody setAcceptLabel(@NotNull Component acceptLabel) {
+        this.acceptLabel = acceptLabel;
+        this.rebuildButtonsIfBuilt();
+        return this;
+    }
+
+    /**
+     * Gives the dialog a second way to go on next to accepting it, with a button of its own between the ones that cancel and accept.
+     * Dialogs that only have an OK button do not show it.
+     *
+     * @param action Runs when the user picks the button, right before the dialog closes. The callback of the dialog does not get called then.
+     */
+    public MessageDialogBody setAlternative(@NotNull Component label, @NotNull Runnable action) {
+        this.alternativeLabel = label;
+        this.alternativeAction = action;
+        this.rebuildButtonsIfBuilt();
+        return this;
+    }
+
+    private void rebuildButtonsIfBuilt() {
+        if (this.okayButton != null || this.cancelButton != null || this.acceptButton != null) {
+            rebuildButtons();
+        }
     }
 
     public MessageDialogBody setDelay(long delayMs) {

@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.element;
 
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -83,7 +84,57 @@ class ElementSpaceInputListenerTest {
 
         assertTrue(plain.changeFocus(true));
         assertTrue(plainWidget.focused);
-        assertSame(plainWidget, plain.getWidget());
+        assertSame(plainWidget, ElementSpaceInputListener.unwrap(plain));
+    }
+
+    @Test
+    void widgetsThatWorkOutTheirOwnRotationGetTheMouseWithIt() {
+        TestElement element = new TestElement(90.0F);
+        RecordingWidget widget = new RecordingWidget();
+        ElementSpaceInputListener listener = ElementSpaceInputListener.ofChildWidget(element, widget);
+
+        assertTrue(listener.mouseClicked(60, 70, 0));
+        assertPoint(60, 70, widget.lastX, widget.lastY);
+        listener.mouseDragged(60, 70, 0, 0, 5);
+        assertPoint(0, 5, widget.lastDragX, widget.lastDragY);
+        assertInstanceOf(FancyMenuUiComponent.class, ElementSpaceInputListener.ofChildWidget(element, new RecordingUiWidget()));
+    }
+
+    @Test
+    void theListenerIsWhatTheScreenGivesTheFocusTo() {
+        TestElement element = new TestElement(0.0F);
+        RecordingWidget widget = new RecordingWidget();
+        ElementSpaceInputListener listener = ElementSpaceInputListener.ofChildWidget(element, widget);
+
+        // A screen gives the focus to what answers that it took it, which is the listener it has in its list of children
+        assertTrue(listener.changeFocus(true));
+        assertTrue(widget.focused);
+    }
+
+    @Test
+    void theListenerIsAsFocusableAndNavigatableAsItsWidget() {
+        TestElement element = new TestElement(0.0F);
+        ElementSpaceInputListener plain = ElementSpaceInputListener.ofChildWidget(element, new RecordingWidget());
+        assertTrue(plain.isFocusable());
+        assertTrue(plain.isNavigatable());
+
+        NavigatableRecordingWidget widget = new NavigatableRecordingWidget();
+        ElementSpaceInputListener listener = ElementSpaceInputListener.ofChildWidget(element, widget);
+        assertTrue(listener.isFocusable());
+        widget.focusable = false;
+        assertFalse(listener.isFocusable());
+        assertTrue(listener.isNavigatable());
+        listener.setNavigatable(false);
+        assertFalse(widget.navigatable);
+        assertFalse(listener.isNavigatable());
+    }
+
+    @Test
+    void unwrappingGivesTheWidgetBehindAListener() {
+        TestElement element = new TestElement(0.0F);
+        RecordingWidget widget = new RecordingWidget();
+        assertSame(widget, ElementSpaceInputListener.unwrap(ElementSpaceInputListener.of(element, widget)));
+        assertSame(widget, ElementSpaceInputListener.unwrap(widget));
     }
 
     private static void assertPoint(double expectedX, double expectedY, double x, double y) {
@@ -214,6 +265,33 @@ class ElementSpaceInputListenerTest {
     }
 
     private static final class RecordingUiWidget extends RecordingWidget implements FancyMenuUiComponent {
+
+    }
+
+    private static final class NavigatableRecordingWidget extends RecordingWidget implements NavigatableWidget {
+
+        private boolean focusable = true;
+        private boolean navigatable = true;
+
+        @Override
+        public boolean isFocusable() {
+            return this.focusable;
+        }
+
+        @Override
+        public void setFocusable(boolean focusable) {
+            this.focusable = focusable;
+        }
+
+        @Override
+        public boolean isNavigatable() {
+            return this.navigatable;
+        }
+
+        @Override
+        public void setNavigatable(boolean navigatable) {
+            this.navigatable = navigatable;
+        }
 
     }
 

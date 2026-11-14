@@ -1,0 +1,159 @@
+package de.keksuccino.fancymenu.customization.element.container;
+
+import de.keksuccino.fancymenu.customization.element.AbstractElement;
+import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
+import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
+import org.jetbrains.annotations.NotNull;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Elements for tests of containers and their children. They never touch the screen or the game.
+ */
+final class ElementContainerTestElements {
+
+    private ElementContainerTestElements() {
+    }
+
+    /** A plain element, which only ever asks its container where things are. */
+    static class Child extends AbstractElement {
+
+        Child(@NotNull String identifier) {
+            super(null);
+            this.setInstanceIdentifier(identifier);
+            this.stayOnScreen = false;
+        }
+
+        @Override
+        public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        }
+
+        /** Auto-sizing asks the game for the size of the screen, which tests don't have. */
+        @Override
+        public void updateAutoSizing(boolean ignoreLastTickScreenSize) {
+        }
+
+        /** Anchors this element to the other one without looking it up, which would ask the game for the elements of its screen. */
+        void anchorTo(@NotNull AbstractElement other) {
+            this.anchorPoint = ElementAnchorPoints.ELEMENT;
+            this.anchorPointElementIdentifier = other.getInstanceIdentifier();
+            this.cachedElementAnchorPointParent = other;
+        }
+
+    }
+
+    /** A container with a geometry tests set directly. */
+    static class Container extends Child implements ElementContainer {
+
+        final List<AbstractElement> children = new ArrayList<>();
+        int contentWidth = 300;
+        int contentHeight = 600;
+        int contentScreenX = 0;
+        int contentScreenY = 0;
+        float contentScale = 1.0F;
+        boolean scalesChildVisuals = false;
+        boolean managesChildBoxes = false;
+        boolean showingChildren = true;
+        float childOpacity = 1.0F;
+        int visibleX = Integer.MIN_VALUE / 2;
+        int visibleY = Integer.MIN_VALUE / 2;
+        int visibleWidth = Integer.MAX_VALUE;
+        int visibleHeight = Integer.MAX_VALUE;
+
+        Container(@NotNull String identifier) {
+            super(identifier);
+        }
+
+        @Override
+        public @NotNull AbstractElement getContainerElement() {
+            return this;
+        }
+
+        @Override
+        public void setContainerChildren(@NotNull List<? extends AbstractElement> children) {
+            this.children.clear();
+            this.children.addAll(children);
+        }
+
+        @Override
+        public int getContentWidth() {
+            return this.contentWidth;
+        }
+
+        @Override
+        public int getContentHeight() {
+            return this.contentHeight;
+        }
+
+        @Override
+        public int getContentScreenX() {
+            return this.contentScreenX;
+        }
+
+        @Override
+        public int getContentScreenY() {
+            return this.contentScreenY;
+        }
+
+        @Override
+        public float getContentScale() {
+            return this.contentScale;
+        }
+
+        @Override
+        public boolean scalesChildVisuals() {
+            return this.scalesChildVisuals;
+        }
+
+        @Override
+        public boolean managesChildBoxes() {
+            return this.managesChildBoxes;
+        }
+
+        @Override
+        public void refreshChildBoxes() {
+        }
+
+        @Override
+        public boolean arrangesChildren() {
+            return false;
+        }
+
+        @Override
+        public boolean isScreenPointVisible(double screenX, double screenY) {
+            return (screenX >= this.visibleX) && (screenX < ((long) this.visibleX + this.visibleWidth)) && (screenY >= this.visibleY) && (screenY < ((long) this.visibleY + this.visibleHeight));
+        }
+
+        @Override
+        public boolean clipToShownArea(int @NotNull [] area) {
+            area[0] = Math.max(area[0], this.visibleX);
+            area[1] = Math.max(area[1], this.visibleY);
+            area[2] = (int) Math.min(area[2], (long) this.visibleX + this.visibleWidth);
+            area[3] = (int) Math.min(area[3], (long) this.visibleY + this.visibleHeight);
+            if ((area[0] >= area[2]) || (area[1] >= area[3])) return false;
+            ElementContainer parent = this.getParentContainer();
+            return (parent == null) || parent.clipToShownArea(area);
+        }
+
+        @Override
+        public boolean isShowingChildren() {
+            return this.showingChildren;
+        }
+
+        @Override
+        public float getChildOpacity() {
+            return this.childOpacity;
+        }
+
+        @Override
+        public boolean isCollapsedInLayerList() {
+            return false;
+        }
+
+        @Override
+        public void setCollapsedInLayerList(boolean collapsed) {
+        }
+
+    }
+
+}

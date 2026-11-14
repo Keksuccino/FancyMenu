@@ -70,6 +70,8 @@ public class BrowserElement extends AbstractElement {
         }
         // Creation can precede the first visible frame; never accept input until visibility has been resolved.
         wrappedBrowser.setInteractable(false);
+        // The browser is cached across rebuilds of its element, so every element that takes it over tells it again
+        wrappedBrowser.setInputArea(this::isScreenPointVisibleInContainer);
         BrowserHandler.notifyHandler(this.getInstanceIdentifier(), wrappedBrowser);
         return wrappedBrowser;
     }
@@ -120,6 +122,26 @@ public class BrowserElement extends AbstractElement {
     @Override
     public @NotNull List<GuiEventListener> getWidgetsToRegister() {
         return List.of(this.browserWidget.getWidgetToRegister());
+    }
+
+    /**
+     * The browser has to be a direct child of the screen: its slot looks for itself there to hand over to the browser,
+     * and the loader keyboard hooks look for the browser there. It keeps the mouse away from what a container cuts off
+     * through {@link WrappedRinkuBrowser#setInputArea(WrappedRinkuBrowser.InputArea)}, and needs no mapping into a scaled content
+     * because it never draws scaled ({@link #supportsPoseScaling()}).
+     */
+    @Override
+    public boolean registersChildWidgetsDirectly() {
+        return true;
+    }
+
+    /**
+     * The browser renders its page at the size its element has on the screen and converts the mouse to pixels of that page itself,
+     * so a container that scales its content gives it the scaled box instead of scaling what it draws.
+     */
+    @Override
+    public boolean supportsPoseScaling() {
+        return false;
     }
 
     @Override
