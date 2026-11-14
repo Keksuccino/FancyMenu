@@ -1797,18 +1797,18 @@ public class TextEditorWindowBody extends PiPWindowBody {
             return true;
         }
         //GUI shortcut modifier + C
-        if (((keycode) == 67 && InputUtils.isGuiShortcutModifierDown(modifiers))) {
+        if (InputUtils.isCopy(keycode, scancode, modifiers)) {
             Minecraft.getInstance().keyboardHandler.setClipboard(this.getHighlightedText());
             return true;
         }
         //GUI shortcut modifier + V
-        if (((keycode) == 86 && InputUtils.isGuiShortcutModifierDown(modifiers))) {
+        if (InputUtils.isPaste(keycode, scancode, modifiers)) {
             this.history.saveSnapshot();
             this.pasteText(Minecraft.getInstance().keyboardHandler.getClipboard());
             return true;
         }
         //GUI shortcut modifier + A
-        if (((keycode) == 65 && InputUtils.isGuiShortcutModifierDown(modifiers))) {
+        if (InputUtils.isSelectAll(keycode, scancode, modifiers)) {
             for (TextEditorLine t : new ArrayList<>(this.textFieldLines)) {
                 t.setHighlightPos(0);
                 t.setCursorPosition(t.getValue().length());
@@ -1819,7 +1819,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
             return true;
         }
         //GUI shortcut modifier + X
-        if (((keycode) == 88 && InputUtils.isGuiShortcutModifierDown(modifiers))) {
+        if (InputUtils.isCut(keycode, scancode, modifiers)) {
             this.history.saveSnapshot();
             Minecraft.getInstance().keyboardHandler.setClipboard(this.cutHighlightedText());
             this.resetHighlighting();
