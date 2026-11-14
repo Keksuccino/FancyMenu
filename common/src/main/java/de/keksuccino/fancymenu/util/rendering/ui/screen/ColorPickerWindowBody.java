@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
@@ -13,11 +12,9 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
 import java.awt.Color;
 import java.util.function.Consumer;
 
@@ -352,7 +349,7 @@ public class ColorPickerWindowBody extends PiPWindowBody {
     private void renderColorArea(@NotNull GuiGraphics graphics) {
         int hueRgb = Color.HSBtoRGB(this.colorState.getHue(), 1.0F, 1.0F);
         int hueColor = 0xFF000000 | (hueRgb & 0xFFFFFF);
-        this.fillGradientHorizontal(graphics, this.pickerX, this.pickerY, this.pickerX + this.pickerSize, this.pickerY + this.pickerSize, 0xFFFFFFFF, hueColor);
+        RenderingUtils.fillGradientHorizontal(graphics, this.pickerX, this.pickerY, this.pickerX + this.pickerSize, this.pickerY + this.pickerSize, 0xFFFFFFFF, hueColor);
         graphics.fillGradient(this.pickerX, this.pickerY, this.pickerX + this.pickerSize, this.pickerY + this.pickerSize, 0x00000000, 0xFF000000);
         UIBase.renderBorder(graphics, this.pickerX, this.pickerY, this.pickerX + this.pickerSize, this.pickerY + this.pickerSize, 1, UIBase.getUITheme().ui_interface_widget_border_color.getColorInt(), true, true, true, true);
     }
@@ -385,7 +382,7 @@ public class ColorPickerWindowBody extends PiPWindowBody {
             int endRgb = Color.HSBtoRGB(endHue, 1.0F, 1.0F);
             int startColor = 0xFF000000 | (startRgb & 0xFFFFFF);
             int endColor = 0xFF000000 | (endRgb & 0xFFFFFF);
-            this.fillGradientHorizontal(graphics, startX, this.hueY, endX, this.hueY + this.hueHeight, startColor, endColor);
+            RenderingUtils.fillGradientHorizontal(graphics, startX, this.hueY, endX, this.hueY + this.hueHeight, startColor, endColor);
         }
         UIBase.renderBorder(graphics, this.hueX, this.hueY, this.hueX + this.hueWidth, this.hueY + this.hueHeight, 1, theme.ui_interface_widget_border_color.getColorInt(), true, true, true, true);
 
@@ -399,7 +396,7 @@ public class ColorPickerWindowBody extends PiPWindowBody {
         int rgb = this.getCurrentColorInt() & 0xFFFFFF;
         int leftColor = rgb;
         int rightColor = 0xFF000000 | rgb;
-        this.fillGradientHorizontal(graphics, this.alphaX, this.alphaY, this.alphaX + this.alphaWidth, this.alphaY + this.alphaHeight, leftColor, rightColor);
+        RenderingUtils.fillGradientHorizontal(graphics, this.alphaX, this.alphaY, this.alphaX + this.alphaWidth, this.alphaY + this.alphaHeight, leftColor, rightColor);
         UIBase.renderBorder(graphics, this.alphaX, this.alphaY, this.alphaX + this.alphaWidth, this.alphaY + this.alphaHeight, 1, theme.ui_interface_widget_border_color.getColorInt(), true, true, true, true);
 
         int max = Math.max(1, this.alphaWidth - 1);
@@ -498,15 +495,6 @@ public class ColorPickerWindowBody extends PiPWindowBody {
 
     private void notifyOnColorUpdate() {
         this.onColorUpdate.accept(DrawableColor.of(this.getCurrentHex()));
-    }
-
-    private void fillGradientHorizontal(@NotNull GuiGraphics graphics, int x1, int y1, int x2, int y2, int colorLeft, int colorRight) {
-        Matrix4f matrix = graphics.pose().last().pose();
-        VertexConsumer consumer = graphics.bufferSource().getBuffer(RenderType.gui());
-        consumer.addVertex(matrix, (float) x1, (float) y1, 0.0F).setColor(colorLeft);
-        consumer.addVertex(matrix, (float) x1, (float) y2, 0.0F).setColor(colorLeft);
-        consumer.addVertex(matrix, (float) x2, (float) y2, 0.0F).setColor(colorRight);
-        consumer.addVertex(matrix, (float) x2, (float) y1, 0.0F).setColor(colorRight);
     }
 
 }

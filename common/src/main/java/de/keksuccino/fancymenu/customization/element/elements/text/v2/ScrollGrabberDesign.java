@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.element.elements.text.v2;
 
 import de.keksuccino.fancymenu.customization.element.elements.MarkdownSettings;
+import de.keksuccino.fancymenu.customization.element.style.PixelScrollGrabber;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownLook;
 import net.minecraft.resources.ResourceLocation;
@@ -36,15 +37,10 @@ public enum ScrollGrabberDesign {
     private final String localizationKey = LOCALIZATION_KEY + "." + this.name().toLowerCase(Locale.ROOT);
 
     ScrollGrabberDesign(boolean textured) {
-        this.verticalNormalTexture = textured ? texture("vertical_normal") : null;
-        this.verticalHoverTexture = textured ? texture("vertical_hover") : null;
-        this.horizontalNormalTexture = textured ? texture("horizontal_normal") : null;
-        this.horizontalHoverTexture = textured ? texture("horizontal_hover") : null;
-    }
-
-    @NotNull
-    private static ResourceLocation texture(@NotNull String name) {
-        return ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/markdown/scroll_grabber_" + name + ".png");
+        this.verticalNormalTexture = textured ? PixelScrollGrabber.getTexture(true, false) : null;
+        this.verticalHoverTexture = textured ? PixelScrollGrabber.getTexture(true, true) : null;
+        this.horizontalNormalTexture = textured ? PixelScrollGrabber.getTexture(false, false) : null;
+        this.horizontalHoverTexture = textured ? PixelScrollGrabber.getTexture(false, true) : null;
     }
 
     /**
@@ -89,17 +85,6 @@ public enum ScrollGrabberDesign {
     public ResourceLocation getTexture(boolean vertical, boolean hovered) {
         if (vertical) return hovered ? this.verticalHoverTexture : this.verticalNormalTexture;
         return hovered ? this.horizontalHoverTexture : this.horizontalNormalTexture;
-    }
-
-    /**
-     * Returns if the texture is the texture of a grabber of any design.
-     */
-    public static boolean isDesignTexture(@Nullable ResourceLocation texture) {
-        if (texture == null) return false;
-        for (ScrollGrabberDesign design : values()) {
-            if (texture.equals(design.verticalNormalTexture) || texture.equals(design.verticalHoverTexture) || texture.equals(design.horizontalNormalTexture) || texture.equals(design.horizontalHoverTexture)) return true;
-        }
-        return false;
     }
 
     @NotNull

@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.scissor.ScissorShape;
 import de.keksuccino.fancymenu.util.rendering.scissor.ScissorShapes;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.LayoutEditorWidgetRenderContext;
+import de.keksuccino.fancymenu.customization.element.container.ElementContainerDrawScale;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -75,6 +76,7 @@ public class MixinGuiGraphics {
 
     @ModifyArgs(method = "enableScissor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/navigation/ScreenRectangle;<init>(IIII)V"))
     private void modify_enableScissor_FancyMenu(Args args) {
+        boolean mappedByContainer = ElementContainerDrawScale.mapsNextScissor();
         // Under a rotated or tilted pose, the pose (which includes the scaling of PiP windows and editor widgets) decides where the scissor is
         if (ScissorShapes.isPoseRotated()) {
             int minX = args.get(0);
@@ -88,6 +90,19 @@ public class MixinGuiGraphics {
                 args.set(i, bounds[i]);
             }
             return;
+        }
+        // A container that scales what a child draws does it through the pose, and the child cuts in its own unscaled space
+        if (mappedByContainer) {
+            int minX = args.get(0);
+            int minY = args.get(1);
+            int maxX = minX + (int)args.get(2);
+            int maxY = minY + (int)args.get(3);
+            int left = (int) Math.floor(ElementContainerDrawScale.toScreenX(minX));
+            int top = (int) Math.floor(ElementContainerDrawScale.toScreenY(minY));
+            args.set(0, left);
+            args.set(1, top);
+            args.set(2, (int) Math.ceil(ElementContainerDrawScale.toScreenX(maxX)) - left);
+            args.set(3, (int) Math.ceil(ElementContainerDrawScale.toScreenY(maxY)) - top);
         }
         boolean pipActive = PiPWindowHandler.INSTANCE.isScreenRenderActive();
         boolean widgetActive = LayoutEditorWidgetRenderContext.isBodyRenderActive();
@@ -128,6 +143,11 @@ public class MixinGuiGraphics {
 
     @ModifyArgs(method = "containsPointInScissor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics$ScissorStack;containsPoint(II)Z"))
     private void modify_containsPointInScissor_FancyMenu(Args args) {
+        // A child of a container that scales what it draws checks the mouse it has in its own unscaled space, and what the GUI gets cut to is on the screen
+        if (ElementContainerDrawScale.isActive()) {
+            args.set(0, (int) Math.floor(ElementContainerDrawScale.toScreenX((int) args.get(0))));
+            args.set(1, (int) Math.floor(ElementContainerDrawScale.toScreenY((int) args.get(1))));
+        }
         boolean pipActive = PiPWindowHandler.INSTANCE.isScreenRenderActive();
         boolean widgetActive = LayoutEditorWidgetRenderContext.isBodyRenderActive();
         if (!pipActive && !widgetActive) {

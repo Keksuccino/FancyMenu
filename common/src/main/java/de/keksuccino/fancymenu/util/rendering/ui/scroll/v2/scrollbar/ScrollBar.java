@@ -120,6 +120,27 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
         return this.grabberHovered;
     }
 
+    /**
+     * Returns the X position of the track: the strip at the end of the scroll area that the grabber moves in.
+     */
+    public float getTrackX() {
+        if (this.direction == ScrollBarDirection.HORIZONTAL) return this.scrollAreaStartX;
+        return this.scrollAreaEndX - this.grabberWidth - (this.grabberEdgeInset * 2.0F);
+    }
+
+    public float getTrackY() {
+        if (this.direction == ScrollBarDirection.VERTICAL) return this.scrollAreaStartY;
+        return this.scrollAreaEndY - this.grabberHeight - (this.grabberEdgeInset * 2.0F);
+    }
+
+    public float getTrackWidth() {
+        return this.scrollAreaEndX - this.getTrackX();
+    }
+
+    public float getTrackHeight() {
+        return this.scrollAreaEndY - this.getTrackY();
+    }
+
     public boolean isRoundedGrabberEnabled() {
         return this.roundedGrabber;
     }
@@ -252,12 +273,10 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
             float offsetX = (float) (mouseX - this.leftMouseDownOnGrabberAtMouseX);
             float offsetY = (float) (mouseY - this.leftMouseDownOnGrabberAtMouseY);
 
-            float scrollOffset;
-            if (this.direction == ScrollBarDirection.VERTICAL) {
-                scrollOffset = offsetY / usableAreaHeight;
-            } else {
-                scrollOffset = offsetX / usableAreaWidth;
-            }
+            // A track that is not longer than its grabber leaves the grabber nowhere to go
+            float usableArea = (this.direction == ScrollBarDirection.VERTICAL) ? usableAreaHeight : usableAreaWidth;
+            float offset = (this.direction == ScrollBarDirection.VERTICAL) ? offsetY : offsetX;
+            float scrollOffset = (usableArea > 0.0F) ? (offset / usableArea) : 0.0F;
             this.setScroll(this.leftMouseDownOnGrabberAtScroll + scrollOffset);
 
             return true;

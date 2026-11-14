@@ -455,6 +455,8 @@ public class GlslShaderRuntime {
             int missingTextureId = minecraft.getTextureManager().getTexture(MissingTextureAtlasSprite.getLocation()).getId();
             ChannelTextureState[] externalChannelTextureStates = this.resolveExternalChannelTextureStates(minecraft, settings, missingTextureId);
             this.ensureBufferTargets(areaWidthPx, areaHeightPx);
+            // The buffers get drawn into targets of their own. A scissor that cuts the GUI, like the one of a container the shader is in, is in pixels of the screen and would cut them somewhere else.
+            GlStateManager._disableScissorTest();
 
             for (int passIndex = 0; passIndex < BUFFER_PASS_COUNT; passIndex++) {
                 if (!activeBufferPasses[passIndex]) {
@@ -484,6 +486,7 @@ public class GlslShaderRuntime {
 
             // Multipass buffers bind GL_FRAMEBUFFER, which changes both bindings. Restore the live GUI target without rebinding or wrapping its texture.
             previousState.restoreFramebufferBindings();
+            previousState.restoreScissor();
             GlStateManager._viewport(viewportX, viewportY, viewportWidth, viewportHeight);
 
             if (settings.enableBlend()) {

@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.element.elements.text.v2;
 
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.element.elements.MarkdownSettings;
+import de.keksuccino.fancymenu.customization.element.style.PixelScrollGrabber;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.properties.PropertyHolder;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTestRenderer;
@@ -33,14 +34,14 @@ class ScrollGrabberDesignTest {
                 ResourceLocation texture = ScrollGrabberDesign.PIXEL_HANDLE.getTexture(vertical, hovered);
                 assertNotNull(texture);
                 assertTrue(textures.add(texture), texture::toString);
-                assertTrue(ScrollGrabberDesign.isDesignTexture(texture));
+                assertTrue(PixelScrollGrabber.isTexture(texture));
                 try (InputStream stream = ScrollGrabberDesignTest.class.getResourceAsStream("/assets/" + texture.getNamespace() + "/" + texture.getPath())) {
                     assertNotNull(stream, () -> "missing texture: " + texture);
                 }
             }
         }
-        assertFalse(ScrollGrabberDesign.isDesignTexture(null));
-        assertFalse(ScrollGrabberDesign.isDesignTexture(ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/some_grabber_of_the_user.png")));
+        assertFalse(PixelScrollGrabber.isTexture(null));
+        assertFalse(PixelScrollGrabber.isTexture(ResourceLocation.fromNamespaceAndPath("fancymenu", "textures/some_grabber_of_the_user.png")));
     }
 
     @Test

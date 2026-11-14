@@ -26,6 +26,7 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.events.ModReloadEvent;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
+import de.keksuccino.fancymenu.customization.element.ElementSpaceInputListener;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.widget.identification.WidgetIdentifierHandler;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
@@ -344,6 +345,10 @@ public class ScreenCustomizationLayer implements ElementFactory {
 				//Element children get always added at pos 0, so reverse the list to preserve the natural widget order
 				widgetsToRegister = Lists.reverse(widgetsToRegister);
 				for (GuiEventListener w : widgetsToRegister) {
+					// Widgets of children take their input through a listener that knows what their container shows of them
+					if ((ae.getParentContainer() != null) && !ae.registersChildWidgetsDirectly() && !(w instanceof ElementSpaceInputListener) && (w instanceof NarratableEntry)) {
+						w = wrapChildWidget(ae, w);
+					}
 					if ((w instanceof NarratableEntry) && !((IMixinScreen)e.getScreen()).getChildrenFancyMenu().contains(w)) {
 						((IMixinScreen)e.getScreen()).getChildrenFancyMenu().addFirst(w);
 						if (e.getScreen() instanceof CustomizableScreen c) c.removeOnInitChildrenFancyMenu().add(w);
@@ -428,12 +433,12 @@ public class ScreenCustomizationLayer implements ElementFactory {
 		//Render background elements in foreground if it wasn't possible to render to the menu background
 		if (!this.backgroundDrawable) {
 			for (AbstractElement element : new ArrayList<>(this.normalElements.backgroundElements)) {
-				element.renderInternal(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
+				renderIfNotInContainer(element, e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
 			}
 		}
 		//Render foreground elements
 		for (AbstractElement element : new ArrayList<>(this.normalElements.foregroundElements)) {
-			element.renderInternal(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
+			renderIfNotInContainer(element, e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
 		}
 
         this.layoutBase.decorationOverlays.forEach(pair -> {
@@ -608,11 +613,25 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 		//Render background elements
 		for (AbstractElement elements : new ArrayList<>(this.normalElements.backgroundElements)) {
-			elements.renderInternal(graphics, mouseX, mouseY, partial);
+			renderIfNotInContainer(elements, graphics, mouseX, mouseY, partial);
 		}
 
 		this.backgroundDrawable = true;
 
+	}
+
+	/**
+	 * Renders the element, unless it is a child of a container. Containers render their children themselves,
+	 * at their own place in the order of the elements and cut to what they show of them.
+	 */
+	protected static void renderIfNotInContainer(@NotNull AbstractElement element, @NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+		if (element.getParentContainer() != null) return;
+		element.renderInternal(graphics, mouseX, mouseY, partial);
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T extends GuiEventListener & NarratableEntry> GuiEventListener wrapChildWidget(@NotNull AbstractElement element, @NotNull GuiEventListener widget) {
+		return ElementSpaceInputListener.ofChildWidget(element, (T) widget);
 	}
 
 	protected void _renderBackgroundOverlay(GuiGraphics graphics, int x, int y, int width, int height) {
