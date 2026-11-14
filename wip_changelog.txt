@@ -3,5 +3,8 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 
 - Fixed multi-line text pasted into the text editor ending up on a single line when it was copied from apps like Microsoft Word or Excel
 - Fixed tabs disappearing from text pasted into the text editor, so indentation and tab-aligned columns now stay intact
+- Fixed pasting into the text editor putting all lines into a single line in Minecraft 26.3
+- Fixed Select All in the text editor only selecting the current line in Minecraft 26.3
+- Fixed Copy and Cut in the text editor only working on the current line in Minecraft 26.3
 
 %changelog:end%
