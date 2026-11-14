@@ -498,7 +498,7 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
             return true;
         }
         if (selectedEntry instanceof TextListScrollAreaEntry textEntry) {
-            textEntry.onClick(textEntry, this.getRenderMouseX(), this.getRenderMouseY(), 0);
+            textEntry.onClick(textEntry, this.getRenderMouseX(), this.getRenderMouseY(), InputConstants.MOUSE_BUTTON_LEFT);
             return true;
         }
         return false;
