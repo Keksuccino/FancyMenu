@@ -1146,6 +1146,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	public void pasteElementsFromClipboard() {
 		if (!COPIED_ELEMENTS_CLIPBOARD.isEmpty()) {
+			this.history.saveSnapshot();
 			this.deselectAllElements();
 			// Every paste makes new elements, so what is in the clipboard gets new identifiers for each one
 			ContainerElementOperations.assignNewIdentifiers(COPIED_ELEMENTS_CLIPBOARD.keySet(), ScreenCustomization::generateUniqueIdentifier);
