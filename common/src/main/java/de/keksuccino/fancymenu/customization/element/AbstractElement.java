@@ -9,6 +9,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
+import de.keksuccino.fancymenu.customization.element.container.ElementContainer;
+import de.keksuccino.fancymenu.customization.element.container.ElementContainerLink;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
@@ -132,6 +134,9 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
     protected String anchorPointElementIdentifier = null;
     protected AbstractElement cachedElementAnchorPointParent = null;
+    /** Only exists while this element remembers a container it is a child of. */
+    @Nullable
+    protected ElementContainerLink containerLink;
     @Nullable
     protected Layout parentLayout;
     @Nullable
@@ -308,7 +313,19 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 		if (this.shouldRender()) {
 			//Render the actual element
-			this.extractRenderState(graphics, mouseX, mouseY, partial);
+			ElementContainer container = this.getParentContainer();
+			if (container == null) {
+				this.extractRenderState(graphics, mouseX, mouseY, partial);
+			} else {
+				// Children are as visible as their container lets them be. The opacity is only changed while the element draws, so its fading keeps working with its own value.
+				float ownOpacity = this.opacity;
+				this.opacity = ownOpacity * container.getChildOpacity();
+				try {
+					this.extractRenderState(graphics, mouseX, mouseY, partial);
+				} finally {
+					this.opacity = ownOpacity;
+				}
+			}
 		}
 
 		this.renderTick_Tail();
@@ -744,6 +761,14 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	protected int getAbsoluteX(boolean includeParallax) {
 
+		ElementContainerLink link = this.containerLink;
+		ElementContainer container = (link != null) ? link.getContainer() : null;
+
+		// A container that manages the boxes of its children decides where they are, so nothing of their own positioning applies
+		if ((container != null) && container.managesChildBoxes() && link.hasManagedBox()) {
+			return link.getManagedScreenX(container) + ElementContainerLink.toScreenSize(container, this.animatedOffsetX);
+		}
+
 		int x = 0;
 		if (this.anchorPoint != null) {
 			x = this.anchorPoint.getElementPositionX(this);
@@ -755,7 +780,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 		x += this.animatedOffsetX;
 
-		boolean applyParallax = includeParallax && this.enableParallax && !isEditor();
+		// Parallax follows the mouse on the screen, which makes no sense for something that sits in the content of a container
+		boolean applyParallax = includeParallax && this.enableParallax && !isEditor() && (container == null);
 
 		// Apply parallax effect if enabled and not in editor
 		if (applyParallax) {
@@ -771,13 +797,18 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		if (this.stretchX.getBoolean()) {
             x = 0;
 		} else if (this.stayOnScreen && !this.stickyAnchor && !applyParallax) {
+			// Children stay in the content of their container, which is what the screen is for everything else
+			int maxX = ((container != null) ? container.getContentWidth() : getScreenWidth()) - STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.getContentSpaceWidth();
 			if (x < STAY_ON_SCREEN_EDGE_ZONE_SIZE) {
 				x = STAY_ON_SCREEN_EDGE_ZONE_SIZE;
 			}
-			if (x > (getScreenWidth() - STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.getAbsoluteWidth())) {
-				x = getScreenWidth() - STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.getAbsoluteWidth();
+			if (x > maxX) {
+				x = maxX;
 			}
 		}
+
+		// Everything above is in the units of the content of the container, and positions that leave the element are on the screen
+		if (container != null) x = ElementContainerLink.toScreenX(container, x);
 
 		return x;
 
@@ -796,6 +827,14 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	protected int getAbsoluteY(boolean includeParallax) {
 
+		ElementContainerLink link = this.containerLink;
+		ElementContainer container = (link != null) ? link.getContainer() : null;
+
+		// A container that manages the boxes of its children decides where they are, so nothing of their own positioning applies
+		if ((container != null) && container.managesChildBoxes() && link.hasManagedBox()) {
+			return link.getManagedScreenY(container) + ElementContainerLink.toScreenSize(container, this.animatedOffsetY);
+		}
+
 		int y = 0;
 		if (this.anchorPoint != null) {
 			y = this.anchorPoint.getElementPositionY(this);
@@ -807,7 +846,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 		y += this.animatedOffsetY;
 
-		boolean applyParallax = includeParallax && this.enableParallax && !isEditor();
+		// Parallax follows the mouse on the screen, which makes no sense for something that sits in the content of a container
+		boolean applyParallax = includeParallax && this.enableParallax && !isEditor() && (container == null);
 
 		// Apply parallax effect if enabled and not in editor
 		if (applyParallax) {
@@ -823,13 +863,18 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		if (this.stretchY.getBoolean()) {
 			y = 0;
 		} else if (this.stayOnScreen && !this.stickyAnchor && !applyParallax) {
+			// Children stay in the content of their container, which is what the screen is for everything else
+			int maxY = ((container != null) ? container.getContentHeight() : getScreenHeight()) - STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.getContentSpaceHeight();
 			if (y < STAY_ON_SCREEN_EDGE_ZONE_SIZE) {
 				y = STAY_ON_SCREEN_EDGE_ZONE_SIZE;
 			}
-			if (y > (getScreenHeight() - STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.getAbsoluteHeight())) {
-				y = getScreenHeight() - STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.getAbsoluteHeight();
+			if (y > maxY) {
+				y = maxY;
 			}
 		}
+
+		// Everything above is in the units of the content of the container, and positions that leave the element are on the screen
+		if (container != null) y = ElementContainerLink.toScreenY(container, y);
 
 		return y;
 
@@ -839,11 +884,27 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	 * Returns the actual/final width the element will have when it gets rendered.
 	 */
 	public int getAbsoluteWidth() {
+		ElementContainerLink link = this.containerLink;
+		ElementContainer container = (link != null) ? link.getContainer() : null;
+		if (container == null) return this.getOwnWidth();
+		ElementContainerLink.SizeSpace space = link.getSizeSpace();
+		if (space == ElementContainerLink.SizeSpace.NATURAL) return this.getOwnWidth();
+		if (container.managesChildBoxes() && link.hasManagedBox()) return link.getManagedWidth();
+		int width = this.getOwnWidth();
+		return (space == ElementContainerLink.SizeSpace.SCREEN) ? ElementContainerLink.toScreenSize(container, width) : width;
+	}
+
+	/**
+	 * Returns the width this element has on its own, in the units its position gets calculated in:
+	 * screen pixels for elements of the main layout, units of the content for children of a container.
+	 */
+	protected int getOwnWidth() {
 		if (!this.advancedWidth.isDefault()) {
 			return this.advancedWidth.getInteger();
 		}
 		if (this.stretchX.getBoolean()) {
-			return getScreenWidth();
+			ElementContainer container = this.getParentContainer();
+			return (container != null) ? container.getContentWidth() : getScreenWidth();
 		}
 		this.updateAutoSizing(false);
 		if (this.autoSizing && (this.autoSizingWidth > 0)) {
@@ -856,11 +917,27 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	 * Returns the actual/final height the element will have when it gets rendered.
 	 */
 	public int getAbsoluteHeight() {
+		ElementContainerLink link = this.containerLink;
+		ElementContainer container = (link != null) ? link.getContainer() : null;
+		if (container == null) return this.getOwnHeight();
+		ElementContainerLink.SizeSpace space = link.getSizeSpace();
+		if (space == ElementContainerLink.SizeSpace.NATURAL) return this.getOwnHeight();
+		if (container.managesChildBoxes() && link.hasManagedBox()) return link.getManagedHeight();
+		int height = this.getOwnHeight();
+		return (space == ElementContainerLink.SizeSpace.SCREEN) ? ElementContainerLink.toScreenSize(container, height) : height;
+	}
+
+	/**
+	 * Returns the height this element has on its own, in the units its position gets calculated in:
+	 * screen pixels for elements of the main layout, units of the content for children of a container.
+	 */
+	protected int getOwnHeight() {
 		if (!this.advancedHeight.isDefault()) {
 			return this.advancedHeight.getInteger();
 		}
 		if (this.stretchY.getBoolean()) {
-			return getScreenHeight();
+			ElementContainer container = this.getParentContainer();
+			return (container != null) ? container.getContentHeight() : getScreenHeight();
 		}
 		this.updateAutoSizing(false);
 		if (this.autoSizing && (this.autoSizingHeight > 0)) {
@@ -1072,6 +1149,10 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 	public boolean shouldRender() {
 
+		// Children of a container that does not show them are not there, no matter what they are set to themselves
+		ElementContainer container = this.getParentContainer();
+		if ((container != null) && !container.isShowingChildren()) return false;
+
 		if (!isEditor() && this.loadOncePerSession && this.shouldHideOncePerSessionElement()) return false;
 
 		if (this.isAppearanceDelayed() && !isEditor()) return false;
@@ -1158,7 +1239,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	 * override this when they are displayed in a coordinate space that differs from the active layout editor.
 	 */
 	public int getPositioningScreenWidth() {
-		return getScreenWidth();
+		ElementContainer container = this.getParentContainer();
+		return (container != null) ? container.getContentWidth() : getScreenWidth();
 	}
 
 	public static int getScreenHeight() {
@@ -1171,7 +1253,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	 * override this when they are displayed in a coordinate space that differs from the active layout editor.
 	 */
 	public int getPositioningScreenHeight() {
-		return getScreenHeight();
+		ElementContainer container = this.getParentContainer();
+		return (container != null) ? container.getContentHeight() : getScreenHeight();
 	}
 
 	@SuppressWarnings("all")
@@ -1235,22 +1318,158 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		throw new RuntimeException("AbstractElements are not navigatable!");
 	}
 
+    /**
+     * Returns the identifier of the container this element is a child of, or NULL if it is an element of the main layout.
+     */
+    @Nullable
+    public String getParentContainerIdentifier() {
+        return (this.containerLink != null) ? this.containerLink.getContainerIdentifier() : null;
+    }
+
+    /**
+     * Makes this element a child of the container with the given identifier, or an element of the main layout if it is NULL.<br>
+     * The container gets looked up when it is needed, so it does not have to exist yet.
+     */
+    public void setParentContainerIdentifier(@Nullable String containerIdentifier) {
+        if ((containerIdentifier == null) || containerIdentifier.trim().isEmpty() || containerIdentifier.equals(this.getInstanceIdentifier())) {
+            this.containerLink = null;
+            return;
+        }
+        if ((this.containerLink == null) || !this.containerLink.getContainerIdentifier().equals(containerIdentifier)) {
+            this.containerLink = new ElementContainerLink(this, containerIdentifier);
+        }
+    }
+
+    /**
+     * Returns the container this element is a child of, or NULL if it is an element of the main layout,
+     * or if the container it remembers does not exist.
+     */
+    @Nullable
+    public ElementContainer getParentContainer() {
+        ElementContainerLink link = this.containerLink;
+        return (link != null) ? link.getContainer() : null;
+    }
+
+    /**
+     * Makes this element a child of the given container, or an element of the main layout if it is NULL.
+     */
+    public void setParentContainer(@Nullable ElementContainer container) {
+        this.setParentContainerIdentifier((container != null) ? container.getContainerElement().getInstanceIdentifier() : null);
+        if (this.containerLink != null) this.containerLink.setContainer(container);
+    }
+
+    /**
+     * Returns the connection to the container of this element, which only exists while this element remembers a container.
+     */
+    @Nullable
+    public ElementContainerLink getContainerLink() {
+        return this.containerLink;
+    }
+
+    /**
+     * Returns if this element draws in a way that follows a scale on the pose of the graphics it gets rendered with.<br>
+     * Containers that scale what their children draw do it through the pose. Elements that draw past the pose, for example
+     * into a render target of their own, return FALSE here and get the scaled box from {@link #getAbsoluteWidth()} and
+     * {@link #getAbsoluteHeight()} instead, which is the same for content that fills its box.
+     */
+    public boolean supportsPoseScaling() {
+        return true;
+    }
+
+    /**
+     * Returns the width of this element in the units its position gets calculated in. This is {@link #getAbsoluteWidth()}
+     * for elements of the main layout, and the unscaled width for children of a container that scales its content.
+     */
+    public int getContentSpaceWidth() {
+        return this.getSizeInSpace(ElementContainerLink.SizeSpace.CONTENT, true);
+    }
+
+    /** The height counterpart of {@link #getContentSpaceWidth()}. */
+    public int getContentSpaceHeight() {
+        return this.getSizeInSpace(ElementContainerLink.SizeSpace.CONTENT, false);
+    }
+
+    /**
+     * Returns the width this element has before its container changes it, in the units of the content of the container.
+     * Containers that manage the boxes of their children lay them out with this.
+     */
+    public int getNaturalWidth() {
+        return this.getSizeInSpace(ElementContainerLink.SizeSpace.NATURAL, true);
+    }
+
+    /** The height counterpart of {@link #getNaturalWidth()}. */
+    public int getNaturalHeight() {
+        return this.getSizeInSpace(ElementContainerLink.SizeSpace.NATURAL, false);
+    }
+
+    /**
+     * Asks {@link #getAbsoluteWidth()} or {@link #getAbsoluteHeight()} for the size in another space than the one the element
+     * is in right now, so the answer includes everything subclasses do to the size.<br>
+     * The space is a state of the element while this runs. It is only correct for the thread that renders, which is the only one that switches it.
+     */
+    private int getSizeInSpace(@NotNull ElementContainerLink.SizeSpace space, boolean width) {
+        ElementContainerLink link = this.containerLink;
+        if ((link == null) || (link.getSizeSpace() == space)) return width ? this.getAbsoluteWidth() : this.getAbsoluteHeight();
+        ElementContainerLink.SizeSpace previous = link.setSizeSpace(space);
+        try {
+            return width ? this.getAbsoluteWidth() : this.getAbsoluteHeight();
+        } finally {
+            link.setSizeSpace(previous);
+        }
+    }
+
+    /**
+     * Returns if the point on the screen is in the part of the content the container of this element shows.
+     * Everything of a child outside of it is cut off. Elements of the main layout never get cut off.
+     */
+    public boolean isScreenPointVisibleInContainer(double screenX, double screenY) {
+        ElementContainer container = this.getParentContainer();
+        return (container == null) || (container.isShowingChildren() && container.isScreenPointVisible(screenX, screenY));
+    }
+
+    /**
+     * Returns if the container of this element shows its children right now. Elements of the main layout are always shown.
+     */
+    public boolean isShownByContainer() {
+        ElementContainer container = this.getParentContainer();
+        return (container == null) || container.isShowingChildren();
+    }
+
     /** Geometry only; kept separate from isMouseOver so elements do not intercept vanilla GUI events. */
     public boolean containsMousePosition(double mouseX, double mouseY) {
+        if (!this.isScreenPointVisibleInContainer(mouseX, mouseY)) return false;
         return this.getElementHitbox().contains(mouseX, mouseY, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
     }
 
     /**
      * Maps a screen point to the X coordinate it has in the untransformed space of this element, which is the space the element renders its content in.
-     * Without rotation or tilt, it returns the given X.
+     * Without rotation, tilt or a container that scales what this element draws, it returns the given X.
      */
     public double untransformMouseX(double mouseX, double mouseY) {
-        return this.getElementHitbox().untransformX(mouseX, mouseY, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
+        return this.untransformMouse(mouseX, mouseY, true);
     }
 
     /** The Y counterpart of {@link #untransformMouseX(double, double)}. */
     public double untransformMouseY(double mouseX, double mouseY) {
-        return this.getElementHitbox().untransformY(mouseX, mouseY, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
+        return this.untransformMouse(mouseX, mouseY, false);
+    }
+
+    private double untransformMouse(double mouseX, double mouseY, boolean returnX) {
+        ElementContainerLink link = this.containerLink;
+        ElementContainer container = (link != null) ? link.getContainer() : null;
+        int x = this.getAbsoluteX();
+        int y = this.getAbsoluteY();
+        // While the element renders scaled by its container, it is in the unscaled space already, and so is the mouse it got
+        if ((container != null) && (link.getSizeSpace() == ElementContainerLink.SizeSpace.SCREEN) && ElementContainerLink.drawsScaled(this, container)) {
+            // The container scales what the element draws around its top-left corner, and the rotation happens in the scaled space
+            float scale = container.getContentScale();
+            mouseX = x + ((mouseX - x) / scale);
+            mouseY = y + ((mouseY - y) / scale);
+            int width = this.getContentSpaceWidth();
+            int height = this.getContentSpaceHeight();
+            return returnX ? this.getElementHitbox().untransformX(mouseX, mouseY, x, y, width, height) : this.getElementHitbox().untransformY(mouseX, mouseY, x, y, width, height);
+        }
+        return returnX ? this.getElementHitbox().untransformX(mouseX, mouseY, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight()) : this.getElementHitbox().untransformY(mouseX, mouseY, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight());
     }
 
     /** Returns the hitbox of this element, updated to its current rotation and tilt. */

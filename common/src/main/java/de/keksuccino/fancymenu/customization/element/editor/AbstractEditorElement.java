@@ -5,6 +5,8 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
+import de.keksuccino.fancymenu.customization.element.container.ElementContainer;
+import de.keksuccino.fancymenu.customization.element.container.ElementContainerLink;
 import de.keksuccino.fancymenu.customization.layout.editor.AnchorPointOverlay;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorHistory;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
@@ -128,6 +130,9 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
     public boolean recentlyLeftClickSelected = false;
     public boolean recentlyResized = false;
     public boolean movingCrumpleZonePassed = false;
+    /** What of this element the current call of {@link #extractRenderState(GuiGraphicsExtractor, int, int, float)} renders. */
+    @NotNull
+    protected RenderPass renderPass = RenderPass.EVERYTHING;
 
     private final List<AbstractEditorElement<?, ?>> cachedHoveredElementsOnRightClickMenuOpen = new ArrayList<>();
     private final List<ContextMenuBuilder.ContextMenuScreenOpenProcessor> contextMenuScreenOpenProcessorList = new ArrayList<>();
@@ -782,11 +787,17 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
         this.hovered = this.isMouseOver(mouseX, mouseY);
         this.updateResizeHoverState(mouseX, mouseY);
 
-        this.element.renderInternal(graphics, mouseX, mouseY, partial);
+        if (this.renderPass != RenderPass.EDITOR_CONTROLS) {
 
-        this.renderDraggingNotAllowedOverlay(graphics);
+            this.element.renderInternal(graphics, mouseX, mouseY, partial);
 
-        this.renderDeprecatedIndicator(graphics);
+            this.renderDraggingNotAllowedOverlay(graphics);
+
+            this.renderDeprecatedIndicator(graphics);
+
+        }
+
+        if (this.renderPass == RenderPass.ELEMENT) return;
 
         //Update cursor
         ResizeGrabberType hoveredResizeType = this.getHoveredResizeType();
@@ -803,6 +814,42 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
         this.renderBorder(graphics, mouseX, mouseY, partial);
 
+    }
+
+    /**
+     * Renders this element as a child of a container, which calls this while it renders its content.<br>
+     * A selected child only renders the element itself here. Its border and controls would get cut off with the content,
+     * so the editor renders them afterwards with {@link #extractEditorControlsRenderState(GuiGraphicsExtractor, int, int, float)}.
+     */
+    public void extractRenderStateInContainer(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
+        // The editor renders children the user moves around on top of everything, so they can be seen leaving their container
+        if (this.isGettingMoved()) return;
+        this.extractRenderState(graphics, mouseX, mouseY, partial, this.isSelected() ? RenderPass.ELEMENT : RenderPass.EVERYTHING);
+    }
+
+    /**
+     * Renders only the element itself, without what the editor adds to it.
+     */
+    public void extractElementRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
+        this.extractRenderState(graphics, mouseX, mouseY, partial, RenderPass.ELEMENT);
+    }
+
+    /**
+     * Renders only what the editor adds to this element: its border, its controls and its displays.
+     */
+    public void extractEditorControlsRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
+        this.extractRenderState(graphics, mouseX, mouseY, partial, RenderPass.EDITOR_CONTROLS);
+    }
+
+    private void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial, @NotNull RenderPass pass) {
+        RenderPass previous = this.renderPass;
+        this.renderPass = pass;
+        try {
+            // Subclasses add to this method, and all of what they add has to run in every pass
+            this.extractRenderState(graphics, mouseX, mouseY, partial);
+        } finally {
+            this.renderPass = previous;
+        }
     }
 
     protected void tick() {
@@ -1150,8 +1197,8 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
         int newAbsY = this.element.getAbsoluteY();
 
         // Adjust posOffset to counteract any shift—keeping the on-screen (absolute) position unchanged.
-        this.element.posOffsetX += (oldAbsX - newAbsX);
-        this.element.posOffsetY += (oldAbsY - newAbsY);
+        this.element.posOffsetX += this.toContentDistance(oldAbsX - newAbsX);
+        this.element.posOffsetY += this.toContentDistance(oldAbsY - newAbsY);
 
         this.element.stayOnScreen = stayOnScreen;
 
@@ -1167,6 +1214,71 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
         this.setAnchorPoint(anchor.anchorPoint, false);
         this.updateLeftMouseDownCachedValues(mouseX, mouseY);
         this.updateMovingStartPos(mouseX, mouseY);
+    }
+
+    /**
+     * Makes the element a child of the given container, or an element of the main layout if it is NULL.
+     * The element stays where it is on the screen and keeps the size it has there.<br>
+     * The editor has to update its container hierarchy afterwards.
+     */
+    public void moveToContainer(@Nullable ElementContainer container) {
+
+        int screenX = this.element.getAbsoluteX();
+        int screenY = this.element.getAbsoluteY();
+        int screenWidth = this.element.getAbsoluteWidth();
+        int screenHeight = this.element.getAbsoluteHeight();
+        boolean keepsOwnWidth = this.element.advancedWidth.isDefault() && !this.element.stretchX.getBoolean();
+        boolean keepsOwnHeight = this.element.advancedHeight.isDefault() && !this.element.stretchY.getBoolean();
+
+        this.element.setParentContainer(container);
+
+        if (container != null) {
+            // Children that stay on screen stay in the content of their container, which would keep the user from dragging them out of it again
+            this.element.stayOnScreen = false;
+            // The top left of the content is the one anchor that never moves a child when the content changes its size
+            this.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
+            this.element.setAnchorPointElementIdentifier(null);
+        } else if ((this.element.anchorPoint == ElementAnchorPoints.ELEMENT) || (this.element.anchorPoint == null)) {
+            // The element it was anchored to stays behind in the container
+            this.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
+            this.element.setAnchorPointElementIdentifier(null);
+        }
+
+        // One unit of the content of a container is not always one pixel on the screen
+        if (keepsOwnWidth) this.element.baseWidth = Math.max(1, (container != null) ? ElementContainerLink.toContentSize(container, screenWidth) : screenWidth);
+        if (keepsOwnHeight) this.element.baseHeight = Math.max(1, (container != null) ? ElementContainerLink.toContentSize(container, screenHeight) : screenHeight);
+        this.element.autoSizingWidth = 0;
+        this.element.autoSizingHeight = 0;
+
+        this.moveToScreenPosition(screenX, screenY);
+
+    }
+
+    /**
+     * Moves the element to the given position on the screen by changing its offset from its anchor.
+     */
+    public void moveToScreenPosition(int screenX, int screenY) {
+        boolean stayOnScreen = this.element.stayOnScreen;
+        this.element.stayOnScreen = false;
+        this.element.posOffsetX += this.toContentDistance(screenX - this.element.getAbsoluteX());
+        this.element.posOffsetY += this.toContentDistance(screenY - this.element.getAbsoluteY());
+        this.element.stayOnScreen = stayOnScreen;
+    }
+
+    /**
+     * Converts a distance on the screen to the units the element calculates its position and size in.
+     * These are screen pixels for elements of the main layout, and the units of the content for children of a container.
+     */
+    public int toContentDistance(int screenDistance) {
+        ElementContainer container = this.element.getParentContainer();
+        return (container != null) ? ElementContainerLink.toContentSize(container, screenDistance) : screenDistance;
+    }
+
+    /**
+     * Returns if the user moves this element around with the mouse right now.
+     */
+    public boolean isGettingMoved() {
+        return this.leftMouseDown && this.movingCrumpleZonePassed && !this.isGettingResized() && !this.isGettingRotated() && !this.isGettingTilted() && this.editor.getCurrentlyDraggedElements().contains(this);
     }
 
     public void resetElementStates() {
@@ -1384,10 +1496,12 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
                 this.element.horizontalTiltDegrees.set(this.snapTiltToZero(newTilt));
             } else if (this.leftMouseDown && !this.isGettingResized() && this.movingCrumpleZonePassed) { // MOVE ELEMENT
-                int diffX = (int)-(this.movingStartPosX - mouseX);
-                int diffY = (int)-(this.movingStartPosY - mouseY);
+                // The offsets of children are in the units of the content of their container, which the mouse does not move in
+                int diffX = this.toContentDistance((int)-(this.movingStartPosX - mouseX));
+                int diffY = this.toContentDistance((int)-(this.movingStartPosY - mouseY));
                 if (this.editor.allSelectedElementsMovable()) {
-                    if (!this.isMultiSelected() || !this.isElementAnchorAndParentIsSelected()) {
+                    // Children of a container that gets moved along move with it
+                    if (!this.isMultiSelected() || (!this.isElementAnchorAndParentIsSelected() && !this.editor.containerDragDropHandler.movesWithDraggedContainer(this, this.editor.getSelectedElements()))) {
                         // Calculate new positions
                         int newOffsetX = this.leftMouseDownBaseX + diffX;
                         int newOffsetY = this.leftMouseDownBaseY + diffY;
@@ -1547,8 +1661,8 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                 }
             }
             if (this.leftMouseDown && this.isGettingResized()) { // RESIZE ELEMENT
-                int diffX = (int)-(this.resizingStartPosX - mouseX);
-                int diffY = (int)-(this.resizingStartPosY - mouseY);
+                int diffX = this.toContentDistance((int)-(this.resizingStartPosX - mouseX));
+                int diffY = this.toContentDistance((int)-(this.resizingStartPosY - mouseY));
                 if ((diffX > 0) || (diffY > 0)) this.recentlyResized = true;
 
                 ResizeGrabberType resizeType = this.activeResizeGrabberType;
@@ -1620,6 +1734,8 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
     @Override
     public boolean isMouseOver(double mouseX, double mouseY) {
         if (this.element.layerHiddenInEditor) return false;
+        // What a container cuts off of a child can't be hovered. A selected child shows its border and controls there, so it can.
+        if (!this.isSelected() && !this.element.isScreenPointVisibleInContainer(mouseX, mouseY)) return false;
         return UIBase.isXYInArea((int) mouseX, (int) mouseY, this.getX(), this.getY(), this.getWidth(), this.getHeight());
     }
 
@@ -1653,6 +1769,8 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
     public boolean isHovered() {
         if (this.element.layerHiddenInEditor) return false;
+        // Children of a container that does not show them do not render, which leaves them with the hover state of their last frame
+        if (!this.element.isShownByContainer()) return false;
         return this.hovered || this.rightClickMenu.isUserNavigatingInMenu() || (this.getHoveredResizeType() != null) || (this.getHoveredRotationGrabber() != null) || (this.getHoveredVerticalTiltGrabber() != null) || (this.getHoveredHorizontalTiltGrabber() != null);
     }
 
@@ -1964,6 +2082,19 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
     @Override
     public @Nullable Screen getContextMenuCallbackScreen() {
         return this.editor;
+    }
+
+    /**
+     * The parts of an element in the editor that one call of {@link #extractRenderState(GuiGraphicsExtractor, int, int, float)} can render.
+     */
+    protected enum RenderPass {
+
+        EVERYTHING,
+        /** The element itself, without what the editor adds to it. */
+        ELEMENT,
+        /** What the editor adds to the element: border, controls and displays. */
+        EDITOR_CONTROLS
+
     }
 
     private static @NotNull MaterialIcon getAnchorPointIcon(@NotNull ElementAnchorPoint anchorPoint) {

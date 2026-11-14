@@ -178,6 +178,8 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
                 element.anchorPointElementIdentifier = WidgetIdentifierHandler.normalizeIdentifier(anchorElement);
             }
 
+            element.setParentContainerIdentifier(serialized.getValue("parent_container"));
+
             String stayOnScreen = serialized.getValue("stay_on_screen");
             //Setting this to false if null should set it to false for all legacy elements, so old layouts don't break
             if ((stayOnScreen == null) || stayOnScreen.equals("false")) {
@@ -320,6 +322,10 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             sec.putProperty("anchor_point", (element.anchorPoint != null) ? element.anchorPoint.getName() : ElementAnchorPoints.TOP_LEFT.getName());
             if ((element.anchorPoint == ElementAnchorPoints.ELEMENT) && (element.anchorPointElementIdentifier != null)) {
                 sec.putProperty("anchor_point_element", element.anchorPointElementIdentifier);
+            }
+
+            if (element.getParentContainerIdentifier() != null) {
+                sec.putProperty("parent_container", element.getParentContainerIdentifier());
             }
 
             if (element.appearanceDelay == null) {

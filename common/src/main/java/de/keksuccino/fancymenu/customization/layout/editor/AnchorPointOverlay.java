@@ -7,6 +7,8 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.HideableElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
+import de.keksuccino.fancymenu.customization.element.container.ContainerEditorElement;
+import de.keksuccino.fancymenu.customization.element.container.ElementContainer;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.ScreenUtils;
@@ -44,6 +46,18 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
     protected boolean lastTickDraggedEmpty = true;
     protected long areaHoverStartTime = -1;
     protected boolean overlayVisibilityKeybindPressed = false;
+    /**
+     * The container whose content the anchor areas stand for right now, or NULL if they stand for the screen.<br>
+     * Anchors of children refer to the content of their container, so while the user drags children of one container,
+     * the areas sit along what that container shows of its content.
+     */
+    @Nullable
+    protected AbstractEditorElement<?, ?> anchorSpaceContainer = null;
+    /** If the dragged elements have anchors the overlay can change. Children of a container that places them itself have none. */
+    protected boolean draggedElementsHaveAnchors = true;
+
+    protected static final int SCREEN_ANCHOR_AREA_SIZE = 30;
+    protected static final int MIN_CONTAINER_ANCHOR_AREA_SIZE = 6;
 
     protected AnchorPointArea topLeftArea = new AnchorPointArea(ElementAnchorPoints.TOP_LEFT, 30, 30, AnchorPointArea.ProgressDirection.TO_RIGHT);
     protected AnchorPointArea midLeftArea = new AnchorPointArea(ElementAnchorPoints.MID_LEFT, 30, 30, AnchorPointArea.ProgressDirection.TO_RIGHT);
@@ -159,6 +173,12 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
             return;
         }
 
+        this.updateAnchorSpace();
+        if (!this.draggedElementsHaveAnchors) {
+            this.resetAreaHoverCache();
+            return;
+        }
+
         this.tickAreaMouseOver(mouseX, mouseY);
 
         RenderingUtils.resetShaderColor(graphics);
@@ -185,47 +205,90 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
         this.fillOverlay(graphics, xMin, yMax - borderThickness, xMax, yMax, color);
     }
 
+    /**
+     * Works out what the anchor areas stand for in this frame: the screen, or the content of the container the dragged elements are in.
+     */
+    protected void updateAnchorSpace() {
+        this.anchorSpaceContainer = null;
+        this.draggedElementsHaveAnchors = true;
+        List<AbstractEditorElement<?, ?>> dragged = this.editor.getCurrentlyDraggedElements();
+        ElementContainer shared = null;
+        boolean first = true;
+        for (AbstractEditorElement<?, ?> e : dragged) {
+            if (this.editor.containerDragDropHandler.movesWithDraggedContainer(e, dragged)) continue;
+            ElementContainer container = e.element.getParentContainer();
+            if (first) {
+                shared = container;
+                first = false;
+            } else if (shared != container) {
+                // Elements of different spaces have no anchor areas in common, so the areas stay the ones of the screen
+                return;
+            }
+        }
+        if (shared == null) return;
+        if (shared.managesChildBoxes()) {
+            this.draggedElementsHaveAnchors = false;
+            return;
+        }
+        AbstractEditorElement<?, ?> containerEditorElement = this.editor.getElementByInstanceIdentifier(shared.getContainerElement().getInstanceIdentifier());
+        if (containerEditorElement instanceof ContainerEditorElement) this.anchorSpaceContainer = containerEditorElement;
+    }
+
+    /**
+     * Returns if the anchors of the element refer to what the anchor areas stand for right now.
+     */
+    protected boolean isInAnchorSpace(@NotNull AbstractEditorElement<?, ?> element) {
+        ElementContainer container = element.element.getParentContainer();
+        if (container == null) return this.anchorSpaceContainer == null;
+        return (this.anchorSpaceContainer != null) && (this.anchorSpaceContainer.element == container.getContainerElement());
+    }
+
     protected void renderAreas(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
-        MenuBar menuBar = this.editor.getCurrentMenuBar();
-        int menuBarHeight = ((menuBar != null) ? (int)((float)MenuBar.PIXEL_SIZE * MenuBar.getRenderScale()) : 0);
-        if ((menuBar != null) && !menuBar.isExpanded()) menuBarHeight = 0;
+        int spaceX = 0;
+        int spaceY = 0;
+        int spaceWidth = ScreenUtils.getScreenWidth();
+        int spaceHeight = ScreenUtils.getScreenHeight();
+        int areaSize = SCREEN_ANCHOR_AREA_SIZE;
+        // On the screen, the areas reach a pixel beyond its edges, which hides the part of their border that would lie on the edge
+        int overhang = 1;
+        if (this.anchorSpaceContainer != null) {
+            ContainerEditorElement container = (ContainerEditorElement) this.anchorSpaceContainer;
+            spaceX = container.getDropAreaX();
+            spaceY = container.getDropAreaY();
+            spaceWidth = container.getDropAreaWidth();
+            spaceHeight = container.getDropAreaHeight();
+            // Three areas have to fit next to each other with room between them, in containers of every size
+            areaSize = Math.max(MIN_CONTAINER_ANCHOR_AREA_SIZE, Math.min(SCREEN_ANCHOR_AREA_SIZE, Math.min(spaceWidth, spaceHeight) / 5));
+            overhang = 0;
+        } else {
+            MenuBar menuBar = this.editor.getCurrentMenuBar();
+            int menuBarHeight = ((menuBar != null) ? (int)((float)MenuBar.PIXEL_SIZE * MenuBar.getRenderScale()) : 0);
+            if ((menuBar != null) && !menuBar.isExpanded()) menuBarHeight = 0;
+            spaceY = menuBarHeight;
+            spaceHeight -= menuBarHeight;
+        }
 
-        this.topLeftArea.x = -1;
-        this.topLeftArea.y = -1 + menuBarHeight;
-        this.topLeftArea.extractRenderState(graphics, mouseX, mouseY, partial);
+        int left = spaceX - overhang;
+        int centerX = spaceX + (spaceWidth / 2) - (areaSize / 2);
+        int right = spaceX + spaceWidth - areaSize + overhang;
+        int top = spaceY - overhang;
+        // The middle of the screen stays the middle of the screen, also with the menu bar taking some of it
+        int centerY = ((this.anchorSpaceContainer != null) ? (spaceY + (spaceHeight / 2)) : (ScreenUtils.getScreenHeight() / 2)) - (areaSize / 2);
+        int bottom = spaceY + spaceHeight - areaSize + overhang;
 
-        this.midLeftArea.x = -1;
-        this.midLeftArea.y = (ScreenUtils.getScreenHeight() / 2) - (this.midLeftArea.getHeight() / 2);
-        this.midLeftArea.extractRenderState(graphics, mouseX, mouseY, partial);
-
-        this.bottomLeftArea.x = -1;
-        this.bottomLeftArea.y = ScreenUtils.getScreenHeight() - this.bottomLeftArea.getHeight() + 1;
-        this.bottomLeftArea.extractRenderState(graphics, mouseX, mouseY, partial);
-
-        this.topCenteredArea.x = (ScreenUtils.getScreenWidth() / 2) - (this.topCenteredArea.getWidth() / 2);
-        this.topCenteredArea.y = -1 + menuBarHeight;
-        this.topCenteredArea.extractRenderState(graphics, mouseX, mouseY, partial);
-
-        this.midCenteredArea.x = (ScreenUtils.getScreenWidth() / 2) - (this.midCenteredArea.getWidth() / 2);
-        this.midCenteredArea.y = (ScreenUtils.getScreenHeight() / 2) - (this.midCenteredArea.getHeight() / 2);
-        this.midCenteredArea.extractRenderState(graphics, mouseX, mouseY, partial);
-
-        this.bottomCenteredArea.x = (ScreenUtils.getScreenWidth() / 2) - (this.bottomCenteredArea.getWidth() / 2);
-        this.bottomCenteredArea.y = ScreenUtils.getScreenHeight() - this.bottomCenteredArea.getHeight() + 1;
-        this.bottomCenteredArea.extractRenderState(graphics, mouseX, mouseY, partial);
-
-        this.topRightArea.x = ScreenUtils.getScreenWidth() - this.topRightArea.getWidth() + 1;
-        this.topRightArea.y = -1 + menuBarHeight;
-        this.topRightArea.extractRenderState(graphics, mouseX, mouseY, partial);
-
-        this.midRightArea.x = ScreenUtils.getScreenWidth() - this.midRightArea.getWidth() + 1;
-        this.midRightArea.y = (ScreenUtils.getScreenHeight() / 2) - (this.midRightArea.getHeight() / 2);
-        this.midRightArea.extractRenderState(graphics, mouseX, mouseY, partial);
-
-        this.bottomRightArea.x = ScreenUtils.getScreenWidth() - this.bottomRightArea.getWidth() + 1;
-        this.bottomRightArea.y = ScreenUtils.getScreenHeight() - this.bottomRightArea.getHeight() + 1;
-        this.bottomRightArea.extractRenderState(graphics, mouseX, mouseY, partial);
+        this.topLeftArea.setBounds(left, top, areaSize);
+        this.midLeftArea.setBounds(left, centerY, areaSize);
+        this.bottomLeftArea.setBounds(left, bottom, areaSize);
+        this.topCenteredArea.setBounds(centerX, top, areaSize);
+        this.midCenteredArea.setBounds(centerX, centerY, areaSize);
+        this.bottomCenteredArea.setBounds(centerX, bottom, areaSize);
+        this.topRightArea.setBounds(right, top, areaSize);
+        this.midRightArea.setBounds(right, centerY, areaSize);
+        this.bottomRightArea.setBounds(right, bottom, areaSize);
+        for (AnchorPointArea area : this.anchorPointAreas) {
+            area.extractRenderState(graphics, mouseX, mouseY, partial);
+        }
 
         if (this.currentlyHoveredArea != null) {
             this.currentlyHoveredArea.renderMouseOverProgress(graphics, this.calculateMouseOverProgress());
@@ -255,6 +318,8 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
     }
 
     protected void renderConnectionLineFor(@NotNull GuiGraphicsExtractor graphics, @NotNull AbstractEditorElement<?, ?> e) {
+        // The areas only stand for the anchors of elements whose anchors refer to the same space
+        if ((e.element.anchorPoint != ElementAnchorPoints.ELEMENT) && !this.isInAnchorSpace(e)) return;
         AnchorPointArea a = this.getParentAreaOfElement(e);
         if (a != null) {
             int xElement = e.getX() + (e.getWidth() / 2);
@@ -352,6 +417,17 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
         Objects.requireNonNull(element);
         Objects.requireNonNull(area);
         if (this.isAttachedToAnchor(element, area)) return false;
+        // Elements that move with a container the user drags keep their place in it
+        if (this.editor.containerDragDropHandler.movesWithDraggedContainer(element, this.editor.getCurrentlyDraggedElements())) return false;
+        ElementContainer container = element.element.getParentContainer();
+        if ((container != null) && container.managesChildBoxes()) return false;
+        if (area instanceof ElementAnchorPointArea elementArea) {
+            // An element can only follow an element of the same space: its container, or the main layout
+            AbstractEditorElement<?, ?> anchorElement = this.editor.getElementByInstanceIdentifier(elementArea.elementIdentifier);
+            if ((anchorElement == null) || (anchorElement.element.getParentContainer() != container)) return false;
+        } else if (!this.isInAnchorSpace(element)) {
+            return false;
+        }
         //Check if area is ElementAnchorPointArea and if so, check if area's element is child of the given element parameter
         if (area instanceof ElementAnchorPointArea) {
             AbstractEditorElement<?, ?> areaElement = this.editor.getElementByInstanceIdentifier(((ElementAnchorPointArea) area).elementIdentifier);
@@ -432,6 +508,12 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
                 if (parentOfHovered != null) {
                     for (AbstractEditorElement<?, ?> dragged : this.editor.getCurrentlyDraggedElements()) {
                         if (parentOfHovered.getInstanceIdentifier().equals(dragged.element.getInstanceIdentifier())) return null;
+                    }
+                }
+                // Hovering a container with something it can hold means dropping it in there, not anchoring to it
+                if (e instanceof ContainerEditorElement container) {
+                    for (AbstractEditorElement<?, ?> dragged : this.editor.getCurrentlyDraggedElements()) {
+                        if ((dragged.element.getParentContainer() != e.element) && container.canHoldChild(dragged)) return null;
                     }
                 }
                 if (!e.isSelected() && !e.isMultiSelected()) return new ElementAnchorPointArea(e.element.getInstanceIdentifier());
@@ -563,8 +645,8 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
         public final ElementAnchorPoint anchorPoint;
         private int x;
         private int y;
-        private final int width;
-        private final int height;
+        private int width;
+        private int height;
         private final ProgressDirection direction;
 
         private AnchorPointArea(@NotNull ElementAnchorPoint anchorPoint, int width, int height, @NotNull ProgressDirection direction) {
@@ -607,6 +689,13 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
             }
             AnchorPointOverlay.this.fillOverlay(graphics, startX, startY, endX, endY, RenderingUtils.replaceAlphaInColor(getOverlayColorBorder().getColorInt(), getOverlayOpacity()));
             UIBase.resetShaderColor(graphics);
+        }
+
+        protected void setBounds(int x, int y, int size) {
+            this.x = x;
+            this.y = y;
+            this.width = size;
+            this.height = size;
         }
 
         protected int getWidth() {

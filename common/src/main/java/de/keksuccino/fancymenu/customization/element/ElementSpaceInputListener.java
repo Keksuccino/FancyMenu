@@ -1,7 +1,10 @@
 package de.keksuccino.fancymenu.customization.element;
 
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
+import net.minecraft.client.gui.ComponentPath;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.navigation.FocusNavigationEvent;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.input.CharacterEvent;
@@ -16,6 +19,8 @@ import java.util.Objects;
  * Hands the mouse input a screen sends to a widget of an element on to that widget in the untransformed space of the element,
  * which is the space the element renders the widget in. Rotated and tilted elements register these instead of their widgets,
  * so the widgets react to the mouse where they appear on the screen.<br>
+ * Widgets of children of a container always get registered through these: they map the mouse into a scaled content,
+ * and they keep clicks and scrolls away from everything the container cuts off or does not show.<br>
  * Use {@link #of(AbstractElement, GuiEventListener)}, which keeps the input routing of FancyMenu UI components for widgets that are one.
  */
 public class ElementSpaceInputListener implements GuiEventListener, NarratableEntry {
@@ -58,6 +63,7 @@ public class ElementSpaceInputListener implements GuiEventListener, NarratableEn
 
     @Override
     public boolean mouseClicked(@NotNull MouseButtonEvent event, boolean isDoubleClick) {
+        if (!this.element.isScreenPointVisibleInContainer(event.x(), event.y())) return false;
         return this.widget.mouseClicked(this.toElementSpace(event), isDoubleClick);
     }
 
@@ -79,16 +85,19 @@ public class ElementSpaceInputListener implements GuiEventListener, NarratableEn
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        if (!this.element.isScreenPointVisibleInContainer(mouseX, mouseY)) return false;
         return this.widget.mouseScrolled(this.element.untransformMouseX(mouseX, mouseY), this.element.untransformMouseY(mouseX, mouseY), scrollX, scrollY);
     }
 
     @Override
     public boolean isMouseOver(double mouseX, double mouseY) {
+        if (!this.element.isScreenPointVisibleInContainer(mouseX, mouseY)) return false;
         return this.widget.isMouseOver(this.element.untransformMouseX(mouseX, mouseY), this.element.untransformMouseY(mouseX, mouseY));
     }
 
     @Override
     public boolean keyPressed(@NotNull KeyEvent event) {
+        if (!this.element.isShownByContainer()) return false;
         return this.widget.keyPressed(event);
     }
 
@@ -99,6 +108,7 @@ public class ElementSpaceInputListener implements GuiEventListener, NarratableEn
 
     @Override
     public boolean charTyped(@NotNull CharacterEvent event) {
+        if (!this.element.isShownByContainer()) return false;
         return this.widget.charTyped(event);
     }
 
@@ -115,6 +125,35 @@ public class ElementSpaceInputListener implements GuiEventListener, NarratableEn
     @Override
     public boolean isFocused() {
         return this.widget.isFocused();
+    }
+
+    /**
+     * Focus navigation goes to the widget itself, which takes keyboard input without this listener in between.
+     */
+    @Override
+    public @Nullable ComponentPath nextFocusPath(@NotNull FocusNavigationEvent navigationEvent) {
+        if (!this.element.isShownByContainer()) return null;
+        return this.widget.nextFocusPath(navigationEvent);
+    }
+
+    @Override
+    public @Nullable ComponentPath getCurrentFocusPath() {
+        return this.widget.getCurrentFocusPath();
+    }
+
+    @Override
+    public @NotNull ScreenRectangle getRectangle() {
+        return this.widget.getRectangle();
+    }
+
+    @Override
+    public boolean shouldTakeFocusAfterInteraction() {
+        return this.widget.shouldTakeFocusAfterInteraction();
+    }
+
+    @Override
+    public boolean capturesInput() {
+        return this.widget.capturesInput();
     }
 
     @Override

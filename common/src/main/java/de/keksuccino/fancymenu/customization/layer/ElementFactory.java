@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.layer;
 
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
+import de.keksuccino.fancymenu.customization.element.container.ElementContainerHierarchy;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
 import de.keksuccino.fancymenu.customization.widget.WidgetMeta;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
@@ -15,6 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 public interface ElementFactory {
 
@@ -80,6 +82,14 @@ public interface ElementFactory {
                 }
             }
         }
+
+        // Children can only be in a container of their own list, because a list renders as a whole, in front of or behind the screen
+        ElementContainerHierarchy.connect(normalElements.backgroundElements);
+        ElementContainerHierarchy.connect(normalElements.foregroundElements);
+        ElementContainerHierarchy.sortChildrenBehindContainers(normalElements.backgroundElements, Function.identity());
+        ElementContainerHierarchy.sortChildrenBehindContainers(normalElements.foregroundElements, Function.identity());
+        ElementContainerHierarchy.assignChildren(normalElements.backgroundElements);
+        ElementContainerHierarchy.assignChildren(normalElements.foregroundElements);
 
         normalElements.backgroundElements.forEach(element -> element.setAppearanceStateScreenIdentifier(screenIdentifier));
         normalElements.foregroundElements.forEach(element -> element.setAppearanceStateScreenIdentifier(screenIdentifier));
