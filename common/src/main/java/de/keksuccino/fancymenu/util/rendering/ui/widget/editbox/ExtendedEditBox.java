@@ -656,7 +656,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
             }
         }
         //If select all, only select parts that are not prefix or suffix
-        if (((keycode) == 65 && InputUtils.isGuiShortcutModifierDown(modifiers)) && ((this.inputPrefix != null) || (this.inputSuffix != null))) {
+        if (InputUtils.isSelectAll(keycode, scancode, modifiers) && ((this.inputPrefix != null) || (this.inputSuffix != null))) {
             if (this.inputSuffix != null) {
                 this.moveCursorTo(this.getValue().length() - this.inputSuffix.length(), false);
             } else {
