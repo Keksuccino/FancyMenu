@@ -318,7 +318,7 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
             boolean mouseOver = this.geometry.isInViewport(this.frameMouseX, this.frameMouseY);
             this.scrolling.update(this.geometry, deltaSeconds, this.frameMouseX, this.frameMouseY, mouseOver);
             ScrollAreaScroller scroller = this.scrolling.getScroller();
-            this.geometry.setScroll(scroller.x().getPosition(), scroller.y().getPosition(), this.getGuiScale());
+            this.geometry.setScroll(scroller.x().getPosition(), scroller.y().getPosition(), this.getPreciseGuiScale());
 
             this.frameReady = true;
 
@@ -503,7 +503,7 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
     /**
      * Returns how many pixels of the window one screen pixel is, which is the smallest step the content can move by and still show sharp.
      */
-    protected double getGuiScale() {
+    protected double getPreciseGuiScale() {
         return WindowHandler.getGuiScale();
     }
 

@@ -922,7 +922,7 @@ class ScrollAreaElementTest {
         }
 
         @Override
-        protected double getGuiScale() {
+        protected double getPreciseGuiScale() {
             return 1.0D;
         }
 
