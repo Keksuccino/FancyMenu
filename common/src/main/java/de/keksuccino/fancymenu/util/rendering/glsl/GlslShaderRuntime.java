@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.customization.variables.UserVariableSnapshot;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphicsExtractor;
 import de.keksuccino.fancymenu.util.rendering.GuiRenderPhaseAction;
+import de.keksuccino.fancymenu.util.rendering.GuiScissorUtil;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
@@ -320,11 +321,11 @@ public class GlslShaderRuntime {
         }
     }
 
-    private record GlslRenderState(@NotNull GlslShaderRuntime runtime, int areaX, int areaY, int areaWidth, int areaHeight, float partialTick, @Nullable String fragmentSource, @NotNull RenderSettings settings, @NotNull ScreenRectangle bounds) implements GuiRenderPhaseAction {
+    private record GlslRenderState(@NotNull GlslShaderRuntime runtime, int areaX, int areaY, int areaWidth, int areaHeight, float partialTick, @Nullable String fragmentSource, @NotNull RenderSettings settings, @NotNull ScreenRectangle bounds, @Nullable ScreenRectangle scissor) implements GuiRenderPhaseAction {
 
         @Override
         public void executeRender_FancyMenu() {
-            this.runtime.renderNow(this.areaX, this.areaY, this.areaWidth, this.areaHeight, this.partialTick, this.fragmentSource, this.settings);
+            this.runtime.renderNow(this.areaX, this.areaY, this.areaWidth, this.areaHeight, this.partialTick, this.fragmentSource, this.settings, this.scissor);
         }
 
     }
@@ -412,13 +413,16 @@ public class GlslShaderRuntime {
         ScreenRectangle bounds = new ScreenRectangle(areaX, areaY, areaWidth, areaHeight).transformAxisAligned(graphics.pose());
         var renderState = ((IMixinGuiGraphicsExtractor) graphics).get_guiRenderState_FancyMenu();
         renderState.nextStratum();
-        renderState.addGuiElement(new GlslRenderState(this, areaX, areaY, areaWidth, areaHeight, partialTick, fragmentSource, settings, bounds));
+        renderState.addGuiElement(new GlslRenderState(this, areaX, areaY, areaWidth, areaHeight, partialTick, fragmentSource, settings, bounds, GuiScissorUtil.getActiveScissor(graphics)));
         renderState.nextStratum();
         RenderingUtils.resetShaderColor(graphics);
         return !this.sourceMissing;
     }
 
-    private boolean renderNow(int areaX, int areaY, int areaWidth, int areaHeight, float partialTick, @Nullable String fragmentSource, @NotNull RenderSettings settings) {
+    /**
+     * @param scissor What the GUI got cut to where the shader got extracted, like what a container shows of its content, or NULL if nothing cut it.
+     */
+    private boolean renderNow(int areaX, int areaY, int areaWidth, int areaHeight, float partialTick, @Nullable String fragmentSource, @NotNull RenderSettings settings, @Nullable ScreenRectangle scissor) {
 
         RenderSystem.assertOnRenderThread();
         Minecraft minecraft = Minecraft.getInstance();
@@ -444,6 +448,13 @@ public class GlslShaderRuntime {
         int viewportY = Math.max(0, areaYPxBottom);
         int viewportRight = Math.min(screenWidthPx, areaXPx + areaWidthPx);
         int viewportTop = Math.min(screenHeightPx, areaYPxBottom + areaHeightPx);
+        if (scissor != null) {
+            // The shader draws past everything that cuts the GUI, so it gets cut here, at the same pixels the GUI gets cut at
+            viewportX = Math.max(viewportX, Mth.floor(scissor.left() * guiScale));
+            viewportY = Math.max(viewportY, screenHeightPx - Mth.floor(scissor.bottom() * guiScale));
+            viewportRight = Math.min(viewportRight, Mth.floor(scissor.right() * guiScale));
+            viewportTop = Math.min(viewportTop, screenHeightPx - Mth.floor(scissor.top() * guiScale));
+        }
         int viewportWidth = Math.max(0, viewportRight - viewportX);
         int viewportHeight = Math.max(0, viewportTop - viewportY);
         if (viewportWidth <= 0 || viewportHeight <= 0) {

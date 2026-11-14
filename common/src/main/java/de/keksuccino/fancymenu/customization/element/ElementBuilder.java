@@ -28,6 +28,8 @@ import java.util.Objects;
 public abstract class ElementBuilder<E extends AbstractElement, L extends AbstractEditorElement> implements SerializationHelper {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    /** The key children of a container save the identifier of their container under. Changing it breaks saved layouts. */
+    public static final String PARENT_CONTAINER_KEY = "parent_container";
 
     private final String identifier;
 
@@ -176,6 +178,8 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
                 element.anchorPointElementIdentifier = WidgetIdentifierHandler.normalizeIdentifier(anchorElement);
             }
 
+            element.setParentContainerIdentifier(serialized.getValue(PARENT_CONTAINER_KEY));
+
             String stayOnScreen = serialized.getValue("stay_on_screen");
             //Setting this to false if null should set it to false for all legacy elements, so old layouts don't break
             if ((stayOnScreen == null) || stayOnScreen.equals("false")) {
@@ -318,6 +322,10 @@ public abstract class ElementBuilder<E extends AbstractElement, L extends Abstra
             sec.putProperty("anchor_point", (element.anchorPoint != null) ? element.anchorPoint.getName() : ElementAnchorPoints.TOP_LEFT.getName());
             if ((element.anchorPoint == ElementAnchorPoints.ELEMENT) && (element.anchorPointElementIdentifier != null)) {
                 sec.putProperty("anchor_point_element", element.anchorPointElementIdentifier);
+            }
+
+            if (element.getParentContainerIdentifier() != null) {
+                sec.putProperty(PARENT_CONTAINER_KEY, element.getParentContainerIdentifier());
             }
 
             if (element.appearanceDelay == null) {

@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.jsonmodel;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.platform.NativeImage;
@@ -16,6 +17,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -123,6 +125,9 @@ public class JsonModelElement extends AbstractElement {
     private final Map<Identifier, CuboidModel> parentModelCache = new ConcurrentHashMap<>();
     private final ModelBuildAttemptTracker modelBuildAttempts = new ModelBuildAttemptTracker();
     private final ModelCacheLifecycle<JsonModelCache> modelCache = new ModelCacheLifecycle<>();
+    private final int[] shownArea = new int[4];
+    /** X, Y, width and height of what the container of the model shows of it, in pixels of the render target with Y counted from the bottom. */
+    private final int[] targetScissor = new int[4];
 
     public JsonModelElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -137,12 +142,45 @@ public class JsonModelElement extends AbstractElement {
         this.parentModelCache.clear();
     }
 
+    /**
+     * The model renders straight to the screen with a pose of its own, past the pose of the GUI. A container that scales
+     * its content gives the element the scaled box instead, and the model is as big as its box.
+     */
+    @Override
+    public boolean supportsPoseScaling() {
+        return false;
+    }
+
+    /**
+     * Works out {@link #targetScissor} from what the container of the model shows of it. The box gets cut to the render target,
+     * because a scissor that reaches out of its target or that is empty gets refused with an exception.
+     *
+     * @return If anything of the model is in the render target.
+     */
+    private boolean updateTargetScissor(int targetWidth, int targetHeight) {
+        double guiScale = WindowHandler.getGuiScale();
+        int left = Math.max(0, (int) Math.round(this.shownArea[0] * guiScale));
+        int top = Math.max(0, (int) Math.round(this.shownArea[1] * guiScale));
+        int right = Math.min(targetWidth, (int) Math.round(this.shownArea[2] * guiScale));
+        int bottom = Math.min(targetHeight, (int) Math.round(this.shownArea[3] * guiScale));
+        if ((right <= left) || (bottom <= top)) return false;
+        this.targetScissor[0] = left;
+        this.targetScissor[1] = targetHeight - bottom;
+        this.targetScissor[2] = right - left;
+        this.targetScissor[3] = bottom - top;
+        return true;
+    }
+
     @Override
     public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         if (!this.shouldRender()) {
             return;
         }
+
+        // The model also renders past everything that cuts GUI elements, so what a container shows of it has to be cut here
+        boolean cutByContainer = this.getParentContainer() != null;
+        if (cutByContainer && (!this.getShownScreenArea(this.shownArea) || !this.updateTargetScissor(Minecraft.getInstance().getMainRenderTarget().width, Minecraft.getInstance().getMainRenderTarget().height))) return;
 
         this.ensureModelCache();
 
@@ -209,7 +247,13 @@ public class JsonModelElement extends AbstractElement {
         MultiBufferSource.BufferSource buffer = Minecraft.getInstance().renderBuffers().bufferSource();
         VertexConsumer consumer = buffer.getBuffer(renderType);
         renderModelQuads(cache.model().quads(), pose, consumer, r, g, b, a);
-        buffer.endBatch();
+        // Render types take the scissor they draw with from here when they get prepared
+        if (cutByContainer) RenderSystem.enableScissorForRenderTypeDraws(this.targetScissor[0], this.targetScissor[1], this.targetScissor[2], this.targetScissor[3]);
+        try {
+            buffer.endBatch();
+        } finally {
+            if (cutByContainer) RenderSystem.disableScissorForRenderTypeDraws();
+        }
 
         GlStateManager._enableCull();
         GlStateManager._disableDepthTest();

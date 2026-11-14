@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.element.elements.MarkdownSettings;
+import de.keksuccino.fancymenu.customization.element.style.ElementPanelBackground;
 import de.keksuccino.fancymenu.util.properties.PropertiesParser;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
@@ -120,7 +121,7 @@ class TextBackgroundTest {
         TestElement loaded = new TestElement();
         loaded.getPropertyMap().forEach((key, property) -> property.deserialize(saved));
 
-        assertTrue(saved.hasProperty(TextBackground.ENABLED_KEY));
+        assertTrue(saved.hasProperty(ElementPanelBackground.ENABLED_KEY));
         assertTrue(loaded.background.enabled.getBoolean());
         assertEquals(9, loaded.background.padding.getInteger());
         assertFalse(loaded.background.behindScrollBars.getBoolean());
@@ -163,42 +164,42 @@ class TextBackgroundTest {
 
     @Test
     void backgroundIsTheTextAreaGrownByThePaddingOnEverySide() {
-        TextBackground background = new TestElement().background;
+        ElementPanelBackground background = new TestElement().background;
 
-        assertArrayEquals(new int[]{94, 44, 212, 92}, background.updateArea(100, 50, 200, 80, false, false));
+        assertArrayEquals(new int[]{94, 44, 212, 92}, background.updateArea(100, 50, 200, 80, false, false, false, false));
 
         background.padding.set(10);
-        assertArrayEquals(new int[]{90, 40, 220, 100}, background.updateArea(100, 50, 200, 80, false, false));
+        assertArrayEquals(new int[]{90, 40, 220, 100}, background.updateArea(100, 50, 200, 80, false, false, false, false));
 
         background.padding.set(0);
-        assertArrayEquals(new int[]{100, 50, 200, 80}, background.updateArea(100, 50, 200, 80, false, false));
+        assertArrayEquals(new int[]{100, 50, 200, 80}, background.updateArea(100, 50, 200, 80, false, false, false, false));
     }
 
     @Test
     void backgroundGrowsByTheSpaceOfEveryShownScrollBar() {
-        TextBackground background = new TestElement().background;
+        ElementPanelBackground background = new TestElement().background;
         int space = TextElement.SCROLL_BAR_SPACE;
 
-        assertArrayEquals(new int[]{94, 44, 212 + space, 92}, background.updateArea(100, 50, 200, 80, true, false));
-        assertArrayEquals(new int[]{94, 44, 212, 92 + space}, background.updateArea(100, 50, 200, 80, false, true));
-        assertArrayEquals(new int[]{94, 44, 212 + space, 92 + space}, background.updateArea(100, 50, 200, 80, true, true));
+        assertArrayEquals(new int[]{94, 44, 212 + space, 92}, background.updateArea(100, 50, 200, 80, true, false, false, false));
+        assertArrayEquals(new int[]{94, 44, 212, 92 + space}, background.updateArea(100, 50, 200, 80, false, true, false, false));
+        assertArrayEquals(new int[]{94, 44, 212 + space, 92 + space}, background.updateArea(100, 50, 200, 80, true, true, false, false));
     }
 
     @Test
     void backgroundOnlyCoversTheTextAreaWhenItShouldNotReachBehindScrollBars() {
-        TextBackground background = new TestElement().background;
+        ElementPanelBackground background = new TestElement().background;
         background.behindScrollBars.set(false);
 
-        assertArrayEquals(new int[]{94, 44, 212, 92}, background.updateArea(100, 50, 200, 80, true, true));
-        assertArrayEquals(new int[]{94, 44, 212, 92}, background.updateArea(100, 50, 200, 80, false, false));
+        assertArrayEquals(new int[]{94, 44, 212, 92}, background.updateArea(100, 50, 200, 80, true, true, false, false));
+        assertArrayEquals(new int[]{94, 44, 212, 92}, background.updateArea(100, 50, 200, 80, false, false, false, false));
     }
 
     @Test
     void paddingBelowZeroCountsAsNoPadding() {
-        TextBackground background = new TestElement().background;
+        ElementPanelBackground background = new TestElement().background;
         background.padding.set(-5);
 
-        assertArrayEquals(new int[]{100, 50, 200, 80}, background.updateArea(100, 50, 200, 80, false, false));
+        assertArrayEquals(new int[]{100, 50, 200, 80}, background.updateArea(100, 50, 200, 80, false, false, false, false));
         background.enabled.set(true);
         background.behindScrollBars.set(false);
         assertEquals(0, background.getScrollBarDistance());
@@ -206,7 +207,7 @@ class TextBackgroundTest {
 
     @Test
     void scrollBarsStandOutsideOfABackgroundThatDoesNotReachBehindThem() {
-        TextBackground background = new TestElement().background;
+        ElementPanelBackground background = new TestElement().background;
         background.enabled.set(true);
         background.behindScrollBars.set(false);
 
@@ -221,7 +222,7 @@ class TextBackgroundTest {
 
     @Test
     void scrollBarsStayNextToTheTextAreaWithoutABackgroundAndOnABackgroundThatReachesBehindThem() {
-        TextBackground background = new TestElement().background;
+        ElementPanelBackground background = new TestElement().background;
 
         // What elements that got saved without a background have
         assertEquals(0, background.getScrollBarDistance());
@@ -233,13 +234,36 @@ class TextBackgroundTest {
     }
 
     @Test
+    void theBackgroundReachesBehindScrollBarsOnEverySide() {
+        ElementPanelBackground background = new TestElement().background;
+        background.enabled.set(true);
+        int space = TextElement.SCROLL_BAR_SPACE;
+        // Bars at the left and the top make the background start earlier instead of end later
+        assertArrayEquals(new int[]{94 - space, 44, 212 + space, 92}, background.updateArea(100, 50, 200, 80, true, false, true, false));
+        assertArrayEquals(new int[]{94, 44 - space, 212, 92 + space}, background.updateArea(100, 50, 200, 80, false, true, false, true));
+        assertArrayEquals(new int[]{94 - space, 44, 212 + space, 92 + space}, background.updateArea(100, 50, 200, 80, true, true, true, false));
+        // A bar that does not show takes no space on any side
+        assertArrayEquals(new int[]{94, 44, 212, 92}, background.updateArea(100, 50, 200, 80, false, false, true, true));
+    }
+
+    @Test
+    void theSpaceOfScrollBarsIsAskedForEveryTime() {
+        int[] space = {12};
+        ElementPanelBackground background = new ElementPanelBackground(new TestElement(), "fancymenu.elements.text.background", () -> space[0]);
+        background.enabled.set(true);
+        assertArrayEquals(new int[]{94, 44, 212 + 12, 92}, background.updateArea(100, 50, 200, 80, true, false, false, false));
+        space[0] = 30;
+        assertArrayEquals(new int[]{94, 44, 212 + 30, 92}, background.updateArea(100, 50, 200, 80, true, false, false, false));
+    }
+
+    @Test
     void everySettingHasANameInTheEnglishLanguageFile() throws IOException {
         JsonObject english;
         try (InputStream stream = TextBackgroundTest.class.getResourceAsStream("/assets/fancymenu/lang/en_us.json")) {
             assertNotNull(stream, "English localization resource is missing from the test runtime classpath");
             english = JsonParser.parseReader(new InputStreamReader(stream, StandardCharsets.UTF_8)).getAsJsonObject();
         }
-        TextBackground background = new TestElement().background;
+        ElementPanelBackground background = new TestElement().background;
 
         for (Property<?> property : List.of(background.enabled, background.padding, background.behindScrollBars, background.texture, background.nineSlice, background.nineSliceBorderX, background.nineSliceBorderY, background.tile)) {
             assertTrue(english.has(property.getContextMenuEntryLocalizationKeyBase()), property::getKey);
@@ -253,7 +277,7 @@ class TextBackgroundTest {
 
         private final Map<String, Property<?>> properties = new LinkedHashMap<>();
         private final MarkdownSettings settings = new MarkdownSettings(this, new MarkdownTestRenderer());
-        private final TextBackground background = new TextBackground(this);
+        private final ElementPanelBackground background = new ElementPanelBackground(this, "fancymenu.elements.text.background", () -> TextElement.SCROLL_BAR_SPACE);
 
         @Override
         public @NotNull Map<String, Property<?>> getPropertyMap() {

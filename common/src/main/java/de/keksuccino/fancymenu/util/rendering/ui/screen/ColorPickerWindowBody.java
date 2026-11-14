@@ -16,7 +16,6 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
-import net.minecraft.util.ARGB;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.awt.Color;
@@ -369,7 +368,7 @@ public class ColorPickerWindowBody extends PiPWindowBody {
     private void renderColorArea(@NotNull GuiGraphicsExtractor graphics) {
         int hueRgb = Color.HSBtoRGB(this.colorState.getHue(), 1.0F, 1.0F);
         int hueColor = 0xFF000000 | (hueRgb & 0xFFFFFF);
-        this.fillGradientHorizontal(graphics, this.pickerX, this.pickerY, this.pickerX + this.pickerSize, this.pickerY + this.pickerSize, 0xFFFFFFFF, hueColor);
+        RenderingUtils.fillGradientHorizontal(graphics, this.pickerX, this.pickerY, this.pickerX + this.pickerSize, this.pickerY + this.pickerSize, 0xFFFFFFFF, hueColor);
         graphics.fillGradient(this.pickerX, this.pickerY, this.pickerX + this.pickerSize, this.pickerY + this.pickerSize, 0x00000000, 0xFF000000);
         UIBase.renderBorder(graphics, this.pickerX, this.pickerY, this.pickerX + this.pickerSize, this.pickerY + this.pickerSize, 1, UIBase.getUITheme().ui_interface_widget_border_color.getColorInt(), true, true, true, true);
     }
@@ -402,7 +401,7 @@ public class ColorPickerWindowBody extends PiPWindowBody {
             int endRgb = Color.HSBtoRGB(endHue, 1.0F, 1.0F);
             int startColor = 0xFF000000 | (startRgb & 0xFFFFFF);
             int endColor = 0xFF000000 | (endRgb & 0xFFFFFF);
-            this.fillGradientHorizontal(graphics, startX, this.hueY, endX, this.hueY + this.hueHeight, startColor, endColor);
+            RenderingUtils.fillGradientHorizontal(graphics, startX, this.hueY, endX, this.hueY + this.hueHeight, startColor, endColor);
         }
         UIBase.renderBorder(graphics, this.hueX, this.hueY, this.hueX + this.hueWidth, this.hueY + this.hueHeight, 1, theme.ui_interface_widget_border_color.getColorInt(), true, true, true, true);
 
@@ -416,7 +415,7 @@ public class ColorPickerWindowBody extends PiPWindowBody {
         int rgb = this.getCurrentColorInt() & 0xFFFFFF;
         int leftColor = rgb;
         int rightColor = 0xFF000000 | rgb;
-        this.fillGradientHorizontal(graphics, this.alphaX, this.alphaY, this.alphaX + this.alphaWidth, this.alphaY + this.alphaHeight, leftColor, rightColor);
+        RenderingUtils.fillGradientHorizontal(graphics, this.alphaX, this.alphaY, this.alphaX + this.alphaWidth, this.alphaY + this.alphaHeight, leftColor, rightColor);
         UIBase.renderBorder(graphics, this.alphaX, this.alphaY, this.alphaX + this.alphaWidth, this.alphaY + this.alphaHeight, 1, theme.ui_interface_widget_border_color.getColorInt(), true, true, true, true);
 
         int max = Math.max(1, this.alphaWidth - 1);
@@ -515,14 +514,6 @@ public class ColorPickerWindowBody extends PiPWindowBody {
 
     private void notifyOnColorUpdate() {
         this.onColorUpdate.accept(DrawableColor.of(this.getCurrentHex()));
-    }
-
-    private void fillGradientHorizontal(@NotNull GuiGraphicsExtractor graphics, int x1, int y1, int x2, int y2, int colorLeft, int colorRight) {
-        int width = Math.max(1, x2 - x1);
-        for (int x = x1; x < x2; x++) {
-            float factor = (float) (x - x1) / (float) width;
-            graphics.fill(x, y1, x + 1, y2, ARGB.srgbLerp(factor, colorLeft, colorRight));
-        }
     }
 
 }
