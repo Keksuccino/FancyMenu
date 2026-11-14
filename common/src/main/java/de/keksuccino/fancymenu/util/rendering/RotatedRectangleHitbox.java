@@ -54,7 +54,7 @@ public final class RotatedRectangleHitbox {
         double dx = mouseX - (x + halfWidth);
         double dy = mouseY - (y + halfHeight);
         double localX = this.inverseTransformX(dx, dy);
-        double localY = this.inverse10 * dx + this.inverse11 * dy;
+        double localY = this.inverseTransformY(dx, dy);
         return (localX >= -halfWidth) && (localX < halfWidth) && (localY >= -halfHeight) && (localY < halfHeight);
     }
 
@@ -68,6 +68,14 @@ public final class RotatedRectangleHitbox {
         double centerX = x + width / 2.0;
         double centerY = y + height / 2.0;
         return centerX + this.inverseTransformX(mouseX - centerX, mouseY - centerY);
+    }
+
+    /** The Y counterpart of {@link #untransformX(double, double, int, int, int, int)}. */
+    public double untransformY(double mouseX, double mouseY, int x, int y, int width, int height) {
+        if (!this.transformed) return mouseY;
+        double centerX = x + width / 2.0;
+        double centerY = y + height / 2.0;
+        return centerY + this.inverseTransformY(mouseX - centerX, mouseY - centerY);
     }
 
     public boolean isTransformed() {
@@ -88,6 +96,10 @@ public final class RotatedRectangleHitbox {
 
     private double inverseTransformX(double offsetX, double offsetY) {
         return this.inverse00 * offsetX + this.inverse01 * offsetY;
+    }
+
+    private double inverseTransformY(double offsetX, double offsetY) {
+        return this.inverse10 * offsetX + this.inverse11 * offsetY;
     }
 
 }

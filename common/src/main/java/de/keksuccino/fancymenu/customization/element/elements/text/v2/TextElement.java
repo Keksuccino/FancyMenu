@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.util.ScreenUtils;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
+import de.keksuccino.fancymenu.customization.element.ElementSpaceInputListener;
 import de.keksuccino.fancymenu.customization.element.elements.MarkdownSettings;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.util.ListUtils;
@@ -79,6 +80,9 @@ public class TextElement extends AbstractElement {
     protected DrawableColor customGrabberColorHover;
     protected final Supplier<DrawableColor> customGrabberColorNormalSupplier = () -> this.customGrabberColorNormal;
     protected final Supplier<DrawableColor> customGrabberColorHoverSupplier = () -> this.customGrabberColorHover;
+    /** The scroll area and the Markdown render in the untransformed space of the element, so screens send them their input through these. */
+    protected final ElementSpaceInputListener scrollAreaInput;
+    protected final ElementSpaceInputListener markdownInput;
 
     public TextElement(@NotNull ElementBuilder<?, ?> builder) {
 
@@ -129,6 +133,9 @@ public class TextElement extends AbstractElement {
         this.themeGrabberColorNormal = this.scrollArea.verticalScrollBar.idleBarColor;
         this.themeGrabberColorHover = this.scrollArea.verticalScrollBar.hoverBarColor;
         ScrollGrabberDesign.followAppliedLooks(this.scrollGrabberDesign, this.markdownSettings);
+
+        this.scrollAreaInput = ElementSpaceInputListener.of(this, this.scrollArea);
+        this.markdownInput = ElementSpaceInputListener.of(this, this.markdownRenderer);
 
         this.scrollArea.addEntry(new MarkdownRendererEntry(this.scrollArea, this.markdownRenderer));
         // Ensure markdown can render once to measure its size before culling kicks in.
@@ -186,7 +193,10 @@ public class TextElement extends AbstractElement {
                 this.scrollArea.setY(y, true);
                 this.scrollArea.setWidth(width, true);
                 this.scrollArea.setHeight(height, true);
-                this.scrollArea.extractRenderState(graphics, mouseX, mouseY, partial);
+                // The scroll area renders in the untransformed space of the element, so its hover checks need the mouse in that space
+                int elementMouseX = (int)Math.floor(this.untransformMouseX(mouseX, mouseY));
+                int elementMouseY = (int)Math.floor(this.untransformMouseY(mouseX, mouseY));
+                this.scrollArea.extractRenderState(graphics, elementMouseX, elementMouseY, partial);
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -212,7 +222,13 @@ public class TextElement extends AbstractElement {
 
     @Override
     public @Nullable List<GuiEventListener> getWidgetsToRegister() {
-        return this.interactable ? ListUtils.of(this.markdownRenderer, this.scrollArea) : null;
+        return this.interactable ? ListUtils.of(this.markdownInput, this.scrollAreaInput) : null;
+    }
+
+    /** Returns the listener that passes mouse input to the scroll area of this element, in the space the scroll area renders in. */
+    @NotNull
+    public ElementSpaceInputListener getScrollAreaInput() {
+        return this.scrollAreaInput;
     }
 
     protected void renderTick() {
