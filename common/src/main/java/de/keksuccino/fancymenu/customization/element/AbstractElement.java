@@ -4,7 +4,6 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
@@ -269,7 +268,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 		// Apply transformations if needed
 		boolean transformationsApplied = false;
-		RenderRotationUtil.RotationState restoreRenderRotation = null;
 		float rotDegrees = this.getRotationDegrees();
 		float verticalTilt = this.getVerticalTiltDegrees();
 		float horizontalTilt = this.getHorizontalTiltDegrees();
@@ -278,7 +276,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 		if ((this.shouldRender() || willStartFadeOutThisTick) && (hasRotation || hasTilt)) {
 
-			restoreRenderRotation = new RenderRotationUtil.RotationState(RenderRotationUtil.getCurrentAdditionalRenderRotation_FancyMenu());
 			graphics.pose().pushMatrix();
 			transformationsApplied = true;
 
@@ -286,26 +283,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			float centerX = this.getAbsoluteX() + (this.getAbsoluteWidth() / 2.0F);
 			float centerY = this.getAbsoluteY() + (this.getAbsoluteHeight() / 2.0F);
 
-			// Translate to center
-			graphics.pose().translate(centerX, centerY);
-
-			// Apply rotation (around Z axis)
-			if (hasRotation) {
-				graphics.pose().rotate((float)Math.toRadians(rotDegrees));
-			}
-
-			RenderRotationUtil.RotationState elementRenderRotation = new RenderRotationUtil.RotationState(restoreRenderRotation);
-			if (hasTilt) {
-				if (verticalTilt != 0.0F) elementRenderRotation.mul(Axis.XP.rotationDegrees(verticalTilt));
-				if (horizontalTilt != 0.0F) elementRenderRotation.mul(Axis.YP.rotationDegrees(horizontalTilt));
-			}
-			if (hasRotation) {
-				elementRenderRotation.mul(Axis.ZP.rotationDegrees(rotDegrees));
-			}
-			RenderRotationUtil.setActiveRenderRotation_FancyMenu(elementRenderRotation);
-
-			// Translate back
-			graphics.pose().translate(-centerX, -centerY);
+			// Apply tilting first, then rotation (around Z axis), both around the center
+			RenderRotationUtil.rotateAndTilt(graphics.pose(), centerX, centerY, hasRotation ? rotDegrees : 0.0F, hasTilt ? verticalTilt : 0.0F, hasTilt ? horizontalTilt : 0.0F);
 
 		}
 
@@ -336,7 +315,6 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		// Pop the transformations
 		if (transformationsApplied) {
 			graphics.pose().popMatrix();
-			if (restoreRenderRotation != null) RenderRotationUtil.setActiveRenderRotation_FancyMenu(restoreRenderRotation);
 		}
 
 		this.lastTickShouldRender = this.shouldRender();

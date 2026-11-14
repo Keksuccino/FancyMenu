@@ -118,7 +118,7 @@ public final class GuiBlurPlan {
     /**
      * Resolves the framebuffer region a GUI-space blur area covers, including a pixel of antialiasing margin.
      *
-     * @param rotation The mask rotation as row-major 2x2 matrix (m00, m01, m10, m11); the mask rotates around the area's center.
+     * @param rotation The mask matrix as row-major 2x2 matrix (m00, m01, m10, m11), which maps a screen offset from the area's center into the mask; the mask rotates and tilts around the area's center.
      * @return false if the area misses the target.
      */
     public static boolean resolveCompositeRegion(@NotNull Region out, float x, float y, float width, float height, float m00, float m01, float m10, float m11, double guiScale, int targetWidth, int targetHeight) {
@@ -128,12 +128,14 @@ public final class GuiBlurPlan {
         float maxX = x + width + margin;
         float maxY = y + height + margin;
         boolean identity = Math.abs(m00 - 1.0F) <= 1.0E-4F && Math.abs(m11 - 1.0F) <= 1.0E-4F && Math.abs(m01) <= 1.0E-4F && Math.abs(m10) <= 1.0E-4F;
-        if (!identity && Float.isFinite(m00) && Float.isFinite(m01) && Float.isFinite(m10) && Float.isFinite(m11)) {
+        float determinant = (m00 * m11) - (m01 * m10);
+        if (!identity && Float.isFinite(determinant) && (Math.abs(determinant) > 1.0E-6F)) {
             float halfWidth = width * 0.5F;
             float halfHeight = height * 0.5F;
-            // Cover both the matrix and its transpose, since the shader maps screen pixels into the mask's local space.
-            float boundHalfWidth = Math.max(Math.abs(m00) * halfWidth + Math.abs(m01) * halfHeight, Math.abs(m00) * halfWidth + Math.abs(m10) * halfHeight);
-            float boundHalfHeight = Math.max(Math.abs(m10) * halfWidth + Math.abs(m11) * halfHeight, Math.abs(m01) * halfWidth + Math.abs(m11) * halfHeight);
+            // The shader maps screen pixels into the mask's local space, so the mask covers the screen through the inverse of the matrix.
+            // For a tilted mask, this is not its transpose, since tilting compresses the mask on the screen.
+            float boundHalfWidth = (Math.abs(m11) * halfWidth + Math.abs(m01) * halfHeight) / Math.abs(determinant);
+            float boundHalfHeight = (Math.abs(m10) * halfWidth + Math.abs(m00) * halfHeight) / Math.abs(determinant);
             float centerX = x + halfWidth;
             float centerY = y + halfHeight;
             minX = Math.min(minX, centerX - boundHalfWidth - margin);

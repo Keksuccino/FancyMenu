@@ -1,6 +1,8 @@
 package de.keksuccino.fancymenu.util.rendering;
 
 import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.NotNull;
+import org.joml.Matrix3x2f;
 import org.joml.Quaternionfc;
 
 public final class RenderRotationUtil {
@@ -72,6 +74,27 @@ public final class RenderRotationUtil {
         }
         float invDet = 1.0F / det;
         return new Rotation2D(rotation.m11() * invDet, -rotation.m01() * invDet, -rotation.m10() * invDet, rotation.m00() * invDet);
+    }
+
+    /**
+     * Rotates and tilts the given GUI pose around the given center, the way elements get rendered.<br>
+     * A 2D pose has no rotation around the X and Y axes, but GUI rendering is orthographic, so a tilt shows as the XY part of the
+     * 3D rotation Rx(vertical tilt) * Ry(horizontal tilt), which compresses the content on the screen.<br>
+     * {@link RotatedRectangleHitbox} inverts the same transformation for the mouse, so both have to stay in sync.
+     */
+    public static void rotateAndTilt(@NotNull Matrix3x2f pose, float centerX, float centerY, float rotationDegrees, float verticalTiltDegrees, float horizontalTiltDegrees) {
+        pose.translate(centerX, centerY);
+        if ((verticalTiltDegrees != 0.0F) || (horizontalTiltDegrees != 0.0F)) {
+            double verticalTilt = Math.toRadians(verticalTiltDegrees);
+            double horizontalTilt = Math.toRadians(horizontalTiltDegrees);
+            float tilt00 = (float)Math.cos(horizontalTilt);
+            float tilt10 = (float)(Math.sin(verticalTilt) * Math.sin(horizontalTilt));
+            float tilt11 = (float)Math.cos(verticalTilt);
+            // The pose multiplied with the rows (tilt00, 0) and (tilt10, tilt11), written out to not allocate a matrix for every tilted element in every frame
+            pose.set((pose.m00() * tilt00) + (pose.m10() * tilt10), (pose.m01() * tilt00) + (pose.m11() * tilt10), pose.m10() * tilt11, pose.m11() * tilt11, pose.m20(), pose.m21());
+        }
+        if (rotationDegrees != 0.0F) pose.rotate((float)Math.toRadians(rotationDegrees));
+        pose.translate(-centerX, -centerY);
     }
 
     @ApiStatus.Internal
