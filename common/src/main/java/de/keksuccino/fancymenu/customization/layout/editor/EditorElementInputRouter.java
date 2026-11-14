@@ -24,7 +24,7 @@ public class EditorElementInputRouter implements GuiEventListener, NarratableEnt
 
     @NotNull
     protected final LayoutEditorScreen editor;
-    /** The listener that took the last click, which gets everything the mouse does until its button is released. */
+    /** The listener that took the last click, which holds the mouse until its button gets released. */
     @Nullable
     protected GuiEventListener clicked;
 
@@ -65,9 +65,12 @@ public class EditorElementInputRouter implements GuiEventListener, NarratableEnt
         return false;
     }
 
-    @Override
-    public boolean mouseDragged(@NotNull MouseButtonEvent event, double dragX, double dragY) {
-        return (this.clicked != null) && this.clicked.mouseDragged(event, dragX, dragY);
+    /**
+     * Returns if one of the listeners took the last click and the mouse button is still held. Whatever the mouse does in that time
+     * is for that listener, which follows the mouse on its own, so the editor must not move or select anything with it.
+     */
+    public boolean isHoldingMouse() {
+        return this.clicked != null;
     }
 
     @Override

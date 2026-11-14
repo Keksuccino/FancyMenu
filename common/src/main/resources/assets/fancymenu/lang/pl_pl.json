@@ -3868,6 +3868,7 @@
   "fancymenu.editor.close_audio.sound_channel": "Kanał dźwięku zamykania ekranu: %s",
   "fancymenu.editor.close_audio.sound_channel.desc": "Kanał dźwięku Minecrafta, na którym gra dźwięk zamykania ekranu.\n\nDzięki temu głośność podąża też za suwakiem tego kanału w ustawieniach dźwięku Minecrafta.",
   "fancymenu.editor.containers.drop.not_allowed": "Elementy vanilla nie mogą trafić\ndo obszarów przewijanych. Należą\ndo samego ekranu.",
+  "fancymenu.editor.containers.drop.not_allowed.dependency": "Ten element nie może tu trafić.\nObszar podąża za nim, więc nie może\ngo jednocześnie zawierać.",
   "fancymenu.editor.containers.move_out": "Wyjmij z obszaru przewijanego",
   "fancymenu.editor.containers.move_out.desc": "Wyjmuje ten element z obszaru przewijanego, w którym jest.\nZostaje tam, gdzie jest na ekranie.\n\nMożesz też po prostu wyciągnąć element z jego obszaru.",
   "fancymenu.elements.widgets.click_sound_volume": "Głośność dźwięku kliknięcia",

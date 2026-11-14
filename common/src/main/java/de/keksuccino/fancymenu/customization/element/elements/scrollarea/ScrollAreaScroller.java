@@ -92,6 +92,13 @@ public final class ScrollAreaScroller {
             return (this.max > 0) ? Math.min(1.0D, Math.max(0.0D, this.position / this.max)) : 0.0D;
         }
 
+        /**
+         * Returns how far the content is scrolled in percent, between 0 (start) and 100 (end), with two digits behind the point at most.
+         */
+        public double getPercent() {
+            return Math.round(this.getProgress() * 10000.0D) / 100.0D;
+        }
+
         public boolean canScroll() {
             return this.max > 0;
         }

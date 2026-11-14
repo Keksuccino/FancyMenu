@@ -21,8 +21,6 @@ public final class ScrollAreaGeometry {
     private int maxScrollY;
     private int scrollX;
     private int scrollY;
-    private float subPixelScrollX;
-    private float subPixelScrollY;
 
     /**
      * Sets the part of the screen the area shows its content in, and how many screen pixels one unit of the content is.
@@ -54,19 +52,12 @@ public final class ScrollAreaGeometry {
 
     /**
      * Sets how far the content is scrolled, in screen pixels.<br>
-     * The whole pixels move the content, which keeps the positions of everything in it whole. What is left gets rounded
-     * to pixels of the window, the smallest step that still shows sharp, and is for moving what gets drawn.
-     *
-     * @param guiScale How many pixels of the window one screen pixel is.
+     * The content moves by whole screen pixels, like the lists of the game do. Everything in it that cuts what it draws,
+     * like a text or a progress bar, cuts at whole screen pixels, and would cut next to what it draws in a content that sits between two of them.
      */
-    public void setScroll(double positionX, double positionY, double guiScale) {
-        double step = (guiScale > 0.0D) ? guiScale : 1.0D;
-        double snappedX = Math.round(positionX * step) / step;
-        double snappedY = Math.round(positionY * step) / step;
-        this.scrollX = (int) Math.floor(snappedX);
-        this.scrollY = (int) Math.floor(snappedY);
-        this.subPixelScrollX = (float) (snappedX - this.scrollX);
-        this.subPixelScrollY = (float) (snappedY - this.scrollY);
+    public void setScroll(double positionX, double positionY) {
+        this.scrollX = (int) Math.round(positionX);
+        this.scrollY = (int) Math.round(positionY);
     }
 
     private int toContentUnits(int screenPixels) {
@@ -135,18 +126,6 @@ public final class ScrollAreaGeometry {
      */
     public int getContentScreenY() {
         return this.viewportY - this.scrollY;
-    }
-
-    /**
-     * Returns the part of the scroll that is smaller than a screen pixel, between 0 and 1.
-     */
-    public float getSubPixelScrollX() {
-        return this.subPixelScrollX;
-    }
-
-    /** The Y counterpart of {@link #getSubPixelScrollX()}. */
-    public float getSubPixelScrollY() {
-        return this.subPixelScrollY;
     }
 
     public boolean isInViewport(double screenX, double screenY) {

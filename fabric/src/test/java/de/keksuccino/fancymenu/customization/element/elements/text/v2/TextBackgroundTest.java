@@ -166,13 +166,13 @@ class TextBackgroundTest {
     void backgroundIsTheTextAreaGrownByThePaddingOnEverySide() {
         ElementPanelBackground background = new TestElement().background;
 
-        assertArrayEquals(new int[]{94, 44, 212, 92}, background.updateArea(100, 50, 200, 80, false, false));
+        assertArrayEquals(new int[]{94, 44, 212, 92}, background.updateArea(100, 50, 200, 80, false, false, false, false));
 
         background.padding.set(10);
-        assertArrayEquals(new int[]{90, 40, 220, 100}, background.updateArea(100, 50, 200, 80, false, false));
+        assertArrayEquals(new int[]{90, 40, 220, 100}, background.updateArea(100, 50, 200, 80, false, false, false, false));
 
         background.padding.set(0);
-        assertArrayEquals(new int[]{100, 50, 200, 80}, background.updateArea(100, 50, 200, 80, false, false));
+        assertArrayEquals(new int[]{100, 50, 200, 80}, background.updateArea(100, 50, 200, 80, false, false, false, false));
     }
 
     @Test
@@ -180,9 +180,9 @@ class TextBackgroundTest {
         ElementPanelBackground background = new TestElement().background;
         int space = TextElement.SCROLL_BAR_SPACE;
 
-        assertArrayEquals(new int[]{94, 44, 212 + space, 92}, background.updateArea(100, 50, 200, 80, true, false));
-        assertArrayEquals(new int[]{94, 44, 212, 92 + space}, background.updateArea(100, 50, 200, 80, false, true));
-        assertArrayEquals(new int[]{94, 44, 212 + space, 92 + space}, background.updateArea(100, 50, 200, 80, true, true));
+        assertArrayEquals(new int[]{94, 44, 212 + space, 92}, background.updateArea(100, 50, 200, 80, true, false, false, false));
+        assertArrayEquals(new int[]{94, 44, 212, 92 + space}, background.updateArea(100, 50, 200, 80, false, true, false, false));
+        assertArrayEquals(new int[]{94, 44, 212 + space, 92 + space}, background.updateArea(100, 50, 200, 80, true, true, false, false));
     }
 
     @Test
@@ -190,8 +190,8 @@ class TextBackgroundTest {
         ElementPanelBackground background = new TestElement().background;
         background.behindScrollBars.set(false);
 
-        assertArrayEquals(new int[]{94, 44, 212, 92}, background.updateArea(100, 50, 200, 80, true, true));
-        assertArrayEquals(new int[]{94, 44, 212, 92}, background.updateArea(100, 50, 200, 80, false, false));
+        assertArrayEquals(new int[]{94, 44, 212, 92}, background.updateArea(100, 50, 200, 80, true, true, false, false));
+        assertArrayEquals(new int[]{94, 44, 212, 92}, background.updateArea(100, 50, 200, 80, false, false, false, false));
     }
 
     @Test
@@ -199,7 +199,7 @@ class TextBackgroundTest {
         ElementPanelBackground background = new TestElement().background;
         background.padding.set(-5);
 
-        assertArrayEquals(new int[]{100, 50, 200, 80}, background.updateArea(100, 50, 200, 80, false, false));
+        assertArrayEquals(new int[]{100, 50, 200, 80}, background.updateArea(100, 50, 200, 80, false, false, false, false));
         background.enabled.set(true);
         background.behindScrollBars.set(false);
         assertEquals(0, background.getScrollBarDistance());
@@ -251,9 +251,9 @@ class TextBackgroundTest {
         int[] space = {12};
         ElementPanelBackground background = new ElementPanelBackground(new TestElement(), "fancymenu.elements.text.background", () -> space[0]);
         background.enabled.set(true);
-        assertArrayEquals(new int[]{94, 44, 212 + 12, 92}, background.updateArea(100, 50, 200, 80, true, false));
+        assertArrayEquals(new int[]{94, 44, 212 + 12, 92}, background.updateArea(100, 50, 200, 80, true, false, false, false));
         space[0] = 30;
-        assertArrayEquals(new int[]{94, 44, 212 + 30, 92}, background.updateArea(100, 50, 200, 80, true, false));
+        assertArrayEquals(new int[]{94, 44, 212 + 30, 92}, background.updateArea(100, 50, 200, 80, true, false, false, false));
     }
 
     @Test

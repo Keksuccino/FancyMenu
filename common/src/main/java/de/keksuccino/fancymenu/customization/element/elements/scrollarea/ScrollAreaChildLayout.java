@@ -18,7 +18,7 @@ public final class ScrollAreaChildLayout {
     private final ScrollAreaArrangement arrangement = new ScrollAreaArrangement();
     /** The children the arrangement is about, in its order. Children that do not show have no place in an arrangement. */
     private final List<AbstractElement> arranged = new ArrayList<>();
-    private int signature = 0;
+    private long signature = 0L;
     private boolean hasArrangement = false;
     /** If children of the area have a box from here, which has to be taken from them when the area stops arranging them. */
     private boolean childrenHaveBoxes = false;
@@ -50,8 +50,9 @@ public final class ScrollAreaChildLayout {
         boolean gridAutoFit = area.gridAutoFit.getBoolean();
         int gridMinCellSize = Math.max(1, area.gridMinCellSize.getInteger());
 
-        // Every value the arrangement depends on goes into the signature, so the same signature means the same boxes
-        int signature = System.identityHashCode(arranger);
+        // Every value the arrangement depends on goes into the signature, so the same signature means the same boxes.
+        // It has 64 bits, so two different states that end up with the same one are nothing that happens in practice.
+        long signature = System.identityHashCode(arranger);
         signature = (31 * signature) + count;
         signature = (31 * signature) + Float.floatToIntBits(scale);
         signature = (31 * signature) + viewportWidth;
@@ -73,13 +74,16 @@ public final class ScrollAreaChildLayout {
             int naturalHeight = child.getNaturalHeight();
             arrangement.naturalWidth[i] = naturalWidth;
             arrangement.naturalHeight[i] = naturalHeight;
-            arrangement.offsetX[i] = child.posOffsetX;
-            arrangement.offsetY[i] = child.posOffsetY;
+            // A child that is as big as the content starts where the content starts
+            int offsetX = child.isStretchedX() ? 0 : child.posOffsetX;
+            int offsetY = child.isStretchedY() ? 0 : child.posOffsetY;
+            arrangement.offsetX[i] = offsetX;
+            arrangement.offsetY[i] = offsetY;
             signature = (31 * signature) + System.identityHashCode(child);
             signature = (31 * signature) + naturalWidth;
             signature = (31 * signature) + naturalHeight;
-            signature = (31 * signature) + child.posOffsetX;
-            signature = (31 * signature) + child.posOffsetY;
+            signature = (31 * signature) + offsetX;
+            signature = (31 * signature) + offsetY;
             // A child that lost its box, like one that just got put into the area, needs a new one
             ElementContainerLink link = child.getContainerLink();
             if ((link == null) || !link.hasManagedBox()) signature++;

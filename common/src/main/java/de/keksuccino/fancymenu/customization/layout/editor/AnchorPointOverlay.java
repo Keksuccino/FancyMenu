@@ -513,6 +513,12 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
                         if ((dragged.element.getParentContainer() != e.element) && container.canHoldChild(dragged)) return null;
                     }
                 }
+                // An element can only follow one of the same space, so one that none of the dragged elements share theirs with is nothing to anchor to
+                boolean sharesSpace = false;
+                for (AbstractEditorElement<?, ?> dragged : this.editor.getCurrentlyDraggedElements()) {
+                    if (dragged.element.getParentContainer() == e.element.getParentContainer()) sharesSpace = true;
+                }
+                if (!sharesSpace) return null;
                 if (!e.isSelected() && !e.isMultiSelected()) return new ElementAnchorPointArea(e.element.getInstanceIdentifier());
             }
         }

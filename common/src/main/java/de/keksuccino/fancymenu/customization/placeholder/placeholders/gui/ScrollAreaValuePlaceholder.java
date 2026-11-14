@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.placeholder.placeholders.gui;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.elements.scrollarea.ScrollAreaElement;
-import de.keksuccino.fancymenu.customization.element.elements.scrollarea.ScrollAreaScroller;
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -50,7 +49,7 @@ public class ScrollAreaValuePlaceholder extends Placeholder {
 
     @NotNull
     static ScrollAreaValuePlaceholder scrollPercent(@NotNull Function<String, AbstractElement> elementLookup) {
-        return new ScrollAreaValuePlaceholder("scroll_area_scroll_percent", "fancymenu.placeholders.scroll_area_scroll_percent", (area, horizontal) -> toPercent(area.getScroller().axis(horizontal)), elementLookup);
+        return new ScrollAreaValuePlaceholder("scroll_area_scroll_percent", "fancymenu.placeholders.scroll_area_scroll_percent", (area, horizontal) -> area.getScroller().axis(horizontal).getPercent(), elementLookup);
     }
 
     /** How big the content is, in pixels at the size the content has without the area scaling it. */
@@ -62,13 +61,6 @@ public class ScrollAreaValuePlaceholder extends Placeholder {
     @NotNull
     static ScrollAreaValuePlaceholder contentSize(@NotNull Function<String, AbstractElement> elementLookup) {
         return new ScrollAreaValuePlaceholder("scroll_area_content_size", "fancymenu.placeholders.scroll_area_content_size", (area, horizontal) -> horizontal ? area.getContentWidth() : area.getContentHeight(), elementLookup);
-    }
-
-    /**
-     * Returns how far an axis is scrolled in percent, with two digits behind the point at most.
-     */
-    public static double toPercent(@NotNull ScrollAreaScroller.Axis axis) {
-        return Math.round(axis.getProgress() * 10000.0D) / 100.0D;
     }
 
     /**

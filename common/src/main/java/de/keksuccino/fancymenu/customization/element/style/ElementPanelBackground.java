@@ -20,7 +20,7 @@ public final class ElementPanelBackground {
 
     /** The key of the property that switches the background on. Changing it breaks saved layouts. */
     public static final String ENABLED_KEY = "background";
-    /** The key the texts start with that are the same for the backgrounds of all elements. They are the ones of text elements, which had this background first. */
+    /** The key the texts start with that are the same for the backgrounds of all elements. */
     public static final String SHARED_LOCALIZATION_KEY_BASE = "fancymenu.elements.text.background";
     /** The built-in panel. The pixels of its borders have to stay as big as the pixels of the GUI, so it always gets nine-sliced with its own border size. */
     private static final Identifier PANEL_TEXTURE = Identifier.fromNamespaceAndPath("fancymenu", "textures/markdown/text_background.png");
@@ -142,16 +142,6 @@ public final class ElementPanelBackground {
     public int getScrollBarDistance() {
         if (!this.enabled.getBoolean() || this.behindScrollBars.getBoolean()) return 0;
         return Math.max(0, this.padding.getInteger());
-    }
-
-    /**
-     * Works out the area the background covers around the given content area: the content area grown by the padding on every side,
-     * and by the space of every shown scroll bar the background reaches behind. The scroll bars are at the right and the bottom of the content area.
-     *
-     * @return X, Y, width and height of the background. Every call returns the same array.
-     */
-    public int[] updateArea(int x, int y, int width, int height, boolean verticalScrollBarShown, boolean horizontalScrollBarShown) {
-        return this.updateArea(x, y, width, height, verticalScrollBarShown, horizontalScrollBarShown, false, false);
     }
 
     /**

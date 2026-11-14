@@ -75,16 +75,6 @@ public class ElementSpaceInputListener implements GuiEventListener, NarratableEn
         this.unrotatesMouse = unrotatesMouse;
     }
 
-    @NotNull
-    public GuiEventListener getWidget() {
-        return this.widget;
-    }
-
-    @NotNull
-    public AbstractElement getElement() {
-        return this.element;
-    }
-
     protected double toElementSpaceX(double mouseX, double mouseY) {
         return this.unrotatesMouse ? this.element.untransformMouseX(mouseX, mouseY) : this.element.unscaleMouseX(mouseX, mouseY);
     }

@@ -263,10 +263,13 @@ public class TooltipElement extends AbstractElement {
         return super.getAbsoluteYWithoutParallax();
     }
 
+    /**
+     * A tooltip is always as high as its text needs it, with some padding. That is the height it has on its own, which a container it is in
+     * turns into the one it has on the screen.
+     */
     @Override
-    public int getAbsoluteHeight() {
-        // Always return the height needed to fit the markdown content
-        return Math.max(this.cachedRealHeight + 12, 20); // Add some padding
+    protected int getOwnHeight() {
+        return Math.max(this.cachedRealHeight + 12, 20);
     }
 
     public void updateContent() {

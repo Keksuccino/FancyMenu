@@ -3868,6 +3868,7 @@
   "fancymenu.editor.close_audio.sound_channel": "Screen Close-Audio Sound Channel: %s",
   "fancymenu.editor.close_audio.sound_channel.desc": "The Minecraft sound channel the screen close-audio plays on.\n\nThe audio follows the volume slider of that channel in Minecraft's sound settings.",
   "fancymenu.editor.containers.drop.not_allowed": "Vanilla elements can't go into\nscrollable areas. They belong to\nthe screen itself.",
+  "fancymenu.editor.containers.drop.not_allowed.dependency": "This element can't go in here.\nThe area follows it around, so it\ncan't hold it at the same time.",
   "fancymenu.editor.containers.move_out": "Move Out of Scrollable Area",
   "fancymenu.editor.containers.move_out.desc": "Takes this element out of the Scrollable Area it's in.\nIt stays where it is on the screen.\n\nYou can also just drag an element out of its area.",
   "fancymenu.elements.widgets.click_sound_volume": "Click Sound Volume",

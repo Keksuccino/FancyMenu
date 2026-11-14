@@ -35,9 +35,10 @@ public class ScrollAreaInput implements GuiEventListener, NarratableEntry, Fancy
         // The bars sit next to what the area shows, where a container around the area can still cut them off
         if (!this.area.isShowingChildren() || !this.area.isScreenPointVisibleInContainer(event.x(), event.y())) return false;
         if (this.area.getBars().mouseClicked(event.x(), event.y(), event.button())) return true;
-        // A press on the content can become dragging it. It stays a click for whatever is under the mouse, so it does not get consumed here.
-        if ((event.button() == InputConstants.MOUSE_BUTTON_LEFT) && this.area.isScreenPointVisible(event.x(), event.y()) && !this.area.hasInteractiveChildAt(event.x(), event.y())) {
-            this.area.getScrolling().onMousePressed((int) event.x(), (int) event.y());
+        // A press on the content that can drag it along is for the area, so nothing behind the area gets it as well.
+        // Where something in the area or on top of it takes the press, it stays a click for that.
+        if ((event.button() == InputConstants.MOUSE_BUTTON_LEFT) && this.area.isScreenPointVisible(event.x(), event.y()) && !this.area.hasInteractiveChildAt(event.x(), event.y()) && !this.area.isCoveredAt(event.x(), event.y())) {
+            return this.area.getScrolling().onMousePressed((int) event.x(), (int) event.y());
         }
         return false;
     }
@@ -52,11 +53,6 @@ public class ScrollAreaInput implements GuiEventListener, NarratableEntry, Fancy
             if (barWasGrabbed) this.area.getScrolling().snapToNearest();
         }
         return false;
-    }
-
-    @Override
-    public boolean mouseDragged(@NotNull MouseButtonEvent event, double dragX, double dragY) {
-        return this.area.getBars().mouseDragged(event.x(), event.y(), event.button(), dragX, dragY);
     }
 
     /**

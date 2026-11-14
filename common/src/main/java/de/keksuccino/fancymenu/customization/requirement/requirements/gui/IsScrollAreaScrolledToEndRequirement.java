@@ -14,7 +14,9 @@ import java.util.function.Function;
 
 /**
  * Met while the content of a Scrollable Area element is scrolled to its end, in the direction the area mainly scrolls in.
- * An area with nothing to scroll shows all of its content, which counts as being at the end.
+ * An area with nothing to scroll shows all of its content, which counts as being at the end.<br>
+ * An area that does not show its content is not scrolled to anything: before its first frame it does not know how big its content is,
+ * and would count as being at an end it is not at one frame later.
  */
 public class IsScrollAreaScrolledToEndRequirement extends Requirement {
 
@@ -44,7 +46,7 @@ public class IsScrollAreaScrolledToEndRequirement extends Requirement {
     public boolean isRequirementMet(@Nullable String value) {
         if ((value == null) || value.isBlank()) return false;
         if (!(this.elementLookup.apply(value.trim()) instanceof ScrollAreaElement area)) return false;
-        return area.getScrolling().getMainAxis().isAtEnd();
+        return area.isShowingChildren() && area.getScrolling().getMainAxis().isAtEnd();
     }
 
     @Override

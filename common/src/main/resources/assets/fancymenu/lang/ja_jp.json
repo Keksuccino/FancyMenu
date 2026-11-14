@@ -3868,6 +3868,7 @@
   "fancymenu.editor.close_audio.sound_channel": "画面を閉じる音のサウンドチャンネル: %s",
   "fancymenu.editor.close_audio.sound_channel.desc": "画面を閉じる音を再生する Minecraft のサウンドチャンネルです。\n\nMinecraft のサウンド設定にある、そのチャンネルの音量スライダーにも合わせて音量が変わります。",
   "fancymenu.editor.containers.drop.not_allowed": "Vanilla要素はスクロールエリアに\n入れられません。画面そのものに\n属しているためです。",
+  "fancymenu.editor.containers.drop.not_allowed.dependency": "この要素はここには入れられません。\nエリアがこの要素に付いて動くので、\n同時に中へ入れることはできません。",
   "fancymenu.editor.containers.move_out": "スクロールエリアの外に出す",
   "fancymenu.editor.containers.move_out.desc": "この要素を、今入っているスクロールエリアから取り出します。\n画面上の位置は変わりません。\n\n要素をエリアの外へドラッグするだけでも取り出せます。",
   "fancymenu.elements.widgets.click_sound_volume": "クリック音の音量",

@@ -92,7 +92,7 @@ class ElementSpaceInputListenerTest {
         plain.setFocused(true);
         assertTrue(plainWidget.isFocused());
         assertTrue(plain.isFocused());
-        assertSame(plainWidget, plain.getWidget());
+        assertSame(plainWidget, ElementSpaceInputListener.unwrap(plain));
     }
 
     @Test

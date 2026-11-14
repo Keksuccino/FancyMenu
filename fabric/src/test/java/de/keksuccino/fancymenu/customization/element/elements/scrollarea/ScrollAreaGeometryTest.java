@@ -72,36 +72,26 @@ class ScrollAreaGeometryTest {
         ScrollAreaGeometry geometry = new ScrollAreaGeometry();
         geometry.setViewport(10, 20, 200, 100, 1.0F);
         geometry.setContentSize(0, 500, false, true);
-        geometry.setScroll(0, 37, 1.0);
+        geometry.setScroll(0, 37);
         assertEquals(10, geometry.getContentScreenX());
         assertEquals(-17, geometry.getContentScreenY());
-        assertEquals(0.0F, geometry.getSubPixelScrollY());
     }
 
     @Test
-    void theRestOfTheScrollSnapsToPixelsOfTheWindow() {
+    void aScrollBetweenTwoPixelsMovesTheContentToTheCloserOne() {
         ScrollAreaGeometry geometry = new ScrollAreaGeometry();
         geometry.setViewport(0, 0, 200, 100, 1.0F);
-        geometry.setContentSize(0, 500, false, true);
+        geometry.setContentSize(500, 500, true, true);
 
-        // At a GUI scale of 2, the smallest step is half a screen pixel
-        geometry.setScroll(0, 37.3, 2.0);
+        geometry.setScroll(0, 37.3);
         assertEquals(-37, geometry.getContentScreenY());
-        assertEquals(0.5F, geometry.getSubPixelScrollY());
-
-        geometry.setScroll(0, 37.2, 2.0);
-        assertEquals(-37, geometry.getContentScreenY());
-        assertEquals(0.0F, geometry.getSubPixelScrollY());
-
-        // A rest that rounds up to a whole pixel moves the content instead
-        geometry.setScroll(0, 37.9, 2.0);
+        geometry.setScroll(0, 37.5);
         assertEquals(-38, geometry.getContentScreenY());
-        assertEquals(0.0F, geometry.getSubPixelScrollY());
-
-        // At a GUI scale of 1, there is nothing smaller than a screen pixel
-        geometry.setScroll(12.4, 0, 1.0);
+        geometry.setScroll(0, 37.9);
+        assertEquals(-38, geometry.getContentScreenY());
+        geometry.setScroll(12.4, 0);
         assertEquals(-12, geometry.getContentScreenX());
-        assertEquals(0.0F, geometry.getSubPixelScrollX());
+        assertEquals(0, geometry.getContentScreenY());
     }
 
     @Test

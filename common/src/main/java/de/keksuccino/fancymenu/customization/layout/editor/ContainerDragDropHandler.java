@@ -1,11 +1,10 @@
 package de.keksuccino.fancymenu.customization.layout.editor;
 
-import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.container.ContainerEditorElement;
 import de.keksuccino.fancymenu.customization.element.container.ElementContainer;
 import de.keksuccino.fancymenu.customization.element.container.ElementContainerHierarchy;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
-import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
+import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetEditorElement;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -71,7 +70,12 @@ public class ContainerDragDropHandler {
             for (AbstractEditorElement<?, ?> e : this.refused) {
                 e.renderMovingNotAllowedTime = Math.max(e.renderMovingNotAllowedTime, until);
             }
-            TooltipHandler.INSTANCE.addRenderTickTooltip(UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.containers.drop.not_allowed")), () -> true);
+            // Vanilla elements never go into a container. Everything else only stays out of a container that sits where it sits because of that element.
+            boolean onlyVanilla = true;
+            for (AbstractEditorElement<?, ?> e : this.refused) {
+                if (!(e instanceof VanillaWidgetEditorElement)) onlyVanilla = false;
+            }
+            TooltipHandler.INSTANCE.addRenderTickTooltip(UITooltip.of(LocalizationUtils.splitLocalizedLines(onlyVanilla ? "fancymenu.editor.containers.drop.not_allowed" : "fancymenu.editor.containers.drop.not_allowed.dependency")), () -> true);
         }
 
         int color = UIBase.getUITheme().layout_editor_element_border_color_selected.getColorInt();
@@ -126,12 +130,16 @@ public class ContainerDragDropHandler {
         // What gets a place among the children of the container the mouse is over, and what lies on top of what it got dropped on
         List<AbstractEditorElement<?, ?>> placed = new ArrayList<>();
         List<AbstractEditorElement<?, ?>> onTop = new ArrayList<>();
+        boolean anyChangedContainer = false;
         for (int i = 0; i < dropped.size(); i++) {
             AbstractEditorElement<?, ?> e = dropped.get(i);
             AbstractEditorElement<?, ?> destination = destinations.get(i);
             ElementContainer destinationContainer = toContainer(destination);
             boolean changesContainer = e.element.getParentContainer() != destinationContainer;
-            if (changesContainer) e.moveToContainer(destinationContainer, this.keepsElementAnchor(e, destinationContainer, dropped, destinations));
+            if (changesContainer) {
+                e.moveToContainer(destinationContainer);
+                anyChangedContainer = true;
+            }
             if ((dropIndex >= 0) && (destination == target)) {
                 placed.add(e);
             } else if (changesContainer) {
@@ -141,7 +149,7 @@ public class ContainerDragDropHandler {
         if (placed.isEmpty() && onTop.isEmpty()) return;
 
         List<AbstractEditorElement<?, ?>> elements = this.editor.normalEditorElements;
-        List<AbstractEditorElement<?, ?>> orderBefore = onTop.isEmpty() ? new ArrayList<>(elements) : null;
+        List<AbstractEditorElement<?, ?>> orderBefore = anyChangedContainer ? null : new ArrayList<>(elements);
         if (!placed.isEmpty()) {
             AbstractEditorElement<?, ?> next = this.findChildAtDropIndex((ContainerEditorElement) target, dropIndex, dragged);
             elements.removeAll(placed);
@@ -154,11 +162,7 @@ public class ContainerDragDropHandler {
         // Children that got dropped on the place they had already change nothing
         if ((orderBefore != null) && orderBefore.equals(elements)) return;
 
-        this.editor.updateContainerHierarchy();
-        this.editor.updateLayerGroupElementOrder();
-        for (AbstractLayoutEditorWidget widget : this.editor.layoutEditorWidgets) {
-            widget.refresh();
-        }
+        this.editor.containerOperations.refreshAfterChange();
 
     }
 
@@ -169,12 +173,15 @@ public class ContainerDragDropHandler {
 
     /**
      * Returns the container a dropped element ends up in when the mouse is over the given one, or NULL if it ends up in the main layout:
-     * the first container, from the one the mouse is over outwards, that can hold the element and that the element reaches into.
+     * the first container, from the one the mouse is over outwards, that holds the element already, or that can hold it and that it reaches into.
      */
     @Nullable
     protected AbstractEditorElement<?, ?> findDestination(@NotNull AbstractEditorElement<?, ?> element, @Nullable AbstractEditorElement<?, ?> target) {
         AbstractEditorElement<?, ?> candidate = target;
         while ((candidate instanceof ContainerEditorElement candidateContainer) && (candidate.element instanceof ElementContainer container)) {
+            // An element stays in the container it is in already, also where the container does not show it, like a child that is
+            // scrolled out of sight while the user drags it along with others
+            if (element.element.getParentContainer() == container) return candidate;
             if (candidateContainer.canHoldChild(element)) {
                 this.box[0] = element.getX();
                 this.box[1] = element.getY();
@@ -186,18 +193,6 @@ public class ContainerDragDropHandler {
             candidate = (parent != null) ? this.editor.getElementByInstanceIdentifier(parent.getContainerElement().getInstanceIdentifier()) : null;
         }
         return null;
-    }
-
-    /**
-     * Returns if a dropped element that is anchored to another element stays anchored to it: when both are in the same container afterwards.
-     */
-    protected boolean keepsElementAnchor(@NotNull AbstractEditorElement<?, ?> element, @Nullable ElementContainer destination, @NotNull List<AbstractEditorElement<?, ?>> dropped, @NotNull List<AbstractEditorElement<?, ?>> destinations) {
-        AbstractElement anchor = element.element.getElementAnchorPointParent();
-        if (anchor == null) return false;
-        for (int i = 0; i < dropped.size(); i++) {
-            if (dropped.get(i).element == anchor) return toContainer(destinations.get(i)) == destination;
-        }
-        return anchor.getParentContainer() == destination;
     }
 
     /**

@@ -556,21 +556,22 @@ public class RenderingUtils {
      * @param factor Value between 0.0F and 1.0F the alpha of the color gets multiplied with, like the opacity of what gets drawn in the color.
      * @return The given color with new alpha. A factor of 1.0F or more returns the color exactly as it is.
      */
-    /**
-     * Fills an area with a gradient that runs from its left edge to its right edge. Vanilla only has one that runs from top to bottom.
-     */
-    public static void fillGradientHorizontal(@NotNull GuiGraphicsExtractor graphics, int x1, int y1, int x2, int y2, int colorLeft, int colorRight) {
-        int width = Math.max(1, x2 - x1);
-        for (int x = x1; x < x2; x++) {
-            float factor = (float) (x - x1) / (float) width;
-            graphics.fill(x, y1, x + 1, y2, ARGB.srgbLerp(factor, colorLeft, colorRight));
-        }
-    }
-
     public static int multiplyAlphaInColor(int color, float factor) {
         if (factor >= 1.0F) return color;
         int alpha = (int)((color >>> 24) * Math.max(0.0F, factor));
         return (color & 0x00FFFFFF) | (alpha << 24);
+    }
+
+    /**
+     * Fills an area with a gradient that runs from its left edge to its right edge. Vanilla only has one that runs from top to bottom.<br>
+     * Every column gets the color the gradient has in its middle, so a gradient looks the same from both sides.
+     */
+    public static void fillGradientHorizontal(@NotNull GuiGraphicsExtractor graphics, int x1, int y1, int x2, int y2, int colorLeft, int colorRight) {
+        int width = Math.max(1, x2 - x1);
+        for (int x = x1; x < x2; x++) {
+            float factor = ((x - x1) + 0.5F) / (float) width;
+            graphics.fill(x, y1, x + 1, y2, ARGB.srgbLerp(factor, colorLeft, colorRight));
+        }
     }
 
     public static void fillF(@NotNull GuiGraphicsExtractor graphics, float minX, float minY, float maxX, float maxY, int color) {

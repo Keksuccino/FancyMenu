@@ -68,6 +68,12 @@ public interface ElementContainer {
     boolean managesChildBoxes();
 
     /**
+     * Works the boxes of the children out again right now, for a container that manages them. The boxes are the ones of the last frame
+     * otherwise, which is too old for something that just moved a child and needs to know where it is now.
+     */
+    void refreshChildBoxes();
+
+    /**
      * Returns if this container decides where its children are in a way that leaves the user no place to put them:
      * it arranges them one after another, in the order they have. Children of such a container can only be put in another order.
      */

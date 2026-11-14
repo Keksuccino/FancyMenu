@@ -69,6 +69,14 @@ public enum ScrollAreaLayoutMode {
         return !this.arrangesChildren;
     }
 
+    /**
+     * Returns if children can fill the room they have across the direction they line up in. Children that flow sit next to each other
+     * in that room with the size they have, so there is nothing for one of them to fill.
+     */
+    public boolean supportsFillAlignment() {
+        return this != FLOW;
+    }
+
     @NotNull
     public String getLocalizationKey() {
         return this.localizationKey;

@@ -3868,6 +3868,7 @@
   "fancymenu.editor.close_audio.sound_channel": "Canal de sonido del audio al cerrar pantalla: %s",
   "fancymenu.editor.close_audio.sound_channel.desc": "El canal de sonido de Minecraft en el que suena el audio al cerrar pantalla.\n\nAsí también sigue el control de volumen de ese canal en los ajustes de sonido de Minecraft.",
   "fancymenu.editor.containers.drop.not_allowed": "Los elementos de Vanilla no pueden ir\nen áreas desplazables. Son parte\nde la pantalla misma.",
+  "fancymenu.editor.containers.drop.not_allowed.dependency": "Este elemento no puede ir aquí.\nEl área lo sigue a donde vaya, así que\nno puede contenerlo al mismo tiempo.",
   "fancymenu.editor.containers.move_out": "Sacar del área desplazable",
   "fancymenu.editor.containers.move_out.desc": "Saca este elemento del área desplazable en la que está.\nSe queda donde está en la pantalla.\n\nTambién puedes simplemente arrastrar un elemento fuera de su área.",
   "fancymenu.elements.widgets.click_sound_volume": "Volumen del sonido de clic",

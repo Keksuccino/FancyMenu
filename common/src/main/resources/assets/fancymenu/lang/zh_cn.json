@@ -3868,6 +3868,7 @@
   "fancymenu.editor.close_audio.sound_channel": "界面关闭音效声音通道：%s",
   "fancymenu.editor.close_audio.sound_channel.desc": "播放界面关闭音效所用的 Minecraft 声音通道。\n\n这样它的音量也会跟随 Minecraft 声音设置里该通道的音量滑块。",
   "fancymenu.editor.containers.drop.not_allowed": "原版元素不能放进\n滚动区域。它们属于\n界面本身。",
+  "fancymenu.editor.containers.drop.not_allowed.dependency": "这个元素放不进这里。\n区域正跟着它移动，\n所以没法同时把它装进去。",
   "fancymenu.editor.containers.move_out": "移出滚动区域",
   "fancymenu.editor.containers.move_out.desc": "把这个元素从它所在的滚动区域里拿出来。\n它在屏幕上的位置保持不变。\n\n你也可以直接把元素拖出它的区域。",
   "fancymenu.elements.widgets.click_sound_volume": "点击音效音量",

@@ -2,13 +2,14 @@ package de.keksuccino.fancymenu.customization.element.elements.scrollarea;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
+import de.keksuccino.fancymenu.customization.element.ElementSpaceInputListener;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.events.screen.ScreenKeyPressedEvent;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
-import de.keksuccino.fancymenu.util.input.MouseUtils;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
 import java.util.List;
 
@@ -27,19 +28,19 @@ public final class ScrollAreaKeyboard {
         // The layout editor and everything it opens use these keys for their own things
         if (LayoutEditorScreen.getCurrentInstance() != null) return;
         Screen screen = event.getScreen();
-        // In a text field, these keys move the cursor
-        if ((screen == null) || (screen.getFocused() instanceof EditBox)) return;
+        if (screen == null) return;
+        // In a text field, these keys move the cursor. Screens know the text field of a child of a container as the listener that maps its input.
+        GuiEventListener focused = screen.getFocused();
+        if ((focused != null) && (ElementSpaceInputListener.unwrap(focused) instanceof EditBox)) return;
         ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(screen);
         if (layer == null) return;
 
-        double mouseX = MouseUtils.getScaledMouseX();
-        double mouseY = MouseUtils.getScaledMouseY();
         // Children come behind their area in the order of the elements, so an area in another area gets asked first,
         // and hands the key on to the outer one when it has nowhere to scroll to anymore
         List<AbstractElement> elements = layer.allElements;
         for (int i = elements.size() - 1; i >= 0; i--) {
             if (!(elements.get(i) instanceof ScrollAreaElement area)) continue;
-            if (!area.keyboardScrolling.getBoolean() || !area.isShowingChildren() || !area.isScreenPointVisible(mouseX, mouseY)) continue;
+            if (!area.keyboardScrolling.getBoolean() || !area.isShowingChildren() || !area.isPointerOverContent()) continue;
             ScrollAreaScrolling scrolling = area.getScrolling();
             boolean scrolled = switch (key) {
                 case InputConstants.KEY_PAGEUP -> scrolling.scrollByPage(false);

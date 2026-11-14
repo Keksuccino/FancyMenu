@@ -3868,6 +3868,7 @@
   "fancymenu.editor.close_audio.sound_channel": "화면 닫기 사운드 사운드 채널: %s",
   "fancymenu.editor.close_audio.sound_channel.desc": "화면 닫기 사운드가 재생될 Minecraft 사운드 채널이에요.\n\nMinecraft 사운드 설정에 있는 그 채널의 볼륨 슬라이더도 따라가요.",
   "fancymenu.editor.containers.drop.not_allowed": "바닐라 요소는 스크롤 영역에\n넣을 수 없어요. 화면 자체에\n속해 있거든요.",
+  "fancymenu.editor.containers.drop.not_allowed.dependency": "이 요소는 여기에 넣을 수 없어요.\n영역이 이 요소를 따라다니고 있어서\n동시에 안에 담을 수는 없거든요.",
   "fancymenu.editor.containers.move_out": "스크롤 영역 밖으로 꺼내기",
   "fancymenu.editor.containers.move_out.desc": "이 요소를 지금 들어 있는 스크롤 영역에서 꺼내요.\n화면에서의 위치는 그대로예요.\n\n요소를 영역 밖으로 드래그하기만 해도 꺼낼 수 있어요.",
   "fancymenu.elements.widgets.click_sound_volume": "클릭 소리 볼륨",

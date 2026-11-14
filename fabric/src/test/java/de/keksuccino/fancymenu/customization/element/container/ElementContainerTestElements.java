@@ -111,6 +111,10 @@ final class ElementContainerTestElements {
         }
 
         @Override
+        public void refreshChildBoxes() {
+        }
+
+        @Override
         public boolean arrangesChildren() {
             return false;
         }

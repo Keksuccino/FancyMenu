@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.scrollarea;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.customization.element.style.PixelScrollGrabber;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollbar.ScrollBar;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -112,7 +113,7 @@ public final class ScrollAreaBars {
         double scrollX = scroller.x().getPosition();
         double scrollY = scroller.y().getPosition();
         long now = System.currentTimeMillis();
-        if ((scrollX != this.lastScrollX) || (scrollY != this.lastScrollY) || this.isGrabbed() || this.vertical.isGrabberHovered() || this.horizontal.isGrabberHovered()) {
+        if ((scrollX != this.lastScrollX) || (scrollY != this.lastScrollY) || this.isUsedByMouse()) {
             this.lastActivityTime = now;
         }
         this.lastScrollX = scrollX;
@@ -151,6 +152,13 @@ public final class ScrollAreaBars {
         return this.vertical.isGrabberGrabbed() || this.horizontal.isGrabberGrabbed();
     }
 
+    /**
+     * Returns if the mouse holds one of the grabbers or is over one, where a press of it grabs the grabber.
+     */
+    public boolean isUsedByMouse() {
+        return this.isGrabbed() || this.vertical.isGrabberHovered() || this.horizontal.isGrabberHovered();
+    }
+
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         return this.vertical.mouseClicked(mouseX, mouseY, button) || this.horizontal.mouseClicked(mouseX, mouseY, button);
     }
@@ -160,8 +168,13 @@ public final class ScrollAreaBars {
         this.horizontal.mouseReleased(mouseX, mouseY, button);
     }
 
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        return this.vertical.mouseDragged(mouseX, mouseY, button, dragX, dragY) || this.horizontal.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    /**
+     * Moves the grabber the user holds to where the mouse is. Has to be called in every frame a grabber is held: on some game versions,
+     * screens never tell what takes its clicks before they do that the mouse moved with its button held.
+     */
+    public void followPointer(int mouseX, int mouseY) {
+        this.vertical.mouseDragged(mouseX, mouseY, InputConstants.MOUSE_BUTTON_LEFT, 0.0D, 0.0D);
+        this.horizontal.mouseDragged(mouseX, mouseY, InputConstants.MOUSE_BUTTON_LEFT, 0.0D, 0.0D);
     }
 
 }

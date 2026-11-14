@@ -1,6 +1,9 @@
 package de.keksuccino.fancymenu.customization.layout.editor;
 
+import de.keksuccino.fancymenu.customization.element.AbstractElement;
+import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
+import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.container.ContainerEditorElement;
 import de.keksuccino.fancymenu.customization.element.container.ElementContainer;
 import de.keksuccino.fancymenu.customization.element.container.ElementContainerHierarchy;
@@ -24,8 +27,6 @@ import java.util.function.Supplier;
  */
 public class ContainerElementOperations {
 
-    /** The key elements save the identifier of their container under. */
-    private static final String PARENT_CONTAINER_KEY = "parent_container";
     private static final String INSTANCE_IDENTIFIER_KEY = "instance_identifier";
     /** How far from the top left of what a container shows an element gets put that would not show in it otherwise. */
     private static final int VISIBLE_PLACEMENT_INSET = 6;
@@ -39,30 +40,28 @@ public class ContainerElementOperations {
     }
 
     /**
-     * Returns everything that is in the container, directly or in one of its children, in the order of the elements.
-     */
-    @NotNull
-    public List<AbstractEditorElement<?, ?>> getDescendants(@NotNull AbstractEditorElement<?, ?> container) {
-        List<AbstractEditorElement<?, ?>> descendants = new ArrayList<>();
-        if (!(container.element instanceof ElementContainer elementContainer)) return descendants;
-        for (AbstractEditorElement<?, ?> e : this.editor.normalEditorElements) {
-            if (ElementContainerHierarchy.isInContainer(e.element, elementContainer)) descendants.add(e);
-        }
-        return descendants;
-    }
-
-    /**
-     * Returns the elements with everything that is in the containers among them, each element only once.
+     * Returns the elements with everything that is in the containers among them, each element only once.<br>
+     * They come in the order the editor has its elements in, so what gets made from them, like copies, has the layers in the same order.
+     * Elements the editor keeps somewhere else, like vanilla elements, come last.
      */
     @NotNull
     public List<AbstractEditorElement<?, ?>> withDescendants(@NotNull Collection<AbstractEditorElement<?, ?>> elements) {
-        List<AbstractEditorElement<?, ?>> all = new ArrayList<>(elements);
+        List<AbstractEditorElement<?, ?>> all = new ArrayList<>();
+        for (AbstractEditorElement<?, ?> e : this.editor.normalEditorElements) {
+            if (elements.contains(e) || this.isInAnyOf(e, elements)) all.add(e);
+        }
         for (AbstractEditorElement<?, ?> e : elements) {
-            for (AbstractEditorElement<?, ?> descendant : this.getDescendants(e)) {
-                if (!all.contains(descendant)) all.add(descendant);
-            }
+            if (!all.contains(e)) all.add(e);
         }
         return all;
+    }
+
+    protected boolean isInAnyOf(@NotNull AbstractEditorElement<?, ?> element, @NotNull Collection<AbstractEditorElement<?, ?>> containers) {
+        if (element.element.getParentContainer() == null) return false;
+        for (AbstractEditorElement<?, ?> e : containers) {
+            if ((e.element instanceof ElementContainer container) && ElementContainerHierarchy.isInContainer(element.element, container)) return true;
+        }
+        return false;
     }
 
     /**
@@ -74,8 +73,11 @@ public class ContainerElementOperations {
     public AbstractEditorElement<?, ?> getSibling(@NotNull AbstractEditorElement<?, ?> element, boolean above) {
         List<AbstractEditorElement<?, ?>> elements = this.editor.normalEditorElements;
         ElementContainer container = element.element.getParentContainer();
+        int index = elements.indexOf(element);
+        // An element the editor does not have among these, like a vanilla element, has no place in their order
+        if (index < 0) return null;
         int step = above ? 1 : -1;
-        for (int i = elements.indexOf(element) + step; (i >= 0) && (i < elements.size()); i += step) {
+        for (int i = index + step; (i >= 0) && (i < elements.size()); i += step) {
             if (elements.get(i).element.getParentContainer() == container) return elements.get(i);
         }
         return null;
@@ -96,8 +98,8 @@ public class ContainerElementOperations {
             copy.putProperty(INSTANCE_IDENTIFIER_KEY, newIdentifier);
         }
         for (SerializedElement copy : copies) {
-            String container = copy.getValue(PARENT_CONTAINER_KEY);
-            if ((container != null) && newIdentifiers.containsKey(container)) copy.putProperty(PARENT_CONTAINER_KEY, newIdentifiers.get(container));
+            String container = copy.getValue(ElementBuilder.PARENT_CONTAINER_KEY);
+            if ((container != null) && newIdentifiers.containsKey(container)) copy.putProperty(ElementBuilder.PARENT_CONTAINER_KEY, newIdentifiers.get(container));
         }
     }
 
@@ -186,7 +188,7 @@ public class ContainerElementOperations {
         // Where the element goes if nothing of it shows where it is: next to where the user saw it last, or where its new container is
         int fallbackX = (oldContainer != null) ? oldContainer.getContainerElement().getAbsoluteX() : 0;
         int fallbackY = (oldContainer != null) ? oldContainer.getContainerElement().getAbsoluteY() : 0;
-        element.moveToContainer(container, false);
+        element.moveToContainer(container);
         if (this.editor.getElementByInstanceIdentifier((container != null) ? container.getContainerElement().getInstanceIdentifier() : "") instanceof ContainerEditorElement containerEditorElement) {
             this.box[0] = element.getX();
             this.box[1] = element.getY();
@@ -199,9 +201,30 @@ public class ContainerElementOperations {
     }
 
     /**
+     * Replaces the anchors of elements that are anchored to an element of another container, or of the main layout while they are in a container.
+     * An element can only follow one that is in the same content, and elements end up like this when one of two that are anchored
+     * to each other gets moved into or out of a container. Every element stays where it is on the screen.<br>
+     * Has to be called after everything that changes its container in one go did, so elements that move together stay anchored to each other.
+     */
+    public void detachAnchorsAcrossContainers() {
+        for (AbstractEditorElement<?, ?> e : this.editor.getAllElements()) {
+            if (e.element.anchorPoint != ElementAnchorPoints.ELEMENT) continue;
+            AbstractElement anchor = e.element.getElementAnchorPointParent();
+            if ((anchor == null) || (anchor.getParentContainer() == e.element.getParentContainer())) continue;
+            int screenX = e.getX();
+            int screenY = e.getY();
+            // The top left is the one anchor that never moves a child when the content of its container changes its size
+            e.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
+            e.element.setAnchorPointElementIdentifier(null);
+            e.moveToScreenPosition(screenX, screenY);
+        }
+    }
+
+    /**
      * Brings the containers and everything that shows the elements of the editor up to date, after elements got added, removed or moved between containers.
      */
     public void refreshAfterChange() {
+        this.detachAnchorsAcrossContainers();
         this.editor.updateContainerHierarchy();
         this.editor.updateLayerGroupElementOrder();
         for (AbstractLayoutEditorWidget widget : this.editor.layoutEditorWidgets) {

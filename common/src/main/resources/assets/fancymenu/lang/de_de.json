@@ -3868,6 +3868,7 @@
   "fancymenu.editor.close_audio.sound_channel": "Soundkanal vom Schließen-Audio: %s",
   "fancymenu.editor.close_audio.sound_channel.desc": "Der Minecraft-Soundkanal, auf dem das Schließen-Audio für den Bildschirm abgespielt wird.\n\nSo folgt die Lautstärke auch dem Regler dieses Kanals in deinen Minecraft-Soundeinstellungen.",
   "fancymenu.editor.containers.drop.not_allowed": "Vanilla-Elemente passen nicht in\nscrollbare Bereiche. Sie gehören\nzum Bildschirm selbst.",
+  "fancymenu.editor.containers.drop.not_allowed.dependency": "Dieses Element passt hier nicht rein.\nDer Bereich folgt ihm überallhin, also\nkann er es nicht gleichzeitig enthalten.",
   "fancymenu.editor.containers.move_out": "Aus scrollbarem Bereich herausnehmen",
   "fancymenu.editor.containers.move_out.desc": "Nimmt dieses Element aus dem scrollbaren Bereich, in dem es steckt.\nEs bleibt, wo es auf dem Bildschirm ist.\n\nDu kannst ein Element auch einfach aus seinem Bereich herausziehen.",
   "fancymenu.elements.widgets.click_sound_volume": "Lautstärke vom Klicksound",

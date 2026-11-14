@@ -14,9 +14,13 @@ class IsScrollAreaScrolledToEndRequirementTest {
 
     private static final ScrollAreaElementBuilder BUILDER = new ScrollAreaElementBuilder();
 
+    private static ShownArea shownArea() {
+        return new ShownArea();
+    }
+
     @Test
     void itIsMetWhileTheContentIsAtTheEndOfTheDirectionTheAreaScrollsIn() {
-        ScrollAreaElement area = new ScrollAreaElement(BUILDER);
+        ScrollAreaElement area = shownArea();
         area.getScroller().setRange(400, 800);
         IsScrollAreaScrolledToEndRequirement requirement = new IsScrollAreaScrolledToEndRequirement(id -> "area".equals(id) ? area : null);
 
@@ -36,8 +40,19 @@ class IsScrollAreaScrolledToEndRequirementTest {
 
     @Test
     void anAreaWithNothingToScrollShowsItsEnd() {
-        ScrollAreaElement area = new ScrollAreaElement(BUILDER);
+        ScrollAreaElement area = shownArea();
         assertTrue(new IsScrollAreaScrolledToEndRequirement(id -> area).isRequirementMet("area"));
+    }
+
+    @Test
+    void anAreaThatDoesNotShowItsContentIsNotScrolledToAnything() {
+        // Before its first frame, an area has no idea how big its content is, and would count as being at its end
+        ShownArea area = shownArea();
+        area.shown = false;
+        IsScrollAreaScrolledToEndRequirement requirement = new IsScrollAreaScrolledToEndRequirement(id -> area);
+        assertFalse(requirement.isRequirementMet("area"));
+        area.shown = true;
+        assertTrue(requirement.isRequirementMet("area"));
     }
 
     @Test
@@ -52,6 +67,21 @@ class IsScrollAreaScrolledToEndRequirementTest {
     @Test
     void itReadsWhatAnElementLooksLikeRightNowSoItOnlyRunsOnTheMainThread() {
         assertFalse(new IsScrollAreaScrolledToEndRequirement(id -> null).canRunAsync());
+    }
+
+    private static final class ShownArea extends ScrollAreaElement {
+
+        private boolean shown = true;
+
+        private ShownArea() {
+            super(BUILDER);
+        }
+
+        @Override
+        public boolean isShowingChildren() {
+            return this.shown;
+        }
+
     }
 
 }

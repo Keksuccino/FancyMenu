@@ -157,6 +157,21 @@ class ScrollAreaScrollerTest {
     }
 
     @Test
+    void thePercentHasTwoDigitsBehindThePointAtMost() {
+        ScrollAreaScroller scroller = new ScrollAreaScroller();
+        scroller.setSmooth(false);
+        scroller.setRange(0, 300);
+        assertEquals(0.0, scroller.y().getPercent());
+        scroller.y().scrollTo(100, false);
+        assertEquals(33.33, scroller.y().getPercent());
+        scroller.y().scrollTo(200, false);
+        assertEquals(66.67, scroller.y().getPercent());
+        scroller.y().scrollTo(300, false);
+        assertEquals(100.0, scroller.y().getPercent());
+        assertEquals(0.0, scroller.x().getPercent());
+    }
+
+    @Test
     void driftingMovesPositionAndTargetTogetherAndReportsWhatIsLeft() {
         ScrollAreaScroller scroller = new ScrollAreaScroller();
         scroller.setRange(0, 100);

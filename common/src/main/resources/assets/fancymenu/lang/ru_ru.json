@@ -3868,6 +3868,7 @@
   "fancymenu.editor.close_audio.sound_channel": "Звуковой канал звука закрытия экрана: %s",
   "fancymenu.editor.close_audio.sound_channel.desc": "Звуковой канал Minecraft, в котором играет звук закрытия экрана.\n\nТак громкость будет следовать и ползунку этого канала в настройках звука Minecraft.",
   "fancymenu.editor.containers.drop.not_allowed": "Ванильные элементы нельзя поместить\nв области прокрутки. Они принадлежат\nсамому экрану.",
+  "fancymenu.editor.containers.drop.not_allowed.dependency": "Этот элемент сюда не поместить.\nОбласть следует за ним, поэтому\nне может одновременно его содержать.",
   "fancymenu.editor.containers.move_out": "Вынуть из области прокрутки",
   "fancymenu.editor.containers.move_out.desc": "Вынимает этот элемент из области прокрутки, в которой он находится.\nОн остаётся там же, где и был на экране.\n\nЭлемент можно и просто вытащить из его области.",
   "fancymenu.elements.widgets.click_sound_volume": "Громкость звука нажатия",

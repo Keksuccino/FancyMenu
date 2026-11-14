@@ -795,7 +795,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			x += (int) (invertParallax ? parallaxOffset : -parallaxOffset);
 		}
 
-		if (this.stretchX.getBoolean()) {
+		if (this.isStretchedX()) {
             x = 0;
 		} else if (this.stayOnScreen && !this.stickyAnchor && !applyParallax && ((link == null) || !link.isMovedByUser())) {
 			// Children stay in the content of their container, which is what the screen is for everything else
@@ -861,7 +861,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			y += (int) (invertParallax ? parallaxOffset : -parallaxOffset);
 		}
 
-		if (this.stretchY.getBoolean()) {
+		if (this.isStretchedY()) {
 			y = 0;
 		} else if (this.stayOnScreen && !this.stickyAnchor && !applyParallax && ((link == null) || !link.isMovedByUser())) {
 			// Children stay in the content of their container, which is what the screen is for everything else
@@ -903,7 +903,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		if (!this.advancedWidth.isDefault()) {
 			return this.advancedWidth.getInteger();
 		}
-		if (this.stretchX.getBoolean()) {
+		if (this.isStretchedX()) {
 			ElementContainer container = this.getParentContainer();
 			return (container != null) ? container.getContentWidth() : getScreenWidth();
 		}
@@ -912,6 +912,28 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			return this.autoSizingWidth;
 		}
 		return this.baseWidth;
+	}
+
+	/**
+	 * Returns if this element is as wide as the space it gets positioned in.<br>
+	 * A child of a container that arranges its children never is: it has a place of its own there, with nothing to stretch over,
+	 * and a content that is as big as its children would grow with a child that is as big as the content.
+	 */
+	public boolean isStretchedX() {
+		return this.stretchX.getBoolean() && !this.isArrangedByContainer();
+	}
+
+	/** The height counterpart of {@link #isStretchedX()}. */
+	public boolean isStretchedY() {
+		return this.stretchY.getBoolean() && !this.isArrangedByContainer();
+	}
+
+	/**
+	 * Returns if this element is a child of a container that arranges its children, which gives it its place.
+	 */
+	public boolean isArrangedByContainer() {
+		ElementContainer container = this.getParentContainer();
+		return (container != null) && container.arrangesChildren();
 	}
 
 	/**
@@ -936,7 +958,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 		if (!this.advancedHeight.isDefault()) {
 			return this.advancedHeight.getInteger();
 		}
-		if (this.stretchY.getBoolean()) {
+		if (this.isStretchedY()) {
 			ElementContainer container = this.getParentContainer();
 			return (container != null) ? container.getContentHeight() : getScreenHeight();
 		}
@@ -1394,6 +1416,26 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
     }
 
     /**
+     * Returns if the point is in the part of the content the container of this element shows, for a point in the space this element is in
+     * right now: the screen, or the unscaled space it renders in while its container scales what it draws.<br>
+     * This is the one to ask with the mouse an element gets handed while it renders.
+     */
+    public boolean isRenderSpacePointVisibleInContainer(double x, double y) {
+        ElementContainerLink link = this.containerLink;
+        ElementContainer container = (link != null) ? link.getContainer() : null;
+        if (container == null) return true;
+        if (link.getSizeSpace() == ElementContainerLink.SizeSpace.CONTENT) {
+            // The container scales what the element draws around its top-left corner
+            float scale = container.getContentScale();
+            int elementX = this.getAbsoluteX();
+            int elementY = this.getAbsoluteY();
+            x = elementX + ((x - elementX) * scale);
+            y = elementY + ((y - elementY) * scale);
+        }
+        return container.isShowingChildren() && container.isScreenPointVisible(x, y);
+    }
+
+    /**
      * Works out the part of this element that shows on the screen: all of it for an element of the main layout,
      * and what its containers do not cut off for a child.
      *
@@ -1407,6 +1449,16 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
         area[3] = area[1] + this.getAbsoluteHeight();
         ElementContainer container = this.getParentContainer();
         return (container == null) || (container.isShowingChildren() && container.clipToShownArea(area));
+    }
+
+    /**
+     * Returns if a press of the mouse at the given point on the screen is for something in this element, like a button or a slider.
+     * Only gets asked for points that are over one of the widgets of the element, which is why it says yes by default.<br>
+     * Containers that let the user drag their content only start dragging where nothing takes the press. Elements with widgets that
+     * are hovered where a press does nothing in them say where it does.
+     */
+    public boolean takesMousePressAt(double screenX, double screenY) {
+        return true;
     }
 
     /**

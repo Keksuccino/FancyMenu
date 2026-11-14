@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.scrollarea;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorHistory;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -10,7 +9,6 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.input.MouseButtonEvent;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 /**
  * The handle the layout editor shows at the end of the content of a selected scrollable area, on one axis.
@@ -41,9 +39,8 @@ public class ScrollAreaContentEndGrabber implements GuiEventListener {
     protected int grabOffset = 0;
     /** Where the mouse took the handle, on the axis of the handle. */
     protected int grabMouse = 0;
-    protected int sizeOnGrab = 0;
-    @Nullable
-    protected LayoutEditorHistory.Snapshot snapshotOnGrab;
+    /** If the mouse moved since it took the handle. Until then, nothing about the content changes: a click on the handle is no drag. */
+    protected boolean moved = false;
 
     /**
      * @param horizontal If the handle is for the width of the content, at its right end. Otherwise it is for the height, at its bottom end.
@@ -118,6 +115,13 @@ public class ScrollAreaContentEndGrabber implements GuiEventListener {
      */
     protected void dragTo(int mouse) {
 
+        if (!this.moved) {
+            if (mouse == this.grabMouse) return;
+            this.moved = true;
+            // The size is about to change for the first time, so this is the state to go back to
+            this.editorElement.editor.history.saveSnapshot();
+        }
+
         ScrollAreaElement area = this.editorElement.element;
         ScrollAreaGeometry geometry = area.getGeometry();
         ScrollAreaScroller.Axis axis = area.getScroller().axis(this.horizontal);
@@ -149,15 +153,7 @@ public class ScrollAreaContentEndGrabber implements GuiEventListener {
     }
 
     protected void release() {
-        if (!this.grabbed) return;
         this.grabbed = false;
-        LayoutEditorHistory history = this.editorElement.editor.history;
-        if ((this.snapshotOnGrab != null) && (this.getSizeProperty().getInteger() != this.sizeOnGrab)) {
-            history.saveSnapshot(this.snapshotOnGrab);
-        } else {
-            history.discardSnapshot(this.snapshotOnGrab);
-        }
-        this.snapshotOnGrab = null;
     }
 
     /**
@@ -204,10 +200,9 @@ public class ScrollAreaContentEndGrabber implements GuiEventListener {
         if ((event.button() != InputConstants.MOUSE_BUTTON_LEFT) || !this.hovered || !this.isShown() || this.isLocked()) return false;
         ScrollAreaGeometry geometry = this.editorElement.element.getGeometry();
         this.grabbed = true;
+        this.moved = false;
         this.grabMouse = (int) (this.horizontal ? event.x() : event.y());
         this.grabOffset = this.getEndOnScreen(geometry) - this.grabMouse;
-        this.sizeOnGrab = this.getSizeProperty().getInteger();
-        this.snapshotOnGrab = this.editorElement.editor.history.createSnapshot();
         return true;
     }
 
@@ -215,14 +210,6 @@ public class ScrollAreaContentEndGrabber implements GuiEventListener {
     public boolean mouseReleased(@NotNull MouseButtonEvent event) {
         if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) this.release();
         return false;
-    }
-
-    /**
-     * The handle follows the mouse while it renders, so the content keeps scrolling along when the mouse is held still beyond the area.
-     */
-    @Override
-    public boolean mouseDragged(@NotNull MouseButtonEvent event, double dragX, double dragY) {
-        return this.grabbed;
     }
 
     @Override

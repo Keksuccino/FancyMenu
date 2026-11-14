@@ -17,6 +17,7 @@ import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRenderer;
+import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRendererEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollbar.ScrollBar;
@@ -122,6 +123,13 @@ public class TextElement extends AbstractElement {
                 if (isEditor()) return false;
                 return super.isMouseOver(mouseX, mouseY);
             }
+            @Override
+            public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
+                float scrollBefore = this.verticalScrollBar.getScroll();
+                if (!super.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY)) return false;
+                // In a container, a text that is at the end it got scrolled towards leaves the scroll to the container, so the user does not get stuck on it
+                return (TextElement.this.getParentContainer() == null) || (this.verticalScrollBar.getScroll() != scrollBefore);
+            }
         };
         this.scrollArea.minimumEntryWidthIsAreaWidth = false;
         this.scrollArea.makeEntriesWidthOfArea = false;
@@ -190,6 +198,13 @@ public class TextElement extends AbstractElement {
                 int width = this.getAbsoluteWidth();
                 int height = this.getAbsoluteHeight();
 
+                this.scrollArea.setX(x, true);
+                this.scrollArea.setY(y, true);
+                this.scrollArea.setWidth(width, true);
+                this.scrollArea.setHeight(height, true);
+                // The scroll bars have to be where they are in this frame before their tracks get drawn
+                this.scrollArea.updateScrollArea();
+
                 boolean verticalScrollBarShown = this.scrollArea.isVerticalScrollBarVisible();
                 boolean horizontalScrollBarShown = this.scrollArea.isHorizontalScrollBarVisible();
                 this.background.render(graphics, x, y, width, height, verticalScrollBarShown, horizontalScrollBarShown, this.opacity);
@@ -197,10 +212,6 @@ public class TextElement extends AbstractElement {
                 if (verticalScrollBarShown) this.scrollBarBackground.render(graphics, this.scrollArea.verticalScrollBar, true, this.opacity);
                 if (horizontalScrollBarShown) this.scrollBarBackground.render(graphics, this.scrollArea.horizontalScrollBar, false, this.opacity);
 
-                this.scrollArea.setX(x, true);
-                this.scrollArea.setY(y, true);
-                this.scrollArea.setWidth(width, true);
-                this.scrollArea.setHeight(height, true);
                 // The scroll area renders in the untransformed space of the element, so its hover checks need the mouse in that space
                 int elementMouseX = (int)Math.floor(this.untransformMouseX(mouseX, mouseY));
                 int elementMouseY = (int)Math.floor(this.untransformMouseY(mouseX, mouseY));
@@ -231,6 +242,18 @@ public class TextElement extends AbstractElement {
     @Override
     public @Nullable List<GuiEventListener> getWidgetsToRegister() {
         return this.interactable ? ListUtils.of(this.markdownInput, this.scrollAreaInput) : null;
+    }
+
+    /**
+     * The scroll area of the text is hovered everywhere on the text, and a press only does something on its grabbers and on what can be clicked in the text, like a link.
+     */
+    @Override
+    public boolean takesMousePressAt(double screenX, double screenY) {
+        if (this.scrollArea.isMouseInteractingWithGrabbers()) return true;
+        // The text renders in the untransformed space of the element, which is where its fragments are
+        double textX = this.untransformMouseX(screenX, screenY);
+        double textY = this.untransformMouseY(screenX, screenY);
+        return (this.markdownRenderer.getChildAt(textX, textY).orElse(null) instanceof MarkdownTextFragment fragment) && fragment.takesClickAt(textX, textY);
     }
 
     /** Returns the listener that passes mouse input to the scroll area of this element, in the space the scroll area renders in. */

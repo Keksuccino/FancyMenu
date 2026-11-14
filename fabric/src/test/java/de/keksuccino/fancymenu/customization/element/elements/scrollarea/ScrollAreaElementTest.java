@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementSpaceInputListener;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
+import de.keksuccino.fancymenu.customization.element.container.ElementContainerLink;
 import de.keksuccino.fancymenu.customization.element.elements.scrollarea.layout.ScrollAreaAlignment;
 import de.keksuccino.fancymenu.customization.element.elements.scrollarea.layout.ScrollAreaLayoutMode;
 import de.keksuccino.fancymenu.customization.element.elements.scrollarea.layout.ScrollAreaResizeBehavior;
@@ -230,6 +231,91 @@ class ScrollAreaElementTest {
     }
 
     @Test
+    void aStretchedChildOfAnAreaThatArrangesItsChildrenKeepsItsOwnSize() {
+        TestChild child = child("child", 0, 0, 50, 20);
+        child.stretchY.set(true);
+        TestArea area = area(child);
+        area.contentHeight.set(300);
+        area.nextFrame();
+        // Where the user places the children, a stretched child is as big as the content
+        assertTrue(child.isStretchedY());
+        assertEquals(300, child.getAbsoluteHeight());
+
+        // Arranged content is as big as its children, so a child that is as big as the content would make it grow with every frame
+        area.layoutMode.set(ScrollAreaLayoutMode.STACK);
+        area.nextFrame();
+        area.nextFrame();
+        area.nextFrame();
+        assertFalse(child.isStretchedY());
+        assertTrue(child.isArrangedByContainer());
+        assertEquals(20, child.getAbsoluteHeight());
+        assertEquals(100, area.getContentHeight());
+    }
+
+    @Test
+    void aStackedChildThatIsWiderThanTheAreaEndsWhereTheAreaEnds() {
+        TestChild wide = child("wide", 0, 0, 300, 20);
+        TestArea area = area(wide);
+        area.layoutMode.set(ScrollAreaLayoutMode.STACK);
+        area.contentPadding.set(5);
+        area.nextFrame();
+        assertEquals(190, wide.getAbsoluteWidth());
+        assertEquals(105, wide.getAbsoluteX());
+    }
+
+    @Test
+    void childrenThatFlowHaveNothingToFill() {
+        TestArea area = area(child("first", 0, 0, 50, 20));
+        area.layoutMode.set(ScrollAreaLayoutMode.STACK);
+        area.childAlignment.set(ScrollAreaAlignment.FILL);
+        assertEquals(ScrollAreaAlignment.FILL, area.getChildAlignment());
+        area.layoutMode.set(ScrollAreaLayoutMode.FLOW);
+        assertEquals(ScrollAreaAlignment.START, area.getChildAlignment());
+        // Setting the alignment to fill goes on to the next one
+        area.childAlignment.set(ScrollAreaAlignment.FILL);
+        assertEquals(ScrollAreaAlignment.START, area.childAlignment.get());
+        area.childAlignment.set(ScrollAreaAlignment.END);
+        assertEquals(ScrollAreaAlignment.END, area.getChildAlignment());
+    }
+
+    @Test
+    void theMouseOfAScaledChildIsInItWhereItIsOnTheScreen() {
+        // Without rounding, the mouse maps by the scale, around where the child starts
+        assertEquals(149, ScrollAreaElement.toUnscaledSpace(174, 100, 75, 50, 1.5F));
+        assertEquals(150, ScrollAreaElement.toUnscaledSpace(175, 100, 75, 50, 1.5F));
+        assertEquals(98, ScrollAreaElement.toUnscaledSpace(97, 100, 75, 50, 1.5F));
+        // Three units at a scale of 1.4 are four pixels on the screen. The pixel next to them would map into the child.
+        assertEquals(103, ScrollAreaElement.toUnscaledSpace(104, 100, 4, 3, 1.4F));
+        // A child that got a pixel more on the screen than its units make would have its last pixel map next to it
+        assertEquals(102, ScrollAreaElement.toUnscaledSpace(104, 100, 5, 3, 1.25F));
+    }
+
+    @Test
+    void whatAScaledChildGetsCutOffOfIsKnownInTheSpaceItRendersIn() {
+        TestChild child = child("child", 10, 40, 40, 30);
+        TestArea area = area(child);
+        area.layoutMode.set(ScrollAreaLayoutMode.PROPORTIONAL);
+        area.proportionalReferenceWidth.set(200);
+        area.proportionalReferenceHeight.set(100);
+        area.contentHeight.set(300);
+        area.width = 400;
+        area.nextFrame();
+        // At twice its size, the child spans (120, 130) to (200, 190) on the screen, and the area shows what is above 150
+        assertEquals(130, child.getAbsoluteY());
+        assertEquals(60, child.getAbsoluteHeight());
+        assertTrue(child.isRenderSpacePointVisibleInContainer(125, 145));
+        assertFalse(child.isRenderSpacePointVisibleInContainer(125, 155));
+
+        // While it renders, the child is in the unscaled space, where it spans (120, 130) to (160, 160). A point 15 units into it is 30 pixels into it on the screen.
+        ElementContainerLink link = child.getContainerLink();
+        assertNotNull(link);
+        ElementContainerLink.SizeSpace previous = link.setSizeSpace(ElementContainerLink.SizeSpace.CONTENT);
+        assertTrue(child.isRenderSpacePointVisibleInContainer(125, 135));
+        assertFalse(child.isRenderSpacePointVisibleInContainer(125, 145));
+        link.setSizeSpace(previous);
+    }
+
+    @Test
     void anAreaThatArrangesItsChildrenOnlyScrollsInOneDirection() {
         TestArea area = area(child("first", 0, 0, 50, 20));
         area.scrollDirection.set(ScrollDirection.BOTH);
@@ -383,13 +469,67 @@ class ScrollAreaElementTest {
         area.snapMode.set(ScrollSnapMode.PAGES);
         area.smoothScrolling.set(false);
         area.nextFrame();
-        assertTrue(area.scrollByWheel(0, -0.2));
+        assertTrue(area.scrollByWheel(0, -1));
         assertEquals(100.0, area.getScroller().y().getPosition());
         assertTrue(area.scrollByWheel(0, -3));
         assertEquals(200.0, area.getScroller().y().getPosition());
         assertTrue(area.scrollByWheel(0, -1));
         // The last page is as long as what is left of the content
         assertEquals(250.0, area.getScroller().y().getPosition());
+        assertFalse(area.scrollByWheel(0, -1));
+    }
+
+    @Test
+    void aWheelThatTurnsInSmallBitsNeedsAFewOfThemToMoveASnappingAreaOn() {
+        TestArea area = area(child("first", 0, 0, 50, 40));
+        area.contentHeight.set(350);
+        area.snapMode.set(ScrollSnapMode.PAGES);
+        area.smoothScrolling.set(false);
+        area.nextFrame();
+        // The scroll is for the area all the way, also while the content has not moved yet
+        assertTrue(area.scrollByWheel(0, -0.4));
+        assertTrue(area.scrollByWheel(0, -0.4));
+        assertEquals(0.0, area.getScroller().y().getPosition());
+        assertTrue(area.scrollByWheel(0, -0.4));
+        assertEquals(100.0, area.getScroller().y().getPosition());
+
+        // A wheel that turns back starts over
+        assertTrue(area.scrollByWheel(0, -0.8));
+        assertTrue(area.scrollByWheel(0, 0.6));
+        assertEquals(100.0, area.getScroller().y().getPosition());
+        assertTrue(area.scrollByWheel(0, 0.6));
+        assertEquals(0.0, area.getScroller().y().getPosition());
+
+        // Where the content has nowhere to go, the scroll is for what is behind the area
+        assertFalse(area.scrollByWheel(0, 0.4));
+
+        // Half a turn that got left alone is forgotten
+        assertTrue(area.scrollByWheel(0, -0.6));
+        area.passTime(1.0);
+        assertTrue(area.scrollByWheel(0, -0.6));
+        assertEquals(0.0, area.getScroller().y().getPosition());
+
+        // One step of a wheel is always enough, also where the game makes less than 1 of it
+        area.passTime(1.0);
+        area.wheelStepSize = 0.5D;
+        assertTrue(area.scrollByWheel(0, -0.5));
+        assertEquals(100.0, area.getScroller().y().getPosition());
+    }
+
+    @Test
+    void pagingAnAreaThatSnapsToElementsAlwaysMovesOn() {
+        // The elements are further apart than a page is long, so the closest place to a page further is where the content is already
+        TestArea area = area(child("first", 0, 0, 50, 40), child("second", 0, 300, 50, 40), child("third", 0, 600, 50, 40));
+        area.contentHeight.set(1000);
+        area.snapMode.set(ScrollSnapMode.ELEMENTS);
+        area.smoothScrolling.set(false);
+        area.nextFrame();
+        assertTrue(area.getScrolling().scrollByPage(true));
+        assertEquals(300.0, area.getScroller().y().getPosition());
+        assertTrue(area.getScrolling().scrollByPage(true));
+        assertEquals(600.0, area.getScroller().y().getPosition());
+        assertTrue(area.getScrolling().scrollByPage(false));
+        assertEquals(300.0, area.getScroller().y().getPosition());
     }
 
     @Test
@@ -491,7 +631,8 @@ class ScrollAreaElementTest {
         area.getScroller().y().scrollTo(200, false);
         area.nextFrame();
 
-        area.getScrolling().onMousePressed(150, 100);
+        // The press is for the area, so nothing behind the area gets it
+        assertTrue(area.getScrolling().onMousePressed(150, 100));
         area.setMouse(150, 98);
         area.nextFrame();
         // Two pixels are still a click
@@ -515,13 +656,35 @@ class ScrollAreaElementTest {
     }
 
     @Test
+    void aMouseThatGotLetGoOfWithoutTheAreaHearingOfItStopsDraggingTheContent() {
+        TestArea area = area(child("first", 0, 0, 50, 40));
+        area.contentHeight.set(1000);
+        area.dragScrolling.set(true);
+        area.nextFrame();
+        area.getScrolling().onMousePressed(150, 100);
+        area.setMouse(150, 70);
+        area.nextFrame();
+        assertEquals(30.0, area.getScroller().y().getPosition());
+
+        // Some screens never hand the release on, so it gets counted where all of them come in
+        ScrollAreaScrolling.onLeftMouseReleasedAnywhere();
+        area.setMouse(150, 40);
+        area.nextFrame();
+        assertFalse(area.getScrolling().isDragging());
+        assertEquals(30.0, area.getScroller().y().getPosition());
+        area.setMouse(150, 10);
+        area.nextFrame();
+        assertEquals(30.0, area.getScroller().y().getPosition());
+    }
+
+    @Test
     void theMouseDoesNotDragTheContentWhereItIsNotAllowedTo() {
         TestArea area = area(child("first", 0, 0, 50, 40));
         area.contentHeight.set(1000);
         area.nextFrame();
 
-        // Not unless the area is set to it
-        area.getScrolling().onMousePressed(150, 100);
+        // Not unless the area is set to it, and then the press stays one for what is behind the area
+        assertFalse(area.getScrolling().onMousePressed(150, 100));
         area.setMouse(150, 40);
         area.nextFrame();
         assertEquals(0.0, area.getScroller().y().getPosition() + (area.getScrolling().isDragging() ? 1 : 0));
@@ -547,6 +710,89 @@ class ScrollAreaElementTest {
         assertFalse(area.getScrolling().isDragging());
         assertFalse(area.scrollByWheel(0, -1));
         assertFalse(area.getScrolling().scrollByPage(true));
+    }
+
+    @Test
+    void anAreaTakesAPressWhereItStartsDraggingItsContent() {
+        TestArea area = area(child("first", 0, 0, 50, 40));
+        area.contentHeight.set(1000);
+        // Nothing has shown yet
+        assertFalse(area.takesMousePressAt(150, 100));
+        area.nextFrame();
+        // An area the mouse does not drag has nothing a press would be for
+        assertFalse(area.takesMousePressAt(150, 100));
+        area.dragScrolling.set(true);
+        assertTrue(area.takesMousePressAt(150, 100));
+        assertFalse(area.takesMousePressAt(50, 100));
+
+        // Content that has nowhere to go can't be dragged
+        area.contentHeight.set(50);
+        area.nextFrame();
+        assertFalse(area.takesMousePressAt(150, 100));
+    }
+
+    @Test
+    void whatGetsAskedOfAnAreaBeforeItShowsItsContentGetsDoneOnceItDoes() {
+        TestChild far = child("far", 0, 400, 50, 40);
+        TestArea area = area(child("near", 0, 10, 50, 40), far);
+        area.contentHeight.set(1000);
+        area.smoothScrolling.set(false);
+        // The area never worked out how far it can be scrolled, so there is nowhere to go yet
+        area.getScrolling().scrollToCorner(true, false);
+        assertEquals(0.0, area.getScroller().y().getPosition());
+        area.nextFrame();
+        assertEquals(900.0, area.getScroller().y().getPosition());
+
+        TestArea other = area(child("first", 0, 10, 50, 40), far);
+        other.contentHeight.set(1000);
+        other.smoothScrolling.set(false);
+        other.getScrolling().scrollToCorner(true, false);
+        // What gets asked last counts
+        other.getScrolling().scrollToChild(far, false);
+        other.nextFrame();
+        assertEquals(396.0, other.getScroller().y().getPosition());
+        assertTrue(other.getScrolling().scrollToPosition(false, 120, false));
+        assertEquals(120.0, other.getScroller().y().getPosition());
+    }
+
+    @Test
+    void contentThatGrowsUnderAnAreaAtItsStartHasNotGotThere() {
+        TestArea area = area(child("first", 0, 0, 50, 40));
+        area.contentHeight.set(50);
+        area.smoothScrolling.set(false);
+        area.nextFrame();
+        area.nextFrame();
+        area.contentHeight.set(400);
+        area.nextFrame();
+        area.nextFrame();
+        assertEquals("0 0 0", area.events());
+        // Getting to the end and back are two things that happened
+        area.getScrolling().scrollToEdge(true, false);
+        area.nextFrame();
+        assertEquals("1 0 1", area.events());
+        area.getScrolling().scrollToEdge(false, false);
+        area.nextFrame();
+        assertEquals("2 1 1", area.events());
+    }
+
+    @Test
+    void aFocusTheMouseSetLeavesTheContentWhereItIs() {
+        TestChild far = child("far", 0, 400, 50, 40);
+        TestChild further = child("further", 0, 700, 50, 40);
+        TestArea area = area(child("near", 0, 10, 50, 40), far, further);
+        area.contentHeight.set(1000);
+        area.smoothScrolling.set(false);
+        area.nextFrame();
+
+        ScrollAreaScrolling.onMousePressedAnywhere();
+        area.focused = far.widget;
+        area.nextFrame();
+        assertEquals(0.0, area.getScroller().y().getPosition());
+
+        // The next focus comes from the keyboard again
+        area.focused = further.widget;
+        area.nextFrame();
+        assertTrue(area.getScroller().y().getPosition() > 600.0);
     }
 
     @Test
@@ -732,21 +978,18 @@ class ScrollAreaElementTest {
         TestArea area = area(child);
         area.nextFrame();
         // The child spans (100, 50) to (150, 90) on the screen
-        assertEquals(30, ScrollAreaElement.moveOutOf(child, 30, 60, true));
-        assertEquals(60, ScrollAreaElement.moveOutOf(child, 30, 60, false));
-        assertEquals(150, ScrollAreaElement.moveOutOf(child, 150, 60, true));
+        assertArrayEquals(new int[]{30, 60}, movedOutOf(child, 30, 60));
+        assertArrayEquals(new int[]{150, 60}, movedOutOf(child, 150, 60));
 
         // In the child, the mouse moves to the closest place outside of it, on one axis
-        assertEquals(99, ScrollAreaElement.moveOutOf(child, 103, 70, true));
-        assertEquals(70, ScrollAreaElement.moveOutOf(child, 103, 70, false));
-        assertEquals(150, ScrollAreaElement.moveOutOf(child, 147, 70, true));
-        assertEquals(125, ScrollAreaElement.moveOutOf(child, 125, 52, true));
-        assertEquals(49, ScrollAreaElement.moveOutOf(child, 125, 52, false));
-        assertEquals(90, ScrollAreaElement.moveOutOf(child, 125, 88, false));
+        assertArrayEquals(new int[]{99, 70}, movedOutOf(child, 103, 70));
+        assertArrayEquals(new int[]{150, 70}, movedOutOf(child, 147, 70));
+        assertArrayEquals(new int[]{125, 49}, movedOutOf(child, 125, 52));
+        assertArrayEquals(new int[]{125, 90}, movedOutOf(child, 125, 88));
         for (int x = 100; x < 150; x += 7) {
             for (int y = 50; y < 90; y += 5) {
-                int movedX = ScrollAreaElement.moveOutOf(child, x, y, true);
-                int movedY = ScrollAreaElement.moveOutOf(child, x, y, false);
+                int movedX = movedOutOf(child, x, y)[0];
+                int movedY = movedOutOf(child, x, y)[1];
                 assertFalse((movedX >= 100) && (movedX < 150) && (movedY >= 50) && (movedY < 90), x + "," + y + " stays in the child at " + movedX + "," + movedY);
                 assertTrue((movedX == x) || (movedY == y), "moved on both axes from " + x + "," + y);
             }
@@ -824,6 +1067,12 @@ class ScrollAreaElementTest {
     /**
      * An area with a box tests set directly, which never asks the game for anything.
      */
+    private static int[] movedOutOf(AbstractElement child, int mouseX, int mouseY) {
+        int[] moved = new int[2];
+        ScrollAreaElement.moveOutOf(child, mouseX, mouseY, moved);
+        return moved;
+    }
+
     private static final class TestArea extends ScrollAreaElement {
 
         private int x = 100;
@@ -831,6 +1080,7 @@ class ScrollAreaElementTest {
         private int width = 200;
         private int height = 100;
         private boolean shiftDown = false;
+        private double wheelStepSize = 1.0D;
         private boolean inEditor = false;
         private long nanoTime = 1_000_000_000L;
         private GuiEventListener focused;
@@ -922,8 +1172,18 @@ class ScrollAreaElementTest {
         }
 
         @Override
-        protected double getPreciseGuiScale() {
-            return 1.0D;
+        protected int getPointerX() {
+            return this.frameMouseX;
+        }
+
+        @Override
+        protected int getPointerY() {
+            return this.frameMouseY;
+        }
+
+        @Override
+        protected double getWheelStepSize() {
+            return this.wheelStepSize;
         }
 
         @Override

@@ -60,10 +60,6 @@ public final class ScrollAreaSnapPoints {
         this.count = kept;
     }
 
-    public int size() {
-        return this.count;
-    }
-
     /**
      * Returns the next point from the given position in the given direction, or the position itself if there is none.
      */

@@ -15,9 +15,14 @@ class ScrollScrollAreaActionTest {
 
     private static final ScrollAreaElementBuilder BUILDER = new ScrollAreaElementBuilder();
 
-    /** An area that can be scrolled 400 pixels sideways and 800 pixels downwards, and is scrolled to 100 and 200. */
+    /** An area that shows its content, can be scrolled 400 pixels sideways and 800 pixels downwards, and is scrolled to 100 and 200. */
     private static ScrollAreaElement scrolledArea() {
-        ScrollAreaElement area = new ScrollAreaElement(BUILDER);
+        ScrollAreaElement area = new ScrollAreaElement(BUILDER) {
+            @Override
+            public boolean isShowingChildren() {
+                return true;
+            }
+        };
         area.scrollDirection.set(ScrollDirection.BOTH);
         area.smoothScrolling.set(false);
         area.getScroller().setRange(400, 800);
@@ -65,19 +70,23 @@ class ScrollScrollAreaActionTest {
     }
 
     @Test
-    void itScrollsToTheEndsOfTheDirectionTheAreaMainlyScrollsIn() {
+    void itScrollsToTheStartAndTheEndOnEveryAxisTheAreaScrollsOn() {
         ScrollAreaElement area = scrolledArea();
         ScrollScrollAreaAction action = new ScrollScrollAreaAction(id -> "area".equals(id) ? area : null);
 
         action.execute(value("area", ScrollScrollAreaAction.Target.END, "", "", "", false));
         assertEquals(800.0, area.getScroller().y().getPosition());
-        assertEquals(100.0, area.getScroller().x().getPosition());
+        assertEquals(400.0, area.getScroller().x().getPosition());
         action.execute(value(" area ", ScrollScrollAreaAction.Target.START, "", "", "", false));
         assertEquals(0.0, area.getScroller().y().getPosition());
+        assertEquals(0.0, area.getScroller().x().getPosition());
 
+        // An axis the area does not scroll on stays where it is
         area.scrollDirection.set(ScrollDirection.HORIZONTAL);
+        area.getScroller().y().scrollTo(200, false);
         action.execute(value("area", ScrollScrollAreaAction.Target.END, "", "", "", false));
         assertEquals(400.0, area.getScroller().x().getPosition());
+        assertEquals(200.0, area.getScroller().y().getPosition());
     }
 
     @Test

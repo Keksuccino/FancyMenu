@@ -386,8 +386,15 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             return;
         }
 
+        // Below the last layer is below all layers, also when the last one is in a container: the lowest layer of the main layout
+        LayerElementEntry lastEntry = entries.get(entries.size() - 1);
+        if (mouseY >= (lastEntry.getY() + lastEntry.getHeight())) {
+            this.setDragTarget(null, null, false, entries);
+            return;
+        }
+
         // The layer the mouse is on, or the one it is in front of when it is between two layers
-        LayerElementEntry target = entries.get(entries.size() - 1);
+        LayerElementEntry target = lastEntry;
         for (LayerElementEntry entry : entries) {
             if (mouseY < (entry.getY() + entry.getHeight())) {
                 target = entry;
@@ -674,6 +681,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             this.editor.containerOperations.moveToContainerVisibly(element, targetContainer);
             changed = true;
         }
+        if (changed) this.editor.containerOperations.detachAnchorsAcrossContainers();
 
         List<AbstractEditorElement<?, ?>> reordered = new ArrayList<>(orderBefore);
         reordered.removeAll(movingElements);

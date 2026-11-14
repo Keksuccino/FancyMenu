@@ -3868,6 +3868,7 @@
   "fancymenu.editor.close_audio.sound_channel": "Canal audio du son à la fermeture de l’écran : %s",
   "fancymenu.editor.close_audio.sound_channel.desc": "Le canal audio de Minecraft sur lequel le son à la fermeture de l’écran est joué.\n\nComme ça, il suit aussi le curseur de volume de ce canal dans les réglages audio de Minecraft.",
   "fancymenu.editor.containers.drop.not_allowed": "Les éléments Vanilla ne peuvent pas aller\ndans les zones défilantes. Ils font partie\nde l'écran lui-même.",
+  "fancymenu.editor.containers.drop.not_allowed.dependency": "Cet élément ne peut pas aller ici.\nLa zone le suit partout, donc elle ne\npeut pas le contenir en même temps.",
   "fancymenu.editor.containers.move_out": "Sortir de la zone défilante",
   "fancymenu.editor.containers.move_out.desc": "Sort cet élément de la zone défilante où il se trouve.\nIl reste là où il est à l'écran.\n\nTu peux aussi simplement faire glisser un élément hors de sa zone.",
   "fancymenu.elements.widgets.click_sound_volume": "Volume du son de clic",

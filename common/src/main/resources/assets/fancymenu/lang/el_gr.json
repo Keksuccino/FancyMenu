@@ -3868,6 +3868,7 @@
   "fancymenu.editor.close_audio.sound_channel": "Κανάλι ήχου κλεισίματος οθόνης: %s",
   "fancymenu.editor.close_audio.sound_channel.desc": "Το κανάλι ήχου του Minecraft στο οποίο παίζει ο ήχος κλεισίματος οθόνης.\n\nΈτσι η ένταση ακολουθεί και το ρυθμιστικό αυτού του καναλιού στις ρυθμίσεις ήχου του Minecraft.",
   "fancymenu.editor.containers.drop.not_allowed": "Τα Vanilla στοιχεία δεν μπαίνουν σε\nκυλιόμενες περιοχές. Ανήκουν\nστην ίδια την οθόνη.",
+  "fancymenu.editor.containers.drop.not_allowed.dependency": "Αυτό το στοιχείο δεν μπαίνει εδώ.\nΗ περιοχή το ακολουθεί παντού, οπότε\nδεν μπορεί ταυτόχρονα να το περιέχει.",
   "fancymenu.editor.containers.move_out": "Βγάλε από την κυλιόμενη περιοχή",
   "fancymenu.editor.containers.move_out.desc": "Βγάζει αυτό το στοιχείο από την κυλιόμενη περιοχή στην οποία βρίσκεται.\nΜένει εκεί που είναι στην οθόνη.\n\nΜπορείς επίσης απλά να σύρεις ένα στοιχείο έξω από την περιοχή του.",
   "fancymenu.elements.widgets.click_sound_volume": "Ένταση ήχου κλικ",

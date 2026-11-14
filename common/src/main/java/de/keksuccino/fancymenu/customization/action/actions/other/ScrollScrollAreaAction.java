@@ -62,8 +62,8 @@ public class ScrollScrollAreaAction extends Action {
         if (!(this.elementLookup.apply(config.areaIdentifier.trim()) instanceof ScrollAreaElement area)) return;
         ScrollAreaScrolling scrolling = area.getScrolling();
         switch (config.target) {
-            case START -> scrolling.scrollToEdge(false, config.smooth);
-            case END -> scrolling.scrollToEdge(true, config.smooth);
+            case START -> scrolling.scrollToCorner(false, config.smooth);
+            case END -> scrolling.scrollToCorner(true, config.smooth);
             case POSITION -> {
                 // An axis without a number stays where it is
                 Double positionX = parsePosition(config.positionX);

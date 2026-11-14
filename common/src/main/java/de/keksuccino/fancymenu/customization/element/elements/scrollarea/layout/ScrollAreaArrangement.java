@@ -63,10 +63,6 @@ public final class ScrollAreaArrangement {
         this.height = new int[capacity];
     }
 
-    public int viewportMain() {
-        return this.horizontal ? this.viewportWidth : this.viewportHeight;
-    }
-
     public int viewportCross() {
         return this.horizontal ? this.viewportHeight : this.viewportWidth;
     }
@@ -86,20 +82,8 @@ public final class ScrollAreaArrangement {
         return this.horizontal ? this.naturalHeight[child] : this.naturalWidth[child];
     }
 
-    public int main(int child) {
-        return this.horizontal ? this.x[child] : this.y[child];
-    }
-
     public int cross(int child) {
         return this.horizontal ? this.y[child] : this.x[child];
-    }
-
-    public int mainSize(int child) {
-        return this.horizontal ? this.width[child] : this.height[child];
-    }
-
-    public int crossSize(int child) {
-        return this.horizontal ? this.height[child] : this.width[child];
     }
 
     public void place(int child, int main, int cross, int mainSize, int crossSize) {

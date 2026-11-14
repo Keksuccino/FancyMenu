@@ -1499,6 +1499,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	public boolean mouseDragged(double mouseX, double mouseY, int button, double $$3, double $$4, int modifiers) {
 
 		if (super.mouseDragged(new MouseButtonEvent(mouseX, mouseY, new MouseButtonInfo(button, modifiers)), $$3, $$4)) return true;
+		// Something an element shows in the editor besides itself holds the mouse, like a handle that gets dragged, so nothing else gets moved or selected with it
+		if (this.elementInputRouter.isHoldingMouse()) return true;
 
 		if (this.isMouseSelection) {
 			for (AbstractEditorElement<?, ?> e : this.getAllElements()) {

@@ -30,7 +30,8 @@ public interface ScrollAreaArranger {
         int main = arrangement.padding;
         for (int i = 0; i < arrangement.count; i++) {
             int mainSize = arrangement.naturalMain(i);
-            int crossSize = fill ? available : arrangement.naturalCross(i);
+            // A child that is bigger than the area would reach out of it, where nothing can scroll it into sight
+            int crossSize = (fill || ((available > 0) && (arrangement.naturalCross(i) > available))) ? available : arrangement.naturalCross(i);
             arrangement.place(i, main, arrangement.padding + arrangement.alignment.offset(available - crossSize), mainSize, crossSize);
             main += mainSize + arrangement.spacing;
         }

@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -22,8 +23,20 @@ public final class ScrollAreaScrolling {
     private static final int PAGE_OVERLAP = 24;
     /** The room an element that gets scrolled into sight has to the edge of the area. */
     private static final int INTO_VIEW_MARGIN = 4;
+    /** How far the wheel has to turn for the content of an area that snaps to move on to the next place it rests at: one step of a wheel that turns in steps. */
+    private static final double SNAP_WHEEL_STEP = 1.0D;
+    /** How long the wheel can rest before what it turned so far is forgotten, so half a turn does not get finished by the next one much later. */
+    private static final long SNAP_WHEEL_REST_NANOS = 400_000_000L;
+    /** How many scrolls an area that does not show its content keeps for when it does. More than anything sensible asks for, and an end for something that keeps asking. */
+    private static final int MAX_PENDING_SCROLLS = 8;
     private static final String MEMORY_SCROLL_X = "scroll_area_scroll_x";
     private static final String MEMORY_SCROLL_Y = "scroll_area_scroll_y";
+    /** What the keys end with for an area of the layout editor. Where the user scrolled to while editing is not where the area is on the real screen. */
+    private static final String MEMORY_EDITOR_SUFFIX = "_editor";
+    /** How often the left mouse button got released since the game started, anywhere and no matter what took the release. See {@link #updateDrag()}. */
+    private static int leftMouseReleases = 0;
+    /** How often a mouse button went down since the game started, anywhere and no matter what took the press. */
+    private static int mousePresses = 0;
 
     @NotNull
     private final ScrollAreaElement area;
@@ -42,12 +55,23 @@ public final class ScrollAreaScrolling {
     private int pressY = 0;
     private int lastDragX = 0;
     private int lastDragY = 0;
+    /** What {@link #leftMouseReleases} was when the mouse went down on the content. */
+    private int leftMouseReleasesOnPress = 0;
     /** If the content is where it starts, so everything that moves it from now on is scrolling. */
     private boolean settled = false;
     private double notifiedX = 0.0D;
     private double notifiedY = 0.0D;
     private boolean notifiedAtStart = false;
     private boolean notifiedAtEnd = false;
+    /** What the wheel turned since the content of an area that snaps last moved on, per axis. A wheel that turns in small bits, like a touchpad, needs a few of them for that. */
+    private double snapWheelX = 0.0D;
+    private double snapWheelY = 0.0D;
+    private long snapWheelNanos = 0L;
+    /** What {@link #mousePresses} was in the last frame. A mouse button that went down since then is what a focus that changed in that time came from. */
+    private int mousePressesSeen = mousePresses;
+    /** What got asked of the content while the area did not show it. See {@link #defer(Runnable)}. */
+    @Nullable
+    private List<Runnable> pendingScrolls;
 
     public ScrollAreaScrolling(@NotNull ScrollAreaElement area) {
         this.area = area;
@@ -74,8 +98,8 @@ public final class ScrollAreaScrolling {
      */
     public void restoreFromMemory() {
         RuntimePropertyContainer memory = this.area.getMemory();
-        Double scrollX = memory.getProperty(MEMORY_SCROLL_X, Double.class);
-        Double scrollY = memory.getProperty(MEMORY_SCROLL_Y, Double.class);
+        Double scrollX = memory.getProperty(this.memoryKey(MEMORY_SCROLL_X), Double.class);
+        Double scrollY = memory.getProperty(this.memoryKey(MEMORY_SCROLL_Y), Double.class);
         if ((scrollX == null) && (scrollY == null)) return;
         if (scrollX != null) this.scroller.x().restore(scrollX);
         if (scrollY != null) this.scroller.y().restore(scrollY);
@@ -98,10 +122,9 @@ public final class ScrollAreaScrolling {
      * Moves the content for one frame. Has to be called after the geometry of the area got the size of its content for this frame.
      *
      * @param deltaSeconds The time since the last frame.
-     * @param mouseX Where the mouse is on the screen, or {@link ScrollAreaElement#MOUSE_OUTSIDE} if it is not known.
      * @param mouseOver If the mouse is over what the area shows.
      */
-    public void update(@NotNull ScrollAreaGeometry geometry, double deltaSeconds, int mouseX, int mouseY, boolean mouseOver) {
+    public void update(@NotNull ScrollAreaGeometry geometry, double deltaSeconds, boolean mouseOver) {
 
         this.scroller.setSmooth(this.area.smoothScrolling.getBoolean());
         this.scroller.setRange(geometry.getMaxScrollX(), geometry.getMaxScrollY());
@@ -116,7 +139,9 @@ public final class ScrollAreaScrolling {
             }
         }
 
-        this.updateDrag(mouseX, mouseY);
+        this.runPendingScrolls();
+
+        this.updateDrag();
 
         boolean userHoldsContent = this.dragging || this.area.getBars().isGrabbed();
         if (this.area.autoScroll.getBoolean() && !this.area.isInEditor() && !userHoldsContent && !(mouseOver && this.area.autoScrollPauseOnHover.getBoolean())) {
@@ -139,15 +164,18 @@ public final class ScrollAreaScrolling {
         double scrollX = this.scroller.x().getPosition();
         double scrollY = this.scroller.y().getPosition();
         ScrollAreaScroller.Axis main = this.getMainAxis();
-        // Content that can't be scrolled is at its start and its end at once, which is nothing it ever gets to.
-        // Content that still glides the last bit of its way has not arrived yet.
-        boolean arrived = main.canScroll() && !main.isScrolling();
+        // Content that still glides the last bit of its way has not arrived yet
+        boolean arrived = !main.isScrolling();
         boolean atStart = arrived && main.isAtStart();
         boolean atEnd = arrived && main.isAtEnd();
         if (this.settled) {
             if ((scrollX != this.notifiedX) || (scrollY != this.notifiedY)) this.area.onContentScrolled();
-            if (atStart && !this.notifiedAtStart) this.area.onContentReachedStart();
-            if (atEnd && !this.notifiedAtEnd) this.area.onContentReachedEnd();
+            // Content that can't be scrolled is at its start and its end at once, which is nothing it ever gets to. It stays known as being
+            // at both, so content that grows under an area that sits at its start does not count as having got there.
+            if (main.canScroll()) {
+                if (atStart && !this.notifiedAtStart) this.area.onContentReachedStart();
+                if (atEnd && !this.notifiedAtEnd) this.area.onContentReachedEnd();
+            }
         }
         this.settled = !this.needsStartPosition;
         this.notifiedX = scrollX;
@@ -163,8 +191,13 @@ public final class ScrollAreaScrolling {
         this.rememberedX = scrollX;
         this.rememberedY = scrollY;
         RuntimePropertyContainer memory = this.area.getMemory();
-        memory.putProperty(MEMORY_SCROLL_X, scrollX);
-        memory.putProperty(MEMORY_SCROLL_Y, scrollY);
+        memory.putProperty(this.memoryKey(MEMORY_SCROLL_X), scrollX);
+        memory.putProperty(this.memoryKey(MEMORY_SCROLL_Y), scrollY);
+    }
+
+    @NotNull
+    private String memoryKey(@NotNull String key) {
+        return this.area.isInEditor() ? (key + MEMORY_EDITOR_SUFFIX) : key;
     }
 
     /**
@@ -197,13 +230,29 @@ public final class ScrollAreaScrolling {
     private boolean scrollAxisByWheel(boolean horizontal, double delta) {
         if (delta == 0.0D) return false;
         ScrollAreaScroller.Axis axis = this.scroller.axis(horizontal);
+        if (this.area.getSnapMode() == ScrollSnapMode.NONE) return axis.scrollBy(-delta * WHEEL_STEP * Math.max(0.0F, this.area.scrollSpeed.getFloat()));
         // A wheel that turns towards the user scrolls the content forwards
         boolean forward = delta < 0.0D;
-        if (this.area.getSnapMode() != ScrollSnapMode.NONE) {
-            this.updateSnapPoints(horizontal);
-            return axis.scrollTo(this.snapPoints.next(axis.getTarget(), forward), true);
+        this.updateSnapPoints(horizontal);
+        double next = this.snapPoints.next(axis.getTarget(), forward);
+        boolean hasNext = next != axis.getTarget();
+        long now = this.area.getNanoTime();
+        double turned = ((now - this.snapWheelNanos) > SNAP_WHEEL_REST_NANOS) ? 0.0D : (horizontal ? this.snapWheelX : this.snapWheelY);
+        this.snapWheelNanos = now;
+        // A wheel that changed its direction starts over
+        if ((turned != 0.0D) && ((turned < 0.0D) != forward)) turned = 0.0D;
+        turned += delta;
+        // One step of a wheel that turns in steps is as much as the game is set to make of it, which can be less than 1
+        boolean movesOn = hasNext && (Math.abs(turned) >= (SNAP_WHEEL_STEP * Math.min(1.0D, this.area.getWheelStepSize())));
+        if (movesOn || !hasNext) turned = 0.0D;
+        if (horizontal) {
+            this.snapWheelX = turned;
+        } else {
+            this.snapWheelY = turned;
         }
-        return axis.scrollBy(-delta * WHEEL_STEP * Math.max(0.0F, this.area.scrollSpeed.getFloat()));
+        if (movesOn) axis.scrollTo(next, true);
+        // A wheel that has not turned far enough yet is still on its way to the next place, so the scroll is for the area
+        return hasNext;
     }
 
     /**
@@ -221,7 +270,10 @@ public final class ScrollAreaScrolling {
         double target = axis.getTarget() + (forward ? distance : -distance);
         if (this.area.getSnapMode() != ScrollSnapMode.NONE) {
             this.updateSnapPoints(horizontal);
-            target = this.snapPoints.nearest(target);
+            double snapped = this.snapPoints.nearest(target);
+            // A page that is shorter than the way to the next place the content rests at would leave the content where it is, or take it back
+            boolean movesOn = forward ? (snapped > axis.getTarget()) : (snapped < axis.getTarget());
+            target = movesOn ? snapped : this.snapPoints.next(axis.getTarget(), forward);
         }
         boolean scrolled = axis.scrollTo(target, true);
         if (scrolled) this.autoScroll.onUserScrolled();
@@ -241,25 +293,70 @@ public final class ScrollAreaScrolling {
     }
 
     /**
-     * Scrolls the content to a position on one axis, in screen pixels from its start.
+     * Scrolls the content to where it starts or where it ends, on every axis the area scrolls on: its top left or its bottom right
+     * for an area that scrolls both ways.<br>
+     * An area that does not show its content yet does it once it does.
+     */
+    public void scrollToCorner(boolean end, boolean animate) {
+        if (!this.area.isShowingChildren()) {
+            this.defer(() -> this.scrollToCorner(end, animate));
+            return;
+        }
+        ScrollDirection direction = this.area.getScrollDirection();
+        if (direction.scrollsX()) this.scrollToPosition(true, end ? this.scroller.x().getMax() : 0.0D, animate);
+        if (direction.scrollsY()) this.scrollToPosition(false, end ? this.scroller.y().getMax() : 0.0D, animate);
+    }
+
+    /**
+     * Scrolls the content to a position on one axis, in screen pixels from its start.<br>
+     * An area that does not show its content yet does it once it does.
      *
      * @return If the content was not there already, or on its way there.
      */
     public boolean scrollToPosition(boolean horizontal, double position, boolean animate) {
+        if (!this.area.isShowingChildren()) {
+            this.defer(() -> this.scrollToPosition(horizontal, position, animate));
+            return true;
+        }
         boolean scrolled = this.scroller.axis(horizontal).scrollTo(position, animate);
         if (scrolled) this.autoScroll.onUserScrolled();
         return scrolled;
     }
 
     /**
-     * Scrolls the content so that the child starts where what the area shows starts, or as close to that as the content can be scrolled.
+     * Keeps a scroll for when the area shows its content.<br>
+     * An area that never showed its content does not know how far it can be scrolled, or where its children are, so everything
+     * that got asked of it would end at its start. That happens to everything that scrolls an area when its screen opens.
+     */
+    private void defer(@NotNull Runnable scroll) {
+        if (this.pendingScrolls == null) this.pendingScrolls = new ArrayList<>();
+        if (this.pendingScrolls.size() >= MAX_PENDING_SCROLLS) this.pendingScrolls.remove(0);
+        this.pendingScrolls.add(scroll);
+    }
+
+    private void runPendingScrolls() {
+        if ((this.pendingScrolls == null) || !this.area.isShowingChildren()) return;
+        List<Runnable> pending = this.pendingScrolls;
+        this.pendingScrolls = null;
+        for (int i = 0; i < pending.size(); i++) {
+            pending.get(i).run();
+        }
+    }
+
+    /**
+     * Scrolls the content so that the child starts where what the area shows starts, or as close to that as the content can be scrolled.<br>
+     * An area that does not show its content yet does it once it does.
      */
     public void scrollToChild(@NotNull AbstractElement child, boolean animate) {
+        if (!this.area.isShowingChildren()) {
+            this.defer(() -> this.scrollToChild(child, animate));
+            return;
+        }
         ScrollAreaGeometry geometry = this.area.getGeometry();
         ScrollDirection direction = this.area.getScrollDirection();
-        // The child is where the content is right now, not where the content is on its way to
-        if (direction.scrollsX()) this.scrollToPosition(true, this.scroller.x().getPosition() + (child.getAbsoluteX() - geometry.getViewportX() - INTO_VIEW_MARGIN), animate);
-        if (direction.scrollsY()) this.scrollToPosition(false, this.scroller.y().getPosition() + (child.getAbsoluteY() - geometry.getViewportY() - INTO_VIEW_MARGIN), animate);
+        // How far the child is from the start of the content is how far the content has to be scrolled to have it at the start of what the area shows
+        if (direction.scrollsX()) this.scrollToPosition(true, child.getAbsoluteX() - geometry.getContentScreenX() - INTO_VIEW_MARGIN, animate);
+        if (direction.scrollsY()) this.scrollToPosition(false, child.getAbsoluteY() - geometry.getContentScreenY() - INTO_VIEW_MARGIN, animate);
     }
 
     /**
@@ -269,21 +366,22 @@ public final class ScrollAreaScrolling {
     public void scrollIntoView(@NotNull AbstractElement child, boolean animate) {
         ScrollAreaGeometry geometry = this.area.getGeometry();
         ScrollDirection direction = this.area.getScrollDirection();
-        if (direction.scrollsX()) this.scrollIntoView(this.scroller.x(), child.getAbsoluteX(), child.getAbsoluteWidth(), geometry.getViewportX(), geometry.getViewportWidth(), animate);
-        if (direction.scrollsY()) this.scrollIntoView(this.scroller.y(), child.getAbsoluteY(), child.getAbsoluteHeight(), geometry.getViewportY(), geometry.getViewportHeight(), animate);
+        if (direction.scrollsX()) this.scrollIntoView(this.scroller.x(), child.getAbsoluteX() - geometry.getContentScreenX(), child.getAbsoluteWidth(), geometry.getViewportX() - geometry.getContentScreenX(), geometry.getViewportWidth(), animate);
+        if (direction.scrollsY()) this.scrollIntoView(this.scroller.y(), child.getAbsoluteY() - geometry.getContentScreenY(), child.getAbsoluteHeight(), geometry.getViewportY() - geometry.getContentScreenY(), geometry.getViewportHeight(), animate);
     }
 
-    private void scrollIntoView(@NotNull ScrollAreaScroller.Axis axis, int childStart, int childSize, int viewportStart, int viewportSize, boolean animate) {
-        int wantedStart = viewportStart + INTO_VIEW_MARGIN;
-        int wantedEnd = (viewportStart + viewportSize) - INTO_VIEW_MARGIN;
-        double distance = 0.0D;
+    /**
+     * @param childStart How far the child is from the start of the content, in screen pixels.
+     * @param shownStart How far what the area shows is from the start of the content, in screen pixels.
+     */
+    private void scrollIntoView(@NotNull ScrollAreaScroller.Axis axis, int childStart, int childSize, int shownStart, int shownSize, boolean animate) {
+        int wantedStart = shownStart + INTO_VIEW_MARGIN;
+        int wantedEnd = (shownStart + shownSize) - INTO_VIEW_MARGIN;
         if ((childStart < wantedStart) || (childSize > (wantedEnd - wantedStart))) {
-            distance = childStart - wantedStart;
+            axis.scrollTo(childStart - INTO_VIEW_MARGIN, animate);
         } else if ((childStart + childSize) > wantedEnd) {
-            distance = (childStart + childSize) - wantedEnd;
+            axis.scrollTo(((childStart + childSize) - shownSize) + INTO_VIEW_MARGIN, animate);
         }
-        // The child is where the content is right now, not where the content is on its way to
-        if (distance != 0.0D) axis.scrollTo(axis.getPosition() + distance, animate);
     }
 
     /**
@@ -291,10 +389,13 @@ public final class ScrollAreaScrolling {
      * so the user can scroll away from a focused child without getting pulled back.
      */
     private void followFocus() {
+        boolean byMouse = mousePresses != this.mousePressesSeen;
+        this.mousePressesSeen = mousePresses;
         GuiEventListener focused = this.area.getFocusedListener();
         if (focused == this.lastFocused) return;
         this.lastFocused = focused;
-        if (focused == null) return;
+        // What the mouse gave the focus to is where the user clicked, and content that moves under the mouse would take what it does next somewhere else
+        if ((focused == null) || byMouse) return;
         AbstractElement child = this.area.findChildOwning(focused);
         if (child != null) this.scrollIntoView(child, true);
     }
@@ -338,18 +439,44 @@ public final class ScrollAreaScrolling {
     }
 
     /**
+     * Tells all areas that the left mouse button got released, no matter where and what took the release.
+     */
+    public static void onLeftMouseReleasedAnywhere() {
+        leftMouseReleases++;
+    }
+
+    /**
+     * Tells all areas that a mouse button went down, no matter where and what took the press.
+     */
+    public static void onMousePressedAnywhere() {
+        mousePresses++;
+    }
+
+    /**
+     * Returns if the mouse can drag the content along: the area is set to it, and its content has somewhere to go.
+     */
+    public boolean canDragContent() {
+        // In the layout editor, dragging moves elements around
+        if (!this.area.dragScrolling.getBoolean() || !this.area.userScrolling.getBoolean() || this.area.isInEditor()) return false;
+        return this.scroller.x().canScroll() || this.scroller.y().canScroll();
+    }
+
+    /**
      * Tells the area that the left mouse button went down on what it shows of its content.
      * From there on, the mouse drags the content along once it moved far enough to not be a click anymore.
+     *
+     * @return If the press is for the area, because the mouse can drag its content.
      */
-    public void onMousePressed(int mouseX, int mouseY) {
-        // In the layout editor, dragging moves elements around
-        if (!this.area.dragScrolling.getBoolean() || !this.area.userScrolling.getBoolean() || this.area.isInEditor()) return;
+    public boolean onMousePressed(int mouseX, int mouseY) {
+        if (!this.canDragContent()) return false;
         this.mousePressed = true;
+        this.leftMouseReleasesOnPress = leftMouseReleases;
         this.dragging = false;
         this.pressX = mouseX;
         this.pressY = mouseY;
         this.lastDragX = mouseX;
         this.lastDragY = mouseY;
+        return true;
     }
 
     public void onMouseReleased() {
@@ -366,8 +493,18 @@ public final class ScrollAreaScrolling {
         return this.dragging;
     }
 
-    private void updateDrag(int mouseX, int mouseY) {
-        if (!this.mousePressed || (mouseX == ScrollAreaElement.MOUSE_OUTSIDE) || (mouseY == ScrollAreaElement.MOUSE_OUTSIDE)) return;
+    private void updateDrag() {
+        if (!this.mousePressed) return;
+        // Some screens keep the release of the mouse to themselves, like the ones with an inventory, and the content would stick to the mouse forever.
+        // The game itself only knows if the button is held while no screen is open, so releases get counted where they come in.
+        if (leftMouseReleases != this.leftMouseReleasesOnPress) {
+            this.onMouseReleased();
+            return;
+        }
+        // The content follows the mouse where it really is. What the area gets told while it renders is somewhere else
+        // while something keeps the mouse away from it, like an area around it the mouse is not over.
+        int mouseX = this.area.getPointerX();
+        int mouseY = this.area.getPointerY();
         if (!this.dragging) {
             if ((Math.abs(mouseX - this.pressX) < DRAG_START_DISTANCE) && (Math.abs(mouseY - this.pressY) < DRAG_START_DISTANCE)) return;
             this.dragging = true;
