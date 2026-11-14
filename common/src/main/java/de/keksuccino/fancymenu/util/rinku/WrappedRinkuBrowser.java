@@ -41,6 +41,7 @@ public class WrappedRinkuBrowser extends AbstractWidget implements Closeable, Na
     protected final BrowserInputState inputState = new BrowserInputState();
     @Nullable protected volatile String expectedMainFrameUrl;
     protected boolean interactable = true;
+    @Nullable protected InputArea inputArea;
     protected float opacity = 1.0F;
     protected boolean autoHandle = true;
     protected volatile float volume = 1.0F;
@@ -254,7 +255,18 @@ public class WrappedRinkuBrowser extends AbstractWidget implements Closeable, Na
 
 	@Override
 	public boolean isMouseOver(double mouseX, double mouseY) {
-		return this.interactable && UIBase.isXYInArea(mouseX, mouseY, this.getX(), this.getY(), this.getWidth(), this.getHeight());
+		if (!this.interactable || !UIBase.isXYInArea(mouseX, mouseY, this.getX(), this.getY(), this.getWidth(), this.getHeight())) return false;
+		return (this.inputArea == null) || this.inputArea.contains(mouseX, mouseY);
+	}
+
+	/**
+	 * Limits where the browser takes clicks and scrolls of the mouse to a part of the screen. Whatever shows the browser
+	 * only in part, like something that cuts it off at its edges, keeps the mouse away from the rest of it with this.
+	 *
+	 * @param inputArea The part of the screen, or NULL for all of the browser.
+	 */
+	public void setInputArea(@Nullable InputArea inputArea) {
+		this.inputArea = inputArea;
 	}
 
     @Override
@@ -607,6 +619,16 @@ public class WrappedRinkuBrowser extends AbstractWidget implements Closeable, Na
     @Override
     public boolean hasMouseButtonCapture(int button) {
         return this.inputState.hasMouseButtonCapture(button);
+    }
+
+    /**
+     * A part of the screen the browser takes mouse input in.
+     */
+    @FunctionalInterface
+    public interface InputArea {
+
+        boolean contains(double screenX, double screenY);
+
     }
 
 }

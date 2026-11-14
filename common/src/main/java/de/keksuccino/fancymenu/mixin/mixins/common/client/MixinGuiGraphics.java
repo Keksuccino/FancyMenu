@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.scissor.ScissorShape;
 import de.keksuccino.fancymenu.util.rendering.scissor.ScissorShapes;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.LayoutEditorWidgetRenderContext;
+import de.keksuccino.fancymenu.customization.element.container.ElementContainerDrawScale;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -67,6 +68,11 @@ public class MixinGuiGraphics {
 
     @ModifyArgs(method = "containsPointInScissor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics$ScissorStack;containsPoint(II)Z"))
     private void modify_containsPointInScissor_FancyMenu(Args args) {
+        // A child of a container that scales what it draws checks the mouse it has in its own unscaled space, and what the GUI gets cut to is on the screen
+        if (ElementContainerDrawScale.isActive()) {
+            args.set(0, (int) Math.floor(ElementContainerDrawScale.toScreenX((int) args.get(0))));
+            args.set(1, (int) Math.floor(ElementContainerDrawScale.toScreenY((int) args.get(1))));
+        }
         boolean pipActive = PiPWindowHandler.INSTANCE.isScreenRenderActive();
         boolean widgetActive = LayoutEditorWidgetRenderContext.isBodyRenderActive();
         if (!pipActive && !widgetActive) {

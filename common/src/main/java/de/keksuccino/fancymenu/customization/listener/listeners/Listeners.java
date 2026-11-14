@@ -13,6 +13,9 @@ public class Listeners {
     public static final OnMouseScrolledListener ON_MOUSE_SCROLLED = new OnMouseScrolledListener();
     public static final OnTextClickedListener ON_TEXT_CLICKED = new OnTextClickedListener();
     public static final OnTextHoveredListener ON_TEXT_HOVERED = new OnTextHoveredListener();
+    public static final OnScrollAreaEventListener ON_SCROLL_AREA_SCROLLED = new OnScrollAreaEventListener("scroll_area_scrolled", "fancymenu.listeners.on_scroll_area_scrolled");
+    public static final OnScrollAreaEventListener ON_SCROLL_AREA_REACHED_START = new OnScrollAreaEventListener("scroll_area_reached_start", "fancymenu.listeners.on_scroll_area_reached_start");
+    public static final OnScrollAreaEventListener ON_SCROLL_AREA_REACHED_END = new OnScrollAreaEventListener("scroll_area_reached_end", "fancymenu.listeners.on_scroll_area_reached_end");
     public static final OnOpenScreenListener ON_OPEN_SCREEN = new OnOpenScreenListener();
     public static final OnCloseScreenListener ON_CLOSE_SCREEN = new OnCloseScreenListener();
     public static final OnQuitMinecraftListener ON_QUIT_MINECRAFT = new OnQuitMinecraftListener();
@@ -109,6 +112,9 @@ public class Listeners {
         ListenerRegistry.register(ON_MOUSE_SCROLLED);
         ListenerRegistry.register(ON_TEXT_CLICKED);
         ListenerRegistry.register(ON_TEXT_HOVERED);
+        ListenerRegistry.register(ON_SCROLL_AREA_SCROLLED);
+        ListenerRegistry.register(ON_SCROLL_AREA_REACHED_START);
+        ListenerRegistry.register(ON_SCROLL_AREA_REACHED_END);
         ListenerRegistry.register(ON_OPEN_SCREEN);
         ListenerRegistry.register(ON_CLOSE_SCREEN);
         ListenerRegistry.register(ON_QUIT_MINECRAFT);

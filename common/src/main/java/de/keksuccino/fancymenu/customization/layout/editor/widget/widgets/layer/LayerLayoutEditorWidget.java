@@ -3,7 +3,11 @@ package de.keksuccino.fancymenu.customization.layout.editor.widget.widgets.layer
 import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.element.container.ContainerEditorElement;
+import de.keksuccino.fancymenu.customization.element.container.ElementContainer;
+import de.keksuccino.fancymenu.customization.element.container.ElementContainerHierarchy;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
+import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorHistory;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidgetBuilder;
@@ -43,11 +47,20 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
     // Added fields for drag and drop functionality
     protected ScrollAreaEntry draggedEntry = null;
-    private int dragTargetUiIndex = -1;
+    /** If the dragged layers have somewhere to go where the mouse is. */
+    private boolean dragTargetValid = false;
+    /** The container the dragged layers get dropped into, or NULL if they get dropped into the main layout. */
+    @Nullable
+    private AbstractEditorElement<?, ?> dragTargetContainer = null;
+    /** The layer the dragged ones get dropped next to, or NULL if they get dropped at the top or the bottom of everything in what they get dropped into. */
+    @Nullable
+    private AbstractEditorElement<?, ?> dragTargetReference = null;
+    /** If the dragged layers end up above the reference, or at the top if there is none. Otherwise they end up below it, or at the bottom. */
+    private boolean dragTargetAbove = false;
     private float dragTargetIndicatorY = Float.NaN;
+    private float dragTargetIndicatorIndent = 0.0F;
     @Nullable
     private Layout.LayerGroup dragTargetGroup = null;
-    private boolean dragTargetIsGroupHeader = false;
     private boolean isDragging = false;
     private static final int DROP_INDICATOR_THICKNESS = 3;
     private static final int TITLE_BAR_ICON_BASE_SIZE = 8;
@@ -147,7 +160,9 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             this.scrollArea.addEntry(new SeparatorEntry(this.scrollArea));
         }
         Set<Layout.LayerGroup> handledGroups = new HashSet<>();
-        for (AbstractEditorElement e : Lists.reverse(new ArrayList<>(this.editor.normalEditorElements))) {
+        for (AbstractEditorElement<?, ?> e : Lists.reverse(new ArrayList<>(this.editor.normalEditorElements))) {
+            // What is in a container shows under the layer of its container
+            if (e.element.getParentContainer() != null) continue;
             Layout.LayerGroup group = this.editor.getLayerGroupForElement(e);
             if ((group != null) && !handledGroups.contains(group)) {
                 LayerGroupEntry groupEntry = new LayerGroupEntry(this.scrollArea, this, group);
@@ -158,9 +173,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             if (group != null && group.collapsed) {
                 continue;
             }
-            LayerElementEntry layer = new LayerElementEntry(this.scrollArea, this, e, group);
-            this.scrollArea.addEntry(layer);
-            this.scrollArea.addEntry(new SeparatorEntry(this.scrollArea));
+            this.addLayerEntries(e, group, 0);
         }
         for (Layout.LayerGroup group : this.editor.layout.layerGroups) {
             if (!handledGroups.contains(group)) {
@@ -184,11 +197,34 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
         // Reset drag state when list is updated
         this.draggedEntry = null;
-        this.dragTargetUiIndex = -1;
-        this.dragTargetIndicatorY = Float.NaN;
-        this.dragTargetGroup = null;
-        this.dragTargetIsGroupHeader = false;
+        this.resetDragTarget();
         this.isDragging = false;
+    }
+
+    /**
+     * Adds the layer of the element, and under it the layers of everything that is in the element, unless it shows collapsed.
+     * The topmost child comes first, like the topmost element of the layout does.
+     *
+     * @param depth How many containers the element is in.
+     */
+    private void addLayerEntries(@NotNull AbstractEditorElement<?, ?> element, @Nullable Layout.LayerGroup group, int depth) {
+        this.scrollArea.addEntry(new LayerElementEntry(this.scrollArea, this, element, group, depth));
+        this.scrollArea.addEntry(new SeparatorEntry(this.scrollArea));
+        if (!(element instanceof ContainerEditorElement container) || !(element.element instanceof ElementContainer elementContainer) || elementContainer.isCollapsedInLayerList()) return;
+        List<AbstractEditorElement<?, ?>> children = container.getChildEditorElements();
+        for (int i = children.size() - 1; i >= 0; i--) {
+            this.addLayerEntries(children.get(i), group, depth + 1);
+        }
+    }
+
+    private void resetDragTarget() {
+        this.dragTargetValid = false;
+        this.dragTargetContainer = null;
+        this.dragTargetReference = null;
+        this.dragTargetAbove = false;
+        this.dragTargetIndicatorY = Float.NaN;
+        this.dragTargetIndicatorIndent = 0.0F;
+        this.dragTargetGroup = null;
     }
 
     @Override
@@ -205,9 +241,10 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         this.scrollArea.render(graphics, mouseX, mouseY, partial);
 
         // Render the drop indicator if currently dragging
-        if (isDragging && Float.isFinite(dragTargetIndicatorY)) {
+        if (isDragging && dragTargetValid && Float.isFinite(dragTargetIndicatorY)) {
             float indicatorY = dragTargetIndicatorY;
-            UIBase.fillF(graphics, this.scrollArea.getInnerX(), indicatorY - DROP_INDICATOR_THICKNESS / 2f,
+            // The line starts where the layers start it would put the dragged ones between, which shows what they would end up in
+            UIBase.fillF(graphics, this.scrollArea.getInnerX() + this.dragTargetIndicatorIndent, indicatorY - DROP_INDICATOR_THICKNESS / 2f,
                     this.scrollArea.getInnerX() + this.scrollArea.getInnerWidth(),
                     indicatorY + DROP_INDICATOR_THICKNESS / 2f,
                     UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_interface_widget_border_color.getColorInt() : UIBase.getUITheme().ui_interface_widget_border_color.getColorInt());
@@ -256,7 +293,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     protected boolean mouseReleasedBody(double mouseX, double mouseY, int button) {
 
         // Handle drop operation when mouse button is released
-        if (button == 0 && isDragging && dragTargetUiIndex >= 0) {
+        if (button == 0 && isDragging && dragTargetValid) {
             finishDragOperation();
         }
 
@@ -267,10 +304,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         // Reset drag state
         isDragging = false;
         draggedEntry = null;
-        dragTargetUiIndex = -1;
-        dragTargetIndicatorY = Float.NaN;
-        dragTargetGroup = null;
-        dragTargetIsGroupHeader = false;
+        this.resetDragTarget();
 
         for (ScrollAreaEntry e : this.scrollArea.getEntries()) {
             if (e instanceof LayerElementEntry l) {
@@ -310,106 +344,160 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
     }
 
     /**
-     * Updates the drag target index based on current mouse position
+     * Works out where the dragged layers would go if the user dropped them where the mouse is.<br>
+     * A layer the mouse is on takes them above or below itself, in whatever it is in. The lower half of a container takes them into the container instead.
      */
     private void updateDragTarget(double mouseX, double mouseY) {
+
         if (!isDragging || draggedEntry == null) return;
+        this.resetDragTarget();
 
         List<AbstractEditorElement<?, ?>> movingElements = this.getMovingElementsForDrag();
-        List<LayerElementEntry> dragEntries = this.getLayerEntriesInUiOrderExcluding(movingElements);
-        this.dragTargetUiIndex = -1;
-        this.dragTargetIndicatorY = Float.NaN;
-        this.dragTargetGroup = null;
-        this.dragTargetIsGroupHeader = false;
+        if (movingElements.isEmpty()) return;
+        boolean groupDrag = this.draggedEntry instanceof LayerGroupEntry;
+        List<LayerElementEntry> entries = this.getLayerEntriesNotMoving(movingElements);
 
-        if (!(draggedEntry instanceof LayerGroupEntry)) {
-            LayerGroupEntry hoveredGroup = this.getHoveredGroupEntry(mouseX, mouseY);
-            if (hoveredGroup != null) {
-                this.dragTargetGroup = hoveredGroup.group;
-                this.dragTargetIsGroupHeader = true;
-                this.dragTargetUiIndex = this.getGroupInsertionIndex(hoveredGroup.group, dragEntries);
-                this.dragTargetIndicatorY = this.getIndicatorYForUiIndex(dragEntries, this.dragTargetUiIndex);
-                return;
+        // Layers dropped on a group become its bottom layers
+        LayerGroupEntry hoveredGroup = groupDrag ? null : this.getHoveredGroupEntry(mouseX, mouseY);
+        if (hoveredGroup != null) {
+            this.dragTargetGroup = hoveredGroup.group;
+            for (int i = entries.size() - 1; i >= 0; i--) {
+                LayerElementEntry entry = entries.get(i);
+                if ((entry.group == hoveredGroup.group) && (entry.depth == 0)) {
+                    this.setDragTarget(null, entry.element, false, entries);
+                    return;
+                }
             }
-        }
-
-        if (dragEntries.isEmpty()) {
-            this.dragTargetUiIndex = 0;
-            this.dragTargetIndicatorY = this.scrollArea.getInnerY();
+            // A group without layers that show sits where its header is, which nothing can be put next to but the header itself
+            this.dragTargetValid = true;
+            this.dragTargetIndicatorY = hoveredGroup.getY() + hoveredGroup.getHeight();
+            this.dragTargetIndicatorIndent = GROUP_INDENT;
+            List<AbstractEditorElement<?, ?>> groupElements = this.editor.getElementsInGroup(hoveredGroup.group);
+            groupElements.removeAll(movingElements);
+            if (!groupElements.isEmpty()) this.dragTargetReference = groupElements.get(0);
             return;
         }
 
-        LayerElementEntry hoveredLayer = this.getHoveredLayerEntry(mouseX, mouseY);
-        if ((hoveredLayer != null) && dragEntries.contains(hoveredLayer)) {
-            float entryMidpoint = hoveredLayer.getY() + hoveredLayer.getHeight() / 2f;
-            int uiIndex = dragEntries.indexOf(hoveredLayer);
-            if (mouseY < entryMidpoint) {
-                this.dragTargetUiIndex = uiIndex;
-                this.dragTargetIndicatorY = hoveredLayer.getY();
-            } else {
-                this.dragTargetUiIndex = uiIndex + 1;
-                this.dragTargetIndicatorY = hoveredLayer.getY() + hoveredLayer.getHeight();
-            }
-            if (!(draggedEntry instanceof LayerGroupEntry)) {
-                this.dragTargetGroup = hoveredLayer.group;
-            }
+        if (entries.isEmpty() || (mouseY < this.scrollArea.getInnerY())) {
+            this.setDragTarget(null, null, true, entries);
+            return;
+        }
+        if (mouseY > (this.scrollArea.getInnerY() + this.scrollArea.getInnerHeight())) {
+            this.setDragTarget(null, null, false, entries);
             return;
         }
 
-        if (mouseY < this.scrollArea.getInnerY()) {
-            this.dragTargetUiIndex = 0;
-            this.dragTargetIndicatorY = dragEntries.get(0).getY();
-        } else if (mouseY > this.scrollArea.getInnerY() + this.scrollArea.getInnerHeight()) {
-            LayerElementEntry lastEntry = dragEntries.get(dragEntries.size() - 1);
-            this.dragTargetUiIndex = dragEntries.size();
-            this.dragTargetIndicatorY = lastEntry.getY() + lastEntry.getHeight();
+        // Below the last layer is below all layers, also when the last one is in a container: the lowest layer of the main layout
+        LayerElementEntry lastEntry = entries.get(entries.size() - 1);
+        if (mouseY >= (lastEntry.getY() + lastEntry.getHeight())) {
+            this.setDragTarget(null, null, false, entries);
+            return;
+        }
+
+        // The layer the mouse is on, or the one it is in front of when it is between two layers
+        LayerElementEntry target = lastEntry;
+        for (LayerElementEntry entry : entries) {
+            if (mouseY < (entry.getY() + entry.getHeight())) {
+                target = entry;
+                break;
+            }
+        }
+        boolean upperHalf = mouseY < (target.getY() + (target.getHeight() / 2.0F));
+
+        if (groupDrag) {
+            // Groups hold layers of the main layout, so a group goes next to one of those and never into a container
+            AbstractEditorElement<?, ?> root = this.getRootOf(target.element);
+            boolean above = (root == target.element) && upperHalf;
+            Layout.LayerGroup rootGroup = this.editor.getLayerGroupForElement(root);
+            if (rootGroup != null) {
+                // Next to another group means next to all of it, which keeps the layers of both groups together
+                List<AbstractEditorElement<?, ?>> groupElements = this.editor.getElementsInGroup(rootGroup);
+                if (!groupElements.isEmpty()) root = above ? groupElements.get(groupElements.size() - 1) : groupElements.get(0);
+            }
+            this.setDragTarget(null, root, above, entries);
+            return;
+        }
+
+        if (!upperHalf && (target.element instanceof ContainerEditorElement)) {
+            this.setDragTarget(target.element, null, true, entries);
         } else {
-            for (int i = 0; i < dragEntries.size(); i++) {
-                LayerElementEntry entry = dragEntries.get(i);
-                float entryMidpoint = entry.getY() + entry.getHeight() / 2f;
-                if (mouseY < entryMidpoint) {
-                    this.dragTargetUiIndex = i;
-                    this.dragTargetIndicatorY = entry.getY();
-                    break;
-                }
-            }
-            if (this.dragTargetUiIndex == -1) {
-                LayerElementEntry lastEntry = dragEntries.get(dragEntries.size() - 1);
-                this.dragTargetUiIndex = dragEntries.size();
-                this.dragTargetIndicatorY = lastEntry.getY() + lastEntry.getHeight();
+            this.setDragTarget(this.getContainerOf(target.element), target.element, upperHalf, entries);
+        }
+        if (this.dragTargetContainer == null) this.dragTargetGroup = target.group;
+
+    }
+
+    /**
+     * Makes the given place the one the dragged layers would go to, if all of them can go there, and works out where the line shows that marks it.
+     *
+     * @param entries The layers that are not getting dragged, in the order they show in.
+     */
+    private void setDragTarget(@Nullable AbstractEditorElement<?, ?> container, @Nullable AbstractEditorElement<?, ?> reference, boolean above, @NotNull List<LayerElementEntry> entries) {
+        if (container instanceof ContainerEditorElement containerEditorElement) {
+            for (AbstractEditorElement<?, ?> moving : this.getMovingElementsForDrag()) {
+                if (!containerEditorElement.canHoldChild(moving)) return;
             }
         }
-
-        if (!(draggedEntry instanceof LayerGroupEntry)) {
-            this.dragTargetGroup = this.resolveDragTargetGroup(mouseX, mouseY, this.dragTargetIndicatorY);
+        this.dragTargetValid = true;
+        this.dragTargetContainer = container;
+        this.dragTargetReference = reference;
+        this.dragTargetAbove = above;
+        LayerElementEntry first = entries.isEmpty() ? null : entries.get(0);
+        LayerElementEntry last = entries.isEmpty() ? null : entries.get(entries.size() - 1);
+        if (reference != null) {
+            LayerElementEntry referenceEntry = null;
+            LayerElementEntry lastOfReference = null;
+            for (LayerElementEntry entry : entries) {
+                if (entry.element == reference) referenceEntry = entry;
+                // What is in the reference shows under it, and what goes below the reference goes below all of that
+                if ((entry.element == reference) || ((reference.element instanceof ElementContainer referenceContainer) && ElementContainerHierarchy.isInContainer(entry.element.element, referenceContainer))) lastOfReference = entry;
+            }
+            if ((referenceEntry == null) || (lastOfReference == null)) return;
+            this.dragTargetIndicatorY = above ? referenceEntry.getY() : (lastOfReference.getY() + lastOfReference.getHeight());
+            this.dragTargetIndicatorIndent = referenceEntry.getIndentOffset();
+        } else if (container != null) {
+            for (LayerElementEntry entry : entries) {
+                if (entry.element != container) continue;
+                this.dragTargetIndicatorY = entry.getY() + entry.getHeight();
+                this.dragTargetIndicatorIndent = entry.getIndentOffset() + GROUP_INDENT;
+            }
+        } else if (above) {
+            this.dragTargetIndicatorY = (first != null) ? first.getY() : this.scrollArea.getInnerY();
+        } else {
+            this.dragTargetIndicatorY = (last != null) ? (last.getY() + last.getHeight()) : this.scrollArea.getInnerY();
         }
     }
 
+    /**
+     * Returns the layers that are not getting dragged, in the order they show in: neither the dragged ones nor what is in them.
+     */
     @NotNull
-    private List<LayerElementEntry> getLayerEntriesInUiOrder() {
+    private List<LayerElementEntry> getLayerEntriesNotMoving(@NotNull List<AbstractEditorElement<?, ?>> movingElements) {
         List<LayerElementEntry> entries = new ArrayList<>();
         for (ScrollAreaEntry entry : this.scrollArea.getEntries()) {
-            if (entry instanceof LayerElementEntry layerEntry) {
-                entries.add(layerEntry);
-            }
+            if (!(entry instanceof LayerElementEntry layerEntry)) continue;
+            if (movingElements.contains(layerEntry.element) || this.editor.containerDragDropHandler.movesWithDraggedContainer(layerEntry.element, movingElements)) continue;
+            entries.add(layerEntry);
         }
         return entries;
     }
 
+    @Nullable
+    private AbstractEditorElement<?, ?> getContainerOf(@NotNull AbstractEditorElement<?, ?> element) {
+        ElementContainer container = element.element.getParentContainer();
+        return (container != null) ? this.editor.getElementByInstanceIdentifier(container.getContainerElement().getInstanceIdentifier()) : null;
+    }
+
+    /**
+     * Returns the element of the main layout the given one is in, or the given one if it is one itself.
+     */
     @NotNull
-    private List<LayerElementEntry> getLayerEntriesInUiOrderExcluding(@NotNull Collection<AbstractEditorElement<?, ?>> excluded) {
-        if (excluded.isEmpty()) {
-            return this.getLayerEntriesInUiOrder();
+    private AbstractEditorElement<?, ?> getRootOf(@NotNull AbstractEditorElement<?, ?> element) {
+        AbstractEditorElement<?, ?> root = element;
+        for (AbstractEditorElement<?, ?> container = this.getContainerOf(root); container != null; container = this.getContainerOf(root)) {
+            root = container;
         }
-        List<LayerElementEntry> entries = new ArrayList<>();
-        for (ScrollAreaEntry entry : this.scrollArea.getEntries()) {
-            if (entry instanceof LayerElementEntry layerEntry) {
-                if (!excluded.contains(layerEntry.element)) {
-                    entries.add(layerEntry);
-                }
-            }
-        }
-        return entries;
+        return root;
     }
 
     @Nullable
@@ -424,151 +512,10 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         return null;
     }
 
-    @Nullable
-    private LayerElementEntry getHoveredLayerEntry(double mouseX, double mouseY) {
-        for (ScrollAreaEntry entry : this.scrollArea.getEntries()) {
-            if (entry instanceof LayerElementEntry layerEntry) {
-                if (layerEntry.isMouseOver(mouseX, mouseY)) {
-                    return layerEntry;
-                }
-            }
-        }
-        return null;
-    }
-
-    @Nullable
-    private LayerGroupEntry getGroupEntry(@NotNull Layout.LayerGroup group) {
-        for (ScrollAreaEntry entry : this.scrollArea.getEntries()) {
-            if (entry instanceof LayerGroupEntry groupEntry) {
-                if (groupEntry.group == group) {
-                    return groupEntry;
-                }
-            }
-        }
-        return null;
-    }
-
-    private int getGroupInsertionIndex(@NotNull Layout.LayerGroup group, @NotNull List<LayerElementEntry> entries) {
-        int lastIndex = -1;
-        for (int i = 0; i < entries.size(); i++) {
-            if (entries.get(i).group == group) {
-                lastIndex = i;
-            }
-        }
-        if (lastIndex >= 0) {
-            return lastIndex + 1;
-        }
-        LayerGroupEntry groupEntry = this.getGroupEntry(group);
-        if (groupEntry != null) {
-            float groupY = groupEntry.getY();
-            for (int i = 0; i < entries.size(); i++) {
-                if (entries.get(i).getY() > groupY) {
-                    return i;
-                }
-            }
-        }
-        return entries.size();
-    }
-
-    private float getIndicatorYForUiIndex(@NotNull List<LayerElementEntry> entries, int uiIndex) {
-        if (entries.isEmpty()) {
-            return this.scrollArea.getInnerY();
-        }
-        if (uiIndex <= 0) {
-            return entries.get(0).getY();
-        }
-        if (uiIndex >= entries.size()) {
-            LayerElementEntry lastEntry = entries.get(entries.size() - 1);
-            return lastEntry.getY() + lastEntry.getHeight();
-        }
-        return entries.get(uiIndex).getY();
-    }
-
-    private int getFlatInsertionIndexForUiTarget(@NotNull List<AbstractEditorElement<?, ?>> remaining, @NotNull List<LayerElementEntry> dragEntries, int uiIndex) {
-        if (remaining.isEmpty()) {
-            return 0;
-        }
-        if (dragEntries.isEmpty()) {
-            return 0;
-        }
-
-        int clampedUiIndex = Math.min(Math.max(uiIndex, 0), dragEntries.size());
-        if (clampedUiIndex <= 0) {
-            int anchorIndex = remaining.indexOf(dragEntries.get(0).element);
-            if (anchorIndex >= 0) {
-                return Math.min(anchorIndex + 1, remaining.size());
-            }
-            return remaining.size();
-        }
-        if (clampedUiIndex >= dragEntries.size()) {
-            int anchorIndex = remaining.indexOf(dragEntries.get(dragEntries.size() - 1).element);
-            if (anchorIndex >= 0) {
-                return Math.max(anchorIndex, 0);
-            }
-            return 0;
-        }
-
-        int anchorIndex = remaining.indexOf(dragEntries.get(clampedUiIndex - 1).element);
-        if (anchorIndex >= 0) {
-            return anchorIndex;
-        }
-
-        // Fall back to the legacy conversion if the UI anchor can't be resolved.
-        return Math.min(Math.max(remaining.size() - clampedUiIndex, 0), remaining.size());
-    }
-
-    private int getFlatInsertionIndexForGroupHeader(@NotNull Layout.LayerGroup group, @NotNull List<AbstractEditorElement<?, ?>> remaining) {
-        // Group headers stay visible even while the group contents are collapsed, so anchor to the
-        // group's real flat position instead of the visible layer list to keep the group contiguous.
-        for (int i = 0; i < remaining.size(); i++) {
-            if (this.editor.getLayerGroupForElement(remaining.get(i)) == group) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    private int resolveFlatInsertionIndex(@NotNull List<AbstractEditorElement<?, ?>> remaining, @NotNull List<LayerElementEntry> dragEntries) {
-        if (remaining.isEmpty()) {
-            return 0;
-        }
-        if (this.dragTargetIsGroupHeader && this.dragTargetGroup != null) {
-            int groupTargetIndex = this.getFlatInsertionIndexForGroupHeader(this.dragTargetGroup, remaining);
-            if (groupTargetIndex >= 0) {
-                return groupTargetIndex;
-            }
-        }
-        return this.getFlatInsertionIndexForUiTarget(remaining, dragEntries, this.dragTargetUiIndex);
-    }
-
-    @Nullable
-    private Layout.LayerGroup resolveDragTargetGroup(double mouseX, double mouseY, float indicatorY) {
-        LayerGroupEntry hoveredGroup = this.getHoveredGroupEntry(mouseX, mouseY);
-        if (hoveredGroup != null) {
-            return hoveredGroup.group;
-        }
-        LayerElementEntry hoveredLayer = this.getHoveredLayerEntry(mouseX, mouseY);
-        if (hoveredLayer != null) {
-            return hoveredLayer.group;
-        }
-        List<LayerElementEntry> entries = this.getLayerEntriesInUiOrder();
-        if (entries.isEmpty() || !Float.isFinite(indicatorY)) {
-            return null;
-        }
-        int uiIndex = 0;
-        for (; uiIndex < entries.size(); uiIndex++) {
-            if (indicatorY <= entries.get(uiIndex).getY()) {
-                break;
-            }
-        }
-        Layout.LayerGroup before = (uiIndex > 0) ? entries.get(uiIndex - 1).group : null;
-        Layout.LayerGroup after = (uiIndex < entries.size()) ? entries.get(uiIndex).group : null;
-        if ((before != null) && (before == after)) {
-            return before;
-        }
-        return null;
-    }
-
+    /**
+     * Returns the layers the user drags: the ones of the dragged group, or the selected ones. Layers that are in another dragged
+     * layer are not among them, because they move along with it.
+     */
     @NotNull
     private List<AbstractEditorElement<?, ?>> getMovingElementsForDrag() {
         List<AbstractEditorElement<?, ?>> movingElements = new ArrayList<>();
@@ -586,6 +533,8 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         if (movingElements.isEmpty() && this.draggedEntry instanceof LayerElementEntry layerEntry) {
             movingElements.add(layerEntry.element);
         }
+        List<AbstractEditorElement<?, ?>> selected = new ArrayList<>(movingElements);
+        movingElements.removeIf(element -> this.editor.containerDragDropHandler.movesWithDraggedContainer(element, selected));
         return movingElements;
     }
 
@@ -711,7 +660,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
      */
     private void finishDragOperation() {
 
-        if (this.dragTargetUiIndex < 0 || this.draggedEntry == null) {
+        if (!this.dragTargetValid || this.draggedEntry == null) {
             return;
         }
 
@@ -720,70 +669,61 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             return;
         }
 
-        Map<AbstractEditorElement<?, ?>, Integer> oldIndices = new HashMap<>();
-        for (int i = 0; i < this.editor.normalEditorElements.size(); i++) {
-            oldIndices.put(this.editor.normalEditorElements.get(i), i);
+        List<AbstractEditorElement<?, ?>> orderBefore = new ArrayList<>(this.editor.normalEditorElements);
+        movingElements.sort(Comparator.comparingInt(orderBefore::indexOf));
+        boolean groupDrag = this.draggedEntry instanceof LayerGroupEntry;
+        LayoutEditorHistory.Snapshot snapshot = this.editor.history.createSnapshot();
+        boolean changed = false;
+
+        // Into what the layers got dropped on first, so their place in the order is one among the layers there
+        ElementContainer targetContainer = (this.dragTargetContainer != null) ? (ElementContainer) this.dragTargetContainer.element : null;
+        for (AbstractEditorElement<?, ?> element : movingElements) {
+            if (element.element.getParentContainer() == targetContainer) continue;
+            this.editor.containerOperations.moveToContainerVisibly(element, targetContainer);
+            changed = true;
         }
+        if (changed) this.editor.containerOperations.detachAnchorsAcrossContainers();
 
-        movingElements.sort(Comparator.comparingInt(element -> oldIndices.getOrDefault(element, -1)));
-
-        List<AbstractEditorElement<?, ?>> remaining = new ArrayList<>(this.editor.normalEditorElements);
-        remaining.removeAll(movingElements);
-
-        List<LayerElementEntry> dragEntries = this.getLayerEntriesInUiOrderExcluding(movingElements);
-        int targetIndex = this.resolveFlatInsertionIndex(remaining, dragEntries);
-        targetIndex = Math.min(Math.max(targetIndex, 0), remaining.size());
-
-        List<AbstractEditorElement<?, ?>> reordered = new ArrayList<>(remaining);
-        reordered.addAll(targetIndex, movingElements);
-        boolean groupChangeRequired = false;
-        if (!(this.draggedEntry instanceof LayerGroupEntry)) {
-            if (this.dragTargetGroup != null) {
-                for (AbstractEditorElement<?, ?> element : movingElements) {
-                    Layout.LayerGroup currentGroup = this.editor.getLayerGroupForElement(element);
-                    if (currentGroup != this.dragTargetGroup) {
-                        groupChangeRequired = true;
-                        break;
-                    }
-                }
-            } else {
-                for (AbstractEditorElement<?, ?> element : movingElements) {
-                    if (this.editor.getLayerGroupForElement(element) != null) {
-                        groupChangeRequired = true;
-                        break;
-                    }
-                }
-            }
+        List<AbstractEditorElement<?, ?>> reordered = new ArrayList<>(orderBefore);
+        reordered.removeAll(movingElements);
+        int targetIndex;
+        if (this.dragTargetReference != null) {
+            // Directly behind or in front of the layer they got dropped next to. The hierarchy puts what is in that layer between them again.
+            targetIndex = reordered.indexOf(this.dragTargetReference) + (this.dragTargetAbove ? 1 : 0);
+        } else {
+            // The topmost layers are the last elements, also among the children of a container
+            targetIndex = this.dragTargetAbove ? reordered.size() : 0;
         }
-        if (reordered.equals(this.editor.normalEditorElements) && !groupChangeRequired) {
-            return;
-        }
-
-        this.editor.history.saveSnapshot();
-
+        reordered.addAll(Math.min(Math.max(targetIndex, 0), reordered.size()), movingElements);
         this.editor.normalEditorElements = reordered;
 
-        if (!(this.draggedEntry instanceof LayerGroupEntry)) {
-            List<String> movingIds = new ArrayList<>();
+        if (!groupDrag) {
             for (AbstractEditorElement<?, ?> element : movingElements) {
-                movingIds.add(element.element.getInstanceIdentifier());
-            }
-            if (this.dragTargetGroup != null) {
-                this.editor.addElementsToLayerGroup(movingIds, this.dragTargetGroup);
-            } else {
-                this.editor.removeElementsFromLayerGroups(movingIds);
+                // Layers in a container belong to no group, and the hierarchy takes them out of the one they had
+                Layout.LayerGroup newGroup = (targetContainer == null) ? this.dragTargetGroup : null;
+                if (this.editor.getLayerGroupForElement(element) == newGroup) continue;
+                changed = true;
+                List<String> identifier = List.of(element.element.getInstanceIdentifier());
+                if (newGroup != null) {
+                    this.editor.addElementsToLayerGroup(identifier, newGroup);
+                } else {
+                    this.editor.removeElementsFromLayerGroups(identifier);
+                }
             }
         }
 
+        this.editor.updateContainerHierarchy();
         this.editor.updateLayerGroupElementOrder();
 
+        if (!changed && orderBefore.equals(this.editor.normalEditorElements)) {
+            this.editor.history.discardSnapshot(snapshot);
+            return;
+        }
+        this.editor.history.saveSnapshot(snapshot);
+
         for (AbstractEditorElement<?, ?> element : movingElements) {
-            Integer oldIndex = oldIndices.get(element);
-            Integer newIndex = this.editor.normalEditorElements.indexOf(element);
-            if ((oldIndex != null) && (newIndex != null)) {
-                boolean movedUp = newIndex > oldIndex;
-                this.editor.layoutEditorWidgets.forEach(widget -> widget.editorElementOrderChanged(element, movedUp));
-            }
+            boolean movedUp = this.editor.normalEditorElements.indexOf(element) > orderBefore.indexOf(element);
+            this.editor.layoutEditorWidgets.forEach(widget -> widget.editorElementOrderChanged(element, movedUp));
         }
 
         MainThreadTaskExecutor.executeInMainThread(() -> this.updateList(true), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
@@ -1091,18 +1031,26 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
         if (moveUp) {
             for (int i = maxIndex + 1; i < this.editor.normalEditorElements.size(); i++) {
-                if (!groupSet.contains(this.editor.normalEditorElements.get(i))) {
+                if (this.canGroupMovePast(this.editor.normalEditorElements.get(i), groupSet)) {
                     return true;
                 }
             }
             return false;
         }
         for (int i = minIndex - 1; i >= 0; i--) {
-            if (!groupSet.contains(this.editor.normalEditorElements.get(i))) {
+            if (this.canGroupMovePast(this.editor.normalEditorElements.get(i), groupSet)) {
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * Returns if the element is a layer a group can move past: a layer of the main layout that is not in the group.
+     * What is in a container is no layer of the main layout, and moves with its container.
+     */
+    private boolean canGroupMovePast(@NotNull AbstractEditorElement<?, ?> element, @NotNull Set<AbstractEditorElement<?, ?>> groupSet) {
+        return !groupSet.contains(element) && (element.element.getParentContainer() == null);
     }
 
     private boolean moveLayerGroup(@NotNull Layout.LayerGroup group, boolean moveUp) {
@@ -1124,7 +1072,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         if (moveUp) {
             for (int i = maxIndex + 1; i < this.editor.normalEditorElements.size(); i++) {
                 AbstractEditorElement<?, ?> candidate = this.editor.normalEditorElements.get(i);
-                if (!groupSet.contains(candidate)) {
+                if (this.canGroupMovePast(candidate, groupSet)) {
                     anchor = candidate;
                     break;
                 }
@@ -1132,7 +1080,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         } else {
             for (int i = minIndex - 1; i >= 0; i--) {
                 AbstractEditorElement<?, ?> candidate = this.editor.normalEditorElements.get(i);
-                if (!groupSet.contains(candidate)) {
+                if (this.canGroupMovePast(candidate, groupSet)) {
                     anchor = candidate;
                     break;
                 }
@@ -1156,6 +1104,8 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
         remaining.addAll(insertIndex, groupElements);
         this.editor.normalEditorElements = remaining;
+        // What is in the containers of the group and of the layer it moved past follows its container
+        this.editor.updateContainerHierarchy();
         this.editor.updateLayerGroupElementOrder();
         for (AbstractEditorElement<?, ?> element : groupElements) {
             this.editor.layoutEditorWidgets.forEach(widget -> widget.editorElementOrderChanged(element, moveUp));
@@ -1231,22 +1181,36 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
 
     private class LayerElementEntry extends ScrollAreaEntry {
 
-        protected AbstractEditorElement element;
+        protected AbstractEditorElement<?, ?> element;
         protected LayerLayoutEditorWidget layerWidget;
         @Nullable
         protected Layout.LayerGroup group;
+        /** How many containers the element of the layer is in, which is how far the layer is indented. */
+        protected final int depth;
         protected final UIIconButton eyeButton;
+        /** Shows or hides the layers of what is in the element. Only layers of containers have it. */
+        @Nullable
+        protected final UIIconButton collapseButton;
         protected Font font = Minecraft.getInstance().font;
         protected boolean dragStarted = false; // Flag to track if drag has been initiated
         protected double dragStartX;
         protected double dragStartY;
         private static final int DRAG_THRESHOLD = 3; // Minimum pixels to move before initiating drag
 
-        public LayerElementEntry(ScrollArea parent, LayerLayoutEditorWidget layerWidget, @NotNull AbstractEditorElement element, @Nullable Layout.LayerGroup group) {
+        public LayerElementEntry(ScrollArea parent, LayerLayoutEditorWidget layerWidget, @NotNull AbstractEditorElement<?, ?> element, @Nullable Layout.LayerGroup group, int depth) {
             super(parent, 50, 28);
             this.element = element;
             this.layerWidget = layerWidget;
             this.group = group;
+            this.depth = depth;
+            this.collapseButton = !(element.element instanceof ElementContainer container) ? null : new UIIconButton(0.0F, 0.0F, GROUP_COLLAPSE_BUTTON_WIDTH, GROUP_BUTTON_HEIGHT, GROUP_COLLAPSE_ICON, button -> {
+                if (FancyMenu.getOptions().playUiClickSounds.getValue()) {
+                    Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                }
+                this.layerWidget.editor.history.saveSnapshot();
+                container.setCollapsedInLayerList(!container.isCollapsedInLayerList());
+                MainThreadTaskExecutor.executeInMainThread(() -> this.layerWidget.updateList(true), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+            });
             this.eyeButton = new UIIconButton(0.0F, 0.0F, LAYER_EYE_BUTTON_WIDTH, LAYER_EYE_BUTTON_HEIGHT, EYE_ICON, button -> {
                 if (FancyMenu.getOptions().playUiClickSounds.getValue()) {
                     Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
@@ -1280,8 +1244,10 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
             LAYER_ICON.render(graphics, layerIconX, layerIconY, layerIconSize, layerIconSize, UIBase.getUITheme().getUIIconColor(1.0F));
 
             this.updateEyeButtonLayout();
+            this.updateCollapseButtonLayout();
             int renderMouseX = this.isIconButtonInteractionAllowed() ? mouseX : Integer.MIN_VALUE;
             int renderMouseY = this.isIconButtonInteractionAllowed() ? mouseY : Integer.MIN_VALUE;
+            if (this.collapseButton != null) this.collapseButton.render(graphics, renderMouseX, renderMouseY, partial);
             this.eyeButton.render(graphics, renderMouseX, renderMouseY, partial);
 
             float labelX = this.getLayerNameX();
@@ -1315,12 +1281,31 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         public float getMaxLayerNameWidth() {
             float rightEdge = this.x + this.getWidth() - RIGHT_SIDE_BUTTON_OFFSET;
             float eyeWidth = this.eyeButton.getWidth();
-            return rightEdge - eyeWidth - this.getLayerNameX() - 3f;
+            float collapseWidth = (this.collapseButton != null) ? this.collapseButton.getWidth() : 0.0F;
+            return rightEdge - eyeWidth - collapseWidth - this.getLayerNameX() - 3f;
         }
 
         public boolean isEyeButtonMouseOver(double mouseX, double mouseY) {
             if (!this.isIconButtonInteractionAllowed()) return false;
             return this.eyeButton.isMouseOver(mouseX, mouseY);
+        }
+
+        public boolean isCollapseButtonMouseOver(double mouseX, double mouseY) {
+            if ((this.collapseButton == null) || !this.isIconButtonInteractionAllowed()) return false;
+            return this.collapseButton.isMouseOver(mouseX, mouseY);
+        }
+
+        /** The button sits where the one of layer groups sits: in front of the eye. */
+        private void updateCollapseButtonLayout() {
+            if ((this.collapseButton == null) || !(this.element.element instanceof ElementContainer container)) return;
+            float collapseWidth = this.collapseButton.getWidth();
+            float collapseHeight = this.collapseButton.getHeight();
+            this.collapseButton.setX(this.x + this.getWidth() - this.eyeButton.getWidth() - collapseWidth - RIGHT_SIDE_BUTTON_OFFSET)
+                    .setY(this.y + (this.getHeight() - collapseHeight) * 0.5f)
+                    .setWidth(collapseWidth)
+                    .setHeight(collapseHeight)
+                    .setIcon(container.isCollapsedInLayerList() ? GROUP_EXPAND_ICON : GROUP_COLLAPSE_ICON)
+                    .setIconAlpha(1.0f);
         }
 
         private boolean isIconButtonInteractionAllowed() {
@@ -1349,7 +1334,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         }
 
         public float getIndentOffset() {
-            return (this.group != null) ? GROUP_INDENT : 0.0f;
+            return ((this.group != null) ? GROUP_INDENT : 0.0f) + (this.depth * GROUP_INDENT);
         }
 
         public float getLayerIconX() {
@@ -1367,7 +1352,8 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             if (button == 0) {
                 this.updateEyeButtonLayout();
-                if (this.isMouseOver(mouseX, mouseY) && !this.isEyeButtonMouseOver(mouseX, mouseY)) {
+                this.updateCollapseButtonLayout();
+                if (this.isMouseOver(mouseX, mouseY) && !this.isEyeButtonMouseOver(mouseX, mouseY) && !this.isCollapseButtonMouseOver(mouseX, mouseY)) {
                     // Store initial position for drag threshold checking
                     this.dragStartX = mouseX;
                     this.dragStartY = mouseY;
@@ -1394,16 +1380,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                         // Start drag operation
                         this.layerWidget.draggedEntry = this;
                         this.layerWidget.isDragging = true;
-
-                        // Important: Set initial target index to the same as the dragged entry
-                        // This ensures no jump at the start
-                        List<LayerElementEntry> entries = this.layerWidget.getLayerEntriesInUiOrder();
-                        int currentIndex = entries.indexOf(this);
-                        if (currentIndex < 0) {
-                            currentIndex = 0;
-                        }
-                        this.layerWidget.dragTargetUiIndex = currentIndex;
-                        this.layerWidget.dragTargetIndicatorY = this.getY();
+                        this.layerWidget.updateDragTarget(mouseX, mouseY);
 
                         return true;
                     }
@@ -1428,8 +1405,11 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
         public void onClick(ScrollAreaEntry entry, double mouseX, double mouseY, int button) {
             if (button == 0) {
                 this.updateEyeButtonLayout();
+                this.updateCollapseButtonLayout();
                 if (this.isEyeButtonMouseOver(mouseX, mouseY)) {
                     this.eyeButton.mouseClicked(mouseX, mouseY, button);
+                } else if ((this.collapseButton != null) && this.isCollapseButtonMouseOver(mouseX, mouseY)) {
+                    this.collapseButton.mouseClicked(mouseX, mouseY, button);
                 } else {
                     if (FancyMenu.getOptions().playUiClickSounds.getValue()) Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(net.minecraft.sounds.SoundEvents.UI_BUTTON_CLICK, 1.0F));
 
@@ -1674,8 +1654,7 @@ public class LayerLayoutEditorWidget extends AbstractLayoutEditorWidget {
                 if (distance > DRAG_THRESHOLD && !this.layerWidget.isDragging) {
                     this.layerWidget.draggedEntry = this;
                     this.layerWidget.isDragging = true;
-                    this.layerWidget.dragTargetUiIndex = 0;
-                    this.layerWidget.dragTargetIndicatorY = this.getY();
+                    this.layerWidget.updateDragTarget(mouseX, mouseY);
                     return true;
                 }
                 return true;
