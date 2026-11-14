@@ -15,17 +15,20 @@ cd "$(dirname "$0")" || exit 1
 # Config overrides for the run, restored when the script exits:
 # - Rinku uses CEF's default Chromium profile instead of the user's persistent Rinku profile (see reset_chromium_crash_mark).
 # - (Neo)Forge opens its early loading window before any mod code runs, so only its FML config can keep it closed.
+# - The game's master volume is 0, so test clients stay silent. Sounds, FancyMenu audio and video backgrounds all follow it.
 RUN_DIR="${FANCYMENU_TEST_RUN_DIR:-run_client}"
 RINKU_CONFIG="$RUN_DIR/config/rinku/rinku.properties"
 FML_CONFIG="$RUN_DIR/config/fml.toml"
+GAME_OPTIONS="$RUN_DIR/options.txt"
 CLIENT_LOCK="${TMPDIR:-/tmp}/fancymenu-offscreen-client.lock"
 HOLDS_CLIENT_LOCK=false
 
 set_config_line() {
-    # Replaces the line of the given key (or appends it), keeping the rest of the file untouched
+    # Replaces the line of the given key (or appends it), keeping the rest of the file untouched.
+    # Keys end with a space, "=" or ":", which covers TOML, properties and the game's options.txt.
     mkdir -p "$(dirname "$1")"
-    if [ -f "$1" ] && grep -q "^$2[ =]" "$1"; then
-        awk -v key="$2" -v line="$3" 'index($0, key) == 1 && substr($0, length(key) + 1, 1) ~ /[ =]/ { print line; next } { print }' "$1" > "$1.offscreen-tmp" && mv "$1.offscreen-tmp" "$1"
+    if [ -f "$1" ] && grep -q "^$2[ =:]" "$1"; then
+        awk -v key="$2" -v line="$3" 'index($0, key) == 1 && substr($0, length(key) + 1, 1) ~ /[ =:]/ { print line; next } { print }' "$1" > "$1.offscreen-tmp" && mv "$1.offscreen-tmp" "$1"
     else
         echo "$3" >> "$1"
     fi
@@ -87,6 +90,7 @@ restore_config() {
 restore_all() {
     release_client_lock
     restore_config "$RINKU_CONFIG" use-cache "use-cache=true"
+    restore_config "$GAME_OPTIONS" soundCategory_master "soundCategory_master:1.0"
     if [ "$LOADER" != "fabric" ]; then
         restore_config "$FML_CONFIG" earlyWindowControl "earlyWindowControl = true"
     fi
@@ -105,6 +109,7 @@ trap restore_all EXIT
 trap 'exit 130' INT TERM
 acquire_client_lock
 override_config "$RINKU_CONFIG" use-cache "use-cache=false"
+override_config "$GAME_OPTIONS" soundCategory_master "soundCategory_master:0.0"
 reset_chromium_crash_mark
 if [ "$LOADER" != "fabric" ]; then
     override_config "$FML_CONFIG" earlyWindowControl "earlyWindowControl = false"

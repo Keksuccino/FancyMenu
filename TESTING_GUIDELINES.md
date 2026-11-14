@@ -24,7 +24,8 @@ JAVA_HOME=$(/usr/libexec/java_home -v 25) sh offscreen_client.sh neoforge
   the same profile makes the running one open a visible "New Tab" window. The script compiles the loader before waiting for the lock.
 - For (Neo)Forge, it also sets `earlyWindowControl = false` in `<game directory>/config/fml.toml` for the run.
   The early loading window opens before any mod code runs, so the FML config is the only way to keep it closed.
-- Both files get restored when the script exits.
+- It sets `soundCategory_master:0.0` in `<game directory>/options.txt` for the run, so test clients stay silent.
+- All of these files get restored when the script exits.
 - The game log contains `Off-screen test client mode is active!` when the mode works.
 
 ### How it works
@@ -49,8 +50,8 @@ for each showcase, following what worked before:
 ### Instance
 
 - Record in a separate game instance (`FANCYMENU_TEST_RUN_DIR`, see above), so the showcase starts clean and the dev instance stays untouched.
-  Give its `options.txt` `onboardAccessibility:false`, `panoramaScrollSpeed:0.0` (a moving panorama changes every pixel of every
-  frame, which makes GIFs huge) and `soundCategory_master:0.0`.
+  Give its `options.txt` `onboardAccessibility:false` and `panoramaScrollSpeed:0.0` (a moving panorama changes every pixel of
+  every frame, which makes GIFs huge).
 - The first launch of an instance opens the "Welcome to FancyMenu!" window, which blocks all other input. Close all PiP windows
   (`PiPWindowHandler.INSTANCE.getOpenWindows()`) before recording starts.
 - A take changes the instance (profiles, layouts, options). After the first launch, clone `config/fancymenu` and `fancymenu_data`
