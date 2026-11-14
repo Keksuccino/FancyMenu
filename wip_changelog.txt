@@ -6,5 +6,8 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - Fixed pasting into the text editor putting all lines into a single line in Minecraft 26.3
 - Fixed Select All in the text editor only selecting the current line in Minecraft 26.3
 - Fixed Copy and Cut in the text editor only working on the current line in Minecraft 26.3
+- Fixed the content of rotated Text elements getting cut off along straight lines instead of following the element's rotation
+- Fixed scroll bars, links and other clickable Markdown content in rotated Text elements not reacting to the mouse where they are shown
+- Fixed element tilting not getting rendered in MC 1.21.11 and newer, which made tilted elements look untilted and react to the mouse in the wrong place
 
 %changelog:end%
