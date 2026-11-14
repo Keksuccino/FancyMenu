@@ -397,8 +397,6 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
      * @return If something in the area took the scroll.
      */
     public boolean scrollChildByWheel(double mouseX, double mouseY, double deltaX, double deltaY) {
-        // What scrolls on its own in an area scrolls up and down, and takes a wheel that did not turn that way for one that turned down
-        if (deltaY == 0.0D) return false;
         Screen screen = ScreenUtils.getScreen();
         if (screen == null) return false;
         for (GuiEventListener listener : screen.children()) {
