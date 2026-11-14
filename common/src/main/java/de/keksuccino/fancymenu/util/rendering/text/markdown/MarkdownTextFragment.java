@@ -718,6 +718,23 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         return this.mouseClicked(event.x(), event.y(), event.button());
     }
 
+    /**
+     * Returns if a click at the given position does something in this fragment: it is on a hyperlink or on text with a click event.
+     */
+    public boolean takesClickAt(double mouseX, double mouseY) {
+        if (this.isTable() && (this.tableContext != null)) {
+            for (TableRow row : this.tableContext.rows) {
+                for (TableCell cell : row.cells) {
+                    for (MarkdownTextFragment fragment : cell.fragments) {
+                        if (fragment.isMouseOver(mouseX, mouseY) && fragment.takesClickAt(mouseX, mouseY)) return true;
+                    }
+                }
+            }
+            return false;
+        }
+        return (this.hyperlink != null) || (this.clickEvent != null);
+    }
+
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         // Handle clicks on table cells
         if (this.isTable() && this.tableContext != null) {

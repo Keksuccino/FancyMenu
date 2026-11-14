@@ -4,6 +4,8 @@ import de.keksuccino.fancymenu.util.ScreenUtils;
 
 import com.mojang.logging.LogUtils;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
+import de.keksuccino.fancymenu.customization.element.container.ElementContainer;
+import de.keksuccino.fancymenu.customization.element.container.ElementContainerLink;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import net.minecraft.client.Minecraft;
@@ -153,7 +155,7 @@ public class ElementAnchorPoint {
         @Override
         public int getElementPositionY(@NotNull AbstractElement element) {
             if (element.stickyAnchor) {
-                return (this.getOriginY(element) - (element.getAbsoluteHeight() / 2)) + element.posOffsetY;
+                return (this.getOriginY(element) - (element.getContentSpaceHeight() / 2)) + element.posOffsetY;
             }
             return super.getElementPositionY(element);
         }
@@ -174,7 +176,7 @@ public class ElementAnchorPoint {
         @Override
         public int getElementPositionY(@NotNull AbstractElement element) {
             if (element.stickyAnchor) {
-                return (this.getOriginY(element) - element.getAbsoluteHeight()) + element.posOffsetY;
+                return (this.getOriginY(element) - element.getContentSpaceHeight()) + element.posOffsetY;
             }
             return super.getElementPositionY(element);
         }
@@ -195,7 +197,7 @@ public class ElementAnchorPoint {
         @Override
         public int getElementPositionX(@NotNull AbstractElement element) {
             if (element.stickyAnchor) {
-                return (this.getOriginX(element) - (element.getAbsoluteWidth() / 2)) + element.posOffsetX;
+                return (this.getOriginX(element) - (element.getContentSpaceWidth() / 2)) + element.posOffsetX;
             }
             return super.getElementPositionX(element);
         }
@@ -221,7 +223,7 @@ public class ElementAnchorPoint {
         @Override
         public int getElementPositionX(@NotNull AbstractElement element) {
             if (element.stickyAnchor) {
-                return (this.getOriginX(element) - (element.getAbsoluteWidth() / 2)) + element.posOffsetX;
+                return (this.getOriginX(element) - (element.getContentSpaceWidth() / 2)) + element.posOffsetX;
             }
             return super.getElementPositionX(element);
         }
@@ -229,7 +231,7 @@ public class ElementAnchorPoint {
         @Override
         public int getElementPositionY(@NotNull AbstractElement element) {
             if (element.stickyAnchor) {
-                return (this.getOriginY(element) - (element.getAbsoluteHeight() / 2)) + element.posOffsetY;
+                return (this.getOriginY(element) - (element.getContentSpaceHeight() / 2)) + element.posOffsetY;
             }
             return super.getElementPositionY(element);
         }
@@ -255,7 +257,7 @@ public class ElementAnchorPoint {
         @Override
         public int getElementPositionX(@NotNull AbstractElement element) {
             if (element.stickyAnchor) {
-                return (this.getOriginX(element) - (element.getAbsoluteWidth() / 2)) + element.posOffsetX;
+                return (this.getOriginX(element) - (element.getContentSpaceWidth() / 2)) + element.posOffsetX;
             }
             return super.getElementPositionX(element);
         }
@@ -263,7 +265,7 @@ public class ElementAnchorPoint {
         @Override
         public int getElementPositionY(@NotNull AbstractElement element) {
             if (element.stickyAnchor) {
-                return (this.getOriginY(element) - element.getAbsoluteHeight()) + element.posOffsetY;
+                return (this.getOriginY(element) - element.getContentSpaceHeight()) + element.posOffsetY;
             }
             return super.getElementPositionY(element);
         }
@@ -284,7 +286,7 @@ public class ElementAnchorPoint {
         @Override
         public int getElementPositionX(@NotNull AbstractElement element) {
             if (element.stickyAnchor) {
-                return (this.getOriginX(element) - element.getAbsoluteWidth()) + element.posOffsetX;
+                return (this.getOriginX(element) - element.getContentSpaceWidth()) + element.posOffsetX;
             }
             return super.getElementPositionX(element);
         }
@@ -310,7 +312,7 @@ public class ElementAnchorPoint {
         @Override
         public int getElementPositionX(@NotNull AbstractElement element) {
             if (element.stickyAnchor) {
-                return (this.getOriginX(element) - element.getAbsoluteWidth()) + element.posOffsetX;
+                return (this.getOriginX(element) - element.getContentSpaceWidth()) + element.posOffsetX;
             }
             return super.getElementPositionX(element);
         }
@@ -318,7 +320,7 @@ public class ElementAnchorPoint {
         @Override
         public int getElementPositionY(@NotNull AbstractElement element) {
             if (element.stickyAnchor) {
-                return (this.getOriginY(element) - (element.getAbsoluteHeight() / 2)) + element.posOffsetY;
+                return (this.getOriginY(element) - (element.getContentSpaceHeight() / 2)) + element.posOffsetY;
             }
             return super.getElementPositionY(element);
         }
@@ -344,7 +346,7 @@ public class ElementAnchorPoint {
         @Override
         public int getElementPositionX(@NotNull AbstractElement element) {
             if (element.stickyAnchor) {
-                return (this.getOriginX(element) - element.getAbsoluteWidth()) + element.posOffsetX;
+                return (this.getOriginX(element) - element.getContentSpaceWidth()) + element.posOffsetX;
             }
             return super.getElementPositionX(element);
         }
@@ -352,7 +354,7 @@ public class ElementAnchorPoint {
         @Override
         public int getElementPositionY(@NotNull AbstractElement element) {
             if (element.stickyAnchor) {
-                return (this.getOriginY(element) - element.getAbsoluteHeight()) + element.posOffsetY;
+                return (this.getOriginY(element) - element.getContentSpaceHeight()) + element.posOffsetY;
             }
             return super.getElementPositionY(element);
         }
@@ -381,7 +383,9 @@ public class ElementAnchorPoint {
                 if ((anchor.getElementAnchorPointParent() != null) && (anchor.getElementAnchorPointParent() == element)) return super.getOriginX(element);
                 if (element.getElementAnchorPointParent() == element) return super.getOriginX(element);
                 if (anchor.getElementAnchorPointParent() == anchor) return super.getOriginX(element);
-                return anchor.getChildElementAnchorPointX();
+                // Children of a container calculate their position in the units of its content, and the anchor element is somewhere on the screen
+                ElementContainer container = element.getParentContainer();
+                return (container != null) ? ElementContainerLink.toContentX(container, anchor.getChildElementAnchorPointX()) : anchor.getChildElementAnchorPointX();
             }
             return super.getOriginX(element);
         }
@@ -394,7 +398,8 @@ public class ElementAnchorPoint {
                 if ((anchor.getElementAnchorPointParent() != null) && (anchor.getElementAnchorPointParent() == element)) return super.getOriginY(element);
                 if (element.getElementAnchorPointParent() == element) return super.getOriginY(element);
                 if (anchor.getElementAnchorPointParent() == anchor) return super.getOriginY(element);
-                return anchor.getChildElementAnchorPointY();
+                ElementContainer container = element.getParentContainer();
+                return (container != null) ? ElementContainerLink.toContentY(container, anchor.getChildElementAnchorPointY()) : anchor.getChildElementAnchorPointY();
             }
             return super.getOriginY(element);
         }

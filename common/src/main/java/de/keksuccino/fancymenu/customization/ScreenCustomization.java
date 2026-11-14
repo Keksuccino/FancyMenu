@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization;
 
 import de.keksuccino.fancymenu.util.ScreenUtils;
+import de.keksuccino.fancymenu.util.rendering.RenderFrameCounter;
 
 import java.io.File;
 import java.util.*;
@@ -382,6 +383,8 @@ public class ScreenCustomization {
 	 * This gets called every render tick before starting to render the game.
 	 */
 	public static void onPreGameRenderTick() {
+
+		RenderFrameCounter.nextFrame();
 
 		AnimationControllerHandler.tick();
 
