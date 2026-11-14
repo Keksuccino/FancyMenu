@@ -33,8 +33,6 @@ public final class ScrollAreaScrolling {
     private static final String MEMORY_SCROLL_Y = "scroll_area_scroll_y";
     /** What the keys end with for an area of the layout editor. Where the user scrolled to while editing is not where the area is on the real screen. */
     private static final String MEMORY_EDITOR_SUFFIX = "_editor";
-    /** How often the left mouse button got released since the game started, anywhere and no matter what took the release. See {@link #updateDrag()}. */
-    private static int leftMouseReleases = 0;
     /** How often a mouse button went down since the game started, anywhere and no matter what took the press. */
     private static int mousePresses = 0;
 
@@ -55,8 +53,6 @@ public final class ScrollAreaScrolling {
     private int pressY = 0;
     private int lastDragX = 0;
     private int lastDragY = 0;
-    /** What {@link #leftMouseReleases} was when the mouse went down on the content. */
-    private int leftMouseReleasesOnPress = 0;
     /** If the content is where it starts, so everything that moves it from now on is scrolling. */
     private boolean settled = false;
     private double notifiedX = 0.0D;
@@ -439,13 +435,6 @@ public final class ScrollAreaScrolling {
     }
 
     /**
-     * Tells all areas that the left mouse button got released, no matter where and what took the release.
-     */
-    public static void onLeftMouseReleasedAnywhere() {
-        leftMouseReleases++;
-    }
-
-    /**
      * Tells all areas that a mouse button went down, no matter where and what took the press.
      */
     public static void onMousePressedAnywhere() {
@@ -470,7 +459,6 @@ public final class ScrollAreaScrolling {
     public boolean onMousePressed(int mouseX, int mouseY) {
         if (!this.canDragContent()) return false;
         this.mousePressed = true;
-        this.leftMouseReleasesOnPress = leftMouseReleases;
         this.dragging = false;
         this.pressX = mouseX;
         this.pressY = mouseY;
@@ -496,8 +484,8 @@ public final class ScrollAreaScrolling {
     private void updateDrag() {
         if (!this.mousePressed) return;
         // Some screens keep the release of the mouse to themselves, like the ones with an inventory, and the content would stick to the mouse forever.
-        // The game itself only knows if the button is held while no screen is open, so releases get counted where they come in.
-        if (leftMouseReleases != this.leftMouseReleasesOnPress) {
+        // So the area does not wait to be told, and looks if the button is still held.
+        if (!this.area.isPointerPressed()) {
             this.onMouseReleased();
             return;
         }
