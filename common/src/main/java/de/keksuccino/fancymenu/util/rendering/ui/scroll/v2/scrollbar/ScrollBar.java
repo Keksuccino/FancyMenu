@@ -264,12 +264,10 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
             float offsetX = (float) (mouseX - this.leftMouseDownOnGrabberAtMouseX);
             float offsetY = (float) (mouseY - this.leftMouseDownOnGrabberAtMouseY);
 
-            float scrollOffset;
-            if (this.direction == ScrollBarDirection.VERTICAL) {
-                scrollOffset = offsetY / usableAreaHeight;
-            } else {
-                scrollOffset = offsetX / usableAreaWidth;
-            }
+            // A track that is not longer than its grabber leaves the grabber nowhere to go
+            float usableArea = (this.direction == ScrollBarDirection.VERTICAL) ? usableAreaHeight : usableAreaWidth;
+            float offset = (this.direction == ScrollBarDirection.VERTICAL) ? offsetY : offsetX;
+            float scrollOffset = (usableArea > 0.0F) ? (offset / usableArea) : 0.0F;
             this.setScroll(this.leftMouseDownOnGrabberAtScroll + scrollOffset);
 
             return true;
