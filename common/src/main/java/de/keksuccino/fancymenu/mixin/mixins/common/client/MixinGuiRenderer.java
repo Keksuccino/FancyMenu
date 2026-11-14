@@ -14,6 +14,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import de.keksuccino.fancymenu.customization.element.elements.jsonmodel.JsonModelGuiDraw;
 import de.keksuccino.fancymenu.customization.panorama.FancyMenuPanoramaPictureInPictureRenderer;
 import de.keksuccino.fancymenu.customization.panorama.FancyMenuPanoramaRenderState;
 import de.keksuccino.fancymenu.util.rendering.GuiRenderPhaseAction;
@@ -241,6 +242,7 @@ public abstract class MixinGuiRenderer {
             this.panoramaPictureInPictureRenderer_FancyMenu.close();
             this.panoramaPictureInPictureRenderer_FancyMenu = null;
         }
+        JsonModelGuiDraw.close();
     }
 
     @Unique
