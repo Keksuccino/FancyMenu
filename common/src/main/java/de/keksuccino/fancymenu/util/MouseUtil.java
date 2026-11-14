@@ -21,6 +21,7 @@ public class MouseUtil {
     private static boolean mouseStateInitialized = false;
     private static double lastMouseX = 0D;
     private static double lastMouseY = 0D;
+    // What every press and release of a mouse button says about the buttons that are held. The game itself only keeps track of them while no screen and no overlay is open, so it can't be asked.
     private static boolean cachedLeftMouseDown = false;
     private static boolean cachedRightMouseDown = false;
     private static boolean cachedMousePositionInitialized = false;
@@ -31,8 +32,6 @@ public class MouseUtil {
         double mouseX = getLiveGuiScaledMouseX();
         double mouseY = getLiveGuiScaledMouseY();
         cacheMousePosition(mouseX, mouseY);
-        cachedLeftMouseDown = MC.mouseHandler.isLeftPressed();
-        cachedRightMouseDown = MC.mouseHandler.isRightPressed();
 
         if (!mouseStateInitialized) {
             mouseStateInitialized = true;
