@@ -10,9 +10,12 @@ import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import de.keksuccino.fancymenu.util.rendering.GuiRenderPhaseAction;
 import de.keksuccino.fancymenu.util.rendering.GuiRenderPhaseQueue;
+import de.keksuccino.fancymenu.util.rendering.scissor.ScissorShape;
+import de.keksuccino.fancymenu.util.rendering.scissor.ScissorShapes;
 import de.keksuccino.fancymenu.util.window.FancyWindow;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
@@ -87,6 +90,19 @@ public class MixinGuiRenderer {
         this.previousScissorArea = null;
         this.renderPhaseActions_FancyMenu.add(this.meshesToDraw.size(), this.activeTraverseRange_FancyMenu, renderPhaseAction);
         info.cancel();
+    }
+
+    /** @reason Cuts the vertices of render states in a shaped scissor (like the scissor of a rotated element) to the shape, see {@link ScissorShapes}. */
+    @WrapOperation(method = "addElementToMesh", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/render/state/GuiElementRenderState;buildVertices(Lcom/mojang/blaze3d/vertex/VertexConsumer;)V"))
+    private void wrap_buildVertices_in_addElementToMesh_FancyMenu(GuiElementRenderState elementState, VertexConsumer consumer, Operation<Void> original) {
+        ScissorShape shape = ScissorShapes.getShape(elementState.scissorArea());
+        if ((shape == null) || !(consumer instanceof BufferBuilder builder)) {
+            original.call(elementState, consumer);
+            return;
+        }
+        int firstVertex = ((IMixinBufferBuilder)builder).get_vertices_FancyMenu();
+        original.call(elementState, consumer);
+        ScissorShapes.clipAddedVertices(builder, firstVertex, shape);
     }
 
     @Inject(method = "draw", at = @At("HEAD"))
