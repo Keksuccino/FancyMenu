@@ -16,6 +16,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.SubmitNodeStorage;
@@ -126,6 +127,7 @@ public class JsonModelElement extends AbstractElement {
     private final Map<Identifier, CuboidModel> parentModelCache = new ConcurrentHashMap<>();
     private final ModelBuildAttemptTracker modelBuildAttempts = new ModelBuildAttemptTracker();
     private final ModelCacheLifecycle<JsonModelCache> modelCache = new ModelCacheLifecycle<>();
+    private final int[] shownArea = new int[4];
 
     public JsonModelElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -140,12 +142,25 @@ public class JsonModelElement extends AbstractElement {
         this.parentModelCache.clear();
     }
 
+    /**
+     * The model renders straight to the screen with a pose of its own, past the pose of the GUI. A container that scales
+     * its content gives the element the scaled box instead, and the model is as big as its box.
+     */
+    @Override
+    public boolean supportsPoseScaling() {
+        return false;
+    }
+
     @Override
     public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         if (!this.shouldRender()) {
             return;
         }
+
+        // The model also renders past everything that cuts GUI elements, so what a container shows of it has to be cut here
+        boolean cutByContainer = this.getParentContainer() != null;
+        if (cutByContainer && !this.getShownScreenArea(this.shownArea)) return;
 
         this.ensureModelCache();
 
@@ -213,9 +228,20 @@ public class JsonModelElement extends AbstractElement {
         float alpha = a;
         submitNodeStorage.submitCustomGeometry(pose, renderType, (modelPose, consumer) -> renderModelQuads(quads, modelPose, consumer, red, green, blue, alpha));
         var target = Minecraft.getInstance().gameRenderer.mainRenderTarget();
+        if (cutByContainer) {
+            // Render types take the scissor they draw with from here when they get prepared. It is in pixels of the target, with Y counted from the bottom.
+            double guiScale = WindowHandler.getGuiScale();
+            int left = (int) Math.round(this.shownArea[0] * guiScale);
+            int right = (int) Math.round(this.shownArea[2] * guiScale);
+            int top = (int) Math.round(this.shownArea[1] * guiScale);
+            int bottom = (int) Math.round(this.shownArea[3] * guiScale);
+            RenderSystem.enableScissorForRenderTypeDraws(left, target.height - bottom, Math.max(0, right - left), Math.max(0, bottom - top));
+        }
         try (var frame = Minecraft.getInstance().gameRenderer.featureRenderDispatcher().prepareFrame(submitNodeStorage); var pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "FancyMenu JSON model", target.getColorTextureView(), java.util.Optional.empty(), target.getDepthTextureView(), java.util.OptionalDouble.empty())) {
             RenderSystem.bindDefaultUniforms(pass);
             net.minecraft.client.renderer.feature.FeatureRenderDispatcher.renderAllFeatures(pass, frame);
+        } finally {
+            if (cutByContainer) RenderSystem.disableScissorForRenderTypeDraws();
         }
 
         Minecraft.getInstance().gameRenderer.lighting().setupFor(Lighting.Entry.ITEMS_3D);
