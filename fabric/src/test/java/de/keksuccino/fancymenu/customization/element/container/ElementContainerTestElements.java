@@ -141,6 +141,15 @@ final class ElementContainerTestElements {
             return this.childOpacity;
         }
 
+        @Override
+        public boolean isCollapsedInLayerList() {
+            return false;
+        }
+
+        @Override
+        public void setCollapsedInLayerList(boolean collapsed) {
+        }
+
     }
 
 }

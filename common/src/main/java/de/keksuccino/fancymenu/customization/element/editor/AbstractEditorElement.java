@@ -461,6 +461,16 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
         }
 
+        // Children can leave their container this way as well, without having to be dragged out of it
+        this.rightClickMenu.addClickableEntry("move_out_of_container", Component.translatable("fancymenu.editor.containers.move_out"), (menu, entry) ->
+                {
+                    this.editor.containerOperations.moveOutOfContainer(this);
+                    menu.closeMenu();
+                })
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.containers.move_out.desc")))
+                .addIsVisibleSupplier((menu, entry) -> this.element.getParentContainer() != null)
+                .setIcon(MaterialIcons.EXIT_TO_APP);
+
         this.rightClickMenu.addSeparatorEntry("separator_6").setStackable(true);
 
         if (this.settings.isCopyable()) {
@@ -484,10 +494,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
             this.rightClickMenu.addClickableEntry("delete_element", Component.translatable("fancymenu.elements.delete"), (menu, entry) ->
                     {
-                        this.editor.history.saveSnapshot();
-                        for (AbstractEditorElement<?, ?> e : this.editor.getSelectedElements()) {
-                            e.deleteElement();
-                        }
+                        this.editor.containerOperations.deleteElements(this.editor.getSelectedElements());
                         menu.closeMenu();
                     })
                     .setStackable(true)

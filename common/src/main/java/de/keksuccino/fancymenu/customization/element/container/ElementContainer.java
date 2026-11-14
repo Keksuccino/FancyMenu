@@ -98,4 +98,11 @@ public interface ElementContainer {
      */
     float getChildOpacity();
 
+    /**
+     * Returns if the layer list of the layout editor shows the container without the layers of what is in it.
+     */
+    boolean isCollapsedInLayerList();
+
+    void setCollapsedInLayerList(boolean collapsed);
+
 }

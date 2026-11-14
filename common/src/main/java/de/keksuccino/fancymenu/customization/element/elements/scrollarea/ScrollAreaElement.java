@@ -91,6 +91,8 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
     public final Property.IntegerProperty scrollBarThickness = putProperty(Property.integerProperty("scroll_bar_thickness", PixelScrollGrabber.THICKNESS, "fancymenu.elements.scroll_area.scroll_bars.thickness", Property.NumericInputBehavior.<Integer>builder().rangeInput(4, 32).build()));
     public final Property.BooleanProperty verticalScrollBarLeft = putProperty(Property.booleanProperty("vertical_scroll_bar_left", false, "fancymenu.elements.scroll_area.scroll_bars.vertical_left"));
     public final Property.BooleanProperty horizontalScrollBarTop = putProperty(Property.booleanProperty("horizontal_scroll_bar_top", false, "fancymenu.elements.scroll_area.scroll_bars.horizontal_top"));
+    /** If the layer list of the layout editor shows the area without the layers of its children. */
+    public final Property.BooleanProperty collapsedInLayerList = putProperty(Property.booleanProperty("collapsed_in_layer_list", false, "fancymenu.elements.scroll_area.collapsed_in_layer_list"));
     public final ScrollBarGrabberStyle grabberStyle = new ScrollBarGrabberStyle(this);
     public final ScrollBarTrackBackground scrollBarBackground = new ScrollBarTrackBackground(this);
     public final ElementPanelBackground background = new ElementPanelBackground(this, "fancymenu.elements.scroll_area.background", this::getScrollBarSpace);
@@ -735,6 +737,16 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
     @Override
     public float getChildOpacity() {
         return this.childOpacity;
+    }
+
+    @Override
+    public boolean isCollapsedInLayerList() {
+        return this.collapsedInLayerList.getBoolean();
+    }
+
+    @Override
+    public void setCollapsedInLayerList(boolean collapsed) {
+        this.collapsedInLayerList.set(collapsed);
     }
 
     /**
