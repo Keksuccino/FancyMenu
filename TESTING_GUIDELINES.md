@@ -24,7 +24,8 @@ JAVA_HOME=$(/usr/libexec/java_home -v 25) sh offscreen_client.sh neoforge
   the same profile makes the running one open a visible "New Tab" window. The script compiles the loader before waiting for the lock.
 - For (Neo)Forge, it also sets `earlyWindowControl = false` in `<game directory>/config/fml.toml` for the run.
   The early loading window opens before any mod code runs, so the FML config is the only way to keep it closed.
-- Both files get restored when the script exits.
+- It sets `soundCategory_master:0.0` in `<game directory>/options.txt` for the run, so test clients stay silent.
+- All of these files get restored when the script exits.
 - The game log contains `Off-screen test client mode is active!` when the mode works.
 
 ### How it works
