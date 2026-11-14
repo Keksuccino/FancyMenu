@@ -12,6 +12,7 @@ import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.vertex.BufferBuilder;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.blaze3d.vertex.VertexFormat;
+import de.keksuccino.fancymenu.customization.element.elements.jsonmodel.JsonModelGuiDraw;
 import de.keksuccino.fancymenu.util.rendering.GuiRenderPhaseAction;
 import de.keksuccino.fancymenu.util.rendering.GuiRenderPhaseQueue;
 import de.keksuccino.fancymenu.util.rendering.scissor.ScissorShape;
@@ -184,6 +185,11 @@ public class MixinGuiRenderer {
         double d3 = ((double)screenRectangle.width() * precise);
         double d4 = ((double)screenRectangle.height() * precise);
         original.call(renderPass, (int)d1, (int)d2, Math.max(0, (int)d3), Math.max(0, (int)d4));
+    }
+
+    @Inject(method = "close", at = @At("TAIL"))
+    private void after_close_FancyMenu(CallbackInfo info) {
+        JsonModelGuiDraw.close();
     }
 
     @Unique

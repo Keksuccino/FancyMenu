@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization.element.elements.jsonmodel;
 import com.mojang.blaze3d.platform.Lighting;
 import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.platform.NativeImage;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
@@ -16,7 +15,6 @@ import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
-import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.LightTexture;
@@ -122,8 +120,6 @@ public class JsonModelElement extends AbstractElement {
     private final ModelBuildAttemptTracker modelBuildAttempts = new ModelBuildAttemptTracker();
     private final ModelCacheLifecycle<JsonModelCache> modelCache = new ModelCacheLifecycle<>();
     private final int[] shownArea = new int[4];
-    /** X, Y, width and height of what the container of the model shows of it, in pixels of the render target with Y counted from the bottom. */
-    private final int[] targetScissor = new int[4];
 
     public JsonModelElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -139,32 +135,12 @@ public class JsonModelElement extends AbstractElement {
     }
 
     /**
-     * The model renders straight to the screen with a pose of its own, past the pose of the GUI. A container that scales
+     * The model gets drawn with a pose of its own, past the pose of the GUI. A container that scales
      * its content gives the element the scaled box instead, and the model is as big as its box.
      */
     @Override
     public boolean supportsPoseScaling() {
         return false;
-    }
-
-    /**
-     * Works out {@link #targetScissor} from what the container of the model shows of it. The box gets cut to the render target,
-     * because a scissor that reaches out of its target or that is empty gets refused with an exception.
-     *
-     * @return If anything of the model is in the render target.
-     */
-    private boolean updateTargetScissor(int targetWidth, int targetHeight) {
-        double guiScale = WindowHandler.getGuiScale();
-        int left = Math.max(0, (int) Math.round(this.shownArea[0] * guiScale));
-        int top = Math.max(0, (int) Math.round(this.shownArea[1] * guiScale));
-        int right = Math.min(targetWidth, (int) Math.round(this.shownArea[2] * guiScale));
-        int bottom = Math.min(targetHeight, (int) Math.round(this.shownArea[3] * guiScale));
-        if ((right <= left) || (bottom <= top)) return false;
-        this.targetScissor[0] = left;
-        this.targetScissor[1] = targetHeight - bottom;
-        this.targetScissor[2] = right - left;
-        this.targetScissor[3] = bottom - top;
-        return true;
     }
 
     @Override
@@ -174,9 +150,8 @@ public class JsonModelElement extends AbstractElement {
             return;
         }
 
-        // The model also renders past everything that cuts GUI elements, so what a container shows of it has to be cut here
-        boolean cutByContainer = this.getParentContainer() != null;
-        if (cutByContainer && (!this.getShownScreenArea(this.shownArea) || !this.updateTargetScissor(Minecraft.getInstance().getMainRenderTarget().width, Minecraft.getInstance().getMainRenderTarget().height))) return;
+        // A model its container shows nothing of needs no work
+        if ((this.getParentContainer() != null) && !this.getShownScreenArea(this.shownArea)) return;
 
         this.ensureModelCache();
 
@@ -200,7 +175,6 @@ public class JsonModelElement extends AbstractElement {
         float centerY = this.getAbsoluteY() + (height / 2.0F);
 
         PoseStack pose = new PoseStack();
-        pose.pushPose();
         pose.translate(centerX, centerY, 200.0F);
         pose.translate(this.modelOffsetX.getFloat(), this.modelOffsetY.getFloat(), this.modelOffsetZ.getFloat());
         pose.scale(scale, scale, scale);
@@ -217,8 +191,6 @@ public class JsonModelElement extends AbstractElement {
 
         pose.translate(-0.5F, -0.5F, -0.5F);
 
-        this.applyLightSettings();
-
         DrawableColor lightColor = this.lightHue.getDrawable();
         float r = 1.0F;
         float g = 1.0F;
@@ -232,32 +204,36 @@ public class JsonModelElement extends AbstractElement {
             a = (color.getAlpha() / 255.0F) * this.opacity;
         }
 
-        GlStateManager._enableBlend();
-        GlStateManager._enableDepthTest();
-        GlStateManager._disableCull();
-
         RenderType renderType = this.renderTranslucent.getBoolean()
                 ? RenderTypes.entityTranslucent(cache.renderTexture())
                 : RenderTypes.entityCutoutNoCull(cache.renderTexture());
+        QuadCollection quads = cache.model().quads();
+        float red = r;
+        float green = g;
+        float blue = b;
+        float alpha = a;
+        JsonModelGuiDraw.submit(graphics, this.getAbsoluteX(), this.getAbsoluteY(), width, height, () -> this.drawModel(pose, renderType, quads, red, green, blue, alpha));
 
+        RenderingUtils.resetShaderColor(graphics);
+
+    }
+
+    /**
+     * Draws the model to the main render target. Gets called while the GUI draws, see {@link JsonModelGuiDraw}.
+     */
+    private void drawModel(@NotNull PoseStack pose, @NotNull RenderType renderType, @NotNull QuadCollection quads, float red, float green, float blue, float alpha) {
+        this.applyLightSettings();
+        GlStateManager._enableBlend();
+        GlStateManager._enableDepthTest();
+        GlStateManager._disableCull();
         MultiBufferSource.BufferSource buffer = Minecraft.getInstance().renderBuffers().bufferSource();
         VertexConsumer consumer = buffer.getBuffer(renderType);
-        renderModelQuads(cache.model().quads(), pose, consumer, r, g, b, a);
-        // Render types take the scissor they draw with from here when they get prepared
-        if (cutByContainer) RenderSystem.enableScissorForRenderTypeDraws(this.targetScissor[0], this.targetScissor[1], this.targetScissor[2], this.targetScissor[3]);
-        try {
-            buffer.endBatch();
-        } finally {
-            if (cutByContainer) RenderSystem.disableScissorForRenderTypeDraws();
-        }
-
+        renderModelQuads(quads, pose, consumer, red, green, blue, alpha);
+        buffer.endBatch();
         GlStateManager._enableCull();
         GlStateManager._disableDepthTest();
         GlStateManager._disableBlend();
-
         Minecraft.getInstance().gameRenderer.getLighting().setupFor(Lighting.Entry.ITEMS_3D);
-        RenderingUtils.resetShaderColor(graphics);
-        pose.popPose();
     }
 
     private void applyLightSettings() {
