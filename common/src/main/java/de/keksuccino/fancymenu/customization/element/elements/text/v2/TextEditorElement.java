@@ -184,8 +184,8 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
-        if (!this.editor.children().contains(this.element.scrollArea)) {
-            ((IMixinScreen)this.editor).getChildrenFancyMenu().add(this.element.scrollArea);
+        if (!this.editor.children().contains(this.element.getScrollAreaInput())) {
+            ((IMixinScreen)this.editor).getChildrenFancyMenu().add(this.element.getScrollAreaInput());
         }
 
         super.render(graphics, mouseX, mouseY, partial);
