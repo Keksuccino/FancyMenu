@@ -7,17 +7,21 @@ import de.keksuccino.fancymenu.util.rendering.RenderRotationUtil;
 import de.keksuccino.fancymenu.util.rendering.RenderScaleUtil;
 import de.keksuccino.fancymenu.util.rendering.RenderTranslationUtil;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.scissor.ScissorShape;
+import de.keksuccino.fancymenu.util.rendering.scissor.ScissorShapes;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.LayoutEditorWidgetRenderContext;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.renderer.state.gui.GuiRenderState;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipPositioner;
 import net.minecraft.resources.Identifier;
 import org.joml.Matrix3x2fStack;
 import org.jspecify.annotations.Nullable;
+import org.joml.Matrix3x2fc;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -69,6 +73,24 @@ public class MixinGuiGraphicsExtractor {
     )
     private int modify_innerTiledBlitColor_FancyMenu(int color) {
         return RenderingUtils.applyShaderColor(color);
+    }
+
+    /**
+     * @reason Vanilla transforms only two corners of the scissor, which gives a wrong rectangle under a rotated pose,
+     * and a rectangle with a negative size, which hides everything, under a flipping pose like a rotation by 180 degrees.<br>
+     * Under a rotated pose, the GPU scissor gets the bounds of the rotated rectangle, and the rotated rectangle itself becomes the shape of the scissor,
+     * which cuts everything rendered in it to the rotated rectangle (see {@link ScissorShapes}).
+     */
+    @WrapOperation(method = "enableScissor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/navigation/ScreenRectangle;transformAxisAligned(Lorg/joml/Matrix3x2fc;)Lnet/minecraft/client/gui/navigation/ScreenRectangle;"))
+    private ScreenRectangle wrap_transformAxisAligned_in_enableScissor_FancyMenu(ScreenRectangle rectangle, Matrix3x2fc pose, Operation<ScreenRectangle> original) {
+        ScissorShape shape = ScissorShapes.getTransformedShape(rectangle, pose);
+        if (shape == null) {
+            // The bounds of all four corners are right for every axis-aligned pose, flipping ones included
+            return ((pose.m00() < 0.0F) || (pose.m11() < 0.0F)) ? rectangle.transformMaxBounds(pose) : original.call(rectangle, pose);
+        }
+        ScreenRectangle bounds = rectangle.transformMaxBounds(pose);
+        ScissorShapes.setShape(bounds, shape);
+        return bounds;
     }
 
     @ModifyArgs(method = "containsPointInScissor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor$ScissorStack;containsPoint(II)Z"))

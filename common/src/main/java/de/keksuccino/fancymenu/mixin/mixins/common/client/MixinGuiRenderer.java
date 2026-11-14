@@ -3,6 +3,8 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.renderpearl.api.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.renderpearl.api.pipeline.RenderPipeline;
@@ -12,6 +14,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.panorama.FancyMenuPanoramaPictureInPictureRenderer;
 import de.keksuccino.fancymenu.customization.panorama.FancyMenuPanoramaRenderState;
 import de.keksuccino.fancymenu.util.rendering.GuiRenderPhaseAction;
+import de.keksuccino.fancymenu.util.rendering.scissor.ScissorShape;
+import de.keksuccino.fancymenu.util.rendering.scissor.ScissorShapes;
 import de.keksuccino.fancymenu.util.window.FancyWindow;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.navigation.ScreenRectangle;
@@ -100,6 +104,19 @@ public abstract class MixinGuiRenderer {
     @Inject(method = "addElementsToMeshes", at = @At("RETURN"))
     private void after_addElementsToMeshes_FancyMenu(GuiRenderState.TraverseRange range, CallbackInfo info) {
         this.activeTraverseRange_FancyMenu = GuiRenderState.TraverseRange.ALL;
+    }
+
+    /** @reason Cuts the vertices of render states in a shaped scissor (like the scissor of a rotated element) to the shape, see {@link ScissorShapes}. */
+    @WrapOperation(method = "addElementToMesh", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/state/gui/GuiElementRenderState;buildVertices(Lcom/mojang/blaze3d/vertex/VertexConsumer;)V"))
+    private void wrap_buildVertices_in_addElementToMesh_FancyMenu(GuiElementRenderState elementState, VertexConsumer consumer, Operation<Void> original) {
+        ScissorShape shape = ScissorShapes.getShape(elementState.scissorArea());
+        if ((shape == null) || !(consumer instanceof BufferBuilder builder)) {
+            original.call(elementState, consumer);
+            return;
+        }
+        int firstVertex = ((IMixinBufferBuilder)builder).get_vertices_FancyMenu();
+        original.call(elementState, consumer);
+        ScissorShapes.clipAddedVertices(builder, firstVertex, shape);
     }
 
     @Inject(method = "addElementToMesh", at = @At("HEAD"), cancellable = true)
