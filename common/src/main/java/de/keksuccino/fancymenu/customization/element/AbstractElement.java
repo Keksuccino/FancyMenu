@@ -3,7 +3,6 @@ package de.keksuccino.fancymenu.customization.element;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.math.Axis;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
@@ -18,6 +17,7 @@ import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.properties.PropertyHolder;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.RenderRotationUtil;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.RotatedRectangleHitbox;
 import de.keksuccino.fancymenu.util.rendering.text.ComponentParser;
@@ -278,18 +278,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 			float centerX = this.getAbsoluteX() + (this.getAbsoluteWidth() / 2.0F);
 			float centerY = this.getAbsoluteY() + (this.getAbsoluteHeight() / 2.0F);
 
-			// Translate to center
-			graphics.pose().translate(centerX, centerY);
-
-			// Matrix3x2fStack only supports 2D GUI transforms. X/Y tilt is skipped here.
-
-			// Apply rotation (around Z axis)
-			if (hasRotation) {
-				graphics.pose().rotate((float)Math.toRadians(rotDegrees));
-			}
-
-			// Translate back
-			graphics.pose().translate(-centerX, -centerY);
+			// Apply tilting first, then rotation (around Z axis), both around the center
+			RenderRotationUtil.rotateAndTilt(graphics.pose(), centerX, centerY, hasRotation ? rotDegrees : 0.0F, hasTilt ? verticalTilt : 0.0F, hasTilt ? horizontalTilt : 0.0F);
 
 		}
 

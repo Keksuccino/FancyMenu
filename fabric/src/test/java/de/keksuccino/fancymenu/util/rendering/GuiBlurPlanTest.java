@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering;
 
+import org.joml.Matrix3x2f;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -86,6 +87,25 @@ class GuiBlurPlanTest {
         float halfExtent = 120.0F * cos * 0.5F;
         assertTrue(region.x() <= 150.0F - halfExtent && region.x() + region.width() >= 150.0F + halfExtent);
         assertTrue(region.y() <= 1000.0F - 110.0F - halfExtent && region.y() + region.height() >= 1000.0F - 110.0F + halfExtent);
+    }
+
+    @Test
+    void tiltedCompositeRegionCoversTheMaskWithoutGrowingPastIt() {
+        GuiBlurPlan.Region region = new GuiBlurPlan.Region();
+        // A 200x20 box around (500, 500), rotated and tilted like an element
+        Matrix3x2f pose = new Matrix3x2f();
+        RenderRotationUtil.rotateAndTilt(pose, 500.0F, 500.0F, 315.0F, -60.0F, 30.0F);
+        RenderRotationUtil.Rotation2D mask = GuiPoseTransformUtil.resolve(pose).rotation();
+
+        assertTrue(GuiBlurPlan.resolveCompositeRegion(region, 400.0F, 490.0F, 200.0F, 20.0F, mask.m00(), mask.m01(), mask.m10(), mask.m11(), 1.0D, 1000, 1000));
+
+        float extentX = (Math.abs(pose.m00()) * 100.0F) + (Math.abs(pose.m10()) * 10.0F);
+        float extentY = (Math.abs(pose.m01()) * 100.0F) + (Math.abs(pose.m11()) * 10.0F);
+        assertTrue(region.x() <= 500.0F - extentX && region.x() + region.width() >= 500.0F + extentX);
+        assertTrue(region.y() <= 500.0F - extentY && region.y() + region.height() >= 500.0F + extentY);
+        // The region joins the untransformed box with the mask on the screen, plus the antialiasing pixels around both
+        assertTrue(region.width() <= (2.0F * Math.max(100.0F, extentX)) + 4.0F);
+        assertTrue(region.height() <= (2.0F * Math.max(10.0F, extentY)) + 4.0F);
     }
 
     @Test
