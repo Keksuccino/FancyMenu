@@ -21,11 +21,7 @@ public class ScrollAreaElementBuilder extends ElementBuilder<ScrollAreaElement, 
     static {
         EventHandler.INSTANCE.registerListenersOf(KEYBOARD);
         EventHandler.INSTANCE.registerListenersOf(SIDEWAYS_WHEEL);
-        // Every release of the mouse comes in here, also the ones a screen keeps to itself, so areas always find out that the mouse let go of their content
-        MouseUtil.addReleaseListener((button, mouseX, mouseY) -> {
-            if (button == MouseUtil.MouseButton.LEFT) ScrollAreaScrolling.onLeftMouseReleasedAnywhere();
-        });
-        // The same goes for presses, which something in an area can take before the area hears of them
+        // Every press of a mouse button comes in here, also the ones something in an area takes before the area hears of them
         MouseUtil.addClickListener((button, mouseX, mouseY) -> ScrollAreaScrolling.onMousePressedAnywhere());
     }
 
