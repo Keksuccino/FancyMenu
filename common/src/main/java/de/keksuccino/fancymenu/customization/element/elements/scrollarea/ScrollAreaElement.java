@@ -21,6 +21,7 @@ import de.keksuccino.fancymenu.customization.listener.listeners.OnScrollAreaEven
 import de.keksuccino.fancymenu.customization.element.style.PixelScrollGrabber;
 import de.keksuccino.fancymenu.customization.element.style.ScrollBarGrabberStyle;
 import de.keksuccino.fancymenu.customization.element.style.ScrollBarTrackBackground;
+import de.keksuccino.fancymenu.util.MouseUtil;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderFrameCounter;
@@ -561,6 +562,13 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
     protected int getPointerY() {
         Minecraft minecraft = Minecraft.getInstance();
         return (int) Math.floor(minecraft.mouseHandler.ypos() * minecraft.getWindow().getGuiScaledHeight() / minecraft.getWindow().getScreenHeight());
+    }
+
+    /**
+     * Returns if the left mouse button is held right now, no matter what took its press.
+     */
+    protected boolean isPointerPressed() {
+        return MouseUtil.isLeftMouseDown();
     }
 
     /**

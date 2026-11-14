@@ -666,8 +666,8 @@ class ScrollAreaElementTest {
         area.nextFrame();
         assertEquals(30.0, area.getScroller().y().getPosition());
 
-        // Some screens never hand the release on, so it gets counted where all of them come in
-        ScrollAreaScrolling.onLeftMouseReleasedAnywhere();
+        // Some screens never hand the release on, so the area looks at the button itself
+        area.pointerPressed = false;
         area.setMouse(150, 40);
         area.nextFrame();
         assertFalse(area.getScrolling().isDragging());
@@ -1081,6 +1081,7 @@ class ScrollAreaElementTest {
         private int height = 100;
         private boolean shiftDown = false;
         private double wheelStepSize = 1.0D;
+        private boolean pointerPressed = true;
         private boolean inEditor = false;
         private long nanoTime = 1_000_000_000L;
         private GuiEventListener focused;
@@ -1179,6 +1180,11 @@ class ScrollAreaElementTest {
         @Override
         protected int getPointerY() {
             return this.frameMouseY;
+        }
+
+        @Override
+        protected boolean isPointerPressed() {
+            return this.pointerPressed;
         }
 
         @Override
