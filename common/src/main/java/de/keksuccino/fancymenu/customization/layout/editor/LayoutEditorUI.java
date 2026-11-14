@@ -178,7 +178,6 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                 .setIcon(MaterialIcons.CONTENT_COPY);
 
         editMenu.addClickableEntry("paste_copied_elements", Component.translatable("fancymenu.editor.edit.paste"), (menu, entry) -> {
-                    editor.history.saveSnapshot();
                     editor.pasteElementsFromClipboard();
                 }).addIsActiveSupplier((menu, entry) -> !LayoutEditorScreen.COPIED_ELEMENTS_CLIPBOARD.isEmpty())
                 .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.paste"))
@@ -780,7 +779,6 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
         menu.addSeparatorEntry("separator_after_manage_actions");
 
         menu.addClickableEntry("paste_elements", Component.translatable("fancymenu.editor.edit.paste"), (menu1, entry) -> {
-                    editor.history.saveSnapshot();
                     editor.pasteElementsFromClipboard();
                 }).addIsActiveSupplier((menu1, entry) -> !LayoutEditorScreen.COPIED_ELEMENTS_CLIPBOARD.isEmpty())
                 .setIcon(MaterialIcons.CONTENT_PASTE);
