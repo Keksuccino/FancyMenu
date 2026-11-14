@@ -613,6 +613,120 @@ class ScrollAreaElementTest {
     }
 
     @Test
+    void theAreaGetsToldWhenItsContentMovesAndWhenItGetsToAnEnd() {
+        TestArea area = area(child("first", 0, 0, 50, 40));
+        area.contentHeight.set(400);
+        area.smoothScrolling.set(false);
+        area.nextFrame();
+        area.nextFrame();
+        // Where the content is when the area shows up is nothing it got scrolled to
+        assertEquals("0 0 0", area.events());
+
+        area.scrollByWheel(0, -1);
+        area.nextFrame();
+        assertEquals("1 0 0", area.events());
+        area.nextFrame();
+        assertEquals("1 0 0", area.events());
+
+        area.getScrolling().scrollToEdge(true, false);
+        area.nextFrame();
+        assertEquals("2 0 1", area.events());
+        // Staying at the end is not getting there again
+        area.nextFrame();
+        area.scrollByWheel(0, -1);
+        area.nextFrame();
+        assertEquals("2 0 1", area.events());
+
+        area.getScrolling().scrollToEdge(false, false);
+        area.nextFrame();
+        assertEquals("3 1 1", area.events());
+        area.getScrolling().scrollToEdge(true, false);
+        area.nextFrame();
+        assertEquals("4 1 2", area.events());
+    }
+
+    @Test
+    void contentThatGlidesTellsTheAreaInEveryFrameItMoves() {
+        TestArea area = area(child("first", 0, 0, 50, 40));
+        area.contentHeight.set(400);
+        area.nextFrame();
+        area.nextFrame();
+        area.getScrolling().scrollToEdge(true, true);
+        area.nextFrame();
+        area.nextFrame();
+        area.nextFrame();
+        assertEquals(3, area.scrolledEvents);
+        assertEquals(0, area.reachedEndEvents);
+        // The content is all but there long before it stops moving, and only tells the area once it stopped
+        while (area.getScroller().y().isScrolling()) {
+            assertEquals(0, area.reachedEndEvents);
+            area.nextFrame();
+        }
+        assertEquals(300.0, area.getScroller().y().getPosition());
+        assertEquals(1, area.reachedEndEvents);
+        int moved = area.scrolledEvents;
+        area.passTime(1.0);
+        assertEquals(moved, area.scrolledEvents);
+    }
+
+    @Test
+    void anAreaThatShowsUpSomewhereTellsNothingAboutGettingThere() {
+        TestArea atEnd = area(child("first", 0, 0, 50, 40));
+        atEnd.startPosition.set(ScrollStartPosition.END);
+        atEnd.smoothScrolling.set(false);
+        // The content only gets something to scroll after a few frames, like content that still loads
+        atEnd.nextFrame();
+        atEnd.nextFrame();
+        atEnd.contentHeight.set(400);
+        atEnd.nextFrame();
+        atEnd.nextFrame();
+        assertEquals(300.0, atEnd.getScroller().y().getPosition());
+        assertEquals("0 0 0", atEnd.events());
+
+        // Opening the screen again puts the content back to where it starts, which tells nothing either
+        atEnd.getScrolling().scrollToEdge(false, false);
+        atEnd.nextFrame();
+        assertEquals("1 1 0", atEnd.events());
+        atEnd.resetScrollOnOpen.set(true);
+        atEnd.onOpenScreen();
+        atEnd.nextFrame();
+        atEnd.nextFrame();
+        assertEquals(300.0, atEnd.getScroller().y().getPosition());
+        assertEquals("1 1 0", atEnd.events());
+
+        // An area with nothing to scroll never gets anywhere
+        TestArea still = area(child("first", 0, 0, 50, 40));
+        still.nextFrame();
+        still.nextFrame();
+        still.getScrolling().scrollToEdge(true, false);
+        still.nextFrame();
+        assertEquals("0 0 0", still.events());
+    }
+
+    @Test
+    void scrollingToAChildPutsItAtTheStartOfWhatTheAreaShows() {
+        TestChild far = child("far", 0, 400, 50, 40);
+        TestChild last = child("last", 0, 950, 50, 40);
+        TestArea area = area(child("near", 0, 10, 50, 40), far, last);
+        area.contentHeight.set(1000);
+        area.smoothScrolling.set(false);
+        area.nextFrame();
+
+        area.getScrolling().scrollToChild(far, false);
+        double position = area.getScroller().y().getPosition();
+        assertTrue((position >= 390) && (position <= 400), "position " + position);
+        area.nextFrame();
+        // A child that is at the start already leaves the content where it is
+        assertFalse(area.getScrolling().scrollToPosition(false, position, false));
+        area.getScrolling().scrollToChild(far, false);
+        assertEquals(position, area.getScroller().y().getPosition());
+
+        // The content can't be scrolled further than to its end
+        area.getScrolling().scrollToChild(last, false);
+        assertEquals(900.0, area.getScroller().y().getPosition());
+    }
+
+    @Test
     void aChildThatMustNotReactToTheMouseGetsToldItIsNextToIt() {
         TestChild child = child("child", 0, 0, 50, 40);
         TestArea area = area(child);
@@ -720,6 +834,9 @@ class ScrollAreaElementTest {
         private boolean inEditor = false;
         private long nanoTime = 1_000_000_000L;
         private GuiEventListener focused;
+        private int scrolledEvents = 0;
+        private int reachedStartEvents = 0;
+        private int reachedEndEvents = 0;
 
         private TestArea() {
             super(BUILDER);
@@ -731,6 +848,26 @@ class ScrollAreaElementTest {
             // 50 milliseconds per frame
             this.nanoTime += 50_000_000L;
             this.updateFrame();
+        }
+
+        /** How often the content moved, got to its start and got to its end. */
+        private String events() {
+            return this.scrolledEvents + " " + this.reachedStartEvents + " " + this.reachedEndEvents;
+        }
+
+        @Override
+        protected void onContentScrolled() {
+            this.scrolledEvents++;
+        }
+
+        @Override
+        protected void onContentReachedStart() {
+            this.reachedStartEvents++;
+        }
+
+        @Override
+        protected void onContentReachedEnd() {
+            this.reachedEndEvents++;
         }
 
         private void passTime(double seconds) {

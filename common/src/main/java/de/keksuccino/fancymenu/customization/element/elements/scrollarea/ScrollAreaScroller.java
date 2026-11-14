@@ -62,13 +62,6 @@ public final class ScrollAreaScroller {
     }
 
     /**
-     * Returns if any axis is still on its way to its target.
-     */
-    public boolean isScrolling() {
-        return this.x.isScrolling() || this.y.isScrolling();
-    }
-
-    /**
      * One axis of a {@link ScrollAreaScroller}.
      */
     public final class Axis {
@@ -117,6 +110,9 @@ public final class ScrollAreaScroller {
             return this.position >= (this.max - END_TOLERANCE);
         }
 
+        /**
+         * Returns if the content is still on its way to where it got scrolled to.
+         */
         public boolean isScrolling() {
             return this.position != this.target;
         }

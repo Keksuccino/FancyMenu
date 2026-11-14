@@ -12,6 +12,9 @@ import de.keksuccino.fancymenu.customization.element.elements.scrollarea.layout.
 import de.keksuccino.fancymenu.customization.element.elements.scrollarea.layout.ScrollAreaLayoutMode;
 import de.keksuccino.fancymenu.customization.element.elements.scrollarea.layout.ScrollAreaResizeBehavior;
 import de.keksuccino.fancymenu.customization.element.style.ElementPanelBackground;
+import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
+import de.keksuccino.fancymenu.customization.listener.listeners.OnScrollAreaEventListener;
+import de.keksuccino.fancymenu.customization.placeholder.placeholders.gui.ScrollAreaValuePlaceholder;
 import de.keksuccino.fancymenu.customization.element.style.PixelScrollGrabber;
 import de.keksuccino.fancymenu.customization.element.style.ScrollBarGrabberStyle;
 import de.keksuccino.fancymenu.customization.element.style.ScrollBarTrackBackground;
@@ -504,6 +507,33 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
 
     protected boolean isShiftDown() {
         return Minecraft.getInstance().hasShiftDown();
+    }
+
+    /**
+     * Gets called in every frame the content is somewhere else than in the frame before.
+     */
+    protected void onContentScrolled() {
+        if (!this.isInEditor()) this.notifyListener(Listeners.ON_SCROLL_AREA_SCROLLED);
+    }
+
+    /**
+     * Gets called when the content got to its start, in the direction the area mainly scrolls in.
+     */
+    protected void onContentReachedStart() {
+        if (!this.isInEditor()) this.notifyListener(Listeners.ON_SCROLL_AREA_REACHED_START);
+    }
+
+    /**
+     * Gets called when the content got to its end, in the direction the area mainly scrolls in.
+     */
+    protected void onContentReachedEnd() {
+        if (!this.isInEditor()) this.notifyListener(Listeners.ON_SCROLL_AREA_REACHED_END);
+    }
+
+    private void notifyListener(@NotNull OnScrollAreaEventListener listener) {
+        if (!listener.hasInstancesListening()) return;
+        ScrollAreaScroller scroller = this.scrolling.getScroller();
+        listener.onScrollAreaEvent(this.getInstanceIdentifier(), (int) Math.round(scroller.x().getPosition()), (int) Math.round(scroller.y().getPosition()), (float) ScrollAreaValuePlaceholder.toPercent(this.scrolling.getMainAxis()));
     }
 
     /**

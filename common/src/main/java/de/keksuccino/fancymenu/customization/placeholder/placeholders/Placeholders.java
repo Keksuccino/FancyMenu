@@ -50,6 +50,9 @@ public class Placeholders {
     public static final ClicksPerSecondPlaceholder CLICKS_PER_SECOND = new ClicksPerSecondPlaceholder();
     public static final TextInputFieldValuePlaceholder TEXT_INPUT_FIELD_VALUE = new TextInputFieldValuePlaceholder();
     public static final TextElementContentHeightPlaceholder TEXT_ELEMENT_CONTENT_HEIGHT = new TextElementContentHeightPlaceholder();
+    public static final ScrollAreaValuePlaceholder SCROLL_AREA_SCROLL_POSITION = ScrollAreaValuePlaceholder.scrollPosition();
+    public static final ScrollAreaValuePlaceholder SCROLL_AREA_SCROLL_PERCENT = ScrollAreaValuePlaceholder.scrollPercent();
+    public static final ScrollAreaValuePlaceholder SCROLL_AREA_CONTENT_SIZE = ScrollAreaValuePlaceholder.contentSize();
     public static final GuiScalePlaceholder GUI_SCALE = new GuiScalePlaceholder();
     public static final VanillaButtonLabelPlaceholder VANILLA_BUTTON_LABEL = new VanillaButtonLabelPlaceholder();
     public static final PlayerNamePlaceholder PLAYER_NAME = new PlayerNamePlaceholder();
@@ -245,6 +248,9 @@ public class Placeholders {
         PlaceholderRegistry.register(CLICKS_PER_SECOND);
         PlaceholderRegistry.register(TEXT_INPUT_FIELD_VALUE);
         PlaceholderRegistry.register(TEXT_ELEMENT_CONTENT_HEIGHT);
+        PlaceholderRegistry.register(SCROLL_AREA_SCROLL_POSITION);
+        PlaceholderRegistry.register(SCROLL_AREA_SCROLL_PERCENT);
+        PlaceholderRegistry.register(SCROLL_AREA_CONTENT_SIZE);
         PlaceholderRegistry.register(GUI_SCALE);
         PlaceholderRegistry.register(VANILLA_BUTTON_LABEL);
 

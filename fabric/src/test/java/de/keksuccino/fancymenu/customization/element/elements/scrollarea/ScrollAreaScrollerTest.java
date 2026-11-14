@@ -45,7 +45,8 @@ class ScrollAreaScrollerTest {
 
         assertEquals(0, scroller.y().getPosition());
         assertEquals(300, scroller.y().getTarget());
-        assertTrue(scroller.isScrolling());
+        assertTrue(scroller.y().isScrolling());
+        assertFalse(scroller.x().isScrolling());
 
         scroller.update(0.016);
         double afterOneFrame = scroller.y().getPosition();
@@ -56,7 +57,7 @@ class ScrollAreaScrollerTest {
 
         for (int i = 0; i < 200; i++) scroller.update(0.016);
         assertEquals(300, scroller.y().getPosition());
-        assertFalse(scroller.isScrolling());
+        assertFalse(scroller.y().isScrolling());
     }
 
     @Test

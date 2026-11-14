@@ -42,6 +42,12 @@ public final class ScrollAreaScrolling {
     private int pressY = 0;
     private int lastDragX = 0;
     private int lastDragY = 0;
+    /** If the content is where it starts, so everything that moves it from now on is scrolling. */
+    private boolean settled = false;
+    private double notifiedX = 0.0D;
+    private double notifiedY = 0.0D;
+    private boolean notifiedAtStart = false;
+    private boolean notifiedAtEnd = false;
 
     public ScrollAreaScrolling(@NotNull ScrollAreaElement area) {
         this.area = area;
@@ -85,6 +91,7 @@ public final class ScrollAreaScrolling {
         this.scroller.x().restore(0.0D);
         this.scroller.y().restore(0.0D);
         this.needsStartPosition = true;
+        this.settled = false;
     }
 
     /**
@@ -120,7 +127,33 @@ public final class ScrollAreaScrolling {
 
         this.scroller.update(deltaSeconds);
         this.remember();
+        this.notifyArea();
 
+    }
+
+    /**
+     * Tells the area when its content moved since the last frame, and when it got to its start or its end.<br>
+     * Where the content is when the area shows up is where it starts and not somewhere it got scrolled to, so that tells nothing.
+     */
+    private void notifyArea() {
+        double scrollX = this.scroller.x().getPosition();
+        double scrollY = this.scroller.y().getPosition();
+        ScrollAreaScroller.Axis main = this.getMainAxis();
+        // Content that can't be scrolled is at its start and its end at once, which is nothing it ever gets to.
+        // Content that still glides the last bit of its way has not arrived yet.
+        boolean arrived = main.canScroll() && !main.isScrolling();
+        boolean atStart = arrived && main.isAtStart();
+        boolean atEnd = arrived && main.isAtEnd();
+        if (this.settled) {
+            if ((scrollX != this.notifiedX) || (scrollY != this.notifiedY)) this.area.onContentScrolled();
+            if (atStart && !this.notifiedAtStart) this.area.onContentReachedStart();
+            if (atEnd && !this.notifiedAtEnd) this.area.onContentReachedEnd();
+        }
+        this.settled = !this.needsStartPosition;
+        this.notifiedX = scrollX;
+        this.notifiedY = scrollY;
+        this.notifiedAtStart = atStart;
+        this.notifiedAtEnd = atEnd;
     }
 
     private void remember() {
@@ -205,6 +238,28 @@ public final class ScrollAreaScrolling {
         boolean scrolled = axis.scrollTo(end ? axis.getMax() : 0.0D, animate);
         if (scrolled) this.autoScroll.onUserScrolled();
         return scrolled;
+    }
+
+    /**
+     * Scrolls the content to a position on one axis, in screen pixels from its start.
+     *
+     * @return If the content was not there already, or on its way there.
+     */
+    public boolean scrollToPosition(boolean horizontal, double position, boolean animate) {
+        boolean scrolled = this.scroller.axis(horizontal).scrollTo(position, animate);
+        if (scrolled) this.autoScroll.onUserScrolled();
+        return scrolled;
+    }
+
+    /**
+     * Scrolls the content so that the child starts where what the area shows starts, or as close to that as the content can be scrolled.
+     */
+    public void scrollToChild(@NotNull AbstractElement child, boolean animate) {
+        ScrollAreaGeometry geometry = this.area.getGeometry();
+        ScrollDirection direction = this.area.getScrollDirection();
+        // The child is where the content is right now, not where the content is on its way to
+        if (direction.scrollsX()) this.scrollToPosition(true, this.scroller.x().getPosition() + (child.getAbsoluteX() - geometry.getViewportX() - INTO_VIEW_MARGIN), animate);
+        if (direction.scrollsY()) this.scrollToPosition(false, this.scroller.y().getPosition() + (child.getAbsoluteY() - geometry.getViewportY() - INTO_VIEW_MARGIN), animate);
     }
 
     /**
