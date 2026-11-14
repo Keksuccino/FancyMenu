@@ -118,12 +118,12 @@ class ElementSpaceInputListenerTest {
         ComponentPath path = listener.nextFocusPath(new FocusNavigationEvent.TabNavigation(true));
         assertNotNull(path);
         // The path ends at the listener, which is what the screen has in its list of children
-        assertSame(listener, path.leafComponent());
+        assertSame(listener, path.component());
         path.applyFocus(true);
         assertTrue(widget.isFocused());
         ComponentPath current = listener.getCurrentFocusPath();
         assertNotNull(current);
-        assertSame(listener, current.leafComponent());
+        assertSame(listener, current.component());
         // A widget that has the focus does not take it again
         assertNull(listener.nextFocusPath(new FocusNavigationEvent.TabNavigation(true)));
     }
