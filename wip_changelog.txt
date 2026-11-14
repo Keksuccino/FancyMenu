@@ -1,6 +1,40 @@
 
 CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 
+- Completely reworked the Markdown renderer used for both the Text element and the Tooltip element
+  - The Markdown renderer now has much better performance, especially with long texts, tables and scrolling
+  - Added three Markdown looks to choose from: Pixel (new pixel art style), Classic (the previous look) and Neutral (follows the UI theme)
+    - New Text and Tooltip elements now use the Pixel look by default, while existing layouts keep their old look
+  - Reworked the Markdown config menu of Text and Tooltip elements with around 150 style options for text, headlines, lists, links, code, quotes, callouts, tables, images and separators
+  - Added changelog-style list markers: `+` for added, `-` for removed, `~` for changed and `*` for highlighted things
+  - Added numbered lists
+  - Added callouts (`> [!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]`, `[!CAUTION]`)
+  - Added strikethrough text support (`~~text~~`)
+  - Added bold text via double underscores (`__text__`)
+  - Added a fixed-width pixel font for code and an option to set a custom code font
+  - Added captions for images, taken from their alternative text
+  - Markdown text in languages without spaces between words, like Chinese and Japanese, now wraps correctly
+  - Code blocks now accept a language name behind their opening marker
+  - Link targets can now contain pairs of round brackets
+- Added a background to the Text element, with a built-in pixel art panel, custom texture support, nine-slice settings, padding and an option to render behind the scroll bars
+- Added a pixel art scroll grabber style to the Text element
+- Scroll grabbers of the Text element now fade with the opacity of the element
+- Fixed Markdown quotes ending after their first line instead of continuing over all lines with the quote prefix
+- Fixed escaped characters in Markdown being unescaped twice
+- Fixed single underscores inside of words being read as italic markers in Markdown
+- Fixed Markdown formatting markers, table syntax and `&` formatting codes being applied inside of code and plain text
+- Fixed unclosed Markdown markers like `~~` and `` ` `` disappearing from the text
+- Fixed Markdown links breaking when their label contains brackets
+- Fixed a crash when a Markdown table cell contains the table marker text
+- Fixed Markdown lines wrapping in the middle of a word when its formatting changes inside of it
+- Fixed scaled Markdown text overflowing its code blocks and list items
+- Fixed code block backgrounds and quote lines disappearing in Markdown when their first or last line is scrolled out of view
+- Fixed several alignment and wrapping issues with right-aligned Markdown quotes
+- Fixed Markdown text colors losing their own transparency when the opacity of the text gets applied
+- Fixed inline code backgrounds being misplaced in Markdown list items and table cells
+- Fixed link underlines in Markdown extending past the last letter where a link wraps to the next line
+- Fixed Markdown images keeping their placeholder size after their texture finished loading
+- Fixed the text of the welcome window not fitting into the window in some languages and GUI scales
 - Fixed multi-line text pasted into the text editor ending up on a single line when it was copied from apps like Microsoft Word or Excel
 - Fixed tabs disappearing from text pasted into the text editor, so indentation and tab-aligned columns now stay intact
 - Fixed pasting into the text editor putting all lines into a single line in Minecraft 26.3
