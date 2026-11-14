@@ -120,6 +120,27 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
         return this.grabberHovered;
     }
 
+    /**
+     * Returns the X position of the track: the strip at the end of the scroll area that the grabber moves in.
+     */
+    public float getTrackX() {
+        if (this.direction == ScrollBarDirection.HORIZONTAL) return this.scrollAreaStartX;
+        return this.scrollAreaEndX - this.grabberWidth - (this.grabberEdgeInset * 2.0F);
+    }
+
+    public float getTrackY() {
+        if (this.direction == ScrollBarDirection.VERTICAL) return this.scrollAreaStartY;
+        return this.scrollAreaEndY - this.grabberHeight - (this.grabberEdgeInset * 2.0F);
+    }
+
+    public float getTrackWidth() {
+        return this.scrollAreaEndX - this.getTrackX();
+    }
+
+    public float getTrackHeight() {
+        return this.scrollAreaEndY - this.getTrackY();
+    }
+
     public boolean isRoundedGrabberEnabled() {
         return this.roundedGrabber;
     }

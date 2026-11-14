@@ -7,6 +7,9 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ElementSpaceInputListener;
 import de.keksuccino.fancymenu.customization.element.elements.MarkdownSettings;
+import de.keksuccino.fancymenu.customization.element.style.ElementPanelBackground;
+import de.keksuccino.fancymenu.customization.element.style.ScrollBarGrabberStyle;
+import de.keksuccino.fancymenu.customization.element.style.ScrollBarTrackBackground;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
@@ -27,7 +30,6 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -65,7 +67,8 @@ public class TextElement extends AbstractElement {
     public final Property.ColorProperty scrollGrabberColorHexHover = putProperty(Property.hexColorProperty("grabber_color_hover", null, true, "fancymenu.elements.text.scroll_grabber_color.hover"));
     public final MarkdownSettings markdownSettings = new MarkdownSettings(this, this.markdownRenderer);
     public final Property<ScrollGrabberDesign> scrollGrabberDesign = putProperty(ScrollGrabberDesign.buildProperty());
-    public final TextBackground background = new TextBackground(this);
+    public final ElementPanelBackground background = new ElementPanelBackground(this, "fancymenu.elements.text.background", () -> SCROLL_BAR_SPACE);
+    public final ScrollBarTrackBackground scrollBarBackground = new ScrollBarTrackBackground(this);
 
     protected List<String> lastLines;
     protected IText lastIText;
@@ -187,7 +190,12 @@ public class TextElement extends AbstractElement {
                 int width = this.getAbsoluteWidth();
                 int height = this.getAbsoluteHeight();
 
-                this.background.render(graphics, x, y, width, height, this.scrollArea, this.opacity);
+                boolean verticalScrollBarShown = this.scrollArea.isVerticalScrollBarVisible();
+                boolean horizontalScrollBarShown = this.scrollArea.isHorizontalScrollBarVisible();
+                this.background.render(graphics, x, y, width, height, verticalScrollBarShown, horizontalScrollBarShown, this.opacity);
+                // The tracks lie next to the text area, so they can be drawn before the scroll area draws the text and the grabbers
+                if (verticalScrollBarShown) this.scrollBarBackground.render(graphics, this.scrollArea.verticalScrollBar, true, this.opacity);
+                if (horizontalScrollBarShown) this.scrollBarBackground.render(graphics, this.scrollArea.horizontalScrollBar, false, this.opacity);
 
                 this.scrollArea.setX(x, true);
                 this.scrollArea.setY(y, true);
@@ -274,43 +282,18 @@ public class TextElement extends AbstractElement {
         ScrollBar vertical = this.scrollArea.verticalScrollBar;
         ScrollBar horizontal = this.scrollArea.horizontalScrollBar;
 
-        vertical.grabberOpacity = this.opacity;
-        horizontal.grabberOpacity = this.opacity;
-
         this.customGrabberColorNormal = (this.scrollGrabberColorHexNormal.get() != null) ? this.scrollGrabberColorHexNormal.getDrawable() : null;
         this.customGrabberColorHover = (this.scrollGrabberColorHexHover.get() != null) ? this.scrollGrabberColorHexHover.getDrawable() : null;
         Supplier<DrawableColor> normalColor = (this.customGrabberColorNormal != null) ? this.customGrabberColorNormalSupplier : this.themeGrabberColorNormal;
         Supplier<DrawableColor> hoverColor = (this.customGrabberColorHover != null) ? this.customGrabberColorHoverSupplier : this.themeGrabberColorHover;
-        vertical.idleBarColor = normalColor;
-        horizontal.idleBarColor = normalColor;
-        vertical.hoverBarColor = hoverColor;
-        horizontal.hoverBarColor = hoverColor;
 
         boolean customized = (this.customGrabberColorNormal != null) || (this.customGrabberColorHover != null)
                 || (this.verticalScrollGrabberTextureNormal != null) || (this.verticalScrollGrabberTextureHover != null)
                 || (this.horizontalScrollGrabberTextureNormal != null) || (this.horizontalScrollGrabberTextureHover != null);
         ScrollGrabberDesign design = this.scrollGrabberDesign.tryGetNonNullElse(ScrollGrabberDesign.THEME_BAR).unlessCustomized(customized);
-        vertical.idleBarTexture = getGrabberTexture(this.verticalScrollGrabberTextureNormal, vertical.idleBarTexture, design.getTexture(true, false));
-        vertical.hoverBarTexture = getGrabberTexture(this.verticalScrollGrabberTextureHover, vertical.hoverBarTexture, design.getTexture(true, true));
-        horizontal.idleBarTexture = getGrabberTexture(this.horizontalScrollGrabberTextureNormal, horizontal.idleBarTexture, design.getTexture(false, false));
-        horizontal.hoverBarTexture = getGrabberTexture(this.horizontalScrollGrabberTextureHover, horizontal.hoverBarTexture, design.getTexture(false, true));
+        ScrollBarGrabberStyle.apply(vertical, this.verticalScrollGrabberTextureNormal, this.verticalScrollGrabberTextureHover, normalColor, hoverColor, design.getTexture(true, false), design.getTexture(true, true), this.opacity);
+        ScrollBarGrabberStyle.apply(horizontal, this.horizontalScrollGrabberTextureNormal, this.horizontalScrollGrabberTextureHover, normalColor, hoverColor, design.getTexture(false, false), design.getTexture(false, true), this.opacity);
 
-    }
-
-    /**
-     * Returns the texture a grabber gets drawn with, or NULL if it gets drawn in a color.
-     *
-     * @param custom The texture of the user for the grabber, if there is one.
-     * @param current The texture the grabber has right now. A texture of the user that is still loading keeps it in place,
-     *                unless it is a texture of a design, which the user did not ask for anymore.
-     * @param designTexture The texture the design of the element has for the grabber.
-     */
-    @Nullable
-    protected static Identifier getGrabberTexture(@Nullable ResourceSupplier<ITexture> custom, @Nullable Identifier current, @Nullable Identifier designTexture) {
-        if (custom == null) return designTexture;
-        ITexture texture = custom.get();
-        if (texture != null) return texture.getResourceLocation();
-        return ScrollGrabberDesign.isDesignTexture(current) ? null : current;
     }
 
     /**
