@@ -1243,9 +1243,28 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
     /** Geometry only; kept separate from isMouseOver so elements do not intercept vanilla GUI events. */
     public boolean containsMousePosition(double mouseX, double mouseY) {
+        return this.getElementHitbox().contains(mouseX, mouseY, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
+    }
+
+    /**
+     * Maps a screen point to the X coordinate it has in the untransformed space of this element, which is the space the element renders its content in.
+     * Without rotation or tilt, it returns the given X.
+     */
+    public double untransformMouseX(double mouseX, double mouseY) {
+        return this.getElementHitbox().untransformX(mouseX, mouseY, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
+    }
+
+    /** The Y counterpart of {@link #untransformMouseX(double, double)}. */
+    public double untransformMouseY(double mouseX, double mouseY) {
+        return this.getElementHitbox().untransformY(mouseX, mouseY, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
+    }
+
+    /** Returns the hitbox of this element, updated to its current rotation and tilt. */
+    @NotNull
+    private RotatedRectangleHitbox getElementHitbox() {
         if (this.elementHitbox == null) this.elementHitbox = new RotatedRectangleHitbox();
         this.elementHitbox.setRotation(this.getRotationDegrees(), this.getVerticalTiltDegrees(), this.getHorizontalTiltDegrees());
-        return this.elementHitbox.contains(mouseX, mouseY, this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
+        return this.elementHitbox;
     }
 
 	/**
