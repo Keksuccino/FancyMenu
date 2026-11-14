@@ -51,6 +51,7 @@ class RotatedRectangleHitboxTest {
                 boolean expected = (Math.abs(localX) < 50) && (Math.abs(localY) < 10);
                 assertEquals(expected, hitbox.contains(60 + yRotationX, 30 + xRotationY, 10, 20, 100, 20));
                 assertEquals(60 + localX, hitbox.untransformX(60 + yRotationX, 30 + xRotationY, 10, 20, 100, 20), 1.0E-9);
+                assertEquals(30 + localY, hitbox.untransformY(60 + yRotationX, 30 + xRotationY, 10, 20, 100, 20), 1.0E-9);
             }
         }
     }
@@ -91,6 +92,7 @@ class RotatedRectangleHitboxTest {
         RotatedRectangleHitbox hitbox = new RotatedRectangleHitbox();
         for (double mouseX : new double[]{-100.5, 10, 60.25, 110, 250.75}) {
             assertEquals(mouseX, hitbox.untransformX(mouseX, 70, 10, 20, 100, 20));
+            assertEquals(mouseX, hitbox.untransformY(70, mouseX, 10, 20, 100, 20));
         }
     }
 
@@ -105,6 +107,7 @@ class RotatedRectangleHitboxTest {
                     double mouseX = 60 + localX * Math.cos(radians) - localY * Math.sin(radians);
                     double mouseY = 30 + localX * Math.sin(radians) + localY * Math.cos(radians);
                     assertEquals(60 + localX, hitbox.untransformX(mouseX, mouseY, 10, 20, 100, 20), 1.0E-9);
+                    assertEquals(30 + localY, hitbox.untransformY(mouseX, mouseY, 10, 20, 100, 20), 1.0E-9);
                 }
             }
         }
@@ -118,6 +121,8 @@ class RotatedRectangleHitboxTest {
         assertEquals(-70, hitbox.untransformX(60, -100, 10, 20, 100, 20), 1.0E-9);
         assertFalse(hitbox.contains(60, 160, 10, 20, 100, 20));
         assertEquals(190, hitbox.untransformX(60, 160, 10, 20, 100, 20), 1.0E-9);
+        assertEquals(30, hitbox.untransformY(60, 160, 10, 20, 100, 20), 1.0E-9);
+        assertEquals(-20, hitbox.untransformY(110, 70, 10, 20, 100, 20), 1.0E-9);
     }
 
     @Test
@@ -128,6 +133,9 @@ class RotatedRectangleHitboxTest {
         assertEquals(200, hitbox.untransformX(160, 70, 110, 20, 100, 20), 1.0E-9);
         assertEquals(150, hitbox.untransformX(130, 70, 110, 20, 40, 60), 1.0E-9);
         assertEquals(95.5, hitbox.untransformX(60.5, 70.5, 10, 25, 101, 21), 1.0E-9);
+        assertEquals(30, hitbox.untransformY(60, 70, 10, 20, 100, 20), 1.0E-9);
+        assertEquals(30, hitbox.untransformY(160, 70, 110, 20, 100, 20), 1.0E-9);
+        assertEquals(40, hitbox.untransformY(140, 70, 110, 20, 40, 60), 1.0E-9);
     }
 
     @Test
@@ -139,6 +147,7 @@ class RotatedRectangleHitboxTest {
             hitbox.setRotation(angles[0], angles[1], angles[2]);
             assertFalse(hitbox.isTransformed());
             assertEquals(60, hitbox.untransformX(60, 70, 10, 20, 100, 20));
+            assertEquals(70, hitbox.untransformY(60, 70, 10, 20, 100, 20));
         }
     }
 
