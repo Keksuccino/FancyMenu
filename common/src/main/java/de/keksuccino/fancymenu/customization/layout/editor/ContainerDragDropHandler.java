@@ -28,9 +28,12 @@ public class ContainerDragDropHandler {
     /** How long the mark of an element that can't go into a container stays after the last frame it got set in. Longer than a frame, so it never flickers. */
     private static final long NOT_ALLOWED_MARK_MS = 150L;
 
+    private static final int DROP_MARKER_THICKNESS = 2;
+
     @NotNull
     protected final LayoutEditorScreen editor;
     protected final List<AbstractEditorElement<?, ?>> refused = new ArrayList<>();
+    protected final int[] dropMarker = new int[4];
 
     public ContainerDragDropHandler(@NotNull LayoutEditorScreen editor) {
         this.editor = editor;
@@ -67,16 +70,27 @@ public class ContainerDragDropHandler {
             TooltipHandler.INSTANCE.addRenderTickTooltip(UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.containers.drop.not_allowed")), () -> true);
         }
 
+        int color = UIBase.getUITheme().layout_editor_element_border_color_selected.getColorInt();
         if (takesAny) {
             int x = container.getDropAreaX();
             int y = container.getDropAreaY();
             int width = container.getDropAreaWidth();
             int height = container.getDropAreaHeight();
-            int color = UIBase.getUITheme().layout_editor_element_border_color_selected.getColorInt();
             graphics.fill(x, y, x + width, y + height, RenderingUtils.replaceAlphaInColor(color, DROP_TARGET_FILL_ALPHA));
             UIBase.renderBorder(graphics, x, y, x + width, y + height, 1, UIBase.getUITheme().layout_editor_element_border_color_selected.getColor(), true, true, true, true);
-            RenderingUtils.resetShaderColor(graphics);
         }
+
+        // A container that arranges its children shows where the dragged ones would go, also when they are its children already and only change their place
+        if (this.refused.size() < dragged.size()) {
+            int dropIndex = container.getDropIndex(mouseX, mouseY, dragged);
+            if ((dropIndex >= 0) && container.getDropMarker(dropIndex, dragged, this.dropMarker)) {
+                int x = this.dropMarker[0];
+                int y = this.dropMarker[1];
+                graphics.fill(x, y, x + Math.max(DROP_MARKER_THICKNESS, this.dropMarker[2]), y + Math.max(DROP_MARKER_THICKNESS, this.dropMarker[3]), color);
+            }
+        }
+
+        RenderingUtils.resetShaderColor(graphics);
 
     }
 
@@ -92,25 +106,58 @@ public class ContainerDragDropHandler {
         AbstractEditorElement<?, ?> target = this.findDropTarget(dragged, mouseX, mouseY);
         ElementContainer targetContainer = (target != null) ? (ElementContainer) target.element : null;
 
-        List<AbstractEditorElement<?, ?>> moved = new ArrayList<>();
-        for (AbstractEditorElement<?, ?> e : dragged) {
-            if (this.movesWithDraggedContainer(e, dragged)) continue;
-            if (e.element.getParentContainer() == targetContainer) continue;
+        // The place among the children has to be asked for before anything moves, while the dragged elements still are where the user sees them
+        int dropIndex = (target != null) ? ((ContainerEditorElement) target).getDropIndex(mouseX, mouseY, dragged) : -1;
+
+        // Everything that ends up in what the elements got dropped on, in the order it has now: what comes in new, and what only gets a new place in it
+        List<AbstractEditorElement<?, ?>> placed = new ArrayList<>();
+        boolean changed = false;
+        for (AbstractEditorElement<?, ?> e : this.editor.normalEditorElements) {
+            if (!dragged.contains(e) || this.movesWithDraggedContainer(e, dragged)) continue;
+            if (e.element.getParentContainer() == targetContainer) {
+                if (dropIndex >= 0) placed.add(e);
+                continue;
+            }
             if ((target != null) && !((ContainerEditorElement) target).canHoldChild(e)) continue;
             e.moveToContainer(targetContainer);
-            moved.add(e);
+            placed.add(e);
+            changed = true;
         }
-        if (moved.isEmpty()) return;
+        if (placed.isEmpty()) return;
 
-        // What got dropped lies on top of what it got dropped on, and the hierarchy puts it behind its new container from there
-        this.editor.normalEditorElements.removeAll(moved);
-        this.editor.normalEditorElements.addAll(moved);
+        List<AbstractEditorElement<?, ?>> elements = this.editor.normalEditorElements;
+        AbstractEditorElement<?, ?> next = (dropIndex >= 0) ? this.findChildAtDropIndex((ContainerEditorElement) target, dropIndex, dragged) : null;
+        int oldFirstIndex = elements.indexOf(placed.get(0));
+        elements.removeAll(placed);
+        if (next != null) {
+            // In front of the child that comes after them in the container
+            elements.addAll(elements.indexOf(next), placed);
+        } else {
+            // What got dropped lies on top of what it got dropped on, and the hierarchy puts it behind its new container from there
+            elements.addAll(placed);
+        }
+        if (!changed && (elements.indexOf(placed.get(0)) == oldFirstIndex)) return;
         this.editor.updateContainerHierarchy();
         this.editor.updateLayerGroupElementOrder();
         for (AbstractLayoutEditorWidget widget : this.editor.layoutEditorWidgets) {
             widget.refresh();
         }
 
+    }
+
+    /**
+     * Returns the child of the container that has the given place among its children when the dragged ones are not counted,
+     * or NULL if the place is behind the last child.
+     */
+    @Nullable
+    protected AbstractEditorElement<?, ?> findChildAtDropIndex(@NotNull ContainerEditorElement container, int dropIndex, @NotNull List<AbstractEditorElement<?, ?>> dragged) {
+        int index = 0;
+        for (AbstractEditorElement<?, ?> child : container.getChildEditorElements()) {
+            if (dragged.contains(child)) continue;
+            if (index == dropIndex) return child;
+            index++;
+        }
+        return null;
     }
 
     /**

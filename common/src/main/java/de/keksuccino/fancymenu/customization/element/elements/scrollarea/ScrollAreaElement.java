@@ -6,6 +6,14 @@ import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.container.ElementContainer;
 import de.keksuccino.fancymenu.customization.element.container.ElementContainerLink;
+import de.keksuccino.fancymenu.customization.element.elements.scrollarea.layout.ScrollAreaAlignment;
+import de.keksuccino.fancymenu.customization.element.elements.scrollarea.layout.ScrollAreaArranger;
+import de.keksuccino.fancymenu.customization.element.elements.scrollarea.layout.ScrollAreaLayoutMode;
+import de.keksuccino.fancymenu.customization.element.elements.scrollarea.layout.ScrollAreaResizeBehavior;
+import de.keksuccino.fancymenu.customization.element.style.ElementPanelBackground;
+import de.keksuccino.fancymenu.customization.element.style.PixelScrollGrabber;
+import de.keksuccino.fancymenu.customization.element.style.ScrollBarGrabberStyle;
+import de.keksuccino.fancymenu.customization.element.style.ScrollBarTrackBackground;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
 import de.keksuccino.fancymenu.util.rendering.RenderFrameCounter;
@@ -34,6 +42,8 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
     private static final double WHEEL_STEP = 30.0D;
     /** The longest time one frame moves the content for. Longer frames, like the first one after the game hung, would make the content jump. */
     private static final double MAX_FRAME_SECONDS = 0.1D;
+    /** The smallest a proportional content gets. Smaller than this, nothing in it can be told apart anymore, and a scale of zero would break all math. */
+    private static final float MIN_PROPORTIONAL_SCALE = 0.05F;
     private static final String MEMORY_SCROLL_X = "scroll_area_scroll_x";
     private static final String MEMORY_SCROLL_Y = "scroll_area_scroll_y";
 
@@ -42,11 +52,34 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
     public final Property.IntegerProperty contentWidth = putProperty(Property.integerProperty("content_width", 0, "fancymenu.elements.scroll_area.content_width", Property.NumericInputBehavior.<Integer>builder().freeInput().build()));
     public final Property.IntegerProperty contentHeight = putProperty(Property.integerProperty("content_height", 0, "fancymenu.elements.scroll_area.content_height", Property.NumericInputBehavior.<Integer>builder().freeInput().build()));
     public final Property.FloatProperty scrollSpeed = putProperty(Property.floatProperty("scroll_speed", 1.0F, "fancymenu.elements.scroll_area.scroll_speed", Property.NumericInputBehavior.<Float>builder().rangeInput(0.1F, 5.0F).build()));
+    public final Property<ScrollAreaLayoutMode> layoutMode = putProperty(ScrollAreaLayoutMode.buildProperty());
+    public final Property<ScrollAreaAlignment> childAlignment = putProperty(ScrollAreaAlignment.buildProperty());
+    public final Property.IntegerProperty contentPadding = putProperty(Property.integerProperty("content_padding", 4, "fancymenu.elements.scroll_area.content_padding", Property.NumericInputBehavior.<Integer>builder().rangeInput(0, 64).build()));
+    public final Property.IntegerProperty childSpacing = putProperty(Property.integerProperty("child_spacing", 4, "fancymenu.elements.scroll_area.child_spacing", Property.NumericInputBehavior.<Integer>builder().rangeInput(0, 64).build()));
+    public final Property.IntegerProperty gridLines = putProperty(Property.integerProperty("grid_lines", 3, "fancymenu.elements.scroll_area.grid_lines", Property.NumericInputBehavior.<Integer>builder().rangeInput(1, 12).build()));
+    public final Property.BooleanProperty gridAutoFit = putProperty(Property.booleanProperty("grid_auto_fit", false, "fancymenu.elements.scroll_area.grid_auto_fit"));
+    public final Property.IntegerProperty gridMinCellSize = putProperty(Property.integerProperty("grid_min_cell_size", 60, "fancymenu.elements.scroll_area.grid_min_cell_size", Property.NumericInputBehavior.<Integer>builder().rangeInput(10, 400).step(5).build()));
+    public final Property<ScrollAreaResizeBehavior> resizeBehavior = putProperty(ScrollAreaResizeBehavior.buildProperty());
+    /**
+     * The size the area had when its proportional content got made, in the units of the content. The content is as big on the screen
+     * as the area is in relation to this, so at this size one unit of the content is one screen pixel.
+     */
+    public final Property.IntegerProperty proportionalReferenceWidth = putProperty(Property.integerProperty("proportional_reference_width", 0, "fancymenu.elements.scroll_area.proportional_reference"));
+    public final Property.IntegerProperty proportionalReferenceHeight = putProperty(Property.integerProperty("proportional_reference_height", 0, "fancymenu.elements.scroll_area.proportional_reference"));
+    public final Property<ScrollBarVisibility> scrollBarVisibility = putProperty(ScrollBarVisibility.buildProperty());
+    /** How thick the scroll bars are. Their grabbers are twice as long as they are thick, like the pixel art handle they are made for. */
+    public final Property.IntegerProperty scrollBarThickness = putProperty(Property.integerProperty("scroll_bar_thickness", PixelScrollGrabber.THICKNESS, "fancymenu.elements.scroll_area.scroll_bars.thickness", Property.NumericInputBehavior.<Integer>builder().rangeInput(4, 32).build()));
+    public final Property.BooleanProperty verticalScrollBarLeft = putProperty(Property.booleanProperty("vertical_scroll_bar_left", false, "fancymenu.elements.scroll_area.scroll_bars.vertical_left"));
+    public final Property.BooleanProperty horizontalScrollBarTop = putProperty(Property.booleanProperty("horizontal_scroll_bar_top", false, "fancymenu.elements.scroll_area.scroll_bars.horizontal_top"));
+    public final ScrollBarGrabberStyle grabberStyle = new ScrollBarGrabberStyle(this);
+    public final ScrollBarTrackBackground scrollBarBackground = new ScrollBarTrackBackground(this);
+    public final ElementPanelBackground background = new ElementPanelBackground(this, "fancymenu.elements.scroll_area.background", this::getScrollBarSpace);
 
     protected final ScrollAreaScroller scroller = new ScrollAreaScroller();
     protected final ScrollAreaGeometry geometry = new ScrollAreaGeometry();
-    protected final ScrollAreaBars bars = new ScrollAreaBars(this.scroller);
+    protected final ScrollAreaBars bars = new ScrollAreaBars(this);
     protected final ScrollAreaInput input = new ScrollAreaInput(this);
+    protected final ScrollAreaChildLayout childLayout = new ScrollAreaChildLayout();
     protected final List<AbstractElement> children = new ArrayList<>();
     @NotNull
     protected ChildRenderer childRenderer = AbstractElement::renderInternal;
@@ -57,6 +90,8 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
     /** True while the geometry gets worked out. Children that ask for it in that time get the geometry of the frame before. */
     protected boolean updatingFrame = false;
     protected long lastFrameNanos = 0L;
+    /** The time the frame before this one took, which is how long everything that moves on its own moves for in this one. */
+    protected double frameDeltaSeconds = 0.0D;
     /** The frame the area last rendered its children in. Input comes in between frames, so the area still shows them in the frame after it. */
     protected long lastChildrenShownFrame = -2L;
     protected float childOpacity = 1.0F;
@@ -68,6 +103,8 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
         // The area cuts its children to a rectangle on the screen, which a rotated or tilted area would not be
         this.setSupportsRotation(false);
         this.setSupportsTilting(false);
+        // Arranged children run in one direction, so an area that arranges them goes on to the next direction when it gets set to both
+        this.scrollDirection.setValueSetProcessor(direction -> ((direction == ScrollDirection.BOTH) && !this.getLayoutMode().supportsBothDirections()) ? ScrollDirection.VERTICAL : direction);
     }
 
     @Override
@@ -85,15 +122,20 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
     @Override
     public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
-        this.updateFrame();
-
+        // Has to be known before the frame gets worked out: children only take part in an arrangement while the area shows them
+        this.lastChildrenShownFrame = RenderFrameCounter.getFrame();
         // The opacity includes the one of the containers this area is in while it renders, which is the only time children ask for it
         this.childOpacity = this.opacity;
-        this.lastChildrenShownFrame = RenderFrameCounter.getFrame();
+
+        this.updateFrame();
 
         ScrollAreaGeometry geometry = this.geometry;
         int viewportX = geometry.getViewportX();
         int viewportY = geometry.getViewportY();
+
+        // The bars have to know where they are before the background gets drawn, which reaches behind the ones that show
+        this.bars.update(geometry, this.opacity, this.frameDeltaSeconds);
+        this.background.render(graphics, viewportX, viewportY, geometry.getViewportWidth(), geometry.getViewportHeight(), this.bars.isVerticalShown(), this.bars.isHorizontalShown(), this.isVerticalScrollBarAtStart(), this.isHorizontalScrollBarAtStart(), this.opacity);
         boolean mouseOverContent = geometry.isInViewport(mouseX, mouseY) && this.isScreenPointVisibleInContainer(mouseX, mouseY);
         int childMouseX = mouseOverContent ? mouseX : MOUSE_OUTSIDE;
         int childMouseY = mouseOverContent ? mouseY : MOUSE_OUTSIDE;
@@ -115,7 +157,6 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
             graphics.disableScissor();
         }
 
-        this.bars.update(geometry, this.scroller, this.opacity);
         this.bars.render(graphics, mouseX, mouseY, partial);
 
     }
@@ -166,19 +207,37 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
         try {
 
             ElementContainer parent = this.getParentContainer();
-            float scale = (parent != null) ? parent.getContentScale() : 1.0F;
-            this.geometry.setViewport(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), scale);
-
+            float parentScale = (parent != null) ? parent.getContentScale() : 1.0F;
+            ScrollAreaLayoutMode mode = this.getLayoutMode();
             ScrollDirection direction = this.getScrollDirection();
-            this.geometry.setContentSize(this.contentWidth.getInteger(), this.contentHeight.getInteger(), direction.scrollsX(), direction.scrollsY());
+            int width = this.getAbsoluteWidth();
+            int height = this.getAbsoluteHeight();
+            float scale = parentScale;
+            if (mode == ScrollAreaLayoutMode.PROPORTIONAL) scale *= this.calculateProportionalScale(width / parentScale, height / parentScale, direction);
+            this.geometry.setViewport(this.getAbsoluteX(), this.getAbsoluteY(), width, height, scale);
+
+            int wantedContentWidth = this.contentWidth.getInteger();
+            int wantedContentHeight = this.contentHeight.getInteger();
+            ScrollAreaArranger arranger = mode.getArranger();
+            if (arranger != null) {
+                this.childLayout.arrange(this, arranger, this.children, this.geometry);
+                if (!mode.hasUserContentSize()) {
+                    wantedContentWidth = this.childLayout.getContentWidth();
+                    wantedContentHeight = this.childLayout.getContentHeight();
+                }
+            } else {
+                this.childLayout.clear(this.children);
+            }
+            this.geometry.setContentSize(wantedContentWidth, wantedContentHeight, direction.scrollsX(), direction.scrollsY());
 
             long now = System.nanoTime();
             double deltaSeconds = (this.lastFrameNanos == 0L) ? 0.0D : Math.min(MAX_FRAME_SECONDS, (now - this.lastFrameNanos) / 1.0E9D);
             this.lastFrameNanos = now;
+            this.frameDeltaSeconds = deltaSeconds;
 
             this.scroller.setRange(this.geometry.getMaxScrollX(), this.geometry.getMaxScrollY());
             this.scroller.update(deltaSeconds);
-            this.geometry.setScroll(this.scroller.x().getPosition(), this.scroller.y().getPosition(), WindowHandler.getGuiScale());
+            this.geometry.setScroll(this.scroller.x().getPosition(), this.scroller.y().getPosition(), this.getGuiScale());
 
             this.rememberScroll();
             this.frameReady = true;
@@ -224,7 +283,7 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
             double delta = (deltaX != 0.0D) ? deltaX : deltaY;
             return (delta != 0.0D) && this.scroller.x().scrollBy(-delta * step);
         }
-        if (Minecraft.getInstance().hasShiftDown() && (deltaX == 0.0D)) {
+        if (this.isShiftDown() && (deltaX == 0.0D)) {
             return (deltaY != 0.0D) && this.scroller.x().scrollBy(-deltaY * step);
         }
         boolean scrolledX = (deltaX != 0.0D) && this.scroller.x().scrollBy(-deltaX * step);
@@ -232,16 +291,86 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
         return scrolledX || scrolledY;
     }
 
+    /**
+     * Returns the direction the area scrolls in. An area that arranges its children does it in one direction and only scrolls in that one,
+     * so it scrolls up and down when it is set to both.
+     */
     @NotNull
     public ScrollDirection getScrollDirection() {
-        return this.scrollDirection.tryGetNonNullElse(ScrollDirection.VERTICAL);
+        ScrollDirection direction = this.scrollDirection.tryGetNonNullElse(ScrollDirection.VERTICAL);
+        return ((direction == ScrollDirection.BOTH) && !this.getLayoutMode().supportsBothDirections()) ? ScrollDirection.VERTICAL : direction;
+    }
+
+    public boolean isVerticalScrollBarAtStart() {
+        return this.verticalScrollBarLeft.getBoolean();
+    }
+
+    public boolean isHorizontalScrollBarAtStart() {
+        return this.horizontalScrollBarTop.getBoolean();
+    }
+
+    /**
+     * Returns the space a scroll bar of the area has its grabber in, next to the area.
+     */
+    public int getScrollBarSpace() {
+        return this.bars.getBarSpace();
+    }
+
+    @NotNull
+    public ScrollAreaLayoutMode getLayoutMode() {
+        return this.layoutMode.tryGetNonNullElse(ScrollAreaLayoutMode.ANCHORS);
+    }
+
+    @NotNull
+    public ScrollAreaAlignment getChildAlignment() {
+        return this.childAlignment.tryGetNonNullElse(ScrollAreaAlignment.START);
     }
 
     /**
      * Returns if the content is as big as the user sets it. If not, the area works its size out from its children.
      */
     public boolean hasUserContentSize() {
-        return true;
+        return this.getLayoutMode().hasUserContentSize();
+    }
+
+    /**
+     * Returns if the child has a place in what the area arranges. Children that do not show leave no gap behind.
+     */
+    public boolean takesPartInArrangement(@NotNull AbstractElement child) {
+        if (isEditor()) return !child.layerHiddenInEditor;
+        return child.shouldRender();
+    }
+
+    /**
+     * Returns how many screen pixels one unit of a proportional content is, for an area of the given size.<br>
+     * The content follows the size the area has across the direction it scrolls in, which keeps its proportions:
+     * its width for an area that scrolls up and down, its height for one that scrolls sideways, and the smaller of both for one that does both.
+     */
+    protected float calculateProportionalScale(float width, float height, @NotNull ScrollDirection direction) {
+        int referenceWidth = this.proportionalReferenceWidth.getInteger();
+        int referenceHeight = this.proportionalReferenceHeight.getInteger();
+        float scaleX = (referenceWidth > 0) ? (width / referenceWidth) : 1.0F;
+        float scaleY = (referenceHeight > 0) ? (height / referenceHeight) : 1.0F;
+        float scale = (direction == ScrollDirection.VERTICAL) ? scaleX : ((direction == ScrollDirection.HORIZONTAL) ? scaleY : Math.min(scaleX, scaleY));
+        return Math.max(MIN_PROPORTIONAL_SCALE, scale);
+    }
+
+    /**
+     * Makes the size the area has right now the size its proportional content is made for, at which the content shows unscaled.
+     */
+    public void captureProportionalReference() {
+        ElementContainer parent = this.getParentContainer();
+        float parentScale = (parent != null) ? parent.getContentScale() : 1.0F;
+        this.proportionalReferenceWidth.set(Math.max(1, Math.round(this.getAbsoluteWidth() / parentScale)));
+        this.proportionalReferenceHeight.set(Math.max(1, Math.round(this.getAbsoluteHeight() / parentScale)));
+    }
+
+    /**
+     * Works out the geometry of the area again right now, for changes that have to show before the next frame.
+     */
+    public void refreshFrame() {
+        this.childLayout.invalidate();
+        this.updateFrame();
     }
 
     /**
@@ -301,6 +430,17 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
      */
     public void setEmptyContentRenderer(@Nullable EmptyContentRenderer emptyContentRenderer) {
         this.emptyContentRenderer = emptyContentRenderer;
+    }
+
+    /**
+     * Returns how many pixels of the window one screen pixel is, which is the smallest step the content can move by and still show sharp.
+     */
+    protected double getGuiScale() {
+        return WindowHandler.getGuiScale();
+    }
+
+    protected boolean isShiftDown() {
+        return Minecraft.getInstance().hasShiftDown();
     }
 
     @NotNull
@@ -388,13 +528,19 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
 
     @Override
     public boolean scalesChildVisuals() {
+        if ((this.getLayoutMode() == ScrollAreaLayoutMode.PROPORTIONAL) && (this.resizeBehavior.tryGetNonNullElse(ScrollAreaResizeBehavior.SCALE) == ScrollAreaResizeBehavior.SCALE)) return true;
         ElementContainer parent = this.getParentContainer();
         return (parent != null) && parent.scalesChildVisuals();
     }
 
     @Override
     public boolean managesChildBoxes() {
-        return false;
+        return this.getLayoutMode().getArranger() != null;
+    }
+
+    @Override
+    public boolean arrangesChildren() {
+        return this.getLayoutMode().arrangesChildren();
     }
 
     @Override

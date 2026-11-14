@@ -27,6 +27,8 @@ public final class ElementContainerLink {
     /** Screen offset X and Y from the content, screen width and height, content width and height. */
     private final int[] managedBox = new int[6];
     private boolean hasManagedBox = false;
+    private int managedDragOffsetX = 0;
+    private int managedDragOffsetY = 0;
 
     public ElementContainerLink(@NotNull AbstractElement element, @NotNull String containerIdentifier) {
         this.element = element;
@@ -109,11 +111,21 @@ public final class ElementContainerLink {
     }
 
     public int getManagedScreenX(@NotNull ElementContainer container) {
-        return container.getContentScreenX() + this.managedBox[0];
+        return container.getContentScreenX() + this.managedBox[0] + this.managedDragOffsetX;
     }
 
     public int getManagedScreenY(@NotNull ElementContainer container) {
-        return container.getContentScreenY() + this.managedBox[1];
+        return container.getContentScreenY() + this.managedBox[1] + this.managedDragOffsetY;
+    }
+
+    /**
+     * Moves the element away from the box its container gave it, by the given distance on the screen.<br>
+     * The layout editor does this while the user drags a child of a container that arranges its children. Such a child has
+     * no place of its own to move to, so it follows the mouse like this until it gets dropped.
+     */
+    public void setManagedDragOffset(int screenOffsetX, int screenOffsetY) {
+        this.managedDragOffsetX = screenOffsetX;
+        this.managedDragOffsetY = screenOffsetY;
     }
 
     /**

@@ -103,6 +103,11 @@ final class ElementContainerTestElements {
         }
 
         @Override
+        public boolean arrangesChildren() {
+            return false;
+        }
+
+        @Override
         public boolean isScreenPointVisible(double screenX, double screenY) {
             return (screenX >= this.visibleX) && (screenX < ((long) this.visibleX + this.visibleWidth)) && (screenY >= this.visibleY) && (screenY < ((long) this.visibleY + this.visibleHeight));
         }

@@ -25,6 +25,7 @@ public class ScrollAreaElementBuilder extends ElementBuilder<ScrollAreaElement, 
         element.baseHeight = DEFAULT_HEIGHT;
         // A new area has something to scroll right away, which shows what it is for
         element.contentHeight.set(DEFAULT_HEIGHT * 2);
+        element.background.applyDefaultsOfNewElements();
         return element;
     }
 

@@ -93,6 +93,20 @@ public final class ScrollAreaGeometry {
         return this.scale;
     }
 
+    /**
+     * Returns how many units of the content the viewport shows on the X axis.
+     */
+    public int getViewportContentWidth() {
+        return this.toContentUnits(this.viewportWidth);
+    }
+
+    /**
+     * Returns how many units of the content the viewport shows on the Y axis.
+     */
+    public int getViewportContentHeight() {
+        return this.toContentUnits(this.viewportHeight);
+    }
+
     public int getContentWidth() {
         return this.contentWidth;
     }

@@ -6,6 +6,9 @@ import de.keksuccino.fancymenu.customization.element.container.ElementContainer;
 import de.keksuccino.fancymenu.customization.element.container.ElementContainerHierarchy;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetEditorElement;
+import de.keksuccino.fancymenu.customization.element.elements.scrollarea.layout.ScrollAreaLayoutMode;
+import de.keksuccino.fancymenu.customization.element.style.ElementStyleMenus;
+import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
@@ -17,14 +20,20 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
+import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
 public class ScrollAreaEditorElement extends AbstractEditorElement<ScrollAreaEditorElement, ScrollAreaElement> implements ContainerEditorElement {
 
+    private static final int DROP_MARKER_THICKNESS = 2;
+    private static final int DROP_MARKER_INSET = 2;
+
     /** The children of the area as what they are in the editor, by the element they wrap. */
     protected final Map<AbstractElement, AbstractEditorElement<?, ?>> childEditorElements = new IdentityHashMap<>();
+    /** The same children, in the order they render in. */
+    protected final List<AbstractEditorElement<?, ?>> orderedChildEditorElements = new ArrayList<>();
     protected final ScrollAreaEmptyGuide emptyGuide = new ScrollAreaEmptyGuide();
     protected final ScrollAreaContentEndGrabber contentWidthGrabber = new ScrollAreaContentEndGrabber(this, true);
     protected final ScrollAreaContentEndGrabber contentHeightGrabber = new ScrollAreaContentEndGrabber(this, false);
@@ -61,9 +70,172 @@ public class ScrollAreaEditorElement extends AbstractEditorElement<ScrollAreaEdi
     @Override
     public void setChildEditorElements(@NotNull List<AbstractEditorElement<?, ?>> children) {
         this.childEditorElements.clear();
+        this.orderedChildEditorElements.clear();
+        this.orderedChildEditorElements.addAll(children);
         for (AbstractEditorElement<?, ?> child : children) {
             this.childEditorElements.put(child.element, child);
         }
+    }
+
+    @Override
+    public @NotNull List<AbstractEditorElement<?, ?>> getChildEditorElements() {
+        return this.orderedChildEditorElements;
+    }
+
+    /**
+     * Arranged children read like text: along the line first, then line by line. Dropped elements go in front of the first child
+     * the mouse is in front of in that order. A stack is one line along the direction the area scrolls in.
+     */
+    @Override
+    public int getDropIndex(int mouseX, int mouseY, @NotNull List<AbstractEditorElement<?, ?>> dragged) {
+        if (!this.element.arrangesChildren()) return -1;
+        boolean horizontal = this.element.getScrollDirection() == ScrollDirection.HORIZONTAL;
+        boolean oneLine = this.element.getLayoutMode() == ScrollAreaLayoutMode.STACK;
+        int mouseMain = horizontal ? mouseX : mouseY;
+        int mouseCross = horizontal ? mouseY : mouseX;
+        int index = 0;
+        for (int i = 0; i < this.orderedChildEditorElements.size(); i++) {
+            AbstractEditorElement<?, ?> child = this.orderedChildEditorElements.get(i);
+            if (dragged.contains(child)) continue;
+            // Children that do not show have no place the mouse could be in front of
+            if (!child.element.layerHiddenInEditor) {
+                int mainStart = horizontal ? child.getX() : child.getY();
+                int mainSize = horizontal ? child.getWidth() : child.getHeight();
+                int crossStart = horizontal ? child.getY() : child.getX();
+                int crossSize = horizontal ? child.getHeight() : child.getWidth();
+                boolean mouseInFront = oneLine
+                        ? (mouseMain < (mainStart + (mainSize / 2)))
+                        : ((mouseMain < mainStart) || ((mouseMain < (mainStart + mainSize)) && (mouseCross < (crossStart + (crossSize / 2)))));
+                if (mouseInFront) return index;
+            }
+            index++;
+        }
+        return index;
+    }
+
+    @Override
+    public boolean getDropMarker(int dropIndex, @NotNull List<AbstractEditorElement<?, ?>> dragged, int @NotNull [] marker) {
+
+        // The line sits in front of the child at the place, or behind the last child that shows
+        AbstractEditorElement<?, ?> reference = null;
+        boolean behindReference = true;
+        int index = 0;
+        for (int i = 0; i < this.orderedChildEditorElements.size(); i++) {
+            AbstractEditorElement<?, ?> child = this.orderedChildEditorElements.get(i);
+            if (dragged.contains(child)) continue;
+            if (!child.element.layerHiddenInEditor) {
+                reference = child;
+                if (index >= dropIndex) {
+                    behindReference = false;
+                    break;
+                }
+            }
+            index++;
+        }
+        if (reference == null) return false;
+
+        ScrollAreaGeometry geometry = this.element.getGeometry();
+        boolean horizontal = this.element.getScrollDirection() == ScrollDirection.HORIZONTAL;
+        boolean oneLine = this.element.getLayoutMode() == ScrollAreaLayoutMode.STACK;
+        // Half of the room between two children, so the line sits in the middle of it
+        int gap = Math.round((this.element.childSpacing.getInteger() * geometry.getScale()) / 2.0F) + (DROP_MARKER_THICKNESS / 2);
+        // A stack gets a line across the whole area. Everything else gets one next to the child, where the dropped elements would go.
+        boolean lineRunsAcrossX = oneLine != horizontal;
+        if (lineRunsAcrossX) {
+            int y = behindReference ? (reference.getY() + reference.getHeight() + gap - DROP_MARKER_THICKNESS) : (reference.getY() - gap);
+            marker[0] = oneLine ? (geometry.getViewportX() + DROP_MARKER_INSET) : reference.getX();
+            marker[1] = y;
+            marker[2] = oneLine ? (geometry.getViewportWidth() - (DROP_MARKER_INSET * 2)) : reference.getWidth();
+            marker[3] = DROP_MARKER_THICKNESS;
+        } else {
+            int x = behindReference ? (reference.getX() + reference.getWidth() + gap - DROP_MARKER_THICKNESS) : (reference.getX() - gap);
+            marker[0] = x;
+            marker[1] = oneLine ? (geometry.getViewportY() + DROP_MARKER_INSET) : reference.getY();
+            marker[2] = DROP_MARKER_THICKNESS;
+            marker[3] = oneLine ? (geometry.getViewportHeight() - (DROP_MARKER_INSET * 2)) : reference.getHeight();
+        }
+        return true;
+
+    }
+
+    /**
+     * Changes how the area places its children, in a way that leaves the children where they are as far as the new mode allows it:<br>
+     * - A mode that leaves the place of children to the user puts every child where it was on the screen.<br>
+     * - A mode that arranges the children puts them in the order they were in on the screen.
+     */
+    public void changeLayoutMode(@NotNull ScrollAreaLayoutMode mode) {
+
+        ScrollAreaElement area = this.element;
+        ScrollAreaLayoutMode oldMode = area.getLayoutMode();
+        if (mode == oldMode) return;
+
+        int count = this.orderedChildEditorElements.size();
+        int[] screenBoxes = new int[count * 4];
+        for (int i = 0; i < count; i++) {
+            AbstractEditorElement<?, ?> child = this.orderedChildEditorElements.get(i);
+            screenBoxes[i * 4] = child.getX();
+            screenBoxes[(i * 4) + 1] = child.getY();
+            screenBoxes[(i * 4) + 2] = child.getWidth();
+            screenBoxes[(i * 4) + 3] = child.getHeight();
+        }
+        ScrollAreaGeometry geometry = area.getGeometry();
+        int oldContentWidth = geometry.getContentWidth();
+        int oldContentHeight = geometry.getContentHeight();
+
+        area.layoutMode.set(mode);
+        // Arranged content can turn into content of the user's size, which should hold everything it held before
+        if (mode.hasUserContentSize() && !oldMode.hasUserContentSize()) {
+            if (!ScrollAreaElement.isAdvancedSize(area.contentWidth)) area.contentWidth.clearManualInput().set(oldContentWidth);
+            if (!ScrollAreaElement.isAdvancedSize(area.contentHeight)) area.contentHeight.clearManualInput().set(oldContentHeight);
+        }
+        // A new proportional content starts at the size the area has, so nothing is scaled until the area changes its size
+        if (mode == ScrollAreaLayoutMode.PROPORTIONAL) area.captureProportionalReference();
+
+        if (mode.arrangesChildren()) {
+            if (!oldMode.arrangesChildren()) this.orderChildrenByPosition(screenBoxes);
+        } else {
+            // The boxes of the mode before are of no use anymore, and the new geometry is what the children get placed in
+            area.refreshFrame();
+            for (int i = 0; i < count; i++) {
+                AbstractEditorElement<?, ?> child = this.orderedChildEditorElements.get(i);
+                child.placeFreelyInContainer(screenBoxes[i * 4], screenBoxes[(i * 4) + 1], screenBoxes[(i * 4) + 2], screenBoxes[(i * 4) + 3]);
+            }
+        }
+
+        area.refreshFrame();
+        this.editor.updateContainerHierarchy();
+
+    }
+
+    /**
+     * Puts the children into the order they have on the screen: line by line along the direction the area does not scroll in,
+     * like text. This is the order an area that arranges its children shows them in, so they stay next to what they were next to.
+     *
+     * @param screenBoxes X, Y, width and height of every child, in the order of the children.
+     */
+    protected void orderChildrenByPosition(int @NotNull [] screenBoxes) {
+        boolean horizontal = this.element.getScrollDirection() == ScrollDirection.HORIZONTAL;
+        List<AbstractEditorElement<?, ?>> children = new ArrayList<>(this.orderedChildEditorElements);
+        Map<AbstractEditorElement<?, ?>, Integer> indexes = new IdentityHashMap<>();
+        for (int i = 0; i < children.size(); i++) {
+            indexes.put(children.get(i), i);
+        }
+        children.sort((first, second) -> {
+            int a = indexes.get(first) * 4;
+            int b = indexes.get(second) * 4;
+            int mainA = screenBoxes[a + (horizontal ? 0 : 1)];
+            int mainB = screenBoxes[b + (horizontal ? 0 : 1)];
+            int sizeA = screenBoxes[a + (horizontal ? 2 : 3)];
+            int sizeB = screenBoxes[b + (horizontal ? 2 : 3)];
+            // Children whose middle lies in the range of the other one are in the same line, where the other axis decides
+            boolean sameLine = ((mainA + (sizeA / 2)) >= mainB) && ((mainA + (sizeA / 2)) < (mainB + sizeB)) || ((mainB + (sizeB / 2)) >= mainA) && ((mainB + (sizeB / 2)) < (mainA + sizeA));
+            if (!sameLine) return Integer.compare(mainA, mainB);
+            return Integer.compare(screenBoxes[a + (horizontal ? 1 : 0)], screenBoxes[b + (horizontal ? 1 : 0)]);
+        });
+        // Only the order among the children counts. The hierarchy of the editor puts them behind the area in that order.
+        List<AbstractEditorElement<?, ?>> elements = this.editor.normalEditorElements;
+        elements.removeAll(children);
+        elements.addAll(children);
     }
 
     @Override
@@ -117,6 +289,8 @@ public class ScrollAreaEditorElement extends AbstractEditorElement<ScrollAreaEdi
 
         super.init();
 
+        this.addArrangementMenu();
+
         this.element.scrollDirection.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.scroll_direction.desc")))
@@ -125,6 +299,7 @@ public class ScrollAreaEditorElement extends AbstractEditorElement<ScrollAreaEdi
         ContextMenu contentSizeMenu = new ContextMenu();
         this.rightClickMenu.addSubMenuEntry("content_size", Component.translatable("fancymenu.elements.scroll_area.content_size"), contentSizeMenu)
                 .setStackable(true)
+                .addIsVisibleSupplier((menu, entry) -> this.element.hasUserContentSize())
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.content_size.desc")))
                 .setIcon(MaterialIcons.STRAIGHTEN);
 
@@ -159,6 +334,153 @@ public class ScrollAreaEditorElement extends AbstractEditorElement<ScrollAreaEdi
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.scroll_speed.desc")))
                 .setIcon(MaterialIcons.SPEED);
 
+        this.rightClickMenu.addSeparatorEntry("separator_before_looks").setStackable(true);
+
+        ElementStyleMenus.addPanelBackgroundMenu(this.rightClickMenu, this, this.element.background);
+
+        this.addScrollBarsMenu();
+
+    }
+
+    private void addScrollBarsMenu() {
+
+        ContextMenu scrollBarsMenu = new ContextMenu();
+        this.rightClickMenu.addSubMenuEntry("scroll_bars", Component.translatable("fancymenu.elements.scroll_area.scroll_bars"), scrollBarsMenu)
+                .setStackable(true)
+                .setIcon(MaterialIcons.SWIPE_VERTICAL);
+
+        this.element.scrollBarVisibility.buildContextMenuEntryAndAddTo(scrollBarsMenu, this)
+                .setStackable(true)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.scroll_bars.visibility.desc")))
+                .setIcon(MaterialIcons.VISIBILITY);
+
+        this.element.scrollBarThickness.buildContextMenuEntryAndAddTo(scrollBarsMenu, this)
+                .setStackable(true)
+                .setIcon(MaterialIcons.LINE_WEIGHT);
+
+        this.element.verticalScrollBarLeft.buildContextMenuEntryAndAddTo(scrollBarsMenu, this)
+                .setStackable(true)
+                .setIcon(MaterialIcons.ALIGN_HORIZONTAL_LEFT);
+
+        this.element.horizontalScrollBarTop.buildContextMenuEntryAndAddTo(scrollBarsMenu, this)
+                .setStackable(true)
+                .setIcon(MaterialIcons.ALIGN_VERTICAL_TOP);
+
+        scrollBarsMenu.addSeparatorEntry("separator_before_grabber_looks").setStackable(true);
+
+        ElementStyleMenus.addScrollGrabberMenus(scrollBarsMenu, this, this.element.grabberStyle);
+
+        ElementStyleMenus.addScrollBarBackgroundMenu(scrollBarsMenu, this, this.element.scrollBarBackground);
+
+    }
+
+    private void addArrangementMenu() {
+
+        ContextMenu arrangementMenu = new ContextMenu();
+        this.rightClickMenu.addSubMenuEntry("arrangement", Component.translatable("fancymenu.elements.scroll_area.arrangement"), arrangementMenu)
+                .setStackable(true)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.arrangement.desc")))
+                .setIcon(MaterialIcons.DASHBOARD);
+
+        // The mode is no plain property entry, because changing it also has to give the children their places in the new mode
+        this.addGenericCycleContextMenuEntryTo(arrangementMenu, "layout_mode", List.of(ScrollAreaLayoutMode.values()),
+                        consumes -> (consumes instanceof ScrollAreaEditorElement),
+                        consumes -> consumes.element.getLayoutMode(),
+                        ScrollAreaEditorElement::changeLayoutMode,
+                        (menu, entry, mode) -> Component.translatable("fancymenu.elements.scroll_area.layout_mode", Component.translatable(mode.getLocalizationKey()).setStyle(LocalizedCycleEnum.WARNING_TEXT_STYLE.get())))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.layout_mode.desc")))
+                .setIcon(MaterialIcons.DASHBOARD_CUSTOMIZE);
+
+        arrangementMenu.addSeparatorEntry("separator_after_layout_mode").setStackable(true)
+                .addIsVisibleSupplier((menu, entry) -> this.element.getLayoutMode() != ScrollAreaLayoutMode.ANCHORS);
+
+        this.element.childAlignment.buildContextMenuEntryAndAddTo(arrangementMenu, this)
+                .setStackable(true)
+                .addIsVisibleSupplier((menu, entry) -> this.element.arrangesChildren())
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.alignment.desc")))
+                .setIcon(MaterialIcons.ALIGN_HORIZONTAL_LEFT);
+
+        this.element.childSpacing.buildContextMenuEntryAndAddTo(arrangementMenu, this)
+                .setStackable(true)
+                .addIsVisibleSupplier((menu, entry) -> this.element.arrangesChildren())
+                .setIcon(MaterialIcons.FORMAT_LINE_SPACING);
+
+        this.element.contentPadding.buildContextMenuEntryAndAddTo(arrangementMenu, this)
+                .setStackable(true)
+                .addIsVisibleSupplier((menu, entry) -> this.element.arrangesChildren())
+                .setIcon(MaterialIcons.PADDING_ICON);
+
+        arrangementMenu.addSeparatorEntry("separator_before_grid").setStackable(true)
+                .addIsVisibleSupplier((menu, entry) -> this.element.getLayoutMode() == ScrollAreaLayoutMode.GRID);
+
+        this.element.gridAutoFit.buildContextMenuEntryAndAddTo(arrangementMenu, this)
+                .setStackable(true)
+                .addIsVisibleSupplier((menu, entry) -> this.element.getLayoutMode() == ScrollAreaLayoutMode.GRID)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.grid_auto_fit.desc")))
+                .setIcon(MaterialIcons.FIT_WIDTH);
+
+        this.element.gridLines.buildContextMenuEntryAndAddTo(arrangementMenu, this)
+                .setStackable(true)
+                .addIsVisibleSupplier((menu, entry) -> this.element.getLayoutMode() == ScrollAreaLayoutMode.GRID)
+                .addIsActiveSupplier((menu, entry) -> !this.element.gridAutoFit.getBoolean())
+                .setIcon(MaterialIcons.VIEW_COLUMN);
+
+        this.element.gridMinCellSize.buildContextMenuEntryAndAddTo(arrangementMenu, this)
+                .setStackable(true)
+                .addIsVisibleSupplier((menu, entry) -> this.element.getLayoutMode() == ScrollAreaLayoutMode.GRID)
+                .addIsActiveSupplier((menu, entry) -> this.element.gridAutoFit.getBoolean())
+                .setIcon(MaterialIcons.WIDTH);
+
+        this.element.resizeBehavior.buildContextMenuEntryAndAddTo(arrangementMenu, this)
+                .setStackable(true)
+                .addIsVisibleSupplier((menu, entry) -> this.element.getLayoutMode() == ScrollAreaLayoutMode.PROPORTIONAL)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.resize_behavior.desc")))
+                .setIcon(MaterialIcons.ASPECT_RATIO);
+
+        arrangementMenu.addClickableEntry("proportional_reference", Component.translatable("fancymenu.elements.scroll_area.proportional_reference.reset"), (menu, entry) -> {
+                    if (!entry.getStackMeta().isFirstInStack()) return;
+                    this.editor.history.saveSnapshot();
+                    for (AbstractEditorElement<?, ?> e : this.editor.getSelectedElements()) {
+                        if ((e instanceof ScrollAreaEditorElement area) && (area.element.getLayoutMode() == ScrollAreaLayoutMode.PROPORTIONAL)) area.resetProportionalReference();
+                    }
+                    menu.closeMenuChain();
+                })
+                .setStackable(true)
+                .addIsVisibleSupplier((menu, entry) -> this.element.getLayoutMode() == ScrollAreaLayoutMode.PROPORTIONAL)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.proportional_reference.reset.desc")))
+                .setIcon(MaterialIcons.FIT_SCREEN);
+
+    }
+
+    /**
+     * Makes the size the area has right now the size its proportional content shows unscaled at.
+     * The children get the places and sizes they have on the screen right now as their own, so nothing moves.
+     */
+    public void resetProportionalReference() {
+        int count = this.orderedChildEditorElements.size();
+        int[] screenBoxes = new int[count * 4];
+        for (int i = 0; i < count; i++) {
+            AbstractEditorElement<?, ?> child = this.orderedChildEditorElements.get(i);
+            screenBoxes[i * 4] = child.getX();
+            screenBoxes[(i * 4) + 1] = child.getY();
+            screenBoxes[(i * 4) + 2] = child.getWidth();
+            screenBoxes[(i * 4) + 3] = child.getHeight();
+        }
+        ScrollAreaGeometry geometry = this.element.getGeometry();
+        float oldScale = geometry.getScale();
+        int contentScreenWidth = Math.round(geometry.getContentWidth() * oldScale);
+        int contentScreenHeight = Math.round(geometry.getContentHeight() * oldScale);
+        this.element.captureProportionalReference();
+        this.element.refreshFrame();
+        // The content is as big on the screen as before, which is another number of its units now
+        float newScale = this.element.getGeometry().getScale();
+        if (!ScrollAreaElement.isAdvancedSize(this.element.contentWidth)) this.element.contentWidth.clearManualInput().set(Math.round(contentScreenWidth / newScale));
+        if (!ScrollAreaElement.isAdvancedSize(this.element.contentHeight)) this.element.contentHeight.clearManualInput().set(Math.round(contentScreenHeight / newScale));
+        this.element.refreshFrame();
+        for (int i = 0; i < count; i++) {
+            this.orderedChildEditorElements.get(i).placeFreelyInContainer(screenBoxes[i * 4], screenBoxes[(i * 4) + 1], screenBoxes[(i * 4) + 2], screenBoxes[(i * 4) + 3]);
+        }
+        this.element.refreshFrame();
     }
 
 }

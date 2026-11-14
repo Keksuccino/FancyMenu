@@ -68,6 +68,12 @@ public interface ElementContainer {
     boolean managesChildBoxes();
 
     /**
+     * Returns if this container decides where its children are in a way that leaves the user no place to put them:
+     * it arranges them one after another, in the order they have. Children of such a container can only be put in another order.
+     */
+    boolean arrangesChildren();
+
+    /**
      * Returns if the point on the screen lies in the part of the content the container shows, and in the shown part of
      * every container this container is in. Everything of a child outside of it is cut off.
      */
