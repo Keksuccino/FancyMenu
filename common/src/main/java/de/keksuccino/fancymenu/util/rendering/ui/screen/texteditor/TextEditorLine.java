@@ -260,7 +260,7 @@ public class TextEditorLine extends ExtendedEditBox {
     
     public boolean keyPressed(int keycode, int i1, int i2) {
         //Handled by the editor
-        if (((keycode) == 67 || (keycode) == 86 || (keycode) == 65 || (keycode) == 88) && InputUtils.isGuiShortcutModifierDown(i2)) {
+        if (InputUtils.isCopy(keycode, i1, i2) || InputUtils.isPaste(keycode, i1, i2) || InputUtils.isSelectAll(keycode, i1, i2) || InputUtils.isCut(keycode, i1, i2)) {
             return false;
         }
         //Text deletion is handled by the editor
