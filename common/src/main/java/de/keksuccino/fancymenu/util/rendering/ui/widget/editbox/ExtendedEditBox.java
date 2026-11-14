@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.editbox;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
@@ -667,7 +666,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
             }
         }
         //If select all, only select parts that are not prefix or suffix
-        if ((keycode == InputConstants.KEY_A && InputUtils.isGuiShortcutModifierDown(modifiers)) && ((this.inputPrefix != null) || (this.inputSuffix != null))) {
+        if (InputUtils.isSelectAll(keycode, scancode, modifiers) && ((this.inputPrefix != null) || (this.inputSuffix != null))) {
             if (this.inputSuffix != null) {
                 this.moveCursorTo(this.getValue().length() - this.inputSuffix.length(), false);
             } else {

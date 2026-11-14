@@ -248,7 +248,7 @@ public class TextEditorLine extends AdvancedTextField {
     @Override
     public boolean keyPressed(int keycode, int i1, int i2) {
         //Handled by the editor
-        if ((keycode == InputConstants.KEY_C || keycode == InputConstants.KEY_V || keycode == InputConstants.KEY_A || keycode == InputConstants.KEY_X) && InputUtils.isGuiShortcutModifierDown(i2)) {
+        if (InputUtils.isCopy(keycode, i1, i2) || InputUtils.isPaste(keycode, i1, i2) || InputUtils.isSelectAll(keycode, i1, i2) || InputUtils.isCut(keycode, i1, i2)) {
             return false;
         }
         //Text deletion is handled by the editor

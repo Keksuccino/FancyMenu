@@ -1773,18 +1773,18 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
             return true;
         }
         //GUI shortcut modifier + C
-        if (keycode == GLFW.GLFW_KEY_C && shortcutModifierDown) {
+        if (InputUtils.isCopy(keycode, scancode, modifiers)) {
             Minecraft.getInstance().keyboardHandler.setClipboard(this.getHighlightedText());
             return true;
         }
         //GUI shortcut modifier + V
-        if (keycode == GLFW.GLFW_KEY_V && shortcutModifierDown) {
+        if (InputUtils.isPaste(keycode, scancode, modifiers)) {
             this.history.saveSnapshot();
             this.pasteText(Minecraft.getInstance().keyboardHandler.getClipboard());
             return true;
         }
         //GUI shortcut modifier + A
-        if (keycode == GLFW.GLFW_KEY_A && shortcutModifierDown) {
+        if (InputUtils.isSelectAll(keycode, scancode, modifiers)) {
             for (TextEditorLine t : new ArrayList<>(this.textFieldLines)) {
                 t.setHighlightPos(0);
                 t.setCursorPosition(t.getValue().length());
@@ -1795,7 +1795,7 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
             return true;
         }
         //GUI shortcut modifier + X
-        if (keycode == GLFW.GLFW_KEY_X && shortcutModifierDown) {
+        if (InputUtils.isCut(keycode, scancode, modifiers)) {
             this.history.saveSnapshot();
             Minecraft.getInstance().keyboardHandler.setClipboard(this.cutHighlightedText());
             this.resetHighlighting();

@@ -64,4 +64,33 @@ public class InputUtils {
         return (modifiers & getGuiShortcutModifierMask(macOs)) != 0;
     }
 
+    /** Returns whether the key press is the select-all shortcut, which is Cmd+A on macOS and Ctrl+A on other platforms. */
+    public static boolean isSelectAll(int keyCode, int scanCode, int modifiers) {
+        return isEditShortcut(keyCode, GLFW.GLFW_KEY_A, modifiers);
+    }
+
+    /** Returns whether the key press is the copy shortcut, which is Cmd+C on macOS and Ctrl+C on other platforms. */
+    public static boolean isCopy(int keyCode, int scanCode, int modifiers) {
+        return isEditShortcut(keyCode, GLFW.GLFW_KEY_C, modifiers);
+    }
+
+    /** Returns whether the key press is the paste shortcut, which is Cmd+V on macOS and Ctrl+V on other platforms. */
+    public static boolean isPaste(int keyCode, int scanCode, int modifiers) {
+        return isEditShortcut(keyCode, GLFW.GLFW_KEY_V, modifiers);
+    }
+
+    /** Returns whether the key press is the cut shortcut, which is Cmd+X on macOS and Ctrl+X on other platforms. */
+    public static boolean isCut(int keyCode, int scanCode, int modifiers) {
+        return isEditShortcut(keyCode, GLFW.GLFW_KEY_X, modifiers);
+    }
+
+    /**
+     * Checks an edit shortcut the way Minecraft's own checks do: the GUI shortcut modifier has to be down, but neither Shift nor Alt.<br>
+     * Minecraft's own checks of this version poll the keyboard instead of reading the modifiers of the key event, which ignores macOS modifier remapping.<br>
+     * The scan code is not needed here, but keeps the parameters of all edit shortcut checks the same as the parameters of the key handlers that call them.
+     */
+    private static boolean isEditShortcut(int keyCode, int shortcutKeyCode, int modifiers) {
+        return (keyCode == shortcutKeyCode) && isGuiShortcutModifierDown(modifiers) && ((modifiers & GLFW.GLFW_MOD_SHIFT) == 0) && ((modifiers & GLFW.GLFW_MOD_ALT) == 0);
+    }
+
 }
