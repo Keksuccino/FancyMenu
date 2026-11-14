@@ -4,9 +4,12 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 /**
@@ -17,12 +20,15 @@ import java.util.function.Function;
  */
 public final class ElementContainerHierarchy {
 
+    /** Longer chains of containers than this do not exist in layouts made in the editor, so reaching it means a loop. */
+    private static final int MAX_DEPTH = 64;
+
     private ElementContainerHierarchy() {
     }
 
     /**
      * Connects every element that remembers a container to that container, if it is in the list.
-     * Elements that remember a container which is not in the list stay unconnected and behave like elements of the main layout.
+     * Elements that remember a container which is not in the list forget it and become elements of the main layout.
      */
     public static void connect(@NotNull List<? extends AbstractElement> elements) {
         Map<String, ElementContainer> containers = null;
@@ -47,10 +53,7 @@ public final class ElementContainerHierarchy {
             } else {
                 children.clear();
             }
-            for (int j = 0; j < elements.size(); j++) {
-                AbstractElement element = elements.get(j);
-                if (element.getParentContainer() == container) children.add(element);
-            }
+            collectChildren(container, elements, Function.identity(), children);
             container.setContainerChildren(children);
         }
     }
@@ -123,7 +126,7 @@ public final class ElementContainerHierarchy {
      *
      * @param target The list the children get added to.
      */
-    public static <T> void collectChildren(@NotNull ElementContainer container, @NotNull List<T> items, @NotNull Function<T, AbstractElement> elementOf, @NotNull List<T> target) {
+    public static <T> void collectChildren(@NotNull ElementContainer container, @NotNull List<? extends T> items, @NotNull Function<T, AbstractElement> elementOf, @NotNull List<T> target) {
         for (int i = 0; i < items.size(); i++) {
             T item = items.get(i);
             if (elementOf.apply(item).getParentContainer() == container) target.add(item);
@@ -135,7 +138,7 @@ public final class ElementContainerHierarchy {
      */
     public static boolean isInContainer(@NotNull AbstractElement element, @NotNull ElementContainer container) {
         ElementContainer parent = element.getParentContainer();
-        for (int depth = 0; (parent != null) && (depth < 64); depth++) {
+        for (int depth = 0; (parent != null) && (depth < MAX_DEPTH); depth++) {
             if (parent == container) return true;
             parent = parent.getContainerElement().getParentContainer();
         }
@@ -143,17 +146,27 @@ public final class ElementContainerHierarchy {
     }
 
     /**
-     * Returns the container that holds the element and is in no container itself, or NULL if the element is in no container.
+     * Returns if where the element is depends on where the other one is: because it is in the other one or anchored to it,
+     * or because one of the containers it is in or one of the elements it is anchored to is.<br>
+     * Two elements that depend on each other could never work out where they are, so nothing may make an element
+     * depend on one that depends on it already.
      */
-    @Nullable
-    public static ElementContainer getOutermostContainer(@NotNull AbstractElement element) {
-        ElementContainer outermost = null;
-        ElementContainer parent = element.getParentContainer();
-        for (int depth = 0; (parent != null) && (depth < 64); depth++) {
-            outermost = parent;
-            parent = parent.getContainerElement().getParentContainer();
+    public static boolean dependsOn(@NotNull AbstractElement element, @NotNull AbstractElement other) {
+        // Most elements are in nothing and anchored to nothing, and need nothing to remember where the search has been
+        if ((element.getParentContainer() == null) && (element.getElementAnchorPointParent() == null)) return false;
+        return dependsOn(element, other, Collections.newSetFromMap(new IdentityHashMap<>()));
+    }
+
+    private static boolean dependsOn(@NotNull AbstractElement element, @NotNull AbstractElement other, @NotNull Set<AbstractElement> visited) {
+        // An element the search has been at before is part of a loop that does not go through the other one
+        if (!visited.add(element)) return false;
+        ElementContainer container = element.getParentContainer();
+        if (container != null) {
+            AbstractElement containerElement = container.getContainerElement();
+            if ((containerElement == other) || dependsOn(containerElement, other, visited)) return true;
         }
-        return outermost;
+        AbstractElement anchor = element.getElementAnchorPointParent();
+        return (anchor != null) && ((anchor == other) || dependsOn(anchor, other, visited));
     }
 
 }

@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.customization.element.container;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
+import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
@@ -30,6 +31,13 @@ final class ElementContainerTestElements {
         /** Auto-sizing asks the game for the size of the screen, which tests don't have. */
         @Override
         public void updateAutoSizing(boolean ignoreLastTickScreenSize) {
+        }
+
+        /** Anchors this element to the other one without looking it up, which would ask the game for the elements of its screen. */
+        void anchorTo(@NotNull AbstractElement other) {
+            this.anchorPoint = ElementAnchorPoints.ELEMENT;
+            this.anchorPointElementIdentifier = other.getInstanceIdentifier();
+            this.cachedElementAnchorPointParent = other;
         }
 
     }
@@ -110,6 +118,17 @@ final class ElementContainerTestElements {
         @Override
         public boolean isScreenPointVisible(double screenX, double screenY) {
             return (screenX >= this.visibleX) && (screenX < ((long) this.visibleX + this.visibleWidth)) && (screenY >= this.visibleY) && (screenY < ((long) this.visibleY + this.visibleHeight));
+        }
+
+        @Override
+        public boolean clipToShownArea(int @NotNull [] area) {
+            area[0] = Math.max(area[0], this.visibleX);
+            area[1] = Math.max(area[1], this.visibleY);
+            area[2] = (int) Math.min(area[2], (long) this.visibleX + this.visibleWidth);
+            area[3] = (int) Math.min(area[3], (long) this.visibleY + this.visibleHeight);
+            if ((area[0] >= area[2]) || (area[1] >= area[3])) return false;
+            ElementContainer parent = this.getParentContainer();
+            return (parent == null) || parent.clipToShownArea(area);
         }
 
         @Override

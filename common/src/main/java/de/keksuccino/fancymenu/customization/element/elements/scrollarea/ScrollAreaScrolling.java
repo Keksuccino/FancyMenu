@@ -61,8 +61,10 @@ public final class ScrollAreaScrolling {
     }
 
     /**
-     * Puts the content where it was when the element of the area got built the last time. Elements get rebuilt whenever
-     * the screen changes its size, and the content stays where it was scrolled to.
+     * Puts the content where the area with the identifier of this one was scrolled to the last time. Elements get rebuilt whenever
+     * the screen changes its size, and the content stays where it was through that.<br>
+     * What elements remember lasts until the game closes, so this is also what keeps the content in place between two times
+     * a screen gets opened, for areas that do not go back to their start position then.
      */
     public void restoreFromMemory() {
         RuntimePropertyContainer memory = this.area.getMemory();

@@ -826,13 +826,23 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
     }
 
     /**
+     * Returns what takes input of the layout editor for this element before the editor does, like handles the element shows in the editor.
+     * A click one of them takes never reaches the editor, which would select or move something with it otherwise.<br>
+     * The editor asks for these whenever input comes in, so the list has to be one the element keeps.
+     */
+    @NotNull
+    public List<GuiEventListener> getEditorInputListeners() {
+        return List.of();
+    }
+
+    /**
      * Renders this element as a child of a container, which calls this while it renders its content.<br>
      * A selected child only renders the element itself here. Its border and controls would get cut off with the content,
      * so the editor renders them afterwards with {@link #extractEditorControlsRenderState(GuiGraphicsExtractor, int, int, float)}.
      */
     public void extractRenderStateInContainer(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         // The editor renders children the user moves around on top of everything, so they can be seen leaving their container
-        if (this.isGettingMoved()) return;
+        if (this.isGettingMovedFreely()) return;
         this.extractRenderState(graphics, mouseX, mouseY, partial, this.isSelected() ? RenderPass.ELEMENT : RenderPass.EVERYTHING);
     }
 
@@ -1229,8 +1239,10 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
      * Makes the element a child of the given container, or an element of the main layout if it is NULL.
      * The element stays where it is on the screen and keeps the size it has there.<br>
      * The editor has to update its container hierarchy afterwards.
+     *
+     * @param keepElementAnchor If the element stays anchored to the element it is anchored to, which only works for two elements of the same container.
      */
-    public void moveToContainer(@Nullable ElementContainer container) {
+    public void moveToContainer(@Nullable ElementContainer container, boolean keepElementAnchor) {
 
         int screenX = this.element.getAbsoluteX();
         int screenY = this.element.getAbsoluteY();
@@ -1241,14 +1253,10 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
         this.element.setParentContainer(container);
 
-        if (container != null) {
-            // Children that stay on screen stay in the content of their container, which would keep the user from dragging them out of it again
-            this.element.stayOnScreen = false;
-            // The top left of the content is the one anchor that never moves a child when the content changes its size
-            this.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
-            this.element.setAnchorPointElementIdentifier(null);
-        } else if ((this.element.anchorPoint == ElementAnchorPoints.ELEMENT) || (this.element.anchorPoint == null)) {
-            // The element it was anchored to stays behind in the container
+        boolean anchoredToElement = this.element.anchorPoint == ElementAnchorPoints.ELEMENT;
+        // An anchor to the edges of the screen would become one to the edges of the content, which moves a child when the content changes its size.
+        // The top left of the content is the one anchor that never does. An element that leaves for the main layout keeps its anchor to the screen.
+        if (anchoredToElement ? !keepElementAnchor : ((container != null) || (this.element.anchorPoint == null))) {
             this.element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
             this.element.setAnchorPointElementIdentifier(null);
         }
@@ -1352,6 +1360,14 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
      */
     public boolean isGettingMoved() {
         return this.leftMouseDown && this.movingCrumpleZonePassed && !this.isGettingResized() && !this.isGettingRotated() && !this.isGettingTilted() && this.editor.getCurrentlyDraggedElements().contains(this);
+    }
+
+    /**
+     * Returns if the user moves this element around on its own right now, and not along with a container it is in.
+     * Only an element that moves on its own can leave its container.
+     */
+    public boolean isGettingMovedFreely() {
+        return this.isGettingMoved() && !this.editor.containerDragDropHandler.movesWithDraggedContainer(this, this.editor.getCurrentlyDraggedElements());
     }
 
     public void resetElementStates() {
@@ -1466,9 +1482,12 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
     
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
         if (button == InputConstants.MOUSE_BUTTON_LEFT) {
-            // A child that followed the mouse is back where its container arranges it
+            // A child that followed the mouse is back where its container arranges it, and in the content of its container if it stays in it
             ElementContainerLink link = this.element.getContainerLink();
-            if (link != null) link.setManagedDragOffset(0, 0);
+            if (link != null) {
+                link.setManagedDragOffset(0, 0);
+                link.setMovedByUser(false);
+            }
             this.leftMouseDown = false;
             this.activeResizeGrabberType = null;
             if (this.isGettingRotated() && (this.preRotationSnapshot != null)) {
@@ -1584,8 +1603,12 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                         int newOffsetX = this.leftMouseDownBaseX + diffX;
                         int newOffsetY = this.leftMouseDownBaseY + diffY;
 
+                        // A child has to be able to leave its container, so nothing holds it in the content while the user moves it
+                        ElementContainerLink link = this.element.getContainerLink();
+                        if (link != null) link.setMovedByUser(true);
+
                         // Check if stay on screen is enabled
-                        if (this.element.stayOnScreen && !this.element.stickyAnchor) {
+                        if (this.element.stayOnScreen && !this.element.stickyAnchor && (this.element.getParentContainer() == null)) {
                             // Calculate what the absolute positions would be with the new offsets
                             int oldPosOffsetX = this.element.posOffsetX;
                             int oldPosOffsetY = this.element.posOffsetY;
@@ -1648,9 +1671,9 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                             // Calculate magnetic snap threshold (smaller = more precise snapping)
                             double snapThreshold = Math.max(2 * guiScale, gridSize / 5.0) * FancyMenu.getOptions().layoutEditorGridSnappingStrength.getValue();
 
-                            // Get screen centers at grid space
-                            double centerXInGridSpace = this.element.getPositioningScreenWidth() * guiScale / 2.0;
-                            double centerYInGridSpace = this.element.getPositioningScreenHeight() * guiScale / 2.0;
+                            // Get screen centers at grid space. The grid is the one of the screen, also for children of a container.
+                            double centerXInGridSpace = AbstractElement.getScreenWidth() * guiScale / 2.0;
+                            double centerYInGridSpace = AbstractElement.getScreenHeight() * guiScale / 2.0;
 
                             // Find nearest grid lines for all four edges
                             double[] edgesX = new double[] { leftEdge * guiScale, rightEdge * guiScale };
@@ -1688,7 +1711,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                                 int edgePos = (closestEdgeIndexX == 0) ? leftEdge : rightEdge;
                                 int gridPos = nearestGridLinesX[closestEdgeIndexX];
                                 int xAdjustment = gridPos - edgePos;
-                                this.element.posOffsetX += xAdjustment;
+                                this.element.posOffsetX += this.toContentDistance(xAdjustment);
                             }
 
                             // Repeat for Y direction with top and bottom edges
@@ -1727,7 +1750,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                                 int edgePos = (closestEdgeIndexY == 0) ? topEdge : bottomEdge;
                                 int gridPos = nearestGridLinesY[closestEdgeIndexY];
                                 int yAdjustment = gridPos - edgePos;
-                                this.element.posOffsetY += yAdjustment;
+                                this.element.posOffsetY += this.toContentDistance(yAdjustment);
                             }
                         }
                     }
@@ -1782,7 +1805,8 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                     this.element.baseWidth = newWidth;
                     this.element.posOffsetX = this.leftMouseDownBaseX + this.element.anchorPoint.getResizePositionOffsetX(this.element, usedDiffX, resizeType);
                     if (this.element.stickyAnchor) {
-                        this.element.posOffsetX += this.element.anchorPoint.getStickyResizePositionCorrectionX(this.element, usedDiffX, cachedOldOffsetX, this.element.posOffsetX, cachedOldPosX, this.element.getAbsoluteX(), cachedOldWidth, this.element.getAbsoluteWidth(), resizeType);
+                        // The correction is a distance on the screen, like the positions it comes from
+                        this.element.posOffsetX += this.toContentDistance(this.element.anchorPoint.getStickyResizePositionCorrectionX(this.element, usedDiffX, cachedOldOffsetX, this.element.posOffsetX, cachedOldPosX, this.element.getAbsoluteX(), cachedOldWidth, this.element.getAbsoluteWidth(), resizeType));
                     }
                     if (net.minecraft.client.Minecraft.getInstance().hasShiftDown() && !resizeCorner) {
                         this.element.baseHeight = this.resizeAspectRatio.getAspectRatioHeight(this.element.baseWidth);
@@ -1798,7 +1822,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                     this.element.baseHeight = newHeight;
                     this.element.posOffsetY = this.leftMouseDownBaseY + this.element.anchorPoint.getResizePositionOffsetY(this.element, usedDiffY, resizeType);
                     if (this.element.stickyAnchor) {
-                        this.element.posOffsetY += this.element.anchorPoint.getStickyResizePositionCorrectionY(this.element, usedDiffY, cachedOldOffsetY, this.element.posOffsetY, cachedOldPosY, this.element.getAbsoluteY(), cachedOldHeight, this.element.baseHeight, resizeType);
+                        this.element.posOffsetY += this.toContentDistance(this.element.anchorPoint.getStickyResizePositionCorrectionY(this.element, usedDiffY, cachedOldOffsetY, this.element.posOffsetY, cachedOldPosY, this.element.getAbsoluteY(), cachedOldHeight, this.element.getAbsoluteHeight(), resizeType));
                     }
                     if (net.minecraft.client.Minecraft.getInstance().hasShiftDown() && !resizeCorner) {
                         this.element.baseWidth = this.resizeAspectRatio.getAspectRatioWidth(this.element.baseHeight);

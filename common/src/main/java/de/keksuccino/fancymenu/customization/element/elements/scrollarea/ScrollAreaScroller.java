@@ -38,10 +38,6 @@ public final class ScrollAreaScroller {
         return horizontal ? this.x : this.y;
     }
 
-    public boolean isSmooth() {
-        return this.smooth;
-    }
-
     public void setSmooth(boolean smooth) {
         this.smooth = smooth;
     }

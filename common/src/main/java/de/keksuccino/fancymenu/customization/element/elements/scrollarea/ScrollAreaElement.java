@@ -6,7 +6,6 @@ import de.keksuccino.fancymenu.customization.element.ElementSpaceInputListener;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.container.ElementContainer;
-import de.keksuccino.fancymenu.customization.element.container.ElementContainerHierarchy;
 import de.keksuccino.fancymenu.customization.element.container.ElementContainerLink;
 import de.keksuccino.fancymenu.customization.element.elements.scrollarea.layout.ScrollAreaAlignment;
 import de.keksuccino.fancymenu.customization.element.elements.scrollarea.layout.ScrollAreaArranger;
@@ -19,6 +18,7 @@ import de.keksuccino.fancymenu.customization.element.style.ScrollBarTrackBackgro
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderFrameCounter;
+import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
@@ -39,8 +39,10 @@ import java.util.List;
  */
 public class ScrollAreaElement extends AbstractElement implements ElementContainer {
 
-    /** Where children get told the mouse is while it is not over what the area shows of them, so nothing in them reacts to it. */
+    /** Where the mouse is for the area as long as nothing told it: far away from everything. */
     public static final int MOUSE_OUTSIDE = -100000;
+    /** The frame an area that does not show its children last showed them in: none. */
+    private static final long NEVER_SHOWN = -2L;
     /** The longest time one frame moves the content for. Longer frames, like the first one after the game hung, would make the content jump. */
     private static final double MAX_FRAME_SECONDS = 0.1D;
     /** The smallest a proportional content gets. Smaller than this, nothing in it can be told apart anymore, and a scale of zero would break all math. */
@@ -107,8 +109,13 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
     protected long lastFrameNanos = 0L;
     /** The time the frame before this one took, which is how long everything that moves on its own moves for in this one. */
     protected double frameDeltaSeconds = 0.0D;
-    /** The frame the area last rendered its children in. Input comes in between frames, so the area still shows them in the frame after it. */
-    protected long lastChildrenShownFrame = -2L;
+    /**
+     * The frame the area last rendered its children in. The area shows its children as long as this is not more than one frame ago:
+     * input comes in between frames, and children that come before the area in a frame ask before the area rendered in it.
+     */
+    protected long lastChildrenShownFrame = NEVER_SHOWN;
+    /** If the area rendered its children since {@link #renderInternal(GuiGraphicsExtractor, int, int, float)} started. */
+    protected boolean renderedChildren = false;
     protected float childOpacity = 1.0F;
     /** Where the mouse was when the area rendered the last time, for what moves the content along with it. */
     protected int frameMouseX = MOUSE_OUTSIDE;
@@ -133,11 +140,36 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
         if (this.resetScrollOnOpen.getBoolean()) this.scrolling.resetToStartPosition();
     }
 
+    /**
+     * An area that does not render still takes its children through their frame. They do not show in it and notice that there,
+     * which is what stops their sounds and videos and starts their delays and fades over, like it does for every element that stops showing.
+     */
+    @Override
+    public void renderInternal(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
+        this.renderedChildren = false;
+        super.renderInternal(graphics, mouseX, mouseY, partial);
+        if (this.renderedChildren) return;
+        // Has to be known before the children get asked if they show
+        this.lastChildrenShownFrame = NEVER_SHOWN;
+        for (int i = 0; i < this.children.size(); i++) {
+            this.childRenderer.render(this.children.get(i), graphics, mouseX, mouseY, partial);
+        }
+    }
+
+    @Override
+    public void onRenderInternalSkipped() {
+        this.lastChildrenShownFrame = NEVER_SHOWN;
+        for (int i = 0; i < this.children.size(); i++) {
+            this.children.get(i).onRenderInternalSkipped();
+        }
+    }
+
     @Override
     public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         // Has to be known before the frame gets worked out: children only take part in an arrangement while the area shows them
         this.lastChildrenShownFrame = RenderFrameCounter.getFrame();
+        this.renderedChildren = true;
         // The opacity includes the one of the containers this area is in while it renders, which is the only time children ask for it
         this.childOpacity = this.opacity;
         this.frameMouseX = mouseX;
@@ -155,8 +187,6 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
         boolean mouseOverContent = geometry.isInViewport(mouseX, mouseY) && this.isScreenPointVisibleInContainer(mouseX, mouseY);
         // Nothing in the content reacts to a mouse that is not over it, or that drags the content along
         boolean childrenSeeMouse = mouseOverContent && !this.scrolling.isDragging();
-        int childMouseX = childrenSeeMouse ? mouseX : MOUSE_OUTSIDE;
-        int childMouseY = childrenSeeMouse ? mouseY : MOUSE_OUTSIDE;
 
         if (this.children.isEmpty() && (this.emptyContentRenderer != null)) {
             this.emptyContentRenderer.render(graphics, viewportX, viewportY, geometry.getViewportWidth(), geometry.getViewportHeight(), mouseOverContent);
@@ -168,7 +198,12 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
             // Positions of children are whole screen pixels. The rest of the scroll moves what they draw, so the content moves as smooth as the window allows.
             graphics.pose().translate(-geometry.getSubPixelScrollX(), -geometry.getSubPixelScrollY());
             for (int i = 0; i < this.children.size(); i++) {
-                this.renderChild(this.children.get(i), graphics, childMouseX, childMouseY, partial);
+                AbstractElement child = this.children.get(i);
+                if (childrenSeeMouse) {
+                    this.renderChild(child, graphics, mouseX, mouseY, partial);
+                } else {
+                    this.renderChild(child, graphics, moveOutOf(child, mouseX, mouseY, true), moveOutOf(child, mouseX, mouseY, false), partial);
+                }
             }
         } finally {
             graphics.pose().popMatrix();
@@ -181,6 +216,24 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
 
         this.bars.render(graphics, mouseX, mouseY, partial);
 
+    }
+
+    /**
+     * Returns where a child gets told the mouse is while it must not react to it: where it is, unless that is in the child,
+     * where it becomes the closest place next to the child. The child is not hovered there, and what follows the mouse in it,
+     * like eyes that look at it, still looks the right way.
+     */
+    protected static int moveOutOf(@NotNull AbstractElement child, int mouseX, int mouseY, boolean returnX) {
+        int toLeft = mouseX - child.getAbsoluteX();
+        int toTop = mouseY - child.getAbsoluteY();
+        int toRight = (child.getAbsoluteX() + child.getAbsoluteWidth()) - mouseX;
+        int toBottom = (child.getAbsoluteY() + child.getAbsoluteHeight()) - mouseY;
+        // The mouse is in the child while it is at or behind its left and top edge and in front of its right and bottom edge
+        if ((toLeft < 0) || (toTop < 0) || (toRight <= 0) || (toBottom <= 0)) return returnX ? mouseX : mouseY;
+        int nearest = Math.min(Math.min(toLeft + 1, toRight), Math.min(toTop + 1, toBottom));
+        if (returnX) return (nearest == (toLeft + 1)) ? (mouseX - nearest) : ((nearest == toRight) ? (mouseX + nearest) : mouseX);
+        if ((nearest == (toLeft + 1)) || (nearest == toRight)) return mouseY;
+        return (nearest == (toTop + 1)) ? (mouseY - nearest) : (mouseY + nearest);
     }
 
     /**
@@ -204,8 +257,8 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
         float scale = this.geometry.getScale();
         int x = child.getAbsoluteX();
         int y = child.getAbsoluteY();
-        int scaledMouseX = (mouseX == MOUSE_OUTSIDE) ? MOUSE_OUTSIDE : (int) Math.floor(x + ((mouseX - x) / scale));
-        int scaledMouseY = (mouseY == MOUSE_OUTSIDE) ? MOUSE_OUTSIDE : (int) Math.floor(y + ((mouseY - y) / scale));
+        int scaledMouseX = (int) Math.floor(x + ((mouseX - x) / scale));
+        int scaledMouseY = (int) Math.floor(y + ((mouseY - y) / scale));
         graphics.pose().pushMatrix();
         ElementContainerLink.SizeSpace previousSpace = link.setSizeSpace(ElementContainerLink.SizeSpace.CONTENT);
         try {
@@ -284,6 +337,23 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
      */
     public boolean scrollByWheel(double deltaX, double deltaY) {
         return this.scrolling.scrollByWheel(deltaX, deltaY);
+    }
+
+    /**
+     * Offers a scroll of the mouse wheel to what is in the area under the mouse and scrolls on its own, like a text.
+     * The area gets every scroll of the screen before the screen hands it to what is under the mouse, so it has to do that for its children itself.
+     *
+     * @return If something in the area took the scroll.
+     */
+    public boolean scrollChildByWheel(double mouseX, double mouseY, double deltaX, double deltaY) {
+        Screen screen = ScreenUtils.getScreen();
+        if (screen == null) return false;
+        for (GuiEventListener listener : screen.children()) {
+            // FancyMenu UI components get every scroll on their own, in front of the area if they are in it
+            if ((listener instanceof FancyMenuUiComponent) || !listener.isMouseOver(mouseX, mouseY)) continue;
+            if ((this.findChildOwning(listener) != null) && listener.mouseScrolled(mouseX, mouseY, deltaX, deltaY)) return true;
+        }
+        return false;
     }
 
     /**
@@ -394,11 +464,9 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
         }
         ScrollDirection direction = this.getScrollDirection();
         if (direction.scrollsX() && !isAdvancedSize(this.contentWidth)) {
-            this.contentWidth.clearManualInput();
             this.contentWidth.set(right);
         }
         if (direction.scrollsY() && !isAdvancedSize(this.contentHeight)) {
-            this.contentHeight.clearManualInput();
             this.contentHeight.set(bottom);
         }
     }
@@ -461,17 +529,20 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
     /**
      * Returns the child the given widget belongs to: one of its own widgets, or a widget of something in a child that is an area itself.
      * Returns NULL if the widget belongs to nothing in the area.
+     *
+     * @param widget The widget, or what it is registered to the screen as.
      */
     @Nullable
     public AbstractElement findChildOwning(@NotNull GuiEventListener widget) {
+        // Screens know widgets of children as the listener that maps their input, and elements can hand their widgets out as one as well
+        GuiEventListener searched = ElementSpaceInputListener.unwrap(widget);
         for (int i = 0; i < this.children.size(); i++) {
             AbstractElement child = this.children.get(i);
-            if ((child instanceof ScrollAreaElement inner) && (inner.findChildOwning(widget) != null)) return child;
+            if ((child instanceof ScrollAreaElement inner) && (inner.findChildOwning(searched) != null)) return child;
             List<GuiEventListener> widgets = child.getWidgetsToRegister();
             if (widgets == null) continue;
             for (GuiEventListener childWidget : widgets) {
-                // Widgets that take their input in the space of their element get registered as the listener that maps it
-                if ((childWidget == widget) || ((childWidget instanceof ElementSpaceInputListener listener) && (listener.getWidget() == widget))) return child;
+                if (ElementSpaceInputListener.unwrap(childWidget) == searched) return child;
             }
         }
         return null;
@@ -484,9 +555,17 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
         Screen screen = ScreenUtils.getScreen();
         if (screen == null) return false;
         for (GuiEventListener listener : screen.children()) {
-            if ((listener instanceof ElementSpaceInputListener childListener) && ElementContainerHierarchy.isInContainer(childListener.getElement(), this) && childListener.isMouseOver(screenX, screenY)) return true;
+            if (listener.isMouseOver(screenX, screenY) && (this.findChildOwning(listener) != null)) return true;
         }
         return false;
+    }
+
+    /**
+     * Returns the time the frame before this one took, capped where a longer frame would make things jump.
+     * It is how long everything of the area that moves on its own moves for in this frame.
+     */
+    public double getFrameDeltaSeconds() {
+        return this.frameDeltaSeconds;
     }
 
     @NotNull
@@ -606,8 +685,21 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
     }
 
     @Override
+    public boolean clipToShownArea(int @NotNull [] area) {
+        this.ensureFrame();
+        ScrollAreaGeometry geometry = this.geometry;
+        area[0] = Math.max(area[0], geometry.getViewportX());
+        area[1] = Math.max(area[1], geometry.getViewportY());
+        area[2] = Math.min(area[2], geometry.getViewportX() + geometry.getViewportWidth());
+        area[3] = Math.min(area[3], geometry.getViewportY() + geometry.getViewportHeight());
+        if ((area[0] >= area[2]) || (area[1] >= area[3])) return false;
+        ElementContainer parent = this.getParentContainer();
+        return (parent == null) || parent.clipToShownArea(area);
+    }
+
+    @Override
     public boolean isShowingChildren() {
-        return ((RenderFrameCounter.getFrame() - this.lastChildrenShownFrame) <= 1L) && this.shouldRender();
+        return (RenderFrameCounter.getFrame() - this.lastChildrenShownFrame) <= 1L;
     }
 
     @Override

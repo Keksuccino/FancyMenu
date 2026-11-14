@@ -14,10 +14,8 @@ import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
@@ -37,21 +35,19 @@ public class ScrollAreaEditorElement extends AbstractEditorElement<ScrollAreaEdi
     protected final ScrollAreaEmptyGuide emptyGuide = new ScrollAreaEmptyGuide();
     protected final ScrollAreaContentEndGrabber contentWidthGrabber = new ScrollAreaContentEndGrabber(this, true);
     protected final ScrollAreaContentEndGrabber contentHeightGrabber = new ScrollAreaContentEndGrabber(this, false);
+    /** The handles come first: they lie on top of what the area shows, where a click would start dragging the content otherwise. */
+    protected final List<GuiEventListener> editorInputListeners;
 
     public ScrollAreaEditorElement(@NotNull ScrollAreaElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
         this.settings.setParallaxAllowed(false);
         this.element.setChildRenderer(this::renderChild);
         this.element.setEmptyContentRenderer(this.emptyGuide::render);
+        this.editorInputListeners = List.of(this.contentWidthGrabber, this.contentHeightGrabber, this.element.getInput());
     }
 
     @Override
     public void extractRenderState(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
-
-        // The editor is a screen like any other for what takes the input of the area: its wheel, its scroll bars and its handles
-        this.registerEditorListener(this.contentWidthGrabber);
-        this.registerEditorListener(this.contentHeightGrabber);
-        this.registerEditorListener(this.element.getInput());
 
         super.extractRenderState(graphics, mouseX, mouseY, partial);
 
@@ -62,9 +58,9 @@ public class ScrollAreaEditorElement extends AbstractEditorElement<ScrollAreaEdi
 
     }
 
-    private <T extends GuiEventListener & NarratableEntry> void registerEditorListener(@NotNull T listener) {
-        List<GuiEventListener> children = ((IMixinScreen) this.editor).getChildrenFancyMenu();
-        if (!children.contains(listener)) children.add(listener);
+    @Override
+    public @NotNull List<GuiEventListener> getEditorInputListeners() {
+        return this.editorInputListeners;
     }
 
     @Override
@@ -103,9 +99,7 @@ public class ScrollAreaEditorElement extends AbstractEditorElement<ScrollAreaEdi
                 int mainSize = horizontal ? child.getWidth() : child.getHeight();
                 int crossStart = horizontal ? child.getY() : child.getX();
                 int crossSize = horizontal ? child.getHeight() : child.getWidth();
-                boolean mouseInFront = oneLine
-                        ? (mouseMain < (mainStart + (mainSize / 2)))
-                        : ((mouseMain < mainStart) || ((mouseMain < (mainStart + mainSize)) && (mouseCross < (crossStart + (crossSize / 2)))));
+                boolean mouseInFront = oneLine ? (mouseMain < (mainStart + (mainSize / 2))) : ((mouseMain < mainStart) || ((mouseMain < (mainStart + mainSize)) && (mouseCross < (crossStart + (crossSize / 2)))));
                 if (mouseInFront) return index;
             }
             index++;
@@ -185,8 +179,8 @@ public class ScrollAreaEditorElement extends AbstractEditorElement<ScrollAreaEdi
         area.layoutMode.set(mode);
         // Arranged content can turn into content of the user's size, which should hold everything it held before
         if (mode.hasUserContentSize() && !oldMode.hasUserContentSize()) {
-            if (!ScrollAreaElement.isAdvancedSize(area.contentWidth)) area.contentWidth.clearManualInput().set(oldContentWidth);
-            if (!ScrollAreaElement.isAdvancedSize(area.contentHeight)) area.contentHeight.clearManualInput().set(oldContentHeight);
+            if (!ScrollAreaElement.isAdvancedSize(area.contentWidth)) area.contentWidth.set(oldContentWidth);
+            if (!ScrollAreaElement.isAdvancedSize(area.contentHeight)) area.contentHeight.set(oldContentHeight);
         }
         // A new proportional content starts at the size the area has, so nothing is scaled until the area changes its size
         if (mode == ScrollAreaLayoutMode.PROPORTIONAL) area.captureProportionalReference();
@@ -242,9 +236,8 @@ public class ScrollAreaEditorElement extends AbstractEditorElement<ScrollAreaEdi
     public boolean canHoldChild(@NotNull AbstractEditorElement<?, ?> element) {
         // Vanilla elements belong to the screen, which renders them itself, so the area can neither move nor cut them
         if (element instanceof VanillaWidgetEditorElement) return false;
-        // An area in one of its own children would hold itself
-        if (element == this) return false;
-        return !(element.element instanceof ElementContainer container) || !ElementContainerHierarchy.isInContainer(this.element, container);
+        // An area in itself, in one of its own children or in something it is anchored to could never work out where it is
+        return (element != this) && !ElementContainerHierarchy.dependsOn(this.element, element.element);
     }
 
     @Override
@@ -572,8 +565,8 @@ public class ScrollAreaEditorElement extends AbstractEditorElement<ScrollAreaEdi
         this.element.refreshFrame();
         // The content is as big on the screen as before, which is another number of its units now
         float newScale = this.element.getGeometry().getScale();
-        if (!ScrollAreaElement.isAdvancedSize(this.element.contentWidth)) this.element.contentWidth.clearManualInput().set(Math.round(contentScreenWidth / newScale));
-        if (!ScrollAreaElement.isAdvancedSize(this.element.contentHeight)) this.element.contentHeight.clearManualInput().set(Math.round(contentScreenHeight / newScale));
+        if (!ScrollAreaElement.isAdvancedSize(this.element.contentWidth)) this.element.contentWidth.set(Math.round(contentScreenWidth / newScale));
+        if (!ScrollAreaElement.isAdvancedSize(this.element.contentHeight)) this.element.contentHeight.set(Math.round(contentScreenHeight / newScale));
         this.element.refreshFrame();
         for (int i = 0; i < count; i++) {
             this.orderedChildEditorElements.get(i).placeFreelyInContainer(screenBoxes[i * 4], screenBoxes[(i * 4) + 1], screenBoxes[(i * 4) + 2], screenBoxes[(i * 4) + 3]);

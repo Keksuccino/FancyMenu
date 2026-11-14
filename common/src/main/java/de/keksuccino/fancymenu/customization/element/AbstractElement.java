@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.container.ElementContainer;
+import de.keksuccino.fancymenu.customization.element.container.ElementContainerHierarchy;
 import de.keksuccino.fancymenu.customization.element.container.ElementContainerLink;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
@@ -796,7 +797,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 		if (this.stretchX.getBoolean()) {
             x = 0;
-		} else if (this.stayOnScreen && !this.stickyAnchor && !applyParallax) {
+		} else if (this.stayOnScreen && !this.stickyAnchor && !applyParallax && ((link == null) || !link.isMovedByUser())) {
 			// Children stay in the content of their container, which is what the screen is for everything else
 			int maxX = ((container != null) ? container.getContentWidth() : getScreenWidth()) - STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.getContentSpaceWidth();
 			if (x < STAY_ON_SCREEN_EDGE_ZONE_SIZE) {
@@ -862,7 +863,7 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 
 		if (this.stretchY.getBoolean()) {
 			y = 0;
-		} else if (this.stayOnScreen && !this.stickyAnchor && !applyParallax) {
+		} else if (this.stayOnScreen && !this.stickyAnchor && !applyParallax && ((link == null) || !link.isMovedByUser())) {
 			// Children stay in the content of their container, which is what the screen is for everything else
 			int maxY = ((container != null) ? container.getContentHeight() : getScreenHeight()) - STAY_ON_SCREEN_EDGE_ZONE_SIZE - this.getContentSpaceHeight();
 			if (y < STAY_ON_SCREEN_EDGE_ZONE_SIZE) {
@@ -1047,51 +1048,14 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	}
 
 	/**
-	 * Detects circular dependencies in the anchor chain.
+	 * Returns if anchoring the child to the proposed parent would make two elements depend on each other for where they are.
+	 * Elements depend on what they are anchored to and on the containers they are in, directly and through other elements.
+	 *
 	 * @param child The element being anchored
 	 * @param proposedParent The element to anchor to
-	 * @return true if adding this anchor would create a circular dependency
 	 */
 	protected boolean detectCircularDependency(AbstractElement child, AbstractElement proposedParent) {
-		// Set a reasonable depth limit to prevent infinite loops
-		final int MAX_DEPTH = 100;
-		int depth = 0;
-
-		Set<String> visitedElements = new HashSet<>();
-		visitedElements.add(child.getInstanceIdentifier());
-
-		AbstractElement current = proposedParent;
-		while (current != null && depth < MAX_DEPTH) {
-			String currentId = current.getInstanceIdentifier();
-
-			// Check if we've encountered the child element in the chain
-			if (visitedElements.contains(currentId)) {
-				return true; // Circular dependency detected
-			}
-
-			visitedElements.add(currentId);
-
-			// Move up the anchor chain
-			String parentId = current.getAnchorPointElementIdentifier();
-			if (parentId == null || parentId.trim().isEmpty()) {
-				break; // Reached the top of the chain
-			}
-
-			// Normalize the parent ID
-			parentId = WidgetIdentifierHandler.normalizeIdentifier(parentId);
-
-			current = getElementByInstanceIdentifier(parentId);
-			depth++;
-		}
-
-		// Check if we hit the depth limit (which might indicate an issue)
-		if (depth >= MAX_DEPTH) {
-			LOGGER.warn("[FANCYMENU] Anchor chain depth exceeded " + MAX_DEPTH +
-					" levels while checking for circular dependencies. This might indicate a problem.");
-			return true; // Treat as circular to be safe
-		}
-
-		return false; // No circular dependency found
+		return (child == proposedParent) || ElementContainerHierarchy.dependsOn(proposedParent, child);
 	}
 
 	/**
@@ -1168,6 +1132,8 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
 	}
 
 	protected boolean _shouldRender() {
+		// Children of a container that does not show them are not there, no matter what they are set to themselves
+		if (!this.isShownByContainer()) return false;
 		if (!this.loadingRequirementsMet()) return false;
 		return this.visible;
 	}
@@ -1428,6 +1394,31 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
     }
 
     /**
+     * Works out the part of this element that shows on the screen: all of it for an element of the main layout,
+     * and what its containers do not cut off for a child.
+     *
+     * @param area Gets filled with the left, top, right and bottom edge of the part that shows.
+     * @return If any part of the element shows.
+     */
+    public boolean getShownScreenArea(int @NotNull [] area) {
+        area[0] = this.getAbsoluteX();
+        area[1] = this.getAbsoluteY();
+        area[2] = area[0] + this.getAbsoluteWidth();
+        area[3] = area[1] + this.getAbsoluteHeight();
+        ElementContainer container = this.getParentContainer();
+        return (container == null) || (container.isShowingChildren() && container.clipToShownArea(area));
+    }
+
+    /**
+     * Returns if the widgets of this element get registered to the screen as they are while the element is a child of a container.<br>
+     * Widgets of children normally get registered through an {@link ElementSpaceInputListener}, which keeps input away from
+     * what the container cuts off and maps the mouse into a scaled content. An element that returns TRUE here has to do both for its widgets itself.
+     */
+    public boolean registersChildWidgetsDirectly() {
+        return false;
+    }
+
+    /**
      * Returns if the container of this element shows its children right now. Elements of the main layout are always shown.
      */
     public boolean isShownByContainer() {
@@ -1446,15 +1437,32 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
      * Without rotation, tilt or a container that scales what this element draws, it returns the given X.
      */
     public double untransformMouseX(double mouseX, double mouseY) {
-        return this.untransformMouse(mouseX, mouseY, true);
+        return this.untransformMouse(mouseX, mouseY, true, true);
     }
 
     /** The Y counterpart of {@link #untransformMouseX(double, double)}. */
     public double untransformMouseY(double mouseX, double mouseY) {
-        return this.untransformMouse(mouseX, mouseY, false);
+        return this.untransformMouse(mouseX, mouseY, false, true);
     }
 
-    private double untransformMouse(double mouseX, double mouseY, boolean returnX) {
+    /**
+     * Maps a screen point to the X coordinate it has without the scale of a container that scales what this element draws.
+     * Unlike {@link #untransformMouseX(double, double)}, it leaves the rotation and the tilt of this element in,
+     * which is what widgets need that work out their own rotation and tilt.
+     */
+    public double unscaleMouseX(double mouseX, double mouseY) {
+        return this.untransformMouse(mouseX, mouseY, true, false);
+    }
+
+    /** The Y counterpart of {@link #unscaleMouseX(double, double)}. */
+    public double unscaleMouseY(double mouseX, double mouseY) {
+        return this.untransformMouse(mouseX, mouseY, false, false);
+    }
+
+    /**
+     * @param unrotate If the rotation and the tilt of this element get taken out of the point as well.
+     */
+    private double untransformMouse(double mouseX, double mouseY, boolean returnX, boolean unrotate) {
         ElementContainerLink link = this.containerLink;
         ElementContainer container = (link != null) ? link.getContainer() : null;
         int x = this.getAbsoluteX();
@@ -1465,10 +1473,12 @@ public abstract class AbstractElement implements Renderable, GuiEventListener, N
             float scale = container.getContentScale();
             mouseX = x + ((mouseX - x) / scale);
             mouseY = y + ((mouseY - y) / scale);
+            if (!unrotate) return returnX ? mouseX : mouseY;
             int width = this.getContentSpaceWidth();
             int height = this.getContentSpaceHeight();
             return returnX ? this.getElementHitbox().untransformX(mouseX, mouseY, x, y, width, height) : this.getElementHitbox().untransformY(mouseX, mouseY, x, y, width, height);
         }
+        if (!unrotate) return returnX ? mouseX : mouseY;
         return returnX ? this.getElementHitbox().untransformX(mouseX, mouseY, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight()) : this.getElementHitbox().untransformY(mouseX, mouseY, x, y, this.getAbsoluteWidth(), this.getAbsoluteHeight());
     }
 

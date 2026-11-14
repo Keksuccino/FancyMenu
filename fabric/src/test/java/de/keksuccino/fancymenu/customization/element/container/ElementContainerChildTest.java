@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.element.container.ElementContainerT
 import de.keksuccino.fancymenu.customization.element.container.ElementContainerTestElements.Container;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -257,6 +258,81 @@ class ElementContainerChildTest {
         Child plain = new Child("plain");
         assertTrue(plain.isScreenPointVisibleInContainer(-5000, 9000));
         assertTrue(plain.isShownByContainer());
+    }
+
+    @Test
+    void theShownAreaOfAChildIsWhatAllItsContainersLeaveOfIt() {
+        Container outer = new Container("outer");
+        outer.visibleX = 0;
+        outer.visibleY = 0;
+        outer.visibleWidth = 90;
+        outer.visibleHeight = 200;
+        Container inner = new Container("inner");
+        inner.setParentContainer(outer);
+        inner.visibleX = 20;
+        inner.visibleY = 30;
+        inner.visibleWidth = 100;
+        inner.visibleHeight = 100;
+        Child child = child(inner, 80, 80);
+        child.anchorPoint = ElementAnchorPoints.TOP_LEFT;
+        child.posOffsetX = 60;
+        child.posOffsetY = 10;
+
+        // The child spans (60, 10) to (140, 90). The inner container shows it from Y 30 on, and the outer one up to X 90.
+        int[] shown = new int[4];
+        assertTrue(child.getShownScreenArea(shown));
+        assertArrayEquals(new int[] {60, 30, 90, 90}, shown);
+
+        child.posOffsetX = 95;
+        assertFalse(child.getShownScreenArea(shown));
+
+        child.posOffsetX = 60;
+        inner.showingChildren = false;
+        assertFalse(child.getShownScreenArea(shown));
+    }
+
+    @Test
+    void nothingHoldsAChildInTheContentWhileTheUserMovesIt() {
+        Container container = new Container("area");
+        container.contentWidth = 300;
+        container.contentHeight = 600;
+        Child child = child(container, 40, 20);
+        child.stayOnScreen = true;
+        child.anchorPoint = ElementAnchorPoints.TOP_LEFT;
+        child.posOffsetX = 500;
+        child.posOffsetY = -70;
+        assertTrue(child.getAbsoluteX() < 300);
+        assertTrue(child.getAbsoluteY() >= 0);
+
+        child.getContainerLink().setMovedByUser(true);
+        assertEquals(500, child.getAbsoluteX());
+        assertEquals(-70, child.getAbsoluteY());
+
+        child.getContainerLink().setMovedByUser(false);
+        assertTrue(child.getAbsoluteX() < 300);
+    }
+
+    @Test
+    void theMouseCanGetMappedIntoAScaledChildWithoutItsRotation() {
+        Container container = new Container("area");
+        container.contentScale = 2.0F;
+        container.scalesChildVisuals = true;
+        Child child = child(container, 40, 20);
+        child.anchorPoint = ElementAnchorPoints.TOP_LEFT;
+        child.posOffsetX = 50;
+        child.posOffsetY = 25;
+        child.rotationDegrees.set(90.0F);
+
+        // Only the scale around the top left corner at (100, 50) comes out, which leaves the point where the rotated element has it
+        assertEquals(125.0, child.unscaleMouseX(150, 70), 1.0E-6);
+        assertEquals(60.0, child.unscaleMouseY(150, 70), 1.0E-6);
+        // With the rotation around the middle of the element at (120, 60) taken out as well, the point ends up somewhere else
+        assertEquals(120.0, child.untransformMouseX(150, 70), 1.0E-6);
+        assertEquals(55.0, child.untransformMouseY(150, 70), 1.0E-6);
+
+        container.scalesChildVisuals = false;
+        assertEquals(150.0, child.unscaleMouseX(150, 70), 1.0E-6);
+        assertEquals(70.0, child.unscaleMouseY(150, 70), 1.0E-6);
     }
 
 }

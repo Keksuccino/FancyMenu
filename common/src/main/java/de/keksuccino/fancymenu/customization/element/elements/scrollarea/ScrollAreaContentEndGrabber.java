@@ -4,13 +4,10 @@ import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorHistory;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
-import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.events.GuiEventListener;
-import net.minecraft.client.gui.narration.NarratableEntry;
-import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.input.MouseButtonEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,10 +16,10 @@ import org.jetbrains.annotations.Nullable;
  * The handle the layout editor shows at the end of the content of a selected scrollable area, on one axis.
  * Dragging it makes the content longer or shorter, and holding it beyond the area scrolls along, so the content can grow as far as needed.<br><br>
  *
- * It is a listener of the editor screen on its own, and a {@link FancyMenuUiComponent}, so it gets a click before the editor does.
- * A click the handle takes never reaches the area behind it, which would start moving the area around otherwise.
+ * The editor asks it for every click before it does anything with it on its own. A click the handle takes
+ * never reaches the area behind it, which would start moving the area around otherwise.
  */
-public class ScrollAreaContentEndGrabber implements GuiEventListener, NarratableEntry, FancyMenuUiComponent {
+public class ScrollAreaContentEndGrabber implements GuiEventListener {
 
     private static final int GRABBER_LENGTH = 26;
     private static final int GRABBER_THICKNESS = 6;
@@ -34,7 +31,6 @@ public class ScrollAreaContentEndGrabber implements GuiEventListener, Narratable
     /** How many pixels per second the content scrolls along for every pixel the mouse is into the zone, and the fastest it gets. */
     private static final double AUTO_SCROLL_SPEED = 14.0D;
     private static final double AUTO_SCROLL_MAX_SPEED = 900.0D;
-    private static final double MAX_FRAME_SECONDS = 0.1D;
 
     @NotNull
     protected final ScrollAreaEditorElement editorElement;
@@ -43,10 +39,11 @@ public class ScrollAreaContentEndGrabber implements GuiEventListener, Narratable
     protected boolean grabbed = false;
     /** How far the mouse was from the end of the content when it took the handle, so the end does not jump to the mouse. */
     protected int grabOffset = 0;
+    /** Where the mouse took the handle, on the axis of the handle. */
+    protected int grabMouse = 0;
     protected int sizeOnGrab = 0;
     @Nullable
     protected LayoutEditorHistory.Snapshot snapshotOnGrab;
-    protected long lastDragNanos = 0L;
 
     /**
      * @param horizontal If the handle is for the width of the content, at its right end. Otherwise it is for the height, at its bottom end.
@@ -127,15 +124,16 @@ public class ScrollAreaContentEndGrabber implements GuiEventListener, Narratable
         int viewportStart = this.horizontal ? geometry.getViewportX() : geometry.getViewportY();
         int viewportEnd = viewportStart + (this.horizontal ? geometry.getViewportWidth() : geometry.getViewportHeight());
 
-        long now = System.nanoTime();
-        double deltaSeconds = (this.lastDragNanos == 0L) ? 0.0D : Math.min(MAX_FRAME_SECONDS, (now - this.lastDragNanos) / 1.0E9D);
-        this.lastDragNanos = now;
+        // The handle moves while its area renders, so the frame of the area is its frame
+        double deltaSeconds = area.getFrameDeltaSeconds();
 
-        // How far the content scrolls along in this frame: forwards while the mouse is at the end of the area, backwards while it is at its start
+        // How far the content scrolls along in this frame: forwards while the mouse is at the end of the area, backwards while it is at its start.
+        // The handle rests close to the end of the area when the area is scrolled to the end of its content, so only a mouse that
+        // moved on from where it took the handle scrolls along. Holding the handle still changes nothing.
         double scrollStep = 0.0D;
-        if (mouse > (viewportEnd - AUTO_SCROLL_ZONE)) {
+        if ((mouse > (viewportEnd - AUTO_SCROLL_ZONE)) && (mouse > this.grabMouse)) {
             scrollStep = Math.min(AUTO_SCROLL_MAX_SPEED, (mouse - (viewportEnd - AUTO_SCROLL_ZONE)) * AUTO_SCROLL_SPEED) * deltaSeconds;
-        } else if (mouse < (viewportStart + AUTO_SCROLL_ZONE)) {
+        } else if ((mouse < (viewportStart + AUTO_SCROLL_ZONE)) && (mouse < this.grabMouse)) {
             scrollStep = -Math.min(AUTO_SCROLL_MAX_SPEED, ((viewportStart + AUTO_SCROLL_ZONE) - mouse) * AUTO_SCROLL_SPEED) * deltaSeconds;
         }
 
@@ -144,7 +142,6 @@ public class ScrollAreaContentEndGrabber implements GuiEventListener, Narratable
         double contentStart = viewportStart - axis.getPosition();
         int size = (int) Math.round(((target - contentStart) + scrollStep) / geometry.getScale());
         int minSize = Math.round((viewportEnd - viewportStart) / geometry.getScale());
-        this.getSizeProperty().clearManualInput();
         this.getSizeProperty().set(Math.max(minSize, size));
         // The range of the scroll follows the new size in the next frame, where what could not be scrolled now gets caught up
         if (scrollStep != 0.0D) axis.drift(scrollStep);
@@ -202,17 +199,13 @@ public class ScrollAreaContentEndGrabber implements GuiEventListener, Narratable
         return end - GRABBER_INSET - GRABBER_THICKNESS;
     }
 
-    public boolean isGrabbed() {
-        return this.grabbed;
-    }
-
     @Override
     public boolean mouseClicked(@NotNull MouseButtonEvent event, boolean isDoubleClick) {
         if ((event.button() != InputConstants.MOUSE_BUTTON_LEFT) || !this.hovered || !this.isShown() || this.isLocked()) return false;
         ScrollAreaGeometry geometry = this.editorElement.element.getGeometry();
         this.grabbed = true;
-        this.lastDragNanos = 0L;
-        this.grabOffset = this.getEndOnScreen(geometry) - (int) (this.horizontal ? event.x() : event.y());
+        this.grabMouse = (int) (this.horizontal ? event.x() : event.y());
+        this.grabOffset = this.getEndOnScreen(geometry) - this.grabMouse;
         this.sizeOnGrab = this.getSizeProperty().getInteger();
         this.snapshotOnGrab = this.editorElement.editor.history.createSnapshot();
         return true;
@@ -244,15 +237,6 @@ public class ScrollAreaContentEndGrabber implements GuiEventListener, Narratable
     @Override
     public boolean isFocused() {
         return false;
-    }
-
-    @Override
-    public @NotNull NarrationPriority narrationPriority() {
-        return NarrationPriority.NONE;
-    }
-
-    @Override
-    public void updateNarration(@NotNull NarrationElementOutput output) {
     }
 
 }

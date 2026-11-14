@@ -38,8 +38,7 @@ class ElementContainerHierarchyTest {
 
     @Test
     void childrenMoveBehindTheirContainerInTheirOwnOrder() {
-        List<AbstractElement> elements = new ArrayList<>(List.of(
-                childOf("c1", "area"), new Child("a"), new Container("area"), new Child("b"), childOf("c2", "area"), childOf("c3", "area")));
+        List<AbstractElement> elements = new ArrayList<>(List.of(childOf("c1", "area"), new Child("a"), new Container("area"), new Child("b"), childOf("c2", "area"), childOf("c3", "area")));
         ElementContainerHierarchy.sortChildrenBehindContainers(elements, Function.identity());
         assertEquals(List.of("a", "area", "c1", "c2", "c3", "b"), ids(elements));
     }
@@ -48,8 +47,7 @@ class ElementContainerHierarchyTest {
     void childrenOfChildrenFollowTheirOwnContainer() {
         Container inner = new Container("inner");
         inner.setParentContainerIdentifier("outer");
-        List<AbstractElement> elements = new ArrayList<>(List.of(
-                childOf("deep", "inner"), new Child("a"), childOf("flat", "outer"), inner, new Container("outer"), childOf("last", "outer")));
+        List<AbstractElement> elements = new ArrayList<>(List.of(childOf("deep", "inner"), new Child("a"), childOf("flat", "outer"), inner, new Container("outer"), childOf("last", "outer")));
         ElementContainerHierarchy.sortChildrenBehindContainers(elements, Function.identity());
         assertEquals(List.of("a", "outer", "flat", "inner", "deep", "last"), ids(elements));
     }
@@ -139,10 +137,78 @@ class ElementContainerHierarchyTest {
         assertTrue(ElementContainerHierarchy.isInContainer(inner, outer));
         assertFalse(ElementContainerHierarchy.isInContainer(outer, inner));
         assertFalse(ElementContainerHierarchy.isInContainer(plain, outer));
+    }
 
-        assertSame(outer, ElementContainerHierarchy.getOutermostContainer(deep));
-        assertSame(outer, ElementContainerHierarchy.getOutermostContainer(inner));
-        assertNull(ElementContainerHierarchy.getOutermostContainer(outer));
+    @Test
+    void elementsDependOnTheirContainersAndOnWhatTheyAreAnchoredTo() {
+        Container outer = new Container("outer");
+        Container inner = new Container("inner");
+        inner.setParentContainer(outer);
+        Child deep = new Child("deep");
+        deep.setParentContainer(inner);
+        Child follower = new Child("follower");
+        follower.anchorTo(deep);
+        Child plain = new Child("plain");
+
+        assertTrue(ElementContainerHierarchy.dependsOn(deep, inner));
+        assertTrue(ElementContainerHierarchy.dependsOn(deep, outer));
+        // The follower sits where the element it is anchored to sits, which sits where its containers are
+        assertTrue(ElementContainerHierarchy.dependsOn(follower, deep));
+        assertTrue(ElementContainerHierarchy.dependsOn(follower, outer));
+        assertFalse(ElementContainerHierarchy.dependsOn(outer, deep));
+        assertFalse(ElementContainerHierarchy.dependsOn(deep, follower));
+        assertFalse(ElementContainerHierarchy.dependsOn(plain, outer));
+        assertFalse(ElementContainerHierarchy.dependsOn(plain, plain));
+    }
+
+    @Test
+    void aSearchForADependencyEndsInALoopOfAnchors() {
+        Child first = new Child("first");
+        Child second = new Child("second");
+        first.anchorTo(second);
+        second.anchorTo(first);
+        Child other = new Child("other");
+        assertFalse(ElementContainerHierarchy.dependsOn(first, other));
+        assertTrue(ElementContainerHierarchy.dependsOn(first, second));
+    }
+
+    @Test
+    void aContainerCanNotHoldWhatItIsAnchoredTo() {
+        Container area = new Container("area");
+        Child anchor = new Child("anchor");
+        area.anchorTo(anchor);
+
+        // The area follows the element, so the element in the area would follow itself
+        anchor.setParentContainer(area);
+        assertNull(anchor.getParentContainer());
+
+        Child follower = new Child("follower");
+        follower.anchorTo(area);
+        follower.setParentContainer(area);
+        assertSame(area, follower.getParentContainer());
+    }
+
+    @Test
+    void containersGetTheirChildrenInTheOrderOfTheList() {
+        Container area = new Container("area");
+        Container inner = new Container("inner");
+        Child first = new Child("first");
+        Child second = new Child("second");
+        Child deep = new Child("deep");
+        List<AbstractElement> elements = List.of(first, area, inner, deep, second);
+        first.setParentContainer(area);
+        inner.setParentContainer(area);
+        second.setParentContainer(area);
+        deep.setParentContainer(inner);
+
+        ElementContainerHierarchy.assignChildren(elements);
+        assertEquals(List.of("first", "inner", "second"), ids(area.children));
+        assertEquals(List.of("deep"), ids(inner.children));
+
+        // A container without children forgets the ones it had
+        deep.setParentContainer(null);
+        ElementContainerHierarchy.assignChildren(elements);
+        assertTrue(inner.children.isEmpty());
     }
 
     @Test

@@ -179,6 +179,8 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
             return;
         }
 
+        // The areas have to be where they are in this frame before the mouse gets checked against them
+        this.updateAreaBounds();
         this.tickAreaMouseOver(mouseX, mouseY);
 
         RenderingUtils.resetShaderColor(graphics);
@@ -243,7 +245,10 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
         return (this.anchorSpaceContainer != null) && (this.anchorSpaceContainer.element == container.getContainerElement());
     }
 
-    protected void renderAreas(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
+    /**
+     * Puts the anchor areas at the edges and the middle of what they stand for in this frame: the screen, or the container the dragged elements are in.
+     */
+    protected void updateAreaBounds() {
 
         int spaceX = 0;
         int spaceY = 0;
@@ -286,6 +291,11 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
         this.topRightArea.setBounds(right, top, areaSize);
         this.midRightArea.setBounds(right, centerY, areaSize);
         this.bottomRightArea.setBounds(right, bottom, areaSize);
+
+    }
+
+    protected void renderAreas(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
+
         for (AnchorPointArea area : this.anchorPointAreas) {
             area.extractRenderState(graphics, mouseX, mouseY, partial);
         }
@@ -353,7 +363,7 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
     }
 
     protected void tickAreaMouseOver(int mouseX, int mouseY) {
-        boolean hoverChangeAllowed = this.isHoverAnchorChangeAllowed();
+        boolean hoverChangeAllowed = this.editor.isUserMovingElements();
         if (hoverChangeAllowed) {
             this.currentlyHoveredArea = FancyMenu.getOptions().anchorOverlayChangeAnchorOnAreaHover.getValue() ? this.getMouseOverArea(mouseX, mouseY) : null;
             //If just started dragging, set lastCompleted to current, to "ignore" the initially hovered area
@@ -385,19 +395,6 @@ public class AnchorPointOverlay implements Renderable, GuiEventListener {
             this.resetAreaHoverCache();
         }
         this.lastTickDraggedEmpty = !hoverChangeAllowed;
-    }
-
-    protected boolean isHoverAnchorChangeAllowed() {
-        List<AbstractEditorElement<?, ?>> draggedElements = this.editor.getCurrentlyDraggedElements();
-        if (draggedElements.isEmpty()) {
-            return false;
-        }
-        for (AbstractEditorElement<?, ?> e : draggedElements) {
-            if (e.isGettingResized() || e.isGettingRotated() || e.isGettingTilted()) {
-                return false;
-            }
-        }
-        return true;
     }
 
     /**

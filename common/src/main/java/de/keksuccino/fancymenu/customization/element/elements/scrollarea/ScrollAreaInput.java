@@ -9,7 +9,7 @@ import net.minecraft.client.input.MouseButtonEvent;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Takes the input of a scrollable area from the screen: the mouse wheel and the grabbers of its scroll bars.<br>
+ * Takes the input of a scrollable area from the screen: the mouse wheel, the grabbers of its scroll bars and the mouse that drags its content.<br>
  * It is a {@link FancyMenuUiComponent}, so it gets every click and scroll of the screen and decides on its own which ones are for the area.
  * An area in another area gets its input before the outer one, and hands a scroll it has no use for on to it by not consuming it.
  */
@@ -25,12 +25,15 @@ public class ScrollAreaInput implements GuiEventListener, NarratableEntry, Fancy
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         if (!this.area.isShowingChildren() || !this.area.isScreenPointVisible(mouseX, mouseY)) return false;
+        // What scrolls in the area comes first, and the area takes over where that has nowhere to scroll to anymore
+        if (this.area.scrollChildByWheel(mouseX, mouseY, scrollX, scrollY)) return true;
         return this.area.scrollByWheel(scrollX, scrollY);
     }
 
     @Override
     public boolean mouseClicked(@NotNull MouseButtonEvent event, boolean isDoubleClick) {
-        if (!this.area.isShowingChildren()) return false;
+        // The bars sit next to what the area shows, where a container around the area can still cut them off
+        if (!this.area.isShowingChildren() || !this.area.isScreenPointVisibleInContainer(event.x(), event.y())) return false;
         if (this.area.getBars().mouseClicked(event.x(), event.y(), event.button())) return true;
         // A press on the content can become dragging it. It stays a click for whatever is under the mouse, so it does not get consumed here.
         if ((event.button() == InputConstants.MOUSE_BUTTON_LEFT) && this.area.isScreenPointVisible(event.x(), event.y()) && !this.area.hasInteractiveChildAt(event.x(), event.y())) {

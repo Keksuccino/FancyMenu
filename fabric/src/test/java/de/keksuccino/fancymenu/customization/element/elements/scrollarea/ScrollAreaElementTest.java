@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.element.elements.scrollarea;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
+import de.keksuccino.fancymenu.customization.element.ElementSpaceInputListener;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.elements.scrollarea.layout.ScrollAreaAlignment;
@@ -11,6 +12,8 @@ import de.keksuccino.fancymenu.customization.element.elements.scrollarea.layout.
 import de.keksuccino.fancymenu.util.properties.Property;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.narration.NarratableEntry;
+import net.minecraft.client.gui.narration.NarrationElementOutput;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import java.io.IOException;
@@ -19,10 +22,12 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ScrollAreaElementTest {
@@ -607,6 +612,101 @@ class ScrollAreaElementTest {
         assertTrue((position >= 290) && (position <= 300), "position " + position);
     }
 
+    @Test
+    void aChildThatMustNotReactToTheMouseGetsToldItIsNextToIt() {
+        TestChild child = child("child", 0, 0, 50, 40);
+        TestArea area = area(child);
+        area.nextFrame();
+        // The child spans (100, 50) to (150, 90) on the screen
+        assertEquals(30, ScrollAreaElement.moveOutOf(child, 30, 60, true));
+        assertEquals(60, ScrollAreaElement.moveOutOf(child, 30, 60, false));
+        assertEquals(150, ScrollAreaElement.moveOutOf(child, 150, 60, true));
+
+        // In the child, the mouse moves to the closest place outside of it, on one axis
+        assertEquals(99, ScrollAreaElement.moveOutOf(child, 103, 70, true));
+        assertEquals(70, ScrollAreaElement.moveOutOf(child, 103, 70, false));
+        assertEquals(150, ScrollAreaElement.moveOutOf(child, 147, 70, true));
+        assertEquals(125, ScrollAreaElement.moveOutOf(child, 125, 52, true));
+        assertEquals(49, ScrollAreaElement.moveOutOf(child, 125, 52, false));
+        assertEquals(90, ScrollAreaElement.moveOutOf(child, 125, 88, false));
+        for (int x = 100; x < 150; x += 7) {
+            for (int y = 50; y < 90; y += 5) {
+                int movedX = ScrollAreaElement.moveOutOf(child, x, y, true);
+                int movedY = ScrollAreaElement.moveOutOf(child, x, y, false);
+                assertFalse((movedX >= 100) && (movedX < 150) && (movedY >= 50) && (movedY < 90), x + "," + y + " stays in the child at " + movedX + "," + movedY);
+                assertTrue((movedX == x) || (movedY == y), "moved on both axes from " + x + "," + y);
+            }
+        }
+    }
+
+    @Test
+    void anAreaThatGetsSkippedTellsItsChildrenAndStopsShowingThem() {
+        TestChild child = child("child", 0, 0, 50, 40);
+        TestChild deep = child("deep", 0, 0, 20, 20);
+        TestArea inner = area(deep);
+        inner.setInstanceIdentifier("inner");
+        TestArea area = new TestArea();
+        area.setInstanceIdentifier("area");
+        child.setParentContainer(area);
+        inner.setParentContainer(area);
+        area.setContainerChildren(List.of(child, inner));
+        area.nextFrame();
+        inner.nextFrame();
+        assertTrue(area.isShowingChildren());
+        assertTrue(deep.isShownByContainer());
+
+        area.onRenderInternalSkipped();
+        assertEquals(1, child.skippedRenders);
+        assertEquals(1, deep.skippedRenders);
+        assertFalse(area.isShowingChildren());
+        assertFalse(inner.isShowingChildren());
+        assertFalse(child.isShownByContainer());
+        assertFalse(deep.shouldRender());
+    }
+
+    @Test
+    void anAreaInAnAreaOnlyShowsWhatBothShow() {
+        TestArea inner = new TestArea();
+        inner.setInstanceIdentifier("inner");
+        TestArea outer = new TestArea();
+        outer.setInstanceIdentifier("outer");
+        inner.setParentContainer(outer);
+        outer.setContainerChildren(List.of(inner));
+        outer.nextFrame();
+        // The outer area shows (100, 50) to (300, 150). The inner one is half out of it at the right.
+        inner.x = 250;
+        inner.y = 60;
+        inner.width = 100;
+        inner.height = 50;
+        inner.nextFrame();
+
+        int[] area = {200, 0, 400, 400};
+        assertTrue(inner.clipToShownArea(area));
+        assertArrayEquals(new int[] {250, 60, 300, 110}, area);
+        assertTrue(inner.isScreenPointVisible(290, 70));
+        assertFalse(inner.isScreenPointVisible(320, 70));
+        assertFalse(inner.clipToShownArea(new int[] {310, 60, 340, 100}));
+    }
+
+    @Test
+    void aWidgetBelongsToTheChildThatHasItAlsoThroughItsListener() {
+        TestChild child = child("child", 0, 0, 50, 40);
+        TestChild deep = child("deep", 0, 0, 20, 20);
+        TestArea inner = area(deep);
+        inner.setInstanceIdentifier("inner");
+        TestArea area = new TestArea();
+        area.setInstanceIdentifier("area");
+        child.setParentContainer(area);
+        inner.setParentContainer(area);
+        area.setContainerChildren(List.of(child, inner));
+
+        assertSame(child, area.findChildOwning(child.widget));
+        assertSame(child, area.findChildOwning(ElementSpaceInputListener.ofChildWidget(child, child.widget)));
+        // Something in an area that is a child belongs to that child
+        assertSame(inner, area.findChildOwning(deep.widget));
+        assertNull(area.findChildOwning(new TestChild().widget));
+    }
+
     /**
      * An area with a box tests set directly, which never asks the game for anything.
      */
@@ -696,7 +796,16 @@ class ScrollAreaElementTest {
 
     }
 
-    private static final class TestWidget implements GuiEventListener {
+    private static final class TestWidget implements GuiEventListener, NarratableEntry {
+
+        @Override
+        public @NotNull NarrationPriority narrationPriority() {
+            return NarrationPriority.NONE;
+        }
+
+        @Override
+        public void updateNarration(@NotNull NarrationElementOutput output) {
+        }
 
         @Override
         public void setFocused(boolean focused) {
@@ -712,6 +821,12 @@ class ScrollAreaElementTest {
     private static final class TestChild extends AbstractElement {
 
         private final TestWidget widget = new TestWidget();
+        private int skippedRenders = 0;
+
+        @Override
+        public void onRenderInternalSkipped() {
+            this.skippedRenders++;
+        }
 
         private TestChild() {
             super(null);

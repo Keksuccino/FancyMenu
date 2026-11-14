@@ -91,6 +91,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	public LayoutEditorHistory history = new LayoutEditorHistory(this);
 	public AnchorPointOverlay anchorPointOverlay = new AnchorPointOverlay(this);
 	public ContainerDragDropHandler containerDragDropHandler = new ContainerDragDropHandler(this);
+	protected final EditorElementInputRouter elementInputRouter = new EditorElementInputRouter(this);
 	public ContextMenu rightClickMenu;
 	public ContextMenu activeElementContextMenu = null;
 	public List<AbstractLayoutEditorWidget> layoutEditorWidgets = new ArrayList<>();
@@ -107,6 +108,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	protected int rightClickMenuOpenPosY = -1000;
 	protected LayoutEditorHistory.Snapshot preDragElementSnapshot;
 	private boolean editorStateDestroyed = false;
+	private final int[] elementShownArea = new int[4];
 	/** What the elements and their containers looked like when the containers last got their children. */
 	private int containerHierarchySignature = 0;
 	public final List<WidgetMeta> cachedVanillaWidgetMetas = new ArrayList<>();
@@ -173,6 +175,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		for (AbstractLayoutEditorWidget w : Lists.reverse(new ArrayList<>(this.layoutEditorWidgets))) {
 			this.addWidget(Objects.requireNonNull(w));
 		}
+
+		// Behind the menus and widgets of the editor, which lie on top of the elements and get their input first
+		this.addWidget(this.elementInputRouter);
 
 		this.isMouseSelection = false;
 		this.history.discardSnapshot(this.preDragElementSnapshot);
@@ -356,10 +361,11 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			} else {
 				// Children render in their container, which cuts them to what it shows. Only their border and controls go on top of everything.
 				// A child the user moves around is the exception: it has to be seen where the mouse takes it, also outside of its container.
-				if (e.isGettingMoved() && (this.getElementByInstanceIdentifier(e.element.getParentContainer().getContainerElement().getInstanceIdentifier()) instanceof ContainerEditorElement container)) {
+				if (e.isGettingMovedFreely() && (this.getElementByInstanceIdentifier(e.element.getParentContainer().getContainerElement().getInstanceIdentifier()) instanceof ContainerEditorElement container)) {
 					container.extractChildRenderStateUncut(e, graphics, mouseX, mouseY, partial);
 				}
-				e.extractEditorControlsRenderState(graphics, mouseX, mouseY, partial);
+				// A child of a container that does not show has nothing its border and controls could belong to
+				if (e.element.isShownByContainer()) e.extractEditorControlsRenderState(graphics, mouseX, mouseY, partial);
 			}
 		}
 
@@ -570,11 +576,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		for (AbstractEditorElement<?, ?> e : this.normalEditorElements) {
 			elements.add(e.element);
 		}
-		ElementContainerHierarchy.connect(elements);
 		// A container that is gone leaves its children in the main layout, where they also get saved to from now on
-		for (AbstractElement element : elements) {
-			if ((element.getParentContainerIdentifier() != null) && (element.getParentContainer() == null)) element.setParentContainer(null);
-		}
+		ElementContainerHierarchy.connect(elements);
 
 		ElementContainerHierarchy.sortChildrenBehindContainers(this.normalEditorElements, e -> e.element);
 		elements.clear();
@@ -697,6 +700,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		return elementsFinal;
 	}
 
+	/**
+	 * Returns the hovered elements, with the one on top of all others as the last one.
+	 */
 	@NotNull
 	public List<AbstractEditorElement<?, ?>> getHoveredElements() {
 		List<AbstractEditorElement<?, ?>> elements = new ArrayList<>();
@@ -705,6 +711,19 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				if (e.element.layerHiddenInEditor) continue;
 				boolean hidden = (e instanceof HideableElement h) && h.isHidden();
 				if (!hidden) elements.add(e);
+			}
+		}
+		// Selected elements count as being on top of everything, but a container always has its children on top of it.
+		// So a selected container goes behind the first hovered element that is in it, which keeps its children reachable.
+		for (int i = elements.size() - 1; i > 0; i--) {
+			if (!(elements.get(i).element instanceof ElementContainer container)) continue;
+			for (int j = 0; j < i; j++) {
+				if (ElementContainerHierarchy.isInContainer(elements.get(j).element, container)) {
+					elements.add(j, elements.remove(i));
+					// The element that is at the place of the container now has not been looked at yet
+					i++;
+					break;
+				}
 			}
 		}
 		return elements;
@@ -871,12 +890,25 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		return false;
 	}
 
+	/**
+	 * Returns if the area on the screen covers a part of the element that shows. What a container cuts off of a child does not count.
+	 */
 	protected boolean isElementOverlappingArea(@NotNull AbstractEditorElement<?, ?> element, int xStart, int yStart, int xEnd, int yEnd) {
-		int elementStartX = element.getX();
-		int elementStartY = element.getY();
-		int elementEndX = element.getX() + element.getWidth();
-		int elementEndY = element.getY() + element.getHeight();
-		return (xEnd > elementStartX) && (yEnd > elementStartY) && (yStart < elementEndY) && (xStart < elementEndX);
+		int[] shown = this.elementShownArea;
+		if (!element.element.getShownScreenArea(shown)) return false;
+		return (xEnd > shown[0]) && (yEnd > shown[1]) && (yStart < shown[3]) && (xStart < shown[2]);
+	}
+
+	/**
+	 * Returns if the user moves elements around with the mouse right now. This is the only kind of dragging that puts elements
+	 * somewhere else: into or out of a container, or to another anchor.
+	 */
+	public boolean isUserMovingElements() {
+		if (this.currentlyDraggedElements.isEmpty()) return false;
+		for (AbstractEditorElement<?, ?> e : this.currentlyDraggedElements) {
+			if (!e.isGettingMoved()) return false;
+		}
+		return true;
 	}
 
 	public boolean allSelectedElementsMovable() {

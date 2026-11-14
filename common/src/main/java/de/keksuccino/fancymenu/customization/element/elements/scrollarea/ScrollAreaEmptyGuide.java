@@ -9,6 +9,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,9 +40,11 @@ public final class ScrollAreaEmptyGuide {
     private final Component note = Component.translatable(LOCALIZATION_KEY_BASE + "note");
     private final List<List<MutableComponent>> wrappedTips = new ArrayList<>();
     private final List<MutableComponent> wrappedNote = new ArrayList<>();
+    @Nullable
     private Component[] tooltipLines;
     private float wrappedForWidth = -1.0F;
     private float wrappedForTextSize = -1.0F;
+    @Nullable
     private String wrappedForLanguageProbe;
 
     public ScrollAreaEmptyGuide() {

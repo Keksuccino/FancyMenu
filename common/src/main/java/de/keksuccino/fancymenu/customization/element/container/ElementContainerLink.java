@@ -29,6 +29,7 @@ public final class ElementContainerLink {
     private boolean hasManagedBox = false;
     private int managedDragOffsetX = 0;
     private int managedDragOffsetY = 0;
+    private boolean movedByUser = false;
 
     public ElementContainerLink(@NotNull AbstractElement element, @NotNull String containerIdentifier) {
         this.element = element;
@@ -67,16 +68,13 @@ public final class ElementContainerLink {
         this.connected = true;
     }
 
+    /**
+     * Returns if the container is the element, or sits where it sits because of where the element is: in the element,
+     * or anchored to it, directly or through other elements.
+     */
     private boolean wouldHoldItself(@NotNull ElementContainer container) {
-        AbstractElement current = container.getContainerElement();
-        // Longer chains than this do not exist in layouts made in the editor, so reaching the limit means a loop
-        for (int depth = 0; depth < 64; depth++) {
-            if (current == this.element) return true;
-            ElementContainer parent = current.getParentContainer();
-            if (parent == null) return false;
-            current = parent.getContainerElement();
-        }
-        return true;
+        AbstractElement containerElement = container.getContainerElement();
+        return (containerElement == this.element) || ElementContainerHierarchy.dependsOn(containerElement, this.element);
     }
 
     /**
@@ -126,6 +124,19 @@ public final class ElementContainerLink {
     public void setManagedDragOffset(int screenOffsetX, int screenOffsetY) {
         this.managedDragOffsetX = screenOffsetX;
         this.managedDragOffsetY = screenOffsetY;
+    }
+
+    /**
+     * Tells the link if the user moves the element around in the layout editor right now.<br>
+     * An element that stays on the screen stays in the content of its container, which would keep the user from dragging it
+     * out of the container. So nothing holds a child the user moves, until it gets dropped.
+     */
+    public void setMovedByUser(boolean movedByUser) {
+        this.movedByUser = movedByUser;
+    }
+
+    public boolean isMovedByUser() {
+        return this.movedByUser;
     }
 
     /**

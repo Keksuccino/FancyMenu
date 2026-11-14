@@ -347,7 +347,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 				widgetsToRegister = Lists.reverse(widgetsToRegister);
 				for (GuiEventListener w : widgetsToRegister) {
 					// Widgets of children take their input through a listener that knows what their container shows of them
-					if ((ae.getParentContainer() != null) && !(w instanceof ElementSpaceInputListener) && (w instanceof NarratableEntry)) {
+					if ((ae.getParentContainer() != null) && !ae.registersChildWidgetsDirectly() && !(w instanceof ElementSpaceInputListener) && (w instanceof NarratableEntry)) {
 						w = wrapChildWidget(ae, w);
 					}
 					if ((w instanceof NarratableEntry) && !((IMixinScreen)e.getScreen()).getChildrenFancyMenu().contains(w)) {
@@ -623,7 +623,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 	@SuppressWarnings("unchecked")
 	private static <T extends GuiEventListener & NarratableEntry> GuiEventListener wrapChildWidget(@NotNull AbstractElement element, @NotNull GuiEventListener widget) {
-		return ElementSpaceInputListener.of(element, (T) widget);
+		return ElementSpaceInputListener.ofChildWidget(element, (T) widget);
 	}
 
 	protected void _renderBackgroundOverlay(GuiGraphicsExtractor graphics, int x, int y, int width, int height) {

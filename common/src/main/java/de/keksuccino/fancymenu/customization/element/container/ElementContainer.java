@@ -80,6 +80,14 @@ public interface ElementContainer {
     boolean isScreenPointVisible(double screenX, double screenY);
 
     /**
+     * Cuts a rectangle on the screen down to what the container shows of its content, in this container and in every container it is in.
+     *
+     * @param area The left, top, right and bottom edge of the rectangle, which get changed to the edges of the part that shows.
+     * @return If any part of the rectangle shows.
+     */
+    boolean clipToShownArea(int @NotNull [] area);
+
+    /**
      * Returns if the container shows its children right now. Children of a container that does not show them
      * do not get rendered and must not react to input.
      */
