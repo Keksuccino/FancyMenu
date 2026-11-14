@@ -61,7 +61,8 @@ public final class ScrollAreaBars {
 
         ScrollAreaScroller scroller = this.area.getScroller();
         ScrollBarVisibility visibility = this.area.scrollBarVisibility.tryGetNonNullElse(ScrollBarVisibility.ALWAYS);
-        boolean shown = visibility != ScrollBarVisibility.NEVER;
+        // Bars are for scrolling by hand, so an area the user can't scroll has none
+        boolean shown = (visibility != ScrollBarVisibility.NEVER) && this.area.userScrolling.getBoolean();
         this.vertical.active = shown && scroller.y().canScroll();
         this.horizontal.active = shown && scroller.x().canScroll();
 

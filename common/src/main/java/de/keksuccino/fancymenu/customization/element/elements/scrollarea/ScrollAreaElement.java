@@ -2,9 +2,11 @@ package de.keksuccino.fancymenu.customization.element.elements.scrollarea;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
+import de.keksuccino.fancymenu.customization.element.ElementSpaceInputListener;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.container.ElementContainer;
+import de.keksuccino.fancymenu.customization.element.container.ElementContainerHierarchy;
 import de.keksuccino.fancymenu.customization.element.container.ElementContainerLink;
 import de.keksuccino.fancymenu.customization.element.elements.scrollarea.layout.ScrollAreaAlignment;
 import de.keksuccino.fancymenu.customization.element.elements.scrollarea.layout.ScrollAreaArranger;
@@ -15,13 +17,14 @@ import de.keksuccino.fancymenu.customization.element.style.PixelScrollGrabber;
 import de.keksuccino.fancymenu.customization.element.style.ScrollBarGrabberStyle;
 import de.keksuccino.fancymenu.customization.element.style.ScrollBarTrackBackground;
 import de.keksuccino.fancymenu.util.properties.Property;
-import de.keksuccino.fancymenu.util.properties.RuntimePropertyContainer;
+import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.rendering.RenderFrameCounter;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.konkrete.math.MathUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -38,20 +41,32 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
 
     /** Where children get told the mouse is while it is not over what the area shows of them, so nothing in them reacts to it. */
     public static final int MOUSE_OUTSIDE = -100000;
-    /** How many screen pixels one step of the mouse wheel scrolls at a scroll speed of 1. */
-    private static final double WHEEL_STEP = 30.0D;
     /** The longest time one frame moves the content for. Longer frames, like the first one after the game hung, would make the content jump. */
     private static final double MAX_FRAME_SECONDS = 0.1D;
     /** The smallest a proportional content gets. Smaller than this, nothing in it can be told apart anymore, and a scale of zero would break all math. */
     private static final float MIN_PROPORTIONAL_SCALE = 0.05F;
-    private static final String MEMORY_SCROLL_X = "scroll_area_scroll_x";
-    private static final String MEMORY_SCROLL_Y = "scroll_area_scroll_y";
 
     public final Property<ScrollDirection> scrollDirection = putProperty(ScrollDirection.buildProperty());
     /** The size of the content in the units of the content. Only counts on axes the area scrolls on, and never makes the content smaller than the area. */
     public final Property.IntegerProperty contentWidth = putProperty(Property.integerProperty("content_width", 0, "fancymenu.elements.scroll_area.content_width", Property.NumericInputBehavior.<Integer>builder().freeInput().build()));
     public final Property.IntegerProperty contentHeight = putProperty(Property.integerProperty("content_height", 0, "fancymenu.elements.scroll_area.content_height", Property.NumericInputBehavior.<Integer>builder().freeInput().build()));
+    /** If the user can scroll the content. Without it, the content only moves on its own and when something tells it to. */
+    public final Property.BooleanProperty userScrolling = putProperty(Property.booleanProperty("user_scrolling", true, "fancymenu.elements.scroll_area.scrolling.user"));
     public final Property.FloatProperty scrollSpeed = putProperty(Property.floatProperty("scroll_speed", 1.0F, "fancymenu.elements.scroll_area.scroll_speed", Property.NumericInputBehavior.<Float>builder().rangeInput(0.1F, 5.0F).build()));
+    public final Property.BooleanProperty smoothScrolling = putProperty(Property.booleanProperty("smooth_scrolling", true, "fancymenu.elements.scroll_area.scrolling.smooth"));
+    public final Property.BooleanProperty dragScrolling = putProperty(Property.booleanProperty("drag_scrolling", false, "fancymenu.elements.scroll_area.scrolling.drag"));
+    public final Property.BooleanProperty keyboardScrolling = putProperty(Property.booleanProperty("keyboard_scrolling", true, "fancymenu.elements.scroll_area.scrolling.keyboard"));
+    public final Property<ScrollSnapMode> snapMode = putProperty(ScrollSnapMode.buildProperty());
+    public final Property<ScrollStartPosition> startPosition = putProperty(ScrollStartPosition.buildProperty());
+    /** If the content goes back to its start position every time the screen gets opened. Without it, it stays where it was until the game closes. */
+    public final Property.BooleanProperty resetScrollOnOpen = putProperty(Property.booleanProperty("reset_scroll_on_open", true, "fancymenu.elements.scroll_area.scrolling.reset_on_open"));
+    public final Property.BooleanProperty autoScroll = putProperty(Property.booleanProperty("auto_scroll", false, "fancymenu.elements.scroll_area.auto_scroll.enabled"));
+    /** How many screen pixels per second the content scrolls on its own. */
+    public final Property.FloatProperty autoScrollSpeed = putProperty(Property.floatProperty("auto_scroll_speed", 20.0F, "fancymenu.elements.scroll_area.auto_scroll.speed", Property.NumericInputBehavior.<Float>builder().rangeInput(2.0F, 200.0F).build()));
+    public final Property.BooleanProperty autoScrollLoop = putProperty(Property.booleanProperty("auto_scroll_loop", true, "fancymenu.elements.scroll_area.auto_scroll.loop"));
+    public final Property.BooleanProperty autoScrollPauseOnHover = putProperty(Property.booleanProperty("auto_scroll_pause_on_hover", true, "fancymenu.elements.scroll_area.auto_scroll.pause_on_hover"));
+    public final Property.BooleanProperty edgeShadows = putProperty(Property.booleanProperty("edge_shadows", false, "fancymenu.elements.scroll_area.edge_shadows"));
+    public final Property.ColorProperty edgeShadowColor = putProperty(Property.hexColorProperty("edge_shadow_color", "#000000A0", true, "fancymenu.elements.scroll_area.edge_shadows.color"));
     public final Property<ScrollAreaLayoutMode> layoutMode = putProperty(ScrollAreaLayoutMode.buildProperty());
     public final Property<ScrollAreaAlignment> childAlignment = putProperty(ScrollAreaAlignment.buildProperty());
     public final Property.IntegerProperty contentPadding = putProperty(Property.integerProperty("content_padding", 4, "fancymenu.elements.scroll_area.content_padding", Property.NumericInputBehavior.<Integer>builder().rangeInput(0, 64).build()));
@@ -75,7 +90,7 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
     public final ScrollBarTrackBackground scrollBarBackground = new ScrollBarTrackBackground(this);
     public final ElementPanelBackground background = new ElementPanelBackground(this, "fancymenu.elements.scroll_area.background", this::getScrollBarSpace);
 
-    protected final ScrollAreaScroller scroller = new ScrollAreaScroller();
+    protected final ScrollAreaScrolling scrolling = new ScrollAreaScrolling(this);
     protected final ScrollAreaGeometry geometry = new ScrollAreaGeometry();
     protected final ScrollAreaBars bars = new ScrollAreaBars(this);
     protected final ScrollAreaInput input = new ScrollAreaInput(this);
@@ -95,8 +110,9 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
     /** The frame the area last rendered its children in. Input comes in between frames, so the area still shows them in the frame after it. */
     protected long lastChildrenShownFrame = -2L;
     protected float childOpacity = 1.0F;
-    protected double savedScrollX = 0.0D;
-    protected double savedScrollY = 0.0D;
+    /** Where the mouse was when the area rendered the last time, for what moves the content along with it. */
+    protected int frameMouseX = MOUSE_OUTSIDE;
+    protected int frameMouseY = MOUSE_OUTSIDE;
 
     public ScrollAreaElement(@NotNull ElementBuilder<?, ?> builder) {
         super(builder);
@@ -109,14 +125,12 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
 
     @Override
     public void afterConstruction() {
-        // Elements get rebuilt whenever the screen changes its size, and the content stays where it was scrolled to
-        RuntimePropertyContainer memory = this.getMemory();
-        Double scrollX = memory.getProperty(MEMORY_SCROLL_X, Double.class);
-        Double scrollY = memory.getProperty(MEMORY_SCROLL_Y, Double.class);
-        if (scrollX != null) this.scroller.x().restore(scrollX);
-        if (scrollY != null) this.scroller.y().restore(scrollY);
-        this.savedScrollX = this.scroller.x().getTarget();
-        this.savedScrollY = this.scroller.y().getTarget();
+        this.scrolling.restoreFromMemory();
+    }
+
+    @Override
+    public void onOpenScreen() {
+        if (this.resetScrollOnOpen.getBoolean()) this.scrolling.resetToStartPosition();
     }
 
     @Override
@@ -126,6 +140,8 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
         this.lastChildrenShownFrame = RenderFrameCounter.getFrame();
         // The opacity includes the one of the containers this area is in while it renders, which is the only time children ask for it
         this.childOpacity = this.opacity;
+        this.frameMouseX = mouseX;
+        this.frameMouseY = mouseY;
 
         this.updateFrame();
 
@@ -137,8 +153,10 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
         this.bars.update(geometry, this.opacity, this.frameDeltaSeconds);
         this.background.render(graphics, viewportX, viewportY, geometry.getViewportWidth(), geometry.getViewportHeight(), this.bars.isVerticalShown(), this.bars.isHorizontalShown(), this.isVerticalScrollBarAtStart(), this.isHorizontalScrollBarAtStart(), this.opacity);
         boolean mouseOverContent = geometry.isInViewport(mouseX, mouseY) && this.isScreenPointVisibleInContainer(mouseX, mouseY);
-        int childMouseX = mouseOverContent ? mouseX : MOUSE_OUTSIDE;
-        int childMouseY = mouseOverContent ? mouseY : MOUSE_OUTSIDE;
+        // Nothing in the content reacts to a mouse that is not over it, or that drags the content along
+        boolean childrenSeeMouse = mouseOverContent && !this.scrolling.isDragging();
+        int childMouseX = childrenSeeMouse ? mouseX : MOUSE_OUTSIDE;
+        int childMouseY = childrenSeeMouse ? mouseY : MOUSE_OUTSIDE;
 
         if (this.children.isEmpty() && (this.emptyContentRenderer != null)) {
             this.emptyContentRenderer.render(graphics, viewportX, viewportY, geometry.getViewportWidth(), geometry.getViewportHeight(), mouseOverContent);
@@ -155,6 +173,10 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
         } finally {
             graphics.pose().popMatrix();
             graphics.disableScissor();
+        }
+
+        if (this.edgeShadows.getBoolean()) {
+            ScrollAreaEdgeShadows.render(graphics, geometry, this.scrolling.getScroller(), this.edgeShadowColor.getDrawable().getColorInt(), this.opacity);
         }
 
         this.bars.render(graphics, mouseX, mouseY, partial);
@@ -230,16 +252,16 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
             }
             this.geometry.setContentSize(wantedContentWidth, wantedContentHeight, direction.scrollsX(), direction.scrollsY());
 
-            long now = System.nanoTime();
+            long now = this.getNanoTime();
             double deltaSeconds = (this.lastFrameNanos == 0L) ? 0.0D : Math.min(MAX_FRAME_SECONDS, (now - this.lastFrameNanos) / 1.0E9D);
             this.lastFrameNanos = now;
             this.frameDeltaSeconds = deltaSeconds;
 
-            this.scroller.setRange(this.geometry.getMaxScrollX(), this.geometry.getMaxScrollY());
-            this.scroller.update(deltaSeconds);
-            this.geometry.setScroll(this.scroller.x().getPosition(), this.scroller.y().getPosition(), this.getGuiScale());
+            boolean mouseOver = this.geometry.isInViewport(this.frameMouseX, this.frameMouseY);
+            this.scrolling.update(this.geometry, deltaSeconds, this.frameMouseX, this.frameMouseY, mouseOver);
+            ScrollAreaScroller scroller = this.scrolling.getScroller();
+            this.geometry.setScroll(scroller.x().getPosition(), scroller.y().getPosition(), this.getGuiScale());
 
-            this.rememberScroll();
             this.frameReady = true;
 
         } finally {
@@ -255,40 +277,13 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
         if (!this.frameReady) this.updateFrame();
     }
 
-    protected void rememberScroll() {
-        double scrollX = this.scroller.x().getTarget();
-        double scrollY = this.scroller.y().getTarget();
-        if ((scrollX == this.savedScrollX) && (scrollY == this.savedScrollY)) return;
-        this.savedScrollX = scrollX;
-        this.savedScrollY = scrollY;
-        RuntimePropertyContainer memory = this.getMemory();
-        memory.putProperty(MEMORY_SCROLL_X, scrollX);
-        memory.putProperty(MEMORY_SCROLL_Y, scrollY);
-    }
-
     /**
-     * Scrolls the content with the mouse wheel.<br>
-     * An area that only scrolls sideways takes the normal wheel for it. An area that scrolls both ways scrolls up and down
-     * with the wheel and sideways with a sideways wheel or with Shift held.
+     * Scrolls the content with the mouse wheel.
      *
      * @return If the content has somewhere to go in the scrolled direction. If not, the scroll is for whatever is behind the area.
      */
     public boolean scrollByWheel(double deltaX, double deltaY) {
-        double step = WHEEL_STEP * Math.max(0.0F, this.scrollSpeed.getFloat());
-        ScrollDirection direction = this.getScrollDirection();
-        if (direction == ScrollDirection.VERTICAL) {
-            return (deltaY != 0.0D) && this.scroller.y().scrollBy(-deltaY * step);
-        }
-        if (direction == ScrollDirection.HORIZONTAL) {
-            double delta = (deltaX != 0.0D) ? deltaX : deltaY;
-            return (delta != 0.0D) && this.scroller.x().scrollBy(-delta * step);
-        }
-        if (this.isShiftDown() && (deltaX == 0.0D)) {
-            return (deltaY != 0.0D) && this.scroller.x().scrollBy(-deltaY * step);
-        }
-        boolean scrolledX = (deltaX != 0.0D) && this.scroller.x().scrollBy(-deltaX * step);
-        boolean scrolledY = (deltaY != 0.0D) && this.scroller.y().scrollBy(-deltaY * step);
-        return scrolledX || scrolledY;
+        return this.scrolling.scrollByWheel(deltaX, deltaY);
     }
 
     /**
@@ -443,9 +438,70 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
         return Minecraft.getInstance().hasShiftDown();
     }
 
+    /**
+     * Returns the time everything in the area that moves on its own measures its frames with.
+     */
+    protected long getNanoTime() {
+        return System.nanoTime();
+    }
+
+    protected boolean isInEditor() {
+        return isEditor();
+    }
+
+    /**
+     * Returns what has the focus of the screen right now, which the keyboard moves from widget to widget.
+     */
+    @Nullable
+    protected GuiEventListener getFocusedListener() {
+        Screen screen = ScreenUtils.getScreen();
+        return (screen != null) ? screen.getFocused() : null;
+    }
+
+    /**
+     * Returns the child the given widget belongs to: one of its own widgets, or a widget of something in a child that is an area itself.
+     * Returns NULL if the widget belongs to nothing in the area.
+     */
+    @Nullable
+    public AbstractElement findChildOwning(@NotNull GuiEventListener widget) {
+        for (int i = 0; i < this.children.size(); i++) {
+            AbstractElement child = this.children.get(i);
+            if ((child instanceof ScrollAreaElement inner) && (inner.findChildOwning(widget) != null)) return child;
+            List<GuiEventListener> widgets = child.getWidgetsToRegister();
+            if (widgets == null) continue;
+            for (GuiEventListener childWidget : widgets) {
+                // Widgets that take their input in the space of their element get registered as the listener that maps it
+                if ((childWidget == widget) || ((childWidget instanceof ElementSpaceInputListener listener) && (listener.getWidget() == widget))) return child;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns if something in the area that takes mouse input is at the given position on the screen: a widget of a child.
+     */
+    public boolean hasInteractiveChildAt(double screenX, double screenY) {
+        Screen screen = ScreenUtils.getScreen();
+        if (screen == null) return false;
+        for (GuiEventListener listener : screen.children()) {
+            if ((listener instanceof ElementSpaceInputListener childListener) && ElementContainerHierarchy.isInContainer(childListener.getElement(), this) && childListener.isMouseOver(screenX, screenY)) return true;
+        }
+        return false;
+    }
+
+    @NotNull
+    public ScrollSnapMode getSnapMode() {
+        return this.snapMode.tryGetNonNullElse(ScrollSnapMode.NONE);
+    }
+
+    @NotNull
+    public ScrollAreaScrolling getScrolling() {
+        return this.scrolling;
+    }
+
     @NotNull
     public ScrollAreaScroller getScroller() {
-        return this.scroller;
+        return this.scrolling.getScroller();
     }
 
     @NotNull

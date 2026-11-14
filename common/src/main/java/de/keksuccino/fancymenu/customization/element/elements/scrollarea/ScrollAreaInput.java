@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.scrollarea;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
@@ -30,12 +31,23 @@ public class ScrollAreaInput implements GuiEventListener, NarratableEntry, Fancy
     @Override
     public boolean mouseClicked(@NotNull MouseButtonEvent event, boolean isDoubleClick) {
         if (!this.area.isShowingChildren()) return false;
-        return this.area.getBars().mouseClicked(event.x(), event.y(), event.button());
+        if (this.area.getBars().mouseClicked(event.x(), event.y(), event.button())) return true;
+        // A press on the content can become dragging it. It stays a click for whatever is under the mouse, so it does not get consumed here.
+        if ((event.button() == InputConstants.MOUSE_BUTTON_LEFT) && this.area.isScreenPointVisible(event.x(), event.y()) && !this.area.hasInteractiveChildAt(event.x(), event.y())) {
+            this.area.getScrolling().onMousePressed((int) event.x(), (int) event.y());
+        }
+        return false;
     }
 
     @Override
     public boolean mouseReleased(@NotNull MouseButtonEvent event) {
+        boolean barWasGrabbed = this.area.getBars().isGrabbed();
         this.area.getBars().mouseReleased(event.x(), event.y(), event.button());
+        if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
+            this.area.getScrolling().onMouseReleased();
+            // A grabber the user let go of leaves the content wherever it was dragged to
+            if (barWasGrabbed) this.area.getScrolling().snapToNearest();
+        }
         return false;
     }
 

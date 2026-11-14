@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -13,6 +14,11 @@ public class ScrollAreaElementBuilder extends ElementBuilder<ScrollAreaElement, 
 
     private static final int DEFAULT_WIDTH = 200;
     private static final int DEFAULT_HEIGHT = 120;
+    private static final ScrollAreaKeyboard KEYBOARD = new ScrollAreaKeyboard();
+
+    static {
+        EventHandler.INSTANCE.registerListenersOf(KEYBOARD);
+    }
 
     public ScrollAreaElementBuilder() {
         super("scroll_area");

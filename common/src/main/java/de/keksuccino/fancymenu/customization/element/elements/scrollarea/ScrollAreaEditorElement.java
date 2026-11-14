@@ -329,16 +329,114 @@ public class ScrollAreaEditorElement extends AbstractEditorElement<ScrollAreaEdi
 
         this.rightClickMenu.addSeparatorEntry("separator_after_content_size").setStackable(true);
 
-        this.element.scrollSpeed.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
-                .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.scroll_speed.desc")))
-                .setIcon(MaterialIcons.SPEED);
+        this.addScrollingMenu();
+
+        this.addAutoScrollMenu();
 
         this.rightClickMenu.addSeparatorEntry("separator_before_looks").setStackable(true);
 
         ElementStyleMenus.addPanelBackgroundMenu(this.rightClickMenu, this, this.element.background);
 
         this.addScrollBarsMenu();
+
+        ContextMenu edgeShadowsMenu = new ContextMenu();
+        this.rightClickMenu.addSubMenuEntry("edge_shadows", Component.translatable("fancymenu.elements.scroll_area.edge_shadows.menu"), edgeShadowsMenu)
+                .setStackable(true)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.edge_shadows.desc")))
+                .setIcon(MaterialIcons.GRADIENT);
+
+        this.element.edgeShadows.buildContextMenuEntryAndAddTo(edgeShadowsMenu, this)
+                .setStackable(true)
+                .setIcon(MaterialIcons.GRADIENT);
+
+        this.element.edgeShadowColor.buildContextMenuEntryAndAddTo(edgeShadowsMenu, this)
+                .setStackable(true)
+                .addIsActiveSupplier((menu, entry) -> this.element.edgeShadows.getBoolean())
+                .setIcon(MaterialIcons.PALETTE);
+
+    }
+
+    private void addScrollingMenu() {
+
+        ContextMenu scrollingMenu = new ContextMenu();
+        this.rightClickMenu.addSubMenuEntry("scrolling", Component.translatable("fancymenu.elements.scroll_area.scrolling"), scrollingMenu)
+                .setStackable(true)
+                .setIcon(MaterialIcons.MOUSE);
+
+        this.element.userScrolling.buildContextMenuEntryAndAddTo(scrollingMenu, this)
+                .setStackable(true)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.scrolling.user.desc")))
+                .setIcon(MaterialIcons.TOUCH_APP);
+
+        scrollingMenu.addSeparatorEntry("separator_after_user_scrolling").setStackable(true);
+
+        this.element.scrollSpeed.buildContextMenuEntryAndAddTo(scrollingMenu, this)
+                .setStackable(true)
+                .addIsActiveSupplier((menu, entry) -> this.element.userScrolling.getBoolean())
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.scroll_speed.desc")))
+                .setIcon(MaterialIcons.SPEED);
+
+        this.element.smoothScrolling.buildContextMenuEntryAndAddTo(scrollingMenu, this)
+                .setStackable(true)
+                .setIcon(MaterialIcons.ANIMATION);
+
+        this.element.dragScrolling.buildContextMenuEntryAndAddTo(scrollingMenu, this)
+                .setStackable(true)
+                .addIsActiveSupplier((menu, entry) -> this.element.userScrolling.getBoolean())
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.scrolling.drag.desc")))
+                .setIcon(MaterialIcons.PAN_TOOL);
+
+        this.element.keyboardScrolling.buildContextMenuEntryAndAddTo(scrollingMenu, this)
+                .setStackable(true)
+                .addIsActiveSupplier((menu, entry) -> this.element.userScrolling.getBoolean())
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.scrolling.keyboard.desc")))
+                .setIcon(MaterialIcons.KEYBOARD);
+
+        this.element.snapMode.buildContextMenuEntryAndAddTo(scrollingMenu, this)
+                .setStackable(true)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.scrolling.snap.desc")))
+                .setIcon(MaterialIcons.VIEW_CAROUSEL);
+
+        scrollingMenu.addSeparatorEntry("separator_before_start_position").setStackable(true);
+
+        this.element.startPosition.buildContextMenuEntryAndAddTo(scrollingMenu, this)
+                .setStackable(true)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.scrolling.start_position.desc")))
+                .setIcon(MaterialIcons.START);
+
+        this.element.resetScrollOnOpen.buildContextMenuEntryAndAddTo(scrollingMenu, this)
+                .setStackable(true)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.scrolling.reset_on_open.desc")))
+                .setIcon(MaterialIcons.RESTART_ALT);
+
+    }
+
+    private void addAutoScrollMenu() {
+
+        ContextMenu autoScrollMenu = new ContextMenu();
+        this.rightClickMenu.addSubMenuEntry("auto_scroll", Component.translatable("fancymenu.elements.scroll_area.auto_scroll"), autoScrollMenu)
+                .setStackable(true)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.auto_scroll.desc")))
+                .setIcon(MaterialIcons.PLAY_ARROW);
+
+        this.element.autoScroll.buildContextMenuEntryAndAddTo(autoScrollMenu, this)
+                .setStackable(true)
+                .setIcon(MaterialIcons.PLAY_ARROW);
+
+        this.element.autoScrollSpeed.buildContextMenuEntryAndAddTo(autoScrollMenu, this)
+                .setStackable(true)
+                .addIsActiveSupplier((menu, entry) -> this.element.autoScroll.getBoolean())
+                .setIcon(MaterialIcons.SPEED);
+
+        this.element.autoScrollLoop.buildContextMenuEntryAndAddTo(autoScrollMenu, this)
+                .setStackable(true)
+                .addIsActiveSupplier((menu, entry) -> this.element.autoScroll.getBoolean())
+                .setIcon(MaterialIcons.REPEAT);
+
+        this.element.autoScrollPauseOnHover.buildContextMenuEntryAndAddTo(autoScrollMenu, this)
+                .setStackable(true)
+                .addIsActiveSupplier((menu, entry) -> this.element.autoScroll.getBoolean())
+                .setIcon(MaterialIcons.MOUSE);
 
     }
 

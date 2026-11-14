@@ -50,6 +50,11 @@ public class ElementSpaceInputListener implements GuiEventListener, NarratableEn
     }
 
     @NotNull
+    public AbstractElement getElement() {
+        return this.element;
+    }
+
+    @NotNull
     protected MouseButtonEvent toElementSpace(@NotNull MouseButtonEvent event) {
         double x = this.element.untransformMouseX(event.x(), event.y());
         double y = this.element.untransformMouseY(event.x(), event.y());
