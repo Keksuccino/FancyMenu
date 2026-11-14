@@ -290,6 +290,9 @@ public class ScrollBar extends UIBase implements GuiEventListener, Renderable, N
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
 
+        // A wheel that did not turn up or down has nothing for a scroll bar, like one that only turned sideways
+        if (scrollDeltaY == 0.0D) return false;
+
         if (this.active && this.allowScrollWheel && this.isMouseInsideScrollArea(mouseX, mouseY, true) && !this.leftMouseDownOnGrabber) {
             float scrollOffset = 0.1F * this.wheelScrollSpeed;
             if (scrollDeltaY > 0) {
