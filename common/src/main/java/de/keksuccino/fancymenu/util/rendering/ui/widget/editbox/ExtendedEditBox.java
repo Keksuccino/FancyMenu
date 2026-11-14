@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.editbox;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.VanillaEvents;
@@ -572,7 +573,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
     }
 
     public void onClick(double mouseX, double mouseY) {
-        this.onClick(VanillaEvents.mouseButtonEvent(mouseX, mouseY, 0, 0), false);
+        this.onClick(VanillaEvents.mouseButtonEvent(mouseX, mouseY, InputConstants.MOUSE_BUTTON_LEFT, 0), false);
     }
 
     @Override
