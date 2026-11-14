@@ -63,12 +63,21 @@ public class TooltipElement extends AbstractElement {
         this.markdownRenderer.setAutoLineBreakingEnabled(true);
     }
 
+    /**
+     * Returns if the tooltip renders where it is in the order of the elements, like every other element does, instead of on top of everything at the end of the frame.<br>
+     * It does in the layout editor, and as a part of the content of a container, which has to cut it and to move it along like everything else in it.
+     * A tooltip that follows the mouse is never a part of the content.
+     */
+    protected boolean rendersInPlace() {
+        return isEditor() || (!this.mouseFollowing && (this.getParentContainer() != null));
+    }
+
     @Override
     public void renderInternal(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (RenderingUtils.isTooltipRenderingBlocked()) return;
 
-        if (isEditor()) {
+        if (this.rendersInPlace()) {
             super.renderInternal(graphics, mouseX, mouseY, partial);
         } else {
             RenderingUtils.addDeferredScreenRenderingTask(super::renderInternal);
@@ -105,7 +114,7 @@ public class TooltipElement extends AbstractElement {
                     int textureWidth = Math.max(1, tex.getWidth());
                     int textureHeight = Math.max(1, tex.getHeight());
 
-                    if (!isEditor()) {
+                    if (!this.rendersInPlace()) {
                         graphics.pose().pushPose();
                         graphics.pose().translate(0.0F, 0.0F, 400.0F);
                     }
@@ -117,7 +126,7 @@ public class TooltipElement extends AbstractElement {
                         this.nineSliceBorderTop.getInteger(), this.nineSliceBorderRight.getInteger(), 
                         this.nineSliceBorderBottom.getInteger(), this.nineSliceBorderLeft.getInteger());
 
-                    if (!isEditor()) graphics.pose().popPose();
+                    if (!this.rendersInPlace()) graphics.pose().popPose();
 
                 } else {
                     // Render vanilla tooltip background
@@ -128,7 +137,7 @@ public class TooltipElement extends AbstractElement {
                 this.renderVanillaTooltipBackground(graphics, x, y, width, height);
             }
 
-            if (!isEditor()) {
+            if (!this.rendersInPlace()) {
                 graphics.pose().pushPose();
                 graphics.pose().translate(0.0F, 0.0F, 400.0F);
             }
@@ -140,7 +149,7 @@ public class TooltipElement extends AbstractElement {
             this.markdownRenderer.setVisibleVerticalRange(y, y + height);
             this.markdownRenderer.render(graphics, mouseX, mouseY, partial);
 
-            if (!isEditor()) graphics.pose().popPose();
+            if (!this.rendersInPlace()) graphics.pose().popPose();
             
         } catch (Exception e) {
             LOGGER.error("[FANCYMENU] Failed to render Tooltip element!", e);
@@ -152,7 +161,7 @@ public class TooltipElement extends AbstractElement {
     
     private void renderVanillaTooltipBackground(GuiGraphics graphics, int x, int y, int width, int height) {
         // Use vanilla tooltip background rendering
-        TooltipRenderUtil.renderTooltipBackground(graphics, x, y, width, height, isEditor() ? 0 : 400);
+        TooltipRenderUtil.renderTooltipBackground(graphics, x, y, width, height, this.rendersInPlace() ? 0 : 400);
     }
 
     protected void renderTick() {
