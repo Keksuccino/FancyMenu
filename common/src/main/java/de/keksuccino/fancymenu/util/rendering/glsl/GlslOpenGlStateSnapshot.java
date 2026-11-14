@@ -90,10 +90,17 @@ final class GlslOpenGlStateSnapshot {
         setCapability(GL11.GL_BLEND, this.blendEnabled);
         setCapability(GL11.GL_DEPTH_TEST, this.depthTestEnabled);
         setCapability(GL11.GL_CULL_FACE, this.cullEnabled);
-        setCapability(GL11.GL_SCISSOR_TEST, this.scissorEnabled);
-        GlStateManager._scissorBox(this.scissorBox[0], this.scissorBox[1], this.scissorBox[2], this.scissorBox[3]);
+        this.restoreScissor();
         GlStateManager._blendFuncSeparate(this.blendSourceRgb, this.blendDestinationRgb, this.blendSourceAlpha, this.blendDestinationAlpha);
         GL20.glBlendEquationSeparate(this.blendEquationRgb, this.blendEquationAlpha);
+    }
+
+    /**
+     * Puts the scissor back the way it was, for what gets drawn to the target the scissor is for.
+     */
+    public void restoreScissor() {
+        setCapability(GL11.GL_SCISSOR_TEST, this.scissorEnabled);
+        GlStateManager._scissorBox(this.scissorBox[0], this.scissorBox[1], this.scissorBox[2], this.scissorBox[3]);
     }
 
     private static void setCapability(int capability, boolean enabled) {

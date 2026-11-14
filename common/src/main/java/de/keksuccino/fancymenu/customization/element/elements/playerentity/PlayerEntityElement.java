@@ -123,6 +123,15 @@ public class PlayerEntityElement extends AbstractElement {
         this.supportsTilting = false;
     }
 
+    /**
+     * The player gets rendered into the box of its widget, past the pose of the GUI. A container that scales its content
+     * gives the element the scaled box instead, and the player is as big as its box.
+     */
+    @Override
+    public boolean supportsPoseScaling() {
+        return false;
+    }
+
     @Override
     public void afterConstruction() {
         super.afterConstruction();

@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.element.elements.text.v2;
 
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.element.elements.MarkdownSettingsMenu;
+import de.keksuccino.fancymenu.customization.element.style.ElementStyleMenus;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.ListUtils;
@@ -97,7 +98,7 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
 
         MarkdownSettingsMenu.addTo(this.rightClickMenu, this, editorElement -> editorElement.element.markdownSettings);
 
-        this.addBackgroundMenu();
+        ElementStyleMenus.addPanelBackgroundMenu(this.rightClickMenu, this, this.element.background);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_markdown");
 
@@ -170,6 +171,8 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
         this.element.scrollGrabberColorHexHover.buildContextMenuEntryAndAddTo(grabberColorMenu, this)
                 .setIcon(MaterialIcons.PALETTE);
 
+        ElementStyleMenus.addScrollBarBackgroundMenu(this.rightClickMenu, this, this.element.scrollBarBackground);
+
         this.rightClickMenu.addSeparatorEntry("separator_after_hover_grabber_color");
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "interactable", TextEditorElement.class,
@@ -189,62 +192,6 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
         }
 
         super.render(graphics, mouseX, mouseY, partial);
-
-    }
-
-    private void addBackgroundMenu() {
-
-        TextBackground background = this.element.background;
-
-        ContextMenu backgroundMenu = new ContextMenu();
-        this.rightClickMenu.addSubMenuEntry("background", Component.translatable("fancymenu.elements.text.background"), backgroundMenu)
-                .setStackable(true)
-                .setIcon(MaterialIcons.WALLPAPER);
-
-        background.enabled.buildContextMenuEntryAndAddTo(backgroundMenu, this)
-                .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.background.enabled.desc")))
-                .setIcon(MaterialIcons.WALLPAPER);
-
-        background.padding.buildContextMenuEntryAndAddTo(backgroundMenu, this)
-                .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.background.padding.desc")))
-                .setIcon(MaterialIcons.PADDING_ICON);
-
-        background.behindScrollBars.buildContextMenuEntryAndAddTo(backgroundMenu, this)
-                .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.background.behind_scroll_bars.desc")))
-                .setIcon(MaterialIcons.EXPAND_CONTENT);
-
-        backgroundMenu.addSeparatorEntry("separator_before_background_texture").setStackable(true);
-
-        background.texture.buildContextMenuEntryAndAddTo(backgroundMenu, this)
-                .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.background.texture.desc")))
-                .setIcon(MaterialIcons.IMAGE);
-
-        // The built-in panel always gets drawn the way it needs it, so everything below only does something for a texture of the user
-        background.tile.buildContextMenuEntryAndAddTo(backgroundMenu, this)
-                .setStackable(true)
-                .addIsActiveSupplier((menu, entry) -> background.texture.get() != null)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.background.tile.desc")))
-                .setIcon(MaterialIcons.GRID_VIEW);
-
-        background.nineSlice.buildContextMenuEntryAndAddTo(backgroundMenu, this)
-                .setStackable(true)
-                .addIsActiveSupplier((menu, entry) -> background.texture.get() != null)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.background.nine_slice.desc")))
-                .setIcon(MaterialIcons.GRID_GUIDES);
-
-        background.nineSliceBorderX.buildContextMenuEntryAndAddTo(backgroundMenu, this)
-                .setStackable(true)
-                .addIsActiveSupplier((menu, entry) -> background.texture.get() != null)
-                .setIcon(MaterialIcons.BORDER_HORIZONTAL);
-
-        background.nineSliceBorderY.buildContextMenuEntryAndAddTo(backgroundMenu, this)
-                .setStackable(true)
-                .addIsActiveSupplier((menu, entry) -> background.texture.get() != null)
-                .setIcon(MaterialIcons.BORDER_VERTICAL);
 
     }
 

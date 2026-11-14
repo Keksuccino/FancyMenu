@@ -125,6 +125,15 @@ public class JsonModelElement extends AbstractElement {
         this.parentModelCache.clear();
     }
 
+    /**
+     * The model renders straight to the screen with a pose of its own, past the pose of the GUI. A container that scales
+     * its content gives the element the scaled box instead, and the model is as big as its box.
+     */
+    @Override
+    public boolean supportsPoseScaling() {
+        return false;
+    }
+
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 

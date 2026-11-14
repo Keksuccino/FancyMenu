@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.*;
 import de.keksuccino.fancymenu.Compat;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.util.rendering.RenderFrameCounter;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.decorationoverlay.overlays.DecorationOverlays;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
@@ -381,6 +382,8 @@ public class ScreenCustomization {
 	 * This gets called every render tick before starting to render the game.
 	 */
 	public static void onPreGameRenderTick() {
+
+		RenderFrameCounter.nextFrame();
 
 		AnimationControllerHandler.tick();
 

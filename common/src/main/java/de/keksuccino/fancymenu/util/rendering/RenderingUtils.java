@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering;
 
+import de.keksuccino.fancymenu.customization.element.container.ElementContainerDrawScale;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -800,6 +801,20 @@ public class RenderingUtils {
         return (color & 0x00FFFFFF) | (alpha << 24);
     }
 
+    /**
+     * Fills an area with a gradient that runs from its left edge to its right edge. Vanilla only has one that runs from top to bottom.
+     */
+    public static void fillGradientHorizontal(@NotNull GuiGraphics graphics, int x1, int y1, int x2, int y2, int colorLeft, int colorRight) {
+        Matrix4f matrix = graphics.pose().last().pose();
+        VertexConsumer consumer = graphics.bufferSource().getBuffer(RenderType.gui());
+        consumer.vertex(matrix, (float) x1, (float) y1, 0.0F).color(colorLeft).endVertex();
+        consumer.vertex(matrix, (float) x1, (float) y2, 0.0F).color(colorLeft).endVertex();
+        consumer.vertex(matrix, (float) x2, (float) y2, 0.0F).color(colorRight).endVertex();
+        consumer.vertex(matrix, (float) x2, (float) y1, 0.0F).color(colorRight).endVertex();
+        // Gradients of the game get drawn right away, and one that waits would end up on top of what comes after it and past what cuts it
+        graphics.flush();
+    }
+
     public static void fillF(@NotNull GuiGraphics graphics, float minX, float minY, float maxX, float maxY, int color) {
         fillF(graphics, minX, minY, maxX, maxY, 0F, color);
     }
@@ -975,6 +990,8 @@ public class RenderingUtils {
     public static void enableScissor(@NotNull GuiGraphics graphics, int minX, int minY, int maxX, int maxY) {
         ScreenRectangle r = new ScreenRectangle(minX, minY, maxX - minX, maxY - minY);
         r = transformAxisAligned(r, graphics.pose().last().pose());
+        // The pose includes the scale a container draws a child with, which scissors get mapped by on their own otherwise
+        ElementContainerDrawScale.markNextScissorAsOnScreen();
         graphics.enableScissor(r.left(), r.top(), r.right(), r.bottom());
     }
 

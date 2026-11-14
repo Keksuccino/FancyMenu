@@ -8,6 +8,9 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlay;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
+import de.keksuccino.fancymenu.customization.element.container.ContainerEditorElement;
+import de.keksuccino.fancymenu.customization.element.container.ElementContainer;
+import de.keksuccino.fancymenu.customization.element.container.ElementContainerHierarchy;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.HideableElement;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
@@ -81,6 +84,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	public List<VanillaWidgetEditorElement> vanillaWidgetEditorElements = new ArrayList<>();
 	public LayoutEditorHistory history = new LayoutEditorHistory(this);
 	public AnchorPointOverlay anchorPointOverlay = new AnchorPointOverlay(this);
+	public ContainerDragDropHandler containerDragDropHandler = new ContainerDragDropHandler(this);
+	protected final EditorElementInputRouter elementInputRouter = new EditorElementInputRouter(this);
+	public final ContainerElementOperations containerOperations = new ContainerElementOperations(this);
 	public ContextMenu rightClickMenu;
 	public ContextMenu activeElementContextMenu = null;
 	public List<AbstractLayoutEditorWidget> layoutEditorWidgets = new ArrayList<>();
@@ -97,6 +103,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	protected int rightClickMenuOpenPosY = -1000;
 	protected LayoutEditorHistory.Snapshot preDragElementSnapshot;
 	private boolean editorStateDestroyed = false;
+	private final int[] elementShownArea = new int[4];
+	/** What the elements and their containers looked like when the containers last got their children. */
+	private int containerHierarchySignature = 0;
 	public final List<WidgetMeta> cachedVanillaWidgetMetas = new ArrayList<>();
 	/** Customizations of vanilla widgets that only exist in other contexts of the target screen. They get serialized back unchanged, so editing never deletes them. */
 	protected final List<SerializedElement> absentVanillaWidgetElements = new ArrayList<>();
@@ -161,6 +170,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		for (AbstractLayoutEditorWidget w : Lists.reverse(new ArrayList<>(this.layoutEditorWidgets))) {
 			this.addWidget(Objects.requireNonNull(w));
 		}
+
+		// Behind the menus and widgets of the editor, which lie on top of the elements and get their input first
+		this.addWidget(this.elementInputRouter);
 
 		this.isMouseSelection = false;
 		this.history.discardSnapshot(this.preDragElementSnapshot);
@@ -289,6 +301,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		this.renderMouseSelectionRectangle(graphics, mouseX, mouseY);
 
+		this.containerDragDropHandler.render(graphics, mouseX, mouseY, partial);
+
 		this.anchorPointOverlay.render(graphics, mouseX, mouseY, partial);
 
 		this.renderLayoutEditorWidgets(graphics, mouseX, mouseY, partial);
@@ -315,10 +329,12 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	protected void renderElements(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
+		this.ensureContainerHierarchy();
+
 		//Render normal elements behind vanilla if renderBehindVanilla
 		if (this.layout.renderElementsBehindVanilla) {
 			for (AbstractEditorElement<?, ?> e : new ArrayList<>(this.normalEditorElements)) {
-				if (!e.isSelected()) e.render(graphics, mouseX, mouseY, partial);
+				if (!e.isSelected() && (e.element.getParentContainer() == null)) e.render(graphics, mouseX, mouseY, partial);
 			}
 		}
 		//Render vanilla button elements
@@ -328,14 +344,24 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		//Render normal elements before vanilla if NOT renderBehindVanilla
 		if (!this.layout.renderElementsBehindVanilla) {
 			for (AbstractEditorElement<?, ?> e : new ArrayList<>(this.normalEditorElements)) {
-				if (!e.isSelected()) e.render(graphics, mouseX, mouseY, partial);
+				if (!e.isSelected() && (e.element.getParentContainer() == null)) e.render(graphics, mouseX, mouseY, partial);
 			}
 		}
 
 		//Render selected elements last, so they're always visible
 		List<AbstractEditorElement<?, ?>> selected = this.getSelectedElements();
 		for (AbstractEditorElement<?, ?> e : selected) {
-			e.render(graphics, mouseX, mouseY, partial);
+			if (e.element.getParentContainer() == null) {
+				e.render(graphics, mouseX, mouseY, partial);
+			} else {
+				// Children render in their container, which cuts them to what it shows. Only their border and controls go on top of everything.
+				// A child the user moves around is the exception: it has to be seen where the mouse takes it, also outside of its container.
+				if (e.isGettingMovedFreely() && (this.getElementByInstanceIdentifier(e.element.getParentContainer().getContainerElement().getInstanceIdentifier()) instanceof ContainerEditorElement container)) {
+					container.renderChildUncut(e, graphics, mouseX, mouseY, partial);
+				}
+				// A child of a container that does not show has nothing its border and controls could belong to
+				if (e.element.isShownByContainer()) e.renderEditorControls(graphics, mouseX, mouseY, partial);
+			}
 		}
 
 	}
@@ -525,6 +551,65 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 	}
 
+	/**
+	 * Makes sure the containers know their children. Everything that adds, removes or moves elements, or puts them into or out of
+	 * a container, changes what the elements and their containers look like, which is all this needs to notice it.
+	 */
+	protected void ensureContainerHierarchy() {
+		if (this.calculateContainerHierarchySignature() == this.containerHierarchySignature) return;
+		this.updateContainerHierarchy();
+		// Whatever changed the elements did it without telling the containers, so what shows the elements may not know about it either
+		for (AbstractLayoutEditorWidget widget : this.layoutEditorWidgets) {
+			widget.refresh();
+		}
+	}
+
+	private int calculateContainerHierarchySignature() {
+		int signature = this.normalEditorElements.size();
+		for (int i = 0; i < this.normalEditorElements.size(); i++) {
+			AbstractElement element = this.normalEditorElements.get(i).element;
+			signature = (31 * signature) + System.identityHashCode(element);
+			signature = (31 * signature) + Objects.hashCode(element.getParentContainerIdentifier());
+		}
+		return signature;
+	}
+
+	/**
+	 * Brings the elements into the order containers need, with every child behind its container, and gives every container its children.
+	 */
+	public void updateContainerHierarchy() {
+
+		List<AbstractElement> elements = new ArrayList<>(this.normalEditorElements.size());
+		for (AbstractEditorElement<?, ?> e : this.normalEditorElements) {
+			elements.add(e.element);
+		}
+		// A container that is gone leaves its children in the main layout, where they also get saved to from now on
+		ElementContainerHierarchy.connect(elements);
+		// Children are layers of their container, which is what layer groups hold in their place
+		for (AbstractElement element : elements) {
+			if (element.getParentContainer() != null) this.removeElementsFromLayerGroups(List.of(element.getInstanceIdentifier()));
+		}
+
+		ElementContainerHierarchy.sortChildrenBehindContainers(this.normalEditorElements, e -> e.element);
+		elements.clear();
+		for (AbstractEditorElement<?, ?> e : this.normalEditorElements) {
+			elements.add(e.element);
+		}
+		ElementContainerHierarchy.assignChildren(elements);
+
+		List<AbstractEditorElement<?, ?>> children = new ArrayList<>();
+		for (AbstractEditorElement<?, ?> e : this.normalEditorElements) {
+			if ((e instanceof ContainerEditorElement containerEditorElement) && (e.element instanceof ElementContainer container)) {
+				children.clear();
+				ElementContainerHierarchy.collectChildren(container, this.normalEditorElements, child -> child.element, children);
+				containerEditorElement.setChildEditorElements(children);
+			}
+		}
+
+		this.containerHierarchySignature = this.calculateContainerHierarchySignature();
+
+	}
+
 	protected void constructElementInstances() {
 
 		//Clear element lists
@@ -570,6 +655,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				}
 			}
 		}
+
+		this.updateContainerHierarchy();
 
 		this.sanitizeLayerGroups();
 
@@ -624,6 +711,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		return elementsFinal;
 	}
 
+	/**
+	 * Returns the hovered elements, with the one on top of all others as the last one.
+	 */
 	@NotNull
 	public List<AbstractEditorElement<?, ?>> getHoveredElements() {
 		List<AbstractEditorElement<?, ?>> elements = new ArrayList<>();
@@ -632,6 +722,19 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 				if (e.element.layerHiddenInEditor) continue;
 				boolean hidden = (e instanceof HideableElement h) && h.isHidden();
 				if (!hidden) elements.add(e);
+			}
+		}
+		// Selected elements count as being on top of everything, but a container always has its children on top of it.
+		// So a selected container goes behind the first hovered element that is in it, which keeps its children reachable.
+		for (int i = elements.size() - 1; i > 0; i--) {
+			if (!(elements.get(i).element instanceof ElementContainer container)) continue;
+			for (int j = 0; j < i; j++) {
+				if (ElementContainerHierarchy.isInContainer(elements.get(j).element, container)) {
+					elements.add(j, elements.remove(i));
+					// The element that is at the place of the container now has not been looked at yet
+					i++;
+					break;
+				}
 			}
 		}
 		return elements;
@@ -798,12 +901,25 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		return false;
 	}
 
+	/**
+	 * Returns if the area on the screen covers a part of the element that shows. What a container cuts off of a child does not count.
+	 */
 	protected boolean isElementOverlappingArea(@NotNull AbstractEditorElement<?, ?> element, int xStart, int yStart, int xEnd, int yEnd) {
-		int elementStartX = element.getX();
-		int elementStartY = element.getY();
-		int elementEndX = element.getX() + element.getWidth();
-		int elementEndY = element.getY() + element.getHeight();
-		return (xEnd > elementStartX) && (yEnd > elementStartY) && (yStart < elementEndY) && (xStart < elementEndX);
+		int[] shown = this.elementShownArea;
+		if (!element.element.getShownScreenArea(shown)) return false;
+		return (xEnd > shown[0]) && (yEnd > shown[1]) && (yStart < shown[3]) && (xStart < shown[2]);
+	}
+
+	/**
+	 * Returns if the user moves elements around with the mouse right now. This is the only kind of dragging that puts elements
+	 * somewhere else: into or out of a container, or to another anchor.
+	 */
+	public boolean isUserMovingElements() {
+		if (this.currentlyDraggedElements.isEmpty()) return false;
+		for (AbstractEditorElement<?, ?> e : this.currentlyDraggedElements) {
+			if (!e.isGettingMoved()) return false;
+		}
+		return true;
 	}
 
 	public boolean allSelectedElementsMovable() {
@@ -821,9 +937,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			int groupIndex = groupElements.indexOf(element);
 			return groupIndex != -1 && groupIndex < groupElements.size() - 1;
 		}
-		int index = this.normalEditorElements.indexOf(element);
-		if (index == -1) return false;
-		return index < this.normalEditorElements.size()-1;
+		return this.containerOperations.getSibling(element, true) != null;
 	}
 
 	public boolean canMoveLayerDown(AbstractEditorElement<?, ?> element) {
@@ -833,8 +947,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			int groupIndex = groupElements.indexOf(element);
 			return groupIndex > 0;
 		}
-		int index = this.normalEditorElements.indexOf(element);
-		return index > 0;
+		return this.containerOperations.getSibling(element, false) != null;
 	}
 
 	/**
@@ -870,35 +983,37 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 					}
 					movedAbove = above;
 				}
-			} else if (this.normalEditorElements.contains(element)) {
-				List<AbstractEditorElement<?, ?>> newNormalEditorElements = new ArrayList<>();
-				int index = this.normalEditorElements.indexOf(element);
-				int i = 0;
-				if (index < (this.normalEditorElements.size() - 1)) {
-					for (AbstractEditorElement<?, ?> e : this.normalEditorElements) {
-						if (e != element) {
-							newNormalEditorElements.add(e);
-							if (i == index+1) {
-								movedAbove = e;
-								newNormalEditorElements.add(element);
-							}
-						}
-						i++;
-					}
-					this.normalEditorElements = newNormalEditorElements;
-					if (movedAbove != null) {
-						Layout.LayerGroup targetGroup = this.getLayerGroupForElement(movedAbove);
-						if (targetGroup != null) {
-							this.addElementsToLayerGroup(List.of(element.element.getInstanceIdentifier()), targetGroup);
-						}
-					}
-				}
+			} else {
+				movedAbove = this.moveLayerPastSibling(element, true);
 			}
+			// Everything that is in a moved container moves along with it
+			this.updateContainerHierarchy();
 			this.updateLayerGroupElementOrder();
 		} catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to move element one layer up in the editor!", ex);
 		}
 		return movedAbove;
+	}
+
+	/**
+	 * Moves the element past the element next to it among the elements of the same container, or of the main layout.
+	 * An element of the main layout that ends up next to an element of a layer group becomes part of that group.
+	 *
+	 * @param up If the element moves a layer up. Otherwise it moves a layer down.
+	 * @return The element the given one moved past, or NULL if there is none in that direction.
+	 */
+	@Nullable
+	protected AbstractEditorElement<?, ?> moveLayerPastSibling(@NotNull AbstractEditorElement<?, ?> element, boolean up) {
+		AbstractEditorElement<?, ?> sibling = this.containerOperations.getSibling(element, up);
+		if (sibling == null) return null;
+		List<AbstractEditorElement<?, ?>> reordered = new ArrayList<>(this.normalEditorElements);
+		reordered.remove(element);
+		// Directly behind or in front of the sibling. The hierarchy puts what is in the sibling between the two again.
+		reordered.add(reordered.indexOf(sibling) + (up ? 1 : 0), element);
+		this.normalEditorElements = reordered;
+		Layout.LayerGroup targetGroup = this.getLayerGroupForElement(sibling);
+		if (targetGroup != null) this.addElementsToLayerGroup(List.of(element.element.getInstanceIdentifier()), targetGroup);
+		return sibling;
 	}
 
 	/**
@@ -934,30 +1049,10 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 					}
 					movedBehind = below;
 				}
-			} else if (this.normalEditorElements.contains(element)) {
-				List<AbstractEditorElement<?, ?>> newNormalEditorElements = new ArrayList<>();
-				int index = this.normalEditorElements.indexOf(element);
-				int i = 0;
-				if (index > 0) {
-					for (AbstractEditorElement<?, ?> e : this.normalEditorElements) {
-						if (e != element) {
-							if (i == index-1) {
-								newNormalEditorElements.add(element);
-								movedBehind = e;
-							}
-							newNormalEditorElements.add(e);
-						}
-						i++;
-					}
-					this.normalEditorElements = newNormalEditorElements;
-					if (movedBehind != null) {
-						Layout.LayerGroup targetGroup = this.getLayerGroupForElement(movedBehind);
-						if (targetGroup != null) {
-							this.addElementsToLayerGroup(List.of(element.element.getInstanceIdentifier()), targetGroup);
-						}
-					}
-				}
+			} else {
+				movedBehind = this.moveLayerPastSibling(element, false);
 			}
+			this.updateContainerHierarchy();
 			this.updateLayerGroupElementOrder();
 		} catch (Exception ex) {
 			LOGGER.error("[FANCYMENU] Failed to move element one layer down in the editor!", ex);
@@ -1025,24 +1120,27 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	public void copyElementsToClipboard(AbstractEditorElement<?, ?>... elements) {
 		if ((elements != null) && (elements.length > 0)) {
 			COPIED_ELEMENTS_CLIPBOARD.clear();
-			for (AbstractEditorElement<?, ?> e : elements) {
+			// A container gets copied with everything that is in it
+			for (AbstractEditorElement<?, ?> e : this.containerOperations.withDescendants(Arrays.asList(elements))) {
 				if (e.element.layerHiddenInEditor) continue;
 				if (e.settings.isCopyable()) {
 					SerializedElement serialized = e.element.getBuilder().serializeElementInternal(e.element);
 					if (serialized != null) {
-						serialized.putProperty("instance_identifier", ScreenCustomization.generateUniqueIdentifier());
 						COPIED_ELEMENTS_CLIPBOARD.put(serialized, e.element.getBuilder());
 					}
 				}
 			}
+			// The copies are elements of their own from here on, and the copies of children belong to the copy of their container
+			ContainerElementOperations.assignNewIdentifiers(COPIED_ELEMENTS_CLIPBOARD.keySet(), ScreenCustomization::generateUniqueIdentifier);
 		}
 	}
 
 	public void pasteElementsFromClipboard() {
 		if (!COPIED_ELEMENTS_CLIPBOARD.isEmpty()) {
 			this.deselectAllElements();
+			// Every paste makes new elements, so what is in the clipboard gets new identifiers for each one
+			ContainerElementOperations.assignNewIdentifiers(COPIED_ELEMENTS_CLIPBOARD.keySet(), ScreenCustomization::generateUniqueIdentifier);
 			for (Map.Entry<SerializedElement, ElementBuilder<?,?>> m : COPIED_ELEMENTS_CLIPBOARD.entrySet()) {
-				m.getKey().putProperty("instance_identifier", ScreenCustomization.generateUniqueIdentifier());
 				AbstractElement deserialized = m.getValue().deserializeElementInternal(m.getKey());
 				if (deserialized != null) {
 					AbstractEditorElement<?, ?> deserializedEditorElement = m.getValue().wrapIntoEditorElementInternal(deserialized, this);
@@ -1054,6 +1152,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 					}
 				}
 			}
+			this.containerOperations.refreshAfterChange();
 		}
 	}
 
@@ -1230,7 +1329,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 		boolean multiSelect = selected.size() > 1;
 		for (AbstractEditorElement<?, ?> e : selected) {
 			if (this.allSelectedElementsMovable()) {
-				if (!multiSelect || !e.isElementAnchorAndParentIsSelected()) {
+				if (!multiSelect || (!e.isElementAnchorAndParentIsSelected() && !this.containerDragDropHandler.movesWithDraggedContainer(e, selected))) {
 					e.element.posOffsetX = e.element.posOffsetX + offsetX;
 					e.element.posOffsetY = e.element.posOffsetY + offsetY;
 				}
@@ -1325,6 +1424,11 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		boolean cachedMovingStarted = this.elementMovingStarted;
 
+		// Elements the user moved around go into what they got dropped on: a container or the main layout
+		if (cachedMovingStarted && (button == InputConstants.MOUSE_BUTTON_LEFT)) {
+			this.containerDragDropHandler.onElementsDropped(new ArrayList<>(this.currentlyDraggedElements), (int) mouseX, (int) mouseY);
+		}
+
 		this.elementMovingStarted = false;
 		this.elementResizingStarted = false;
 		this.currentlyDraggedElements.clear();
@@ -1372,6 +1476,8 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 	public boolean mouseDragged(double mouseX, double mouseY, int button, double $$3, double $$4) {
 
 		if (super.mouseDragged(mouseX, mouseY, button, $$3, $$4)) return true;
+		// Something an element shows in the editor besides itself holds the mouse, like a handle that gets dragged, so nothing else gets moved or selected with it
+		if (this.elementInputRouter.isHoldingMouse()) return true;
 
 		if (this.isMouseSelection) {
 			for (AbstractEditorElement<?, ?> e : this.getAllElements()) {
@@ -1514,11 +1620,9 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 
 		//DEL
 		if (keycode == InputConstants.KEY_DELETE) {
-			this.history.saveSnapshot();
-			for (AbstractEditorElement<?, ?> e : this.getSelectedElements()) {
-				if (e.element.layerHiddenInEditor) continue;
-				e.deleteElement();
-			}
+			List<AbstractEditorElement<?, ?>> deleted = this.getSelectedElements();
+			deleted.removeIf(e -> e.element.layerHiddenInEditor);
+			this.containerOperations.deleteElements(deleted);
 			return true;
 		}
 

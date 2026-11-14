@@ -215,13 +215,19 @@ public abstract class AbstractDecorationOverlay<O extends AbstractDecorationOver
         return (getScreen() instanceof LayoutEditorScreen);
     }
 
+    /** Only for the render thread, which is the one that collects collision boxes. */
+    private static final int[] SHOWN_AREA = new int[4];
+
     @Nullable
     protected static CollisionAreaBounds getAsCollisionBox(@NotNull Object o) {
         if (o instanceof AbstractElement e) {
             if (!e.shouldRender()) return null;
             if ((e instanceof HideableElement h) && h.isHidden()) return null;
             if (!e.shouldBeAffectedByDecorationOverlays.tryGetNonNull()) return null;
-            return new CollisionAreaBounds(e.getAbsoluteX(), e.getAbsoluteY(), e.getAbsoluteWidth(), e.getAbsoluteHeight());
+            // What a container cuts off of its children is not there for anything to collide with
+            int[] shown = SHOWN_AREA;
+            if (!e.getShownScreenArea(shown)) return null;
+            return new CollisionAreaBounds(shown[0], shown[1], shown[2] - shown[0], shown[3] - shown[1]);
         }
         if (o instanceof PlainTextButton) return null;
         if (o instanceof AbstractButton b) return new CollisionAreaBounds(b.getX(), b.getY(), b.getWidth(), b.getHeight());
