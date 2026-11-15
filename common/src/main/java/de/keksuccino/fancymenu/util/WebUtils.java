@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util;
 
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.util.threading.FancyMenuExecutors;
+import de.keksuccino.fancymenu.util.window.OffscreenTestClient;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -103,6 +104,11 @@ public class WebUtils {
     }
 
     public static void openWebLink(@NotNull String url) {
+        // Test clients must never open anything on the screen of the user, see TESTING_GUIDELINES.md
+        if (OffscreenTestClient.isEnabled()) {
+            LOGGER.info("[FANCYMENU] Off-screen test client mode: Skipped opening the link {}", url);
+            return;
+        }
         try {
             String s = System.getProperty("os.name").toLowerCase(Locale.ROOT);
             URL u = new URL(url);
