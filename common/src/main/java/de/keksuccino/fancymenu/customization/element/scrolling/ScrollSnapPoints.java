@@ -1,12 +1,12 @@
-package de.keksuccino.fancymenu.customization.element.elements.scrollarea;
+package de.keksuccino.fancymenu.customization.element.scrolling;
 
 import java.util.Arrays;
 
 /**
- * The positions the content of a scrollable area comes to rest at on one axis, when the area snaps: the start and the end
+ * The positions the content of a scrollable element comes to rest at on one axis, when the element snaps: the start and the end
  * of the range, and everything in between that got added. Plain math, so it knows nothing about elements or the game.
  */
-public final class ScrollAreaSnapPoints {
+public final class ScrollSnapPoints {
 
     /** How far apart two positions have to be to count as two. Closer ones are the same place for the eye. */
     private static final double MIN_DISTANCE = 0.5D;
@@ -28,7 +28,7 @@ public final class ScrollAreaSnapPoints {
     }
 
     /**
-     * Adds a point for every page: the size of what the area shows, over and over, until the end of the range.
+     * Adds a point for every page: the size of what the element shows, over and over, until the end of the range.
      */
     public void addPages(int pageSize, int max) {
         if (pageSize <= 0) return;

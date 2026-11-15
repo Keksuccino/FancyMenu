@@ -4,7 +4,7 @@ import de.keksuccino.fancymenu.customization.element.elements.animationcontrolle
 import de.keksuccino.fancymenu.customization.element.elements.animationcontroller.AnimationControllerElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.scrollarea.ScrollAreaElement;
 import de.keksuccino.fancymenu.customization.element.elements.scrollarea.ScrollAreaElementBuilder;
-import de.keksuccino.fancymenu.customization.element.elements.scrollarea.ScrollDirection;
+import de.keksuccino.fancymenu.customization.element.scrolling.ScrollDirection;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -32,7 +32,7 @@ class IsScrollAreaScrolledToEndRequirementTest {
         assertTrue(requirement.isRequirementMet("  area "));
 
         // An area that scrolls sideways is at its end when its content is at its right end
-        area.scrollDirection.set(ScrollDirection.HORIZONTAL);
+        area.scrollSettings.scrollDirection.set(ScrollDirection.HORIZONTAL);
         assertFalse(requirement.isRequirementMet("area"));
         area.getScroller().x().scrollTo(400, false);
         assertTrue(requirement.isRequirementMet("area"));

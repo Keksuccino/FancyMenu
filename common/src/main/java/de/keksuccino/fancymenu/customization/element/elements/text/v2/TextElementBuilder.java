@@ -15,6 +15,10 @@ import org.jetbrains.annotations.Nullable;
 
 public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorElement> {
 
+    /** The key text elements saved their switch for scrolling with, and the one of the property that took its place. */
+    private static final String LEGACY_SCROLLING_KEY = "enable_scrolling";
+    private static final String USER_SCROLLING_KEY = "user_scrolling";
+
     public TextElementBuilder() {
         super("text_v2");
     }
@@ -34,6 +38,7 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
     public TextElement deserializeElement(@NotNull SerializedElement serialized) {
 
         LegacyMarkdownSettings.upgradeTextElement(serialized);
+        upgradeLegacyScrolling(serialized);
 
         //Don't use buildDefaultInstance() here, because updateContent() runs asynchronously and could override the deserialized content with the default one
         TextElement element = new TextElement(this);
@@ -72,11 +77,6 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
         element.horizontalScrollGrabberTextureNormal = deserializeImageResourceSupplier(serialized.getValue("horizontal_grabber_texture_normal"));
         element.horizontalScrollGrabberTextureHover = deserializeImageResourceSupplier(serialized.getValue("horizontal_grabber_texture_hover"));
 
-        String enableScrollingString = serialized.getValue("enable_scrolling");
-        if ((enableScrollingString != null) && enableScrollingString.equals("false")) {
-            element.enableScrolling = false;
-        }
-
         String autoLineWrapping = serialized.getValue("auto_line_wrapping");
         if (autoLineWrapping != null) {
             if (autoLineWrapping.equals("true")) element.markdownRenderer.setAutoLineBreakingEnabled(true);
@@ -95,6 +95,16 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
 
         return element;
 
+    }
+
+    /**
+     * Text elements used to have one switch for scrolling, which is what letting players scroll is now.
+     * Has to run on the saved data of a text element before its properties load it.
+     */
+    static void upgradeLegacyScrolling(@NotNull SerializedElement serialized) {
+        if (serialized.hasProperty(LEGACY_SCROLLING_KEY) && !serialized.hasProperty(USER_SCROLLING_KEY)) {
+            serialized.putProperty(USER_SCROLLING_KEY, serialized.getValue(LEGACY_SCROLLING_KEY));
+        }
     }
 
     @Override
@@ -123,7 +133,6 @@ public class TextElementBuilder extends ElementBuilder<TextElement, TextEditorEl
         if (element.horizontalScrollGrabberTextureHover != null) {
             serializeTo.putProperty("horizontal_grabber_texture_hover", element.horizontalScrollGrabberTextureHover.getSourceWithPrefix());
         }
-        serializeTo.putProperty("enable_scrolling", "" + element.enableScrolling);
         serializeTo.putProperty("auto_line_wrapping", "" + element.markdownRenderer.isAutoLineBreakingEnabled());
         serializeTo.putProperty("remove_html_breaks", "" + element.markdownRenderer.isRemoveHtmlBreaks());
         return serializeTo;

@@ -5,7 +5,7 @@ import de.keksuccino.fancymenu.customization.element.elements.animationcontrolle
 import de.keksuccino.fancymenu.customization.element.elements.animationcontroller.AnimationControllerElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.scrollarea.ScrollAreaElement;
 import de.keksuccino.fancymenu.customization.element.elements.scrollarea.ScrollAreaElementBuilder;
-import de.keksuccino.fancymenu.customization.element.elements.scrollarea.ScrollDirection;
+import de.keksuccino.fancymenu.customization.element.scrolling.ScrollDirection;
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import org.junit.jupiter.api.Test;
 import java.util.HashMap;
@@ -49,9 +49,9 @@ class ScrollAreaValuePlaceholderTest {
         ScrollAreaValuePlaceholder placeholder = ScrollAreaValuePlaceholder.scrollPosition(id -> area);
         assertEquals("200", replacement(placeholder, "area", null));
         assertEquals("200", replacement(placeholder, "area", "something"));
-        area.scrollDirection.set(ScrollDirection.BOTH);
+        area.scrollSettings.scrollDirection.set(ScrollDirection.BOTH);
         assertEquals("200", replacement(placeholder, "area", null));
-        area.scrollDirection.set(ScrollDirection.HORIZONTAL);
+        area.scrollSettings.scrollDirection.set(ScrollDirection.HORIZONTAL);
         assertEquals("100", replacement(placeholder, "area", null));
         // An axis that got asked for counts, also when it is not the one the area scrolls on
         assertEquals("200", replacement(placeholder, "area", "vertical"));

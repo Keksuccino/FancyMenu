@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.element.elements.scrollarea;
+package de.keksuccino.fancymenu.customization.element.scrolling;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.customization.element.style.PixelScrollGrabber;
@@ -7,10 +7,10 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * The two scroll bars of a scrollable area. They sit outside of what the area shows, next to it,
+ * The two scroll bars of a scrollable element. They sit outside of what the element shows of its content, next to it,
  * and only exist for an axis as long as the content can be scrolled on it.
  */
-public final class ScrollAreaBars {
+public final class ElementScrollBars {
 
     /** The room between a grabber and the edges of its bar, on both sides of the grabber. */
     private static final int GRABBER_MARGIN = 1;
@@ -19,7 +19,7 @@ public final class ScrollAreaBars {
     private static final float FADE_PER_SECOND = 4.0F;
 
     @NotNull
-    private final ScrollAreaElement area;
+    private final ScrollableElement host;
     private final ScrollBar vertical;
     private final ScrollBar horizontal;
     /** How visible bars are that only show while the content scrolls, between 0 and 1. */
@@ -29,9 +29,11 @@ public final class ScrollAreaBars {
     private double lastScrollY = 0.0D;
     private float opacity = 1.0F;
 
-    public ScrollAreaBars(@NotNull ScrollAreaElement area) {
-        this.area = area;
-        ScrollAreaScroller scroller = area.getScroller();
+    /**
+     * @param scroller What moves the content of the element. A dragged grabber moves it along.
+     */
+    public ElementScrollBars(@NotNull ScrollableElement host, @NotNull ContentScroller scroller) {
+        this.host = host;
         this.vertical = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, PixelScrollGrabber.THICKNESS, PixelScrollGrabber.LENGTH, 0, 0, 0, 0, PixelScrollGrabber.getTexture(true, false), PixelScrollGrabber.getTexture(true, true));
         this.horizontal = new ScrollBar(ScrollBar.ScrollBarDirection.HORIZONTAL, PixelScrollGrabber.LENGTH, PixelScrollGrabber.THICKNESS, 0, 0, 0, 0, PixelScrollGrabber.getTexture(false, false), PixelScrollGrabber.getTexture(false, true));
         this.vertical.setGrabberEdgeInset(GRABBER_MARGIN);
@@ -42,28 +44,36 @@ public final class ScrollAreaBars {
     }
 
     /**
-     * Returns the space a scroll bar has its grabber in, next to the area.
+     * Returns the space a scroll bar has its grabber in, next to what the element shows of its content.
      */
     public int getBarSpace() {
         return this.getThickness() + (GRABBER_MARGIN * 2);
     }
 
     private int getThickness() {
-        return Math.max(2, this.area.scrollBarThickness.getInteger());
+        return Math.max(2, this.host.getScrollSettings().scrollBarThickness.getInteger());
     }
 
     /**
-     * Puts the bars next to what the area shows right now and their grabbers where the content is scrolled to.
-     *
-     * @param opacity The opacity of the area, between 0 and 1.
-     * @param deltaSeconds The time since the last frame.
+     * Makes grabbers that get drawn in a color bars with round corners, or bars with sharp ones.
      */
-    public void update(@NotNull ScrollAreaGeometry geometry, float opacity, double deltaSeconds) {
+    public void setRoundedGrabbers(boolean rounded) {
+        this.vertical.setRoundedGrabberEnabled(rounded);
+        this.horizontal.setRoundedGrabberEnabled(rounded);
+    }
 
-        ScrollAreaScroller scroller = this.area.getScroller();
-        ScrollBarVisibility visibility = this.area.scrollBarVisibility.tryGetNonNullElse(ScrollBarVisibility.ALWAYS);
-        // Bars are for scrolling by hand, so an area the user can't scroll has none
-        boolean shown = (visibility != ScrollBarVisibility.NEVER) && this.area.userScrolling.getBoolean();
+    /**
+     * Puts the bars next to what the element shows right now and their grabbers where the content is scrolled to.
+     *
+     * @param opacity The opacity of the element, between 0 and 1.
+     */
+    public void update(@NotNull ScrollGeometry geometry, float opacity) {
+
+        ScrollSettings settings = this.host.getScrollSettings();
+        ContentScroller scroller = this.host.getScrolling().getScroller();
+        ScrollBarVisibility visibility = settings.scrollBarVisibility.tryGetNonNullElse(ScrollBarVisibility.ALWAYS);
+        // Bars are for scrolling by hand, so an element the user can't scroll has none
+        boolean shown = (visibility != ScrollBarVisibility.NEVER) && settings.userScrolling.getBoolean();
         this.vertical.active = shown && scroller.y().canScroll();
         this.horizontal.active = shown && scroller.x().canScroll();
 
@@ -77,27 +87,27 @@ public final class ScrollAreaBars {
 
         int space = this.getBarSpace();
         // A background that does not reach behind the bars has them outside of it
-        int distance = this.area.background.getScrollBarDistance();
+        int distance = this.host.getScrollBarDistance();
         int left = geometry.getViewportX();
         int top = geometry.getViewportY();
         int right = left + geometry.getViewportWidth();
         int bottom = top + geometry.getViewportHeight();
 
-        // A bar has its grabber at the end of the range it is given, so a bar on the left or the top ends where the area starts
-        this.vertical.scrollAreaEndX = this.area.isVerticalScrollBarAtStart() ? (left - distance) : (right + distance + space);
+        // A bar has its grabber at the end of the range it is given, so a bar on the left or the top ends where the content starts
+        this.vertical.scrollAreaEndX = settings.verticalScrollBarLeft.getBoolean() ? (left - distance) : (right + distance + space);
         this.vertical.scrollAreaStartX = this.vertical.scrollAreaEndX - space;
         this.vertical.scrollAreaStartY = top;
         this.vertical.scrollAreaEndY = bottom;
         if (!this.vertical.isGrabberGrabbed()) this.vertical.setScroll((float) scroller.y().getProgress(), false);
 
-        this.horizontal.scrollAreaEndY = this.area.isHorizontalScrollBarAtStart() ? (top - distance) : (bottom + distance + space);
+        this.horizontal.scrollAreaEndY = settings.horizontalScrollBarTop.getBoolean() ? (top - distance) : (bottom + distance + space);
         this.horizontal.scrollAreaStartY = this.horizontal.scrollAreaEndY - space;
         this.horizontal.scrollAreaStartX = left;
         this.horizontal.scrollAreaEndX = right;
         if (!this.horizontal.isGrabberGrabbed()) this.horizontal.setScroll((float) scroller.x().getProgress(), false);
 
-        this.opacity = opacity * this.updateActivityFade(visibility, scroller, deltaSeconds);
-        this.area.grabberStyle.apply(this.vertical, this.horizontal, this.opacity);
+        this.opacity = opacity * this.updateActivityFade(visibility, scroller, this.host.getScrolling().getFrameDeltaSeconds());
+        this.host.applyScrollGrabberLooks(this.vertical, this.horizontal, this.opacity);
 
     }
 
@@ -105,7 +115,7 @@ public final class ScrollAreaBars {
      * Returns how visible the bars are for this frame, between 0 and 1. Bars that only show while the content scrolls
      * come back at once when something happens, and fade out a moment after it stopped.
      */
-    private float updateActivityFade(@NotNull ScrollBarVisibility visibility, @NotNull ScrollAreaScroller scroller, double deltaSeconds) {
+    private float updateActivityFade(@NotNull ScrollBarVisibility visibility, @NotNull ContentScroller scroller, double deltaSeconds) {
         if (visibility != ScrollBarVisibility.WHILE_SCROLLING) {
             this.activityFade = 1.0F;
             return 1.0F;
@@ -126,13 +136,16 @@ public final class ScrollAreaBars {
         return this.activityFade;
     }
 
+    /**
+     * @param mouseX Where the mouse is, in the space the content scrolls in.
+     */
     public void render(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         if (this.vertical.active) {
-            this.area.scrollBarBackground.render(graphics, this.vertical, true, this.opacity);
+            this.host.getScrollBarBackground().render(graphics, this.vertical, true, this.opacity);
             this.vertical.extractRenderState(graphics, mouseX, mouseY, partial);
         }
         if (this.horizontal.active) {
-            this.area.scrollBarBackground.render(graphics, this.horizontal, false, this.opacity);
+            this.host.getScrollBarBackground().render(graphics, this.horizontal, false, this.opacity);
             this.horizontal.extractRenderState(graphics, mouseX, mouseY, partial);
         }
     }
@@ -159,6 +172,9 @@ public final class ScrollAreaBars {
         return this.isGrabbed() || this.vertical.isGrabberHovered() || this.horizontal.isGrabberHovered();
     }
 
+    /**
+     * @param mouseX Where the mouse is, in the space the content scrolls in.
+     */
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         return this.vertical.mouseClicked(mouseX, mouseY, button) || this.horizontal.mouseClicked(mouseX, mouseY, button);
     }
@@ -169,10 +185,15 @@ public final class ScrollAreaBars {
     }
 
     /**
-     * Moves the grabber the user holds to where the mouse is. Has to be called in every frame a grabber is held: on some game versions,
+     * Moves the grabber the user holds to where the mouse really is. Has to be called in every frame a grabber is held: on some game versions,
      * screens never tell what takes its clicks before they do that the mouse moved with its button held.
      */
-    public void followPointer(int mouseX, int mouseY) {
+    public void followPointer() {
+        if (!this.isGrabbed()) return;
+        int pointerX = this.host.getPointerX();
+        int pointerY = this.host.getPointerY();
+        double mouseX = this.host.toScrollSpaceX(pointerX, pointerY);
+        double mouseY = this.host.toScrollSpaceY(pointerX, pointerY);
         this.vertical.mouseDragged(mouseX, mouseY, InputConstants.MOUSE_BUTTON_LEFT, 0.0D, 0.0D);
         this.horizontal.mouseDragged(mouseX, mouseY, InputConstants.MOUSE_BUTTON_LEFT, 0.0D, 0.0D);
     }
