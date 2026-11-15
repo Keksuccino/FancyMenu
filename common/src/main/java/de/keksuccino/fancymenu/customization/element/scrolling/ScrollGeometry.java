@@ -1,14 +1,14 @@
-package de.keksuccino.fancymenu.customization.element.elements.scrollarea;
+package de.keksuccino.fancymenu.customization.element.scrolling;
 
 /**
- * The geometry of a scrollable area for one frame: what it shows (the viewport), how big its content is,
+ * The geometry of a scrollable element for one frame: what it shows (the viewport), how big its content is,
  * how far the content can be scrolled and where the content is on the screen.<br>
  * Plain math on the values it gets, so it knows nothing about elements or the game.<br><br>
  *
  * The viewport and the scroll are in screen pixels. The content size is in the units of the content,
  * which are screen pixels times the scale.
  */
-public final class ScrollAreaGeometry {
+public final class ScrollGeometry {
 
     private int viewportX;
     private int viewportY;
@@ -23,7 +23,7 @@ public final class ScrollAreaGeometry {
     private int scrollY;
 
     /**
-     * Sets the part of the screen the area shows its content in, and how many screen pixels one unit of the content is.
+     * Sets the part of the screen the element shows its content in, and how many screen pixels one unit of the content is.
      */
     public void setViewport(int x, int y, int width, int height, float scale) {
         this.viewportX = x;

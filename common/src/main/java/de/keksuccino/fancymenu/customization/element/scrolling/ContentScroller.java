@@ -1,16 +1,16 @@
-package de.keksuccino.fancymenu.customization.element.elements.scrollarea;
+package de.keksuccino.fancymenu.customization.element.scrolling;
 
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Where the content of a scrollable area is, where it is scrolling to and how it gets there.<br>
+ * Where the content of a scrollable element is, where it is scrolling to and how it gets there.<br>
  * Everything is in screen pixels and plain math, so it knows nothing about elements or the game.<br><br>
  *
  * Every axis has a position (where the content is right now) and a target (where it is going). Scrolling moves the target,
  * and {@link #update(double)} moves the position towards it. A scroll that comes in while another one is still running
  * just moves the target on, so nothing ever waits for an animation to finish.
  */
-public final class ScrollAreaScroller {
+public final class ContentScroller {
 
     /** How fast the position closes the distance to the target. After one second, e^-RATE of the distance is left. */
     private static final double SMOOTH_SCROLL_RATE = 16.0D;
@@ -62,7 +62,7 @@ public final class ScrollAreaScroller {
     }
 
     /**
-     * One axis of a {@link ScrollAreaScroller}.
+     * One axis of a {@link ContentScroller}.
      */
     public final class Axis {
 
@@ -151,13 +151,13 @@ public final class ScrollAreaScroller {
             double clamped = Math.min(this.max, Math.max(0.0D, position));
             boolean changed = clamped != this.target;
             this.target = clamped;
-            if (!animate || !ScrollAreaScroller.this.smooth) this.position = clamped;
+            if (!animate || !ContentScroller.this.smooth) this.position = clamped;
             return changed;
         }
 
         /**
          * Puts the content where it was before, without knowing yet how far it can be scrolled.
-         * The next {@link ScrollAreaScroller#setRange(int, int)} pulls it into the range.
+         * The next {@link ContentScroller#setRange(int, int)} pulls it into the range.
          */
         public void restore(double position) {
             if (Double.isNaN(position)) return;

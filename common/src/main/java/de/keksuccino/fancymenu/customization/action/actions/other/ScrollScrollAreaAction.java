@@ -3,9 +3,8 @@ package de.keksuccino.fancymenu.customization.action.actions.other;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
-import de.keksuccino.fancymenu.customization.element.container.ElementContainerHierarchy;
-import de.keksuccino.fancymenu.customization.element.elements.scrollarea.ScrollAreaElement;
-import de.keksuccino.fancymenu.customization.element.elements.scrollarea.ScrollAreaScrolling;
+import de.keksuccino.fancymenu.customization.element.scrolling.ElementScrolling;
+import de.keksuccino.fancymenu.customization.element.scrolling.ScrollableElement;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.cycle.LocalizedGenericValueCycle;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -20,13 +19,15 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
- * Scrolls the content of a Scrollable Area element: to its start, to its end, to a position or to one of the elements in it.
+ * Scrolls the content of a scrollable element, like a Scrollable Area or a Text: to its start, to its end, to a position,
+ * to one of the elements in it or to one of its lines of text.
  */
 public class ScrollScrollAreaAction extends Action {
 
@@ -58,9 +59,9 @@ public class ScrollScrollAreaAction extends Action {
     @Override
     public void execute(@Nullable String value) {
         Config config = Config.parse(value);
-        if ((config == null) || config.areaIdentifier.isBlank()) return;
-        if (!(this.elementLookup.apply(config.areaIdentifier.trim()) instanceof ScrollAreaElement area)) return;
-        ScrollAreaScrolling scrolling = area.getScrolling();
+        if ((config == null) || config.scrollableIdentifier.isBlank()) return;
+        if (!(this.elementLookup.apply(config.scrollableIdentifier.trim()) instanceof ScrollableElement scrollable)) return;
+        ElementScrolling scrolling = scrollable.getScrolling();
         switch (config.target) {
             case START -> scrolling.scrollToCorner(false, config.smooth);
             case END -> scrolling.scrollToCorner(true, config.smooth);
@@ -73,7 +74,14 @@ public class ScrollScrollAreaAction extends Action {
             }
             case ELEMENT -> {
                 AbstractElement element = config.elementIdentifier.isBlank() ? null : this.elementLookup.apply(config.elementIdentifier.trim());
-                if ((element != null) && ElementContainerHierarchy.isInContainer(element, area)) scrolling.scrollToChild(element, config.smooth);
+                if (element != null) scrollable.scrollToElement(element, config.smooth);
+            }
+            case LINE -> {
+                Double lineNumber = parsePosition(config.lineNumber);
+                if (lineNumber != null) scrollable.scrollToLine((int) Math.round(lineNumber), config.smooth);
+            }
+            case TEXT -> {
+                if (!config.lineText.isBlank()) scrollable.scrollToText(config.lineText, config.smooth);
             }
         }
     }
@@ -107,7 +115,7 @@ public class ScrollScrollAreaAction extends Action {
     @Override
     public @Nullable String getValuePreset() {
         Config config = new Config();
-        config.areaIdentifier = "some.element.id";
+        config.scrollableIdentifier = "some.element.id";
         return config.serialize();
     }
 
@@ -153,7 +161,12 @@ public class ScrollScrollAreaAction extends Action {
         START,
         END,
         POSITION,
-        ELEMENT;
+        /** An element in the content. Only content that holds elements has any. */
+        ELEMENT,
+        /** A line of the text in the content, by its number. Only content that is text has lines. */
+        LINE,
+        /** The first line of the text in the content that holds a given text. */
+        TEXT;
 
         /** The name the target gets saved with. Changing it breaks saved layouts. */
         private final String serializedName = this.name().toLowerCase(Locale.ROOT);
@@ -174,7 +187,7 @@ public class ScrollScrollAreaAction extends Action {
     public static final class Config {
 
         @NotNull
-        public String areaIdentifier = "";
+        public String scrollableIdentifier = "";
         @NotNull
         public Target target = Target.START;
         /** The positions stay text until the action runs, so they can be placeholders. */
@@ -185,10 +198,18 @@ public class ScrollScrollAreaAction extends Action {
         @NotNull
         public String elementIdentifier = "";
         public boolean smooth = true;
+        /** The number of the line stays text until the action runs, so it can be a placeholder. */
+        @NotNull
+        public String lineNumber = "";
+        @NotNull
+        public String lineText = "";
 
+        /**
+         * The text to look for comes last: it is the only part that can hold anything, the separator included.
+         */
         @NotNull
         public String serialize() {
-            return this.areaIdentifier + VALUE_SEPARATOR + this.target.serializedName + VALUE_SEPARATOR + this.positionX + VALUE_SEPARATOR + this.positionY + VALUE_SEPARATOR + this.elementIdentifier + VALUE_SEPARATOR + this.smooth;
+            return this.scrollableIdentifier + VALUE_SEPARATOR + this.target.serializedName + VALUE_SEPARATOR + this.positionX + VALUE_SEPARATOR + this.positionY + VALUE_SEPARATOR + this.elementIdentifier + VALUE_SEPARATOR + this.smooth + VALUE_SEPARATOR + this.lineNumber + VALUE_SEPARATOR + this.lineText;
         }
 
         /**
@@ -199,12 +220,14 @@ public class ScrollScrollAreaAction extends Action {
             if (value == null) return null;
             String[] parts = value.split("\\|\\|\\|", -1);
             Config config = new Config();
-            if (parts.length >= 1) config.areaIdentifier = parts[0];
+            if (parts.length >= 1) config.scrollableIdentifier = parts[0];
             if (parts.length >= 2) config.target = Target.parse(parts[1]);
             if (parts.length >= 3) config.positionX = parts[2];
             if (parts.length >= 4) config.positionY = parts[3];
             if (parts.length >= 5) config.elementIdentifier = parts[4];
             if (parts.length >= 6) config.smooth = Boolean.parseBoolean(parts[5]);
+            if (parts.length >= 7) config.lineNumber = parts[6];
+            if (parts.length >= 8) config.lineText = String.join(VALUE_SEPARATOR, Arrays.copyOfRange(parts, 7, parts.length));
             return config;
         }
 
@@ -231,11 +254,11 @@ public class ScrollScrollAreaAction extends Action {
 
             this.addStartEndSpacerCell();
 
-            this.addLabelCell(Component.translatable(LOCALIZATION_KEY + ".edit.area_identifier"));
+            this.addLabelCell(Component.translatable(LOCALIZATION_KEY + ".edit.scrollable_identifier"));
             this.addTextInputCell(null, true, true)
-                    .setEditListener(s -> this.config.areaIdentifier = s)
-                    .setText(this.config.areaIdentifier)
-                    .setTooltip(() -> UITooltip.of(Component.translatable(LOCALIZATION_KEY + ".edit.area_identifier.desc")));
+                    .setEditListener(s -> this.config.scrollableIdentifier = s)
+                    .setText(this.config.scrollableIdentifier)
+                    .setTooltip(() -> UITooltip.of(Component.translatable(LOCALIZATION_KEY + ".edit.scrollable_identifier.desc")));
 
             this.addCellGroupEndSpacerCell();
 
@@ -269,6 +292,20 @@ public class ScrollScrollAreaAction extends Action {
                         .setEditListener(s -> this.config.elementIdentifier = s)
                         .setText(this.config.elementIdentifier)
                         .setTooltip(() -> UITooltip.of(Component.translatable(LOCALIZATION_KEY + ".edit.element_identifier.desc")));
+            } else if (this.config.target == Target.LINE) {
+                this.addCellGroupEndSpacerCell();
+                this.addLabelCell(Component.translatable(LOCALIZATION_KEY + ".edit.line_number"));
+                this.addTextInputCell(null, true, true)
+                        .setEditListener(s -> this.config.lineNumber = s)
+                        .setText(this.config.lineNumber)
+                        .setTooltip(() -> UITooltip.of(Component.translatable(LOCALIZATION_KEY + ".edit.line_number.desc")));
+            } else if (this.config.target == Target.TEXT) {
+                this.addCellGroupEndSpacerCell();
+                this.addLabelCell(Component.translatable(LOCALIZATION_KEY + ".edit.line_text"));
+                this.addTextInputCell(null, true, true)
+                        .setEditListener(s -> this.config.lineText = s)
+                        .setText(this.config.lineText)
+                        .setTooltip(() -> UITooltip.of(Component.translatable(LOCALIZATION_KEY + ".edit.line_text.desc")));
             }
 
             this.addCellGroupEndSpacerCell();
@@ -283,8 +320,14 @@ public class ScrollScrollAreaAction extends Action {
 
         @Override
         public boolean allowDone() {
-            if (this.config.areaIdentifier.isBlank()) return false;
-            return (this.config.target != Target.ELEMENT) || !this.config.elementIdentifier.isBlank();
+            if (this.config.scrollableIdentifier.isBlank()) return false;
+            // A target that needs something to scroll to is not done without it
+            return switch (this.config.target) {
+                case ELEMENT -> !this.config.elementIdentifier.isBlank();
+                case LINE -> !this.config.lineNumber.isBlank();
+                case TEXT -> !this.config.lineText.isBlank();
+                default -> true;
+            };
         }
 
         @Override

@@ -1,9 +1,13 @@
 package de.keksuccino.fancymenu.customization.action.actions.other;
 
+import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.elements.scrollarea.ScrollAreaElement;
 import de.keksuccino.fancymenu.customization.element.elements.scrollarea.ScrollAreaElementBuilder;
-import de.keksuccino.fancymenu.customization.element.elements.scrollarea.ScrollDirection;
+import de.keksuccino.fancymenu.customization.element.scrolling.ScrollDirection;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -23,17 +27,17 @@ class ScrollScrollAreaActionTest {
                 return true;
             }
         };
-        area.scrollDirection.set(ScrollDirection.BOTH);
-        area.smoothScrolling.set(false);
+        area.scrollSettings.scrollDirection.set(ScrollDirection.BOTH);
+        area.scrollSettings.smoothScrolling.set(false);
         area.getScroller().setRange(400, 800);
         area.getScroller().x().scrollTo(100, false);
         area.getScroller().y().scrollTo(200, false);
         return area;
     }
 
-    private static String value(String areaIdentifier, ScrollScrollAreaAction.Target target, String positionX, String positionY, String elementIdentifier, boolean smooth) {
+    private static String value(String scrollableIdentifier, ScrollScrollAreaAction.Target target, String positionX, String positionY, String elementIdentifier, boolean smooth) {
         ScrollScrollAreaAction.Config config = new ScrollScrollAreaAction.Config();
-        config.areaIdentifier = areaIdentifier;
+        config.scrollableIdentifier = scrollableIdentifier;
         config.target = target;
         config.positionX = positionX;
         config.positionY = positionY;
@@ -46,7 +50,7 @@ class ScrollScrollAreaActionTest {
     void valuesSurviveSavingAndLoading() {
         ScrollScrollAreaAction.Config config = ScrollScrollAreaAction.Config.parse(value("some.area", ScrollScrollAreaAction.Target.POSITION, "12", "{\"placeholder\":\"x\"}", "some.child", false));
         assertNotNull(config);
-        assertEquals("some.area", config.areaIdentifier);
+        assertEquals("some.area", config.scrollableIdentifier);
         assertEquals(ScrollScrollAreaAction.Target.POSITION, config.target);
         assertEquals("12", config.positionX);
         assertEquals("{\"placeholder\":\"x\"}", config.positionY);
@@ -61,7 +65,7 @@ class ScrollScrollAreaActionTest {
     void aValueWithPartsMissingKeepsWhatANewActionStartsWith() {
         ScrollScrollAreaAction.Config config = ScrollScrollAreaAction.Config.parse("some.area");
         assertNotNull(config);
-        assertEquals("some.area", config.areaIdentifier);
+        assertEquals("some.area", config.scrollableIdentifier);
         assertEquals(ScrollScrollAreaAction.Target.START, config.target);
         assertTrue(config.smooth);
         assertEquals(ScrollScrollAreaAction.Target.START, ScrollScrollAreaAction.Config.parse("some.area|||nonsense").target);
@@ -82,7 +86,7 @@ class ScrollScrollAreaActionTest {
         assertEquals(0.0, area.getScroller().x().getPosition());
 
         // An axis the area does not scroll on stays where it is
-        area.scrollDirection.set(ScrollDirection.HORIZONTAL);
+        area.scrollSettings.scrollDirection.set(ScrollDirection.HORIZONTAL);
         area.getScroller().y().scrollTo(200, false);
         action.execute(value("area", ScrollScrollAreaAction.Target.END, "", "", "", false));
         assertEquals(400.0, area.getScroller().x().getPosition());
@@ -131,6 +135,78 @@ class ScrollScrollAreaActionTest {
         new ScrollScrollAreaAction(id -> area).execute(value("area", ScrollScrollAreaAction.Target.ELEMENT, "", "", "", false));
         assertEquals(200.0, area.getScroller().y().getPosition());
         assertEquals(100.0, area.getScroller().x().getPosition());
+    }
+
+    @Test
+    void theLineToScrollToSurvivesSavingAndLoading() {
+        ScrollScrollAreaAction.Config config = new ScrollScrollAreaAction.Config();
+        config.scrollableIdentifier = "some.text";
+        config.target = ScrollScrollAreaAction.Target.TEXT;
+        config.lineNumber = "{\"placeholder\":\"line\"}";
+        // The text to look for can hold anything, also what parts of a value get told apart by
+        config.lineText = "a ||| b|||";
+        ScrollScrollAreaAction.Config loaded = ScrollScrollAreaAction.Config.parse(config.serialize());
+        assertNotNull(loaded);
+        assertEquals("some.text", loaded.scrollableIdentifier);
+        assertEquals(ScrollScrollAreaAction.Target.TEXT, loaded.target);
+        assertEquals(config.lineNumber, loaded.lineNumber);
+        assertEquals("a ||| b|||", loaded.lineText);
+        assertTrue(loaded.smooth);
+
+        // A value from before lines could be scrolled to has none
+        ScrollScrollAreaAction.Config old = ScrollScrollAreaAction.Config.parse(value("some.area", ScrollScrollAreaAction.Target.END, "", "", "", false).replace("|||false||||||", "|||false"));
+        assertNotNull(old);
+        assertEquals("", old.lineNumber);
+        assertEquals("", old.lineText);
+        assertFalse(old.smooth);
+    }
+
+    @Test
+    void itHandsLinesAndElementsToScrollToOnToTheElement() {
+        List<String> asked = new ArrayList<>();
+        ScrollAreaElement scrollable = new ScrollAreaElement(BUILDER) {
+            @Override
+            public void scrollToLine(int lineNumber, boolean animate) {
+                asked.add("line " + lineNumber + " " + animate);
+            }
+            @Override
+            public void scrollToText(@NotNull String text, boolean animate) {
+                asked.add("text " + text + " " + animate);
+            }
+            @Override
+            public void scrollToElement(@NotNull AbstractElement element, boolean animate) {
+                asked.add("element " + animate);
+            }
+        };
+        ScrollScrollAreaAction action = new ScrollScrollAreaAction(id -> scrollable);
+
+        ScrollScrollAreaAction.Config config = new ScrollScrollAreaAction.Config();
+        config.scrollableIdentifier = "scrollable";
+        config.target = ScrollScrollAreaAction.Target.LINE;
+        config.lineNumber = " 12 ";
+        config.smooth = false;
+        action.execute(config.serialize());
+        // What a placeholder answers with can have a point in it
+        config.lineNumber = "7.0";
+        config.smooth = true;
+        action.execute(config.serialize());
+        // Something that is no number is no line
+        config.lineNumber = "abc";
+        action.execute(config.serialize());
+        config.lineNumber = "";
+        action.execute(config.serialize());
+
+        config.target = ScrollScrollAreaAction.Target.TEXT;
+        config.lineText = "Some Words";
+        action.execute(config.serialize());
+        config.lineText = "  ";
+        action.execute(config.serialize());
+
+        config.target = ScrollScrollAreaAction.Target.ELEMENT;
+        config.elementIdentifier = "child";
+        action.execute(config.serialize());
+
+        assertEquals(List.of("line 12 false", "line 7 true", "text Some Words true", "element true"), asked);
     }
 
 }

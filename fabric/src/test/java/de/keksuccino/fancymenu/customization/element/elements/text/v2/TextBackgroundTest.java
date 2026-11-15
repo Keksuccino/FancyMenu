@@ -33,6 +33,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TextBackgroundTest {
 
+    /** The space the scroll bars of the test element have their grabbers in. */
+    private static final int SCROLL_BAR_SPACE = 12;
+
     /** A text element as its builder saved it before text elements had a background. */
     private static final String ELEMENT_SAVED_WITHOUT_BACKGROUND = """
               interactable = true
@@ -178,7 +181,7 @@ class TextBackgroundTest {
     @Test
     void backgroundGrowsByTheSpaceOfEveryShownScrollBar() {
         ElementPanelBackground background = new TestElement().background;
-        int space = TextElement.SCROLL_BAR_SPACE;
+        int space = SCROLL_BAR_SPACE;
 
         assertArrayEquals(new int[]{94, 44, 212 + space, 92}, background.updateArea(100, 50, 200, 80, true, false, false, false));
         assertArrayEquals(new int[]{94, 44, 212, 92 + space}, background.updateArea(100, 50, 200, 80, false, true, false, false));
@@ -237,7 +240,7 @@ class TextBackgroundTest {
     void theBackgroundReachesBehindScrollBarsOnEverySide() {
         ElementPanelBackground background = new TestElement().background;
         background.enabled.set(true);
-        int space = TextElement.SCROLL_BAR_SPACE;
+        int space = SCROLL_BAR_SPACE;
         // Bars at the left and the top make the background start earlier instead of end later
         assertArrayEquals(new int[]{94 - space, 44, 212 + space, 92}, background.updateArea(100, 50, 200, 80, true, false, true, false));
         assertArrayEquals(new int[]{94, 44 - space, 212, 92 + space}, background.updateArea(100, 50, 200, 80, false, true, false, true));
@@ -277,7 +280,7 @@ class TextBackgroundTest {
 
         private final Map<String, Property<?>> properties = new LinkedHashMap<>();
         private final MarkdownSettings settings = new MarkdownSettings(this, new MarkdownTestRenderer());
-        private final ElementPanelBackground background = new ElementPanelBackground(this, "fancymenu.elements.text.background", () -> TextElement.SCROLL_BAR_SPACE);
+        private final ElementPanelBackground background = new ElementPanelBackground(this, "fancymenu.elements.text.background", () -> SCROLL_BAR_SPACE);
 
         @Override
         public @NotNull Map<String, Property<?>> getPropertyMap() {

@@ -96,10 +96,16 @@ public class MarkdownParser {
         int textLength = markdownText.length();
         //Index of the line break that ends a line, or the text length for the last line. It only gets brought up to the line of the current index where the loop needs it.
         int lineEnd = -1;
+        //Index the line breaks got counted up to, for the line the fragments of the builder start in. The loop skips parts of the text, so the breaks get counted behind it.
+        int lineCountIndex = 0;
 
         for (int index = 0; index < textLength; index++) {
 
             char c = markdownText.charAt(index);
+
+            for (; lineCountIndex < index; lineCountIndex++) {
+                if (markdownText.charAt(lineCountIndex) == NEWLINE_CHAR) builder.sourceLine++;
+            }
 
             boolean isStartOfLine = queueNewLine;
             queueNewLine = false;
@@ -115,6 +121,9 @@ public class MarkdownParser {
                         tableFragment.table = true;
                         tableFragment.tableContext = table.tableContext();
                         tableFragment.naturalLineBreakAfter = true;
+                        // A table shows as one line that holds all of its lines of the text
+                        tableFragment.sourceLine = builder.sourceLine;
+                        tableFragment.lastSourceLine = builder.sourceLine + countLineBreaks(markdownText, index, table.end());
                         // Inherit current alignment from builder
                         tableFragment.alignment = builder.alignment;
                         lastBuiltFragment = addFragment(fragments, tableFragment);
@@ -523,6 +532,17 @@ public class MarkdownParser {
         if (isStartOfLine || !builder.text.isEmpty()) fragments.add(builder.build(false, false));
     }
 
+    /**
+     * Returns how many line breaks the text has between the two indexes.
+     */
+    protected static int countLineBreaks(@NotNull String text, int start, int end) {
+        int count = 0;
+        for (int i = start; (i < end) && (i < text.length()); i++) {
+            if (text.charAt(i) == NEWLINE_CHAR) count++;
+        }
+        return count;
+    }
+
     protected static MarkdownTextFragment addFragment(List<MarkdownTextFragment> fragments, MarkdownTextFragment fragment) {
         fragments.add(fragment);
         return fragment;
@@ -567,6 +587,8 @@ public class MarkdownParser {
         protected Identifier font = null;
         protected boolean plainText = false;
         protected MarkdownTextFragment.TableContext tableContext = null;
+        /** The index of the line of the text the builder builds fragments of right now, starting at 0. */
+        protected int sourceLine = 0;
 
         protected FragmentBuilder(MarkdownRenderer renderer) {
             this.renderer = renderer;
@@ -620,6 +642,8 @@ public class MarkdownParser {
                 }
             }
             frag.tableContext = tableContext;
+            frag.sourceLine = this.sourceLine;
+            frag.lastSourceLine = this.sourceLine;
             frag.naturalLineBreakAfter = naturalLineBreakAfter;
             frag.endOfWord = endOfWord;
             frag.breaksInside = MarkdownLineBreaks.hasBreak(frag.text);

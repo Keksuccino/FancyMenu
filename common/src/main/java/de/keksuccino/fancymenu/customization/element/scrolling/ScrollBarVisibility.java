@@ -1,11 +1,11 @@
-package de.keksuccino.fancymenu.customization.element.elements.scrollarea;
+package de.keksuccino.fancymenu.customization.element.scrolling;
 
 import de.keksuccino.fancymenu.util.properties.Property;
 import org.jetbrains.annotations.NotNull;
 import java.util.Locale;
 
 /**
- * When a scrollable area shows the scroll bars of the directions it can be scrolled in.
+ * When a scrollable element shows the scroll bars of the directions it can be scrolled in.
  */
 public enum ScrollBarVisibility {
 
@@ -14,7 +14,7 @@ public enum ScrollBarVisibility {
     WHILE_SCROLLING,
     NEVER;
 
-    /** The key of the property that holds the visibility of the bars of an area. Changing it breaks saved layouts. */
+    /** The key of the property that holds the visibility of the bars of an element. Changing it breaks saved layouts. */
     public static final String PROPERTY_KEY = "scroll_bar_visibility";
     private static final String LOCALIZATION_KEY = "fancymenu.elements.scroll_area.scroll_bars.visibility";
 
