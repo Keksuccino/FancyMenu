@@ -372,8 +372,6 @@ public class ScrollAreaEditorElement extends AbstractEditorElement<ScrollAreaEdi
 
         ElementStyleMenus.addScrollBarBackgroundMenu(scrollBarsMenu, this, this.element.scrollBarBackground);
 
-        ScrollSettingsMenus.addEdgeShadowsMenu(this.rightClickMenu, this, this.element.scrollSettings);
-
     }
 
     private void addArrangementMenu() {
