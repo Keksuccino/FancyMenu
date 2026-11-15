@@ -8,15 +8,15 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 /**
- * A listener for one of the things that happen to the content of a Scrollable Area element: it moved, it reached its start or it reached its end.
- * All of them tell their actions which area it was and where its content is.
+ * A listener for one of the things that happen to the content of a scrollable element, like a Scrollable Area or a Text: it moved, it reached its start or it reached its end.
+ * All of them tell their actions which element it was and where its content is.
  */
 public class OnScrollAreaEventListener extends AbstractListener {
 
     @NotNull
     private final String localizationKey;
     @Nullable
-    private String areaIdentifier;
+    private String elementIdentifier;
     private int scrollX;
     private int scrollY;
     private float scrollPercent;
@@ -32,11 +32,11 @@ public class OnScrollAreaEventListener extends AbstractListener {
     /**
      * @param scrollX How far the content is scrolled sideways, in pixels.
      * @param scrollY How far the content is scrolled downwards, in pixels.
-     * @param scrollPercent How far the content is scrolled in the direction the area mainly scrolls in, between 0 and 100.
+     * @param scrollPercent How far the content is scrolled in the direction the element mainly scrolls in, between 0 and 100.
      */
-    public void onScrollAreaEvent(@NotNull String areaIdentifier, int scrollX, int scrollY, float scrollPercent) {
+    public void onScrollAreaEvent(@NotNull String elementIdentifier, int scrollX, int scrollY, float scrollPercent) {
         if (!this.hasInstancesListening()) return;
-        this.areaIdentifier = areaIdentifier;
+        this.elementIdentifier = elementIdentifier;
         this.scrollX = scrollX;
         this.scrollY = scrollY;
         this.scrollPercent = scrollPercent;
@@ -45,7 +45,7 @@ public class OnScrollAreaEventListener extends AbstractListener {
 
     @Override
     protected void buildCustomVariablesAndAddToList(List<CustomVariable> list) {
-        list.add(new CustomVariable("element_identifier", () -> (this.areaIdentifier != null) ? this.areaIdentifier : "ERROR"));
+        list.add(new CustomVariable("element_identifier", () -> (this.elementIdentifier != null) ? this.elementIdentifier : "ERROR"));
         list.add(new CustomVariable("scroll_x", () -> String.valueOf(this.scrollX)));
         list.add(new CustomVariable("scroll_y", () -> String.valueOf(this.scrollY)));
         list.add(new CustomVariable("scroll_percent", () -> String.valueOf(this.scrollPercent)));

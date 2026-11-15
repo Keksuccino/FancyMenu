@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.element.elements.scrollarea;
+package de.keksuccino.fancymenu.customization.element.scrolling;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
@@ -14,11 +14,11 @@ import net.minecraft.client.gui.screens.Screen;
 import java.util.List;
 
 /**
- * Scrolls the scrollable area the mouse is over with the keyboard: a page at a time with Page Up and Page Down,
+ * Scrolls the scrollable element the mouse is over with the keyboard: a page at a time with Page Up and Page Down,
  * and to the start and the end with Home and End.<br>
- * Screens only hand keys to the widget that has their focus, which an area is not, so this listens to the keys of all screens instead.
+ * Screens only hand keys to the widget that has their focus, which a scrollable element is not, so this listens to the keys of all screens instead.
  */
-public final class ScrollAreaKeyboard {
+public final class ElementScrollKeyboard {
 
     @EventListener
     public void onKeyPressed(ScreenKeyPressedEvent event) {
@@ -35,18 +35,19 @@ public final class ScrollAreaKeyboard {
         ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getLayerOfScreen(screen);
         if (layer == null) return;
 
-        // Children come behind their area in the order of the elements, so an area in another area gets asked first,
+        // Children come behind their container in the order of the elements, so a scrollable element in the content of another one gets asked first,
         // and hands the key on to the outer one when it has nowhere to scroll to anymore
         List<AbstractElement> elements = layer.allElements;
         for (int i = elements.size() - 1; i >= 0; i--) {
-            if (!(elements.get(i) instanceof ScrollAreaElement area)) continue;
-            if (!area.keyboardScrolling.getBoolean() || !area.isShowingChildren() || !area.isPointerOverContent()) continue;
-            ScrollAreaScrolling scrolling = area.getScrolling();
+            if (!(elements.get(i) instanceof ScrollableElement scrollable)) continue;
+            ScrollSettings settings = scrollable.getScrollSettings();
+            if (!settings.keyboardScrolling.getBoolean() || !scrollable.takesScrollKeys() || !scrollable.isShowingScrollContent() || !scrollable.isPointerOverContent()) continue;
+            ElementScrolling scrolling = scrollable.getScrolling();
             boolean scrolled = switch (key) {
                 case InputConstants.KEY_PAGEUP -> scrolling.scrollByPage(false);
                 case InputConstants.KEY_PAGEDOWN -> scrolling.scrollByPage(true);
-                case InputConstants.KEY_HOME -> area.userScrolling.getBoolean() && scrolling.scrollToEdge(false, true);
-                default -> area.userScrolling.getBoolean() && scrolling.scrollToEdge(true, true);
+                case InputConstants.KEY_HOME -> settings.userScrolling.getBoolean() && scrolling.scrollToEdge(false, true);
+                default -> settings.userScrolling.getBoolean() && scrolling.scrollToEdge(true, true);
             };
             if (scrolled) return;
         }

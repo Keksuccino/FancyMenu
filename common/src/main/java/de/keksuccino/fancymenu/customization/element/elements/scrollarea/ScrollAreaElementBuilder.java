@@ -5,8 +5,6 @@ import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
-import de.keksuccino.fancymenu.util.MouseUtil;
-import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -15,15 +13,6 @@ public class ScrollAreaElementBuilder extends ElementBuilder<ScrollAreaElement, 
 
     private static final int DEFAULT_WIDTH = 200;
     private static final int DEFAULT_HEIGHT = 120;
-    private static final ScrollAreaKeyboard KEYBOARD = new ScrollAreaKeyboard();
-    private static final ScrollAreaSidewaysWheel SIDEWAYS_WHEEL = new ScrollAreaSidewaysWheel();
-
-    static {
-        EventHandler.INSTANCE.registerListenersOf(KEYBOARD);
-        EventHandler.INSTANCE.registerListenersOf(SIDEWAYS_WHEEL);
-        // Every press of a mouse button comes in here, also the ones something in an area takes before the area hears of them
-        MouseUtil.addClickListener((button, mouseX, mouseY) -> ScrollAreaScrolling.onMousePressedAnywhere());
-    }
 
     public ScrollAreaElementBuilder() {
         super("scroll_area");

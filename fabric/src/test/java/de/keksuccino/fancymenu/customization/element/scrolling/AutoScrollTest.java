@@ -1,20 +1,20 @@
-package de.keksuccino.fancymenu.customization.element.elements.scrollarea;
+package de.keksuccino.fancymenu.customization.element.scrolling;
 
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class ScrollAreaAutoScrollTest {
+class AutoScrollTest {
 
-    private static ScrollAreaScroller scroller(int max) {
-        ScrollAreaScroller scroller = new ScrollAreaScroller();
+    private static ContentScroller scroller(int max) {
+        ContentScroller scroller = new ContentScroller();
         scroller.setRange(0, max);
         return scroller;
     }
 
     /** Lets the given time pass in small frames. */
-    private static void run(ScrollAreaAutoScroll autoScroll, ScrollAreaScroller scroller, double seconds, double speed, boolean loop) {
+    private static void run(AutoScroll autoScroll, ContentScroller scroller, double seconds, double speed, boolean loop) {
         for (double passed = 0; passed < seconds; passed += 0.05) {
             autoScroll.update(scroller.y(), 0.05, speed, loop);
         }
@@ -22,8 +22,8 @@ class ScrollAreaAutoScrollTest {
 
     @Test
     void theContentRestsAtItsStartBeforeItMoves() {
-        ScrollAreaScroller scroller = scroller(1000);
-        ScrollAreaAutoScroll autoScroll = new ScrollAreaAutoScroll();
+        ContentScroller scroller = scroller(1000);
+        AutoScroll autoScroll = new AutoScroll();
         autoScroll.update(scroller.y(), 0.1, 100, false);
         assertEquals(0, scroller.y().getPosition());
         run(autoScroll, scroller, 3, 100, false);
@@ -32,8 +32,8 @@ class ScrollAreaAutoScrollTest {
 
     @Test
     void theContentMovesAtASteadySpeed() {
-        ScrollAreaScroller scroller = scroller(100000);
-        ScrollAreaAutoScroll autoScroll = new ScrollAreaAutoScroll();
+        ContentScroller scroller = scroller(100000);
+        AutoScroll autoScroll = new AutoScroll();
         run(autoScroll, scroller, 2, 100, false);
         double start = scroller.y().getPosition();
         run(autoScroll, scroller, 2, 100, false);
@@ -44,16 +44,16 @@ class ScrollAreaAutoScrollTest {
 
     @Test
     void theContentStaysAtItsEndWithoutALoop() {
-        ScrollAreaScroller scroller = scroller(100);
-        ScrollAreaAutoScroll autoScroll = new ScrollAreaAutoScroll();
+        ContentScroller scroller = scroller(100);
+        AutoScroll autoScroll = new AutoScroll();
         run(autoScroll, scroller, 30, 100, false);
         assertEquals(100, scroller.y().getPosition());
     }
 
     @Test
     void theContentStartsOverWithALoop() {
-        ScrollAreaScroller scroller = scroller(100);
-        ScrollAreaAutoScroll autoScroll = new ScrollAreaAutoScroll();
+        ContentScroller scroller = scroller(100);
+        AutoScroll autoScroll = new AutoScroll();
         boolean wasAtEnd = false;
         boolean startedOver = false;
         for (int i = 0; i < 400; i++) {
@@ -67,8 +67,8 @@ class ScrollAreaAutoScrollTest {
 
     @Test
     void theContentRestsAfterTheUserScrolled() {
-        ScrollAreaScroller scroller = scroller(100000);
-        ScrollAreaAutoScroll autoScroll = new ScrollAreaAutoScroll();
+        ContentScroller scroller = scroller(100000);
+        AutoScroll autoScroll = new AutoScroll();
         run(autoScroll, scroller, 2, 100, false);
         scroller.y().scrollTo(5000, false);
         autoScroll.onUserScrolled();
@@ -81,14 +81,14 @@ class ScrollAreaAutoScrollTest {
 
     @Test
     void nothingMovesWithoutSpeedTimeOrRange() {
-        ScrollAreaScroller scroller = scroller(1000);
-        ScrollAreaAutoScroll autoScroll = new ScrollAreaAutoScroll();
+        ContentScroller scroller = scroller(1000);
+        AutoScroll autoScroll = new AutoScroll();
         run(autoScroll, scroller, 5, 0, true);
         assertEquals(0, scroller.y().getPosition());
         for (int i = 0; i < 100; i++) autoScroll.update(scroller.y(), 0, 100, true);
         assertEquals(0, scroller.y().getPosition());
-        ScrollAreaScroller fitting = scroller(0);
-        run(new ScrollAreaAutoScroll(), fitting, 5, 100, true);
+        ContentScroller fitting = scroller(0);
+        run(new AutoScroll(), fitting, 5, 100, true);
         assertEquals(0, fitting.y().getPosition());
     }
 
