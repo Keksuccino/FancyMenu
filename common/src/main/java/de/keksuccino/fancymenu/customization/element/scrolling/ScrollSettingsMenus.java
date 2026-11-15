@@ -159,26 +159,4 @@ public final class ScrollSettingsMenus {
 
     }
 
-    /**
-     * Adds the menu of the shadows at the edges there is more content behind.
-     */
-    public static <H extends PropertyHolder> void addEdgeShadowsMenu(@NotNull ContextMenu addTo, @NotNull ContextMenuBuilder<H> builder, @NotNull ScrollSettings settings) {
-
-        ContextMenu edgeShadowsMenu = new ContextMenu();
-        addTo.addSubMenuEntry("edge_shadows", Component.translatable(SHARED_KEY_BASE + ".edge_shadows.menu"), edgeShadowsMenu)
-                .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines(settings.getDescriptionKeyBase() + ".edge_shadows.desc")))
-                .setIcon(MaterialIcons.GRADIENT);
-
-        settings.edgeShadows.buildContextMenuEntryAndAddTo(edgeShadowsMenu, builder)
-                .setStackable(true)
-                .setIcon(MaterialIcons.GRADIENT);
-
-        settings.edgeShadowColor.buildContextMenuEntryAndAddTo(edgeShadowsMenu, builder)
-                .setStackable(true)
-                .addIsActiveSupplier((menu, entry) -> settings.edgeShadows.getBoolean())
-                .setIcon(MaterialIcons.PALETTE);
-
-    }
-
 }
