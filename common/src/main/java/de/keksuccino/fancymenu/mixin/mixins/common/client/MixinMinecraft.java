@@ -26,6 +26,7 @@ import de.keksuccino.fancymenu.util.player.PlayerPositionObserver;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.window.InitialLoadingOverlayIconRefreshController;
+import de.keksuccino.fancymenu.util.window.OffscreenTestClient;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import java.net.SocketAddress;
 import java.nio.file.Path;
@@ -258,8 +259,8 @@ public class MixinMinecraft {
 		// Reset GUI scale in case some layout changed it
 		RenderingUtils.resetGuiScale();
 
-        // Open Welcome window
-		if (FancyMenu.getOptions().showWelcomeScreen.getValue() && !FancyMenu.getOptions().modpackMode.getValue() && (screen instanceof TitleScreen)) {
+        // Open Welcome window. Off-screen test clients never get it: it blocks all other input, and closing it opens the docs in the browser of the user.
+		if (FancyMenu.getOptions().showWelcomeScreen.getValue() && !FancyMenu.getOptions().modpackMode.getValue() && (screen instanceof TitleScreen) && !OffscreenTestClient.isEnabled()) {
             FancyMenu.getOptions().showWelcomeScreen.setValue(false);
 			WelcomeWindowBody.openInWindow();
 		}

@@ -147,6 +147,14 @@ subprojects {
         enabled = false
     }
 
+    tasks.withType(Test).configureEach {
+        // Tests must never show up on the screen of the user, see TESTING_GUIDELINES.md.
+        // Without headless mode, macOS gives the test JVM a Dock icon as soon as a test loads AWT (fonts, images).
+        // The UIElement flag keeps the JVM out of the Dock if something starts the macOS UI some other way.
+        systemProperty "java.awt.headless", "true"
+        systemProperty "apple.awt.UIElement", "true"
+    }
+
     processResources {
         def expandProps = [
                 "group": project.group,
