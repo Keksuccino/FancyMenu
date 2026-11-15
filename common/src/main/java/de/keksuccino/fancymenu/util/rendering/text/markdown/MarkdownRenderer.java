@@ -105,6 +105,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     final MarkdownTextFont textFont = new MarkdownTextFont(this);
     final MarkdownLayout layout = new MarkdownLayout(this);
     final MarkdownInteractions interactions = new MarkdownInteractions(this);
+    final MarkdownLinePositions linePositions = new MarkdownLinePositions(this);
 
     public MarkdownRenderer() {
         this(Minecraft.getInstance().font);
@@ -364,6 +365,14 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
         this.visibleTop = top;
         this.visibleBottom = bottom;
         return this;
+    }
+
+    /**
+     * Returns where the lines of the text are, for whatever scrolls the text to one of them.
+     */
+    @NotNull
+    public MarkdownLinePositions getLinePositions() {
+        return this.linePositions;
     }
 
     @Nullable

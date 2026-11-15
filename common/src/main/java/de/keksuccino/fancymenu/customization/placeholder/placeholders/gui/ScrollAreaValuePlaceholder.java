@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.customization.placeholder.placeholders.gui;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
-import de.keksuccino.fancymenu.customization.element.elements.scrollarea.ScrollAreaElement;
+import de.keksuccino.fancymenu.customization.element.scrolling.ScrollableElement;
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -14,9 +14,9 @@ import java.util.Objects;
 import java.util.function.Function;
 
 /**
- * A placeholder for one of the numbers of a Scrollable Area element that belong to one of its two axes:
+ * A placeholder for one of the numbers of a scrollable element, like a Scrollable Area or a Text, that belong to one of its two axes:
  * how far its content is scrolled, in pixels or in percent, and how big its content is.<br>
- * All of them take the identifier of the area and the axis. Without an axis, they answer for the one the area mainly scrolls on.
+ * All of them take the identifier of the element and the axis. Without an axis, they answer for the one the element mainly scrolls on.
  */
 public class ScrollAreaValuePlaceholder extends Placeholder {
 
@@ -38,7 +38,7 @@ public class ScrollAreaValuePlaceholder extends Placeholder {
 
     @NotNull
     static ScrollAreaValuePlaceholder scrollPosition(@NotNull Function<String, AbstractElement> elementLookup) {
-        return new ScrollAreaValuePlaceholder("scroll_area_scroll_position", "fancymenu.placeholders.scroll_area_scroll_position", (area, horizontal) -> Math.round(area.getScroller().axis(horizontal).getPosition()), elementLookup);
+        return new ScrollAreaValuePlaceholder("scroll_area_scroll_position", "fancymenu.placeholders.scroll_area_scroll_position", (scrollable, horizontal) -> Math.round(scrollable.getScroller().axis(horizontal).getPosition()), elementLookup);
     }
 
     /** How far the content is scrolled, from 0 at its start to 100 at its end. */
@@ -49,10 +49,10 @@ public class ScrollAreaValuePlaceholder extends Placeholder {
 
     @NotNull
     static ScrollAreaValuePlaceholder scrollPercent(@NotNull Function<String, AbstractElement> elementLookup) {
-        return new ScrollAreaValuePlaceholder("scroll_area_scroll_percent", "fancymenu.placeholders.scroll_area_scroll_percent", (area, horizontal) -> area.getScroller().axis(horizontal).getPercent(), elementLookup);
+        return new ScrollAreaValuePlaceholder("scroll_area_scroll_percent", "fancymenu.placeholders.scroll_area_scroll_percent", (scrollable, horizontal) -> scrollable.getScroller().axis(horizontal).getPercent(), elementLookup);
     }
 
-    /** How big the content is, in pixels at the size the content has without the area scaling it. */
+    /** How big the content is, in pixels at the size the content has without the element scaling it. */
     @NotNull
     public static ScrollAreaValuePlaceholder contentSize() {
         return contentSize(AbstractElement::getElementByInstanceIdentifier);
@@ -60,7 +60,7 @@ public class ScrollAreaValuePlaceholder extends Placeholder {
 
     @NotNull
     static ScrollAreaValuePlaceholder contentSize(@NotNull Function<String, AbstractElement> elementLookup) {
-        return new ScrollAreaValuePlaceholder("scroll_area_content_size", "fancymenu.placeholders.scroll_area_content_size", (area, horizontal) -> horizontal ? area.getContentWidth() : area.getContentHeight(), elementLookup);
+        return new ScrollAreaValuePlaceholder("scroll_area_content_size", "fancymenu.placeholders.scroll_area_content_size", (scrollable, horizontal) -> horizontal ? scrollable.getScrollGeometry().getContentWidth() : scrollable.getScrollGeometry().getContentHeight(), elementLookup);
     }
 
     /**
@@ -82,10 +82,10 @@ public class ScrollAreaValuePlaceholder extends Placeholder {
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         String elementIdentifier = dps.values.get("element_identifier");
         if ((elementIdentifier == null) || elementIdentifier.isBlank()) return "0";
-        if (!(this.elementLookup.apply(elementIdentifier) instanceof ScrollAreaElement area)) return "0";
+        if (!(this.elementLookup.apply(elementIdentifier) instanceof ScrollableElement scrollable)) return "0";
         String axis = dps.values.get("axis");
-        boolean horizontal = AXIS_HORIZONTAL.equalsIgnoreCase(axis) || (!AXIS_VERTICAL.equalsIgnoreCase(axis) && !area.getScrollDirection().scrollsY());
-        double value = this.valueReader.read(area, horizontal);
+        boolean horizontal = AXIS_HORIZONTAL.equalsIgnoreCase(axis) || (!AXIS_VERTICAL.equalsIgnoreCase(axis) && !scrollable.getScrollDirection().scrollsY());
+        double value = this.valueReader.read(scrollable, horizontal);
         // Whole numbers go out without a point, so they can be used wherever a whole number is asked for
         return (value == Math.rint(value)) ? String.valueOf((long) value) : String.valueOf(value);
     }
@@ -119,7 +119,7 @@ public class ScrollAreaValuePlaceholder extends Placeholder {
     }
 
     /**
-     * Reads the number of a placeholder from an area.
+     * Reads the number of a placeholder from a scrollable element.
      */
     @FunctionalInterface
     private interface ValueReader {
@@ -127,7 +127,7 @@ public class ScrollAreaValuePlaceholder extends Placeholder {
         /**
          * @param horizontal If the number is the one of the horizontal axis. Otherwise it is the one of the vertical axis.
          */
-        double read(@NotNull ScrollAreaElement area, boolean horizontal);
+        double read(@NotNull ScrollableElement scrollable, boolean horizontal);
 
     }
 

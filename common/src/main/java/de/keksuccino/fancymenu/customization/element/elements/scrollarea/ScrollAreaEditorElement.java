@@ -8,6 +8,9 @@ import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidg
 import de.keksuccino.fancymenu.customization.element.elements.scrollarea.layout.ScrollAreaAlignment;
 import de.keksuccino.fancymenu.customization.element.elements.scrollarea.layout.ScrollAreaLayoutMode;
 import de.keksuccino.fancymenu.customization.element.style.ElementStyleMenus;
+import de.keksuccino.fancymenu.customization.element.scrolling.ScrollDirection;
+import de.keksuccino.fancymenu.customization.element.scrolling.ScrollGeometry;
+import de.keksuccino.fancymenu.customization.element.scrolling.ScrollSettingsMenus;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -47,7 +50,7 @@ public class ScrollAreaEditorElement extends AbstractEditorElement<ScrollAreaEdi
         this.settings.setParallaxAllowed(false);
         this.element.setChildRenderer(this::renderChild);
         this.element.setEmptyContentRenderer(this.emptyGuide::render);
-        this.editorInputListeners = List.of(this.contentWidthGrabber, this.contentHeightGrabber, this.element.getInput());
+        this.editorInputListeners = List.of(this.contentWidthGrabber, this.contentHeightGrabber, this.element.getScrollInput());
     }
 
     @Override
@@ -132,7 +135,7 @@ public class ScrollAreaEditorElement extends AbstractEditorElement<ScrollAreaEdi
         }
         if (reference == null) return false;
 
-        ScrollAreaGeometry geometry = this.element.getGeometry();
+        ScrollGeometry geometry = this.element.getScrollGeometry();
         boolean horizontal = this.element.getScrollDirection() == ScrollDirection.HORIZONTAL;
         boolean oneLine = this.element.getLayoutMode() == ScrollAreaLayoutMode.STACK;
         // Half of the room between two children, so the line sits in the middle of it
@@ -176,13 +179,13 @@ public class ScrollAreaEditorElement extends AbstractEditorElement<ScrollAreaEdi
             screenBoxes[(i * 4) + 2] = child.getWidth();
             screenBoxes[(i * 4) + 3] = child.getHeight();
         }
-        ScrollAreaGeometry geometry = area.getGeometry();
+        ScrollGeometry geometry = area.getScrollGeometry();
         int oldContentWidth = geometry.getContentWidth();
         int oldContentHeight = geometry.getContentHeight();
 
         area.layoutMode.set(mode);
         // What the new mode has no use for becomes what the area does in its place, so the settings of the area show what it does
-        if (area.scrollDirection.tryGetNonNullElse(ScrollDirection.VERTICAL) != area.getScrollDirection()) area.scrollDirection.set(area.getScrollDirection());
+        if (area.scrollSettings.scrollDirection.tryGetNonNullElse(ScrollDirection.VERTICAL) != area.getScrollDirection()) area.scrollSettings.scrollDirection.set(area.getScrollDirection());
         if (area.childAlignment.tryGetNonNullElse(ScrollAreaAlignment.START) != area.getChildAlignment()) area.childAlignment.set(area.getChildAlignment());
         // Arranged content can turn into content of the user's size, which should hold everything it held before
         if (mode.hasUserContentSize() && !oldMode.hasUserContentSize()) {
@@ -283,22 +286,22 @@ public class ScrollAreaEditorElement extends AbstractEditorElement<ScrollAreaEdi
 
     @Override
     public int getDropAreaX() {
-        return this.element.getGeometry().getViewportX();
+        return this.element.getScrollGeometry().getViewportX();
     }
 
     @Override
     public int getDropAreaY() {
-        return this.element.getGeometry().getViewportY();
+        return this.element.getScrollGeometry().getViewportY();
     }
 
     @Override
     public int getDropAreaWidth() {
-        return this.element.getGeometry().getViewportWidth();
+        return this.element.getScrollGeometry().getViewportWidth();
     }
 
     @Override
     public int getDropAreaHeight() {
-        return this.element.getGeometry().getViewportHeight();
+        return this.element.getScrollGeometry().getViewportHeight();
     }
 
     /**
@@ -320,10 +323,7 @@ public class ScrollAreaEditorElement extends AbstractEditorElement<ScrollAreaEdi
 
         this.addArrangementMenu();
 
-        this.element.scrollDirection.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
-                .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.scroll_direction.desc")))
-                .setIcon(MaterialIcons.SWAP_VERT);
+        ScrollSettingsMenus.addScrollDirectionEntry(this.rightClickMenu, this, this.element.scrollSettings);
 
         ContextMenu contentSizeMenu = new ContextMenu();
         this.rightClickMenu.addSubMenuEntry("content_size", Component.translatable("fancymenu.elements.scroll_area.content_size"), contentSizeMenu)
@@ -358,146 +358,21 @@ public class ScrollAreaEditorElement extends AbstractEditorElement<ScrollAreaEdi
 
         this.rightClickMenu.addSeparatorEntry("separator_after_content_size").setStackable(true);
 
-        this.addScrollingMenu();
+        ScrollSettingsMenus.addScrollingMenu(this.rightClickMenu, this, this.element.scrollSettings);
 
-        this.addAutoScrollMenu();
+        ScrollSettingsMenus.addAutoScrollMenu(this.rightClickMenu, this, this.element.scrollSettings);
 
         this.rightClickMenu.addSeparatorEntry("separator_before_looks").setStackable(true);
 
         ElementStyleMenus.addPanelBackgroundMenu(this.rightClickMenu, this, this.element.background);
 
-        this.addScrollBarsMenu();
-
-        ContextMenu edgeShadowsMenu = new ContextMenu();
-        this.rightClickMenu.addSubMenuEntry("edge_shadows", Component.translatable("fancymenu.elements.scroll_area.edge_shadows.menu"), edgeShadowsMenu)
-                .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.edge_shadows.desc")))
-                .setIcon(MaterialIcons.GRADIENT);
-
-        this.element.edgeShadows.buildContextMenuEntryAndAddTo(edgeShadowsMenu, this)
-                .setStackable(true)
-                .setIcon(MaterialIcons.GRADIENT);
-
-        this.element.edgeShadowColor.buildContextMenuEntryAndAddTo(edgeShadowsMenu, this)
-                .setStackable(true)
-                .addIsActiveSupplier((menu, entry) -> this.element.edgeShadows.getBoolean())
-                .setIcon(MaterialIcons.PALETTE);
-
-    }
-
-    private void addScrollingMenu() {
-
-        ContextMenu scrollingMenu = new ContextMenu();
-        this.rightClickMenu.addSubMenuEntry("scrolling", Component.translatable("fancymenu.elements.scroll_area.scrolling"), scrollingMenu)
-                .setStackable(true)
-                .setIcon(MaterialIcons.MOUSE);
-
-        this.element.userScrolling.buildContextMenuEntryAndAddTo(scrollingMenu, this)
-                .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.scrolling.user.desc")))
-                .setIcon(MaterialIcons.TOUCH_APP);
-
-        scrollingMenu.addSeparatorEntry("separator_after_user_scrolling").setStackable(true);
-
-        this.element.scrollSpeed.buildContextMenuEntryAndAddTo(scrollingMenu, this)
-                .setStackable(true)
-                .addIsActiveSupplier((menu, entry) -> this.element.userScrolling.getBoolean())
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.scroll_speed.desc")))
-                .setIcon(MaterialIcons.SPEED);
-
-        this.element.smoothScrolling.buildContextMenuEntryAndAddTo(scrollingMenu, this)
-                .setStackable(true)
-                .setIcon(MaterialIcons.ANIMATION);
-
-        this.element.dragScrolling.buildContextMenuEntryAndAddTo(scrollingMenu, this)
-                .setStackable(true)
-                .addIsActiveSupplier((menu, entry) -> this.element.userScrolling.getBoolean())
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.scrolling.drag.desc")))
-                .setIcon(MaterialIcons.PAN_TOOL);
-
-        this.element.keyboardScrolling.buildContextMenuEntryAndAddTo(scrollingMenu, this)
-                .setStackable(true)
-                .addIsActiveSupplier((menu, entry) -> this.element.userScrolling.getBoolean())
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.scrolling.keyboard.desc")))
-                .setIcon(MaterialIcons.KEYBOARD);
-
-        this.element.snapMode.buildContextMenuEntryAndAddTo(scrollingMenu, this)
-                .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.scrolling.snap.desc")))
-                .setIcon(MaterialIcons.VIEW_CAROUSEL);
-
-        scrollingMenu.addSeparatorEntry("separator_before_start_position").setStackable(true);
-
-        this.element.startPosition.buildContextMenuEntryAndAddTo(scrollingMenu, this)
-                .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.scrolling.start_position.desc")))
-                .setIcon(MaterialIcons.START);
-
-        this.element.resetScrollOnOpen.buildContextMenuEntryAndAddTo(scrollingMenu, this)
-                .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.scrolling.reset_on_open.desc")))
-                .setIcon(MaterialIcons.RESTART_ALT);
-
-    }
-
-    private void addAutoScrollMenu() {
-
-        ContextMenu autoScrollMenu = new ContextMenu();
-        this.rightClickMenu.addSubMenuEntry("auto_scroll", Component.translatable("fancymenu.elements.scroll_area.auto_scroll"), autoScrollMenu)
-                .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.auto_scroll.desc")))
-                .setIcon(MaterialIcons.PLAY_ARROW);
-
-        this.element.autoScroll.buildContextMenuEntryAndAddTo(autoScrollMenu, this)
-                .setStackable(true)
-                .setIcon(MaterialIcons.PLAY_ARROW);
-
-        this.element.autoScrollSpeed.buildContextMenuEntryAndAddTo(autoScrollMenu, this)
-                .setStackable(true)
-                .addIsActiveSupplier((menu, entry) -> this.element.autoScroll.getBoolean())
-                .setIcon(MaterialIcons.SPEED);
-
-        this.element.autoScrollLoop.buildContextMenuEntryAndAddTo(autoScrollMenu, this)
-                .setStackable(true)
-                .addIsActiveSupplier((menu, entry) -> this.element.autoScroll.getBoolean())
-                .setIcon(MaterialIcons.REPEAT);
-
-        this.element.autoScrollPauseOnHover.buildContextMenuEntryAndAddTo(autoScrollMenu, this)
-                .setStackable(true)
-                .addIsActiveSupplier((menu, entry) -> this.element.autoScroll.getBoolean())
-                .setIcon(MaterialIcons.MOUSE);
-
-    }
-
-    private void addScrollBarsMenu() {
-
-        ContextMenu scrollBarsMenu = new ContextMenu();
-        this.rightClickMenu.addSubMenuEntry("scroll_bars", Component.translatable("fancymenu.elements.scroll_area.scroll_bars"), scrollBarsMenu)
-                .setStackable(true)
-                .setIcon(MaterialIcons.SWIPE_VERTICAL);
-
-        this.element.scrollBarVisibility.buildContextMenuEntryAndAddTo(scrollBarsMenu, this)
-                .setStackable(true)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.scroll_bars.visibility.desc")))
-                .setIcon(MaterialIcons.VISIBILITY);
-
-        this.element.scrollBarThickness.buildContextMenuEntryAndAddTo(scrollBarsMenu, this)
-                .setStackable(true)
-                .setIcon(MaterialIcons.LINE_WEIGHT);
-
-        this.element.verticalScrollBarLeft.buildContextMenuEntryAndAddTo(scrollBarsMenu, this)
-                .setStackable(true)
-                .setIcon(MaterialIcons.ALIGN_HORIZONTAL_LEFT);
-
-        this.element.horizontalScrollBarTop.buildContextMenuEntryAndAddTo(scrollBarsMenu, this)
-                .setStackable(true)
-                .setIcon(MaterialIcons.ALIGN_VERTICAL_TOP);
-
-        scrollBarsMenu.addSeparatorEntry("separator_before_grabber_looks").setStackable(true);
+        ContextMenu scrollBarsMenu = ScrollSettingsMenus.addScrollBarsMenu(this.rightClickMenu, this, this.element.scrollSettings);
 
         ElementStyleMenus.addScrollGrabberMenus(scrollBarsMenu, this, this.element.grabberStyle);
 
         ElementStyleMenus.addScrollBarBackgroundMenu(scrollBarsMenu, this, this.element.scrollBarBackground);
+
+        ScrollSettingsMenus.addEdgeShadowsMenu(this.rightClickMenu, this, this.element.scrollSettings);
 
     }
 
@@ -619,14 +494,14 @@ public class ScrollAreaEditorElement extends AbstractEditorElement<ScrollAreaEdi
             screenBoxes[(i * 4) + 2] = child.getWidth();
             screenBoxes[(i * 4) + 3] = child.getHeight();
         }
-        ScrollAreaGeometry geometry = this.element.getGeometry();
+        ScrollGeometry geometry = this.element.getScrollGeometry();
         float oldScale = geometry.getScale();
         int contentScreenWidth = Math.round(geometry.getContentWidth() * oldScale);
         int contentScreenHeight = Math.round(geometry.getContentHeight() * oldScale);
         this.element.captureProportionalReference();
         this.element.refreshFrame();
         // The content is as big on the screen as before, which is another number of its units now
-        float newScale = this.element.getGeometry().getScale();
+        float newScale = this.element.getScrollGeometry().getScale();
         if (!ScrollAreaElement.isAdvancedSize(this.element.contentWidth)) this.element.contentWidth.set(Math.round(contentScreenWidth / newScale));
         if (!ScrollAreaElement.isAdvancedSize(this.element.contentHeight)) this.element.contentHeight.set(Math.round(contentScreenHeight / newScale));
         this.element.refreshFrame();

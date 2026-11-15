@@ -1,7 +1,7 @@
 package de.keksuccino.fancymenu.customization.requirement.requirements.gui;
 
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
-import de.keksuccino.fancymenu.customization.element.elements.scrollarea.ScrollAreaElement;
+import de.keksuccino.fancymenu.customization.element.scrolling.ScrollableElement;
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorFormattingRule;
 import net.minecraft.client.resources.language.I18n;
@@ -13,9 +13,9 @@ import java.util.Objects;
 import java.util.function.Function;
 
 /**
- * Met while the content of a Scrollable Area element is scrolled to its end, in the direction the area mainly scrolls in.
- * An area with nothing to scroll shows all of its content, which counts as being at the end.<br>
- * An area that does not show its content is not scrolled to anything: before its first frame it does not know how big its content is,
+ * Met while the content of a scrollable element, like a Scrollable Area or a Text, is scrolled to its end, in the direction the element mainly scrolls in.
+ * An element with nothing to scroll shows all of its content, which counts as being at the end.<br>
+ * An element that does not show its content is not scrolled to anything: before its first frame it does not know how big its content is,
  * and would count as being at an end it is not at one frame later.
  */
 public class IsScrollAreaScrolledToEndRequirement extends Requirement {
@@ -45,8 +45,8 @@ public class IsScrollAreaScrolledToEndRequirement extends Requirement {
     @Override
     public boolean isRequirementMet(@Nullable String value) {
         if ((value == null) || value.isBlank()) return false;
-        if (!(this.elementLookup.apply(value.trim()) instanceof ScrollAreaElement area)) return false;
-        return area.isShowingChildren() && area.getScrolling().getMainAxis().isAtEnd();
+        if (!(this.elementLookup.apply(value.trim()) instanceof ScrollableElement scrollable)) return false;
+        return scrollable.isShowingScrollContent() && scrollable.getScrolling().getMainAxis().isAtEnd();
     }
 
     @Override
