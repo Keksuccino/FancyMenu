@@ -25,6 +25,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PipableScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer.ScrollScreenNormalizer;
 import de.keksuccino.fancymenu.util.window.InitialLoadingOverlayIconRefreshController;
+import de.keksuccino.fancymenu.util.window.OffscreenTestClient;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
@@ -134,8 +135,8 @@ public abstract class MixinGui {
         // Reset GUI scale in case some layout changed it
         RenderingUtils.resetGuiScale();
 
-        // Open Welcome window
-        if (FancyMenu.getOptions().showWelcomeScreen.getValue() && !FancyMenu.getOptions().modpackMode.getValue() && (screen instanceof TitleScreen)) {
+        // Open Welcome window. Off-screen test clients never get it: it blocks all other input, and closing it opens the docs in the browser of the user.
+        if (FancyMenu.getOptions().showWelcomeScreen.getValue() && !FancyMenu.getOptions().modpackMode.getValue() && (screen instanceof TitleScreen) && !OffscreenTestClient.isEnabled()) {
             FancyMenu.getOptions().showWelcomeScreen.setValue(false);
             WelcomeWindowBody.openInWindow();
         }
