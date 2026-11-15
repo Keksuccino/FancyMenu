@@ -166,7 +166,8 @@ class MarkdownSpacelessTextWrapTest {
     @Test
     void pieceSharesEverythingThatFormatsItsFragment() throws ReflectiveOperationException {
         Set<String> shared = Set.of("parent", "unscaledTextHeight", "textColor", "bold", "italic", "strikethrough", "minecraftFormatting", "bulletListLevel", "listItemMarker",
-                "listItemNumber", "listHasPlusItems", "alignment", "hyperlink", "clickEvent", "hoverEvent", "headlineType", "quoteContext", "codeBlockContext", "plainText", "font");
+                "listItemNumber", "listHasPlusItems", "alignment", "hyperlink", "clickEvent", "hoverEvent", "headlineType", "quoteContext", "codeBlockContext", "plainText", "font",
+                "sourceLine", "lastSourceLine");
         Set<String> own = Set.of("parentLine", "text", "x", "y", "unscaledTextWidth", "unscaledTrailingSpaceWidth", "startOfRenderLine", "naturalLineBreakAfter", "autoLineBreakAfter",
                 "endOfWord", "strikethroughEnd", "hovered", "breaksInside", "pieces", "renderComponent", "fixedWidthText", "renderComponentState", "renderComponentStyleVersion", "renderComponentCustomColor",
                 // What marks a fragment as the first one of something, and what only fragments have that no line ends inside of
@@ -175,6 +176,8 @@ class MarkdownSpacelessTextWrapTest {
         MarkdownTextFragment plain = new MarkdownTextFragment(renderer, "一二三四");
         MarkdownTextFragment fragment = new MarkdownTextFragment(renderer, "一二三四");
         fragment.unscaledTextHeight = 20;
+        fragment.sourceLine = 3;
+        fragment.lastSourceLine = 4;
         fragment.textColor = DrawableColor.of(1, 2, 3);
         fragment.bold = true;
         fragment.italic = true;

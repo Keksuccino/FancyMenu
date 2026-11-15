@@ -5,25 +5,33 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ElementSpaceInputListener;
 import de.keksuccino.fancymenu.customization.element.elements.MarkdownSettings;
+import de.keksuccino.fancymenu.customization.element.scrolling.ElementScrollBars;
+import de.keksuccino.fancymenu.customization.element.scrolling.ElementScrollInput;
+import de.keksuccino.fancymenu.customization.element.scrolling.ElementScrolling;
+import de.keksuccino.fancymenu.customization.element.scrolling.ScrollDirection;
+import de.keksuccino.fancymenu.customization.element.scrolling.ScrollEdgeShadows;
+import de.keksuccino.fancymenu.customization.element.scrolling.ScrollGeometry;
+import de.keksuccino.fancymenu.customization.element.scrolling.ScrollSettings;
+import de.keksuccino.fancymenu.customization.element.scrolling.ScrollSnapMode;
+import de.keksuccino.fancymenu.customization.element.scrolling.ScrollSnapPoints;
+import de.keksuccino.fancymenu.customization.element.scrolling.ScrollableElement;
 import de.keksuccino.fancymenu.customization.element.style.ElementPanelBackground;
 import de.keksuccino.fancymenu.customization.element.style.ScrollBarGrabberStyle;
 import de.keksuccino.fancymenu.customization.element.style.ScrollBarTrackBackground;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
-import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.RenderFrameCounter;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRenderer;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownTextFragment;
-import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRendererEntry;
-import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollbar.ScrollBar;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.konkrete.input.StringUtils;
-import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.resources.language.I18n;
@@ -32,14 +40,31 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Supplier;
 
-public class TextElement extends AbstractElement {
+/**
+ * A text that shows in an area of its own and scrolls in it when it does not fit.<br>
+ * The text is the content the element scrolls: it wraps at the width of the element, and its real size is the size of the content.
+ * The element works out where the text is once per frame, in {@link #updateFrame()}, from the size it has in that frame.
+ */
+public class TextElement extends AbstractElement implements ScrollableElement {
 
-    /** The space a scroll bar has its grabber in. It lies outside of the element: next to the text area, or next to a background that does not reach behind the scroll bars. */
-    public static final int SCROLL_BAR_SPACE = 12;
+    /** How far the text is from the edges of the content, on every side. */
+    public static final int TEXT_INSET = 1;
+    /** Where the mouse is for the text while it must not react to it: far away from everything. */
+    protected static final int MOUSE_OUTSIDE = -100000;
+    /** The frame an element that does not show its text last showed it in: none. */
+    private static final long NEVER_SHOWN = -2L;
+    /** Where the text can come to rest. It holds no elements, so it can't snap to any. */
+    private static final Set<ScrollSnapMode> SNAP_MODES = Collections.unmodifiableSet(EnumSet.of(ScrollSnapMode.NONE, ScrollSnapMode.LINES, ScrollSnapMode.HEADLINES, ScrollSnapMode.PAGES));
+    /** The grabber colors of the UI theme, which grabbers without a color of the user get drawn in. */
+    private static final Supplier<DrawableColor> THEME_GRABBER_COLOR_NORMAL = () -> UIBase.getUITheme().scroll_grabber_color_normal;
+    private static final Supplier<DrawableColor> THEME_GRABBER_COLOR_HOVER = () -> UIBase.getUITheme().scroll_grabber_color_hover;
 
     @NotNull
     protected SourceMode sourceMode = SourceMode.DIRECT;
@@ -54,26 +79,33 @@ public class TextElement extends AbstractElement {
     public ResourceSupplier<ITexture> verticalScrollGrabberTextureHover;
     public ResourceSupplier<ITexture> horizontalScrollGrabberTextureNormal;
     public ResourceSupplier<ITexture> horizontalScrollGrabberTextureHover;
-    public boolean enableScrolling = true;
     public boolean interactable = true;
     @NotNull
     public volatile MarkdownRenderer markdownRenderer = new MarkdownRenderer();
-    @NotNull
-    public volatile ScrollArea scrollArea;
 
     public final Property.ColorProperty scrollGrabberColorHexNormal = putProperty(Property.hexColorProperty("grabber_color_normal", null, true, "fancymenu.elements.text.scroll_grabber_color.normal"));
     public final Property.ColorProperty scrollGrabberColorHexHover = putProperty(Property.hexColorProperty("grabber_color_hover", null, true, "fancymenu.elements.text.scroll_grabber_color.hover"));
     public final MarkdownSettings markdownSettings = new MarkdownSettings(this, this.markdownRenderer);
     public final Property<ScrollGrabberDesign> scrollGrabberDesign = putProperty(ScrollGrabberDesign.buildProperty());
-    public final ElementPanelBackground background = new ElementPanelBackground(this, "fancymenu.elements.text.background", () -> SCROLL_BAR_SPACE);
+    /** A text scrolls both ways unless it is set to something else: up and down, and sideways where a line is wider than the element. */
+    public final ScrollSettings scrollSettings = new ScrollSettings(this, "fancymenu.elements.text", ScrollDirection.BOTH, SNAP_MODES);
+    public final ElementPanelBackground background = new ElementPanelBackground(this, "fancymenu.elements.text.background", this::getScrollBarSpace);
     public final ScrollBarTrackBackground scrollBarBackground = new ScrollBarTrackBackground(this);
 
+    protected final ElementScrolling scrolling = new ElementScrolling(this);
+    protected final ScrollGeometry geometry = new ScrollGeometry();
+    protected final ElementScrollBars bars = new ElementScrollBars(this, this.scrolling.getScroller());
+    protected final ElementScrollInput scrollInput = new ElementScrollInput(this);
+    /** The text renders in the untransformed space of the element, so screens send it its input through this. */
+    protected final ElementSpaceInputListener markdownInput;
+    /**
+     * What the element registers to the screen. The scrolling comes first: the text takes every press on one of its words, also where a press
+     * does nothing in it, so it would keep them from dragging the text. The scrolling leaves presses on what can be clicked, like a link, to the text.
+     */
+    protected final List<GuiEventListener> widgets;
     protected List<String> lastLines;
     protected IText lastIText;
     protected boolean lastTickShouldRender = false;
-    /** The grabber colors of the UI theme, which the scroll bars of the scroll area start with. */
-    protected final Supplier<DrawableColor> themeGrabberColorNormal;
-    protected final Supplier<DrawableColor> themeGrabberColorHover;
     /** The grabber colors of the user, read once per frame. The suppliers the scroll bars ask for them are the same objects for every frame. */
     @Nullable
     protected DrawableColor customGrabberColorNormal;
@@ -81,9 +113,15 @@ public class TextElement extends AbstractElement {
     protected DrawableColor customGrabberColorHover;
     protected final Supplier<DrawableColor> customGrabberColorNormalSupplier = () -> this.customGrabberColorNormal;
     protected final Supplier<DrawableColor> customGrabberColorHoverSupplier = () -> this.customGrabberColorHover;
-    /** The scroll area and the Markdown render in the untransformed space of the element, so screens send them their input through these. */
-    protected final ElementSpaceInputListener scrollAreaInput;
-    protected final ElementSpaceInputListener markdownInput;
+    protected boolean frameReady = false;
+    /**
+     * The frame the element last rendered its text in. It shows its text as long as this is not more than one frame ago:
+     * input comes in between frames.
+     */
+    protected long lastShownFrame = NEVER_SHOWN;
+    /** Where the mouse was when the element rendered the last time, in the space the text scrolls in. */
+    protected int frameMouseX = MOUSE_OUTSIDE;
+    protected int frameMouseY = MOUSE_OUTSIDE;
 
     public TextElement(@NotNull ElementBuilder<?, ?> builder) {
 
@@ -91,64 +129,17 @@ public class TextElement extends AbstractElement {
 
         this.allowDepthTestManipulation = true;
 
-        this.scrollArea = new ScrollArea(0, 0, this.getAbsoluteWidth(), this.getAbsoluteHeight()) {
-            @Override
-            public void updateScrollArea() {
-                super.updateScrollArea();
-                //Manually update scroll bar area size, so the grabbers are outside the area, and outside of a background that does not reach behind them
-                if (Minecraft.getInstance().screen != null) {
-                    int distance = TextElement.this.background.getScrollBarDistance();
-                    this.verticalScrollBar.scrollAreaEndX = TextElement.this.getAbsoluteX() + TextElement.this.getAbsoluteWidth() + distance + SCROLL_BAR_SPACE;
-                    this.horizontalScrollBar.scrollAreaEndY = TextElement.this.getAbsoluteY() + TextElement.this.getAbsoluteHeight() + distance + SCROLL_BAR_SPACE;
-                }
-            }
-            @Override
-            public boolean mouseClicked(double mouseX, double mouseY, int button) {
-                if (isEditor()) {
-                    if (this.verticalScrollBar.mouseClicked(mouseX, mouseY, button)) return true;
-                    if (this.horizontalScrollBar.mouseClicked(mouseX, mouseY, button)) return true;
-                    return false;
-                }
-                return super.mouseClicked(mouseX, mouseY, button);
-            }
-            @Override
-            public boolean isMouseOver(double mouseX, double mouseY) {
-                if (isEditor()) return false;
-                return super.isMouseOver(mouseX, mouseY);
-            }
-            @Override
-            public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaY) {
-                float scrollBefore = this.verticalScrollBar.getScroll();
-                if (!super.mouseScrolled(mouseX, mouseY, scrollDeltaY)) return false;
-                // In a container, a text that is at the end it got scrolled towards leaves the scroll to the container, so the user does not get stuck on it
-                return (TextElement.this.getParentContainer() == null) || (this.verticalScrollBar.getScroll() != scrollBefore);
-            }
-        };
-        this.scrollArea.minimumEntryWidthIsAreaWidth = false;
-        this.scrollArea.makeEntriesWidthOfArea = false;
-        this.scrollArea.makeAllEntriesWidthOfWidestEntry = false;
-        this.scrollArea.verticalScrollBar.grabberWidth = 10;
-        this.scrollArea.verticalScrollBar.grabberHeight = 20;
-        this.scrollArea.horizontalScrollBar.grabberWidth = 20;
-        this.scrollArea.horizontalScrollBar.grabberHeight = 10;
-        this.scrollArea.backgroundColor = () -> DrawableColor.FULLY_TRANSPARENT;
-        this.scrollArea.borderColor = () -> DrawableColor.FULLY_TRANSPARENT;
-
-        this.themeGrabberColorNormal = this.scrollArea.verticalScrollBar.idleBarColor;
-        this.themeGrabberColorHover = this.scrollArea.verticalScrollBar.hoverBarColor;
+        // The grabbers of the bar design are bars in a color, which have round corners like everything else of the UI theme
+        this.bars.setRoundedGrabbers(true);
         ScrollGrabberDesign.followAppliedLooks(this.scrollGrabberDesign, this.markdownSettings);
 
-        this.scrollAreaInput = ElementSpaceInputListener.of(this, this.scrollArea);
         this.markdownInput = ElementSpaceInputListener.of(this, this.markdownRenderer);
-
-        this.scrollArea.addEntry(new MarkdownRendererEntry(this.scrollArea, this.markdownRenderer));
-        // Ensure markdown can render once to measure its size before culling kicks in.
-        this.scrollArea.setRenderOnlyEntriesInArea(false);
+        this.widgets = List.of(this.scrollInput, this.markdownInput);
 
         this.markdownRenderer.setTextEventHandler(new MarkdownRenderer.TextEventHandler() {
             @Override
             public void onTextClickEvent(@NotNull String eventId) {
-                if (TextElement.this.isEditor() || !TextElement.this.interactable) {
+                if (TextElement.this.isInEditor() || !TextElement.this.interactable) {
                     return;
                 }
                 if (eventId.isEmpty()) {
@@ -161,7 +152,7 @@ public class TextElement extends AbstractElement {
 
             @Override
             public void onTextHoverEvent(@NotNull String eventId) {
-                if (TextElement.this.isEditor() || !TextElement.this.interactable) {
+                if (TextElement.this.isInEditor() || !TextElement.this.interactable) {
                     return;
                 }
                 if (eventId.isEmpty()) {
@@ -176,6 +167,16 @@ public class TextElement extends AbstractElement {
     }
 
     @Override
+    public void afterConstruction() {
+        this.scrolling.restoreFromMemory();
+    }
+
+    @Override
+    public void onOpenScreen() {
+        if (this.scrollSettings.resetScrollOnOpen.getBoolean()) this.scrolling.resetToStartPosition();
+    }
+
+    @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         if (this.shouldRender()) {
@@ -186,30 +187,50 @@ public class TextElement extends AbstractElement {
 
                 this.markdownRenderer.setTextOpacity(this.opacity);
 
-                int x = this.getAbsoluteX();
-                int y = this.getAbsoluteY();
-                int width = this.getAbsoluteWidth();
-                int height = this.getAbsoluteHeight();
-
                 RenderSystem.enableBlend();
-                this.scrollArea.setX(x, true);
-                this.scrollArea.setY(y, true);
-                this.scrollArea.setWidth(width, true);
-                this.scrollArea.setHeight(height, true);
-                // The scroll bars have to be where they are in this frame before their tracks get drawn
-                this.scrollArea.updateScrollArea();
 
-                boolean verticalScrollBarShown = this.scrollArea.isVerticalScrollBarVisible();
-                boolean horizontalScrollBarShown = this.scrollArea.isHorizontalScrollBarVisible();
-                this.background.render(graphics, x, y, width, height, verticalScrollBarShown, horizontalScrollBarShown, this.opacity);
-                // The tracks lie next to the text area, so they can be drawn before the scroll area draws the text and the grabbers
-                if (verticalScrollBarShown) this.scrollBarBackground.render(graphics, this.scrollArea.verticalScrollBar, true, this.opacity);
-                if (horizontalScrollBarShown) this.scrollBarBackground.render(graphics, this.scrollArea.horizontalScrollBar, false, this.opacity);
-
-                // The scroll area renders in the untransformed space of the element, so its hover checks need the mouse in that space
+                this.lastShownFrame = RenderFrameCounter.getFrame();
+                // The text renders in the untransformed space of the element, so everything that checks the mouse needs it in that space
                 int elementMouseX = (int)Math.floor(this.untransformMouseX(mouseX, mouseY));
                 int elementMouseY = (int)Math.floor(this.untransformMouseY(mouseX, mouseY));
-                this.scrollArea.render(graphics, elementMouseX, elementMouseY, partial);
+                this.frameMouseX = elementMouseX;
+                this.frameMouseY = elementMouseY;
+
+                // A grabber the user holds follows the mouse where it really is, before the frame gets worked out with where that takes the text
+                this.bars.followPointer();
+
+                this.updateFrame();
+
+                ScrollGeometry geometry = this.geometry;
+                int x = geometry.getViewportX();
+                int y = geometry.getViewportY();
+                int width = geometry.getViewportWidth();
+                int height = geometry.getViewportHeight();
+
+                // The bars have to know where they are before the background gets drawn, which reaches behind the ones that show
+                this.bars.update(geometry, this.opacity);
+                this.background.render(graphics, x, y, width, height, this.bars.isVerticalShown(), this.bars.isHorizontalShown(), this.scrollSettings.verticalScrollBarLeft.getBoolean(), this.scrollSettings.horizontalScrollBarTop.getBoolean(), this.opacity);
+
+                // Nothing in the text reacts to a mouse that is not over what shows of it, or that drags the text along
+                boolean textSeesMouse = geometry.isInViewport(elementMouseX, elementMouseY) && this.isRenderSpacePointVisibleInContainer(mouseX, mouseY) && !this.scrolling.isDragging();
+
+                MarkdownRenderer markdown = this.markdownRenderer;
+                markdown.setX(geometry.getContentScreenX() + TEXT_INSET);
+                markdown.setY(geometry.getContentScreenY() + TEXT_INSET);
+                // Lines outside of what the element shows don't get rendered
+                markdown.setVisibleVerticalRange(y, y + height);
+                graphics.enableScissor(x, y, x + width, y + height);
+                try {
+                    markdown.render(graphics, textSeesMouse ? elementMouseX : MOUSE_OUTSIDE, textSeesMouse ? elementMouseY : MOUSE_OUTSIDE, partial);
+                } finally {
+                    graphics.disableScissor();
+                }
+
+                if (this.scrollSettings.edgeShadows.getBoolean()) {
+                    ScrollEdgeShadows.render(graphics, geometry, this.scrolling.getScroller(), this.scrollSettings.edgeShadowColor.getDrawable().getColorInt(), this.opacity);
+                }
+
+                this.bars.render(graphics, elementMouseX, elementMouseY, partial);
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -219,6 +240,21 @@ public class TextElement extends AbstractElement {
 
         }
 
+    }
+
+    /**
+     * Works out the geometry of the element for this frame and moves the text towards where it is scrolling to.
+     */
+    protected void updateFrame() {
+        ScrollDirection direction = this.getScrollDirection();
+        MarkdownRenderer markdown = this.markdownRenderer;
+        int width = this.getAbsoluteWidth();
+        // The text wraps at the width of the element. Asking for its real size lays it out again if that width changed.
+        markdown.setOptimalWidth(Math.max(0, width - (TEXT_INSET * 2)));
+        this.geometry.setViewport(this.getAbsoluteX(), this.getAbsoluteY(), width, this.getAbsoluteHeight(), 1.0F);
+        this.geometry.setContentSize((int) Math.ceil(markdown.getRealWidth()) + (TEXT_INSET * 2), this.getContentHeight(), direction.scrollsX(), direction.scrollsY());
+        this.scrolling.update(this.geometry, this.geometry.isInViewport(this.frameMouseX, this.frameMouseY));
+        this.frameReady = true;
     }
 
     @Override
@@ -235,25 +271,156 @@ public class TextElement extends AbstractElement {
 
     @Override
     public @Nullable List<GuiEventListener> getWidgetsToRegister() {
-        return this.interactable ? ListUtils.of(this.markdownInput, this.scrollAreaInput) : null;
+        return this.interactable ? this.widgets : null;
     }
 
     /**
-     * The scroll area of the text is hovered everywhere on the text, and a press only does something on its grabbers and on what can be clicked in the text, like a link.
+     * The text and the scrolling map the mouse into the space of the element themselves, which includes the scale of a container.
+     */
+    @Override
+    public boolean registersChildWidgetsDirectly() {
+        return true;
+    }
+
+    /**
+     * A press is for the element where it grabs one of its scroll bars, where it starts dragging the text,
+     * and where it is for something that can be clicked in the text, like a link.
      */
     @Override
     public boolean takesMousePressAt(double screenX, double screenY) {
-        if (this.scrollArea.isMouseInteractingWithGrabbers()) return true;
+        if (!this.interactable || !this.isShowingScrollContent()) return false;
+        if (this.bars.isUsedByMouse()) return true;
+        if (!this.isScrollPointVisible(screenX, screenY)) return false;
+        return this.scrolling.canDragContent() || this.takesContentPressAt(screenX, screenY);
+    }
+
+    @Override
+    public boolean takesContentPressAt(double screenX, double screenY) {
         // The text renders in the untransformed space of the element, which is where its fragments are
         double textX = this.untransformMouseX(screenX, screenY);
         double textY = this.untransformMouseY(screenX, screenY);
         return (this.markdownRenderer.getChildAt(textX, textY).orElse(null) instanceof MarkdownTextFragment fragment) && fragment.takesClickAt(textX, textY);
     }
 
-    /** Returns the listener that passes mouse input to the scroll area of this element, in the space the scroll area renders in. */
+    /** Returns the listener that takes the mouse wheel, the scroll bars and the dragging of the text for this element. */
     @NotNull
-    public ElementSpaceInputListener getScrollAreaInput() {
-        return this.scrollAreaInput;
+    public ElementScrollInput getScrollInput() {
+        return this.scrollInput;
+    }
+
+    /**
+     * Returns the space a scroll bar of the element has its grabber in, next to the text.
+     */
+    public int getScrollBarSpace() {
+        return this.bars.getBarSpace();
+    }
+
+    @Override
+    public @NotNull AbstractElement getScrollElement() {
+        return this;
+    }
+
+    @Override
+    public @NotNull ScrollSettings getScrollSettings() {
+        return this.scrollSettings;
+    }
+
+    @Override
+    public @NotNull ElementScrolling getScrolling() {
+        return this.scrolling;
+    }
+
+    @Override
+    public @NotNull ElementScrollBars getScrollBars() {
+        return this.bars;
+    }
+
+    @Override
+    public @NotNull ScrollGeometry getScrollGeometry() {
+        // Makes sure there is a geometry to answer with for everything that asks before the element rendered for the first time
+        if (!this.frameReady) this.updateFrame();
+        return this.geometry;
+    }
+
+    @Override
+    public @NotNull ScrollDirection getScrollDirection() {
+        return this.scrollSettings.scrollDirection.tryGetNonNullElse(ScrollDirection.BOTH);
+    }
+
+    @Override
+    public boolean isShowingScrollContent() {
+        return (RenderFrameCounter.getFrame() - this.lastShownFrame) <= 1L;
+    }
+
+    @Override
+    public boolean isInEditor() {
+        return isEditor();
+    }
+
+    /**
+     * An element that takes no input takes none from the keyboard either.
+     */
+    @Override
+    public boolean takesScrollKeys() {
+        return this.interactable;
+    }
+
+    @Override
+    public int getScrollBarDistance() {
+        return this.background.getScrollBarDistance();
+    }
+
+    @Override
+    public @NotNull ScrollBarTrackBackground getScrollBarBackground() {
+        return this.scrollBarBackground;
+    }
+
+    /**
+     * Textures and colors of the user win. Without any of them, the design of the element decides what the grabbers look like.
+     */
+    @Override
+    public void applyScrollGrabberLooks(@NotNull ScrollBar vertical, @NotNull ScrollBar horizontal, float opacity) {
+
+        this.customGrabberColorNormal = (this.scrollGrabberColorHexNormal.get() != null) ? this.scrollGrabberColorHexNormal.getDrawable() : null;
+        this.customGrabberColorHover = (this.scrollGrabberColorHexHover.get() != null) ? this.scrollGrabberColorHexHover.getDrawable() : null;
+        Supplier<DrawableColor> normalColor = (this.customGrabberColorNormal != null) ? this.customGrabberColorNormalSupplier : THEME_GRABBER_COLOR_NORMAL;
+        Supplier<DrawableColor> hoverColor = (this.customGrabberColorHover != null) ? this.customGrabberColorHoverSupplier : THEME_GRABBER_COLOR_HOVER;
+
+        boolean customized = (this.customGrabberColorNormal != null) || (this.customGrabberColorHover != null)
+                || (this.verticalScrollGrabberTextureNormal != null) || (this.verticalScrollGrabberTextureHover != null)
+                || (this.horizontalScrollGrabberTextureNormal != null) || (this.horizontalScrollGrabberTextureHover != null);
+        ScrollGrabberDesign design = this.scrollGrabberDesign.tryGetNonNullElse(ScrollGrabberDesign.THEME_BAR).unlessCustomized(customized);
+        ScrollBarGrabberStyle.apply(vertical, this.verticalScrollGrabberTextureNormal, this.verticalScrollGrabberTextureHover, normalColor, hoverColor, design.getTexture(true, false), design.getTexture(true, true), opacity);
+        ScrollBarGrabberStyle.apply(horizontal, this.horizontalScrollGrabberTextureNormal, this.horizontalScrollGrabberTextureHover, normalColor, hoverColor, design.getTexture(false, false), design.getTexture(false, true), opacity);
+
+    }
+
+    /**
+     * The text comes to rest with one of its lines or headlines at the start of what the element shows. Sideways, it has nothing to rest at.
+     */
+    @Override
+    public void addSnapPoints(@NotNull ScrollSnapPoints points, boolean horizontal) {
+        if (horizontal) return;
+        this.markdownRenderer.getLinePositions().forEach(this.scrollSettings.getSnapMode() == ScrollSnapMode.HEADLINES, points::add);
+    }
+
+    @Override
+    public boolean snapsOnAxis(boolean horizontal) {
+        return !horizontal;
+    }
+
+    /**
+     * The lines only are where they show once the text got laid out at the width of the element, so an element that does not show its text yet
+     * looks for the line once it does.
+     */
+    @Override
+    public void scrollToLine(int lineNumber, boolean animate) {
+        this.scrolling.whenShowingContent(() -> this.scrolling.scrollToPosition(false, this.markdownRenderer.getLinePositions().find(lineNumber), animate));
+    }
+
+    @Override
+    public void scrollToText(@NotNull String text, boolean animate) {
+        this.scrolling.whenShowingContent(() -> this.scrolling.scrollToPosition(false, this.markdownRenderer.getLinePositions().find(text), animate));
     }
 
     protected void renderTick() {
@@ -279,38 +446,6 @@ public class TextElement extends AbstractElement {
         }
         this.lastText = t;
 
-        //Update scroll wheel ONLY FOR vertical bar (horizontal never scrolls via scroll wheel)
-        this.scrollArea.verticalScrollBar.setScrollWheelAllowed(this.enableScrolling);
-
-        //Update active state of scroll bars
-        this.scrollArea.verticalScrollBar.active = (this.scrollArea.getTotalEntryHeight() > this.scrollArea.getInnerHeight()) && this.enableScrolling;
-        this.scrollArea.horizontalScrollBar.active = (this.scrollArea.getTotalEntryWidth() > this.scrollArea.getInnerWidth()) && this.enableScrolling;
-
-        this.updateScrollGrabbers();
-
-    }
-
-    /**
-     * Gives the scroll bars the colors and textures of their grabbers, and the opacity of the element.<br>
-     * Textures and colors of the user win. Without any of them, the design of the element decides what the grabbers look like.
-     */
-    protected void updateScrollGrabbers() {
-
-        ScrollBar vertical = this.scrollArea.verticalScrollBar;
-        ScrollBar horizontal = this.scrollArea.horizontalScrollBar;
-
-        this.customGrabberColorNormal = (this.scrollGrabberColorHexNormal.get() != null) ? this.scrollGrabberColorHexNormal.getDrawable() : null;
-        this.customGrabberColorHover = (this.scrollGrabberColorHexHover.get() != null) ? this.scrollGrabberColorHexHover.getDrawable() : null;
-        Supplier<DrawableColor> normalColor = (this.customGrabberColorNormal != null) ? this.customGrabberColorNormalSupplier : this.themeGrabberColorNormal;
-        Supplier<DrawableColor> hoverColor = (this.customGrabberColorHover != null) ? this.customGrabberColorHoverSupplier : this.themeGrabberColorHover;
-
-        boolean customized = (this.customGrabberColorNormal != null) || (this.customGrabberColorHover != null)
-                || (this.verticalScrollGrabberTextureNormal != null) || (this.verticalScrollGrabberTextureHover != null)
-                || (this.horizontalScrollGrabberTextureNormal != null) || (this.horizontalScrollGrabberTextureHover != null);
-        ScrollGrabberDesign design = this.scrollGrabberDesign.tryGetNonNullElse(ScrollGrabberDesign.THEME_BAR).unlessCustomized(customized);
-        ScrollBarGrabberStyle.apply(vertical, this.verticalScrollGrabberTextureNormal, this.verticalScrollGrabberTextureHover, normalColor, hoverColor, design.getTexture(true, false), design.getTexture(true, true), this.opacity);
-        ScrollBarGrabberStyle.apply(horizontal, this.horizontalScrollGrabberTextureNormal, this.horizontalScrollGrabberTextureHover, normalColor, hoverColor, design.getTexture(false, false), design.getTexture(false, true), this.opacity);
-
     }
 
     /**
@@ -318,7 +453,7 @@ public class TextElement extends AbstractElement {
      * The markdown renderer lays out the text while the element renders, so this reflects the most recently rendered text, line wrapping and text settings.
      */
     public int getContentHeight() {
-        return (int) Math.ceil(this.markdownRenderer.getRealHeight() + (this.scrollArea.getBorderThickness() * 2));
+        return (int) Math.ceil(this.markdownRenderer.getRealHeight() + (TEXT_INSET * 2));
     }
 
     public void updateContent() {

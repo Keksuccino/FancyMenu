@@ -1,34 +1,34 @@
-package de.keksuccino.fancymenu.customization.element.elements.scrollarea;
+package de.keksuccino.fancymenu.customization.element.scrolling;
 
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Soft shadows at the edges of a scrollable area that there is more content behind. They show which way the area can still be scrolled,
+ * Soft shadows at the edges of a scrollable element that there is more content behind. They show which way the element can still be scrolled,
  * and fade in over the first pixels the content moves away from an edge, so they never pop up.
  */
-public final class ScrollAreaEdgeShadows {
+public final class ScrollEdgeShadows {
 
-    /** How far a shadow reaches into the area, and how far the content has to be from an edge for its shadow to show in full. */
+    /** How far a shadow reaches into the element, and how far the content has to be from an edge for its shadow to show in full. */
     private static final int SIZE = 14;
 
-    private ScrollAreaEdgeShadows() {
+    private ScrollEdgeShadows() {
     }
 
     /**
-     * Draws the shadows over what the area shows of its content.
+     * Draws the shadows over what the element shows of its content.
      *
      * @param color The color of the shadows where they are the darkest, at the edge.
-     * @param opacity The opacity of the area, between 0 and 1.
+     * @param opacity The opacity of the element, between 0 and 1.
      */
-    public static void render(@NotNull GuiGraphics graphics, @NotNull ScrollAreaGeometry geometry, @NotNull ScrollAreaScroller scroller, int color, float opacity) {
+    public static void render(@NotNull GuiGraphics graphics, @NotNull ScrollGeometry geometry, @NotNull ContentScroller scroller, int color, float opacity) {
         int left = geometry.getViewportX();
         int top = geometry.getViewportY();
         int right = left + geometry.getViewportWidth();
         int bottom = top + geometry.getViewportHeight();
         int clear = color & 0x00FFFFFF;
-        ScrollAreaScroller.Axis y = scroller.y();
+        ContentScroller.Axis y = scroller.y();
         if (y.canScroll()) {
             int height = Math.min(SIZE, geometry.getViewportHeight() / 2);
             int atStart = shade(color, y.getPosition(), opacity);
@@ -36,7 +36,7 @@ public final class ScrollAreaEdgeShadows {
             if ((atStart >>> 24) > 0) graphics.fillGradient(left, top, right, top + height, atStart, clear);
             if ((atEnd >>> 24) > 0) graphics.fillGradient(left, bottom - height, right, bottom, clear, atEnd);
         }
-        ScrollAreaScroller.Axis x = scroller.x();
+        ContentScroller.Axis x = scroller.x();
         if (x.canScroll()) {
             int width = Math.min(SIZE, geometry.getViewportWidth() / 2);
             int atStart = shade(color, x.getPosition(), opacity);

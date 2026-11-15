@@ -10,6 +10,11 @@ import de.keksuccino.fancymenu.customization.element.container.ElementContainerL
 import de.keksuccino.fancymenu.customization.element.elements.scrollarea.layout.ScrollAreaAlignment;
 import de.keksuccino.fancymenu.customization.element.elements.scrollarea.layout.ScrollAreaLayoutMode;
 import de.keksuccino.fancymenu.customization.element.elements.scrollarea.layout.ScrollAreaResizeBehavior;
+import de.keksuccino.fancymenu.customization.element.scrolling.ElementScrolling;
+import de.keksuccino.fancymenu.customization.element.scrolling.ScrollBarVisibility;
+import de.keksuccino.fancymenu.customization.element.scrolling.ScrollDirection;
+import de.keksuccino.fancymenu.customization.element.scrolling.ScrollSnapMode;
+import de.keksuccino.fancymenu.customization.element.scrolling.ScrollStartPosition;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -74,36 +79,36 @@ class ScrollAreaElementTest {
     @Test
     void settingsSurviveSavingAndLoading() {
         ScrollAreaElement area = BUILDER.buildDefaultInstance();
-        area.scrollDirection.set(ScrollDirection.HORIZONTAL);
+        area.scrollSettings.scrollDirection.set(ScrollDirection.HORIZONTAL);
         area.layoutMode.set(ScrollAreaLayoutMode.GRID);
         area.childAlignment.set(ScrollAreaAlignment.FILL);
         area.resizeBehavior.set(ScrollAreaResizeBehavior.RESIZE);
-        area.scrollBarVisibility.set(ScrollBarVisibility.WHILE_SCROLLING);
+        area.scrollSettings.scrollBarVisibility.set(ScrollBarVisibility.WHILE_SCROLLING);
         area.contentWidth.set(777);
         area.contentHeight.setManualInput("{\"placeholder\":\"some_height\"}");
         area.gridLines.set(5);
         area.childSpacing.set(9);
-        area.scrollBarThickness.set(14);
-        area.verticalScrollBarLeft.set(true);
+        area.scrollSettings.scrollBarThickness.set(14);
+        area.scrollSettings.verticalScrollBarLeft.set(true);
 
         SerializedElement saved = BUILDER.serializeElementInternal(area);
         assertNotNull(saved);
         ScrollAreaElement loaded = BUILDER.deserializeElementInternal(saved);
         assertNotNull(loaded);
 
-        assertEquals(ScrollDirection.HORIZONTAL, loaded.scrollDirection.get());
+        assertEquals(ScrollDirection.HORIZONTAL, loaded.scrollSettings.scrollDirection.get());
         assertEquals(ScrollAreaLayoutMode.GRID, loaded.getLayoutMode());
         assertEquals(ScrollAreaAlignment.FILL, loaded.getChildAlignment());
         assertEquals(ScrollAreaResizeBehavior.RESIZE, loaded.resizeBehavior.get());
-        assertEquals(ScrollBarVisibility.WHILE_SCROLLING, loaded.scrollBarVisibility.get());
+        assertEquals(ScrollBarVisibility.WHILE_SCROLLING, loaded.scrollSettings.scrollBarVisibility.get());
         assertEquals(777, loaded.contentWidth.getInteger());
         assertEquals(area.contentHeight.getManualInput(), loaded.contentHeight.getManualInput());
         assertTrue(ScrollAreaElement.isAdvancedSize(loaded.contentHeight));
         assertFalse(ScrollAreaElement.isAdvancedSize(loaded.contentWidth));
         assertEquals(5, loaded.gridLines.getInteger());
         assertEquals(9, loaded.childSpacing.getInteger());
-        assertEquals(14, loaded.scrollBarThickness.getInteger());
-        assertTrue(loaded.verticalScrollBarLeft.getBoolean());
+        assertEquals(14, loaded.scrollSettings.scrollBarThickness.getInteger());
+        assertTrue(loaded.scrollSettings.verticalScrollBarLeft.getBoolean());
         assertTrue(loaded.background.enabled.getBoolean());
     }
 
@@ -318,14 +323,14 @@ class ScrollAreaElementTest {
     @Test
     void anAreaThatArrangesItsChildrenOnlyScrollsInOneDirection() {
         TestArea area = area(child("first", 0, 0, 50, 20));
-        area.scrollDirection.set(ScrollDirection.BOTH);
+        area.scrollSettings.scrollDirection.set(ScrollDirection.BOTH);
         assertEquals(ScrollDirection.BOTH, area.getScrollDirection());
         area.layoutMode.set(ScrollAreaLayoutMode.FLOW);
         assertEquals(ScrollDirection.VERTICAL, area.getScrollDirection());
         // Setting the direction to both goes on to the next one
-        area.scrollDirection.set(ScrollDirection.BOTH);
-        assertEquals(ScrollDirection.VERTICAL, area.scrollDirection.get());
-        area.scrollDirection.set(ScrollDirection.HORIZONTAL);
+        area.scrollSettings.scrollDirection.set(ScrollDirection.BOTH);
+        assertEquals(ScrollDirection.VERTICAL, area.scrollSettings.scrollDirection.get());
+        area.scrollSettings.scrollDirection.set(ScrollDirection.HORIZONTAL);
         assertEquals(ScrollDirection.HORIZONTAL, area.getScrollDirection());
     }
 
@@ -372,41 +377,41 @@ class ScrollAreaElementTest {
         TestArea vertical = area(child("child", 0, 0, 10, 10));
         vertical.contentHeight.set(1000);
         vertical.contentWidth.set(1000);
-        vertical.smoothScrolling.set(false);
+        vertical.scrollSettings.smoothScrolling.set(false);
         vertical.nextFrame();
-        assertTrue(vertical.scrollByWheel(0, -1));
+        assertTrue(vertical.getScrolling().scrollByWheel(0, -1));
         assertTrue(vertical.getScroller().y().getPosition() > 0);
         assertEquals(0, vertical.getScroller().x().getPosition());
         // Nothing to scroll sideways, so a sideways wheel is for whatever is behind the area
-        assertFalse(vertical.scrollByWheel(-1, 0));
+        assertFalse(vertical.getScrolling().scrollByWheel(-1, 0));
         // At the start, scrolling further up is for whatever is behind the area too
         vertical.getScroller().y().scrollTo(0, false);
-        assertFalse(vertical.scrollByWheel(0, 1));
+        assertFalse(vertical.getScrolling().scrollByWheel(0, 1));
 
         TestArea horizontal = area(child("child", 0, 0, 10, 10));
-        horizontal.scrollDirection.set(ScrollDirection.HORIZONTAL);
+        horizontal.scrollSettings.scrollDirection.set(ScrollDirection.HORIZONTAL);
         horizontal.contentWidth.set(1000);
-        horizontal.smoothScrolling.set(false);
+        horizontal.scrollSettings.smoothScrolling.set(false);
         horizontal.nextFrame();
         // An area that only scrolls sideways takes the normal wheel for it
-        assertTrue(horizontal.scrollByWheel(0, -1));
+        assertTrue(horizontal.getScrolling().scrollByWheel(0, -1));
         assertTrue(horizontal.getScroller().x().getPosition() > 0);
 
         TestArea both = area(child("child", 0, 0, 10, 10));
-        both.scrollDirection.set(ScrollDirection.BOTH);
+        both.scrollSettings.scrollDirection.set(ScrollDirection.BOTH);
         both.contentWidth.set(1000);
         both.contentHeight.set(1000);
-        both.smoothScrolling.set(false);
+        both.scrollSettings.smoothScrolling.set(false);
         both.nextFrame();
-        assertTrue(both.scrollByWheel(0, -1));
+        assertTrue(both.getScrolling().scrollByWheel(0, -1));
         assertTrue(both.getScroller().y().getPosition() > 0);
         assertEquals(0, both.getScroller().x().getPosition());
         both.shiftDown = true;
-        assertTrue(both.scrollByWheel(0, -1));
+        assertTrue(both.getScrolling().scrollByWheel(0, -1));
         assertTrue(both.getScroller().x().getPosition() > 0);
         both.shiftDown = false;
         double x = both.getScroller().x().getPosition();
-        assertTrue(both.scrollByWheel(-1, 0));
+        assertTrue(both.getScrolling().scrollByWheel(-1, 0));
         assertTrue(both.getScroller().x().getPosition() > x);
     }
 
@@ -443,22 +448,22 @@ class ScrollAreaElementTest {
     void anAreaThatSnapsToElementsStopsAtTheirStarts() {
         TestArea area = area(child("first", 0, 0, 50, 40), child("second", 0, 60, 50, 40), child("third", 0, 170, 50, 40));
         area.contentHeight.set(600);
-        area.snapMode.set(ScrollSnapMode.ELEMENTS);
-        area.smoothScrolling.set(false);
+        area.scrollSettings.snapMode.set(ScrollSnapMode.ELEMENTS);
+        area.scrollSettings.smoothScrolling.set(false);
         area.nextFrame();
 
-        assertTrue(area.scrollByWheel(0, -1));
+        assertTrue(area.getScrolling().scrollByWheel(0, -1));
         assertEquals(60.0, area.getScroller().y().getPosition());
         area.nextFrame();
-        assertTrue(area.scrollByWheel(0, -1));
+        assertTrue(area.getScrolling().scrollByWheel(0, -1));
         assertEquals(170.0, area.getScroller().y().getPosition());
         area.nextFrame();
         // Behind the last element, the next stop is the end of the content
-        assertTrue(area.scrollByWheel(0, -1));
+        assertTrue(area.getScrolling().scrollByWheel(0, -1));
         assertEquals(500.0, area.getScroller().y().getPosition());
         area.nextFrame();
-        assertFalse(area.scrollByWheel(0, -1));
-        assertTrue(area.scrollByWheel(0, 1));
+        assertFalse(area.getScrolling().scrollByWheel(0, -1));
+        assertTrue(area.getScrolling().scrollByWheel(0, 1));
         assertEquals(170.0, area.getScroller().y().getPosition());
     }
 
@@ -466,53 +471,53 @@ class ScrollAreaElementTest {
     void anAreaThatSnapsToPagesScrollsAsFarAsItIsBig() {
         TestArea area = area(child("first", 0, 0, 50, 40));
         area.contentHeight.set(350);
-        area.snapMode.set(ScrollSnapMode.PAGES);
-        area.smoothScrolling.set(false);
+        area.scrollSettings.snapMode.set(ScrollSnapMode.PAGES);
+        area.scrollSettings.smoothScrolling.set(false);
         area.nextFrame();
-        assertTrue(area.scrollByWheel(0, -1));
+        assertTrue(area.getScrolling().scrollByWheel(0, -1));
         assertEquals(100.0, area.getScroller().y().getPosition());
-        assertTrue(area.scrollByWheel(0, -3));
+        assertTrue(area.getScrolling().scrollByWheel(0, -3));
         assertEquals(200.0, area.getScroller().y().getPosition());
-        assertTrue(area.scrollByWheel(0, -1));
+        assertTrue(area.getScrolling().scrollByWheel(0, -1));
         // The last page is as long as what is left of the content
         assertEquals(250.0, area.getScroller().y().getPosition());
-        assertFalse(area.scrollByWheel(0, -1));
+        assertFalse(area.getScrolling().scrollByWheel(0, -1));
     }
 
     @Test
     void aWheelThatTurnsInSmallBitsNeedsAFewOfThemToMoveASnappingAreaOn() {
         TestArea area = area(child("first", 0, 0, 50, 40));
         area.contentHeight.set(350);
-        area.snapMode.set(ScrollSnapMode.PAGES);
-        area.smoothScrolling.set(false);
+        area.scrollSettings.snapMode.set(ScrollSnapMode.PAGES);
+        area.scrollSettings.smoothScrolling.set(false);
         area.nextFrame();
         // The scroll is for the area all the way, also while the content has not moved yet
-        assertTrue(area.scrollByWheel(0, -0.4));
-        assertTrue(area.scrollByWheel(0, -0.4));
+        assertTrue(area.getScrolling().scrollByWheel(0, -0.4));
+        assertTrue(area.getScrolling().scrollByWheel(0, -0.4));
         assertEquals(0.0, area.getScroller().y().getPosition());
-        assertTrue(area.scrollByWheel(0, -0.4));
+        assertTrue(area.getScrolling().scrollByWheel(0, -0.4));
         assertEquals(100.0, area.getScroller().y().getPosition());
 
         // A wheel that turns back starts over
-        assertTrue(area.scrollByWheel(0, -0.8));
-        assertTrue(area.scrollByWheel(0, 0.6));
+        assertTrue(area.getScrolling().scrollByWheel(0, -0.8));
+        assertTrue(area.getScrolling().scrollByWheel(0, 0.6));
         assertEquals(100.0, area.getScroller().y().getPosition());
-        assertTrue(area.scrollByWheel(0, 0.6));
+        assertTrue(area.getScrolling().scrollByWheel(0, 0.6));
         assertEquals(0.0, area.getScroller().y().getPosition());
 
         // Where the content has nowhere to go, the scroll is for what is behind the area
-        assertFalse(area.scrollByWheel(0, 0.4));
+        assertFalse(area.getScrolling().scrollByWheel(0, 0.4));
 
         // Half a turn that got left alone is forgotten
-        assertTrue(area.scrollByWheel(0, -0.6));
+        assertTrue(area.getScrolling().scrollByWheel(0, -0.6));
         area.passTime(1.0);
-        assertTrue(area.scrollByWheel(0, -0.6));
+        assertTrue(area.getScrolling().scrollByWheel(0, -0.6));
         assertEquals(0.0, area.getScroller().y().getPosition());
 
         // One step of a wheel is always enough, also where the game makes less than 1 of it
         area.passTime(1.0);
         area.wheelStepSize = 0.5D;
-        assertTrue(area.scrollByWheel(0, -0.5));
+        assertTrue(area.getScrolling().scrollByWheel(0, -0.5));
         assertEquals(100.0, area.getScroller().y().getPosition());
     }
 
@@ -521,8 +526,8 @@ class ScrollAreaElementTest {
         // The elements are further apart than a page is long, so the closest place to a page further is where the content is already
         TestArea area = area(child("first", 0, 0, 50, 40), child("second", 0, 300, 50, 40), child("third", 0, 600, 50, 40));
         area.contentHeight.set(1000);
-        area.snapMode.set(ScrollSnapMode.ELEMENTS);
-        area.smoothScrolling.set(false);
+        area.scrollSettings.snapMode.set(ScrollSnapMode.ELEMENTS);
+        area.scrollSettings.smoothScrolling.set(false);
         area.nextFrame();
         assertTrue(area.getScrolling().scrollByPage(true));
         assertEquals(300.0, area.getScroller().y().getPosition());
@@ -536,8 +541,8 @@ class ScrollAreaElementTest {
     void contentThatGotMovedFreelyComesToRestWhereTheAreaSnaps() {
         TestArea area = area(child("first", 0, 0, 50, 40), child("second", 0, 100, 50, 40));
         area.contentHeight.set(600);
-        area.snapMode.set(ScrollSnapMode.ELEMENTS);
-        area.smoothScrolling.set(false);
+        area.scrollSettings.snapMode.set(ScrollSnapMode.ELEMENTS);
+        area.scrollSettings.smoothScrolling.set(false);
         area.nextFrame();
         area.getScroller().y().scrollTo(80, false);
         area.nextFrame();
@@ -548,7 +553,7 @@ class ScrollAreaElementTest {
     @Test
     void anAreaThatStartsAtItsEndShowsUpThere() {
         TestArea area = area(child("first", 0, 0, 50, 40));
-        area.startPosition.set(ScrollStartPosition.END);
+        area.scrollSettings.startPosition.set(ScrollStartPosition.END);
         // Nothing to scroll yet, like content that still loads
         area.nextFrame();
         assertEquals(0.0, area.getScroller().y().getPosition());
@@ -569,17 +574,17 @@ class ScrollAreaElementTest {
         area.getScroller().y().scrollTo(120, false);
         area.nextFrame();
 
-        area.resetScrollOnOpen.set(false);
+        area.scrollSettings.resetScrollOnOpen.set(false);
         area.onOpenScreen();
         area.nextFrame();
         assertEquals(120.0, area.getScroller().y().getPosition());
 
-        area.resetScrollOnOpen.set(true);
+        area.scrollSettings.resetScrollOnOpen.set(true);
         area.onOpenScreen();
         area.nextFrame();
         assertEquals(0.0, area.getScroller().y().getPosition());
 
-        area.startPosition.set(ScrollStartPosition.END);
+        area.scrollSettings.startPosition.set(ScrollStartPosition.END);
         area.onOpenScreen();
         area.nextFrame();
         assertEquals(300.0, area.getScroller().y().getPosition());
@@ -589,8 +594,8 @@ class ScrollAreaElementTest {
     void anAreaThatScrollsOnItsOwnMovesUntilTheMouseIsOverIt() {
         TestArea area = area(child("first", 0, 0, 50, 40));
         area.contentHeight.set(5000);
-        area.autoScroll.set(true);
-        area.autoScrollSpeed.set(100.0F);
+        area.scrollSettings.autoScroll.set(true);
+        area.scrollSettings.autoScrollSpeed.set(100.0F);
         area.nextFrame();
         area.passTime(3.0);
         double moved = area.getScroller().y().getPosition();
@@ -600,15 +605,15 @@ class ScrollAreaElementTest {
         area.setMouse(150, 80);
         area.passTime(2.0);
         assertEquals(moved, area.getScroller().y().getPosition());
-        area.autoScrollPauseOnHover.set(false);
+        area.scrollSettings.autoScrollPauseOnHover.set(false);
         area.passTime(2.0);
         assertTrue(area.getScroller().y().getPosition() > moved);
 
         // Scrolling by hand makes it rest for a moment
         area.setMouse(ScrollAreaElement.MOUSE_OUTSIDE, ScrollAreaElement.MOUSE_OUTSIDE);
-        area.smoothScrolling.set(false);
+        area.scrollSettings.smoothScrolling.set(false);
         area.nextFrame();
-        area.scrollByWheel(0, -1);
+        area.getScrolling().scrollByWheel(0, -1);
         double afterWheel = area.getScroller().y().getPosition();
         area.passTime(1.0);
         assertEquals(afterWheel, area.getScroller().y().getPosition());
@@ -626,7 +631,7 @@ class ScrollAreaElementTest {
     void theMouseDragsTheContentAlongOnceItMovedFarEnough() {
         TestArea area = area(child("first", 0, 0, 50, 40));
         area.contentHeight.set(1000);
-        area.dragScrolling.set(true);
+        area.scrollSettings.dragScrolling.set(true);
         area.nextFrame();
         area.getScroller().y().scrollTo(200, false);
         area.nextFrame();
@@ -659,7 +664,7 @@ class ScrollAreaElementTest {
     void aMouseThatGotLetGoOfWithoutTheAreaHearingOfItStopsDraggingTheContent() {
         TestArea area = area(child("first", 0, 0, 50, 40));
         area.contentHeight.set(1000);
-        area.dragScrolling.set(true);
+        area.scrollSettings.dragScrolling.set(true);
         area.nextFrame();
         area.getScrolling().onMousePressed(150, 100);
         area.setMouse(150, 70);
@@ -691,7 +696,7 @@ class ScrollAreaElementTest {
         area.getScrolling().onMouseReleased();
 
         // Not in the layout editor, where dragging moves elements around
-        area.dragScrolling.set(true);
+        area.scrollSettings.dragScrolling.set(true);
         area.inEditor = true;
         area.setMouse(150, 100);
         area.nextFrame();
@@ -703,12 +708,12 @@ class ScrollAreaElementTest {
         area.inEditor = false;
 
         // Not when players can't scroll at all
-        area.userScrolling.set(false);
+        area.scrollSettings.userScrolling.set(false);
         area.getScrolling().onMousePressed(150, 100);
         area.setMouse(150, 30);
         area.nextFrame();
         assertFalse(area.getScrolling().isDragging());
-        assertFalse(area.scrollByWheel(0, -1));
+        assertFalse(area.getScrolling().scrollByWheel(0, -1));
         assertFalse(area.getScrolling().scrollByPage(true));
     }
 
@@ -721,7 +726,7 @@ class ScrollAreaElementTest {
         area.nextFrame();
         // An area the mouse does not drag has nothing a press would be for
         assertFalse(area.takesMousePressAt(150, 100));
-        area.dragScrolling.set(true);
+        area.scrollSettings.dragScrolling.set(true);
         assertTrue(area.takesMousePressAt(150, 100));
         assertFalse(area.takesMousePressAt(50, 100));
 
@@ -736,7 +741,7 @@ class ScrollAreaElementTest {
         TestChild far = child("far", 0, 400, 50, 40);
         TestArea area = area(child("near", 0, 10, 50, 40), far);
         area.contentHeight.set(1000);
-        area.smoothScrolling.set(false);
+        area.scrollSettings.smoothScrolling.set(false);
         // The area never worked out how far it can be scrolled, so there is nowhere to go yet
         area.getScrolling().scrollToCorner(true, false);
         assertEquals(0.0, area.getScroller().y().getPosition());
@@ -745,7 +750,7 @@ class ScrollAreaElementTest {
 
         TestArea other = area(child("first", 0, 10, 50, 40), far);
         other.contentHeight.set(1000);
-        other.smoothScrolling.set(false);
+        other.scrollSettings.smoothScrolling.set(false);
         other.getScrolling().scrollToCorner(true, false);
         // What gets asked last counts
         other.getScrolling().scrollToChild(far, false);
@@ -759,7 +764,7 @@ class ScrollAreaElementTest {
     void contentThatGrowsUnderAnAreaAtItsStartHasNotGotThere() {
         TestArea area = area(child("first", 0, 0, 50, 40));
         area.contentHeight.set(50);
-        area.smoothScrolling.set(false);
+        area.scrollSettings.smoothScrolling.set(false);
         area.nextFrame();
         area.nextFrame();
         area.contentHeight.set(400);
@@ -781,10 +786,10 @@ class ScrollAreaElementTest {
         TestChild further = child("further", 0, 700, 50, 40);
         TestArea area = area(child("near", 0, 10, 50, 40), far, further);
         area.contentHeight.set(1000);
-        area.smoothScrolling.set(false);
+        area.scrollSettings.smoothScrolling.set(false);
         area.nextFrame();
 
-        ScrollAreaScrolling.onMousePressedAnywhere();
+        ElementScrolling.onMousePressedAnywhere();
         area.focused = far.widget;
         area.nextFrame();
         assertEquals(0.0, area.getScroller().y().getPosition());
@@ -799,7 +804,7 @@ class ScrollAreaElementTest {
     void theKeyboardScrollsByPagesAndToTheEnds() {
         TestArea area = area(child("first", 0, 0, 50, 40));
         area.contentHeight.set(1000);
-        area.smoothScrolling.set(false);
+        area.scrollSettings.smoothScrolling.set(false);
         area.nextFrame();
         assertTrue(area.getScrolling().scrollByPage(true));
         double page = area.getScroller().y().getPosition();
@@ -820,7 +825,7 @@ class ScrollAreaElementTest {
         TestChild near = child("near", 0, 10, 50, 40);
         TestArea area = area(near, far);
         area.contentHeight.set(1000);
-        area.smoothScrolling.set(false);
+        area.scrollSettings.smoothScrolling.set(false);
         area.nextFrame();
 
         area.focused = far.widget;
@@ -851,7 +856,7 @@ class ScrollAreaElementTest {
         TestChild huge = child("huge", 0, 300, 50, 400);
         TestArea area = area(huge);
         area.contentHeight.set(1000);
-        area.smoothScrolling.set(false);
+        area.scrollSettings.smoothScrolling.set(false);
         area.nextFrame();
         area.getScrolling().scrollIntoView(huge, false);
         double position = area.getScroller().y().getPosition();
@@ -862,13 +867,13 @@ class ScrollAreaElementTest {
     void theAreaGetsToldWhenItsContentMovesAndWhenItGetsToAnEnd() {
         TestArea area = area(child("first", 0, 0, 50, 40));
         area.contentHeight.set(400);
-        area.smoothScrolling.set(false);
+        area.scrollSettings.smoothScrolling.set(false);
         area.nextFrame();
         area.nextFrame();
         // Where the content is when the area shows up is nothing it got scrolled to
         assertEquals("0 0 0", area.events());
 
-        area.scrollByWheel(0, -1);
+        area.getScrolling().scrollByWheel(0, -1);
         area.nextFrame();
         assertEquals("1 0 0", area.events());
         area.nextFrame();
@@ -879,7 +884,7 @@ class ScrollAreaElementTest {
         assertEquals("2 0 1", area.events());
         // Staying at the end is not getting there again
         area.nextFrame();
-        area.scrollByWheel(0, -1);
+        area.getScrolling().scrollByWheel(0, -1);
         area.nextFrame();
         assertEquals("2 0 1", area.events());
 
@@ -918,8 +923,8 @@ class ScrollAreaElementTest {
     @Test
     void anAreaThatShowsUpSomewhereTellsNothingAboutGettingThere() {
         TestArea atEnd = area(child("first", 0, 0, 50, 40));
-        atEnd.startPosition.set(ScrollStartPosition.END);
-        atEnd.smoothScrolling.set(false);
+        atEnd.scrollSettings.startPosition.set(ScrollStartPosition.END);
+        atEnd.scrollSettings.smoothScrolling.set(false);
         // The content only gets something to scroll after a few frames, like content that still loads
         atEnd.nextFrame();
         atEnd.nextFrame();
@@ -933,7 +938,7 @@ class ScrollAreaElementTest {
         atEnd.getScrolling().scrollToEdge(false, false);
         atEnd.nextFrame();
         assertEquals("1 1 0", atEnd.events());
-        atEnd.resetScrollOnOpen.set(true);
+        atEnd.scrollSettings.resetScrollOnOpen.set(true);
         atEnd.onOpenScreen();
         atEnd.nextFrame();
         atEnd.nextFrame();
@@ -955,7 +960,7 @@ class ScrollAreaElementTest {
         TestChild last = child("last", 0, 950, 50, 40);
         TestArea area = area(child("near", 0, 10, 50, 40), far, last);
         area.contentHeight.set(1000);
-        area.smoothScrolling.set(false);
+        area.scrollSettings.smoothScrolling.set(false);
         area.nextFrame();
 
         area.getScrolling().scrollToChild(far, false);
@@ -1107,17 +1112,17 @@ class ScrollAreaElementTest {
         }
 
         @Override
-        protected void onContentScrolled() {
+        public void onContentScrolled() {
             this.scrolledEvents++;
         }
 
         @Override
-        protected void onContentReachedStart() {
+        public void onContentReachedStart() {
             this.reachedStartEvents++;
         }
 
         @Override
-        protected void onContentReachedEnd() {
+        public void onContentReachedEnd() {
             this.reachedEndEvents++;
         }
 
@@ -1133,22 +1138,22 @@ class ScrollAreaElementTest {
         }
 
         @Override
-        protected long getNanoTime() {
+        public long getNanoTime() {
             return this.nanoTime;
         }
 
         @Override
-        protected boolean isInEditor() {
+        public boolean isInEditor() {
             return this.inEditor;
         }
 
         @Override
-        protected GuiEventListener getFocusedListener() {
+        public GuiEventListener getFocusedListener() {
             return this.focused;
         }
 
         @Override
-        public boolean hasInteractiveChildAt(double screenX, double screenY) {
+        public boolean takesContentPressAt(double screenX, double screenY) {
             return false;
         }
 
@@ -1173,27 +1178,27 @@ class ScrollAreaElementTest {
         }
 
         @Override
-        protected int getPointerX() {
+        public int getPointerX() {
             return this.frameMouseX;
         }
 
         @Override
-        protected int getPointerY() {
+        public int getPointerY() {
             return this.frameMouseY;
         }
 
         @Override
-        protected boolean isPointerPressed() {
+        public boolean isPointerPressed() {
             return this.pointerPressed;
         }
 
         @Override
-        protected double getWheelStepSize() {
+        public double getWheelStepSize() {
             return this.wheelStepSize;
         }
 
         @Override
-        protected boolean isShiftDown() {
+        public boolean isShiftDown() {
             return this.shiftDown;
         }
 
