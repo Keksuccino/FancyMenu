@@ -7,8 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Set;
 
 /**
- * How a scrollable element scrolls its content: what the user can do, what the content does on its own, and what the scroll bars
- * and the hints around the content look like.<br>
+ * How a scrollable element scrolls its content: what the user can do, what the content does on its own, and what its scroll bars look like.<br>
  * The names of the settings are the same for every element. Only their descriptions say what gets scrolled, so every kind of element has its own.
  */
 public final class ScrollSettings {
@@ -29,8 +28,6 @@ public final class ScrollSettings {
     public final Property.FloatProperty autoScrollSpeed;
     public final Property.BooleanProperty autoScrollLoop;
     public final Property.BooleanProperty autoScrollPauseOnHover;
-    public final Property.BooleanProperty edgeShadows;
-    public final Property.ColorProperty edgeShadowColor;
     public final Property<ScrollBarVisibility> scrollBarVisibility;
     /** How thick the scroll bars are. Their grabbers are twice as long as they are thick, like the pixel art handle they are made for. */
     public final Property.IntegerProperty scrollBarThickness;
@@ -60,8 +57,6 @@ public final class ScrollSettings {
         this.autoScrollSpeed = holder.putProperty(Property.floatProperty("auto_scroll_speed", 20.0F, "fancymenu.elements.scroll_area.auto_scroll.speed", Property.NumericInputBehavior.<Float>builder().rangeInput(2.0F, 200.0F).build()));
         this.autoScrollLoop = holder.putProperty(Property.booleanProperty("auto_scroll_loop", true, "fancymenu.elements.scroll_area.auto_scroll.loop"));
         this.autoScrollPauseOnHover = holder.putProperty(Property.booleanProperty("auto_scroll_pause_on_hover", true, "fancymenu.elements.scroll_area.auto_scroll.pause_on_hover"));
-        this.edgeShadows = holder.putProperty(Property.booleanProperty("edge_shadows", false, "fancymenu.elements.scroll_area.edge_shadows"));
-        this.edgeShadowColor = holder.putProperty(Property.hexColorProperty("edge_shadow_color", "#000000A0", true, "fancymenu.elements.scroll_area.edge_shadows.color"));
         this.scrollBarVisibility = holder.putProperty(ScrollBarVisibility.buildProperty());
         this.scrollBarThickness = holder.putProperty(Property.integerProperty("scroll_bar_thickness", PixelScrollGrabber.THICKNESS, "fancymenu.elements.scroll_area.scroll_bars.thickness", Property.NumericInputBehavior.<Integer>builder().rangeInput(4, 32).build()));
         this.verticalScrollBarLeft = holder.putProperty(Property.booleanProperty("vertical_scroll_bar_left", false, "fancymenu.elements.scroll_area.scroll_bars.vertical_left"));

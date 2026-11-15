@@ -178,9 +178,7 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
 
         ElementStyleMenus.addScrollBarBackgroundMenu(scrollBarsMenu, this, this.element.scrollBarBackground);
 
-        ScrollSettingsMenus.addEdgeShadowsMenu(this.rightClickMenu, this, this.element.scrollSettings);
-
-        this.rightClickMenu.addSeparatorEntry("separator_after_edge_shadows");
+        this.rightClickMenu.addSeparatorEntry("separator_after_scroll_bars");
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "interactable", TextEditorElement.class,
                         consumes -> consumes.element.interactable,
