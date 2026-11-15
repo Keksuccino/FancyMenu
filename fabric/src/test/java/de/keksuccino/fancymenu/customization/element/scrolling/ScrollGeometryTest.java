@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.element.elements.scrollarea;
+package de.keksuccino.fancymenu.customization.element.scrolling;
 
 import org.junit.jupiter.api.Test;
 
@@ -6,11 +6,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class ScrollAreaGeometryTest {
+class ScrollGeometryTest {
 
     @Test
     void contentIsNeverSmallerThanTheViewport() {
-        ScrollAreaGeometry geometry = new ScrollAreaGeometry();
+        ScrollGeometry geometry = new ScrollGeometry();
         geometry.setViewport(10, 20, 200, 100, 1.0F);
         geometry.setContentSize(50, 30, true, true);
         assertEquals(200, geometry.getContentWidth());
@@ -21,7 +21,7 @@ class ScrollAreaGeometryTest {
 
     @Test
     void contentOnlyGrowsOnAxesThatScroll() {
-        ScrollAreaGeometry geometry = new ScrollAreaGeometry();
+        ScrollGeometry geometry = new ScrollGeometry();
         geometry.setViewport(0, 0, 200, 100, 1.0F);
 
         geometry.setContentSize(900, 700, false, true);
@@ -43,7 +43,7 @@ class ScrollAreaGeometryTest {
 
     @Test
     void aScaledContentIsMeasuredInItsOwnUnits() {
-        ScrollAreaGeometry geometry = new ScrollAreaGeometry();
+        ScrollGeometry geometry = new ScrollGeometry();
         geometry.setViewport(0, 0, 400, 200, 2.0F);
         // The viewport shows 200x100 units of the content
         geometry.setContentSize(0, 250, false, true);
@@ -60,7 +60,7 @@ class ScrollAreaGeometryTest {
 
     @Test
     void anInvalidScaleCountsAsNoScale() {
-        ScrollAreaGeometry geometry = new ScrollAreaGeometry();
+        ScrollGeometry geometry = new ScrollGeometry();
         geometry.setViewport(0, 0, 100, 50, 0.0F);
         assertEquals(1.0F, geometry.getScale());
         geometry.setViewport(0, 0, 100, 50, -3.0F);
@@ -69,7 +69,7 @@ class ScrollAreaGeometryTest {
 
     @Test
     void wholePixelsOfTheScrollMoveTheContent() {
-        ScrollAreaGeometry geometry = new ScrollAreaGeometry();
+        ScrollGeometry geometry = new ScrollGeometry();
         geometry.setViewport(10, 20, 200, 100, 1.0F);
         geometry.setContentSize(0, 500, false, true);
         geometry.setScroll(0, 37);
@@ -79,7 +79,7 @@ class ScrollAreaGeometryTest {
 
     @Test
     void aScrollBetweenTwoPixelsMovesTheContentToTheCloserOne() {
-        ScrollAreaGeometry geometry = new ScrollAreaGeometry();
+        ScrollGeometry geometry = new ScrollGeometry();
         geometry.setViewport(0, 0, 200, 100, 1.0F);
         geometry.setContentSize(500, 500, true, true);
 
@@ -96,7 +96,7 @@ class ScrollAreaGeometryTest {
 
     @Test
     void onlyPointsInsideTheViewportAreInIt() {
-        ScrollAreaGeometry geometry = new ScrollAreaGeometry();
+        ScrollGeometry geometry = new ScrollGeometry();
         geometry.setViewport(10, 20, 200, 100, 1.0F);
         assertTrue(geometry.isInViewport(10, 20));
         assertTrue(geometry.isInViewport(209.5, 119.5));
@@ -108,7 +108,7 @@ class ScrollAreaGeometryTest {
 
     @Test
     void negativeViewportSizesCountAsEmpty() {
-        ScrollAreaGeometry geometry = new ScrollAreaGeometry();
+        ScrollGeometry geometry = new ScrollGeometry();
         geometry.setViewport(0, 0, -5, -8, 1.0F);
         geometry.setContentSize(300, 300, true, true);
         assertEquals(0, geometry.getViewportWidth());

@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.customization.element.elements.scrollarea;
+package de.keksuccino.fancymenu.customization.element.scrolling;
 
 import org.junit.jupiter.api.Test;
 
@@ -6,11 +6,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class ScrollAreaScrollerTest {
+class ContentScrollerTest {
 
     @Test
     void scrollingStaysInsideTheRange() {
-        ScrollAreaScroller scroller = new ScrollAreaScroller();
+        ContentScroller scroller = new ContentScroller();
         scroller.setSmooth(false);
         scroller.setRange(0, 100);
 
@@ -27,7 +27,7 @@ class ScrollAreaScrollerTest {
 
     @Test
     void scrollingAgainstAnEndReportsThatNothingChanged() {
-        ScrollAreaScroller scroller = new ScrollAreaScroller();
+        ContentScroller scroller = new ContentScroller();
         scroller.setSmooth(false);
         scroller.setRange(0, 100);
 
@@ -39,7 +39,7 @@ class ScrollAreaScrollerTest {
 
     @Test
     void smoothScrollingMovesTowardsTheTargetAndArrives() {
-        ScrollAreaScroller scroller = new ScrollAreaScroller();
+        ContentScroller scroller = new ContentScroller();
         scroller.setRange(0, 1000);
         scroller.y().scrollBy(300);
 
@@ -62,7 +62,7 @@ class ScrollAreaScrollerTest {
 
     @Test
     void aNewScrollDuringARunningOneMovesTheTargetOn() {
-        ScrollAreaScroller scroller = new ScrollAreaScroller();
+        ContentScroller scroller = new ContentScroller();
         scroller.setRange(0, 1000);
         scroller.y().scrollBy(100);
         scroller.update(0.016);
@@ -75,7 +75,7 @@ class ScrollAreaScrollerTest {
 
     @Test
     void updatesWithoutTimeDoNotMoveSmoothScrolls() {
-        ScrollAreaScroller scroller = new ScrollAreaScroller();
+        ContentScroller scroller = new ContentScroller();
         scroller.setRange(0, 1000);
         scroller.y().scrollBy(100);
         scroller.update(0);
@@ -84,7 +84,7 @@ class ScrollAreaScrollerTest {
 
     @Test
     void aSmallerRangePullsPositionAndTargetIn() {
-        ScrollAreaScroller scroller = new ScrollAreaScroller();
+        ContentScroller scroller = new ContentScroller();
         scroller.setRange(200, 1000);
         scroller.y().scrollTo(800, false);
         scroller.y().scrollBy(150);
@@ -104,7 +104,7 @@ class ScrollAreaScrollerTest {
 
     @Test
     void aBiggerRangeKeepsThePosition() {
-        ScrollAreaScroller scroller = new ScrollAreaScroller();
+        ContentScroller scroller = new ContentScroller();
         scroller.setRange(0, 100);
         scroller.y().scrollTo(70, false);
         scroller.setRange(0, 5000);
@@ -114,26 +114,26 @@ class ScrollAreaScrollerTest {
 
     @Test
     void restoredPositionsWaitForTheRange() {
-        ScrollAreaScroller scroller = new ScrollAreaScroller();
+        ContentScroller scroller = new ContentScroller();
         scroller.y().restore(340);
         assertEquals(340, scroller.y().getPosition());
         scroller.setRange(0, 1000);
         assertEquals(340, scroller.y().getPosition());
 
-        ScrollAreaScroller shrunk = new ScrollAreaScroller();
+        ContentScroller shrunk = new ContentScroller();
         shrunk.y().restore(340);
         shrunk.setRange(0, 120);
         assertEquals(120, shrunk.y().getPosition());
         assertEquals(120, shrunk.y().getTarget());
 
-        ScrollAreaScroller negative = new ScrollAreaScroller();
+        ContentScroller negative = new ContentScroller();
         negative.y().restore(-5);
         assertEquals(0, negative.y().getPosition());
     }
 
     @Test
     void positionsAtTheEndsCountAsStartAndEnd() {
-        ScrollAreaScroller scroller = new ScrollAreaScroller();
+        ContentScroller scroller = new ContentScroller();
         scroller.setSmooth(false);
         scroller.setRange(0, 100);
 
@@ -158,7 +158,7 @@ class ScrollAreaScrollerTest {
 
     @Test
     void thePercentHasTwoDigitsBehindThePointAtMost() {
-        ScrollAreaScroller scroller = new ScrollAreaScroller();
+        ContentScroller scroller = new ContentScroller();
         scroller.setSmooth(false);
         scroller.setRange(0, 300);
         assertEquals(0.0, scroller.y().getPercent());
@@ -173,7 +173,7 @@ class ScrollAreaScrollerTest {
 
     @Test
     void driftingMovesPositionAndTargetTogetherAndReportsWhatIsLeft() {
-        ScrollAreaScroller scroller = new ScrollAreaScroller();
+        ContentScroller scroller = new ContentScroller();
         scroller.setRange(0, 100);
         scroller.y().scrollBy(30);
 
@@ -191,7 +191,7 @@ class ScrollAreaScrollerTest {
 
     @Test
     void scrollingToNotANumberLeavesTheAxisUsable() {
-        ScrollAreaScroller scroller = new ScrollAreaScroller();
+        ContentScroller scroller = new ContentScroller();
         scroller.setSmooth(false);
         scroller.setRange(0, 100);
         scroller.y().scrollTo(40, false);

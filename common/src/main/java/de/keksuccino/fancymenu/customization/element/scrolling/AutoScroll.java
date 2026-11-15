@@ -1,13 +1,13 @@
-package de.keksuccino.fancymenu.customization.element.elements.scrollarea;
+package de.keksuccino.fancymenu.customization.element.scrolling;
 
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Scrolls the content of a scrollable area on its own, at a steady speed, the way credits roll.<br>
+ * Scrolls the content of a scrollable element on its own, at a steady speed, the way credits roll.<br>
  * At the end it stops, or waits a moment and starts over. When the user scrolls, it waits a moment before it goes on from where they left the content.
  * Plain math on the axis it gets, so it knows nothing about elements or the game.
  */
-public final class ScrollAreaAutoScroll {
+public final class AutoScroll {
 
     /** How long the content rests at its end before it starts over, and at its start before it moves again. */
     private static final double END_REST_SECONDS = 1.5D;
@@ -25,7 +25,7 @@ public final class ScrollAreaAutoScroll {
      * @param pixelsPerSecond How fast the content scrolls.
      * @param loop If the content starts over when it reached its end.
      */
-    public void update(@NotNull ScrollAreaScroller.Axis axis, double deltaSeconds, double pixelsPerSecond, boolean loop) {
+    public void update(@NotNull ContentScroller.Axis axis, double deltaSeconds, double pixelsPerSecond, boolean loop) {
         if (!axis.canScroll() || (deltaSeconds <= 0.0D) || (pixelsPerSecond <= 0.0D)) return;
         if (this.restSeconds > 0.0D) {
             this.restSeconds -= deltaSeconds;

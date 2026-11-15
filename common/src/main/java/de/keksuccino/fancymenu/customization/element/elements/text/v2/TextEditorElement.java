@@ -2,24 +2,28 @@ package de.keksuccino.fancymenu.customization.element.elements.text.v2;
 
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.element.elements.MarkdownSettingsMenu;
+import de.keksuccino.fancymenu.customization.element.scrolling.ScrollSettingsMenus;
 import de.keksuccino.fancymenu.customization.element.style.ElementStyleMenus;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
-import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinScreen;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.Arrays;
+import java.util.List;
 
 public class TextEditorElement extends AbstractEditorElement<TextEditorElement, TextElement> {
 
+    protected final List<GuiEventListener> editorInputListeners;
+
     public TextEditorElement(@NotNull TextElement element, @NotNull LayoutEditorScreen editor) {
         super(element, editor);
+        this.editorInputListeners = List.of(this.element.getScrollInput());
     }
 
     @Override
@@ -102,22 +106,23 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
 
         this.rightClickMenu.addSeparatorEntry("separator_after_markdown");
 
-        this.addToggleContextMenuEntryTo(this.rightClickMenu, "set_scrolling", TextEditorElement.class,
-                        consumes -> consumes.element.enableScrolling,
-                        (textEditorElement, aBoolean) -> textEditorElement.element.enableScrolling = aBoolean,
-                        "fancymenu.elements.text.scrolling")
-                .setStackable(true)
-                .setIcon(MaterialIcons.SWIPE_VERTICAL);
+        ScrollSettingsMenus.addScrollDirectionEntry(this.rightClickMenu, this, this.element.scrollSettings);
+
+        ScrollSettingsMenus.addScrollingMenu(this.rightClickMenu, this, this.element.scrollSettings);
+
+        ScrollSettingsMenus.addAutoScrollMenu(this.rightClickMenu, this, this.element.scrollSettings);
 
         this.rightClickMenu.addSeparatorEntry("separator_after_scrolling");
 
-        this.element.scrollGrabberDesign.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+        ContextMenu scrollBarsMenu = ScrollSettingsMenus.addScrollBarsMenu(this.rightClickMenu, this, this.element.scrollSettings);
+
+        this.element.scrollGrabberDesign.buildContextMenuEntryAndAddTo(scrollBarsMenu, this)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.scroll_grabber_design.desc")))
                 .setIcon(MaterialIcons.DRAG_INDICATOR);
 
         ContextMenu grabberTextureMenu = new ContextMenu();
-        this.rightClickMenu.addSubMenuEntry("grabber_texture", Component.translatable("fancymenu.elements.text.scroll_grabber_texture"), grabberTextureMenu)
+        scrollBarsMenu.addSubMenuEntry("grabber_texture", Component.translatable("fancymenu.elements.text.scroll_grabber_texture"), grabberTextureMenu)
                 .setStackable(true)
                 .setIcon(MaterialIcons.IMAGE);
 
@@ -160,7 +165,7 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                 .setIcon(MaterialIcons.IMAGE);
 
         ContextMenu grabberColorMenu = new ContextMenu();
-        this.rightClickMenu.addSubMenuEntry("grabber_color", Component.translatable("fancymenu.elements.text.scroll_grabber_color"), grabberColorMenu)
+        scrollBarsMenu.addSubMenuEntry("grabber_color", Component.translatable("fancymenu.elements.text.scroll_grabber_color"), grabberColorMenu)
                 .setStackable(true)
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.text.scroll_grabber_color.desc")))
                 .setIcon(MaterialIcons.PALETTE);
@@ -171,9 +176,11 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
         this.element.scrollGrabberColorHexHover.buildContextMenuEntryAndAddTo(grabberColorMenu, this)
                 .setIcon(MaterialIcons.PALETTE);
 
-        ElementStyleMenus.addScrollBarBackgroundMenu(this.rightClickMenu, this, this.element.scrollBarBackground);
+        ElementStyleMenus.addScrollBarBackgroundMenu(scrollBarsMenu, this, this.element.scrollBarBackground);
 
-        this.rightClickMenu.addSeparatorEntry("separator_after_hover_grabber_color");
+        ScrollSettingsMenus.addEdgeShadowsMenu(this.rightClickMenu, this, this.element.scrollSettings);
+
+        this.rightClickMenu.addSeparatorEntry("separator_after_edge_shadows");
 
         this.addToggleContextMenuEntryTo(this.rightClickMenu, "interactable", TextEditorElement.class,
                         consumes -> consumes.element.interactable,
@@ -184,15 +191,12 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
 
     }
 
+    /**
+     * The scroll bars and the mouse wheel work in the editor like they do on the real screen.
+     */
     @Override
-    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
-
-        if (!this.editor.children().contains(this.element.getScrollAreaInput())) {
-            ((IMixinScreen)this.editor).getChildrenFancyMenu().add(this.element.getScrollAreaInput());
-        }
-
-        super.render(graphics, mouseX, mouseY, partial);
-
+    public @NotNull List<GuiEventListener> getEditorInputListeners() {
+        return this.editorInputListeners;
     }
 
 }
