@@ -8,7 +8,8 @@ import org.lwjgl.glfw.GLFW;
 /**
  * Dev-only launch mode for automated in-game tests, documented in TESTING_GUIDELINES.md in the project root.<br>
  * When the {@value #ENV_VARIABLE} environment variable is "true" in a development environment, the game window gets created
- * hidden and without focus, so test clients never show up on screen or take focus away from the user.<br><br>
+ * hidden and without focus, so test clients never show up on screen or take focus away from the user.
+ * The game also never moves or locks the real mouse cursor in this mode (see MixinInputConstants).<br><br>
  *
  * The mode also keeps the window out of fullscreen, because GLFW always shows fullscreen windows.
  * Its hooks run before Minecraft creates the window, so this class must not touch any game state.
