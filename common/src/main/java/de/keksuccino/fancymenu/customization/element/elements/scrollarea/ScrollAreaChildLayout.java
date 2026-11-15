@@ -4,6 +4,8 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.container.ElementContainerLink;
 import de.keksuccino.fancymenu.customization.element.elements.scrollarea.layout.ScrollAreaArrangement;
 import de.keksuccino.fancymenu.customization.element.elements.scrollarea.layout.ScrollAreaArranger;
+import de.keksuccino.fancymenu.customization.element.scrolling.ScrollDirection;
+import de.keksuccino.fancymenu.customization.element.scrolling.ScrollGeometry;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +28,7 @@ public final class ScrollAreaChildLayout {
     /**
      * Arranges the children of the area. Has to be called after the geometry of the area got its viewport for this frame.
      */
-    public void arrange(@NotNull ScrollAreaElement area, @NotNull ScrollAreaArranger arranger, @NotNull List<AbstractElement> children, @NotNull ScrollAreaGeometry geometry) {
+    public void arrange(@NotNull ScrollAreaElement area, @NotNull ScrollAreaArranger arranger, @NotNull List<AbstractElement> children, @NotNull ScrollGeometry geometry) {
 
         this.arranged.clear();
         for (int i = 0; i < children.size(); i++) {
@@ -133,7 +135,7 @@ public final class ScrollAreaChildLayout {
     }
 
     /**
-     * Makes the next {@link #arrange(ScrollAreaElement, ScrollAreaArranger, List, ScrollAreaGeometry)} work everything out again.
+     * Makes the next {@link #arrange(ScrollAreaElement, ScrollAreaArranger, List, ScrollGeometry)} work everything out again.
      */
     public void invalidate() {
         this.hasArrangement = false;

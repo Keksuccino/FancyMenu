@@ -46,6 +46,12 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     protected float unscaledTrailingSpaceWidth;
     public float unscaledTextHeight;
     public boolean startOfRenderLine = false;
+    /**
+     * The index of the line of the parsed text the fragment starts in, starting at 0, and of the one it ends in. Both are the same
+     * for everything but a table, which holds all of its lines. {@link MarkdownLinePositions} finds lines of the text with them.
+     */
+    protected int sourceLine = 0;
+    protected int lastSourceLine = 0;
     public boolean naturalLineBreakAfter;
     public boolean autoLineBreakAfter;
     public boolean endOfWord;
@@ -474,6 +480,8 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         MarkdownTextFragment piece = new MarkdownTextFragment(this.parent, "");
         // Everything that describes the text of the fragment. What marks the fragment as the first one of something, like of a list item, stays with the first piece.
         piece.unscaledTextHeight = this.unscaledTextHeight;
+        piece.sourceLine = this.sourceLine;
+        piece.lastSourceLine = this.lastSourceLine;
         piece.textColor = this.textColor;
         piece.bold = this.bold;
         piece.italic = this.italic;

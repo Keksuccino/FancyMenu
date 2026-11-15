@@ -1,12 +1,12 @@
-package de.keksuccino.fancymenu.customization.element.elements.scrollarea;
+package de.keksuccino.fancymenu.customization.element.scrolling;
 
 import de.keksuccino.fancymenu.util.properties.Property;
 import org.jetbrains.annotations.NotNull;
 import java.util.Locale;
 
 /**
- * The directions the content of a scrollable area can be scrolled in. On an axis that does not scroll,
- * the content is exactly as big as what the area shows of it.
+ * The directions the content of a scrollable element can be scrolled in. On an axis that does not scroll,
+ * the content is exactly as big as what the element shows of it.
  */
 public enum ScrollDirection {
 
@@ -14,7 +14,7 @@ public enum ScrollDirection {
     HORIZONTAL(true, false),
     BOTH(true, true);
 
-    /** The key of the property that holds the direction of an area. Changing it breaks saved layouts. */
+    /** The key of the property that holds the direction of an element. Changing it breaks saved layouts. */
     public static final String PROPERTY_KEY = "scroll_direction";
     private static final String LOCALIZATION_KEY = "fancymenu.elements.scroll_area.scroll_direction";
 
@@ -27,9 +27,12 @@ public enum ScrollDirection {
         this.scrollsY = scrollsY;
     }
 
+    /**
+     * @param defaultDirection The direction of an element that got saved without one.
+     */
     @NotNull
-    public static Property<ScrollDirection> buildProperty() {
-        return Property.enumProperty(PROPERTY_KEY, VERTICAL, LOCALIZATION_KEY, ScrollDirection::getLocalizationKey);
+    public static Property<ScrollDirection> buildProperty(@NotNull ScrollDirection defaultDirection) {
+        return Property.enumProperty(PROPERTY_KEY, defaultDirection, LOCALIZATION_KEY, ScrollDirection::getLocalizationKey);
     }
 
     public boolean scrollsX() {

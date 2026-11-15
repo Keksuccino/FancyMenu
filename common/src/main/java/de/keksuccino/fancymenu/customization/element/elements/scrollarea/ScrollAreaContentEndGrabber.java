@@ -9,6 +9,8 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.input.MouseButtonEvent;
 import org.jetbrains.annotations.NotNull;
+import de.keksuccino.fancymenu.customization.element.scrolling.ContentScroller;
+import de.keksuccino.fancymenu.customization.element.scrolling.ScrollGeometry;
 
 /**
  * The handle the layout editor shows at the end of the content of a selected scrollable area, on one axis.
@@ -64,7 +66,7 @@ public class ScrollAreaContentEndGrabber implements GuiEventListener {
         ScrollAreaElement area = this.editorElement.element;
         if (this.grabbed) this.dragTo(this.horizontal ? mouseX : mouseY);
 
-        ScrollAreaGeometry geometry = area.getGeometry();
+        ScrollGeometry geometry = area.getScrollGeometry();
         int end = this.getEndOnScreen(geometry);
         int viewportStart = this.horizontal ? geometry.getViewportX() : geometry.getViewportY();
         int viewportEnd = viewportStart + (this.horizontal ? geometry.getViewportWidth() : geometry.getViewportHeight());
@@ -123,13 +125,13 @@ public class ScrollAreaContentEndGrabber implements GuiEventListener {
         }
 
         ScrollAreaElement area = this.editorElement.element;
-        ScrollAreaGeometry geometry = area.getGeometry();
-        ScrollAreaScroller.Axis axis = area.getScroller().axis(this.horizontal);
+        ScrollGeometry geometry = area.getScrollGeometry();
+        ContentScroller.Axis axis = area.getScroller().axis(this.horizontal);
         int viewportStart = this.horizontal ? geometry.getViewportX() : geometry.getViewportY();
         int viewportEnd = viewportStart + (this.horizontal ? geometry.getViewportWidth() : geometry.getViewportHeight());
 
         // The handle moves while its area renders, so the frame of the area is its frame
-        double deltaSeconds = area.getFrameDeltaSeconds();
+        double deltaSeconds = area.getScrolling().getFrameDeltaSeconds();
 
         // How far the content scrolls along in this frame: forwards while the mouse is at the end of the area, backwards while it is at its start.
         // The handle rests close to the end of the area when the area is scrolled to the end of its content, so only a mouse that
@@ -180,17 +182,17 @@ public class ScrollAreaContentEndGrabber implements GuiEventListener {
         return this.horizontal ? area.contentWidth : area.contentHeight;
     }
 
-    protected int getEndOnScreen(@NotNull ScrollAreaGeometry geometry) {
+    protected int getEndOnScreen(@NotNull ScrollGeometry geometry) {
         if (this.horizontal) return geometry.getContentScreenX() + Math.round(geometry.getContentWidth() * geometry.getScale());
         return geometry.getContentScreenY() + Math.round(geometry.getContentHeight() * geometry.getScale());
     }
 
-    protected int getGrabberX(@NotNull ScrollAreaGeometry geometry, int end) {
+    protected int getGrabberX(@NotNull ScrollGeometry geometry, int end) {
         if (this.horizontal) return end - GRABBER_INSET - GRABBER_THICKNESS;
         return geometry.getViewportX() + ((geometry.getViewportWidth() - GRABBER_LENGTH) / 2);
     }
 
-    protected int getGrabberY(@NotNull ScrollAreaGeometry geometry, int end) {
+    protected int getGrabberY(@NotNull ScrollGeometry geometry, int end) {
         if (this.horizontal) return geometry.getViewportY() + ((geometry.getViewportHeight() - GRABBER_LENGTH) / 2);
         return end - GRABBER_INSET - GRABBER_THICKNESS;
     }
@@ -198,7 +200,7 @@ public class ScrollAreaContentEndGrabber implements GuiEventListener {
     @Override
     public boolean mouseClicked(@NotNull MouseButtonEvent event, boolean isDoubleClick) {
         if ((event.button() != InputConstants.MOUSE_BUTTON_LEFT) || !this.hovered || !this.isShown() || this.isLocked()) return false;
-        ScrollAreaGeometry geometry = this.editorElement.element.getGeometry();
+        ScrollGeometry geometry = this.editorElement.element.getScrollGeometry();
         this.grabbed = true;
         this.moved = false;
         this.grabMouse = (int) (this.horizontal ? event.x() : event.y());
