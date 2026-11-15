@@ -8,7 +8,6 @@ import de.keksuccino.fancymenu.customization.element.scrolling.ElementScrollBars
 import de.keksuccino.fancymenu.customization.element.scrolling.ElementScrollInput;
 import de.keksuccino.fancymenu.customization.element.scrolling.ElementScrolling;
 import de.keksuccino.fancymenu.customization.element.scrolling.ScrollDirection;
-import de.keksuccino.fancymenu.customization.element.scrolling.ScrollEdgeShadows;
 import de.keksuccino.fancymenu.customization.element.scrolling.ScrollGeometry;
 import de.keksuccino.fancymenu.customization.element.scrolling.ScrollSettings;
 import de.keksuccino.fancymenu.customization.element.scrolling.ScrollSnapMode;
@@ -223,10 +222,6 @@ public class TextElement extends AbstractElement implements ScrollableElement {
                     markdown.extractRenderState(graphics, textSeesMouse ? elementMouseX : MOUSE_OUTSIDE, textSeesMouse ? elementMouseY : MOUSE_OUTSIDE, partial);
                 } finally {
                     graphics.disableScissor();
-                }
-
-                if (this.scrollSettings.edgeShadows.getBoolean()) {
-                    ScrollEdgeShadows.render(graphics, geometry, this.scrolling.getScroller(), this.scrollSettings.edgeShadowColor.getDrawable().getColorInt(), this.opacity);
                 }
 
                 this.bars.render(graphics, elementMouseX, elementMouseY, partial);
