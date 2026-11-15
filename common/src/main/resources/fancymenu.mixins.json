@@ -63,6 +63,7 @@
     "client.MixinGuiGraphicsExtractor_ScissorStack",
     "client.MixinGuiRenderer",
     "client.MixinImageButton",
+    "client.MixinInputConstants",
     "client.MixinInventoryScreen",
     "client.MixinJoinMultiplayerScreen",
     "client.MixinKeyboardHandler",
