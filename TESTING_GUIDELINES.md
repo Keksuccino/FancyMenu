@@ -1,8 +1,20 @@
 # Testing Guidelines
 
+## Staying off the screen
+
+Tests must never get in the way of the user. No test, unit test or in-game test, may open a window, put an icon in the Dock,
+take the window focus, move or lock the mouse cursor, play audible sound or open anything in the browser.
+
+- **Unit tests** run headless: the root `build.gradle` gives every `Test` task `java.awt.headless=true` and `apple.awt.UIElement=true`.
+  Without headless mode, macOS puts the test JVM in the Dock as soon as a test loads AWT (fonts, images). Never remove these properties,
+  and never start GLFW, Swing or anything else that opens a window from a unit test.
+- **In-game tests** only run in off-screen test clients, see below. Never launch a normal client (`runClient`) for testing.
+- To check a new kind of test, watch `lsappinfo list` while it runs. No process of the test may show up there with `type="Foreground"`,
+  which is what gets a Dock icon, and `lsappinfo front` must never switch to it.
+
 ## Off-screen test clients
 
-Test clients must never show their window on screen or take focus away from the user. FancyMenu has a dev-only
+Test clients must never show their window on screen, take focus away from the user or touch the mouse cursor. FancyMenu has a dev-only
 off-screen mode for that, so always launch test clients through `offscreen_client.sh`:
 
 ```bash
@@ -27,16 +39,25 @@ JAVA_HOME=$(/usr/libexec/java_home -v 21) sh offscreen_client.sh neoforge
 - It sets `soundCategory_master:0.0` in `<game directory>/options.txt` for the run, so test clients stay silent.
 - All of these files get restored when the script exits.
 - The game log contains `Off-screen test client mode is active!` when the mode works.
+- **Important:** Test clients must never open anything in the browser of the user. Closing the "Welcome to FancyMenu!" window in any way
+  (its button, its close button, or `PiPWindow#close()`) opens the FancyMenu docs there, so off-screen clients never open that window,
+  and `WebUtils#openWebLink` only logs links in them. Never close the Welcome window from test code, never close all open PiP windows
+  in bulk to get rid of it, and never open links some other way.
 
 ### How it works
 
 - `util/window/OffscreenTestClient` reads the environment variable. The mode only works in a development environment.
 - `MixinGLX` disables the macOS menu bar before GLFW starts, so the game gets no Dock icon and can't get activated.
+- `MixinMinecraft` does not open the Welcome window, and `WebUtils#openWebLink` does not open links.
 - `MixinWindow` creates the game window hidden and unfocused, and keeps it windowed, because GLFW always shows fullscreen windows.
+- `MixinInputConstants` skips the game's mouse grab and release, so the real cursor never gets moved or locked,
+  for example when a test enters or leaves a world.
 
 ### Writing in-game tests
 
 - The game still renders into its render targets, so screenshots (`Screenshot.grab()`, `Screenshot.takeScreenshot()`) work as usual.
 - The hidden window gets no input from the OS. Simulate input through the game's real input handlers instead,
   for example `KeyboardHandler#keyPress` with the key of the `KeyMapping` you want to trigger.
+- The game still keeps track of the mouse being grabbed or released, only the real cursor stays untouched.
+  Never call window or cursor functions of GLFW from test code (showing, raising or focusing the window, moving the cursor).
 - There is no window to close, so test code has to call `Minecraft#stop()` when it's done. If a run hangs, stop its Gradle process.
