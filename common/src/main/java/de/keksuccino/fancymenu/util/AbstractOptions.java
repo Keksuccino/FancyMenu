@@ -88,6 +88,11 @@ public abstract class AbstractOptions {
             return this.key;
         }
 
+        @NotNull
+        public String getCategory() {
+            return this.category;
+        }
+
     }
 
     /**
