@@ -197,6 +197,13 @@ public interface CustomizableWidget {
 
     boolean isLabelShadowFancyMenu();
 
+    /**
+     * Returns if the label of this widget gets rendered with a shadow, which also includes the global label shadow for buttons and sliders.
+     */
+    default boolean resolveLabelShadowFancyMenu() {
+        return this.isLabelShadowFancyMenu();
+    }
+
     void setCustomClickSoundFancyMenu(@Nullable IAudio sound);
 
     @Nullable

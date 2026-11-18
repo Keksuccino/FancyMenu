@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.IExtendedWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.WidgetLabelAlignment;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
@@ -16,6 +17,8 @@ import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.texture.PngTexture;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.AbstractButton;
+import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
@@ -168,6 +171,15 @@ public final class GlobalCustomizationHandler {
 
     public static int getGlobalSliderHandleNineSliceBorderLeft() {
         return FancyMenu.getOptions().globalSliderHandleNineSliceBorderLeft.getValue();
+    }
+
+    /**
+     * Returns if the global button and slider label customizations apply to the given widget.<br>
+     * Widgets of FancyMenu's own UI render their labels with the UI base and keep their own look, so they never get these customizations.
+     */
+    public static boolean isGlobalLabelCustomizationTarget(@NotNull Object widget) {
+        if ((widget instanceof IExtendedWidget extended) && extended.isLabelRenderedWithUiBase()) return false;
+        return (widget instanceof AbstractButton) || (widget instanceof AbstractSliderButton);
     }
 
     public static boolean isGlobalButtonLabelUnderlineOnHoverEnabled() {
