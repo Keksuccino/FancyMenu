@@ -4,6 +4,8 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorWindowBody;
+import de.keksuccino.fancymenu.customization.aiexport.AiExportMenus;
+import de.keksuccino.fancymenu.customization.aiexport.exporters.LayoutAiExporter;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlay;
@@ -123,6 +125,9 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
             editor.saveLayoutAs();
         }).setIcon(MaterialIcons.SAVE_AS);
 
+        // Exports the layout like it is in the editor, so unsaved changes are part of the export
+        AiExportMenus.addExportSubMenu(layoutMenu, "export_layout_for_ai", Component.translatable("fancymenu.ai_export.layout"), () -> LayoutAiExporter.exportEditorLayout(editor));
+
         layoutMenu.addSeparatorEntry("separator_after_save_as");
 
         layoutMenu.addSubMenuEntry("layout_settings", Component.translatable("fancymenu.editor.layout.properties"), buildRightClickContextMenu())
@@ -189,6 +194,11 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                     editor.selectAllElements();
                 }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.select_all"))
                 .setIcon(MaterialIcons.SELECT_ALL);
+
+        editMenu.addSeparatorEntry("separator_after_select_all");
+
+        AiExportMenus.addExportSubMenu(editMenu, "export_selected_elements_for_ai", Component.translatable("fancymenu.ai_export.selected_elements"), () -> LayoutAiExporter.exportEditorElements(editor, editor.getSelectedElements()))
+                .addIsActiveSupplier((menu, entry) -> !editor.getSelectedElements().isEmpty());
 
         //ELEMENT
         ContextMenu elementMenu = new ContextMenu();
@@ -1083,6 +1093,8 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                 FileUtils.openFile(layout.layoutFile);
             }
         }).setIcon(MaterialIcons.OPEN_IN_NEW);
+
+        AiExportMenus.addExportSubMenu(menu, "export_layout_for_ai", Component.translatable("fancymenu.ai_export.layout"), () -> LayoutAiExporter.exportLayout(layout));
 
         return menu;
 

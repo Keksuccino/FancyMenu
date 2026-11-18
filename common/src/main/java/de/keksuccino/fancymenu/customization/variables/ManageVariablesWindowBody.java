@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.variables;
 
+import de.keksuccino.fancymenu.customization.aiexport.AiExportMenus;
+import de.keksuccino.fancymenu.customization.aiexport.exporters.VariablesAiExporter;
 import de.keksuccino.fancymenu.util.VanillaEvents;
 import de.keksuccino.fancymenu.util.cycle.CommonCycles;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
@@ -192,6 +194,15 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
                 }).addIsActiveSupplier((menu, entry) -> this.canRedo())
                 .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.redo"))
                 .setIcon(MaterialIcons.REDO);
+
+        this.rightClickContextMenu.addSeparatorEntry("separator_before_ai_export");
+
+        AiExportMenus.addExportSubMenu(this.rightClickContextMenu, "export_variable_for_ai", Component.translatable("fancymenu.ai_export.variables.export_selected"), () -> {
+                    Variable selectedVariable = this.getContextMenuTargetVariable();
+                    return (selectedVariable != null) ? VariablesAiExporter.exportSingle(selectedVariable) : VariablesAiExporter.exportAll();
+                }).addIsVisibleSupplier((menu, entry) -> this.hasContextMenuTargetVariable());
+
+        AiExportMenus.addExportSubMenu(this.rightClickContextMenu, "export_all_variables_for_ai", Component.translatable("fancymenu.ai_export.variables.export_all"), VariablesAiExporter::exportAll);
 
         if (reopen || wasOpen) {
             this.openRightClickContextMenuAtMouse(true);

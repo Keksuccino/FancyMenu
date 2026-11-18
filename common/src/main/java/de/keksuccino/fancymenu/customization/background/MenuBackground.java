@@ -3,6 +3,8 @@ package de.keksuccino.fancymenu.customization.background;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.aiexport.AiExportMenus;
+import de.keksuccino.fancymenu.customization.aiexport.exporters.LayoutAiExporter;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementMemories;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
@@ -126,6 +128,8 @@ public abstract class MenuBackground<B extends MenuBackground<?>> implements Ren
                 }).setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.editor.background_options.copy_background_identifier.desc")))
                 .addIsActiveSupplier((menu1, entry) -> !editor.layout.menuBackgrounds.isEmpty())
                 .setIcon(MaterialIcons.CONTENT_COPY);
+
+        AiExportMenus.addExportSubMenu(menu, "export_for_ai", Component.translatable("fancymenu.ai_export"), () -> LayoutAiExporter.exportMenuBackground(this));
 
         menu.addSeparatorEntry("separator_after_copy_identifier");
 

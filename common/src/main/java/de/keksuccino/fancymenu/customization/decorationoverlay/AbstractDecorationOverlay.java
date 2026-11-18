@@ -3,6 +3,8 @@ package de.keksuccino.fancymenu.customization.decorationoverlay;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.aiexport.AiExportMenus;
+import de.keksuccino.fancymenu.customization.aiexport.exporters.LayoutAiExporter;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.HideableElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorHistory;
@@ -23,6 +25,7 @@ import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -69,6 +72,8 @@ public abstract class AbstractDecorationOverlay<O extends AbstractDecorationOver
 
         this.showOverlay.buildContextMenuEntryAndAddTo(menu, this)
                 .setIcon(MaterialIcons.VISIBILITY);
+
+        AiExportMenus.addExportSubMenu(menu, "export_for_ai", Component.translatable("fancymenu.ai_export"), () -> LayoutAiExporter.exportDecorationOverlay(editor, this));
 
         menu.addSeparatorEntry("separator_after_show_overlay_toggle");
 

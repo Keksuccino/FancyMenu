@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.element.elements.glsl;
 
+import de.keksuccino.fancymenu.customization.aiexport.AiExportRuntimeInfo;
+import de.keksuccino.fancymenu.customization.aiexport.AiExportWriter;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.util.file.FileFilter;
@@ -17,7 +19,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Locale;
 
-public class GlslElement extends AbstractElement {
+public class GlslElement extends AbstractElement implements AiExportRuntimeInfo {
 
     public final Property.StringProperty inlineShaderSource = putProperty(Property.stringProperty("inline_shader_source", "", true, false, "fancymenu.elements.glsl.inline_shader_source"));
     public final Property.StringProperty bufferAInlineSource = putProperty(Property.stringProperty("buffer_a_inline_source", "", true, false, "fancymenu.elements.glsl.buffer_a_inline_source"));
@@ -278,6 +280,11 @@ public class GlslElement extends AbstractElement {
                 this.getChannelInput(c2, GlslShaderRuntime.ChannelInput.NONE),
                 this.getChannelInput(c3, GlslShaderRuntime.ChannelInput.NONE)
         );
+    }
+
+    @Override
+    public void writeAiExportRuntimeInfo(@NotNull AiExportWriter writer) {
+        this.shaderRuntime.writeAiExportRuntimeInfo(writer);
     }
 
 }

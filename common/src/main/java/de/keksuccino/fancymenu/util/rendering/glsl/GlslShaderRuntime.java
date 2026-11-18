@@ -11,6 +11,8 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.renderpearl.api.textures.FilterMode;
 import com.mojang.renderpearl.api.textures.GpuSampler;
 import com.mojang.renderpearl.api.textures.GpuTextureView;
+import de.keksuccino.fancymenu.customization.aiexport.AiExportText;
+import de.keksuccino.fancymenu.customization.aiexport.AiExportWriter;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinGuiGraphicsExtractor;
 import de.keksuccino.fancymenu.util.rendering.GuiRenderPhaseAction;
 import de.keksuccino.fancymenu.util.rendering.GuiScissorUtil;
@@ -592,6 +594,19 @@ public class GlslShaderRuntime {
 
     public long getFrameCounter() {
         return this.passPrograms_FancyMenu[IMAGE_PASS_INDEX].passFrames.committedFrameCount();
+    }
+
+    /**
+     * Writes the compile state of the shader for AI exports of the elements, backgrounds and overlays that use this runtime.
+     */
+    public void writeAiExportRuntimeInfo(@NotNull AiExportWriter writer) {
+        writer.fieldText("Frames rendered so far", String.valueOf(this.getFrameCounter()));
+        writer.fieldText("Shader source missing", AiExportText.yesNo(this.sourceMissing));
+        if (this.lastCompileError != null) {
+            writer.field("Last compile or render error", this.lastCompileError);
+        } else {
+            writer.fieldText("Last compile or render error", "none (shaders only compile while they get rendered, so this is also empty when the shader did not render yet)");
+        }
     }
 
     /** Releases shared compiled pipelines while the rendering device is still alive. */

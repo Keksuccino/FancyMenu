@@ -2,6 +2,8 @@ package de.keksuccino.fancymenu.customization.element.editor;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.aiexport.AiExportMenus;
+import de.keksuccino.fancymenu.customization.aiexport.exporters.LayoutAiExporter;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
@@ -226,6 +228,9 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                     .setIcon(MaterialIcons.CONTENT_COPY);
 
         }
+
+        // Exports the element like it is in the editor, so unsaved changes are part of the export
+        AiExportMenus.addExportSubMenu(this.rightClickMenu, "export_for_ai", Component.translatable("fancymenu.ai_export"), () -> LayoutAiExporter.exportEditorElements(this.editor, List.of(this)));
 
         this.rightClickMenu.addSeparatorEntry("separator_2");
 

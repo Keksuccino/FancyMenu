@@ -65,6 +65,14 @@ public abstract class Requirement {
     public abstract boolean isRequirementMet(@Nullable String value);
 
     /**
+     * If checking the requirement changes something, like a requirement that is only met the first time it gets checked.<br>
+     * Things that only look at requirements, like AI exports that show which requirements are met right now, don't check those requirements.
+     */
+    public boolean hasCheckSideEffects() {
+        return false;
+    }
+
+    /**
      * The display name of the requirement.<br>
      * It is shown in the requirement options of the layout editor.
      */

@@ -11,13 +11,17 @@ import de.keksuccino.fancymenu.customization.action.blocks.statements.ExecuteLat
 import de.keksuccino.fancymenu.customization.action.blocks.statements.IfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.WhileExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorWindowBody;
+import de.keksuccino.fancymenu.customization.aiexport.AiExportMenus;
+import de.keksuccino.fancymenu.customization.aiexport.exporters.SchedulersAiExporter;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementGroup;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
 import de.keksuccino.fancymenu.customization.scheduler.SchedulerHandler;
 import de.keksuccino.fancymenu.customization.scheduler.SchedulerInstance;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.message.MessageDialogStyle;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
@@ -35,7 +39,6 @@ import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -44,6 +47,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -206,6 +210,18 @@ public class ManageSchedulersWindowBody extends PiPCellWindowBody {
             }
         }).setIsActiveSupplier(consumes -> this.selectedInstance != null);
 
+        this.addRightSideDefaultSpacer();
+
+        // Exports the schedulers of this window, so unsaved changes are part of the export
+        this.addRightSideButton(20, Component.translatable("fancymenu.ai_export"), button -> {
+            ContextMenu exportMenu = new ContextMenu();
+            SchedulerInstance selected = this.selectedInstance;
+            AiExportMenus.addExportSubMenu(exportMenu, "selected_scheduler", Component.translatable("fancymenu.ai_export.schedulers.selected"), () -> SchedulersAiExporter.exportSingle(Objects.requireNonNull(selected)))
+                    .addIsActiveSupplier((menu, entry) -> selected != null);
+            AiExportMenus.addExportSubMenu(exportMenu, "all_schedulers", Component.translatable("fancymenu.ai_export.schedulers.all"), () -> SchedulersAiExporter.exportAll(List.copyOf(this.tempInstances)));
+            AiExportMenus.openMenuAtMouse(exportMenu);
+        }).setUITooltipSupplier(consumes -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.ai_export.desc")));
+
     }
 
     protected void onEditActionsOfSelected() {
@@ -353,30 +369,8 @@ public class ManageSchedulersWindowBody extends PiPCellWindowBody {
     }
 
     @Override
-    public void renderLateBody(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
-        if (this.descriptionScrollArea != null) {
-            int descW = (int) this.descriptionScrollArea.getWidthWithBorder();
-            int descEndX = (int) (this.descriptionScrollArea.getXWithBorder() + this.descriptionScrollArea.getWidthWithBorder());
-            int descEndY = (int) (this.descriptionScrollArea.getYWithBorder() + this.descriptionScrollArea.getHeightWithBorder());
-            int inactiveLabelColor = this.getInactiveLabelTextColor();
-            List<MutableComponent> renameTip = UIBase.lineWrapUIComponentsSmall(Component.translatable("fancymenu.schedulers.manage.rename_tip").withStyle(Style.EMPTY.withColor(inactiveLabelColor)), descW);
-            List<MutableComponent> quickEditTip = UIBase.lineWrapUIComponentsSmall(Component.translatable("fancymenu.schedulers.manage.quick_edit_tip").withStyle(Style.EMPTY.withColor(inactiveLabelColor)), descW);
-            int lineY = descEndY + 4;
-            for (MutableComponent line : renameTip) {
-                int lineWidth = (int)UIBase.getUITextWidthSmall(line);
-                int lineX = descEndX - lineWidth;
-                UIBase.renderText(graphics, line, lineX, lineY, -1, UIBase.getUITextSizeSmall());
-                lineY += (int) (UIBase.getUITextHeightSmall() + 2);
-            }
-            lineY += 2;
-            for (MutableComponent line : quickEditTip) {
-                int lineWidth = (int)UIBase.getUITextWidthSmall(line);
-                int lineX = descEndX - lineWidth;
-                UIBase.renderText(graphics, line, lineX, lineY, -1, UIBase.getUITextSizeSmall());
-                lineY += (int) (UIBase.getUITextHeightSmall() + 2);
-            }
-        }
-
+    protected @NotNull List<Component> getDescriptionAreaTips() {
+        return List.of(Component.translatable("fancymenu.schedulers.manage.rename_tip"), Component.translatable("fancymenu.schedulers.manage.quick_edit_tip"));
     }
 
     @Override
@@ -438,12 +432,6 @@ public class ManageSchedulersWindowBody extends PiPCellWindowBody {
         return UIBase.shouldBlur()
                 ? UIBase.getUITheme().ui_blur_interface_widget_label_color_normal.getColorInt()
                 : UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt();
-    }
-
-    protected int getInactiveLabelTextColor() {
-        return UIBase.shouldBlur()
-                ? UIBase.getUITheme().ui_blur_interface_widget_label_color_inactive.getColorInt()
-                : UIBase.getUITheme().ui_interface_widget_label_color_inactive.getColorInt();
     }
 
     protected boolean isIdentifierAvailable(@NotNull SchedulerInstance current, @NotNull String identifier) {
