@@ -88,7 +88,7 @@ public abstract class MixinScreen implements CustomizableScreen, ContainerEventH
             return;
         }
         RenderSystem.enableBlend();
-        if (!GuiTextureCoverRenderer.render(graphics, customBackground, 0, 0, this.width, this.height)) {
+        if (!GuiTextureCoverRenderer.render(graphics, customBackground, 0, 0, this.width, this.height, GlobalCustomizationHandler.isCustomMenuBackgroundAspectRatioPreserved())) {
             RenderSystem.disableBlend();
             original.call(vOffset);
             return;

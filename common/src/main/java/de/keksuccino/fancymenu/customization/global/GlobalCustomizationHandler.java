@@ -231,6 +231,13 @@ public final class GlobalCustomizationHandler {
         return getTextureResource(MENU_BACKGROUND, FancyMenu.getOptions().globalMenuBackgroundTexture.getValue());
     }
 
+    /**
+     * @return {@code true} when the custom menu background texture should keep its aspect ratio while covering the screen, {@code false} when it should get stretched to the screen size.
+     */
+    public static boolean isCustomMenuBackgroundAspectRatioPreserved() {
+        return FancyMenu.getOptions().globalMenuBackgroundPreserveAspectRatio.getValue();
+    }
+
     @Nullable
     public static IAudio getCustomButtonClickSound() {
         ResourceSupplier<IAudio> supplier = BUTTON_CLICK_SOUND.get(FancyMenu.getOptions().globalButtonClickSound.getValue());

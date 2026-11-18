@@ -2469,6 +2469,8 @@
   "fancymenu.global_customizations.button_click_sound": "Власний звук клацання кнопки",
   "fancymenu.global_customizations.button_labels": "Написи кнопок",
   "fancymenu.global_customizations.menu_background_texture": "Власна текстура тла меню",
+  "fancymenu.global_customizations.menu_background_texture.preserve_aspect_ratio": "Зберігати пропорції текстури тла: %s",
+  "fancymenu.global_customizations.menu_background_texture.preserve_aspect_ratio.desc": "Якщо увімкнено, текстура зберігає свої початкові пропорції й усе одно заповнює весь екран. Те, що не влазить, обрізається по краях.\n\nЯкщо вимкнено, текстура розтягується точно під розмір екрана, тому може виглядати сплющеною.",
   "fancymenu.global_customizations.menu_music_tracks": "Власні музичні треки меню",
   "fancymenu.global_customizations.menu_music_tracks.add": "Додати трек",
   "fancymenu.global_customizations.menu_music_tracks.clear": "Очистити список треків",

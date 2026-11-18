@@ -2469,6 +2469,8 @@
   "fancymenu.global_customizations.button_click_sound": "커스텀 버튼 클릭 소리",
   "fancymenu.global_customizations.button_labels": "버튼 레이블",
   "fancymenu.global_customizations.menu_background_texture": "커스텀 메뉴 배경 텍스처",
+  "fancymenu.global_customizations.menu_background_texture.preserve_aspect_ratio": "배경 텍스처 비율 유지: %s",
+  "fancymenu.global_customizations.menu_background_texture.preserve_aspect_ratio.desc": "활성화하면 텍스처가 원래 비율을 유지하면서 화면 전체를 채워요. 화면에 다 안 들어가는 부분은 가장자리에서 잘려요.\n\n비활성화하면 텍스처가 화면에 딱 맞게 늘어나서 찌그러져 보일 수 있어요.",
   "fancymenu.global_customizations.menu_music_tracks": "커스텀 메뉴 음악 트랙",
   "fancymenu.global_customizations.menu_music_tracks.add": "트랙 추가",
   "fancymenu.global_customizations.menu_music_tracks.clear": "트랙 지우기",
