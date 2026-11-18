@@ -444,6 +444,7 @@ public class ExtendedButton extends Button implements IExtendedWidget, UniqueWid
         return this;
     }
 
+    @Override
     public boolean isLabelRenderedWithUiBase() {
         return this.renderLabelWithUiBase;
     }

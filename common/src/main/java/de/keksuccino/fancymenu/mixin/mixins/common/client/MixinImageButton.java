@@ -5,6 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.IExtendedWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.ImageButtonRenderPolicy;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiComponent;
@@ -36,7 +37,8 @@ public abstract class MixinImageButton extends GuiComponent {
 		boolean renderCustomLabel = ImageButtonRenderPolicy.shouldRenderCustomLabel(customizable.getCustomLabelFancyMenu() != null, customizable.getHoverLabelFancyMenu() != null, button.isHoveredOrFocused(), button.visible, button.active);
 		if (renderCustomLabel) {
 			int labelColor = button.active ? 16777215 : 10526880;
-			graphics.drawCenteredString(Minecraft.getInstance().font, button.getMessage(), button.x + button.getWidth() / 2, button.y + (button.getHeight() - 8) / 2, labelColor | Mth.ceil(((IMixinAbstractWidget)button).getAlphaFancyMenu() * 255.0F) << 24);
+			// Rendered the same way other Vanilla buttons render their labels, so all label customizations apply to them too
+			((IExtendedWidget)button).renderScrollingLabel(button, graphics, Minecraft.getInstance().font, 2, customizable.resolveLabelShadowFancyMenu(), labelColor | Mth.ceil(((IMixinAbstractWidget)button).getAlphaFancyMenu() * 255.0F) << 24);
 		}
 
 		this.cachedShaderColor_FancyMenu = RenderSystem.getShaderColor();

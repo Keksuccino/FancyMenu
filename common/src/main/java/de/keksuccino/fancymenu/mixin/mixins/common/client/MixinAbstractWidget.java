@@ -285,7 +285,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	 */
 	@WrapWithCondition(method = "renderButton", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/AbstractWidget;drawCenteredString(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;III)V"))
 	private boolean wrapLabelRenderingFancyMenu(PoseStack pose, Font font, Component component, int x, int y, int color) {
-		this.renderScrollingLabel(this.getWidgetFancyMenu(), GuiGraphics.currentGraphics(), font, 2, this.resolveLabelShadow_FancyMenu(), color);
+		this.renderScrollingLabel(this.getWidgetFancyMenu(), GuiGraphics.currentGraphics(), font, 2, this.resolveLabelShadowFancyMenu(), color);
 		return false;
 	}
 	
@@ -736,6 +736,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Unique
 	@Override
 	public @NotNull WidgetLabelAlignment resolveLabelAlignmentFancyMenu() {
+		if (!this.isGlobalLabelCustomizationTarget_FancyMenu()) return this.labelAlignment_FancyMenu;
 		if (this.isSliderWidget_FancyMenu()) {
 			return WidgetLabelAlignment.resolve(this.labelAlignment_FancyMenu, GlobalCustomizationHandler.getGlobalSliderLabelAlignment());
 		}
@@ -1125,7 +1126,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 
 	@Unique
 	private boolean isGlobalLabelCustomizationTarget_FancyMenu() {
-		return this.isButtonWidget_FancyMenu() || this.isSliderWidget_FancyMenu();
+		return GlobalCustomizationHandler.isGlobalLabelCustomizationTarget(this);
 	}
 
 	@Unique
@@ -1175,8 +1176,10 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	}
 
 	@Unique
-	private boolean resolveLabelShadow_FancyMenu() {
+	@Override
+	public boolean resolveLabelShadowFancyMenu() {
 		boolean localShadow = this.labelShadowFancyMenu;
+		if (!this.isGlobalLabelCustomizationTarget_FancyMenu()) return localShadow;
 		if (this.isSliderWidget_FancyMenu()) {
 			return GlobalCustomizationHandler.isGlobalSliderLabelShadowEnabled() && localShadow;
 		}
