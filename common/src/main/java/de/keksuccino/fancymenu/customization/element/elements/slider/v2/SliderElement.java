@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.elements.slider.v2;
 
+import de.keksuccino.fancymenu.customization.action.ValuePlaceholderHolder;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
@@ -31,12 +32,13 @@ import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import net.minecraft.client.gui.screens.Screen;
 import org.jetbrains.annotations.Nullable;
 
 public class SliderElement extends AbstractElement implements ExecutableElement {
 
-    public static final String VALUE_PLACEHOLDER = "$$value";
+    public static final String VALUE_PLACEHOLDER_NAME = "value";
 
     public AbstractExtendedSlider slider;
     @NotNull
@@ -153,7 +155,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
 
     @NotNull
     protected Component getSliderLabel(@NotNull AbstractExtendedSlider slider) {
-        String labelValueReplaced = (this.label != null) ? this.label.replace(VALUE_PLACEHOLDER, slider.getValueDisplayText()) : "";
+        String labelValueReplaced = (this.label != null) ? ValuePlaceholderHolder.applyValuePlaceholders(this.label, Map.of(VALUE_PLACEHOLDER_NAME, slider::getValueDisplayText)) : "";
         return buildComponent(labelValueReplaced);
     }
 
