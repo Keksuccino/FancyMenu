@@ -342,12 +342,12 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
     }
 
     /**
-     * Serializes the script to compare it with {@link #initialScriptState}.<br>
+     * Serializes the script to tell whether it got edited, by comparing the result with an earlier result of this method, like {@link #initialScriptState}.<br>
      * The collapse states of blocks get left out. Collapsing or expanding a block only changes how the script is shown,
-     * so it is no edit (it creates no undo point either) and should not make closing the editor ask for confirmation.
+     * so it is no edit (it creates no undo point either) and should not make closing an editor ask for confirmation.
      */
     @NotNull
-    static Map<String, String> serializeScriptState(@NotNull AbstractExecutableBlock script) {
+    public static Map<String, String> serializeScriptState(@NotNull AbstractExecutableBlock script) {
         Map<String, String> state = script.serialize().getProperties();
         state.keySet().removeIf(key -> key.contains(COLLAPSE_STATE_PROPERTY_MARKER));
         return state;
