@@ -41,7 +41,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -58,13 +60,19 @@ public class ManageListenersWindowBody extends PiPCellWindowBody {
     protected final List<ListenerInstance> tempInstances = new ArrayList<>();
     @Nullable
     protected ListenerInstance selectedInstance;
+    /**
+     * The listeners as they were when the window opened. Closing the window without saving only asks for confirmation when they differ from it.
+     */
+    @NotNull
+    private final Map<String, ListenerState> initialListenersState;
 
     public ManageListenersWindowBody(@NotNull Consumer<Boolean> callback) {
         super(Component.translatable("fancymenu.listeners.manage"));
         this.callback = callback;
         this.setAllowCloseOnEsc(false);
-        // Create a copy of all listener instances to work with
-        this.tempInstances.addAll(ListenerHandler.getInstances());
+        // Work with copies of all listener instances, so only Done changes the active listeners and Cancel throws away every change
+        ListenerHandler.getInstances().forEach(instance -> this.tempInstances.add(instance.copy()));
+        this.initialListenersState = serializeListenersState(this.tempInstances);
         this.setSearchBarEnabled(true);
         this.setDescriptionAreaEnabled(true);
     }
@@ -302,7 +310,7 @@ public class ManageListenersWindowBody extends PiPCellWindowBody {
     public void setWindow(@Nullable PiPWindow window) {
         if (window != null) {
             window.setCloseWindowCheck((window1, decision) -> {
-                if (this.skipCloseWarning) {
+                if (this.skipCloseWarning || !this.hasUnsavedChanges()) {
                     this.skipCloseWarning = false;
                     decision.supply(true);
                     return;
@@ -343,6 +351,38 @@ public class ManageListenersWindowBody extends PiPCellWindowBody {
         this.skipCloseWarning = accepted;
         this.callback.accept(accepted);
         this.closeWindow();
+    }
+
+    /**
+     * Returns {@code true} when the listeners differ from how they were when the window opened,
+     * or when the rename box of a listener holds a name that is not applied yet.
+     */
+    protected boolean hasUnsavedChanges() {
+        ListenerInstanceCell editingCell = this.getEditingInstanceCell();
+        if ((editingCell != null) && (editingCell.editBox != null) && !Objects.equals(editingCell.editBox.getValue(), Objects.requireNonNullElse(editingCell.instance.getDisplayName(), ""))) {
+            return true;
+        }
+        return hasListenersChanged(this.initialListenersState, this.tempInstances);
+    }
+
+    @NotNull
+    static Map<String, ListenerState> serializeListenersState(@NotNull List<ListenerInstance> instances) {
+        Map<String, ListenerState> state = new HashMap<>();
+        for (ListenerInstance instance : instances) {
+            state.put(instance.instanceIdentifier, new ListenerState(instance.getDisplayName(), ActionScriptEditorWindowBody.serializeScriptState(instance.getActionScript())));
+        }
+        return state;
+    }
+
+    static boolean hasListenersChanged(@NotNull Map<String, ListenerState> initialListenersState, @NotNull List<ListenerInstance> instances) {
+        return !initialListenersState.equals(serializeListenersState(instances));
+    }
+
+    /**
+     * The parts of a listener instance that get compared to tell whether it got edited.
+     * Collapse states of blocks in the action script are left out, see {@link ActionScriptEditorWindowBody#serializeScriptState(AbstractExecutableBlock)}.
+     */
+    record ListenerState(@Nullable String displayName, @NotNull Map<String, String> actionScript) {
     }
 
     public static @NotNull PiPWindow openInWindow(@NotNull ManageListenersWindowBody screen, @Nullable PiPWindow parentWindow) {
