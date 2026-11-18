@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.lifecycle;
 
 import de.keksuccino.fancymenu.customization.background.backgrounds.video.VideoBackgroundTaskController;
+import de.keksuccino.fancymenu.customization.global.SeamlessWorldLoadingHandler;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
@@ -40,6 +41,8 @@ public final class ClientShutdownHandler {
         runCleanup("internet availability monitor", WebUtils::shutdown);
         runCleanup("screen audio playback", ScreenCustomizationLayerHandler::shutdown);
         runCleanup("layouts", LayoutHandler::shutdown);
+        // Finishes the GPU read back of the screenshot of a world that just got left, so it has to run while the renderer is still alive.
+        runCleanup("seamless world loading screenshots", SeamlessWorldLoadingHandler::shutdown);
         runCleanup("video background scheduler", VideoBackgroundTaskController::shutdownSharedExecutor);
         runCleanup("scheduled tasks", TaskExecutor::shutdown);
         runCleanup("user variables", VariableHandler::shutdown);

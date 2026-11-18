@@ -14,7 +14,6 @@ import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import net.minecraft.Util;
-import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.ConnectScreen;
 import net.minecraft.client.gui.screens.GenericMessageScreen;
@@ -46,6 +45,8 @@ public final class SeamlessWorldLoadingHandler {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final File ROOT_DIR = FileUtils.createDirectory(new File(FancyMenu.INSTANCE_DATA_DIR, "seamless_world_loading"));
     private static final int RECENT_PRELOAD_LIMIT = 5;
+    private static final long SHUTDOWN_READ_BACK_TIMEOUT_MS = 1000L;
+    private static final SeamlessWorldFrameCapture FRAME_CAPTURE = SeamlessWorldFrameCapture.create();
 
     @Nullable private static LoadTarget activeTarget;
     @Nullable private static File activeFile;
@@ -56,9 +57,6 @@ public final class SeamlessWorldLoadingHandler {
     @Nullable private static ResourceSupplier<ITexture> preWarmedWorldSupplier;
     @Nullable private static LoadTarget captureTarget;
     @Nullable private static String captureIdentifier;
-    @Nullable private static NativeImage lastCapturedImage;
-    private static long lastCaptureTimeMs;
-    private static final long CAPTURE_INTERVAL_MS = 1000L;
 
     private SeamlessWorldLoadingHandler() {
     }
@@ -298,6 +296,18 @@ public final class SeamlessWorldLoadingHandler {
         clearCaptureState();
     }
 
+    /**
+     * Waits for screenshots that are still getting read back from the GPU, so leaving a world right before the game closes still saves its screenshot.
+     */
+    public static void shutdown() {
+        FRAME_CAPTURE.finishPendingReadBacks(SHUTDOWN_READ_BACK_TIMEOUT_MS);
+        clearCaptureState();
+    }
+
+    /**
+     * Called every frame while the player is in a world. Only copies the frame on the GPU, at most once per second, because reading it back into
+     * CPU memory makes the game stutter. The latest copy only gets read back once, when the player leaves the world.
+     */
     public static void captureFrameIfNeeded(@NotNull RenderTarget renderTarget) {
         if (!isEnabled()) {
             clearCaptureState();
@@ -306,19 +316,11 @@ public final class SeamlessWorldLoadingHandler {
         if (captureTarget == null || captureIdentifier == null) {
             return;
         }
-        long now = Util.getMillis();
-        if (lastCapturedImage != null && now - lastCaptureTimeMs < CAPTURE_INTERVAL_MS) {
-            return;
-        }
-        NativeImage image;
         try {
-            image = Screenshot.takeScreenshot(renderTarget);
+            FRAME_CAPTURE.copyFrameIfDue(renderTarget);
         } catch (Exception ex) {
             LOGGER.warn("[FANCYMENU] Failed to capture seamless world loading screenshot.", ex);
-            return;
         }
-        replaceLastCapturedImage(image);
-        lastCaptureTimeMs = now;
     }
 
     private static void setCaptureTarget(@NotNull LoadTarget target, @Nullable String identifier) {
@@ -332,10 +334,9 @@ public final class SeamlessWorldLoadingHandler {
             return;
         }
         if (target != captureTarget || !resolved.equals(captureIdentifier)) {
-            clearLastCapturedImage();
+            FRAME_CAPTURE.reset();
             captureTarget = target;
             captureIdentifier = resolved;
-            lastCaptureTimeMs = 0L;
         }
     }
 
@@ -345,57 +346,45 @@ public final class SeamlessWorldLoadingHandler {
             return;
         }
         String resolved = normalizeIdentifier(target, identifier);
-        if (resolved == null) {
+        if (resolved == null || captureTarget != target || !resolved.equals(captureIdentifier)) {
             clearCaptureState();
             return;
         }
-        if (captureTarget != target || !resolved.equals(captureIdentifier)) {
-            clearCaptureState();
-            return;
-        }
-        NativeImage image = lastCapturedImage;
-        lastCapturedImage = null;
         captureTarget = null;
         captureIdentifier = null;
-        lastCaptureTimeMs = 0L;
-        if (image == null) {
-            return;
-        }
         File outputFile = resolveScreenshotFile(target, resolved);
-        saveNativeImage(image, outputFile);
+        try {
+            FRAME_CAPTURE.readBackAndReset(image -> {
+                if (image != null) saveNativeImage(image, outputFile);
+            });
+        } catch (Exception ex) {
+            LOGGER.warn("[FANCYMENU] Failed to save seamless world loading screenshot.", ex);
+        }
     }
 
     private static void clearCaptureState() {
         captureTarget = null;
         captureIdentifier = null;
-        lastCaptureTimeMs = 0L;
-        clearLastCapturedImage();
-    }
-
-    private static void clearLastCapturedImage() {
-        if (lastCapturedImage != null) {
-            lastCapturedImage.close();
-            lastCapturedImage = null;
-        }
-    }
-
-    private static void replaceLastCapturedImage(@NotNull NativeImage image) {
-        clearLastCapturedImage();
-        lastCapturedImage = image;
+        FRAME_CAPTURE.reset();
     }
 
     private static void saveNativeImage(@NotNull NativeImage image, @NotNull File outputFile) {
-        FileUtils.createDirectory(outputFile.getParentFile());
-        Util.ioPool().execute(() -> {
-            try {
-                image.writeToFile(outputFile);
-                releaseCachedTexture(outputFile);
-            } catch (Exception ex) {
-                LOGGER.warn("[FANCYMENU] Failed to save seamless world loading screenshot.", ex);
-            } finally {
-                image.close();
-            }
-        });
+        try {
+            FileUtils.createDirectory(outputFile.getParentFile());
+            Util.ioPool().execute(() -> {
+                try {
+                    image.writeToFile(outputFile);
+                    releaseCachedTexture(outputFile);
+                } catch (Exception ex) {
+                    LOGGER.warn("[FANCYMENU] Failed to save seamless world loading screenshot.", ex);
+                } finally {
+                    image.close();
+                }
+            });
+        } catch (Exception ex) {
+            image.close();
+            LOGGER.warn("[FANCYMENU] Failed to save seamless world loading screenshot.", ex);
+        }
     }
 
     private static void releaseCachedTexture(@NotNull File outputFile) {
