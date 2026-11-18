@@ -1,6 +1,8 @@
 package de.keksuccino.fancymenu.customization.requirement.ui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import de.keksuccino.fancymenu.customization.aiexport.AiExportMenus;
+import de.keksuccino.fancymenu.customization.aiexport.exporters.RequirementAiExporter;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementGroup;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
@@ -242,6 +244,11 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
                 }).addIsActiveSupplier((menu, entry) -> this.canRedo())
                 .setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.redo"))
                 .setIcon(MaterialIcons.REDO);
+
+        this.rightClickContextMenu.addSeparatorEntry("separator_before_ai_export");
+
+        // Exports the requirements like they are in this window, so unsaved changes are part of the export
+        AiExportMenus.addExportSubMenu(this.rightClickContextMenu, "export_requirements_for_ai", Component.translatable("fancymenu.ai_export.requirements"), () -> RequirementAiExporter.export(this.container));
 
         if (reopen || wasOpen) {
             this.openRightClickContextMenuAtMouse(true);

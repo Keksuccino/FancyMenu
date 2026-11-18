@@ -4,6 +4,17 @@ import com.google.common.io.Files;
 import de.keksuccino.fancymenu.CreditsScreen;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.customization.aiexport.AiExportMenus;
+import de.keksuccino.fancymenu.customization.aiexport.exporters.CatalogAiExporter;
+import de.keksuccino.fancymenu.customization.aiexport.exporters.CustomGuisAiExporter;
+import de.keksuccino.fancymenu.customization.aiexport.exporters.LayoutAiExporter;
+import de.keksuccino.fancymenu.customization.aiexport.exporters.ListenersAiExporter;
+import de.keksuccino.fancymenu.customization.aiexport.exporters.ProfilesAiExporter;
+import de.keksuccino.fancymenu.customization.aiexport.exporters.SchedulersAiExporter;
+import de.keksuccino.fancymenu.customization.aiexport.exporters.ScreenAiExporter;
+import de.keksuccino.fancymenu.customization.aiexport.exporters.SettingsAiExporter;
+import de.keksuccino.fancymenu.customization.aiexport.exporters.SystemAiExporter;
+import de.keksuccino.fancymenu.customization.aiexport.exporters.VariablesAiExporter;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.customgui.ManageCustomGuisScreen;
@@ -173,6 +184,8 @@ public class CustomizationOverlayUI {
             }
         }).setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.overlay.menu_bar.customization.copy_current_screen_identifier.desc")))
                 .setIcon(MaterialIcons.CONTENT_COPY);
+
+        AiExportMenus.addExportSubMenu(customizationMenu, "export_current_screen_for_ai", Component.translatable("fancymenu.ai_export.current_screen"), () -> ScreenAiExporter.export(screen));
 
         customizationMenu.addValueCycleEntry("normalize_current_scroll_screen", CommonCycles.cycleEnabledDisabled("fancymenu.scroll_screen_normalizer", ScrollScreenNormalizerHandler.shouldNormalize(screen))
                         .addCycleListener(cycle -> {
@@ -1509,6 +1522,10 @@ public class CustomizationOverlayUI {
             WebUtils.openWebLink("https://github.com/Keksuccino/FancyMenu/issues");
         }).setIcon(MaterialIcons.BUG_REPORT);
 
+        helpMenu.addSubMenuEntry("export_for_ai", Component.translatable("fancymenu.ai_export"), buildAiExportMenu())
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.ai_export.desc")))
+                .setIcon(MaterialIcons.ROBOT_2);
+
         helpMenu.addSeparatorEntry("separator_after_report_issue");
 
         helpMenu.addClickableEntry("curseforge_fancymenu_category", Component.translatable("fancymenu.overlay.menu_bar.help.curseforge_fancymenu_category"), (menu, entry) -> {
@@ -1534,6 +1551,28 @@ public class CustomizationOverlayUI {
 
         return helpMenu;
 
+    }
+
+    /**
+     * The exports of the help menu, for everything that is not part of a screen or layout.
+     */
+    @NotNull
+    private static ContextMenu buildAiExportMenu() {
+        ContextMenu menu = new ContextMenu();
+        AiExportMenus.addExportSubMenu(menu, "system_info", Component.translatable("fancymenu.ai_export.system_info"), SystemAiExporter::export)
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.ai_export.system_info.desc")));
+        AiExportMenus.addExportSubMenu(menu, "settings", Component.translatable("fancymenu.ai_export.settings"), SettingsAiExporter::export)
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.ai_export.settings.desc")));
+        menu.addSeparatorEntry("separator_after_settings");
+        AiExportMenus.addExportSubMenu(menu, "variables", Component.translatable("fancymenu.ai_export.variables.all"), VariablesAiExporter::exportAll);
+        AiExportMenus.addExportSubMenu(menu, "listeners", Component.translatable("fancymenu.ai_export.listeners.all"), ListenersAiExporter::exportAll);
+        AiExportMenus.addExportSubMenu(menu, "schedulers", Component.translatable("fancymenu.ai_export.schedulers.all"), SchedulersAiExporter::exportAll);
+        AiExportMenus.addExportSubMenu(menu, "custom_guis", Component.translatable("fancymenu.ai_export.custom_guis"), CustomGuisAiExporter::export);
+        AiExportMenus.addExportSubMenu(menu, "profiles", Component.translatable("fancymenu.ai_export.profiles"), ProfilesAiExporter::export);
+        menu.addSeparatorEntry("separator_after_profiles");
+        AiExportMenus.addExportSubMenu(menu, "catalog", Component.translatable("fancymenu.ai_export.catalog"), CatalogAiExporter::export)
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.ai_export.catalog.desc")));
+        return menu;
     }
 
     public static ContextMenu buildUITabAndAddTo(MenuBar menuBar) {
@@ -1721,10 +1760,10 @@ public class CustomizationOverlayUI {
                         }
                         LayoutHandler.reloadLayouts();
                     } else {
-                        Dialogs.openMessage(Component.literal(String.join("\n", LocalizationUtils.splitLocalizedStringLines("fancymenu.layout.manage.rename.error.file_already_exists"))), MessageDialogStyle.ERROR);
+                        Dialogs.openMessage(Component.translatable("fancymenu.layout.manage.rename.error.file_already_exists"), MessageDialogStyle.ERROR);
                     }
                 } else if (s != null) {
-                    Dialogs.openMessage(Component.literal(String.join("\n", LocalizationUtils.splitLocalizedStringLines("fancymenu.layout.manage.rename.error.empty_name"))), MessageDialogStyle.ERROR);
+                    Dialogs.openMessage(Component.translatable("fancymenu.layout.manage.rename.error.empty_name"), MessageDialogStyle.ERROR);
                 }
             });
             Dialogs.openGeneric(inputScreen,
@@ -1740,6 +1779,8 @@ public class CustomizationOverlayUI {
                 FileUtils.openFile(layout.layoutFile);
             }
         }).setIcon(MaterialIcons.OPEN_IN_NEW);
+
+        AiExportMenus.addExportSubMenu(menu, "export_layout_for_ai", Component.translatable("fancymenu.ai_export.layout"), () -> LayoutAiExporter.exportLayout(layout));
 
         return menu;
 

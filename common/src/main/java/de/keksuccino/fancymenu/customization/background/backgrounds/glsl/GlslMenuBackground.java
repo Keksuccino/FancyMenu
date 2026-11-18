@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.background.backgrounds.glsl;
 
+import de.keksuccino.fancymenu.customization.aiexport.AiExportRuntimeInfo;
+import de.keksuccino.fancymenu.customization.aiexport.AiExportWriter;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.background.MenuBackgroundBuilder;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
@@ -24,7 +26,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Locale;
 
-public class GlslMenuBackground extends MenuBackground<GlslMenuBackground> {
+public class GlslMenuBackground extends MenuBackground<GlslMenuBackground> implements AiExportRuntimeInfo {
 
     private static final List<GlslShaderRuntime.CompileMode> COMPILE_MODES = List.of(
             GlslShaderRuntime.CompileMode.AUTO,
@@ -401,6 +403,11 @@ public class GlslMenuBackground extends MenuBackground<GlslMenuBackground> {
     @NotNull
     private static Component warningValue(@NotNull Component value) {
         return value.copy().withStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()));
+    }
+
+    @Override
+    public void writeAiExportRuntimeInfo(@NotNull AiExportWriter writer) {
+        this.shaderRuntime.writeAiExportRuntimeInfo(writer);
     }
 
 }
