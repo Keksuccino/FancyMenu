@@ -2469,6 +2469,8 @@
   "fancymenu.global_customizations.button_click_sound": "Кастомный звук клика по кнопке",
   "fancymenu.global_customizations.button_labels": "Подписи кнопок",
   "fancymenu.global_customizations.menu_background_texture": "Кастомная текстура фона меню",
+  "fancymenu.global_customizations.menu_background_texture.preserve_aspect_ratio": "Сохранять пропорции текстуры фона: %s",
+  "fancymenu.global_customizations.menu_background_texture.preserve_aspect_ratio.desc": "Если включено, текстура сохраняет свои исходные пропорции и всё равно заполняет весь экран. То, что не помещается, обрезается по краям.\n\nЕсли выключено, текстура растягивается точно под размер экрана, поэтому может выглядеть сплющенной.",
   "fancymenu.global_customizations.menu_music_tracks": "Кастомные музыкальные треки меню",
   "fancymenu.global_customizations.menu_music_tracks.add": "Добавить трек",
   "fancymenu.global_customizations.menu_music_tracks.clear": "Очистить треки",

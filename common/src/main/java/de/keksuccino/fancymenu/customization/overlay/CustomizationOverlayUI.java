@@ -1000,6 +1000,12 @@ public class CustomizationOverlayUI {
                         Component.translatable("fancymenu.global_customizations.menu_background_texture"), true, null, true, true, true)
                 .setIcon(MaterialIcons.IMAGE);
 
+        globalCustomizationsMenu.addValueCycleEntry("menu_background_preserve_aspect_ratio",
+                        CommonCycles.cycleEnabledDisabled("fancymenu.global_customizations.menu_background_texture.preserve_aspect_ratio", GlobalCustomizationHandler.isCustomMenuBackgroundAspectRatioPreserved())
+                                .addCycleListener(cycle -> FancyMenu.getOptions().globalMenuBackgroundPreserveAspectRatio.setValue(cycle.getAsBoolean())))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.global_customizations.menu_background_texture.preserve_aspect_ratio.desc")))
+                .setIcon(MaterialIcons.ASPECT_RATIO);
+
         ContextMenu panoramaMenu = new ContextMenu();
         globalCustomizationsMenu.addSubMenuEntry("background_panorama", Component.translatable("fancymenu.global_customizations.background_panorama"), panoramaMenu)
                 .setIcon(MaterialIcons.IMAGE);

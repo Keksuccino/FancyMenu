@@ -2469,6 +2469,8 @@
   "fancymenu.global_customizations.button_click_sound": "Benutzerdefinierter Klicksound für Knöpfe",
   "fancymenu.global_customizations.button_labels": "Knopf-Beschriftungen",
   "fancymenu.global_customizations.menu_background_texture": "Benutzerdefinierte Menü-Hintergrundtextur",
+  "fancymenu.global_customizations.menu_background_texture.preserve_aspect_ratio": "Seitenverhältnis der Hintergrundtextur beibehalten: %s",
+  "fancymenu.global_customizations.menu_background_texture.preserve_aspect_ratio.desc": "Wenn aktiviert, behält die Textur ihre ursprünglichen Proportionen und füllt trotzdem den ganzen Bildschirm aus. Was nicht reinpasst, wird an den Rändern abgeschnitten.\n\nWenn deaktiviert, wird die Textur so gestreckt, dass sie genau auf den Bildschirm passt. Dadurch kann sie verzerrt aussehen.",
   "fancymenu.global_customizations.menu_music_tracks": "Benutzerdefinierte Menü-Musiktitel",
   "fancymenu.global_customizations.menu_music_tracks.add": "Titel hinzufügen",
   "fancymenu.global_customizations.menu_music_tracks.clear": "Titel entfernen",
