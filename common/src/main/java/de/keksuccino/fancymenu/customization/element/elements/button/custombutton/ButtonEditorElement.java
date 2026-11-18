@@ -110,6 +110,9 @@ public class ButtonEditorElement<E extends ButtonEditorElement<?, ?>, N extends 
         this.element.labelScale.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setIcon(MaterialIcons.FORMAT_SIZE);
 
+        this.element.labelAlignment.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setIcon(MaterialIcons.FORMAT_ALIGN_CENTER);
+
         this.rightClickMenu.addSeparatorEntry("button_separator_3").setStackable(true);
 
         this.addAudioResourceChooserContextMenuEntryTo(this.rightClickMenu, "hover_sound",
