@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.customization.action.ui;
 
 import de.keksuccino.fancymenu.util.ScreenUtils;
 
-import com.google.common.collect.Lists;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.action.ActionFavoritesManager;
@@ -2430,92 +2429,6 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         return new MoveTarget(referenceParent, (referenceIndex >= 0) ? (referenceIndex + 1) : siblings.size());
     }
 
-    @Nullable
-    protected ExecutableEntry getValidMoveToEntryBefore(@NotNull ExecutableEntry entry, boolean ignoreValidityChecks) {
-        if (entry == BEFORE_FIRST) return BEFORE_FIRST;
-        int index = this.scriptEntriesScrollArea.getEntries().size();
-        boolean foundEntry = false;
-        boolean foundValidMoveTo = false;
-        for (ScrollAreaEntry e : Lists.reverse(this.scriptEntriesScrollArea.getEntries())) {
-            if (e instanceof ExecutableEntry ee) {
-                index--;
-                if (e == entry) {
-                    foundEntry = true;
-                    continue;
-                }
-                if (!ignoreValidityChecks) {
-                    List<ExecutableEntry> statementChain = new ArrayList<>();
-                    if (entry.executable instanceof AbstractExecutableBlock) {
-                        statementChain = this.getStatementChainOf(entry);
-                    }
-                    if ((entry.executable instanceof AbstractExecutableBlock) && statementChain.contains(ee)) {
-                        continue;
-                    }
-                    if ((ee.parentBlock != null) && (ee.parentBlock != this.executableBlock)) {
-                        ExecutableEntry pb = this.findEntryForExecutable(ee.parentBlock);
-                        if ((pb != null) && statementChain.contains(pb)) {
-                            continue;
-                        }
-                    }
-                    if ((entry.executable instanceof AbstractExecutableBlock) && this.isContentOfStatementChain(ee, statementChain)) {
-                        continue;
-                    }
-                }
-                if (foundEntry) {
-                    foundValidMoveTo = true;
-                    break;
-                }
-            }
-        }
-        if (!foundValidMoveTo) return null;
-        ScrollAreaEntry e = this.scriptEntriesScrollArea.getEntry(index);
-        if (e instanceof ExecutableEntry ee) return ee;
-        return null;
-    }
-
-    @Nullable
-    protected ExecutableEntry getValidMoveToEntryAfter(@NotNull ExecutableEntry entry, boolean ignoreValidityChecks) {
-        if (entry == AFTER_LAST) return AFTER_LAST;
-        int index = -1;
-        boolean foundEntry = false;
-        boolean foundValidMoveTo = false;
-        for (ScrollAreaEntry e : this.scriptEntriesScrollArea.getEntries()) {
-            if (e instanceof ExecutableEntry ee) {
-                index++;
-                if (e == entry) {
-                    foundEntry = true;
-                    continue;
-                }
-                if (!ignoreValidityChecks) {
-                    List<ExecutableEntry> statementChain = new ArrayList<>();
-                    if (entry.executable instanceof AbstractExecutableBlock) {
-                        statementChain = this.getStatementChainOf(entry);
-                    }
-                    if ((entry.executable instanceof AbstractExecutableBlock) && statementChain.contains(ee)) {
-                        continue;
-                    }
-                    if ((ee.parentBlock != null) && (ee.parentBlock != this.executableBlock)) {
-                        ExecutableEntry pb = this.findEntryForExecutable(ee.parentBlock);
-                        if ((pb != null) && statementChain.contains(pb)) {
-                            continue;
-                        }
-                    }
-                    if ((entry.executable instanceof AbstractExecutableBlock) && this.isContentOfStatementChain(ee, statementChain)) {
-                        continue;
-                    }
-                }
-                if (foundEntry) {
-                    foundValidMoveTo = true;
-                    break;
-                }
-            }
-        }
-        if (!foundValidMoveTo) return null;
-        ScrollAreaEntry e = this.scriptEntriesScrollArea.getEntry(index);
-        if (e instanceof ExecutableEntry ee) return ee;
-        return null;
-    }
-
     protected boolean moveAfter(@NotNull ExecutableEntry entry, @NotNull ExecutableEntry moveAfter) {
         MoveTarget target = this.calculateMoveTarget(entry, moveAfter);
         if (target == null) {
@@ -2527,146 +2440,30 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         entry.getParentBlock().getExecutables().remove(entry.executable);
         target.parent().getExecutables().add(target.index(), entry.executable);
 
-        this.updateActionInstanceScrollArea(true);
-        ExecutableEntry newEntry = this.findEntryForExecutable(entry.executable);
-        if (newEntry != null) {
-            this.setEntrySelectedRespectingContextMenu(newEntry);
-        }
+        this.rebuildEntriesAndSelect(entry.executable);
         return true;
     }
 
-    protected void moveUp(ExecutableEntry entry) {
-        if (entry != null) {
-            if ((entry.executable instanceof ActionInstance) || (entry.executable instanceof IfExecutableBlock) || (entry.executable instanceof WhileExecutableBlock) || (entry.executable instanceof DelayExecutableBlock) || (entry.executable instanceof ExecuteLaterExecutableBlock)) {
-                boolean manualUpdate = false;
-                if (this.scriptEntriesScrollArea.getEntries().indexOf(entry) == 1) {
-                    this.moveAfter(entry, BEFORE_FIRST);
-                } else {
-                    if ((entry.getParentBlock() != this.executableBlock) && ((entry.getParentBlock() instanceof ElseIfExecutableBlock) || (entry.getParentBlock() instanceof ElseExecutableBlock)) && (entry.getParentBlock().getExecutables().indexOf(entry.executable) == 0)) {
-                        ExecutableEntry parentBlock = this.findEntryForExecutable(entry.getParentBlock());
-                        if ((parentBlock != null) && (parentBlock.appendParent != null)) {
-                            this.createUndoPoint();
-                            entry.getParentBlock().getExecutables().remove(entry.executable);
-                            parentBlock.appendParent.getExecutables().add(entry.executable);
-                            manualUpdate = true;
-                        }
-                    } else if ((entry.getParentBlock() != this.executableBlock) && (entry.getParentBlock() instanceof IfExecutableBlock) && (entry.getParentBlock().getExecutables().indexOf(entry.executable) == 0)) {
-                        ExecutableEntry parentBlock = this.findEntryForExecutable(entry.getParentBlock());
-                        if (parentBlock != null) {
-                            int parentIndex = Math.max(0, parentBlock.getParentBlock().getExecutables().indexOf(parentBlock.executable));
-                            if (parentIndex >= 0) {
-                                this.createUndoPoint();
-                                entry.getParentBlock().getExecutables().remove(entry.executable);
-                                parentBlock.getParentBlock().getExecutables().add(parentIndex, entry.executable);
-                                manualUpdate = true;
-                            }
-                        }
-                    } else {
-                        ExecutableEntry before = this.getValidMoveToEntryBefore(entry, false);
-                        if (before != null) {
-                            boolean isMovable = (entry.executable instanceof IfExecutableBlock) || (entry.executable instanceof ActionInstance);
-                            if (isMovable && (before.executable instanceof AbstractExecutableBlock b) && (entry.getParentBlock() != b)) {
-                                this.moveAfter(entry, before);
-                            } else if (isMovable && !(before.executable instanceof AbstractExecutableBlock) && (before.getParentBlock().getExecutables().indexOf(before.executable) == before.getParentBlock().getExecutables().size()-1)) {
-                                this.moveAfter(entry, before);
-                            } else {
-                                ExecutableEntry beforeBefore = this.getValidMoveToEntryBefore(before, true);
-                                if (beforeBefore != null) {
-                                    this.moveAfter(entry, beforeBefore);
-                                }
-                            }
-                        }
-                    }
-                }
-                if (manualUpdate) {
-                    this.updateActionInstanceScrollArea(true);
-                    //Re-select entry after updating scroll area
-                    ExecutableEntry newEntry = this.findEntryForExecutable(entry.executable);
-                    if (newEntry != null) {
-                        this.setEntrySelectedRespectingContextMenu(newEntry);
-                    }
-                }
-                return;
-            }
-            if (entry.executable instanceof ElseIfExecutableBlock ei) {
-                AbstractExecutableBlock entryAppendParent = entry.appendParent;
-                if (entryAppendParent != null) {
-                    ExecutableEntry appendParentEntry = this.findEntryForExecutable(entryAppendParent);
-                    if (appendParentEntry != null) {
-                        AbstractExecutableBlock parentOfParent = appendParentEntry.appendParent;
-                        if (parentOfParent != null) {
-                            this.createUndoPoint();
-                            entryAppendParent.setAppendedBlock(ei.getAppendedBlock());
-                            ei.setAppendedBlock(entryAppendParent);
-                            parentOfParent.setAppendedBlock(ei);
-                        }
-                    }
-                }
-            }
-            this.updateActionInstanceScrollArea(true);
-            //Re-select entry after updating scroll area
-            ExecutableEntry newEntry = this.findEntryForExecutable(entry.executable);
-            if (newEntry != null) {
-                this.setEntrySelectedRespectingContextMenu(newEntry);
-            }
+    protected void moveUp(@Nullable ExecutableEntry entry) {
+        if ((entry != null) && ActionScriptEntryMover.moveUp(this.executableBlock, entry.executable, this::createUndoPoint)) {
+            this.rebuildEntriesAndSelect(entry.executable);
         }
     }
 
-    protected void moveDown(ExecutableEntry entry) {
-        if (entry != null) {
-            if ((entry.executable instanceof ActionInstance) || (entry.executable instanceof IfExecutableBlock) || (entry.executable instanceof WhileExecutableBlock) || (entry.executable instanceof DelayExecutableBlock) || (entry.executable instanceof ExecuteLaterExecutableBlock)) {
-                boolean manualUpdate = false;
-                if ((entry.getParentBlock() != this.executableBlock) && (entry.getParentBlock().getAppendedBlock() == null) && (entry.getParentBlock().getExecutables().indexOf(entry.executable) == entry.getParentBlock().getExecutables().size()-1)) {
-                    ExecutableEntry parentBlock = this.findEntryForExecutable(entry.getParentBlock());
-                    if (parentBlock != null) {
-                        int parentIndex = -1;
-                        if (parentBlock.executable instanceof IfExecutableBlock) {
-                            parentIndex = Math.max(0, parentBlock.getParentBlock().getExecutables().indexOf(parentBlock.executable));
-                        } else {
-                            List<ExecutableEntry> chain = this.getStatementChainOf(parentBlock);
-                            if (!chain.isEmpty()) {
-                                parentIndex = chain.get(0).getParentBlock().getExecutables().indexOf(chain.get(0).executable);
-                            }
-                        }
-                        if (parentIndex != -1) {
-                            this.createUndoPoint();
-                            entry.getParentBlock().getExecutables().remove(entry.executable);
-                            parentBlock.getParentBlock().getExecutables().add(parentIndex+1, entry.executable);
-                            manualUpdate = true;
-                        }
-                    }
-                } else {
-                    ExecutableEntry after = this.getValidMoveToEntryAfter(entry, false);
-                    if (after != null) {
-                        this.moveAfter(entry, after);
-                    }
-                }
-                if (manualUpdate) {
-                    this.updateActionInstanceScrollArea(true);
-                    //Re-select entry after updating scroll area
-                    ExecutableEntry newEntry = this.findEntryForExecutable(entry.executable);
-                    if (newEntry != null) {
-                        this.setEntrySelectedRespectingContextMenu(newEntry);
-                    }
-                }
-                return;
-            }
-            if (entry.executable instanceof ElseIfExecutableBlock ei) {
-                AbstractExecutableBlock entryAppendChild = ei.getAppendedBlock();
-                AbstractExecutableBlock entryAppendParent = entry.appendParent;
-                if ((entryAppendChild instanceof ElseIfExecutableBlock) && (entryAppendParent != null)) {
-                    this.createUndoPoint();
-                    ei.setAppendedBlock(entryAppendChild.getAppendedBlock());
-                    entryAppendChild.setAppendedBlock(ei);
-                    entryAppendParent.setAppendedBlock(entryAppendChild);
-                }
-            }
-            this.updateActionInstanceScrollArea(true);
-            //Re-select entry after updating scroll area
-            ExecutableEntry newEntry = this.findEntryForExecutable(entry.executable);
-            if (newEntry != null) {
-                this.setEntrySelectedRespectingContextMenu(newEntry);
-            }
+    protected void moveDown(@Nullable ExecutableEntry entry) {
+        if ((entry != null) && ActionScriptEntryMover.moveDown(this.executableBlock, entry.executable, this::createUndoPoint)) {
+            this.rebuildEntriesAndSelect(entry.executable);
+        }
+    }
+
+    /**
+     * Rebuilds the entry list after the script changed and selects the entry of the executable again.
+     */
+    protected void rebuildEntriesAndSelect(@NotNull Executable executable) {
+        this.updateActionInstanceScrollArea(true);
+        ExecutableEntry newEntry = this.findEntryForExecutable(executable);
+        if (newEntry != null) {
+            this.setEntrySelectedRespectingContextMenu(newEntry);
         }
     }
 
@@ -2773,18 +2570,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         }
 
         if (executable instanceof AbstractExecutableBlock b) {
-            boolean skipChildren = false;
-            if (b instanceof FolderExecutableBlock folder && folder.isCollapsed()) {
-                skipChildren = true;
-            } else if (b instanceof IfExecutableBlock ifBlock && ifBlock.isCollapsed()) {
-                skipChildren = true;
-            } else if (b instanceof WhileExecutableBlock whileBlock && whileBlock.isCollapsed()) {
-                skipChildren = true;
-            } else if (b instanceof DelayExecutableBlock delayBlock && delayBlock.isCollapsed()) {
-                skipChildren = true;
-            } else if (b instanceof ExecuteLaterExecutableBlock executeLaterBlock && executeLaterBlock.isCollapsed()) {
-                skipChildren = true;
-            }
+            boolean skipChildren = ActionScriptEntryMover.isCollapsed(b);
             if (!skipChildren) {
                 for (Executable e : b.getExecutables()) {
                     this.addExecutableToEntries(level+1, e, null, b);
@@ -3444,7 +3230,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             if (this.leftMouseDownDragging) {
                 if ((this.leftMouseDownDraggingPosX != getRenderMouseX()) || (this.leftMouseDownDraggingPosY != getRenderMouseY())) {
                     // Only allow dragging for specific entries
-                    if (!(this.executable instanceof AbstractExecutableBlock) || (this.executable instanceof IfExecutableBlock) || (this.executable instanceof WhileExecutableBlock) || (this.executable instanceof DelayExecutableBlock) || (this.executable instanceof ExecuteLaterExecutableBlock) || (this.executable instanceof FolderExecutableBlock) || (this.executable instanceof CommentExecutableBlock)) {
+                    if (ActionScriptEntryMover.canMoveFreely(this.executable)) {
                         this.dragging = true;
                     }
                 }
