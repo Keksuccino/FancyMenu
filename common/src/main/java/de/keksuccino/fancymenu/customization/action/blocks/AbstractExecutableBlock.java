@@ -81,7 +81,11 @@ public abstract class AbstractExecutableBlock implements Executable, ValuePlaceh
     }
 
     public AbstractExecutableBlock addExecutable(Executable executable) {
-        this.executables.add(executable);
+        return this.addExecutable(this.executables.size(), executable);
+    }
+
+    public AbstractExecutableBlock addExecutable(int index, Executable executable) {
+        this.executables.add(index, executable);
         if (executable instanceof ValuePlaceholderHolder h) {
             this.valuePlaceholders.forEach(h::addValuePlaceholder);
         }
