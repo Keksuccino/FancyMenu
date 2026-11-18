@@ -49,8 +49,7 @@ public interface IExtendedWidget {
         int xMax = widget.getX() + widget.getWidth() - spaceLeftRight;
         float scale = this.resolveLabelScale(widget);
         if (scale == 0.0F) return;
-        // Labels rendered with the UI base belong to FancyMenu's own UI, so the global label alignments of buttons and sliders don't move them
-        WidgetLabelAlignment alignment = (widget instanceof CustomizableWidget customizable) ? customizable.getLabelAlignmentFancyMenu() : WidgetLabelAlignment.CENTERED;
+        WidgetLabelAlignment alignment = this.resolveLabelAlignment(widget);
         //Use getMessage() here to not break custom label handling of CustomizableWidget
         if (scale == 1.0F) {
             this.renderScrollingLabelInternalUiBase(graphics, widget.getMessage(), xMin, widget.getY(), xMax, widget.getY() + widget.getHeight(), textColor, alignment);
@@ -126,6 +125,13 @@ public interface IExtendedWidget {
         } else {
             UIBase.renderText(graphics, text, alignment.getLabelX(xMin, xMax, textWidth, 1.0F), textPosY, textColor, textSize);
         }
+    }
+
+    /**
+     * Returns if the label gets rendered with the UI base, which only widgets of FancyMenu's own UI do.
+     */
+    default boolean isLabelRenderedWithUiBase() {
+        return false;
     }
 
     default float resolveLabelScale(@NotNull AbstractWidget widget) {
