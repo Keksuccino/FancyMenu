@@ -6,6 +6,10 @@ import com.mojang.brigadier.context.ParsedCommandNode;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.aiexport.AiExportDocument;
+import de.keksuccino.fancymenu.customization.aiexport.AiExportFiles;
+import de.keksuccino.fancymenu.customization.aiexport.exporters.FmDataAiExporter;
 import de.keksuccino.fancymenu.customization.fmdata.FmDataMatchingType;
 import de.keksuccino.fancymenu.customization.fmdata.FmDataServerListener;
 import de.keksuccino.fancymenu.customization.fmdata.FmDataServerListenerHandler;
@@ -19,12 +23,16 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -32,6 +40,8 @@ import java.util.Objects;
 
 public class FmDataCommand {
 
+    private static final Logger LOGGER = LogManager.getLogger();
+    private static final int MAX_CHAT_COPY_LENGTH = 100000;
     private static final CharacterFilter LISTENER_NAME_FILTER = CharacterFilter.buildResourceNameFilter();
     private static final int COLOR_IDENTIFIER_LABEL = 0x59C8FF;
     private static final int COLOR_IDENTIFIER_VALUE = 0xA4E3FF;
@@ -135,6 +145,14 @@ public class FmDataCommand {
                                 )
                         )
                 )
+                .then(Commands.literal("export_for_ai")
+                        .then(Commands.literal("copy")
+                                .executes(context -> exportForAi(context.getSource(), false))
+                        )
+                        .then(Commands.literal("file")
+                                .executes(context -> exportForAi(context.getSource(), true))
+                        )
+                )
                 .then(Commands.literal("welcome_data")
                         .then(Commands.literal("list")
                                 .executes(context -> listWelcomeData(context.getSource()))
@@ -171,6 +189,47 @@ public class FmDataCommand {
                         )
                 )
         );
+    }
+
+    /**
+     * Exports the server-side FMData setup for AI chats, as clickable chat message that copies it, or as file on the server.
+     */
+    private static int exportForAi(@NotNull CommandSourceStack source, boolean toFile) {
+        AiExportDocument document;
+        try {
+            document = FmDataAiExporter.export();
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to export the FMData setup for AI!", ex);
+            source.sendFailure(Component.literal("[FancyMenu] Failed to export the FMData setup: " + ex.getMessage()));
+            return 0;
+        }
+        if (toFile) {
+            try {
+                File file = AiExportFiles.save(document);
+                String path = FancyMenu.INSTANCE_DATA_DIR_PATH + "/" + AiExportFiles.EXPORT_DIRECTORY_NAME + "/" + file.getName();
+                source.sendSuccess(Component.literal("[FancyMenu] Saved the FMData export for AI on the server as ")
+                        .append(Component.literal(path).withStyle(ChatFormatting.GREEN)), false);
+                return 1;
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to save the FMData export for AI!", ex);
+                source.sendFailure(Component.literal("[FancyMenu] Failed to save the FMData export: " + ex.getMessage()));
+                return 0;
+            }
+        }
+        if (!source.isPlayer()) {
+            // The server console has no clipboard, so it gets the whole export as text
+            source.sendSuccess(Component.literal(document.text()), false);
+            return 1;
+        }
+        // Chat messages have a size limit, and messages above it would disconnect the player
+        if (document.text().length() > MAX_CHAT_COPY_LENGTH) {
+            source.sendFailure(Component.literal("[FancyMenu] The export is too big for the chat. Use /fmdata export_for_ai file instead."));
+            return 0;
+        }
+        source.sendSuccess(Component.literal("[FancyMenu] ")
+                .append(Component.literal("Click here to copy the FMData export for AI.").withStyle(style -> style.withColor(ChatFormatting.GREEN).withUnderlined(true)
+                        .withClickEvent(new ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, document.text())))), false);
+        return 1;
     }
 
     private static int sendDataToClients(@NotNull CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
