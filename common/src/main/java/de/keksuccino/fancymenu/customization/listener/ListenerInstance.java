@@ -50,6 +50,19 @@ public class ListenerInstance {
     }
 
     /**
+     * Returns a copy of this instance with the same identifier and display name and a copy of its action script.<br>
+     * The copy is not registered to its listener, so editing it doesn't change this instance or what the listener runs.
+     */
+    @NotNull
+    public ListenerInstance copy() {
+        ListenerInstance copy = this.parent.createFreshInstance();
+        copy.instanceIdentifier = this.instanceIdentifier;
+        copy.displayName = this.displayName;
+        copy.setActionScript(this.actionScript.copy(false));
+        return copy;
+    }
+
+    /**
      * This method is safe for multi-calling, so even if the instance is already registered, nothing will break.
      */
     public void registerSelfToParent() {
