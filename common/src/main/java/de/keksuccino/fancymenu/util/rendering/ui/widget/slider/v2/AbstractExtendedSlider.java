@@ -511,6 +511,7 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton implem
         return this;
     }
 
+    @Override
     public boolean isLabelRenderedWithUiBase() {
         return this.renderLabelWithUiBase;
     }
