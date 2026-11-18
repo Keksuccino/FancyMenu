@@ -374,67 +374,11 @@ public class PlaceholderParser {
     private static List<ParsedPlaceholder> findPlaceholders(@Nullable String in, @NotNull HashMap<String, String> parsed, @NotNull ParsingContext context) {
         List<ParsedPlaceholder> placeholders = new ArrayList<>();
         if (in == null) return placeholders;
-
-        for (int i = 0; i < in.length(); i++) {
-            if (in.charAt(i) == OPEN_CURLY_BRACKETS_CHAR) {
-                // Found a potential start of a JSON object.
-                // Let's find its corresponding closing bracket.
-                String sub = StringUtils.substring(in, i);
-                int endIndex = findPlaceholderEndIndex(sub, i); // Returns absolute index in 'in'
-
-                if (endIndex != -1) {
-                    // We found a matching '}' for the '{' at 'i'.
-                    // This block is a candidate for being a placeholder.
-                    String candidate = StringUtils.substring(in, i, endIndex + 1);
-
-                    // To check if it's a real placeholder, we normalize it and check the prefix.
-                    // This handles multi-line and whitespace variations.
-                    String normalized = normalizePlaceholderString(candidate);
-
-                    if (normalized.startsWith(PLACEHOLDER_PREFIX)) {
-                        // It's a valid placeholder. Add it to our list.
-                        // Note: We use the original 'candidate' string for the object,
-                        // as that's what exists in the input string 'in'.
-                        placeholders.add(new ParsedPlaceholder(candidate, i, endIndex + 1, parsed, context));
-
-                        // Advance the loop counter past this placeholder to avoid
-                        // parsing its contents as separate, new placeholders.
-                        i = endIndex;
-                    }
-                }
-            }
+        PlaceholderScanner scanner = new PlaceholderScanner(in);
+        while (scanner.next()) {
+            placeholders.add(new ParsedPlaceholder(in.substring(scanner.start(), scanner.end()), scanner.start(), scanner.end(), parsed, context));
         }
         return placeholders;
-    }
-
-    private static int findPlaceholderEndIndex(@NotNull String placeholderStartSubString, int startIndex) {
-        int currentIndex = startIndex;
-        int depth = 0;
-        boolean escaped = false;
-        boolean inQuotes = false;
-        for (char c : placeholderStartSubString.toCharArray()) {
-            if (currentIndex != startIndex) { //skip first char
-                if (!escaped && (c == APOSTROPHE_CHAR)) { //toggle quoting so braces inside values stay ignored
-                    inQuotes = !inQuotes;
-                } else if (!inQuotes) {
-                    if (!escaped && (c == OPEN_CURLY_BRACKETS_CHAR)) {
-                        depth++;
-                    } else if (!escaped && (c == CLOSE_CURLY_BRACKETS_CHAR)) {
-                        if (depth <= 0) {
-                            return currentIndex;
-                        }
-                        depth--;
-                    }
-                }
-            }
-            if (escaped) {
-                escaped = false;
-            } else {
-                escaped = (c == BACKSLASH_CHAR);
-            }
-            currentIndex++;
-        }
-        return -1;
     }
 
     /**
