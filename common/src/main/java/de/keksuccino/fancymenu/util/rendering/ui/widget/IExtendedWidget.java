@@ -17,15 +17,16 @@ public interface IExtendedWidget {
         int xMax = widget.getX() + widget.getWidth() - spaceLeftRight;
         float scale = this.resolveLabelScale(widget);
         if (scale == 0.0F) return;
+        WidgetLabelAlignment alignment = this.resolveLabelAlignment(widget);
         //Use getMessage() here to not break custom label handling of CustomizableWidget
         if (scale == 1.0F) {
-            this.renderScrollingLabelInternal(graphics, font, widget.getMessage(), xMin, widget.getY(), xMax, widget.getY() + widget.getHeight(), labelShadow, textColor);
+            this.renderScrollingLabelInternal(graphics, font, widget.getMessage(), xMin, widget.getY(), xMax, widget.getY() + widget.getHeight(), labelShadow, textColor, alignment);
         } else {
-            this.renderScrollingLabelInternalScaled(graphics, font, widget.getMessage(), xMin, widget.getY(), xMax, widget.getY() + widget.getHeight(), labelShadow, textColor, scale);
+            this.renderScrollingLabelInternalScaled(graphics, font, widget.getMessage(), xMin, widget.getY(), xMax, widget.getY() + widget.getHeight(), labelShadow, textColor, scale, alignment);
         }
     }
 
-    default void renderScrollingLabelInternal(@NotNull GuiGraphicsExtractor graphics, Font font, @NotNull Component text, int xMin, int yMin, int xMax, int yMax, boolean labelShadow, int textColor) {
+    default void renderScrollingLabelInternal(@NotNull GuiGraphicsExtractor graphics, Font font, @NotNull Component text, int xMin, int yMin, int xMax, int yMax, boolean labelShadow, int textColor, @NotNull WidgetLabelAlignment alignment) {
         int textWidth = font.width(text);
         int textPosY = (yMin + yMax - 9) / 2 + 1;
         int maxTextWidth = xMax - xMin;
@@ -39,7 +40,7 @@ public interface IExtendedWidget {
             graphics.text(font, text, xMin - (int)textPosX, textPosY, textColor, labelShadow);
             graphics.disableScissor();
         } else {
-            graphics.text(font, text, (int)(((xMin + xMax) / 2F) - (font.width(text) / 2F)), textPosY, textColor, labelShadow);
+            graphics.text(font, text, (int)alignment.getLabelX(xMin, xMax, textWidth, 1.0F), textPosY, textColor, labelShadow);
         }
     }
 
@@ -48,17 +49,19 @@ public interface IExtendedWidget {
         int xMax = widget.getX() + widget.getWidth() - spaceLeftRight;
         float scale = this.resolveLabelScale(widget);
         if (scale == 0.0F) return;
+        // Labels rendered with the UI base belong to FancyMenu's own UI, so the global label alignments of buttons and sliders don't move them
+        WidgetLabelAlignment alignment = (widget instanceof CustomizableWidget customizable) ? customizable.getLabelAlignmentFancyMenu() : WidgetLabelAlignment.CENTERED;
         //Use getMessage() here to not break custom label handling of CustomizableWidget
         if (scale == 1.0F) {
-            this.renderScrollingLabelInternalUiBase(graphics, widget.getMessage(), xMin, widget.getY(), xMax, widget.getY() + widget.getHeight(), textColor);
+            this.renderScrollingLabelInternalUiBase(graphics, widget.getMessage(), xMin, widget.getY(), xMax, widget.getY() + widget.getHeight(), textColor, alignment);
         } else if (UIBase.shouldUseMinecraftFontForUIRendering()) {
-            this.renderScrollingLabelInternalScaled(graphics, Minecraft.getInstance().font, widget.getMessage(), xMin, widget.getY(), xMax, widget.getY() + widget.getHeight(), false, textColor, scale);
+            this.renderScrollingLabelInternalScaled(graphics, Minecraft.getInstance().font, widget.getMessage(), xMin, widget.getY(), xMax, widget.getY() + widget.getHeight(), false, textColor, scale, alignment);
         } else {
-            this.renderScrollingLabelInternalUiBaseScaled(graphics, widget.getMessage(), xMin, widget.getY(), xMax, widget.getY() + widget.getHeight(), textColor, scale);
+            this.renderScrollingLabelInternalUiBaseScaled(graphics, widget.getMessage(), xMin, widget.getY(), xMax, widget.getY() + widget.getHeight(), textColor, scale, alignment);
         }
     }
 
-    default void renderScrollingLabelInternalUiBase(@NotNull GuiGraphicsExtractor graphics, @NotNull Component text, int xMin, int yMin, int xMax, int yMax, int textColor) {
+    default void renderScrollingLabelInternalUiBase(@NotNull GuiGraphicsExtractor graphics, @NotNull Component text, int xMin, int yMin, int xMax, int yMax, int textColor, @NotNull WidgetLabelAlignment alignment) {
         float textWidth = UIBase.getUITextWidthNormal(text);
         float textHeight = UIBase.getUITextHeightNormal();
         float textPosY = (yMin + yMax - textHeight) / 2F;
@@ -73,13 +76,11 @@ public interface IExtendedWidget {
             UIBase.renderText(graphics, text, xMin - (float) textOffset, textPosY, textColor);
             graphics.disableScissor();
         } else {
-            float centerX = (xMin + xMax) / 2F;
-            float textPosX = Mth.clamp(centerX, xMin + (textWidth / 2F), xMax - (textWidth / 2F)) - (textWidth / 2F);
-            UIBase.renderText(graphics, text, textPosX, textPosY, textColor);
+            UIBase.renderText(graphics, text, alignment.getLabelX(xMin, xMax, textWidth, 1.0F), textPosY, textColor);
         }
     }
 
-    default void renderScrollingLabelInternalScaled(@NotNull GuiGraphicsExtractor graphics, @NotNull Font font, @NotNull Component text, int xMin, int yMin, int xMax, int yMax, boolean labelShadow, int textColor, float scale) {
+    default void renderScrollingLabelInternalScaled(@NotNull GuiGraphicsExtractor graphics, @NotNull Font font, @NotNull Component text, int xMin, int yMin, int xMax, int yMax, boolean labelShadow, int textColor, float scale, @NotNull WidgetLabelAlignment alignment) {
         if (scale == 0.0F) return;
         float invScale = 1.0F / scale;
         float scaledMinX = xMin * invScale;
@@ -101,13 +102,13 @@ public interface IExtendedWidget {
             graphics.text(font, text, (int)(scaledMinX - (float) textOffset), (int)textPosY, textColor, labelShadow);
             graphics.disableScissor();
         } else {
-            float textPosX = ((scaledMinX + scaledMaxX) / 2F) - (textWidth / 2F);
+            float textPosX = alignment.getLabelX(scaledMinX, scaledMaxX, textWidth, scale);
             graphics.text(font, text, (int)textPosX, (int)textPosY, textColor, labelShadow);
         }
         graphics.pose().popMatrix();
     }
 
-    default void renderScrollingLabelInternalUiBaseScaled(@NotNull GuiGraphicsExtractor graphics, @NotNull Component text, int xMin, int yMin, int xMax, int yMax, int textColor, float scale) {
+    default void renderScrollingLabelInternalUiBaseScaled(@NotNull GuiGraphicsExtractor graphics, @NotNull Component text, int xMin, int yMin, int xMax, int yMax, int textColor, float scale, @NotNull WidgetLabelAlignment alignment) {
         float textSize = UIBase.getUITextSizeNormal() * scale;
         float textWidth = UIBase.getUITextWidth(text, textSize);
         float textHeight = UIBase.getUITextHeight(textSize);
@@ -123,9 +124,7 @@ public interface IExtendedWidget {
             UIBase.renderText(graphics, text, xMin - (float) textOffset, textPosY, textColor, textSize);
             graphics.disableScissor();
         } else {
-            float centerX = (xMin + xMax) / 2F;
-            float textPosX = Mth.clamp(centerX, xMin + (textWidth / 2F), xMax - (textWidth / 2F)) - (textWidth / 2F);
-            UIBase.renderText(graphics, text, textPosX, textPosY, textColor, textSize);
+            UIBase.renderText(graphics, text, alignment.getLabelX(xMin, xMax, textWidth, 1.0F), textPosY, textColor, textSize);
         }
     }
 
@@ -134,6 +133,14 @@ public interface IExtendedWidget {
             return customizable.resolveLabelScaleFancyMenu();
         }
         return 1.0F;
+    }
+
+    @NotNull
+    default WidgetLabelAlignment resolveLabelAlignment(@NotNull AbstractWidget widget) {
+        if (widget instanceof CustomizableWidget customizable) {
+            return customizable.resolveLabelAlignmentFancyMenu();
+        }
+        return WidgetLabelAlignment.CENTERED;
     }
 
 }

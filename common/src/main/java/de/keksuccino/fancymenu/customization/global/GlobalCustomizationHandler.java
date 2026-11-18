@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.WidgetLabelAlignment;
 import de.keksuccino.fancymenu.util.resource.RenderableResource;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
@@ -192,6 +193,11 @@ public final class GlobalCustomizationHandler {
         return FancyMenu.getOptions().globalButtonLabelShadow.getValue();
     }
 
+    @NotNull
+    public static WidgetLabelAlignment getGlobalButtonLabelAlignment() {
+        return WidgetLabelAlignment.getBySerializedName(FancyMenu.getOptions().globalButtonLabelAlignment.getValue());
+    }
+
     public static boolean isGlobalSliderLabelUnderlineOnHoverEnabled() {
         return FancyMenu.getOptions().globalSliderLabelUnderlineOnHover.getValue();
     }
@@ -213,6 +219,11 @@ public final class GlobalCustomizationHandler {
 
     public static boolean isGlobalSliderLabelShadowEnabled() {
         return FancyMenu.getOptions().globalSliderLabelShadow.getValue();
+    }
+
+    @NotNull
+    public static WidgetLabelAlignment getGlobalSliderLabelAlignment() {
+        return WidgetLabelAlignment.getBySerializedName(FancyMenu.getOptions().globalSliderLabelAlignment.getValue());
     }
 
     @Nullable

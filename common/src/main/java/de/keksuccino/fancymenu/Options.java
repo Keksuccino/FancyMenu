@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu;
 
 import de.keksuccino.fancymenu.util.AbstractOptions;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.WidgetLabelAlignment;
 import de.keksuccino.konkrete.config.Config;
 import net.minecraft.sounds.SoundSource;
 
@@ -45,6 +46,7 @@ public class Options extends AbstractOptions {
     public final Option<Float> globalButtonLabelScale = new Option<>(config, "global_button_label_scale", 1.0F, "global_customizations");
     public final Option<String> globalButtonLabelScaleRaw = new Option<>(config, "global_button_label_scale_raw", "", "global_customizations");
     public final Option<Boolean> globalButtonLabelShadow = new Option<>(config, "global_button_label_shadow", true, "global_customizations");
+    public final Option<String> globalButtonLabelAlignment = new Option<>(config, "global_button_label_alignment", WidgetLabelAlignment.CENTERED.getSerializedName(), "global_customizations");
     public final Option<String> globalSliderBackground = new Option<>(config, "global_slider_background", "", "global_customizations");
     public final Option<Boolean> globalSliderBackgroundTransparent = new Option<>(config, "global_slider_background_transparent", false, "global_customizations");
     public final Option<Boolean> globalSliderBackgroundNineSlice = new Option<>(config, "global_slider_background_nine_slice", false, "global_customizations");
@@ -58,6 +60,7 @@ public class Options extends AbstractOptions {
     public final Option<Float> globalSliderLabelScale = new Option<>(config, "global_slider_label_scale", 1.0F, "global_customizations");
     public final Option<String> globalSliderLabelScaleRaw = new Option<>(config, "global_slider_label_scale_raw", "", "global_customizations");
     public final Option<Boolean> globalSliderLabelShadow = new Option<>(config, "global_slider_label_shadow", true, "global_customizations");
+    public final Option<String> globalSliderLabelAlignment = new Option<>(config, "global_slider_label_alignment", WidgetLabelAlignment.CENTERED.getSerializedName(), "global_customizations");
     public final Option<String> globalSliderHandleNormal = new Option<>(config, "global_slider_handle_normal", "", "global_customizations");
     public final Option<String> globalSliderHandleHover = new Option<>(config, "global_slider_handle_hover", "", "global_customizations");
     public final Option<String> globalSliderHandleInactive = new Option<>(config, "global_slider_handle_inactive", "", "global_customizations");
