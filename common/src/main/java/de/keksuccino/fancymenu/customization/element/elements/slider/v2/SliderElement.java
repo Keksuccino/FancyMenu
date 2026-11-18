@@ -16,6 +16,7 @@ import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.WidgetLabelAlignment;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.AbstractExtendedSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.ListSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
@@ -55,6 +56,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     public final Property.ColorProperty labelBaseColor = putProperty(Property.hexColorProperty("label_base_color", null, true, "fancymenu.elements.widgets.label.base_color"));
     public final Property.ColorProperty labelHoverColor = putProperty(Property.hexColorProperty("label_hover_color", null, true, "fancymenu.elements.widgets.label.hover_color"));
     public final Property.FloatProperty labelScale = putProperty(Property.floatProperty("label_scale", 1.0F, "fancymenu.elements.widgets.label.scale"));
+    public final Property<WidgetLabelAlignment> labelAlignment = putProperty(WidgetLabelAlignment.buildProperty());
     public final Property.BooleanProperty labelShadow = putProperty(Property.booleanProperty("label_shadow", true, "fancymenu.elements.widgets.label.shadow"));
     public String tooltip;
     public ResourceSupplier<ITexture> handleTextureNormal;
@@ -214,6 +216,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         this.updateWidgetLabelBaseColor();
         this.updateWidgetLabelHoverColor();
         this.updateWidgetLabelScale();
+        this.updateWidgetLabelAlignment();
         this.updateWidgetHitboxRotation();
         this.slider.updateMessage();
     }
@@ -484,6 +487,12 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         }
     }
 
+    public void updateWidgetLabelAlignment() {
+        if (this.slider instanceof CustomizableWidget w) {
+            w.setLabelAlignmentFancyMenu(this.getLabelAlignment());
+        }
+    }
+
     public void updateWidgetHitboxRotation() {
         if (this.slider instanceof CustomizableWidget w) {
             w.setHitboxRotationFancyMenu(this.getRotationDegrees(), this.getVerticalTiltDegrees(), this.getHorizontalTiltDegrees());
@@ -571,6 +580,15 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
             return template.labelScale.getFloat();
         }
         return this.labelScale.getFloat();
+    }
+
+    @NotNull
+    public WidgetLabelAlignment getLabelAlignment() {
+        ButtonElement template = this.getPropertySource();
+        if ((template != null) && template.templateApplyLabel) {
+            return template.labelAlignment.tryGetNonNullElse(WidgetLabelAlignment.CENTERED);
+        }
+        return this.labelAlignment.tryGetNonNullElse(WidgetLabelAlignment.CENTERED);
     }
 
     protected <T> T getTemplateProperty(@NotNull TemplatePropertyGetter<T> templatePropertyGetter, @Nullable T defaultProperty) {

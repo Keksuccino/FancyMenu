@@ -13,6 +13,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.IExtendedWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.WidgetLabelAlignment;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.WidgetWithVanillaTooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.AbstractExtendedSlider;
@@ -94,6 +95,8 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	private float labelScaleFancyMenu = 1.0F;
 	@Unique
 	private boolean labelShadowFancyMenu = true;
+	@Unique @NotNull
+	private WidgetLabelAlignment labelAlignment_FancyMenu = WidgetLabelAlignment.CENTERED;
 	@Unique @Nullable
 	private RenderableResource customBackgroundNormalFancyMenu;
 	@Unique @Nullable
@@ -576,6 +579,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		this.setLabelHoverColorFancyMenu(null);
 		this.setLabelBaseColorFancyMenu(null);
 		this.setLabelScaleFancyMenu(1.0F);
+		this.setLabelAlignmentFancyMenu(WidgetLabelAlignment.CENTERED);
 		this.setCustomWidthFancyMenu(null);
 		this.setCustomHeightFancyMenu(null);
 		this.setCustomXFancyMenu(null);
@@ -715,6 +719,30 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 			}
 		}
 		return localScale;
+	}
+
+	@Unique
+	@Override
+	public void setLabelAlignmentFancyMenu(@NotNull WidgetLabelAlignment alignment) {
+		this.labelAlignment_FancyMenu = Objects.requireNonNull(alignment);
+	}
+
+	@Unique
+	@Override
+	public @NotNull WidgetLabelAlignment getLabelAlignmentFancyMenu() {
+		return this.labelAlignment_FancyMenu;
+	}
+
+	@Unique
+	@Override
+	public @NotNull WidgetLabelAlignment resolveLabelAlignmentFancyMenu() {
+		if (this.isSliderWidget_FancyMenu()) {
+			return WidgetLabelAlignment.resolve(this.labelAlignment_FancyMenu, GlobalCustomizationHandler.getGlobalSliderLabelAlignment());
+		}
+		if (this.isButtonWidget_FancyMenu()) {
+			return WidgetLabelAlignment.resolve(this.labelAlignment_FancyMenu, GlobalCustomizationHandler.getGlobalButtonLabelAlignment());
+		}
+		return this.labelAlignment_FancyMenu;
 	}
 
 	@Unique
