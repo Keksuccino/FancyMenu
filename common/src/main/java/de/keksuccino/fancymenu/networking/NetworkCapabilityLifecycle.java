@@ -92,6 +92,13 @@ final class NetworkCapabilityLifecycle {
         return session != null && session.beginConnection(connection);
     }
 
+    boolean isServerConnectionLive(@NotNull Object server, @NotNull Object connection) {
+        Objects.requireNonNull(server);
+        Objects.requireNonNull(connection);
+        ServerSession session = this.serverSessions.get(new IdentityKey(server));
+        return session != null && session.isLive(connection);
+    }
+
     boolean markServerClientCapable(@NotNull Object server, @NotNull Object connection) {
         return this.markServerClientCapable(server, connection, 0);
     }
@@ -168,6 +175,10 @@ final class NetworkCapabilityLifecycle {
         private synchronized boolean beginConnection(@NotNull Object connection) {
             if (!this.active) return false;
             return this.liveConnections.add(new IdentityKey(connection));
+        }
+
+        private synchronized boolean isLive(@NotNull Object connection) {
+            return this.active && this.liveConnections.contains(new IdentityKey(connection));
         }
 
         private synchronized boolean markClientCapable(@NotNull Object connection, int bridgeProtocolVersion) {
