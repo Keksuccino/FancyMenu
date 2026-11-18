@@ -54,6 +54,8 @@ public class ManageProfilesWindowBody extends PiPWindowBody {
     private static final int COLUMN_GAP = 16;
     private static final int LIST_WIDTH = 236;
     private static final int BUTTON_HEIGHT = 20;
+    /** Space between the toolbars and the profile list or description box above them. */
+    private static final int TOOLBAR_GAP = 8;
     private static final int ICON_BUTTON_GAP = 2;
     private static final int DESTRUCTIVE_ACTION_GAP = 8;
     private static final int DESCRIPTION_PADDING = 8;
@@ -128,7 +130,7 @@ public class ManageProfilesWindowBody extends PiPWindowBody {
         boolean blur = UIBase.shouldBlur();
 
         float oldScroll = (this.listArea != null) ? this.listArea.verticalScrollBar.getScroll() : 0.0F;
-        this.listArea = new ScrollArea(MARGIN, MARGIN, LIST_WIDTH, this.height - (MARGIN * 2) - BUTTON_HEIGHT - 8);
+        this.listArea = new ScrollArea(MARGIN, MARGIN, LIST_WIDTH, this.getPanelBottom() - MARGIN);
         this.listArea.setSetupForBlurInterface(blur);
         this.listArea.makeEntriesWidthOfArea = true;
         this.listArea.horizontalScrollBar.active = false;
@@ -136,7 +138,7 @@ public class ManageProfilesWindowBody extends PiPWindowBody {
         this.listArea.verticalScrollBar.setScroll(oldScroll);
         this.addRenderableWidget(this.listArea);
 
-        int bottomY = this.height - MARGIN - BUTTON_HEIGHT;
+        int bottomY = this.getToolbarY();
         this.newButton = this.addIconButton(MaterialIcons.ADD, "fancymenu.profiles.new", button -> this.actions.createEmpty())
                 .setIsActiveSupplier(consumes -> !ProfileHandler.isBusy());
         this.importButton = this.addIconButton(MaterialIcons.DOWNLOAD, "fancymenu.profiles.import", button -> this.actions.chooseArchiveToImport())
@@ -209,12 +211,26 @@ public class ManageProfilesWindowBody extends PiPWindowBody {
         return !ProfileHandler.isBusy() && (this.getSelectedProfile() != null);
     }
 
+    /**
+     * The Y position of the toolbars at the bottom of the window.
+     */
+    private int getToolbarY() {
+        return this.height - MARGIN - BUTTON_HEIGHT;
+    }
+
+    /**
+     * The Y position where the profile list and the description box end, so both columns line up at the bottom.
+     */
+    private int getPanelBottom() {
+        return this.getToolbarY() - TOOLBAR_GAP;
+    }
+
     @Override
     public void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         float panelX = MARGIN + LIST_WIDTH + COLUMN_GAP;
         float panelWidth = this.width - panelX - MARGIN;
-        int bottomY = this.height - MARGIN - BUTTON_HEIGHT;
+        int bottomY = this.getToolbarY();
 
         Profile selected = this.getSelectedProfile();
 
@@ -239,7 +255,7 @@ public class ManageProfilesWindowBody extends PiPWindowBody {
 
         // Description box
         float boxY = headerBottom + 14;
-        float boxBottom = bottomY - 12;
+        float boxBottom = this.getPanelBottom();
         float boxHeight = Math.max(24, boxBottom - boxY);
         float radius = UIBase.getInterfaceCornerRoundingRadius();
         UIBase.renderRoundedRect(graphics, panelX, boxY, panelWidth, boxHeight, radius, radius, radius, radius, ProfileUiRendering.getAreaColor());
