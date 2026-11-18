@@ -121,7 +121,7 @@ public class PlaceholderParser {
      *
      * <p>{@code ParsingProcessorTiming.BEFORE_REPLACING_PLACEHOLDERS} processors get executed if the input text is not null, is not too long to get parsed and is not currently in the cache.
      *
-     * <p>{@code ParsingProcessorTiming.AFTER_REPLACING_PLACEHOLDERS} processors only get executed if the input text contains placeholders and the system successfully replaced them.
+     * <p>{@code ParsingProcessorTiming.AFTER_REPLACING_PLACEHOLDERS} processors only get executed if the input text contains placeholders or {@code $$} variable references (see {@link #containsPlaceholders(String)}) and the system successfully replaced them.
      *
      * @return The unique ID of the processor.
      */
@@ -214,13 +214,24 @@ public class PlaceholderParser {
     }
 
     /**
-     * Simple check if the given {@link String} contains placeholders.<br>
-     * This basically only checks if the {@link String} contains <code>&#123;"placeholder"</code>, so it's not 100% safe, but performance-friendly.
+     * Simple check if the given {@link String} contains placeholders or {@code $$} references to FancyMenu variables.<br>
+     * This basically only checks if the {@link String} contains <code>&#123;"placeholder"</code> or {@code $$} followed by at least one character,
+     * so it's not 100% safe, but performance-friendly. It does not check if a variable with that name exists.
      */
     public static boolean containsPlaceholders(@Nullable String in) {
         if (in == null) return false;
-        if (in.length() < MIN_LENGTH_FOR_PARSING) return false;
-        return StringUtils.contains(in, "{\"placeholder\"");
+        if ((in.length() >= MIN_LENGTH_FOR_PARSING) && StringUtils.contains(in, "{\"placeholder\"")) return true;
+        return containsVariableReference(in);
+    }
+
+    /**
+     * Checks if the text contains {@code $$} followed by at least one character, which is the shortest possible {@code $$name} reference.
+     * Variable names can contain any character, so this doesn't check the name itself.
+     */
+    private static boolean containsVariableReference(@NotNull String in) {
+        // Only the first "$$" needs a check: if nothing follows it, it ends the text, so there is no other "$$" after it
+        int prefixIndex = in.indexOf(SHORT_VARIABLE_PLACEHOLDER_PREFIX);
+        return (prefixIndex != -1) && ((prefixIndex + SHORT_VARIABLE_PLACEHOLDER_PREFIX.length()) < in.length());
     }
 
     /**
@@ -294,15 +305,17 @@ public class PlaceholderParser {
 
         in = processBeforeReplacement(in, context.processors());
 
-        // If "in" is too short, just return here, because there can't be placeholders in it
-        if (in.length() < MIN_LENGTH_FOR_PARSING) return in;
-
-        Boolean containsPlaceholders = CONTAINS_PLACEHOLDERS.get(in);
-        if (containsPlaceholders == null) {
-            containsPlaceholders = containsPlaceholders(in);
-            CONTAINS_PLACEHOLDERS.put(in, containsPlaceholders);
+        if (in.length() < MIN_LENGTH_FOR_PARSING) {
+            // Texts this short can only contain variable references, and checking them directly is cheaper than a cache lookup
+            if (!containsVariableReference(in)) return in;
+        } else {
+            Boolean containsPlaceholders = CONTAINS_PLACEHOLDERS.get(in);
+            if (containsPlaceholders == null) {
+                containsPlaceholders = containsPlaceholders(in);
+                CONTAINS_PLACEHOLDERS.put(in, containsPlaceholders);
+            }
+            if (!containsPlaceholders) return in;
         }
-        if (!containsPlaceholders) return in;
 
         // Used to cache replacements for already parsed placeholders, so they can get reused to improve performance
         if (parsed == null) parsed = new HashMap<>();
