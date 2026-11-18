@@ -2469,6 +2469,8 @@
   "fancymenu.global_customizations.button_click_sound": "カスタムボタンクリック音",
   "fancymenu.global_customizations.button_labels": "ボタンラベル",
   "fancymenu.global_customizations.menu_background_texture": "カスタムメニュー背景テクスチャ",
+  "fancymenu.global_customizations.menu_background_texture.preserve_aspect_ratio": "背景テクスチャのアスペクト比を維持: %s",
+  "fancymenu.global_customizations.menu_background_texture.preserve_aspect_ratio.desc": "有効にすると、テクスチャは元の比率を保ったまま画面全体を埋めます。収まらない部分は端で切り取られます。\n\n無効にすると、テクスチャが画面ぴったりに引き伸ばされるので、つぶれて見えることがあります。",
   "fancymenu.global_customizations.menu_music_tracks": "カスタムメニューBGMトラック",
   "fancymenu.global_customizations.menu_music_tracks.add": "トラックを追加",
   "fancymenu.global_customizations.menu_music_tracks.clear": "トラックをクリア",

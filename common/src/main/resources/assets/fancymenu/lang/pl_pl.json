@@ -2469,6 +2469,8 @@
   "fancymenu.global_customizations.button_click_sound": "Niestandardowy dźwięk kliknięcia przycisku",
   "fancymenu.global_customizations.button_labels": "Etykiety przycisków",
   "fancymenu.global_customizations.menu_background_texture": "Niestandardowa tekstura tła menu",
+  "fancymenu.global_customizations.menu_background_texture.preserve_aspect_ratio": "Zachowaj proporcje tekstury tła: %s",
+  "fancymenu.global_customizations.menu_background_texture.preserve_aspect_ratio.desc": "Gdy włączone, tekstura zachowuje swoje oryginalne proporcje i nadal wypełnia cały ekran. To, co się nie mieści, zostaje przycięte na krawędziach.\n\nGdy wyłączone, tekstura jest rozciągana tak, żeby pasowała dokładnie do ekranu, przez co może wyglądać na spłaszczoną.",
   "fancymenu.global_customizations.menu_music_tracks": "Niestandardowe utwory muzyki menu",
   "fancymenu.global_customizations.menu_music_tracks.add": "Dodaj utwór",
   "fancymenu.global_customizations.menu_music_tracks.clear": "Wyczyść utwory",
