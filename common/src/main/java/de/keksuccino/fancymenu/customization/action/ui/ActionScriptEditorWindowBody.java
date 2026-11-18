@@ -173,11 +173,21 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
     private boolean suppressHistoryCapture = false;
     private boolean actionsMenuRightClickConsumedByEntry = false;
     private boolean skipCloseWarning = false;
+    /**
+     * Every collapsible block serializes its collapse state as "[&lt;block type&gt;_executable_block_collapsed:&lt;identifier&gt;]".
+     */
+    private static final String COLLAPSE_STATE_PROPERTY_MARKER = "_executable_block_collapsed:";
+    /**
+     * The serialized script as it was when the editor opened. Closing the editor without saving only asks for confirmation when the script differs from it.
+     */
+    @NotNull
+    private final Map<String, String> initialScriptState;
 
     public ActionScriptEditorWindowBody(@NotNull GenericExecutableBlock executableBlock, @NotNull Consumer<GenericExecutableBlock> callback) {
         super(Component.translatable("fancymenu.actions.screens.manage_screen.manage"));
         this.setAllowCloseOnEsc(false);
         this.executableBlock = executableBlock.copy(false);
+        this.initialScriptState = serializeScriptState(this.executableBlock);
         this.callback = callback;
         this.updateActionInstanceScrollArea(false);
     }
@@ -232,8 +242,8 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         UIBase.applyDefaultWidgetSkinTo(this.doneButton, blur);
 
         this.cancelButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
-            Dialogs.openMessageWithCallback(Component.translatable("fancymenu.actions.script_editor.cancel_warning"), MessageDialogStyle.WARNING, call -> {
-                if (call) {
+            this.confirmDiscardChanges(discard -> {
+                if (discard) {
                     this.finishInlineNameEditing(true);
                     this.finishInlineValueEditing(true);
                     this.closeWithResult(null);
@@ -259,9 +269,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                     decision.supply(true);
                     return;
                 }
-                Dialogs.openMessageWithCallback(Component.translatable("fancymenu.actions.script_editor.cancel_warning"), MessageDialogStyle.WARNING, close -> {
-                    decision.supply(close);
-                });
+                this.confirmDiscardChanges(decision::supply);
             });
         }
         super.setWindow(window);
@@ -303,6 +311,48 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         this.finishInlineNameEditing(true);
         this.finishInlineValueEditing(true);
         this.closeWithResult(this.executableBlock);
+    }
+
+    /**
+     * Asks the user to confirm losing their changes before the editor closes without saving.
+     * When there is nothing to lose, the callback gets {@code true} right away, without asking.
+     */
+    private void confirmDiscardChanges(@NotNull Consumer<Boolean> callback) {
+        if (!this.hasUnsavedChanges()) {
+            callback.accept(true);
+            return;
+        }
+        Dialogs.openMessageWithCallback(Component.translatable("fancymenu.actions.script_editor.cancel_warning"), MessageDialogStyle.WARNING, callback);
+    }
+
+    /**
+     * Returns {@code true} when the script differs from how it was when the editor opened,
+     * or when an inline name or value edit box holds text that is not applied to the script yet.
+     */
+    private boolean hasUnsavedChanges() {
+        if (this.isInlineNameEditing() && !Objects.equals(this.inlineNameEditBox.getValue(), this.inlineNameOriginal)) {
+            return true;
+        }
+        if (this.isInlineValueEditing() && !Objects.equals(this.inlineValueEditBox.getValue(), Objects.requireNonNullElse(this.inlineValueOriginal, ""))) {
+            return true;
+        }
+        return hasScriptChanged(this.initialScriptState, this.executableBlock);
+    }
+
+    /**
+     * Serializes the script to compare it with {@link #initialScriptState}.<br>
+     * The collapse states of blocks get left out. Collapsing or expanding a block only changes how the script is shown,
+     * so it is no edit (it creates no undo point either) and should not make closing the editor ask for confirmation.
+     */
+    @NotNull
+    static Map<String, String> serializeScriptState(@NotNull AbstractExecutableBlock script) {
+        Map<String, String> state = script.serialize().getProperties();
+        state.keySet().removeIf(key -> key.contains(COLLAPSE_STATE_PROPERTY_MARKER));
+        return state;
+    }
+
+    static boolean hasScriptChanged(@NotNull Map<String, String> initialScriptState, @NotNull AbstractExecutableBlock script) {
+        return !initialScriptState.equals(serializeScriptState(script));
     }
 
     protected void updateRightClickContextMenu(boolean reopen, @Nullable List<String> entryPath) {
