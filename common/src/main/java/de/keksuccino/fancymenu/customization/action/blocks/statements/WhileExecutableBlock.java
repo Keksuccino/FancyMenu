@@ -50,7 +50,8 @@ public class WhileExecutableBlock extends AbstractExecutableBlock {
      * Executes the block contents for as long as the condition is met, but stops after {@link #TIMEOUT_MILLIS},
      * so an endless loop can't freeze the game.<br>
      * The timeout only stops the run that hit it. Keep the start time local to each run, so every run gets the full timeout,
-     * and a nested run of this same block (for example through a Mimic Button action) can't reset the timer of the run around it.
+     * and a nested run of this same block can't reset the timer of the run around it. A nested run happens, for example, when the loop
+     * is in the script of an On Variable Updated listener and sets a variable, because that runs the same script again right away.
      */
     @Override
     public void execute() {
