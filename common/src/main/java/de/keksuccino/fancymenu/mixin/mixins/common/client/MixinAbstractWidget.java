@@ -262,7 +262,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Inject(method = "renderScrollingString(Lnet/minecraft/client/gui/GuiGraphics;Lnet/minecraft/client/gui/Font;II)V", at = @At("HEAD"), cancellable = true)
 	private void before_renderScrollingString_FancyMenu(GuiGraphics graphics, Font font, int width, int color, CallbackInfo info) {
 		float scale = this.resolveLabelScaleFancyMenu();
-		boolean labelShadow = this.resolveLabelShadow_FancyMenu();
+		boolean labelShadow = this.resolveLabelShadowFancyMenu();
 		WidgetLabelAlignment alignment = this.resolveLabelAlignmentFancyMenu();
 		if (scale == 1.0F && labelShadow && (alignment == WidgetLabelAlignment.CENTERED)) return;
 		if (scale == 0.0F) {
@@ -710,6 +710,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	@Unique
 	@Override
 	public @NotNull WidgetLabelAlignment resolveLabelAlignmentFancyMenu() {
+		if (!this.isGlobalLabelCustomizationTarget_FancyMenu()) return this.labelAlignment_FancyMenu;
 		if (this.isSliderWidget_FancyMenu()) {
 			return WidgetLabelAlignment.resolve(this.labelAlignment_FancyMenu, GlobalCustomizationHandler.getGlobalSliderLabelAlignment());
 		}
@@ -1099,7 +1100,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 
 	@Unique
 	private boolean isGlobalLabelCustomizationTarget_FancyMenu() {
-		return this.isButtonWidget_FancyMenu() || this.isSliderWidget_FancyMenu();
+		return GlobalCustomizationHandler.isGlobalLabelCustomizationTarget(this);
 	}
 
 	@Unique
@@ -1149,8 +1150,10 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	}
 
 	@Unique
-	private boolean resolveLabelShadow_FancyMenu() {
+	@Override
+	public boolean resolveLabelShadowFancyMenu() {
 		boolean localShadow = this.labelShadowFancyMenu;
+		if (!this.isGlobalLabelCustomizationTarget_FancyMenu()) return localShadow;
 		if (this.isSliderWidget_FancyMenu()) {
 			return GlobalCustomizationHandler.isGlobalSliderLabelShadowEnabled() && localShadow;
 		}
