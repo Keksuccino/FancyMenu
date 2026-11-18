@@ -19,6 +19,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.WidgetLabelAlignment;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.AbstractExtendedSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
@@ -60,6 +61,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
     public final Property.ColorProperty labelBaseColor = putProperty(Property.hexColorProperty("label_base_color", null, true, "fancymenu.elements.widgets.label.base_color"));
     public final Property.ColorProperty labelHoverColor = putProperty(Property.hexColorProperty("label_hover_color", null, true, "fancymenu.elements.widgets.label.hover_color"));
     public final Property.FloatProperty labelScale = putProperty(Property.floatProperty("label_scale", 1.0F, "fancymenu.elements.widgets.label.scale"));
+    public final Property<WidgetLabelAlignment> labelAlignment = putProperty(WidgetLabelAlignment.buildProperty());
     public final Property.BooleanProperty labelShadow = putProperty(Property.booleanProperty("label_shadow", true, "fancymenu.elements.widgets.label.shadow"));
     public String tooltip;
     public ResourceSupplier<ITexture> backgroundTextureNormal;
@@ -287,6 +289,7 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
         this.updateWidgetLabelBaseColor();
         this.updateWidgetLabelHoverColor();
         this.updateWidgetLabelScale();
+        this.updateWidgetLabelAlignment();
         this.updateWidgetHoverSound();
         this.updateWidgetUnhoverSound();
         this.updateWidgetClickSound();
@@ -424,6 +427,12 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
             if (shouldApply) {
                 w.setLabelScaleFancyMenu(scale);
             }
+        }
+    }
+
+    public void updateWidgetLabelAlignment() {
+        if (this.getWidget() instanceof CustomizableWidget w) {
+            w.setLabelAlignmentFancyMenu(this.getLabelAlignment());
         }
     }
 
@@ -652,6 +661,16 @@ public class ButtonElement extends AbstractElement implements ExecutableElement 
             return template.labelScale.getFloat();
         }
         return this.labelScale.getFloat();
+    }
+
+    @NotNull
+    public WidgetLabelAlignment getLabelAlignment() {
+        if (this.isTemplate) return this.labelAlignment.tryGetNonNullElse(WidgetLabelAlignment.CENTERED);
+        ButtonElement template = getTopActiveTemplateElement(this.isSlider());
+        if ((template != null) && template.templateApplyLabel) {
+            return template.labelAlignment.tryGetNonNullElse(WidgetLabelAlignment.CENTERED);
+        }
+        return this.labelAlignment.tryGetNonNullElse(WidgetLabelAlignment.CENTERED);
     }
 
     @NotNull
