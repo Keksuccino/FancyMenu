@@ -98,7 +98,7 @@ class RequirementGroupNestingTest {
         String meta = serialized.getValue("[loading_requirement_container_meta:" + original.identifier + "]");
         assertNotNull(meta);
         assertTrue(meta.contains("[groups:outer;standalone;]"), meta);
-        String nestedGroupValue = serialized.getValue("[loading_requirement_group:deepest]");
+        String nestedGroupValue = serialized.getValue("[loading_requirement_group:deepest]" + RequirementContainer.serializeContainerTag(original.identifier));
         assertNotNull(nestedGroupValue);
         assertTrue(nestedGroupValue.contains("[parent_group:second_pair]"), nestedGroupValue);
 
