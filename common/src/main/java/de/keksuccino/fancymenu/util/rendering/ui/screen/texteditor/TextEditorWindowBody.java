@@ -17,6 +17,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollbar.ScrollBar;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.formattingrules.TextEditorFormattingRules;
+import de.keksuccino.fancymenu.customization.placeholder.BoundedConcurrentCache;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderRegistry;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
@@ -57,7 +58,11 @@ public class TextEditorWindowBody extends PiPWindowBody {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final HashMap<String, String> COMPILED_SINGLE_LINE_STRINGS = new HashMap<>();
+    static final int COMPILED_SINGLE_LINE_STRINGS_MAX_ENTRIES = 2048;
+    static final long COMPILED_SINGLE_LINE_STRINGS_MAX_WEIGHT = 1_048_576L;
+    private static final long COMPILED_SINGLE_LINE_STRING_OVERHEAD_WEIGHT = 64L;
+    // Weights count the retained UTF-16 code units of the source text, and of the compiled text if it is not the source itself, plus a fixed allowance for each entry's objects
+    private static final BoundedConcurrentCache<String, String> COMPILED_SINGLE_LINE_STRINGS = new BoundedConcurrentCache<>(COMPILED_SINGLE_LINE_STRINGS_MAX_ENTRIES, COMPILED_SINGLE_LINE_STRINGS_MAX_WEIGHT, (source, compiled) -> COMPILED_SINGLE_LINE_STRING_OVERHEAD_WEIGHT + source.length() + ((compiled == source) ? 0L : compiled.length()));
     private static final Pattern LINE_BREAK_PATTERN = Pattern.compile("\\R");
     /** The number of columns from one tab stop to the next, used to replace tabs with spaces. */
     private static final int TAB_WIDTH = 4;
@@ -2335,12 +2340,21 @@ public class TextEditorWindowBody extends PiPWindowBody {
     }
 
     /**
+     * Removes the {@link #NEWLINE_CODE} and {@link #SPACE_CODE} codes of the text editor from the string.<br>
+     * This runs as parsing processor for every text the placeholder parser parses, every frame, on any thread. Calls for a cached string
+     * return the same compiled instance every time, which the placeholder parser's own caches rely on: they look up the compiled string,
+     * and lookups of the same instance only compare references and reuse its cached hash code. A string without codes compiles to itself.
+     *
      * @return The compiled version of the input string or NULL if the input was NULL.
      */
     public static String compileSingleLineString(@Nullable String s) {
         if (s == null) return null;
-        String compiled = COMPILED_SINGLE_LINE_STRINGS.computeIfAbsent(s, s1 -> s1.replace(NEWLINE_CODE, "").replace(SPACE_CODE, ""));
-        return compiled;
+        String compiled = COMPILED_SINGLE_LINE_STRINGS.get(s);
+        if (compiled != null) return compiled;
+        compiled = s.replace(NEWLINE_CODE, "").replace(SPACE_CODE, "");
+        // Threads that compile the same string at the same time all return the instance that got cached first
+        String cached = COMPILED_SINGLE_LINE_STRINGS.putIfAbsent(s, compiled);
+        return (cached != null) ? cached : compiled;
     }
 
     public static void clearCompiledSingleLineCache() {
