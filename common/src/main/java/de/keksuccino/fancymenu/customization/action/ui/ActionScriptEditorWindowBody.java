@@ -2367,24 +2367,9 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             return null;
         }
 
-        AbstractExecutableBlock targetParent;
-        int targetIndex;
-
-        if (moveAfter == BEFORE_FIRST) {
-            targetParent = this.executableBlock;
-            targetIndex = 0;
-        } else if (moveAfter == AFTER_LAST) {
-            targetParent = this.executableBlock;
-            targetIndex = this.executableBlock.getExecutables().size();
-        } else if ((moveAfter.executable instanceof AbstractExecutableBlock block) && !(block instanceof CommentExecutableBlock)) {
-            targetParent = block;
-            targetIndex = 0;
-        } else {
-            targetParent = moveAfter.getParentBlock();
-            List<Executable> targetList = targetParent.getExecutables();
-            int moveAfterIndex = targetList.indexOf(moveAfter.executable);
-            targetIndex = (moveAfterIndex >= 0) ? moveAfterIndex + 1 : targetList.size();
-        }
+        MoveTarget target = this.getTargetBelow(moveAfter);
+        AbstractExecutableBlock targetParent = target.parent();
+        int targetIndex = target.index();
 
         if (targetParent == currentParent) {
             if (targetIndex > currentIndex) {
@@ -2396,6 +2381,34 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         }
 
         return new MoveTarget(targetParent, Math.max(0, targetIndex));
+    }
+
+    /**
+     * Returns the position right below the given entry. Dropped and added entries both go there.
+     */
+    @NotNull
+    private MoveTarget getTargetBelow(@NotNull ExecutableEntry reference) {
+        if (reference == BEFORE_FIRST) {
+            return new MoveTarget(this.executableBlock, 0);
+        }
+        if (reference == AFTER_LAST) {
+            return new MoveTarget(this.executableBlock, this.executableBlock.getExecutables().size());
+        }
+        return getTargetBelow(reference.executable, reference.getParentBlock());
+    }
+
+    /**
+     * Returns the position right below the given executable: the start of the block for blocks (except comments, which never get entries placed in them),
+     * or the position after the executable in its parent block for everything else. Falls back to the end of the parent block if the executable is not part of it.
+     */
+    @NotNull
+    static MoveTarget getTargetBelow(@NotNull Executable reference, @NotNull AbstractExecutableBlock referenceParent) {
+        if ((reference instanceof AbstractExecutableBlock block) && !(block instanceof CommentExecutableBlock)) {
+            return new MoveTarget(block, 0);
+        }
+        List<Executable> siblings = referenceParent.getExecutables();
+        int referenceIndex = siblings.indexOf(reference);
+        return new MoveTarget(referenceParent, (referenceIndex >= 0) ? (referenceIndex + 1) : siblings.size());
     }
 
     @Nullable
@@ -2727,34 +2740,8 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
     }
 
     protected void addExecutableRelativeToSelection(@NotNull Executable executable, @Nullable ExecutableEntry selectionReference) {
-        if (selectionReference == BEFORE_FIRST) {
-            this.executableBlock.addExecutable(executable);
-            List<Executable> rootExecutables = this.executableBlock.getExecutables();
-            if (rootExecutables.remove(executable)) {
-                rootExecutables.add(0, executable);
-            }
-            return;
-        }
-        if (selectionReference == AFTER_LAST) {
-            this.executableBlock.addExecutable(executable);
-            return;
-        }
-        if (selectionReference == null) {
-            this.executableBlock.addExecutable(executable);
-            return;
-        }
-        if ((selectionReference.executable instanceof AbstractExecutableBlock block) && !(block instanceof CommentExecutableBlock)) {
-            block.addExecutable(executable);
-            return;
-        }
-        AbstractExecutableBlock parentBlock = selectionReference.getParentBlock();
-        List<Executable> executables = parentBlock.getExecutables();
-        int selectedIndex = executables.indexOf(selectionReference.executable);
-        parentBlock.addExecutable(executable);
-        if ((selectedIndex >= 0) && executables.remove(executable)) {
-            int insertIndex = Math.min(selectedIndex + 1, executables.size());
-            executables.add(insertIndex, executable);
-        }
+        MoveTarget target = this.getTargetBelow((selectionReference != null) ? selectionReference : AFTER_LAST);
+        target.parent().addExecutable(target.index(), executable);
     }
 
     protected void addExecutableToEntries(int level, Executable executable, @Nullable AbstractExecutableBlock appendParent, @Nullable AbstractExecutableBlock parentBlock) {
@@ -3777,7 +3764,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
 
     }
 
-    private record MoveTarget(AbstractExecutableBlock parent, int index) {
+    record MoveTarget(AbstractExecutableBlock parent, int index) {
     }
 
 }
