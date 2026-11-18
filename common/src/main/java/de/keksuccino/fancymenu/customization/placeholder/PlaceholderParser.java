@@ -595,7 +595,8 @@ public class PlaceholderParser {
                 if (placeholder == null) {
                     return null;
                 }
-                if (!this.hasValues()) return values;
+                List<String> valueNames = PlaceholderRegistry.getValueNames(placeholder);
+                if (valueNames.isEmpty()) return values;
                 String normalized = this.getNormalizedString();
                 // Check if there's actually a comma (indicating values section exists)
                 if (!normalized.contains(COMMA)) {
@@ -614,14 +615,14 @@ public class PlaceholderParser {
                     if (currentIndex >= currentValueStartIndex) {
                         if (c == APOSTROPHE_CHAR) {
                             if (currentValueName != null) {
-                                if ((inValueDepth == 0) && !isEscaped(valueString, currentIndex) && isEndOfValueContent(placeholder, valueString, currentIndex)) {
+                                if ((inValueDepth == 0) && !isEscaped(valueString, currentIndex) && isEndOfValueContent(valueNames, valueString, currentIndex)) {
                                     String valueContent = StringUtils.substring(valueString, currentValueStartIndex, currentIndex);
                                     values.put(currentValueName, valueContent);
                                     currentValueName = null;
                                     currentValueStartIndex = 0;
                                 }
                             } else {
-                                currentValueName = getValueNameIfStartingWithValue(placeholder, StringUtils.substring(valueString, currentIndex));
+                                currentValueName = getValueNameIfStartingWithValue(valueNames, StringUtils.substring(valueString, currentIndex));
                                 if (currentValueName != null) {
                                     currentValueStartIndex = currentIndex + currentValueName.length() + 4;
                                     inValueDepth = 0;
@@ -644,10 +645,10 @@ public class PlaceholderParser {
             return null;
         }
 
-        private static boolean isEndOfValueContent(@NotNull Placeholder placeholder, @NotNull String valueString, int currentIndex) {
+        private static boolean isEndOfValueContent(@NotNull List<String> valueNames, @NotNull String valueString, int currentIndex) {
             if (valueString.length() == currentIndex+3) return true;
             if (StringUtils.startsWith(StringUtils.substring(valueString, currentIndex), COMMA_WRAPPED_IN_APOSTROPHES)) {
-                String nextValue = getValueNameIfStartingWithValue(placeholder, StringUtils.substring(valueString, currentIndex+2));
+                String nextValue = getValueNameIfStartingWithValue(valueNames, StringUtils.substring(valueString, currentIndex+2));
                 return nextValue != null;
             }
             return false;
@@ -668,9 +669,8 @@ public class PlaceholderParser {
          * Returns the value name if TRUE and NULL if FALSE.
          */
         @Nullable
-        private static String getValueNameIfStartingWithValue(@NotNull Placeholder placeholder, @NotNull String s) {
-            if ((placeholder.getValueNames() == null) || (placeholder.getValueNames().isEmpty())) return null;
-            for (String name : placeholder.getValueNames()) {
+        private static String getValueNameIfStartingWithValue(@NotNull List<String> valueNames, @NotNull String s) {
+            for (String name : valueNames) {
                 if (StringUtils.startsWith(s, APOSTROPHE + name + COLON_WRAPPED_IN_APOSTROPHES)) return name;
             }
             return null;
@@ -679,7 +679,7 @@ public class PlaceholderParser {
         public boolean hasValues() {
             Placeholder p = this.getPlaceholder();
             if (p == null) return false;
-            return ((p.getValueNames() != null) && !p.getValueNames().isEmpty());
+            return !PlaceholderRegistry.getValueNames(p).isEmpty();
         }
 
         @Nullable
