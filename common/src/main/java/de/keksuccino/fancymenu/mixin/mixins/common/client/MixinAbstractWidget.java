@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.util.rendering.RotatedRectangleHitbox;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableSlider;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.CustomizableWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.UniqueWidget;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.WidgetLabelAlignment;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.AbstractExtendedSlider;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
@@ -91,6 +92,8 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	private float labelScaleFancyMenu = 1.0F;
 	@Unique
 	private boolean labelShadowFancyMenu = true;
+	@Unique @NotNull
+	private WidgetLabelAlignment labelAlignment_FancyMenu = WidgetLabelAlignment.CENTERED;
 	@Unique @Nullable
 	private RenderableResource customBackgroundNormalFancyMenu;
 	@Unique @Nullable
@@ -266,7 +269,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 	}
 
 	/**
-	 * @reason Vanilla's 26.1.1 text collector always renders widget labels with a shadow, so FancyMenu draws the label directly when shadow or scale customizations are active.
+	 * @reason Vanilla's 26.1.1 text collector always renders widget labels centered and with a shadow, so FancyMenu draws the label directly when alignment, shadow or scale customizations are active.
 	 */
 	@Inject(method = "extractScrollingStringOverContents", at = @At("HEAD"), cancellable = true)
 	private void before_extractScrollingStringOverContents_FancyMenu(ActiveTextCollector activeTextCollector, Component component, int margin, CallbackInfo info) {
@@ -274,7 +277,8 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
         Font font = Minecraft.getInstance().font;
 		float scale = this.resolveLabelScaleFancyMenu();
 		boolean labelShadow = this.resolveLabelShadow_FancyMenu();
-		if (scale == 1.0F && labelShadow) return;
+		WidgetLabelAlignment alignment = this.resolveLabelAlignmentFancyMenu();
+		if (scale == 1.0F && labelShadow && (alignment == WidgetLabelAlignment.CENTERED)) return;
 		if (scale == 0.0F) {
 			info.cancel();
 			return;
@@ -300,8 +304,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 				graphics.text(font, text, xMin - (int) textOffset, textPosY, textColor, labelShadow);
 				graphics.disableScissor();
 			} else {
-				int textPosX = Mth.clamp((xMin + xMax) / 2, xMin + textWidth / 2, xMax - textWidth / 2);
-				graphics.text(font, text, textPosX - (textWidth / 2), textPosY, textColor, labelShadow);
+				graphics.text(font, text, alignment.getLabelX(xMin, xMax, textWidth), textPosY, textColor, labelShadow);
 			}
 			info.cancel();
 			return;
@@ -327,7 +330,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 			graphics.text(font, text, (int)(scaledMinX - (float)textOffset), (int)textPosY, textColor, labelShadow);
 			graphics.disableScissor();
 		} else {
-			float textPosX = ((scaledMinX + scaledMaxX) / 2F) - (textWidth / 2F);
+			float textPosX = alignment.getLabelX(scaledMinX, scaledMaxX, textWidth, scale);
 			graphics.text(font, text, (int)textPosX, (int)textPosY, textColor, labelShadow);
 		}
 		graphics.pose().popMatrix();
@@ -568,6 +571,7 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 		this.setLabelHoverColorFancyMenu(null);
 		this.setLabelBaseColorFancyMenu(null);
 		this.setLabelScaleFancyMenu(1.0F);
+		this.setLabelAlignmentFancyMenu(WidgetLabelAlignment.CENTERED);
 		this.setCustomWidthFancyMenu(null);
 		this.setCustomHeightFancyMenu(null);
 		this.setCustomXFancyMenu(null);
@@ -699,6 +703,30 @@ public abstract class MixinAbstractWidget implements CustomizableWidget, UniqueW
 			}
 		}
 		return localScale;
+	}
+
+	@Unique
+	@Override
+	public void setLabelAlignmentFancyMenu(@NotNull WidgetLabelAlignment alignment) {
+		this.labelAlignment_FancyMenu = Objects.requireNonNull(alignment);
+	}
+
+	@Unique
+	@Override
+	public @NotNull WidgetLabelAlignment getLabelAlignmentFancyMenu() {
+		return this.labelAlignment_FancyMenu;
+	}
+
+	@Unique
+	@Override
+	public @NotNull WidgetLabelAlignment resolveLabelAlignmentFancyMenu() {
+		if (this.isSliderWidget_FancyMenu()) {
+			return WidgetLabelAlignment.resolve(this.labelAlignment_FancyMenu, GlobalCustomizationHandler.getGlobalSliderLabelAlignment());
+		}
+		if (this.isButtonWidget_FancyMenu()) {
+			return WidgetLabelAlignment.resolve(this.labelAlignment_FancyMenu, GlobalCustomizationHandler.getGlobalButtonLabelAlignment());
+		}
+		return this.labelAlignment_FancyMenu;
 	}
 
 	@Unique

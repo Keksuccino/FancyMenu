@@ -177,6 +177,19 @@ public interface CustomizableWidget {
         return this.getLabelScaleFancyMenu();
     }
 
+    void setLabelAlignmentFancyMenu(@NotNull WidgetLabelAlignment alignment);
+
+    @NotNull
+    WidgetLabelAlignment getLabelAlignmentFancyMenu();
+
+    /**
+     * Returns the alignment the label of this widget gets rendered with, which also includes the global label alignment for buttons and sliders.
+     */
+    @NotNull
+    default WidgetLabelAlignment resolveLabelAlignmentFancyMenu() {
+        return this.getLabelAlignmentFancyMenu();
+    }
+
     void setUnderlineLabelOnHoverFancyMenu(boolean underline);
 
     boolean isUnderlineLabelOnHoverFancyMenu();
