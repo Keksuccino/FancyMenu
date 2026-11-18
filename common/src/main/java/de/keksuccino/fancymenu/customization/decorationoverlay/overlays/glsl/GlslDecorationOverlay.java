@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.customization.decorationoverlay.overlays.glsl;
 
+import de.keksuccino.fancymenu.customization.aiexport.AiExportRuntimeInfo;
+import de.keksuccino.fancymenu.customization.aiexport.AiExportWriter;
 import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlay;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
@@ -25,7 +27,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 import java.util.Locale;
 
-public class GlslDecorationOverlay extends AbstractDecorationOverlay<GlslDecorationOverlay> {
+public class GlslDecorationOverlay extends AbstractDecorationOverlay<GlslDecorationOverlay> implements AiExportRuntimeInfo {
 
     private static final List<GlslShaderRuntime.CompileMode> COMPILE_MODES = List.of(
             GlslShaderRuntime.CompileMode.AUTO,
@@ -395,6 +397,11 @@ public class GlslDecorationOverlay extends AbstractDecorationOverlay<GlslDecorat
     @NotNull
     private static Component warningValue(@NotNull Component value) {
         return value.copy().withStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()));
+    }
+
+    @Override
+    public void writeAiExportRuntimeInfo(@NotNull AiExportWriter writer) {
+        this.shaderRuntime.writeAiExportRuntimeInfo(writer);
     }
 
 }

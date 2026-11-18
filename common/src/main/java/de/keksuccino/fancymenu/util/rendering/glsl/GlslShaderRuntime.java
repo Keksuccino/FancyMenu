@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.glsl;
 
+import de.keksuccino.fancymenu.customization.aiexport.AiExportText;
+import de.keksuccino.fancymenu.customization.aiexport.AiExportWriter;
 import com.mojang.blaze3d.GpuFormat;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.pipeline.RenderTarget;
@@ -592,6 +594,19 @@ public class GlslShaderRuntime {
 
     public long getFrameCounter() {
         return this.passPrograms_FancyMenu[IMAGE_PASS_INDEX].passFrames.committedFrameCount();
+    }
+
+    /**
+     * Writes the compile state of the shader for AI exports of the elements, backgrounds and overlays that use this runtime.
+     */
+    public void writeAiExportRuntimeInfo(@NotNull AiExportWriter writer) {
+        writer.fieldText("Frames rendered so far", String.valueOf(this.getFrameCounter()));
+        writer.fieldText("Shader source missing", AiExportText.yesNo(this.sourceMissing));
+        if (this.lastCompileError != null) {
+            writer.field("Last compile or render error", this.lastCompileError);
+        } else {
+            writer.fieldText("Last compile or render error", "none (shaders only compile while they get rendered, so this is also empty when the shader did not render yet)");
+        }
     }
 
     public void close() {
