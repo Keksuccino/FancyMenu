@@ -108,7 +108,7 @@ class WhileExecutableBlockTest {
         ControlledWhileExecutableBlock loop = new ControlledWhileExecutableBlock(now, () -> true);
         BodyExecutable body = new BodyExecutable(execution -> {
             if (execution == 1) {
-                // Runs the same block from inside its own contents, like a Mimic Button action that presses the button owning the script
+                // Runs the same block from inside its own contents, like a Set Variable action in the loop of an On Variable Updated listener's script
                 loop.execute();
             }
             now.addAndGet(QUARTER_TIMEOUT_NANOS);
