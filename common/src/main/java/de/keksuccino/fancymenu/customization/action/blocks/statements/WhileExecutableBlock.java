@@ -9,25 +9,36 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
 public class WhileExecutableBlock extends AbstractExecutableBlock {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final long TIMEOUT_MILLIS = 3000; // 3 seconds timeout
+    static final long TIMEOUT_MILLIS = 3000; // 3 seconds timeout
+    private static final long TIMEOUT_NANOS = TimeUnit.MILLISECONDS.toNanos(TIMEOUT_MILLIS);
 
     @NotNull
     public RequirementContainer condition = new RequirementContainer().forceRequirementsMet(true);
 
-    private long loopStartTime = 0;
-    private boolean hasTimedOut = false;
     private boolean collapsed = false;
 
+    /** Retained so copy() can preserve an injected clock. */
+    @NotNull
+    private final LongSupplier nanoTimeSupplier;
+
     public WhileExecutableBlock() {
+        this(System::nanoTime);
     }
 
     public WhileExecutableBlock(@NotNull RequirementContainer condition) {
+        this();
         this.condition = Objects.requireNonNull(condition);
+    }
+
+    WhileExecutableBlock(@NotNull LongSupplier nanoTimeSupplier) {
+        this.nanoTimeSupplier = nanoTimeSupplier;
     }
 
     @Override
@@ -35,42 +46,22 @@ public class WhileExecutableBlock extends AbstractExecutableBlock {
         return "while";
     }
 
+    /**
+     * Executes the block contents for as long as the condition is met, but stops after {@link #TIMEOUT_MILLIS},
+     * so an endless loop can't freeze the game.<br>
+     * The timeout only stops the run that hit it. Keep the start time local to each run, so every run gets the full timeout,
+     * and a nested run of this same block (for example through a Mimic Button action) can't reset the timer of the run around it.
+     */
     @Override
     public void execute() {
-
-        // If we previously timed out, prevent execution
-        if (this.hasTimedOut) {
-            LOGGER.warn("[FANCYMENU] WhileExecutableBlock execution prevented - still in timeout state from previous timeout");
-            return;
-        }
-
-        // Initialize loop start time
-        this.loopStartTime = System.currentTimeMillis();
-
-        // Keep executing block contents while condition is met and timeout hasn't occurred
-        while (this.check() && !this.checkTimeout()) {
+        long loopStartTime = this.nanoTimeSupplier.getAsLong();
+        while (this.check()) {
+            if ((this.nanoTimeSupplier.getAsLong() - loopStartTime) >= TIMEOUT_NANOS) {
+                LOGGER.warn("[FANCYMENU] WhileExecutableBlock loop timed out after {} milliseconds!", TIMEOUT_MILLIS);
+                return;
+            }
             super.execute();
         }
-
-        // If the loop ended due to timeout
-        if (this.checkTimeout()) {
-            this.hasTimedOut = true;
-            LOGGER.warn("[FANCYMENU] WhileExecutableBlock loop timed out after {} milliseconds!", TIMEOUT_MILLIS);
-        } else {
-            // Loop completed successfully - reset timeout state
-            this.hasTimedOut = false;
-        }
-
-        // Reset loop start time
-        this.loopStartTime = 0;
-
-    }
-
-    private boolean checkTimeout() {
-        if (this.loopStartTime == 0) {
-            return false;
-        }
-        return System.currentTimeMillis() - this.loopStartTime >= TIMEOUT_MILLIS;
     }
 
     public boolean isCollapsed() {
@@ -89,7 +80,7 @@ public class WhileExecutableBlock extends AbstractExecutableBlock {
 
     @Override
     public @NotNull WhileExecutableBlock copy(boolean unique) {
-        WhileExecutableBlock b = new WhileExecutableBlock();
+        WhileExecutableBlock b = new WhileExecutableBlock(this.nanoTimeSupplier);
         if (!unique) b.identifier = this.identifier;
         if (this.getAppendedBlock() != null) b.setAppendedBlock((AbstractExecutableBlock)this.getAppendedBlock().copy(unique));
         for (Executable e : this.executables) {
