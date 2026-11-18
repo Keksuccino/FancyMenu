@@ -86,52 +86,87 @@ public class RequirementContainer implements ValuePlaceholderHolder {
         return true;
     }
 
+    /**
+     * Creates a new top-level group.
+     *
+     * @return The new group or NULL if a group with this identifier already exists in this container, including nested groups.
+     */
     @Nullable
     public RequirementGroup createAndAddGroup(@NotNull String identifier, @NotNull RequirementGroup.GroupMode mode) {
-        if (!this.groupExists(identifier)) {
-            RequirementGroup g = new RequirementGroup(identifier, mode, this);
-            this.groups.add(g);
-            this.valuePlaceholders.forEach(g::addValuePlaceholder);
-            return g;
-        }
-        return null;
+        RequirementGroup g = new RequirementGroup(identifier, mode, this);
+        return this.addGroup(g) ? g : null;
     }
 
+    /**
+     * Adds a top-level group.
+     *
+     * @return FALSE if the group is nested in another group, or if its identifier is already used in this container, including nested groups.
+     */
     public boolean addGroup(@NotNull RequirementGroup group) {
-        if (!this.groupExists(group.identifier)) {
+        if ((group.parentGroup == null) && !this.groupExists(group.identifier)) {
             this.groups.add(group);
+            group.setParentContainer(this);
             this.valuePlaceholders.forEach(group::addValuePlaceholder);
             return true;
         }
         return false;
     }
 
+    /**
+     * @return The top-level groups of this container, without the groups nested in them.
+     */
     public List<RequirementGroup> getGroups() {
         return new ArrayList<>(this.groups);
     }
 
+    /**
+     * @return All groups of this container, including the groups nested in other groups.
+     */
+    @NotNull
+    public List<RequirementGroup> getAllGroups() {
+        List<RequirementGroup> allGroups = new ArrayList<>();
+        RequirementGroup.collectGroups(this.groups, allGroups);
+        return allGroups;
+    }
+
+    /**
+     * Searches all groups of this container, including the groups nested in other groups.
+     */
     @Nullable
     public RequirementGroup getGroup(@NotNull String identifier) {
         for (RequirementGroup g : this.groups) {
             if (g.identifier.equals(identifier)) {
                 return g;
             }
+            RequirementGroup nested = g.getGroup(identifier);
+            if (nested != null) {
+                return nested;
+            }
         }
         return null;
     }
 
+    /**
+     * Checks all groups of this container, including the groups nested in other groups.
+     */
     public boolean groupExists(@NotNull String identifier) {
         return this.getGroup(identifier) != null;
     }
 
+    /**
+     * Removes a top-level group.
+     */
     public boolean removeGroup(@NotNull RequirementGroup group) {
         return this.groups.remove(Objects.requireNonNull(group));
     }
 
+    /**
+     * Removes a group of this container, also if it is nested in another group.
+     */
     public boolean removeGroupByIdentifier(@NotNull String identifier) {
         RequirementGroup g = this.getGroup(identifier);
         if (g != null) {
-            return this.groups.remove(g);
+            return (g.parentGroup != null) ? g.parentGroup.removeGroup(g) : this.groups.remove(g);
         }
         return false;
     }
@@ -221,10 +256,7 @@ public class RequirementContainer implements ValuePlaceholderHolder {
         if (!unique) c.identifier = this.identifier;
         this.groups.forEach((group) -> {
             RequirementGroup g = group.copy(unique);
-            g.parent = c;
-            for (RequirementInstance i : g.instances) {
-                i.parent = c;
-            }
+            g.setParentContainer(c);
             c.groups.add(g);
         });
         this.instances.forEach((instance) -> {
@@ -246,7 +278,7 @@ public class RequirementContainer implements ValuePlaceholderHolder {
     @NotNull
     public PropertyContainer serialize() {
         PropertyContainer container = new PropertyContainer("loading_requirement_container");
-        //Serialize container meta
+        //Serialize container meta, which only lists top-level groups, because nested groups get serialized with their parent group
         String containerMetaKey = "[loading_requirement_container_meta:" + this.identifier + "]";
         String containerMetaValue = "[groups:";
         for (RequirementGroup g : this.groups) {
@@ -258,7 +290,7 @@ public class RequirementContainer implements ValuePlaceholderHolder {
         }
         containerMetaValue += "]";
         container.putProperty(containerMetaKey, containerMetaValue);
-        //Serialize groups
+        //Serialize groups, including their nested groups
         for (RequirementGroup g : this.groups) {
             PropertyContainer sg = RequirementGroup.serializeRequirementGroup(g);
             for (Map.Entry<String, String> m : sg.getProperties().entrySet()) {
@@ -354,14 +386,7 @@ public class RequirementContainer implements ValuePlaceholderHolder {
      * containers must never share mutable groups or instances with each other.
      */
     private static void addDeserializedGroupCopy(@NotNull RequirementContainer target, @NotNull RequirementGroup source) {
-        if (target.groupExists(source.identifier)) return;
-        RequirementGroup group = source.copy(false);
-        group.parent = target;
-        for (RequirementInstance instance : group.instances) {
-            instance.parent = target;
-            instance.group = group;
-        }
-        target.addGroup(group);
+        target.addGroup(source.copy(false));
     }
 
     private static void addDeserializedInstanceCopy(@NotNull RequirementContainer target, @NotNull RequirementInstance source) {
@@ -374,12 +399,27 @@ public class RequirementContainer implements ValuePlaceholderHolder {
     @NotNull
     public static RequirementContainer deserializeToSingleContainer(@NotNull PropertyContainer serialized) {
         RequirementContainer c = new RequirementContainer();
+        Map<String, RequirementGroup> groupsByIdentifier = new LinkedHashMap<>();
+        Map<String, String> parentGroupIdentifiers = new HashMap<>();
         for (Map.Entry<String, String> m : Objects.requireNonNull(serialized).getProperties().entrySet()) {
             if (m.getKey().startsWith("[loading_requirement_group:")) {
                 RequirementGroup g = RequirementGroup.deserializeRequirementGroup(m.getKey(), m.getValue(), c);
-                if (g != null) {
-                    c.addGroup(g);
+                if ((g != null) && !groupsByIdentifier.containsKey(g.identifier)) {
+                    groupsByIdentifier.put(g.identifier, g);
+                    String parentGroupIdentifier = RequirementGroup.deserializeParentGroupIdentifier(m.getValue());
+                    if (parentGroupIdentifier != null) {
+                        parentGroupIdentifiers.put(g.identifier, parentGroupIdentifier);
+                    }
                 }
+            }
+        }
+        //Nest groups in their parent groups only after all groups got deserialized, because a parent group can get serialized after its nested groups
+        for (RequirementGroup g : groupsByIdentifier.values()) {
+            String parentGroupIdentifier = parentGroupIdentifiers.get(g.identifier);
+            RequirementGroup parentGroup = (parentGroupIdentifier != null) ? groupsByIdentifier.get(parentGroupIdentifier) : null;
+            //Groups with a missing parent group, or that would end up containing themselves, stay top-level groups, so they don't get lost
+            if ((parentGroup == null) || !parentGroup.addGroup(g)) {
+                c.addGroup(g);
             }
         }
         for (Map.Entry<String, String> m : serialized.getProperties().entrySet()) {
@@ -408,10 +448,7 @@ public class RequirementContainer implements ValuePlaceholderHolder {
             i.parent = stack;
         }
         for (RequirementGroup g : stack.groups) {
-            g.parent = stack;
-            for (RequirementInstance i : g.instances) {
-                i.parent = stack;
-            }
+            g.setParentContainer(stack);
         }
         return stack;
     }
