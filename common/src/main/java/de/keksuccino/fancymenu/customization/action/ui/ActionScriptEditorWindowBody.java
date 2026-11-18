@@ -7,6 +7,8 @@ import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.action.ActionFavoritesManager;
 import de.keksuccino.fancymenu.customization.action.ActionRegistry;
 import de.keksuccino.fancymenu.customization.action.Executable;
+import de.keksuccino.fancymenu.customization.aiexport.AiExportMenus;
+import de.keksuccino.fancymenu.customization.aiexport.exporters.ActionScriptAiExporter;
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.CommentExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
@@ -504,6 +506,11 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                     this.onAppendElse(target);
                 }).addIsActiveSupplier((menu, entry) -> this.canAppendElseBlock(this.getContextMenuTargetEntry()))
                 .setIcon(MaterialIcons.LINK);
+
+        this.rightClickContextMenu.addSeparatorEntry("separator_before_ai_export");
+
+        // Exports the script like it is in the editor, so unsaved changes are part of the export
+        AiExportMenus.addExportSubMenu(this.rightClickContextMenu, "export_action_script_for_ai", Component.translatable("fancymenu.ai_export.action_script"), () -> ActionScriptAiExporter.export(this.executableBlock));
 
         // Reopens only after all entries got added, because the restored sub menu path gets resolved by entry identifiers
         if (reopen || wasOpen) {

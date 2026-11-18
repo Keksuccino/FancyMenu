@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor;
 
+import de.keksuccino.fancymenu.customization.aiexport.AiExportMenus;
+import de.keksuccino.fancymenu.customization.aiexport.exporters.TextAiExporter;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.input.InputConstants;
@@ -347,6 +349,10 @@ public class TextEditorWindowBody extends PiPWindowBody {
                     this.history.stepForward();
                 }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.redo"))
                 .setIcon(MaterialIcons.REDO);
+
+        this.rightClickContextMenu.addSeparatorEntry("separator_before_ai_export");
+
+        AiExportMenus.addExportSubMenu(this.rightClickContextMenu, "export_text_for_ai", Component.translatable("fancymenu.ai_export.text"), () -> TextAiExporter.export(this.getText()));
 
     }
 

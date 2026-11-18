@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.dialog.message;
 
+import de.keksuccino.fancymenu.customization.aiexport.AiExportMenus;
+import de.keksuccino.fancymenu.customization.aiexport.exporters.DialogAiExporter;
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -46,6 +48,8 @@ public class MessageDialogBody extends PiPWindowBody {
     private ExtendedButton okayButton;
     @Nullable
     private ExtendedButton alternativeButton;
+    @Nullable
+    private ExtendedButton aiExportButton;
     @Nullable
     private Component acceptLabel;
     @Nullable
@@ -163,7 +167,14 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
     private void updateButtonPositions() {
         int y = this.height - BUTTON_HEIGHT - BUTTON_BOTTOM_PADDING;
         if (this.okayButton != null) {
-            this.okayButton.setX((this.width - BUTTON_WIDTH) / 2);
+            if (this.aiExportButton != null) {
+                int x = (this.width - ((BUTTON_WIDTH * 2) + BUTTON_GAP)) / 2;
+                this.aiExportButton.setX(x);
+                this.aiExportButton.setY(y);
+                this.okayButton.setX(x + BUTTON_WIDTH + BUTTON_GAP);
+            } else {
+                this.okayButton.setX((this.width - BUTTON_WIDTH) / 2);
+            }
             this.okayButton.setY(y);
         } else if (this.cancelButton != null && this.acceptButton != null) {
             int buttonCount = (this.alternativeButton != null) ? 3 : 2;
@@ -200,6 +211,10 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
             this.removeWidget(this.alternativeButton);
             this.alternativeButton = null;
         }
+        if (this.aiExportButton != null) {
+            this.removeWidget(this.aiExportButton);
+            this.aiExportButton = null;
+        }
 
         if (isOkOnlyMode()) {
             this.okayButton = new ExtendedButton(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT, Component.translatable("fancymenu.common_components.ok"), (button) -> {
@@ -211,6 +226,17 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
             this.okayButton.setNavigatable(false);
             this.addRenderableWidget(this.okayButton);
             UIBase.applyDefaultWidgetSkinTo(this.okayButton, UIBase.shouldBlur());
+            // Errors and warnings that only inform the user are what users ask for help with, so they can export them for AI chats
+            if ((this.style == MessageDialogStyle.ERROR) || (this.style == MessageDialogStyle.WARNING)) {
+                this.aiExportButton = new ExtendedButton(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT, Component.translatable("fancymenu.ai_export"), (button) -> {
+                    AiExportMenus.openMenuAtMouse(AiExportMenus.buildExportMenu(() -> DialogAiExporter.export(this.message, this.style)));
+                });
+                this.aiExportButton.setUITooltipSupplier(consumes -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.ai_export.desc")));
+                this.aiExportButton.setFocusable(false);
+                this.aiExportButton.setNavigatable(false);
+                this.addRenderableWidget(this.aiExportButton);
+                UIBase.applyDefaultWidgetSkinTo(this.aiExportButton, UIBase.shouldBlur());
+            }
         } else {
             this.cancelButton = new ExtendedButton(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT, Component.translatable("fancymenu.common_components.cancel"), (button) -> {
                 handleResult(false);

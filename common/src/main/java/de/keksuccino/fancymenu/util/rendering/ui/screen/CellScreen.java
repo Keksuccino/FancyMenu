@@ -47,6 +47,12 @@ import java.util.function.Supplier;
 public abstract class CellScreen extends Screen implements InitialWidgetFocusScreen {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final int DESCRIPTION_AREA_MIN_HEIGHT = 40;
+    /** Smaller than the normal minimum, because in small windows a short description area is better than one that overlaps the buttons below it. */
+    private static final int DESCRIPTION_AREA_MIN_FITTED_HEIGHT = 20;
+    private static final int DESCRIPTION_TIPS_TOP_SPACING = 4;
+    private static final int DESCRIPTION_TIPS_SPACING = 2;
+    private static final int DESCRIPTION_TIPS_LINE_SPACING = 2;
 
     public ScrollArea scrollArea;
     @Nullable
@@ -277,7 +283,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
             // Initialize description area
             this.descriptionScrollArea = new ScrollArea(0, 0, 0, 0);
             this.descriptionScrollArea.setWidth((this.width / 2) - 40, true);
-            this.descriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
+            this.descriptionScrollArea.setHeight(Math.max(DESCRIPTION_AREA_MIN_HEIGHT, (this.height / 2) - 50 - 25), true);
             this.descriptionScrollArea.setX(this.width - 20 - this.descriptionScrollArea.getWidthWithBorder(), true);
             this.descriptionScrollArea.setY(50 + 15, true);
             this.descriptionScrollArea.horizontalScrollBar.active = false;
@@ -337,8 +343,68 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
 
         AbstractWidget topRightSideWidget = this.layoutRightSideWidgets(true);
 
+        this.fitDescriptionAreaAboveRightSideWidgets(topRightSideWidget);
+
         this.autoScaleScreen(topRightSideWidget);
 
+    }
+
+    /**
+     * Makes the description area shorter when the right side widgets reach up to it, so they never overlap it or the tips below it.
+     */
+    private void fitDescriptionAreaAboveRightSideWidgets(@Nullable AbstractWidget topRightSideWidget) {
+        if (!this.descriptionAreaEnabled || (this.descriptionScrollArea == null) || (topRightSideWidget == null)) return;
+        float maxBottom = topRightSideWidget.getY() - this.getRightSideDefaultSpaceBetweenWidgets() - this.getDescriptionAreaTipsHeight();
+        float maxHeight = maxBottom - this.descriptionScrollArea.getYWithBorder();
+        if (this.descriptionScrollArea.getHeightWithBorder() > maxHeight) {
+            this.descriptionScrollArea.setHeight(Math.max(DESCRIPTION_AREA_MIN_FITTED_HEIGHT, maxHeight), true);
+        }
+    }
+
+    /**
+     * Small tips that get shown right-aligned below the description area, like how to use the cells of the screen.
+     */
+    @NotNull
+    protected List<Component> getDescriptionAreaTips() {
+        return List.of();
+    }
+
+    @NotNull
+    private List<List<MutableComponent>> wrapDescriptionAreaTips() {
+        List<Component> tips = this.getDescriptionAreaTips();
+        if (tips.isEmpty() || (this.descriptionScrollArea == null)) return List.of();
+        int color = UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_interface_widget_label_color_inactive.getColorInt() : UIBase.getUITheme().ui_interface_widget_label_color_inactive.getColorInt();
+        float width = this.descriptionScrollArea.getWidthWithBorder();
+        List<List<MutableComponent>> wrapped = new ArrayList<>();
+        for (Component tip : tips) {
+            wrapped.add(UIBase.lineWrapUIComponentsSmall(tip.copy().withStyle(Style.EMPTY.withColor(color)), width));
+        }
+        return wrapped;
+    }
+
+    private float getDescriptionAreaTipsHeight() {
+        List<List<MutableComponent>> tips = this.wrapDescriptionAreaTips();
+        if (tips.isEmpty()) return 0;
+        float height = DESCRIPTION_TIPS_TOP_SPACING;
+        for (List<MutableComponent> tip : tips) {
+            height += tip.size() * (int) (UIBase.getUITextHeightSmall() + DESCRIPTION_TIPS_LINE_SPACING);
+        }
+        return height + ((tips.size() - 1) * DESCRIPTION_TIPS_SPACING);
+    }
+
+    private void renderDescriptionAreaTips(@NotNull GuiGraphics graphics) {
+        List<List<MutableComponent>> tips = this.wrapDescriptionAreaTips();
+        if (tips.isEmpty()) return;
+        int descEndX = (int) (this.descriptionScrollArea.getXWithBorder() + this.descriptionScrollArea.getWidthWithBorder());
+        int lineY = (int) (this.descriptionScrollArea.getYWithBorder() + this.descriptionScrollArea.getHeightWithBorder()) + DESCRIPTION_TIPS_TOP_SPACING;
+        for (int i = 0; i < tips.size(); i++) {
+            if (i > 0) lineY += DESCRIPTION_TIPS_SPACING;
+            for (MutableComponent line : tips.get(i)) {
+                int lineWidth = (int) UIBase.getUITextWidthSmall(line);
+                UIBase.renderText(graphics, line, descEndX - lineWidth, lineY, -1, UIBase.getUITextSizeSmall());
+                lineY += (int) (UIBase.getUITextHeightSmall() + DESCRIPTION_TIPS_LINE_SPACING);
+            }
+        }
     }
 
     @Nullable
@@ -412,6 +478,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
 
         if (this.descriptionAreaEnabled && (this.descriptionScrollArea != null)) {
             this.descriptionScrollArea.render(graphics, mouseX, mouseY, partial);
+            this.renderDescriptionAreaTips(graphics);
         }
 
         this.scrollArea.render(graphics, mouseX, mouseY, partial);
