@@ -22,55 +22,74 @@ public class TextFormattingUtils {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final String FORMATTING_CODE_BLACK = "0";
-    private static final String FORMATTING_CODE_DARK_BLUE = "1";
-    private static final String FORMATTING_CODE_DARK_GREEN = "2";
-    private static final String FORMATTING_CODE_DARK_AQUA = "3";
-    private static final String FORMATTING_CODE_DARK_RED = "4";
-    private static final String FORMATTING_CODE_DARK_PURPLE = "5";
-    private static final String FORMATTING_CODE_ORANGE = "6";
-    private static final String FORMATTING_CODE_GREY = "7";
-    private static final String FORMATTING_CODE_DARK_GREY = "8";
-    private static final String FORMATTING_CODE_BLUE = "9";
-    private static final String FORMATTING_CODE_GREEN = "a";
-    private static final String FORMATTING_CODE_AQUA = "b";
-    private static final String FORMATTING_CODE_RED = "c";
-    private static final String FORMATTING_CODE_PURPLE = "d";
-    private static final String FORMATTING_CODE_YELLOW = "e";
-    private static final String FORMATTING_CODE_WHITE = "f";
-    private static final String FORMATTING_CODE_BOLD = "l";
-    private static final String FORMATTING_CODE_STRIKE = "m";
-    private static final String FORMATTING_CODE_UNDERLINE = "n";
-    private static final String FORMATTING_CODE_ITALIC = "o";
-    private static final String FORMATTING_CODE_MAGIC = "k";
-    private static final String FORMATTING_CODE_RESET = "r";
+    /**
+     * The codes {@link #replaceFormattingCodes(String, String, String)} converts, in the order of its replacement passes.
+     * {@link #isFormattingCode(char)} checks for the same characters and has to stay in sync with this.
+     */
+    private static final String[] FORMATTING_CODES = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f", "l", "m", "n", "o", "k", "r"};
 
+    /**
+     * Replaces the prefix of every formatting code in the text, for example {@code &a} with {@code §a}. Formatting codes are
+     * {@code 0-9} and the lowercase letters {@code a-f}, {@code k-o} and {@code r}; uppercase letters and all other characters stay as they are.
+     *
+     * <p>The result is defined as one full replacement pass per code, in the order of {@link #FORMATTING_CODES}, where every pass
+     * replaces each non-overlapping occurrence of the old prefix followed by its code from left to right. When neither prefix contains
+     * a code character, no pass can create, break or overlap an occurrence of another pass, so a single left-to-right pass that replaces
+     * every old prefix followed by a code gives exactly the same result. Prefixes with code characters (never used by FancyMenu itself)
+     * can affect later passes, so they get the passes one by one.</p>
+     *
+     * @return The text itself if it contains no formatting code with the old prefix, otherwise the converted text.
+     */
     @NotNull
     public static String replaceFormattingCodes(@NotNull String in, @NotNull String oldPrefix, @NotNull String newPrefix) {
         Objects.requireNonNull(in);
-        in = StringUtils.replace(in, oldPrefix + FORMATTING_CODE_BLACK, newPrefix + FORMATTING_CODE_BLACK);
-        in = StringUtils.replace(in, oldPrefix + FORMATTING_CODE_DARK_BLUE, newPrefix + FORMATTING_CODE_DARK_BLUE);
-        in = StringUtils.replace(in, oldPrefix + FORMATTING_CODE_DARK_GREEN, newPrefix + FORMATTING_CODE_DARK_GREEN);
-        in = StringUtils.replace(in, oldPrefix + FORMATTING_CODE_DARK_AQUA, newPrefix + FORMATTING_CODE_DARK_AQUA);
-        in = StringUtils.replace(in, oldPrefix + FORMATTING_CODE_DARK_RED, newPrefix + FORMATTING_CODE_DARK_RED);
-        in = StringUtils.replace(in, oldPrefix + FORMATTING_CODE_DARK_PURPLE, newPrefix + FORMATTING_CODE_DARK_PURPLE);
-        in = StringUtils.replace(in, oldPrefix + FORMATTING_CODE_ORANGE, newPrefix + FORMATTING_CODE_ORANGE);
-        in = StringUtils.replace(in, oldPrefix + FORMATTING_CODE_GREY, newPrefix + FORMATTING_CODE_GREY);
-        in = StringUtils.replace(in, oldPrefix + FORMATTING_CODE_DARK_GREY, newPrefix + FORMATTING_CODE_DARK_GREY);
-        in = StringUtils.replace(in, oldPrefix + FORMATTING_CODE_BLUE, newPrefix + FORMATTING_CODE_BLUE);
-        in = StringUtils.replace(in, oldPrefix + FORMATTING_CODE_GREEN, newPrefix + FORMATTING_CODE_GREEN);
-        in = StringUtils.replace(in, oldPrefix + FORMATTING_CODE_AQUA, newPrefix + FORMATTING_CODE_AQUA);
-        in = StringUtils.replace(in, oldPrefix + FORMATTING_CODE_RED, newPrefix + FORMATTING_CODE_RED);
-        in = StringUtils.replace(in, oldPrefix + FORMATTING_CODE_PURPLE, newPrefix + FORMATTING_CODE_PURPLE);
-        in = StringUtils.replace(in, oldPrefix + FORMATTING_CODE_YELLOW, newPrefix + FORMATTING_CODE_YELLOW);
-        in = StringUtils.replace(in, oldPrefix + FORMATTING_CODE_WHITE, newPrefix + FORMATTING_CODE_WHITE);
-        in = StringUtils.replace(in, oldPrefix + FORMATTING_CODE_BOLD, newPrefix + FORMATTING_CODE_BOLD);
-        in = StringUtils.replace(in, oldPrefix + FORMATTING_CODE_STRIKE, newPrefix + FORMATTING_CODE_STRIKE);
-        in = StringUtils.replace(in, oldPrefix + FORMATTING_CODE_UNDERLINE, newPrefix + FORMATTING_CODE_UNDERLINE);
-        in = StringUtils.replace(in, oldPrefix + FORMATTING_CODE_ITALIC, newPrefix + FORMATTING_CODE_ITALIC);
-        in = StringUtils.replace(in, oldPrefix + FORMATTING_CODE_MAGIC, newPrefix + FORMATTING_CODE_MAGIC);
-        in = StringUtils.replace(in, oldPrefix + FORMATTING_CODE_RESET, newPrefix + FORMATTING_CODE_RESET);
+        Objects.requireNonNull(oldPrefix);
+        Objects.requireNonNull(newPrefix);
+        if (containsFormattingCode(oldPrefix) || containsFormattingCode(newPrefix)) return replaceFormattingCodesPassByPass(in, oldPrefix, newPrefix);
+        int prefixLength = oldPrefix.length();
+        // A prefix needs a code character behind it, so prefixes that start after this index can't be part of a code
+        int lastCodePrefixStart = in.length() - prefixLength - 1;
+        StringBuilder replaced = null;
+        int copiedUntil = 0;
+        int prefixStart = indexOfPrefix(in, oldPrefix, 0);
+        while ((prefixStart >= 0) && (prefixStart <= lastCodePrefixStart)) {
+            char code = in.charAt(prefixStart + prefixLength);
+            if (isFormattingCode(code)) {
+                if (replaced == null) replaced = new StringBuilder(in.length() + 16);
+                replaced.append(in, copiedUntil, prefixStart).append(newPrefix).append(code);
+                copiedUntil = prefixStart + prefixLength + 1;
+                prefixStart = indexOfPrefix(in, oldPrefix, copiedUntil);
+            } else {
+                // Continue right behind the start of this prefix, because the next one can overlap it (like the second & of &&a)
+                prefixStart = indexOfPrefix(in, oldPrefix, prefixStart + 1);
+            }
+        }
+        if (replaced == null) return in;
+        return replaced.append(in, copiedUntil, in.length()).toString();
+    }
+
+    private static int indexOfPrefix(@NotNull String text, @NotNull String prefix, int fromIndex) {
+        // The char search is much faster for short texts, and all of FancyMenu's prefixes are one char long
+        return (prefix.length() == 1) ? text.indexOf(prefix.charAt(0), fromIndex) : text.indexOf(prefix, fromIndex);
+    }
+
+    @NotNull
+    private static String replaceFormattingCodesPassByPass(@NotNull String in, @NotNull String oldPrefix, @NotNull String newPrefix) {
+        for (String code : FORMATTING_CODES) {
+            in = StringUtils.replace(in, oldPrefix + code, newPrefix + code);
+        }
         return in;
+    }
+
+    private static boolean containsFormattingCode(@NotNull String text) {
+        for (int i = 0; i < text.length(); i++) {
+            if (isFormattingCode(text.charAt(i))) return true;
+        }
+        return false;
+    }
+
+    private static boolean isFormattingCode(char c) {
+        return ((c >= '0') && (c <= '9')) || ((c >= 'a') && (c <= 'f')) || ((c >= 'k') && (c <= 'o')) || (c == 'r');
     }
 
     /**
