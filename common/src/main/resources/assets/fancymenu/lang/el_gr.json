@@ -2469,6 +2469,8 @@
   "fancymenu.global_customizations.button_click_sound": "Προσαρμοσμένος ήχος κλικ κουμπιού",
   "fancymenu.global_customizations.button_labels": "Ετικέτες κουμπιών",
   "fancymenu.global_customizations.menu_background_texture": "Προσαρμοσμένη υφή φόντου μενού",
+  "fancymenu.global_customizations.menu_background_texture.preserve_aspect_ratio": "Διατήρηση αναλογίας υφής φόντου: %s",
+  "fancymenu.global_customizations.menu_background_texture.preserve_aspect_ratio.desc": "Όταν είναι ενεργό, η υφή κρατάει τις αρχικές της αναλογίες και γεμίζει όλη την οθόνη. Ό,τι δεν χωράει κόβεται στις άκρες.\n\nΌταν είναι ανενεργό, η υφή τεντώνεται για να ταιριάζει ακριβώς στην οθόνη, κάτι που μπορεί να την κάνει να φαίνεται παραμορφωμένη.",
   "fancymenu.global_customizations.menu_music_tracks": "Προσαρμοσμένα κομμάτια μουσικής μενού",
   "fancymenu.global_customizations.menu_music_tracks.add": "Προσθήκη κομματιού",
   "fancymenu.global_customizations.menu_music_tracks.clear": "Καθαρισμός κομματιών",

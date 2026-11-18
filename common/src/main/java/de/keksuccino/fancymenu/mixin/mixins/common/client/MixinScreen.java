@@ -236,7 +236,7 @@ public abstract class MixinScreen implements CustomizableScreen {
         if (customBackground == null) return false;
         GlStateManager._enableBlend();
         try {
-            if (!GuiTextureCoverRenderer.render(graphics, customBackground, 0, 0, this.width, this.height)) return false;
+            if (!GuiTextureCoverRenderer.render(graphics, customBackground, 0, 0, this.width, this.height, GlobalCustomizationHandler.isCustomMenuBackgroundAspectRatioPreserved())) return false;
             RenderingUtils.resetShaderColor(graphics);
             return true;
         } finally {

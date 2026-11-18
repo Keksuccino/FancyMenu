@@ -2469,6 +2469,8 @@
   "fancymenu.global_customizations.button_click_sound": "Son personnalisé de clic de bouton",
   "fancymenu.global_customizations.button_labels": "Libellés des boutons",
   "fancymenu.global_customizations.menu_background_texture": "Texture d’arrière-plan du menu personnalisée",
+  "fancymenu.global_customizations.menu_background_texture.preserve_aspect_ratio": "Conserver le ratio d’aspect de la texture d’arrière-plan : %s",
+  "fancymenu.global_customizations.menu_background_texture.preserve_aspect_ratio.desc": "Quand c’est activé, la texture garde ses proportions d’origine et remplit quand même tout l’écran. Ce qui dépasse est coupé sur les bords.\n\nQuand c’est désactivé, la texture est étirée pour remplir l’écran pile, ce qui peut la faire paraître écrasée.",
   "fancymenu.global_customizations.menu_music_tracks": "Musiques de menu personnalisées",
   "fancymenu.global_customizations.menu_music_tracks.add": "Ajouter une piste",
   "fancymenu.global_customizations.menu_music_tracks.clear": "Effacer les pistes",

@@ -143,7 +143,7 @@ public final class SeamlessWorldLoadingHandler {
         com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
         try {
             RenderingUtils.resetShaderColor(graphics);
-            return GuiTextureCoverRenderer.render(graphics, location, x, y, width, height, textureWidth, textureHeight);
+            return GuiTextureCoverRenderer.render(graphics, location, x, y, width, height, textureWidth, textureHeight, true);
         } finally {
             RenderingUtils.resetShaderColor(graphics);
             com.mojang.blaze3d.opengl.GlStateManager._disableBlend();

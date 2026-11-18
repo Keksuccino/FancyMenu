@@ -2469,6 +2469,8 @@
   "fancymenu.global_customizations.button_click_sound": "Custom Button Click Sound",
   "fancymenu.global_customizations.button_labels": "Button Labels",
   "fancymenu.global_customizations.menu_background_texture": "Custom Menu Background Texture",
+  "fancymenu.global_customizations.menu_background_texture.preserve_aspect_ratio": "Preserve Background Texture Aspect Ratio: %s",
+  "fancymenu.global_customizations.menu_background_texture.preserve_aspect_ratio.desc": "When enabled, the texture keeps its original proportions and still fills the whole screen. Any parts that don't fit get cut off at the edges.\n\nWhen disabled, the texture gets stretched to fit the screen exactly, which can make it look squished.",
   "fancymenu.global_customizations.menu_music_tracks": "Custom Menu Music Tracks",
   "fancymenu.global_customizations.menu_music_tracks.add": "Add Track",
   "fancymenu.global_customizations.menu_music_tracks.clear": "Clear Tracks",
