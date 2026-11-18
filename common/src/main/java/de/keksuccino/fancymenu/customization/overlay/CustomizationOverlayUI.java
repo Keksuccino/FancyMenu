@@ -65,6 +65,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.theme.UIColorThemeRegistry;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.WidgetLabelAlignment;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
@@ -795,6 +796,10 @@ public class CustomizationOverlayUI {
                 FancyMenu.getOptions().globalButtonLabelScale.getDefaultValue(),
                 MaterialIcons.FORMAT_SIZE);
 
+        addGlobalLabelAlignmentMenuEntry(buttonLabelMenu, "button_label_alignment",
+                GlobalCustomizationHandler.getGlobalButtonLabelAlignment(),
+                alignment -> FancyMenu.getOptions().globalButtonLabelAlignment.setValue(alignment.getSerializedName()));
+
         buttonLabelMenu.addValueCycleEntry("button_label_shadow",
                         CommonCycles.cycleEnabledDisabled("fancymenu.elements.widgets.label.shadow", FancyMenu.getOptions().globalButtonLabelShadow.getValue())
                                 .addCycleListener(cycle -> FancyMenu.getOptions().globalButtonLabelShadow.setValue(cycle.getAsBoolean())))
@@ -978,6 +983,10 @@ public class CustomizationOverlayUI {
                 FancyMenu.getOptions().globalSliderLabelScale.getDefaultValue(),
                 MaterialIcons.FORMAT_SIZE);
 
+        addGlobalLabelAlignmentMenuEntry(sliderLabelMenu, "slider_label_alignment",
+                GlobalCustomizationHandler.getGlobalSliderLabelAlignment(),
+                alignment -> FancyMenu.getOptions().globalSliderLabelAlignment.setValue(alignment.getSerializedName()));
+
         sliderLabelMenu.addValueCycleEntry("slider_label_shadow",
                         CommonCycles.cycleEnabledDisabled("fancymenu.elements.widgets.label.shadow", FancyMenu.getOptions().globalSliderLabelShadow.getValue())
                                 .addCycleListener(cycle -> FancyMenu.getOptions().globalSliderLabelShadow.setValue(cycle.getAsBoolean())))
@@ -1134,6 +1143,14 @@ public class CustomizationOverlayUI {
 
         return addTo.addSubMenuEntry(entryIdentifier, label, subMenu)
                 .setIcon(icon);
+    }
+
+    private static void addGlobalLabelAlignmentMenuEntry(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull WidgetLabelAlignment currentAlignment, @NotNull Consumer<WidgetLabelAlignment> alignmentSetter) {
+        addTo.addValueCycleEntry(entryIdentifier,
+                        CommonCycles.cycleOrangeValue(WidgetLabelAlignment.LOCALIZATION_KEY, Arrays.asList(WidgetLabelAlignment.values()), currentAlignment)
+                                .setValueNameSupplier(alignment -> Component.translatable(alignment.getLocalizationKey()).getString())
+                                .addCycleListener(alignmentSetter))
+                .setIcon(MaterialIcons.FORMAT_ALIGN_CENTER);
     }
 
     private static ContextMenu.ClickableContextMenuEntry<?> addGlobalLabelScaleMenuEntry(@NotNull ContextMenu addTo, @NotNull String entryIdentifier,
