@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.lifecycle;
 
+import de.keksuccino.fancymenu.customization.global.SeamlessWorldLoadingHandler;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
@@ -46,6 +47,8 @@ public final class ClientShutdownHandler {
             runCleanup("server cache", ServerCache::shutdown);
             runCleanup("screen audio playback", ScreenCustomizationLayerHandler::shutdown);
             runCleanup("layouts", LayoutHandler::shutdown);
+            // Finishes the GPU read back of the screenshot of a world that just got left, so it has to run while the renderer is still alive.
+            runCleanup("seamless world loading screenshots", SeamlessWorldLoadingHandler::shutdown);
             // Stop recurring work before any resource it can touch is disposed. All managed workers are daemons as a final fallback.
             runCleanup("FancyMenu executors", FancyMenuExecutors::shutdownAll);
             runCleanup("deferred Watermedia players", WatermediaDeferredPlayerReleaseTracker::shutdown);
