@@ -54,6 +54,14 @@ public class OncePerSessionRequirement extends Requirement {
 
     }
 
+    /**
+     * Checking it remembers the requirement instance as seen, so every check after the first one is not met anymore.
+     */
+    @Override
+    public boolean hasCheckSideEffects() {
+        return true;
+    }
+
     @Override
     public @NotNull Component getDisplayName() {
         return Component.translatable("fancymenu.requirements.once_per_session");

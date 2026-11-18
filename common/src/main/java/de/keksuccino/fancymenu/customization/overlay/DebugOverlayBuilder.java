@@ -1,7 +1,5 @@
 package de.keksuccino.fancymenu.customization.overlay;
 
-import com.mojang.blaze3d.platform.GLX;
-import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
@@ -13,6 +11,7 @@ import de.keksuccino.fancymenu.customization.slideshow.ExternalTextureSlideshowR
 import de.keksuccino.fancymenu.customization.slideshow.SlideshowHandler;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.PerformanceUtils;
+import de.keksuccino.fancymenu.util.SystemSpecsUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -188,13 +187,13 @@ public class DebugOverlayBuilder {
             return usage * 100.0D;
         }, 0.0D, 100.0D);
         overlay.addLine("cpu_info", DebugOverlay.LinePosition.TOP_LEFT, consumes ->
-                Component.translatable("fancymenu.overlay.debug.cpu", safeReadSystemInfo("cpu_info", GLX::_getCpuInfo))
+                Component.translatable("fancymenu.overlay.debug.cpu", safeReadSystemInfo("cpu_info", SystemSpecsUtils::getCpuInfo))
         );
         overlay.addLine("gpu_info", DebugOverlay.LinePosition.TOP_LEFT, consumes ->
                 Component.translatable(
                         "fancymenu.overlay.debug.gpu",
-                        safeReadSystemInfo("gpu_renderer", () -> RenderSystem.getDevice().getRenderer()),
-                        safeReadSystemInfo("gpu_opengl", () -> RenderSystem.getDevice().getVersion())
+                        safeReadSystemInfo("gpu_renderer", SystemSpecsUtils::getGpuRenderer),
+                        safeReadSystemInfo("gpu_opengl", SystemSpecsUtils::getGpuDriverInfo)
                 )
         );
 
