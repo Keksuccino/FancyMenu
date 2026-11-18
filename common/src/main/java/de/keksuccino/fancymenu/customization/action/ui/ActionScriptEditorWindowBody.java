@@ -952,6 +952,26 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         }
     }
 
+    /**
+     * Returns how far the script list scrolls in one frame while the user drags an entry.<br>
+     * The list scrolls up while the pointer is on or above the top edge of its inner area, scrolls down while the pointer is on or below the bottom edge, and stays where it is otherwise.
+     *
+     * @param mouseY the vertical pointer position, in the same coordinate space as the list edges
+     * @param areaTop the top edge of the list's inner area
+     * @param areaBottom the bottom edge of the list's inner area
+     * @param scrollStep the scroll amount of one frame
+     * @return {@code -scrollStep} to scroll up, {@code scrollStep} to scroll down, or {@code 0}
+     */
+    static float getDragAutoScrollDelta(int mouseY, float areaTop, float areaBottom, float scrollStep) {
+        if (mouseY <= areaTop) {
+            return -scrollStep;
+        }
+        if (mouseY >= areaBottom) {
+            return scrollStep;
+        }
+        return 0.0F;
+    }
+
     @Override
     public void renderBody(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
@@ -964,11 +984,10 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         //Auto-scroll scroll area vertically if dragged and out-of-area
         if (this.renderTickDraggedEntry != null) {
             float scrollOffset = 0.1F * this.scriptEntriesScrollArea.verticalScrollBar.getWheelScrollSpeed();
-            if (mouseX <= this.scriptEntriesScrollArea.getInnerY()) {
-                this.scriptEntriesScrollArea.verticalScrollBar.setScroll(this.scriptEntriesScrollArea.verticalScrollBar.getScroll() - scrollOffset);
-            }
-            if (mouseY >= (this.scriptEntriesScrollArea.getInnerY() + this.scriptEntriesScrollArea.getInnerHeight())) {
-                this.scriptEntriesScrollArea.verticalScrollBar.setScroll(this.scriptEntriesScrollArea.verticalScrollBar.getScroll() + scrollOffset);
+            float areaTop = this.scriptEntriesScrollArea.getInnerY();
+            float scrollDelta = getDragAutoScrollDelta(mouseY, areaTop, areaTop + this.scriptEntriesScrollArea.getInnerHeight(), scrollOffset);
+            if (scrollDelta != 0.0F) {
+                this.scriptEntriesScrollArea.verticalScrollBar.setScroll(this.scriptEntriesScrollArea.verticalScrollBar.getScroll() + scrollDelta);
             }
         }
 
