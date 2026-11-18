@@ -93,27 +93,27 @@ public class PlaceholderParser {
         });
 
         // Replace generic reference of FancyMenu's variables ($$variable_name instead of using the "Get Variable" placeholder)
-        addParsingProcessor(ParsingProcessorTiming.AFTER_REPLACING_PLACEHOLDERS, in -> {
-            String replaced = in;
-            int index = 0;
-            List<UserVariableSnapshot> variables = VariableHandler.getVariableSnapshots();
-            for (char c : in.toCharArray()) {
-                if (c == DOLLAR_CHAR) {
-                    String sub = StringUtils.substring(in, index);
-                    if (StringUtils.startsWith(sub, SHORT_VARIABLE_PLACEHOLDER_PREFIX)) {
-                        for (UserVariableSnapshot variable : variables) {
-                            if (StringUtils.startsWith(sub, SHORT_VARIABLE_PLACEHOLDER_PREFIX + variable.name())) {
-                                replaced = StringUtils.replace(replaced, SHORT_VARIABLE_PLACEHOLDER_PREFIX + variable.name(), variable.value());
-                                break;
-                            }
-                        }
-                    }
-                }
-                index++;
-            }
-            return replaced;
-        });
+        addParsingProcessor(ParsingProcessorTiming.AFTER_REPLACING_PLACEHOLDERS, PlaceholderParser::resolveVariableReferences);
 
+    }
+
+    /**
+     * Replaces every {@code $$variable_name} reference to one of FancyMenu's variables with the value of the variable.
+     * At every {@code $$}, the variable with the longest name that starts there wins (see {@link ShortReferenceResolver}).
+     */
+    @NotNull
+    public static String resolveVariableReferences(@NotNull String text) {
+        if (!text.contains(ShortReferenceResolver.PREFIX)) return text;
+        return resolveVariableReferences(text, VariableHandler.getVariableSnapshots());
+    }
+
+    @NotNull
+    static String resolveVariableReferences(@NotNull String text, @NotNull List<UserVariableSnapshot> variables) {
+        if (variables.isEmpty()) return text;
+        return ShortReferenceResolver.resolve(text, (in, nameStart) -> {
+            UserVariableSnapshot variable = ShortReferenceResolver.findLongestName(in, nameStart, variables, UserVariableSnapshot::name);
+            return (variable != null) ? new ShortReferenceResolver.Reference(variable.name().length(), variable.value()) : null;
+        });
     }
 
     /**
