@@ -15,7 +15,8 @@ import java.util.function.Supplier;
  * like {@code (A AND B) OR (C AND D)}.<br><br>
  *
  * Group identifiers need to be unique in the whole group tree of a {@link RequirementContainer}, including all nested groups,
- * because serialized groups and requirements reference their group by its identifier.
+ * because serialized groups and requirements reference their group by its identifier. Different containers can use the same
+ * group identifiers.
  */
 @SuppressWarnings("all")
 public class RequirementGroup implements ValuePlaceholderHolder {
@@ -236,16 +237,19 @@ public class RequirementGroup implements ValuePlaceholderHolder {
     /**
      * Serializes the group with all its requirements and nested groups. Nested groups store the identifier of their
      * parent group, so they can get nested again when deserializing them.
+     *
+     * @param containerIdentifier The identifier of the container the group belongs to, which keeps groups of different containers
+     *                            apart when they get serialized to the same {@link PropertyContainer}.
      */
     @NotNull
-    public static PropertyContainer serializeRequirementGroup(@NotNull RequirementGroup group) {
+    public static PropertyContainer serializeRequirementGroup(@NotNull RequirementGroup group, @Nullable String containerIdentifier) {
         PropertyContainer sec = new PropertyContainer("requirement_group");
-        serializeRequirementGroupTo(group, null, sec);
+        serializeRequirementGroupTo(group, null, containerIdentifier, sec);
         return sec;
     }
 
-    private static void serializeRequirementGroupTo(@NotNull RequirementGroup group, @Nullable RequirementGroup parentGroup, @NotNull PropertyContainer target) {
-        String key = "[loading_requirement_group:" + group.identifier + "]";
+    private static void serializeRequirementGroupTo(@NotNull RequirementGroup group, @Nullable RequirementGroup parentGroup, @Nullable String containerIdentifier, @NotNull PropertyContainer target) {
+        String key = "[loading_requirement_group:" + group.identifier + "]" + RequirementContainer.serializeContainerTag(containerIdentifier);
         String value = "[group_mode:" + group.mode.name + "]";
         if (parentGroup != null) {
             value += "[parent_group:" + parentGroup.identifier + "]";
@@ -253,11 +257,11 @@ public class RequirementGroup implements ValuePlaceholderHolder {
         target.putProperty(key, value);
         for (RequirementInstance i : group.instances) {
             i.group = group;
-            List<String> l = RequirementInstance.serializeRequirementInstance(i);
+            List<String> l = RequirementInstance.serializeRequirementInstance(i, containerIdentifier);
             target.putProperty(l.get(0), l.get(1));
         }
         for (RequirementGroup g : group.groups) {
-            serializeRequirementGroupTo(g, group, target);
+            serializeRequirementGroupTo(g, group, containerIdentifier, target);
         }
     }
 
