@@ -12,7 +12,8 @@ import javax.annotation.Nullable;
 import java.util.Objects;
 
 /**
- * Renders a complete texture centered over a GUI area while preserving its aspect ratio.
+ * Renders a complete texture over a whole GUI area, either centered with its aspect ratio preserved (cropping the overflowing axis)
+ * or stretched to the exact size of the area.
  */
 public final class GuiTextureCoverRenderer {
 
@@ -20,25 +21,27 @@ public final class GuiTextureCoverRenderer {
     }
 
     /**
+     * @param preserveAspectRatio {@code true} to cover the area with the texture's aspect ratio preserved, {@code false} to stretch the texture to the area.
      * @return {@code true} when the resource was valid and a draw was submitted.
      */
-    public static boolean render(@Nonnull GuiGraphics graphics, @Nonnull RenderableResource resource, int x, int y, int width, int height) {
+    public static boolean render(@Nonnull GuiGraphics graphics, @Nonnull RenderableResource resource, int x, int y, int width, int height, boolean preserveAspectRatio) {
         Objects.requireNonNull(graphics);
         Objects.requireNonNull(resource);
         Identifier location = resource.getResourceLocation();
         if (location == null) {
             return false;
         }
-        return render(graphics, location, x, y, width, height, resource.getWidth(), resource.getHeight());
+        return render(graphics, location, x, y, width, height, resource.getWidth(), resource.getHeight(), preserveAspectRatio);
     }
 
     /**
+     * @param preserveAspectRatio {@code true} to cover the area with the texture's aspect ratio preserved, {@code false} to stretch the texture to the area.
      * @return {@code true} when the dimensions were valid and a draw was submitted.
      */
-    public static boolean render(@Nonnull GuiGraphics graphics, @Nonnull Identifier location, int x, int y, int width, int height, int textureWidth, int textureHeight) {
+    public static boolean render(@Nonnull GuiGraphics graphics, @Nonnull Identifier location, int x, int y, int width, int height, int textureWidth, int textureHeight, boolean preserveAspectRatio) {
         Objects.requireNonNull(graphics);
         Objects.requireNonNull(location);
-        CoverBounds bounds = calculateBounds(x, y, width, height, textureWidth, textureHeight);
+        CoverBounds bounds = calculateBounds(x, y, width, height, textureWidth, textureHeight, preserveAspectRatio);
         if (bounds == null) {
             return false;
         }
@@ -48,7 +51,7 @@ public final class GuiTextureCoverRenderer {
         // blit UV denominator repeats the image whenever the GUI scale makes the destination comparatively larger.
         graphics.enableScissor(x, y, x + width, y + height);
         try {
-            // Cover UVs reach the outer texture boundary, so clamp sampling prevents opposite-edge bleed while
+            // Full-image UVs reach the outer texture boundary, so clamp sampling prevents opposite-edge bleed while
             // GuiTextureSamplerUtil keeps the source sampler's filtering and mipmap behavior unchanged.
             RenderingUtils.submitBlit(graphics, RenderPipelines.GUI_TEXTURED, texture.getTextureView(), GuiTextureSamplerUtil.clampToEdge(texture.getSampler()), bounds.x(), bounds.y(), bounds.right(), bounds.bottom(), 0.0F, 1.0F, 0.0F, 1.0F, RenderingUtils.getShaderColor());
         } finally {
@@ -58,9 +61,12 @@ public final class GuiTextureCoverRenderer {
     }
 
     @Nullable
-    static CoverBounds calculateBounds(int x, int y, int width, int height, int textureWidth, int textureHeight) {
+    static CoverBounds calculateBounds(int x, int y, int width, int height, int textureWidth, int textureHeight, boolean preserveAspectRatio) {
         if (width <= 0 || height <= 0 || textureWidth <= 0 || textureHeight <= 0) {
             return null;
+        }
+        if (!preserveAspectRatio) {
+            return new CoverBounds(x, y, width, height);
         }
 
         int[] renderSize = new AspectRatio(textureWidth, textureHeight).getAspectRatioSizeByMinimumSize(width, height);
@@ -87,4 +93,5 @@ public final class GuiTextureCoverRenderer {
             return this.y + this.height;
         }
     }
+
 }

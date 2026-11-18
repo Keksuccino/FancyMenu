@@ -206,7 +206,7 @@ public abstract class MixinScreen implements CustomizableScreen {
     private static boolean renderGlobalMenuBackground_FancyMenu(@NotNull GuiGraphics graphics, int x, int y, int width, int height) {
         RenderableResource customBackground = GlobalCustomizationHandler.getCustomMenuBackgroundTexture();
         if (customBackground == null) return false;
-        if (!GuiTextureCoverRenderer.render(graphics, customBackground, x, y, width, height)) return false;
+        if (!GuiTextureCoverRenderer.render(graphics, customBackground, x, y, width, height, GlobalCustomizationHandler.isCustomMenuBackgroundAspectRatioPreserved())) return false;
         RenderingUtils.resetShaderColor(graphics);
         return true;
     }

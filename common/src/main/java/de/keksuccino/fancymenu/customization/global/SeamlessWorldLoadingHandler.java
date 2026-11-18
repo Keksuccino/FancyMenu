@@ -141,7 +141,7 @@ public final class SeamlessWorldLoadingHandler {
         }
 
         RenderingUtils.resetShaderColor(graphics);
-        boolean rendered = GuiTextureCoverRenderer.render(graphics, location, x, y, width, height, textureWidth, textureHeight);
+        boolean rendered = GuiTextureCoverRenderer.render(graphics, location, x, y, width, height, textureWidth, textureHeight, true);
         RenderingUtils.resetShaderColor(graphics);
         return rendered;
     }
