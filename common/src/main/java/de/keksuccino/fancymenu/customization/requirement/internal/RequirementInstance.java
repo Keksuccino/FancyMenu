@@ -118,12 +118,16 @@ public class RequirementInstance implements ValuePlaceholderHolder {
         return i;
     }
 
+    /**
+     * @param containerIdentifier The identifier of the container the requirement belongs to. Requirements in groups need it to find
+     *                            their group again, because only the groups of the same container have unique identifiers.
+     */
     @NotNull
-    public static List<String> serializeRequirementInstance(@NotNull RequirementInstance instance) {
+    public static List<String> serializeRequirementInstance(@NotNull RequirementInstance instance, @Nullable String containerIdentifier) {
         List<String> l = new ArrayList<>();
         String key = "[loading_requirement:" + instance.requirement.getIdentifier() + "][requirement_mode:" + instance.mode.name + "]";
         if (instance.group != null) {
-            key += "[group:" + instance.group.identifier + "]";
+            key += "[group:" + instance.group.identifier + "]" + RequirementContainer.serializeContainerTag(containerIdentifier);
         }
         key += "[req_id:" + instance.instanceIdentifier + "]";
         l.add(key);

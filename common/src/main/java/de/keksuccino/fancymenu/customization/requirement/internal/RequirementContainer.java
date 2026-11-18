@@ -20,6 +20,7 @@ public class RequirementContainer implements ValuePlaceholderHolder {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final Map<String, Pair<Long, Boolean>> COOLDOWN_CACHE = new HashMap<>();
+    private static final String CONTAINER_TAG_PREFIX = "[container:";
 
     protected final List<RequirementGroup> groups = new ArrayList<>();
     protected final List<RequirementInstance> instances = new ArrayList<>();
@@ -292,17 +293,40 @@ public class RequirementContainer implements ValuePlaceholderHolder {
         container.putProperty(containerMetaKey, containerMetaValue);
         //Serialize groups, including their nested groups
         for (RequirementGroup g : this.groups) {
-            PropertyContainer sg = RequirementGroup.serializeRequirementGroup(g);
+            PropertyContainer sg = RequirementGroup.serializeRequirementGroup(g, this.identifier);
             for (Map.Entry<String, String> m : sg.getProperties().entrySet()) {
                 container.putProperty(m.getKey(), m.getValue());
             }
         }
         //Serialize instances
         for (RequirementInstance i : this.instances) {
-            List<String> l = RequirementInstance.serializeRequirementInstance(i);
+            List<String> l = RequirementInstance.serializeRequirementInstance(i, this.identifier);
             container.putProperty(l.get(0), l.get(1));
         }
         return container;
+    }
+
+    /**
+     * Groups and grouped requirements get tagged with the identifier of their container, because multiple containers can get
+     * serialized to the same {@link PropertyContainer}, but group identifiers are only unique per container. The tag always
+     * comes after the group identifier, so versions that don't know the tag still read the group identifier correctly.
+     */
+    @NotNull
+    static String serializeContainerTag(@Nullable String containerIdentifier) {
+        return (containerIdentifier != null) ? (CONTAINER_TAG_PREFIX + containerIdentifier + "]") : "";
+    }
+
+    /**
+     * @return The identifier of the container a serialized group or grouped requirement belongs to, or NULL if its key has no container tag.
+     */
+    @Nullable
+    static String deserializeContainerTag(@NotNull String key) {
+        int start = key.indexOf(CONTAINER_TAG_PREFIX);
+        if (start < 0) return null;
+        start += CONTAINER_TAG_PREFIX.length();
+        int end = key.indexOf(']', start);
+        String containerIdentifier = (end < 0) ? key.substring(start) : key.substring(start, end);
+        return containerIdentifier.isBlank() ? null : containerIdentifier;
     }
 
     @Nullable
@@ -322,15 +346,26 @@ public class RequirementContainer implements ValuePlaceholderHolder {
                 containerMetas.add(ListUtils.of(m.getKey(), m.getValue()));
             }
         }
-        RequirementContainer combined = deserializeToSingleContainer(serialized);
         if (containerMetas.isEmpty()) {
             //Legacy support for when requirement containers had no meta and there was only one requirement container per PropertyContainer
-            containers.add(combined);
+            containers.add(deserializeToSingleContainer(serialized));
         } else {
-            Map<String, RequirementGroup> groupsByIdentifier = new LinkedHashMap<>();
+            //Groups of each container get deserialized separately, because group identifiers are only unique per container.
+            //Legacy groups and all top-level requirements have no container tag, so they end up in the untagged container.
+            Map<String, RequirementContainer> taggedContainers = new LinkedHashMap<>();
+            RequirementContainer untaggedContainer = null;
+            for (Map.Entry<String, SerializedEntries> entries : collectSerializedEntriesByContainer(serialized).entrySet()) {
+                RequirementContainer deserialized = deserializeEntries(entries.getValue());
+                if (entries.getKey() == null) {
+                    untaggedContainer = deserialized;
+                } else {
+                    taggedContainers.put(entries.getKey(), deserialized);
+                }
+            }
             Map<String, RequirementInstance> instancesByIdentifier = new LinkedHashMap<>();
-            combined.groups.forEach(group -> groupsByIdentifier.putIfAbsent(group.identifier, group));
-            combined.instances.forEach(instance -> instancesByIdentifier.putIfAbsent(instance.instanceIdentifier, instance));
+            if (untaggedContainer != null) {
+                untaggedContainer.instances.forEach(instance -> instancesByIdentifier.putIfAbsent(instance.instanceIdentifier, instance));
+            }
             for (List<String> meta : containerMetas) {
                 String key = meta.get(0);
                 String value = meta.get(1);
@@ -363,7 +398,7 @@ public class RequirementContainer implements ValuePlaceholderHolder {
                             container.identifier = identifier;
                             //Find groups of container
                             for (String groupId : groupIdentifiers) {
-                                RequirementGroup group = groupsByIdentifier.get(groupId);
+                                RequirementGroup group = findListedGroup(groupId, taggedContainers.get(identifier), untaggedContainer, taggedContainers.values());
                                 if (group != null) addDeserializedGroupCopy(container, group);
                             }
                             //Find instances of container
@@ -381,7 +416,33 @@ public class RequirementContainer implements ValuePlaceholderHolder {
     }
 
     /**
-     * Copies a selected group out of the temporary combined deserialization container. Identified container metadata
+     * Finds a top-level group listed in the metadata of a container. The container's own group wins over a legacy group without
+     * container tag. Malformed metadata can also list groups of other containers, which get searched last.
+     */
+    @Nullable
+    private static RequirementGroup findListedGroup(@NotNull String groupIdentifier, @Nullable RequirementContainer ownContainer, @Nullable RequirementContainer untaggedContainer, @NotNull Collection<RequirementContainer> taggedContainers) {
+        RequirementGroup group = findTopLevelGroup(ownContainer, groupIdentifier);
+        if (group == null) group = findTopLevelGroup(untaggedContainer, groupIdentifier);
+        if (group == null) {
+            for (RequirementContainer c : taggedContainers) {
+                group = findTopLevelGroup(c, groupIdentifier);
+                if (group != null) break;
+            }
+        }
+        return group;
+    }
+
+    @Nullable
+    private static RequirementGroup findTopLevelGroup(@Nullable RequirementContainer container, @NotNull String groupIdentifier) {
+        if (container == null) return null;
+        for (RequirementGroup g : container.groups) {
+            if (g.identifier.equals(groupIdentifier)) return g;
+        }
+        return null;
+    }
+
+    /**
+     * Copies a selected group out of a temporary deserialization container. Identified container metadata
      * can be malformed and select the same source object more than once or for multiple containers, so the returned
      * containers must never share mutable groups or instances with each other.
      */
@@ -396,20 +457,51 @@ public class RequirementContainer implements ValuePlaceholderHolder {
         target.addInstance(instance);
     }
 
+    /**
+     * Deserializes all groups and requirements of the {@link PropertyContainer} to one container, no matter which container they belong to.
+     */
     @NotNull
     public static RequirementContainer deserializeToSingleContainer(@NotNull PropertyContainer serialized) {
+        SerializedEntries entries = new SerializedEntries();
+        for (Map.Entry<String, String> m : Objects.requireNonNull(serialized).getProperties().entrySet()) {
+            if (m.getKey().startsWith("[loading_requirement_group:")) {
+                entries.groups().add(m);
+            } else if (m.getKey().startsWith("[loading_requirement:")) {
+                entries.instances().add(m);
+            }
+        }
+        return deserializeEntries(entries);
+    }
+
+    /**
+     * Collects the serialized groups and requirements per container tag. Entries without container tag use the NULL key.
+     */
+    @NotNull
+    private static Map<String, SerializedEntries> collectSerializedEntriesByContainer(@NotNull PropertyContainer serialized) {
+        Map<String, SerializedEntries> entriesByContainer = new LinkedHashMap<>();
+        for (Map.Entry<String, String> m : serialized.getProperties().entrySet()) {
+            String key = m.getKey();
+            if (key.startsWith("[loading_requirement_group:")) {
+                entriesByContainer.computeIfAbsent(deserializeContainerTag(key), k -> new SerializedEntries()).groups().add(m);
+            } else if (key.startsWith("[loading_requirement:")) {
+                entriesByContainer.computeIfAbsent(deserializeContainerTag(key), k -> new SerializedEntries()).instances().add(m);
+            }
+        }
+        return entriesByContainer;
+    }
+
+    @NotNull
+    private static RequirementContainer deserializeEntries(@NotNull SerializedEntries entries) {
         RequirementContainer c = new RequirementContainer();
         Map<String, RequirementGroup> groupsByIdentifier = new LinkedHashMap<>();
         Map<String, String> parentGroupIdentifiers = new HashMap<>();
-        for (Map.Entry<String, String> m : Objects.requireNonNull(serialized).getProperties().entrySet()) {
-            if (m.getKey().startsWith("[loading_requirement_group:")) {
-                RequirementGroup g = RequirementGroup.deserializeRequirementGroup(m.getKey(), m.getValue(), c);
-                if ((g != null) && !groupsByIdentifier.containsKey(g.identifier)) {
-                    groupsByIdentifier.put(g.identifier, g);
-                    String parentGroupIdentifier = RequirementGroup.deserializeParentGroupIdentifier(m.getValue());
-                    if (parentGroupIdentifier != null) {
-                        parentGroupIdentifiers.put(g.identifier, parentGroupIdentifier);
-                    }
+        for (Map.Entry<String, String> m : entries.groups()) {
+            RequirementGroup g = RequirementGroup.deserializeRequirementGroup(m.getKey(), m.getValue(), c);
+            if ((g != null) && !groupsByIdentifier.containsKey(g.identifier)) {
+                groupsByIdentifier.put(g.identifier, g);
+                String parentGroupIdentifier = RequirementGroup.deserializeParentGroupIdentifier(m.getValue());
+                if (parentGroupIdentifier != null) {
+                    parentGroupIdentifiers.put(g.identifier, parentGroupIdentifier);
                 }
             }
         }
@@ -422,15 +514,13 @@ public class RequirementContainer implements ValuePlaceholderHolder {
                 c.addGroup(g);
             }
         }
-        for (Map.Entry<String, String> m : serialized.getProperties().entrySet()) {
-            if (m.getKey().startsWith("[loading_requirement:")) {
-                RequirementInstance i = RequirementInstance.deserializeRequirementInstance(m.getKey(), m.getValue(), c);
-                if (i != null) {
-                    if (i.group != null) {
-                        i.group.addInstance(i);
-                    } else {
-                        c.addInstance(i);
-                    }
+        for (Map.Entry<String, String> m : entries.instances()) {
+            RequirementInstance i = RequirementInstance.deserializeRequirementInstance(m.getKey(), m.getValue(), c);
+            if (i != null) {
+                if (i.group != null) {
+                    i.group.addInstance(i);
+                } else {
+                    c.addInstance(i);
                 }
             }
         }
@@ -451,6 +541,17 @@ public class RequirementContainer implements ValuePlaceholderHolder {
             g.setParentContainer(stack);
         }
         return stack;
+    }
+
+    /**
+     * Serialized groups and requirements, in their serialization order.
+     */
+    private record SerializedEntries(@NotNull List<Map.Entry<String, String>> groups, @NotNull List<Map.Entry<String, String>> instances) {
+
+        private SerializedEntries() {
+            this(new ArrayList<>(), new ArrayList<>());
+        }
+
     }
 
 }
