@@ -91,6 +91,10 @@ public class PacketHandler {
     }
 
     public static void sendHandshakeToClient(@NotNull ServerPlayer player) {
+        Objects.requireNonNull(player);
+        // Packets can only reach players that joined. Some loaders already report the channels of a client while they still create the
+        // network handler of its player, before the player joined and before anything can get sent to it.
+        if (!NETWORK_CAPABILITIES.isServerConnectionLive(getServer(player), Objects.requireNonNull(player.connection))) return;
         sendToClient(player, HandshakePacket.current());
     }
 

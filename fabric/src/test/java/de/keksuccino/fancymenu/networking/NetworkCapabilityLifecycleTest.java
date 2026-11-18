@@ -187,6 +187,27 @@ class NetworkCapabilityLifecycleTest {
     }
 
     @Test
+    void serverConnectionIsOnlyLiveFromJoinUntilLogoutOrStop() {
+        NetworkCapabilityLifecycle lifecycle = new NetworkCapabilityLifecycle();
+        Object server = new Object();
+        EqualIdentity connection = new EqualIdentity();
+
+        lifecycle.beginServerSession(server);
+        assertFalse(lifecycle.isServerConnectionLive(server, connection));
+        lifecycle.beginServerConnection(server, connection);
+        assertTrue(lifecycle.isServerConnectionLive(server, connection));
+        assertFalse(lifecycle.isServerConnectionLive(server, new EqualIdentity()));
+        assertFalse(lifecycle.isServerConnectionLive(new Object(), connection));
+
+        lifecycle.endServerConnection(server, connection);
+        assertFalse(lifecycle.isServerConnectionLive(server, connection));
+
+        lifecycle.beginServerConnection(server, connection);
+        lifecycle.endServerSession(server);
+        assertFalse(lifecycle.isServerConnectionLive(server, connection));
+    }
+
+    @Test
     void serverStopCleanupIsIdempotentAndRejectsLateHandshake() {
         NetworkCapabilityLifecycle lifecycle = new NetworkCapabilityLifecycle();
         Object server = new Object();
