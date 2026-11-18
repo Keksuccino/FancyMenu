@@ -2469,6 +2469,8 @@
   "fancymenu.global_customizations.button_click_sound": "自定义按钮点击音效",
   "fancymenu.global_customizations.button_labels": "按钮标签",
   "fancymenu.global_customizations.menu_background_texture": "自定义菜单背景材质",
+  "fancymenu.global_customizations.menu_background_texture.preserve_aspect_ratio": "保持背景材质宽高比：%s",
+  "fancymenu.global_customizations.menu_background_texture.preserve_aspect_ratio.desc": "启用后，材质会保持原本的比例，同时铺满整个屏幕，放不下的部分会在边缘被裁掉。\n\n禁用后，材质会被拉伸到刚好铺满屏幕，看起来可能会有点变形。",
   "fancymenu.global_customizations.menu_music_tracks": "自定义菜单音乐曲目",
   "fancymenu.global_customizations.menu_music_tracks.add": "添加曲目",
   "fancymenu.global_customizations.menu_music_tracks.clear": "清空曲目",

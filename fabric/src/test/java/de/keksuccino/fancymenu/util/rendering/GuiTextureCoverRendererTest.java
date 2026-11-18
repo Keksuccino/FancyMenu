@@ -105,6 +105,21 @@ class GuiTextureCoverRendererTest {
     }
 
     @Test
+    void stretchUsesTheFullTextureAndExactAreaForAnyAspectRatio() {
+        GuiTextureCoverRenderer.CoverRegion wide = GuiTextureCoverRenderer.calculateRegion(17, -9, 320, 180, 4096, 64, false);
+        GuiTextureCoverRenderer.CoverRegion tall = GuiTextureCoverRenderer.calculateRegion(0, 0, 1277, 694, 100, 400, false);
+        assertNotNull(wide);
+        assertNotNull(tall);
+
+        assertAll(() -> assertUv(wide, 0.0F, 1.0F, 0.0F, 1.0F), () -> assertUv(tall, 0.0F, 1.0F, 0.0F, 1.0F), () -> assertEquals(17.0F, wide.minX(), EPSILON), () -> assertEquals(337.0F, wide.maxX(), EPSILON), () -> assertEquals(-9.0F, wide.minY(), EPSILON), () -> assertEquals(171.0F, wide.maxY(), EPSILON), () -> assertEquals(1277.0F, tall.maxX(), EPSILON), () -> assertEquals(694.0F, tall.maxY(), EPSILON));
+    }
+
+    @Test
+    void stretchRejectsNonPositiveDimensions() {
+        assertAll(() -> assertNull(GuiTextureCoverRenderer.calculateRegion(0, 0, 0, 694, 2560, 1440, false)), () -> assertNull(GuiTextureCoverRenderer.calculateRegion(0, 0, 1277, -1, 2560, 1440, false)), () -> assertNull(GuiTextureCoverRenderer.calculateRegion(0, 0, 1277, 694, 2560, 0, false)));
+    }
+
+    @Test
     void shaderResourcesLinkTheCoverFragmentToTheSharedVertexFormat() throws IOException {
         String json = loadResource(COVER_JSON);
 
@@ -123,13 +138,13 @@ class GuiTextureCoverRendererTest {
     }
 
     private static GuiTextureCoverRenderer.CoverRegion requireRegion(int x, int y, int width, int height, int textureWidth, int textureHeight) {
-        GuiTextureCoverRenderer.CoverRegion region = GuiTextureCoverRenderer.calculateRegion(x, y, width, height, textureWidth, textureHeight);
+        GuiTextureCoverRenderer.CoverRegion region = GuiTextureCoverRenderer.calculateRegion(x, y, width, height, textureWidth, textureHeight, true);
         assertNotNull(region);
         return region;
     }
 
     private static GuiTextureCoverRenderer.CoverRegion nullableRegion(int width, int height, int textureWidth, int textureHeight) {
-        return GuiTextureCoverRenderer.calculateRegion(0, 0, width, height, textureWidth, textureHeight);
+        return GuiTextureCoverRenderer.calculateRegion(0, 0, width, height, textureWidth, textureHeight, true);
     }
 
     private static void assertUv(GuiTextureCoverRenderer.CoverRegion region, float minU, float maxU, float minV, float maxV) {
@@ -151,4 +166,5 @@ class GuiTextureCoverRendererTest {
             return new String(input.readAllBytes(), StandardCharsets.UTF_8);
         }
     }
+
 }

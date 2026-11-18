@@ -183,7 +183,7 @@ public abstract class MixinScreen implements CustomizableScreen, MenuBackgroundR
         }
         RenderableResource customBackground = GlobalCustomizationHandler.getCustomMenuBackgroundTexture();
         if (customBackground == null) return false;
-        if (!GuiTextureCoverRenderer.render(graphics, customBackground, 0, 0, this.width, this.height)) return false;
+        if (!GuiTextureCoverRenderer.render(graphics, customBackground, 0, 0, this.width, this.height, GlobalCustomizationHandler.isCustomMenuBackgroundAspectRatioPreserved())) return false;
         RenderingUtils.resetShaderColor(graphics);
         RenderSystem.disableBlend();
         this.menuBackgroundReplacementState_FancyMenu.markRendered();

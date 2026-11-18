@@ -17,7 +17,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 
 /**
- * Renders a texture as a centered aspect-ratio cover image bounded to a GUI area.
+ * Renders a complete texture over a whole GUI area, either as a centered cover image that preserves its aspect ratio (cropping the overflowing axis)
+ * or stretched to the exact size of the area.
  */
 public final class GuiTextureCoverRenderer {
 
@@ -32,25 +33,27 @@ public final class GuiTextureCoverRenderer {
     }
 
     /**
+     * @param preserveAspectRatio {@code true} to cover the area with the texture's aspect ratio preserved, {@code false} to stretch the texture to the area.
      * @return {@code true} when the resource was valid and its draw was submitted.
      */
-    public static boolean render(@NotNull GuiGraphics graphics, @NotNull RenderableResource resource, int x, int y, int width, int height) {
+    public static boolean render(@NotNull GuiGraphics graphics, @NotNull RenderableResource resource, int x, int y, int width, int height, boolean preserveAspectRatio) {
         Objects.requireNonNull(graphics);
         Objects.requireNonNull(resource);
         ResourceLocation location = resource.getResourceLocation();
         if (location == null) {
             return false;
         }
-        return render(graphics, location, x, y, width, height, resource.getWidth(), resource.getHeight());
+        return render(graphics, location, x, y, width, height, resource.getWidth(), resource.getHeight(), preserveAspectRatio);
     }
 
     /**
+     * @param preserveAspectRatio {@code true} to cover the area with the texture's aspect ratio preserved, {@code false} to stretch the texture to the area.
      * @return {@code true} when the dimensions were valid and the draw was submitted.
      */
-    public static boolean render(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, int x, int y, int width, int height, int textureWidth, int textureHeight) {
+    public static boolean render(@NotNull GuiGraphics graphics, @NotNull ResourceLocation location, int x, int y, int width, int height, int textureWidth, int textureHeight, boolean preserveAspectRatio) {
         Objects.requireNonNull(graphics);
         Objects.requireNonNull(location);
-        CoverRegion region = calculateRegion(x, y, width, height, textureWidth, textureHeight);
+        CoverRegion region = calculateRegion(x, y, width, height, textureWidth, textureHeight, preserveAspectRatio);
         if (region == null) {
             return false;
         }
@@ -62,7 +65,7 @@ public final class GuiTextureCoverRenderer {
     }
 
     @Nullable
-    static CoverRegion calculateRegion(int x, int y, int width, int height, int textureWidth, int textureHeight) {
+    static CoverRegion calculateRegion(int x, int y, int width, int height, int textureWidth, int textureHeight, boolean preserveAspectRatio) {
         if (width <= 0 || height <= 0 || textureWidth <= 0 || textureHeight <= 0) {
             return null;
         }
@@ -71,16 +74,19 @@ public final class GuiTextureCoverRenderer {
         float maxU = 1.0F;
         float minV = 0.0F;
         float maxV = 1.0F;
-        long textureScaledWidth = (long)textureWidth * height;
-        long areaScaledWidth = (long)width * textureHeight;
-        if (textureScaledWidth > areaScaledWidth) {
-            double visibleWidth = (double)areaScaledWidth / (double)textureScaledWidth;
-            minU = (float)((1.0D - visibleWidth) * 0.5D);
-            maxU = 1.0F - minU;
-        } else if (textureScaledWidth < areaScaledWidth) {
-            double visibleHeight = (double)textureScaledWidth / (double)areaScaledWidth;
-            minV = (float)((1.0D - visibleHeight) * 0.5D);
-            maxV = 1.0F - minV;
+        // Stretching keeps the full-texture UVs, so only the cover mode crops the overflowing axis.
+        if (preserveAspectRatio) {
+            long textureScaledWidth = (long)textureWidth * height;
+            long areaScaledWidth = (long)width * textureHeight;
+            if (textureScaledWidth > areaScaledWidth) {
+                double visibleWidth = (double)areaScaledWidth / (double)textureScaledWidth;
+                minU = (float)((1.0D - visibleWidth) * 0.5D);
+                maxU = 1.0F - minU;
+            } else if (textureScaledWidth < areaScaledWidth) {
+                double visibleHeight = (double)textureScaledWidth / (double)areaScaledWidth;
+                minV = (float)((1.0D - visibleHeight) * 0.5D);
+                maxV = 1.0F - minV;
+            }
         }
 
         // Convert after addition so extreme valid inputs cannot overflow integer coordinates.
@@ -130,4 +136,5 @@ public final class GuiTextureCoverRenderer {
 
     record CoverRegion(float minX, float maxX, float minY, float maxY, float minU, float maxU, float minV, float maxV) {
     }
+
 }
