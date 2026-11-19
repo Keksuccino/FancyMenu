@@ -27,7 +27,10 @@ import java.util.Map;
  */
 final class PlaceholderTemplate {
 
-    private static final int CACHE_MAX_ENTRIES = 1024;
+    // Holds a template for every text with placeholders a layout parses every frame, see PlaceholderEvaluator#CONTAINS_PLACEHOLDERS_MAX_ENTRIES.
+    // A miss compiles the whole text again, which costs more than replacing its placeholders. Templates of texts with several placeholders weigh
+    // more than the weight limit divided by this, so for them the weight limit is reached first.
+    private static final int CACHE_MAX_ENTRIES = 4096;
     // Sized for PlaceholderParser#MAX_TEXT_LENGTH, see there. A template weighs about two to four times its text, more for texts with deeply nested placeholders.
     private static final long CACHE_MAX_WEIGHT = 4_194_304L;
     private static final long OVERHEAD_WEIGHT = 64L;
