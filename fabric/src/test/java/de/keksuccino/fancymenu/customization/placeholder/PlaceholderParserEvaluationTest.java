@@ -141,6 +141,16 @@ class PlaceholderParserEvaluationTest {
     }
 
     @Test
+    void valuesWithPlaceholdersKeepTheirAmpersands() {
+        PlaceholderParser.replacePlaceholders(capture("evaluation_ampersand", echo("u?x=1&a=2")));
+        assertCapturedText("evaluation_ampersand", "u?x=1&a=2");
+        PlaceholderParser.replacePlaceholders(echo(capture("evaluation_ampersand_deep", echo(echo("&ared")))));
+        assertCapturedText("evaluation_ampersand_deep", "&ared");
+        PlaceholderParser.replacePlaceholders(capture("evaluation_ampersand_plain", "x&ay"));
+        assertCapturedText("evaluation_ampersand_plain", "x&ay");
+    }
+
+    @Test
     void textsStillGetTheirFormattingCodesConverted() {
         assertEquals("§ared §bblue", PlaceholderParser.replacePlaceholders(echo(echo("&ared")) + " &bblue"));
         assertEquals("&ared &bblue", PlaceholderParser.replacePlaceholdersPreservingFormattingCodes(echo(echo("&ared")) + " &bblue"));
