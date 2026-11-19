@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.variables;
 
+import de.keksuccino.fancymenu.customization.action.ValuePlaceholderHolder;
 import de.keksuccino.fancymenu.customization.placeholder.ShortReferenceResolver;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -20,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -110,6 +113,27 @@ class VariableStoreReferenceResolutionTest {
         store.setVariable("coins", "25");
 
         assertEquals("$$coins|25", store.resolveReferences("$$pointer|$$coins"));
+    }
+
+    @Test
+    void everyReferenceOfAVariableGetsReplaced() {
+        VariableStore store = this.createStore();
+        store.setVariable("coins", "25");
+        store.setVariable("coins_record", "80");
+
+        assertEquals("25/25/80", store.resolveReferences("$$coins/$$coins/$$coins_record"));
+    }
+
+    @Test
+    void elementValueLeavesLongerVariableReferenceForTheVariable() {
+        VariableStore store = this.createStore();
+        store.setVariable("value_backup", "hello");
+        Map<String, Supplier<String>> checkboxValues = Map.of("value", () -> "true");
+
+        String withValues = ValuePlaceholderHolder.applyValuePlaceholders("$$value_backup|$$value", checkboxValues, store.getVariableNames());
+
+        assertEquals("$$value_backup|true", withValues);
+        assertEquals("hello|true", store.resolveReferences(withValues));
     }
 
     @Test
