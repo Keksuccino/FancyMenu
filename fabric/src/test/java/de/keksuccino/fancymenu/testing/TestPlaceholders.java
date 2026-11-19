@@ -28,9 +28,11 @@ public final class TestPlaceholders {
     private static final String NULL_IDENTIFIER = "fancymenu_test_null";
     private static final String FAILING_IDENTIFIER = "fancymenu_test_failing";
     private static final String CAPTURE_IDENTIFIER = "fancymenu_test_capture";
+    private static final String MAIN_THREAD_VALUE_IDENTIFIER = "fancymenu_test_main_thread_value";
     private static final Map<String, String> VALUES = new ConcurrentHashMap<>();
     private static final Map<String, AtomicInteger> EVALUATIONS = new ConcurrentHashMap<>();
     private static final Map<String, DeserializedPlaceholderString> CAPTURED = new ConcurrentHashMap<>();
+    private static volatile Thread mainThread;
 
     static {
         register(ECHO_IDENTIFIER, List.of("text"), values -> values.get("text"));
@@ -44,7 +46,8 @@ public final class TestPlaceholders {
         register(FAILING_IDENTIFIER, List.of("text"), values -> {
             throw new IllegalStateException("Test placeholder failure");
         });
-        registerPlaceholder(new FunctionPlaceholder(CAPTURE_IDENTIFIER, List.of("key", "text"), null));
+        registerPlaceholder(new FunctionPlaceholder(CAPTURE_IDENTIFIER, List.of("key", "text"), null, false));
+        registerPlaceholder(new FunctionPlaceholder(MAIN_THREAD_VALUE_IDENTIFIER, List.of("key"), values -> VALUES.getOrDefault(values.get("key"), ""), true));
     }
 
     private TestPlaceholders() {
@@ -112,13 +115,26 @@ public final class TestPlaceholders {
         return CAPTURED.get(key);
     }
 
+    /**
+     * Like {@link #value(String)}, but it can't run asynchronously, so it only gets replaced on the thread set with {@link #setMainThread(Thread)},
+     * which stands in for the main thread of the game.
+     */
+    @NotNull
+    public static String mainThreadValue(@NotNull String key) {
+        return serialize(MAIN_THREAD_VALUE_IDENTIFIER, "key", key);
+    }
+
+    public static void setMainThread(@Nullable Thread thread) {
+        mainThread = thread;
+    }
+
     @NotNull
     private static String serialize(@NotNull String identifier, @NotNull String valueName, @NotNull String value) {
         return "{\"placeholder\":\"" + identifier + "\",\"values\":{\"" + valueName + "\":\"" + value + "\"}}";
     }
 
     private static void register(@NotNull String identifier, @NotNull List<String> valueNames, @NotNull Function<Map<String, String>, String> replacement) {
-        registerPlaceholder(new FunctionPlaceholder(identifier, valueNames, replacement));
+        registerPlaceholder(new FunctionPlaceholder(identifier, valueNames, replacement, false));
     }
 
     private static void registerPlaceholder(@NotNull FunctionPlaceholder placeholder) {
@@ -131,11 +147,13 @@ public final class TestPlaceholders {
         /** Null for the capture placeholder. */
         @Nullable
         private final Function<Map<String, String>, String> replacement;
+        private final boolean mainThreadOnly;
 
-        private FunctionPlaceholder(@NotNull String identifier, @NotNull List<String> valueNames, @Nullable Function<Map<String, String>, String> replacement) {
+        private FunctionPlaceholder(@NotNull String identifier, @NotNull List<String> valueNames, @Nullable Function<Map<String, String>, String> replacement, boolean mainThreadOnly) {
             super(identifier);
             this.valueNames = valueNames;
             this.replacement = replacement;
+            this.mainThreadOnly = mainThreadOnly;
         }
 
         @Override
@@ -170,10 +188,15 @@ public final class TestPlaceholders {
             return new DeserializedPlaceholderString(this.getIdentifier(), new HashMap<>(), serialize(this.getIdentifier(), this.valueNames.get(0), ""));
         }
 
-        // The default check needs a running Minecraft client to compare threads.
+        @Override
+        public boolean canRunAsync() {
+            return !this.mainThreadOnly;
+        }
+
+        // The default check needs a running Minecraft client to compare threads, so the main thread is the one set by the test.
         @Override
         public boolean checkAsync() {
-            return true;
+            return this.canRunAsync() || (Thread.currentThread() == mainThread);
         }
 
     }
