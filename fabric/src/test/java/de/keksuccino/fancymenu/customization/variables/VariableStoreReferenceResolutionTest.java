@@ -10,7 +10,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -28,13 +30,16 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * {@code $$name} references get resolved by {@link VariableStore#resolveReferences(String)} through a name index that only gets rebuilt
- * when the variable set changes. Every store here writes only to a temporary directory, and its debounced writes never run.
+ * when the variable set changes, and value placeholders find the names of variables through the same index. The revision of the store
+ * tells renderers when references can resolve differently. Every store here writes only to a temporary directory, and its debounced
+ * writes never run.
  */
 class VariableStoreReferenceResolutionTest {
 
@@ -130,10 +135,125 @@ class VariableStoreReferenceResolutionTest {
         store.setVariable("value_backup", "hello");
         Map<String, Supplier<String>> checkboxValues = Map.of("value", () -> "true");
 
-        String withValues = ValuePlaceholderHolder.applyValuePlaceholders("$$value_backup|$$value", checkboxValues, store.getVariableNames());
+        String withValues = ValuePlaceholderHolder.applyValuePlaceholders("$$value_backup|$$value", checkboxValues, store.getNameIndex());
 
         assertEquals("$$value_backup|true", withValues);
         assertEquals("hello|true", store.resolveReferences(withValues));
+    }
+
+    @Test
+    void valuePlaceholdersFollowTheVariableSetThroughTheNameIndex() {
+        VariableStore store = this.createStore();
+        store.setVariable("value_backup", "hello");
+        store.setVariable("val", "short");
+        Map<String, Supplier<String>> checkboxValues = Map.of("value", () -> "true");
+        String text = "$$value_backup|$$value|$$val";
+
+        assertEquals("$$value_backup|true|$$val", ValuePlaceholderHolder.applyValuePlaceholders(text, checkboxValues, store.getNameIndex()));
+        // A variable with the same name as the value placeholder loses against it
+        store.setVariable("value", "variable");
+        assertEquals("$$value_backup|true|$$val", ValuePlaceholderHolder.applyValuePlaceholders(text, checkboxValues, store.getNameIndex()));
+        store.removeVariable("value_backup");
+        assertEquals("true_backup|true|$$val", ValuePlaceholderHolder.applyValuePlaceholders(text, checkboxValues, store.getNameIndex()));
+        store.clearVariables();
+        assertEquals("true_backup|true|$$val", ValuePlaceholderHolder.applyValuePlaceholders(text, checkboxValues, store.getNameIndex()));
+    }
+
+    @Test
+    void nameIndexGetsReusedUntilTheVariableSetChangesAndKeepsTheNamesOfItsMoment() {
+        VariableStore store = this.createStore();
+        String text = "$$coins_record";
+        VariableNameIndex empty = store.getNameIndex();
+        assertSame(empty, store.getNameIndex());
+
+        store.setVariable("coins", "1");
+        VariableNameIndex withCoins = store.getNameIndex();
+        store.setVariable("coins", "2");
+        Variable handle = store.getVariable("coins");
+        assertNotNull(handle);
+        handle.setValue("3");
+        assertAll(() -> assertNotSame(empty, withCoins), () -> assertSame(withCoins, store.getNameIndex()));
+
+        store.setVariable("coins_record", "80");
+        VariableNameIndex withRecord = store.getNameIndex();
+        assertAll(() -> assertNotSame(withCoins, withRecord), () -> assertEquals(0, empty.findLongestNameLength(text, 2)), () -> assertEquals(5, withCoins.findLongestNameLength(text, 2)), () -> assertEquals(12, withRecord.findLongestNameLength(text, 2)));
+
+        store.removeVariable("coins_record");
+        assertAll(() -> assertNotSame(withRecord, store.getNameIndex()), () -> assertEquals(5, store.getNameIndex().findLongestNameLength(text, 2)), () -> assertEquals(12, withRecord.findLongestNameLength(text, 2)));
+    }
+
+    @Test
+    void nameLookupFindsNoEmptyNamesAndNothingAtTheEndOfTheText() {
+        VariableStore store = this.createStore();
+        store.setVariable("", "empty");
+        store.setVariable("a", "A");
+        VariableNameIndex index = store.getNameIndex();
+
+        assertAll(() -> assertEquals(0, index.findLongestNameLength("$$", 2)), () -> assertEquals(0, index.findLongestNameLength("$$b", 2)), () -> assertEquals(1, index.findLongestNameLength("$$ab", 2)), () -> assertEquals(0, index.findLongestNameLength("$$a", 3)));
+    }
+
+    @Test
+    void valuePlaceholdersGetTheirValuesWhileTheVariablesAreNotLocked() throws Exception {
+        VariableStore store = this.createStore();
+        store.setVariable("coins", "1");
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        try {
+            // Value placeholders can run any code. This one changes a variable on another thread and waits for it, which would never finish if the variables were locked meanwhile
+            Map<String, Supplier<String>> placeholders = Map.of("value", () -> {
+                try {
+                    executor.submit(() -> store.setVariable("coins", "2")).get(5L, TimeUnit.SECONDS);
+                } catch (Exception ex) {
+                    throw new IllegalStateException(ex);
+                }
+                return "true";
+            });
+
+            assertEquals("true|$$coins", ValuePlaceholderHolder.applyValuePlaceholders("$$value|$$coins", placeholders, store.getNameIndex()));
+            assertEquals("2", store.getVariableValue("coins"));
+        } finally {
+            executor.shutdownNow();
+            assertTrue(executor.awaitTermination(10L, TimeUnit.SECONDS));
+        }
+    }
+
+    @Test
+    void valuePlaceholdersResolveLikeWithACopyOfAllVariableNamesForGeneratedTexts() {
+        char[] alphabet = {'a', 'b', 'c', '_', '$', ' ', 'ü', '{', '"', '%', 'n', '\uD83D', '\uDE00', '\uDE01', '日'};
+        Random random = new Random(13579L);
+        int comparisons = 0;
+        for (int round = 0; round < 150; round++) {
+            VariableStore store = this.createStore();
+            List<String> names = new ArrayList<>();
+            int variableCount = random.nextInt(25);
+            for (int i = 0; i < variableCount; i++) {
+                String name = randomName(random, alphabet, names);
+                names.add(name);
+                store.setVariable(name, randomValue(random, alphabet, names));
+            }
+            for (int step = 0; step < 12; step++) {
+                Map<String, Supplier<String>> placeholders = new LinkedHashMap<>();
+                List<String> referencedNames = new ArrayList<>(names);
+                int placeholderCount = random.nextInt(5);
+                for (int i = 0; i < placeholderCount; i++) {
+                    // Names of variables, names that start with them or that they start with, and other names
+                    String name = randomName(random, alphabet, referencedNames);
+                    if (!names.isEmpty() && (random.nextInt(3) == 0)) name = names.get(random.nextInt(names.size()));
+                    String replacement = random.nextInt(6) == 0 ? null : ("<" + name + ">");
+                    placeholders.put(name, () -> replacement);
+                    referencedNames.add(name);
+                }
+                for (int textIndex = 0; textIndex < 20; textIndex++) {
+                    String text = randomText(random, alphabet, referencedNames);
+                    String expected = applyValuePlaceholdersWithACopyOfAllNames(text, placeholders, store.getVariableNames());
+                    String actual = ValuePlaceholderHolder.applyValuePlaceholders(text, placeholders, store.getNameIndex());
+                    assertEquals(expected, actual, () -> "text '" + text + "' with value placeholders " + placeholders.keySet() + " and variables " + store.getVariableNames());
+                    if (expected == text) assertSame(text, actual);
+                    comparisons++;
+                }
+                this.mutateRandomly(store, random, alphabet, names);
+            }
+        }
+        assertEquals(150 * 12 * 20, comparisons);
     }
 
     @Test
@@ -594,6 +714,21 @@ class VariableStoreReferenceResolutionTest {
         return ShortReferenceResolver.resolve(text, (in, nameStart) -> {
             UserVariableSnapshot variable = ShortReferenceResolver.findLongestName(in, nameStart, variables, UserVariableSnapshot::name);
             return (variable != null) ? new ShortReferenceResolver.Reference(variable.name().length(), variable.value()) : null;
+        });
+    }
+
+    /** The resolution of value placeholders before the name index: a copy of all variable names, every name checked per reference. */
+    @NotNull
+    private static String applyValuePlaceholdersWithACopyOfAllNames(@NotNull String value, @NotNull Map<String, Supplier<String>> placeholders, @NotNull Collection<String> variableNames) {
+        if (placeholders.isEmpty()) return value;
+        return ShortReferenceResolver.resolve(value, (text, nameStart) -> {
+            Map.Entry<String, Supplier<String>> placeholder = ShortReferenceResolver.findLongestName(text, nameStart, placeholders.entrySet(), Map.Entry::getKey);
+            int placeholderNameLength = (placeholder != null) ? placeholder.getKey().length() : 0;
+            String variableName = ShortReferenceResolver.findLongestName(text, nameStart, variableNames, name -> name);
+            if ((variableName != null) && (variableName.length() > placeholderNameLength)) return new ShortReferenceResolver.Reference(variableName.length(), null);
+            if (placeholder == null) return null;
+            String replacement = placeholder.getValue().get();
+            return new ShortReferenceResolver.Reference(placeholderNameLength, (replacement != null) ? replacement : "");
         });
     }
 
