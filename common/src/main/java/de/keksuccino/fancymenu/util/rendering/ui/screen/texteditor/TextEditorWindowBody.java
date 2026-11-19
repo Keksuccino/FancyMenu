@@ -54,7 +54,9 @@ public class TextEditorWindowBody extends PiPWindowBody {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    static final int COMPILED_SINGLE_LINE_STRINGS_MAX_ENTRIES = 2048;
+    // Every text the placeholder parser parses and every value of its placeholders goes through this cache on every parse. Layouts parse their texts in the same
+    // order every frame, so with first-in-first-out eviction, a cache with fewer entries than a layout has texts and values evicts every entry before its next lookup.
+    static final int COMPILED_SINGLE_LINE_STRINGS_MAX_ENTRIES = 8192;
     // The placeholder parser compiles every text it parses and its nested values through this cache, so it is sized for the parser's longest texts,
     // see PlaceholderParser#MAX_TEXT_LENGTH. A long text with codes weighs twice its length, and every nested value adds its length.
     static final long COMPILED_SINGLE_LINE_STRINGS_MAX_WEIGHT = 4_194_304L;
