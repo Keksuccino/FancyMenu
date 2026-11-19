@@ -26,6 +26,7 @@ public final class TestPlaceholders {
     private static final String VALUE_IDENTIFIER = "fancymenu_test_value";
     private static final String JOIN_IDENTIFIER = "fancymenu_test_join";
     private static final String NULL_IDENTIFIER = "fancymenu_test_null";
+    private static final String FAILING_IDENTIFIER = "fancymenu_test_failing";
     private static final String CAPTURE_IDENTIFIER = "fancymenu_test_capture";
     private static final Map<String, String> VALUES = new ConcurrentHashMap<>();
     private static final Map<String, AtomicInteger> EVALUATIONS = new ConcurrentHashMap<>();
@@ -40,6 +41,9 @@ public final class TestPlaceholders {
         });
         register(JOIN_IDENTIFIER, List.of("first", "second"), values -> values.get("first") + "|" + values.get("second"));
         register(NULL_IDENTIFIER, List.of("text"), values -> null);
+        register(FAILING_IDENTIFIER, List.of("text"), values -> {
+            throw new IllegalStateException("Test placeholder failure");
+        });
         registerPlaceholder(new FunctionPlaceholder(CAPTURE_IDENTIFIER, List.of("key", "text"), null));
     }
 
@@ -88,6 +92,12 @@ public final class TestPlaceholders {
     @NotNull
     public static String nullReplacement(@NotNull String text) {
         return serialize(NULL_IDENTIFIER, "text", text);
+    }
+
+    /** A placeholder that throws an exception when it gets replaced. */
+    @NotNull
+    public static String failing(@NotNull String text) {
+        return serialize(FAILING_IDENTIFIER, "text", text);
     }
 
     /** A placeholder that remembers what it got called with under the given key (see {@link #captured(String)}) and gets replaced with "captured". */
