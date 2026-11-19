@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.variables;
 
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
+import de.keksuccino.fancymenu.customization.placeholder.ShortReferenceResolver;
 import de.keksuccino.fancymenu.util.Legacy;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -71,6 +72,17 @@ public final class VariableHandler {
     @NotNull
     public static List<String> getVariableNames() {
         return STORE.getVariableNames();
+    }
+
+    /**
+     * Returns the names of FancyMenu's variables as they are right now, as a lookup that finds the longest name that starts at a
+     * {@code $$} of a text. Unlike {@link #getVariableNames()}, it copies nothing: it is the name index the variables keep for resolving
+     * references, which only gets built again after a variable got added or removed. It never changes, so later changes of the variables
+     * don't show up in it, and using it never blocks the variables.
+     */
+    @NotNull
+    public static ShortReferenceResolver.NameLookup getVariableNameLookup() {
+        return STORE.getNameIndex();
     }
 
     /**

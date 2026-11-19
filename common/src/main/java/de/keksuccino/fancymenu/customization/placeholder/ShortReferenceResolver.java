@@ -69,6 +69,20 @@ public final class ShortReferenceResolver {
         return longest;
     }
 
+    /**
+     * Finds the longest name that starts at an index of a text, out of names that don't change while the lookup gets used.
+     */
+    @FunctionalInterface
+    public interface NameLookup {
+
+        /**
+         * @param nameStart The index right after the {@code $$}.
+         * @return The length of the longest name that starts there, or 0 if no name starts there. Empty names never match.
+         */
+        int findLongestNameLength(@NotNull String text, int nameStart);
+
+    }
+
     @FunctionalInterface
     public interface ReferenceLookup {
 
