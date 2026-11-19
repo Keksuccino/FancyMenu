@@ -44,9 +44,12 @@ final class PlaceholderEvaluator {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final long LOG_COOLDOWN_MS = 10000;
     private static final int LOG_COOLDOWN_MAX_ENTRIES = 256;
-    private static final long LOG_COOLDOWN_MAX_WEIGHT = 262_144L;
+    // Errors of placeholders whose values can't be read contain their raw text, which can be as long as a whole text, see PlaceholderParser#MAX_TEXT_LENGTH.
+    // An error heavier than this would never get its cooldown and get logged every frame.
+    private static final long LOG_COOLDOWN_MAX_WEIGHT = 1_048_576L;
     private static final int CONTAINS_PLACEHOLDERS_MAX_ENTRIES = 2048;
-    private static final long CONTAINS_PLACEHOLDERS_MAX_WEIGHT = 1_048_576L;
+    // Sized for PlaceholderParser#MAX_TEXT_LENGTH, see there
+    private static final long CONTAINS_PLACEHOLDERS_MAX_WEIGHT = 2_097_152L;
     private static final long CACHE_ENTRY_OVERHEAD_WEIGHT = 64L;
     private static final int MIN_LENGTH_FOR_PARSING = 8;
     private static final String SHORT_VARIABLE_PLACEHOLDER_PREFIX = "$$";
@@ -54,8 +57,8 @@ final class PlaceholderEvaluator {
     private static final int MAX_BUILDER_CAPACITY = Integer.MAX_VALUE - 8;
 
     // String length is measured in retained UTF-16 code units, with a fixed allowance for each entry's objects.
-    private static final LogCooldownTracker LOG_COOLDOWN = new LogCooldownTracker(LOG_COOLDOWN_MS, LOG_COOLDOWN_MAX_ENTRIES, LOG_COOLDOWN_MAX_WEIGHT);
-    private static final BoundedConcurrentCache<String, Boolean> CONTAINS_PLACEHOLDERS = new BoundedConcurrentCache<>(CONTAINS_PLACEHOLDERS_MAX_ENTRIES, CONTAINS_PLACEHOLDERS_MAX_WEIGHT, (text, ignored) -> CACHE_ENTRY_OVERHEAD_WEIGHT + text.length());
+    static final LogCooldownTracker LOG_COOLDOWN = new LogCooldownTracker(LOG_COOLDOWN_MS, LOG_COOLDOWN_MAX_ENTRIES, LOG_COOLDOWN_MAX_WEIGHT);
+    static final BoundedConcurrentCache<String, Boolean> CONTAINS_PLACEHOLDERS = new BoundedConcurrentCache<>(CONTAINS_PLACEHOLDERS_MAX_ENTRIES, CONTAINS_PLACEHOLDERS_MAX_WEIGHT, (text, ignored) -> CACHE_ENTRY_OVERHEAD_WEIGHT + text.length());
 
     private PlaceholderEvaluator() {
     }
@@ -132,7 +135,7 @@ final class PlaceholderEvaluator {
     @NotNull
     static String replacePlaceholders(@NotNull String text, @Nullable PlaceholderTemplate.ValueSlot slot, boolean value, @NotNull ParsingContext context, @Nullable EvaluationState state) {
 
-        if (context.limitTextLength() && (text.length() >= PlaceholderParser.MAX_TEXT_LENGTH)) return PlaceholderParser.TOO_LONG_TO_PARSE_ERROR_MESSAGE;
+        if (context.limitTextLength() && PlaceholderParser.isTooLongToParse(text)) return PlaceholderParser.getTextTooLongMessage();
 
         // Compiled values without placeholders or $$ references never get their result cached, so they skip the lookup.
         // Cache hits deliberately skip BEFORE processors, so insertion must use this exact pre-processor key too.
@@ -328,7 +331,7 @@ final class PlaceholderEvaluator {
      * @param cachePlaceholders If results get stored in the {@link PlaceholderResultCache}.
      * @param readCachedResults If results may come from the {@link PlaceholderResultCache}. Only true while caching is on and the parse
      *                          doesn't run inside a {@link FreshValuesScope}. Inside a scope, results still get stored, so rendering gets them too.
-     * @param limitTextLength If texts of MAX_TEXT_LENGTH characters or more get answered with an error text. This includes the values of nested placeholders.
+     * @param limitTextLength If texts longer than {@link PlaceholderParser#MAX_TEXT_LENGTH} get answered with an error text. This includes the values of nested placeholders.
      */
     record ParsingContext(@NotNull ParsingProcessorRegistry.Snapshot processors, long cachingControllerRevision, boolean cachePlaceholders, boolean readCachedResults, long cachingDurationMillis, boolean preserveFormattingCodes, boolean limitTextLength) {
 
