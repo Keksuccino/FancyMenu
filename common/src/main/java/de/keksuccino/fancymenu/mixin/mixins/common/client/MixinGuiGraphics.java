@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderTranslationUtil;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.scissor.ScissorShape;
 import de.keksuccino.fancymenu.util.rendering.scissor.ScissorShapes;
+import de.keksuccino.fancymenu.util.rendering.scissor.ScreenScissorEnabler;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.LayoutEditorWidgetRenderContext;
 import de.keksuccino.fancymenu.customization.element.container.ElementContainerDrawScale;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
@@ -28,7 +29,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 
 @Mixin(value = GuiGraphics.class, remap = false)
-public class MixinGuiGraphics {
+public class MixinGuiGraphics implements ScreenScissorEnabler {
 
     @Unique private boolean adjustingScissor_FancyMenu;
     /** The shape of the scissor {@code enableScissor} is about to push, handed from its arguments to the rectangle it creates. */
@@ -141,6 +142,18 @@ public class MixinGuiGraphics {
             this.adjustingScissor_FancyMenu = false;
         }
         info.cancel();
+    }
+
+    @Unique
+    @Override
+    public void enableScreenScissor_FancyMenu(int minX, int minY, int maxX, int maxY) {
+        // The scissor is on the screen already, so before_enableScissor_FancyMenu lets it through like the ones it maps itself
+        this.adjustingScissor_FancyMenu = true;
+        try {
+            ((GuiGraphics)(Object)this).enableScissor(minX, minY, maxX, maxY);
+        } finally {
+            this.adjustingScissor_FancyMenu = false;
+        }
     }
 
 }
