@@ -66,7 +66,7 @@ public class PlaceholderParser {
     @NotNull
     public static String resolveVariableReferences(@NotNull String text) {
         if (!text.contains(ShortReferenceResolver.PREFIX)) return text;
-        return resolveVariableReferences(text, VariableHandler.getVariableSnapshots());
+        return VariableHandler.resolveVariableReferences(text);
     }
 
     @NotNull
