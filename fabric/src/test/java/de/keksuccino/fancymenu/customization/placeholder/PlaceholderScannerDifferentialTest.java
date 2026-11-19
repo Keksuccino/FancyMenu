@@ -191,6 +191,8 @@ class PlaceholderScannerDifferentialTest {
         }
         boolean containsStart = anyStart;
         assertEquals(containsStart, PlaceholderScanner.containsPlaceholderStart(text), () -> "Start check of text: " + escape(text));
+        if ((text.length() >= 8) && !text.contains("$$")) assertEquals(containsStart, PlaceholderParser.containsPlaceholders(text), () -> "Gate of text: " + escape(text));
+        if (!expected.isEmpty()) assertTrue(PlaceholderParser.containsPlaceholders(text), () -> "Gate of text: " + escape(text));
         return actual;
     }
 
