@@ -22,10 +22,12 @@ import java.util.Objects;
  */
 final class PlaceholderResultCache {
 
-    private static final int TEXT_CACHE_MAX_ENTRIES = 512;
+    // Results get stored again every caching duration, in the order their texts get parsed, so with first-in-first-out eviction, a cache with fewer entries
+    // than a layout has texts with placeholders evicts every result before it gets used, and the layout parses all of its texts every frame like without caching.
+    private static final int TEXT_CACHE_MAX_ENTRIES = 4096;
     // The weight limits are sized for PlaceholderParser#MAX_TEXT_LENGTH, see there. An entry weighs its text plus its result.
     private static final long TEXT_CACHE_MAX_WEIGHT = 4_194_304L;
-    private static final int VALUE_CACHE_MAX_ENTRIES = 512;
+    private static final int VALUE_CACHE_MAX_ENTRIES = 4096;
     private static final long VALUE_CACHE_MAX_WEIGHT = 2_097_152L;
     private static final long ENTRY_OVERHEAD_WEIGHT = 64L;
 
