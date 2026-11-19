@@ -67,6 +67,8 @@ public class Dialogs {
                 .setBlockMinecraftScreenInputs(true)
                 .setForceFancyMenuUiScale(true)
                 .setForceFocus(true);
+        // The body knows how many lines its message wraps into only after the window gave it its width
+        body.fitWindowToMessage();
 
         PiPWindowHandler.INSTANCE.openWindowCentered(window, null);
         return body;
