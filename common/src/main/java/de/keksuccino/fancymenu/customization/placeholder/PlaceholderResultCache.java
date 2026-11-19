@@ -12,16 +12,21 @@ import java.util.Objects;
  * Keeps parse results for the placeholder caching duration (see {@link PlaceholderParser.PlaceholderCachingController}),
  * so texts that get parsed every frame only get parsed again when their result can have changed.
  *
- * <p>Results are keyed by the text as it got passed to the parser, before any processor ran.</p>
+ * <p>Results are keyed by the text as it got passed to the parser, before any processor ran. Whole texts and the values of placeholders
+ * have separate caches: values don't get their formatting codes converted, so their results differ from the result of the same text
+ * parsed on its own.</p>
  */
 final class PlaceholderResultCache {
 
-    private static final int CACHE_MAX_ENTRIES = 512;
-    private static final long CACHE_MAX_WEIGHT = 4_194_304L;
+    private static final int TEXT_CACHE_MAX_ENTRIES = 512;
+    private static final long TEXT_CACHE_MAX_WEIGHT = 4_194_304L;
+    private static final int VALUE_CACHE_MAX_ENTRIES = 512;
+    private static final long VALUE_CACHE_MAX_WEIGHT = 1_048_576L;
     private static final long ENTRY_OVERHEAD_WEIGHT = 64L;
 
     // String length is measured in retained UTF-16 code units, with a fixed allowance for each entry's objects.
-    private static final BoundedConcurrentCache<String, CachedResult> RESULTS = new BoundedConcurrentCache<>(CACHE_MAX_ENTRIES, CACHE_MAX_WEIGHT, (text, cached) -> ENTRY_OVERHEAD_WEIGHT + text.length() + cached.result().length());
+    private static final BoundedConcurrentCache<String, CachedResult> TEXT_RESULTS = new BoundedConcurrentCache<>(TEXT_CACHE_MAX_ENTRIES, TEXT_CACHE_MAX_WEIGHT, (text, cached) -> ENTRY_OVERHEAD_WEIGHT + text.length() + cached.result().length());
+    private static final BoundedConcurrentCache<String, CachedResult> VALUE_RESULTS = new BoundedConcurrentCache<>(VALUE_CACHE_MAX_ENTRIES, VALUE_CACHE_MAX_WEIGHT, (text, cached) -> ENTRY_OVERHEAD_WEIGHT + text.length() + cached.result().length());
     private static final Object CACHING_CONTROLLER_LOCK = new Object();
 
     private static long cachingControllerRevision = 0L;
@@ -45,16 +50,17 @@ final class PlaceholderResultCache {
     }
 
     /**
+     * @param value If the text is the value of a placeholder.
      * @return The cached result, or null if there is none that is still usable for the context.
      */
     @Nullable
-    static String get(@NotNull String text, @NotNull PlaceholderEvaluator.ParsingContext context) {
-        CachedResult cached = RESULTS.get(text);
+    static String get(@NotNull String text, boolean value, @NotNull PlaceholderEvaluator.ParsingContext context) {
+        CachedResult cached = (value ? VALUE_RESULTS : TEXT_RESULTS).get(text);
         return ((cached != null) && cached.isUsableFor(context, System.currentTimeMillis())) ? cached.result() : null;
     }
 
-    static void put(@NotNull String text, @NotNull String result, @NotNull PlaceholderEvaluator.ParsingContext context) {
-        RESULTS.put(text, new CachedResult(result, System.currentTimeMillis(), context.processors().revision(), context.cachingControllerRevision()));
+    static void put(@NotNull String text, @NotNull String result, boolean value, @NotNull PlaceholderEvaluator.ParsingContext context) {
+        (value ? VALUE_RESULTS : TEXT_RESULTS).put(text, new CachedResult(result, System.currentTimeMillis(), context.processors().revision(), context.cachingControllerRevision()));
     }
 
     record CachingControllerSnapshot(long revision, @NotNull PlaceholderParser.PlaceholderCachingController controller) {

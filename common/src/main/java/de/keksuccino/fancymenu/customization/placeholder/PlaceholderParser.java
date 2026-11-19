@@ -85,7 +85,8 @@ public class PlaceholderParser {
      * They also get executed on the values of placeholders, before the placeholders in these values get replaced.
      *
      * <p>{@code ParsingProcessorTiming.AFTER_REPLACING_PLACEHOLDERS} processors only get executed if the input text contains placeholders or {@code $$} variable references (see {@link #containsPlaceholders(String)}) and the system successfully replaced them.
-     * They also get executed on the values of placeholders that contain placeholders or {@code $$} variable references.
+     * They also get executed on the values of placeholders that contain placeholders or {@code $$} variable references, except the conversion of {@code &} formatting codes,
+     * so placeholders get the original {@code &} characters of their values.
      *
      * @return The unique ID of the processor.
      */
@@ -163,14 +164,14 @@ public class PlaceholderParser {
     @NotNull
     public static String replacePlaceholdersWithoutLengthLimit(@Nullable String in, boolean preserveFormattingCodes) {
         if (in == null) return EMPTY_STRING;
-        return PlaceholderEvaluator.replacePlaceholders(in, null, PlaceholderEvaluator.createParsingContext(preserveFormattingCodes, false), null);
+        return PlaceholderEvaluator.replacePlaceholders(in, null, false, PlaceholderEvaluator.createParsingContext(preserveFormattingCodes, false), null);
     }
 
     @NotNull
     private static String replacePlaceholders(@Nullable String in, boolean preserveFormattingCodes) {
         if (in == null) return EMPTY_STRING;
         if (in.length() >= MAX_TEXT_LENGTH) return TOO_LONG_TO_PARSE_ERROR_MESSAGE;
-        return PlaceholderEvaluator.replacePlaceholders(in, null, PlaceholderEvaluator.createParsingContext(preserveFormattingCodes, true), null);
+        return PlaceholderEvaluator.replacePlaceholders(in, null, false, PlaceholderEvaluator.createParsingContext(preserveFormattingCodes, true), null);
     }
 
     /**
