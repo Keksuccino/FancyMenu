@@ -21,7 +21,8 @@ import java.util.Map;
  *     it gets returned as it is, without running the AFTER processors.</li>
  *     <li>Its {@link PlaceholderTemplate} gets replaced. The result gets replaced again and again, until a pass doesn't change it anymore,
  *     because placeholders can return placeholders.</li>
- *     <li>The AFTER processors run on it.</li>
+ *     <li>The AFTER processors run on it. Values skip the formatting-code conversion, so placeholders get their values with the original
+ *     {@code &} characters (URLs and file paths need them). The text they end up in still gets converted.</li>
  *     <li>The result gets cached, unless it contains placeholders that got skipped because they can only get replaced on the main thread.</li>
  * </ol>
  *
@@ -101,11 +102,12 @@ final class PlaceholderEvaluator {
      *
      * @param text The text before any processor ran on it.
      * @param slot The compiled value, if the text is the raw text of a value of a {@link PlaceholderTemplate}.
+     * @param value If the text is the value of a placeholder.
      * @param context The context of the parse, which is the context of the state if there is one.
      * @param state The state of the running parse, or null if this starts a new parse.
      */
     @NotNull
-    static String replacePlaceholders(@NotNull String text, @Nullable PlaceholderTemplate.ValueSlot slot, @NotNull ParsingContext context, @Nullable EvaluationState state) {
+    static String replacePlaceholders(@NotNull String text, @Nullable PlaceholderTemplate.ValueSlot slot, boolean value, @NotNull ParsingContext context, @Nullable EvaluationState state) {
 
         if (context.limitTextLength() && (text.length() >= PlaceholderParser.MAX_TEXT_LENGTH)) return PlaceholderParser.TOO_LONG_TO_PARSE_ERROR_MESSAGE;
 
@@ -113,7 +115,7 @@ final class PlaceholderEvaluator {
         // Cache hits deliberately skip BEFORE processors, so insertion must use this exact pre-processor key too.
         boolean plainValue = (slot != null) && (slot.template == null);
         if (context.cachePlaceholders() && !plainValue) {
-            String cached = PlaceholderResultCache.get(text, context);
+            String cached = PlaceholderResultCache.get(text, value, context);
             if (cached != null) return cached;
         }
 
@@ -132,10 +134,10 @@ final class PlaceholderEvaluator {
         int asyncSkips = state.asyncSkips;
         String result = replaceTemplate(template, state);
 
-        result = context.processors().processAfterReplacement(result, context.preserveFormattingCodes() ? PlaceholderParser.FORMATTING_CODE_PROCESSOR_ID : ParsingProcessorRegistry.NO_PROCESSOR_ID);
+        result = context.processors().processAfterReplacement(result, (value || context.preserveFormattingCodes()) ? PlaceholderParser.FORMATTING_CODE_PROCESSOR_ID : ParsingProcessorRegistry.NO_PROCESSOR_ID);
 
         // The main thread must never get a result that still contains placeholders that got skipped because they can only get replaced on the main thread
-        if (context.cachePlaceholders() && (state.asyncSkips == asyncSkips)) PlaceholderResultCache.put(text, result, context);
+        if (context.cachePlaceholders() && (state.asyncSkips == asyncSkips)) PlaceholderResultCache.put(text, result, value, context);
 
         return result;
 
@@ -155,7 +157,7 @@ final class PlaceholderEvaluator {
         DeserializedPlaceholderString dps = new DeserializedPlaceholderString(identifier, null, raw);
         for (Map.Entry<String, String> value : values.entrySet()) {
             String valueText = value.getValue();
-            dps.values.put(value.getKey(), (valueText != null) ? replacePlaceholders(valueText, null, context, state) : EMPTY_STRING);
+            dps.values.put(value.getKey(), (valueText != null) ? replacePlaceholders(valueText, null, true, context, state) : EMPTY_STRING);
         }
         return getReplacement(placeholder, identifier, raw, dps);
     }
@@ -228,7 +230,7 @@ final class PlaceholderEvaluator {
         int asyncSkips = state.asyncSkips;
         DeserializedPlaceholderString dps = new DeserializedPlaceholderString(node.identifier, null, node.raw);
         for (PlaceholderTemplate.ValueSlot slot : node.values) {
-            dps.values.put(slot.name, replacePlaceholders(slot.raw, slot, state.context, state));
+            dps.values.put(slot.name, replacePlaceholders(slot.raw, slot, true, state.context, state));
         }
         String replacement = getReplacement(node.placeholder, node.identifier, node.raw, dps);
         // Replacements that miss skipped main-thread-only placeholders must not get shared
