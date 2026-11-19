@@ -8,10 +8,13 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.variables.UserVariableSnapshot;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
+import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
+import net.minecraft.locale.Language;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import java.lang.ref.WeakReference;
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -28,15 +31,30 @@ import java.util.function.Supplier;
  */
 public class PlaceholderParser {
 
-    /** Texts of this length or longer get answered with {@link #TOO_LONG_TO_PARSE_ERROR_MESSAGE}, unless they get parsed without length limit. */
-    static final int MAX_TEXT_LENGTH = 17000;
+    /**
+     * The most characters a text can have to get its placeholders replaced by {@link #replacePlaceholders(String)} and
+     * {@link #replacePlaceholdersPreservingFormattingCodes(String)}. They answer longer texts, and longer values of nested placeholders,
+     * with {@link #getTextTooLongMessage()}, unless the text gets parsed with {@link #replacePlaceholdersWithoutLengthLimit(String, boolean)}.
+     *
+     * <p>The weight limits of the caches a parse goes through are sized so each of them holds at least eight texts of this length, together
+     * with their results and the values of their nested placeholders: the result caches of {@link PlaceholderResultCache}, the template cache
+     * of {@link PlaceholderTemplate}, the cache of {@link PlaceholderEvaluator#passesGate(String)} and its log cooldown, and the cache of
+     * {@link TextEditorWindowBody#compileSingleLineString(String)}. A text heavier than the weight limit of a cache never gets cached, so it
+     * would get scanned or compiled again every frame, and a cache that only holds a few long texts makes layouts with several of them do
+     * the same. Change these limits together.</p>
+     */
+    static final int MAX_TEXT_LENGTH = 100_000;
+    static final String TEXT_TOO_LONG_LOCALIZATION_KEY = "fancymenu.placeholders.error.text_too_long";
     private static final String EMPTY_STRING = "";
     private static final String FORMATTING_PREFIX_AND = "&";
     private static final String FORMATTING_PREFIX_PARAGRAPH = "§";
     private static final char APOSTROPHE_CHAR = '\"';
-    static final String TOO_LONG_TO_PARSE_ERROR_MESSAGE = "ERROR: Text too long to parse placeholders! 17,000 characters at max!";
 
     static final long FORMATTING_CODE_PROCESSOR_ID;
+
+    /** The result of {@link #getTextTooLongMessage()} and the language it got translated with. */
+    @Nullable
+    private static volatile LocalizedMessage textTooLongMessage;
 
     static {
 
@@ -155,8 +173,8 @@ public class PlaceholderParser {
     /**
      * Replaces all placeholders in a text of any length.
      *
-     * <p>{@link #replacePlaceholders(String)} and {@link #replacePlaceholdersPreservingFormattingCodes(String)} answer every text that reaches
-     * their length limit with an error text, because replacing placeholders takes longer the longer a text is.
+     * <p>{@link #replacePlaceholders(String)} and {@link #replacePlaceholdersPreservingFormattingCodes(String)} answer every text that is longer
+     * than their length limit ({@link #MAX_TEXT_LENGTH}) with an error text, because replacing placeholders takes longer the longer a text is.
      * This method is for callers that limit the length of their text themselves and tell the user about their limit in their own way.</p>
      *
      * @param preserveFormattingCodes If formatting-code prefixes should stay as they are, like {@link #replacePlaceholdersPreservingFormattingCodes(String)} does it.
@@ -170,8 +188,43 @@ public class PlaceholderParser {
     @NotNull
     private static String replacePlaceholders(@Nullable String in, boolean preserveFormattingCodes) {
         if (in == null) return EMPTY_STRING;
-        if (in.length() >= MAX_TEXT_LENGTH) return TOO_LONG_TO_PARSE_ERROR_MESSAGE;
+        if (isTooLongToParse(in)) return getTextTooLongMessage();
         return PlaceholderEvaluator.replacePlaceholders(in, null, false, PlaceholderEvaluator.createParsingContext(preserveFormattingCodes, true), null);
+    }
+
+    /**
+     * If parses with length limit answer the text with {@link #getTextTooLongMessage()}, so if it is longer than {@link #MAX_TEXT_LENGTH}.
+     */
+    static boolean isTooLongToParse(@NotNull String text) {
+        return text.length() > MAX_TEXT_LENGTH;
+    }
+
+    /**
+     * The error text for texts that are too long to parse (see {@link #isTooLongToParse(String)}), translated into the current language,
+     * with {@link #MAX_TEXT_LENGTH} as argument.
+     *
+     * <p>Too long texts get parsed every frame like all other texts, on the render thread and on the threads of Async Tickers, so the message
+     * only gets translated again when the language changed. The game replaces its {@link Language} instance as a whole when the game language
+     * or the resource packs change (and FancyMenu swaps it for AI exports), so checking for the same instance is enough. The translation gets
+     * read from that same instance, which never changes after loading, so this is safe on every thread. Threads that translate at the same time
+     * for the same language get equal texts, and the result of the last one gets kept.</p>
+     */
+    @NotNull
+    static String getTextTooLongMessage() {
+        Language language = Language.getInstance();
+        LocalizedMessage cached = textTooLongMessage;
+        // A weak reference, so the message doesn't keep an old language with all of its translations alive
+        if ((cached != null) && (cached.language().get() == language)) return cached.message();
+        String translation = language.getOrDefault(TEXT_TOO_LONG_LOCALIZATION_KEY);
+        String message;
+        try {
+            message = String.format(translation, LocalizationUtils.formatWholeNumber(MAX_TEXT_LENGTH, language));
+        } catch (IllegalFormatException ex) {
+            // A translation with a broken format (from a resource pack, for example) gets shown as it is
+            message = translation;
+        }
+        textTooLongMessage = new LocalizedMessage(new WeakReference<>(language), message);
+        return message;
     }
 
     /**
@@ -321,6 +374,9 @@ public class PlaceholderParser {
             Objects.requireNonNull(cachingDurationMillis);
         }
 
+    }
+
+    private record LocalizedMessage(@NotNull WeakReference<Language> language, @NotNull String message) {
     }
 
 }

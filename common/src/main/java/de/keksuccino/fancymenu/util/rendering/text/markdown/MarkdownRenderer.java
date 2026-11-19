@@ -31,8 +31,9 @@ import java.util.function.Supplier;
 public class MarkdownRenderer implements Renderable, FocuslessContainerEventHandler, NarratableEntry, NavigatableWidget {
 
     /**
-     * The text of the renderer never gets longer than this, see {@link #setText(String)}. The placeholder parser has a lower limit of its own,
-     * so the renderer always has to ask it for its placeholders with {@link PlaceholderParser#replacePlaceholdersWithoutLengthLimit(String, boolean)}.
+     * The text of the renderer never gets longer than this, see {@link #setText(String)}. The renderer limits its text itself and shows its own
+     * error text for longer texts, so it asks the placeholder parser for its placeholders with {@link PlaceholderParser#replacePlaceholdersWithoutLengthLimit(String, boolean)},
+     * which never answers with the error text of the parser's own limit.
      */
     private static final int MAX_TEXT_LENGTH = 45000;
     private static final String NEWLINE_PERCENT = "%n%";
