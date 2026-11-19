@@ -16,8 +16,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix3x2fStack;
+import org.joml.Vector2f;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -30,8 +33,7 @@ public class MessageDialogBody extends PiPWindowBody {
     private static final int BUTTON_WIDTH = MessageDialogLayout.BUTTON_WIDTH;
     private static final int BUTTON_GAP = MessageDialogLayout.BUTTON_GAP;
     private static final int LINE_SPACING = MessageDialogLayout.LINE_SPACING;
-    /** The share of the screen height the body of a dialog grows to at most for its message. */
-    private static final float MAX_SCREEN_SHARE = 0.75F;
+    private static final float SCISSOR_EPSILON = 0.001F;
 
     @NotNull
     private final Component message;
@@ -50,6 +52,8 @@ public class MessageDialogBody extends PiPWindowBody {
     private final ScrollBar scrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, UIBase.VERTICAL_SCROLL_BAR_WIDTH, UIBase.VERTICAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, () -> UIBase.getUITheme().scroll_grabber_color_normal, () -> UIBase.getUITheme().scroll_grabber_color_hover);
     /** The smallest body height this dialog last gave its window, or -1 before it gave one. */
     private int windowMinBodyHeight = -1;
+    /** Reused for the corners of the scissor of the message area, which gets enabled every frame while the message scrolls. */
+    private final Vector2f scissorCorner = new Vector2f();
 
     @Nullable
     private ExtendedButton cancelButton;
@@ -97,26 +101,25 @@ public class MessageDialogBody extends PiPWindowBody {
 
     /**
      * Makes the window of this dialog at least as tall as its message needs to fit above the buttons without scrolling.
-     * The dialog grows to three quarters of the screen height at most, so a very long message scrolls instead of making the dialog
-     * cover the whole screen.<br>
+     * A very long message scrolls instead of making the dialog cover the whole screen, see {@link MessageDialogLayout#getMinBodyHeight(int, boolean, float)}.<br>
      * Windows open centered with the size they have at that moment, so this has to get called once after the window got this dialog
      * and before it opens. After that, the dialog keeps the window in sync by itself.
      */
     public void fitWindowToMessage() {
         PiPWindow window = this.getWindow();
         if (window == null) return;
-        int minBodyHeight = Math.min(MessageDialogLayout.getFittingBodyHeight(this.renderLines.size(), this.style.getIcon() != null), getMaxFittingBodyHeight());
+        int minBodyHeight = MessageDialogLayout.getMinBodyHeight(this.renderLines.size(), this.style.getIcon() != null, getScreenHeight());
         if (minBodyHeight == this.windowMinBodyHeight) return;
         this.windowMinBodyHeight = minBodyHeight;
         window.setMinBodySize(0, minBodyHeight);
     }
 
-    private static int getMaxFittingBodyHeight() {
+    private static float getScreenHeight() {
         // Dialogs draw their body at the FancyMenu UI scale, which makes this the screen height in the units of the body
         int screenHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
         float renderScale = UIBase.getFixedUIRenderScale();
         if (!(renderScale > 0.0F)) return screenHeight;
-        return (int) ((screenHeight / renderScale) * MAX_SCREEN_SHARE);
+        return screenHeight / renderScale;
     }
 
     @Override
@@ -141,7 +144,7 @@ public class MessageDialogBody extends PiPWindowBody {
         boolean scrollable = layout.isScrollable();
         int scrollOffset = layout.getScrollOffset(this.scrollBar.getScroll());
         if (scrollable) {
-            graphics.enableScissor(0, layout.messageAreaTop(), this.width, layout.messageAreaTop() + layout.messageAreaHeight());
+            this.enableMessageAreaScissor(graphics, layout);
         }
         int textColor = UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_interface_generic_text_color.getColorInt() : UIBase.getUITheme().ui_interface_generic_text_color.getColorInt();
         int lineEnd = layout.getVisibleLineEnd(scrollOffset, this.renderLines.size());
@@ -155,6 +158,29 @@ public class MessageDialogBody extends PiPWindowBody {
 
         updateButtonPositions();
 
+    }
+
+    /**
+     * Cuts everything drawn after this to the message area of the given layout, covering at least the whole area.<br>
+     * The GUI cuts at whole GUI pixels, and {@link GuiGraphics#enableScissor(int, int, int, int)} rounds the corners of a scissor under
+     * the scaled pose of the body down. That moves the bottom edge up by up to almost two GUI pixels, which are several units of the body at
+     * small UI scales, enough to cut off the descenders of the last line when the message is scrolled to its end. So the corners get rounded
+     * outward here, and the scissor gets enabled without the pose. The small epsilon keeps float errors of edges that sit right on a GUI pixel
+     * from adding a pixel.
+     */
+    private void enableMessageAreaScissor(@NotNull GuiGraphics graphics, @NotNull MessageDialogLayout layout) {
+        Matrix3x2fStack pose = graphics.pose();
+        Vector2f corner = this.scissorCorner;
+        pose.transformPosition(0.0F, layout.messageAreaTop(), corner);
+        int left = Mth.floor(corner.x + SCISSOR_EPSILON);
+        int top = Mth.floor(corner.y + SCISSOR_EPSILON);
+        pose.transformPosition(this.width, layout.messageAreaTop() + layout.messageAreaHeight(), corner);
+        int right = Mth.ceil(corner.x - SCISSOR_EPSILON);
+        int bottom = Mth.ceil(corner.y - SCISSOR_EPSILON);
+        pose.pushMatrix();
+        pose.identity();
+        graphics.enableScissor(left, top, right, bottom);
+        pose.popMatrix();
     }
 
     @Override
