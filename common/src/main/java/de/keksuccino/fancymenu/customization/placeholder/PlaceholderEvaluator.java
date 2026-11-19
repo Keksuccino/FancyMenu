@@ -4,6 +4,7 @@
 
 package de.keksuccino.fancymenu.customization.placeholder;
 
+import de.keksuccino.fancymenu.customization.FreshValuesScope;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -16,20 +17,27 @@ import java.util.Map;
  *
  * <p>A parse of a text goes through these steps. Placeholder values go through the same steps when their placeholder gets replaced:</p>
  * <ol>
- *     <li>A cached result of the text gets returned (see {@link PlaceholderResultCache}).</li>
+ *     <li>A cached result of the text gets returned (see {@link PlaceholderResultCache}), unless the parse runs inside a {@link FreshValuesScope}.</li>
  *     <li>The BEFORE processors run on it. If it contains no placeholders and no {@code $$} references after that (see {@link #passesGate(String)}),
  *     it gets returned as it is, without running the AFTER processors.</li>
  *     <li>Its {@link PlaceholderTemplate} gets replaced. The result gets replaced again and again, until a pass doesn't change it anymore,
  *     because placeholders can return placeholders.</li>
  *     <li>The AFTER processors run on it. Values skip the formatting-code conversion, so placeholders get their values with the original
  *     {@code &} characters (URLs and file paths need them). The text they end up in still gets converted.</li>
- *     <li>The result gets cached, unless it contains placeholders that got skipped because they can only get replaced on the main thread.
- *     Values that replaced a placeholder evaluated per occurrence don't get cached either, so every occurrence of them gets its own value.</li>
+ *     <li>The result gets cached, also inside a {@link FreshValuesScope}, so rendering gets the fresh result too. Results that contain placeholders
+ *     that got skipped because they can only get replaced on the main thread don't get cached. Values that replaced a placeholder evaluated
+ *     per occurrence don't get cached either, so every occurrence of them gets its own value.</li>
  * </ol>
  *
  * <p>Identical placeholders of one parse get replaced once and share their replacement, across all values and passes
  * (the memo of {@link EvaluationState}). Placeholders that get evaluated per occurrence (see {@link Placeholder#isEvaluatedPerOccurrence(DeserializedPlaceholderString)})
  * and placeholders with such a placeholder in their values get replaced at every occurrence instead.</p>
+ *
+ * <p>Whether a parse runs inside a {@link FreshValuesScope} gets read once, when its {@link ParsingContext} gets created, and holds for all of
+ * its values and passes. A placeholder found by {@link PlaceholderParser#findPlaceholders(String, HashMap)} reads it again every time it gets
+ * replaced. A parse that a placeholder starts itself through {@link PlaceholderParser} while it gets replaced (Stringify does that) gets a
+ * context of its own, but on the same thread, so it reads the same scope. The memo, compiled templates and the cache of
+ * {@link #passesGate(String)} only depend on the text, so they stay in use inside a scope.</p>
  */
 final class PlaceholderEvaluator {
 
@@ -52,6 +60,10 @@ final class PlaceholderEvaluator {
     private PlaceholderEvaluator() {
     }
 
+    /**
+     * Creates the context of a new parse. It holds everything that must stay the same for the whole parse, including whether it may read
+     * cached results, which depends on the {@link FreshValuesScope} of the current thread at this moment.
+     */
     @NotNull
     static ParsingContext createParsingContext(boolean preserveFormattingCodes, boolean limitTextLength) {
         ParsingProcessorRegistry.Snapshot processors = ParsingProcessorRegistry.snapshot();
@@ -62,7 +74,16 @@ final class PlaceholderEvaluator {
             cachingDurationMillis = caching.controller().cachingDurationMillis().get();
             cachePlaceholders = cachingDurationMillis > 0L;
         }
-        return new ParsingContext(processors, caching.revision(), cachePlaceholders, cachingDurationMillis, preserveFormattingCodes, limitTextLength);
+        return new ParsingContext(processors, caching.revision(), cachePlaceholders, readsCachedResults(cachePlaceholders), cachingDurationMillis, preserveFormattingCodes, limitTextLength);
+    }
+
+    /**
+     * Script logic reads values right after changing them, so inside a {@link FreshValuesScope} parses must not read results
+     * cached for rendering. They still store their results, see {@link ParsingContext}.
+     * The scope only gets checked while caching is on, so parses without caching never pay for it.
+     */
+    private static boolean readsCachedResults(boolean cachePlaceholders) {
+        return cachePlaceholders && !FreshValuesScope.isActive();
     }
 
     /**
@@ -115,8 +136,9 @@ final class PlaceholderEvaluator {
 
         // Compiled values without placeholders or $$ references never get their result cached, so they skip the lookup.
         // Cache hits deliberately skip BEFORE processors, so insertion must use this exact pre-processor key too.
+        // Inside a fresh-values scope, the lookup gets skipped, but the result still gets stored at the end.
         boolean plainValue = (slot != null) && (slot.template == null);
-        if (context.cachePlaceholders() && !plainValue) {
+        if (context.readCachedResults() && !plainValue) {
             String cached = PlaceholderResultCache.get(text, value, context);
             if (cached != null) return cached;
         }
@@ -159,11 +181,13 @@ final class PlaceholderEvaluator {
         if (!placeholder.checkAsync()) return raw;
         HashMap<String, String> values = parsed.getValues();
         if (values == null) return raw;
-        EvaluationState state = new EvaluationState(context, memo);
+        // The context got created when the placeholder got found, but the replacement can happen later, inside or outside
+        // a fresh-values scope, or on another thread. Every replacement is a parse of its own, so it reads the scope of its own moment.
+        EvaluationState state = new EvaluationState(context.withFreshValuesScopeOfCurrentThread(), memo);
         DeserializedPlaceholderString dps = new DeserializedPlaceholderString(identifier, null, raw);
         for (Map.Entry<String, String> value : values.entrySet()) {
             String valueText = value.getValue();
-            dps.values.put(value.getKey(), (valueText != null) ? replacePlaceholders(valueText, null, true, context, state) : EMPTY_STRING);
+            dps.values.put(value.getKey(), (valueText != null) ? replacePlaceholders(valueText, null, true, state.context, state) : EMPTY_STRING);
         }
         return getReplacement(placeholder, identifier, raw, dps, state);
     }
@@ -299,9 +323,25 @@ final class PlaceholderEvaluator {
     }
 
     /**
+     * What stays the same for a whole parse, including all of its values and passes.
+     *
+     * @param cachePlaceholders If results get stored in the {@link PlaceholderResultCache}.
+     * @param readCachedResults If results may come from the {@link PlaceholderResultCache}. Only true while caching is on and the parse
+     *                          doesn't run inside a {@link FreshValuesScope}. Inside a scope, results still get stored, so rendering gets them too.
      * @param limitTextLength If texts of MAX_TEXT_LENGTH characters or more get answered with an error text. This includes the values of nested placeholders.
      */
-    record ParsingContext(@NotNull ParsingProcessorRegistry.Snapshot processors, long cachingControllerRevision, boolean cachePlaceholders, long cachingDurationMillis, boolean preserveFormattingCodes, boolean limitTextLength) {
+    record ParsingContext(@NotNull ParsingProcessorRegistry.Snapshot processors, long cachingControllerRevision, boolean cachePlaceholders, boolean readCachedResults, long cachingDurationMillis, boolean preserveFormattingCodes, boolean limitTextLength) {
+
+        /**
+         * @return This context, or a copy of it with {@link #readCachedResults()} for the {@link FreshValuesScope} the current thread is in right now.
+         */
+        @NotNull
+        ParsingContext withFreshValuesScopeOfCurrentThread() {
+            boolean readCachedResults = readsCachedResults(this.cachePlaceholders);
+            if (readCachedResults == this.readCachedResults) return this;
+            return new ParsingContext(this.processors, this.cachingControllerRevision, this.cachePlaceholders, readCachedResults, this.cachingDurationMillis, this.preserveFormattingCodes, this.limitTextLength);
+        }
+
     }
 
 }
