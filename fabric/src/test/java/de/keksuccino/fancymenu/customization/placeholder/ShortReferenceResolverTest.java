@@ -1,73 +1,96 @@
 package de.keksuccino.fancymenu.customization.placeholder;
 
-import de.keksuccino.fancymenu.customization.action.ValuePlaceholderHolder;
-import de.keksuccino.fancymenu.customization.variables.UserVariableSnapshot;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
+/**
+ * {@link ShortReferenceResolver} on its own, with lookups that find names through {@link ShortReferenceResolver#findLongestName(String, int, Iterable, java.util.function.Function)}
+ * like the lookups of value placeholders do. The resolution of FancyMenu's variables through their name index is covered by {@code VariableStoreReferenceResolutionTest}.
+ */
 class ShortReferenceResolverTest {
 
-    private static final UserVariableSnapshot COINS = variable("coins", "25");
-    private static final UserVariableSnapshot COINS_RECORD = variable("coins_record", "80");
-
     @Test
-    void longestVariableNameWinsInEveryOrder() {
+    void longestNameWinsInEveryOrder() {
         String text = "Record: $$coins_record, now: $$coins";
 
-        assertEquals("Record: 80, now: 25", PlaceholderParser.resolveVariableReferences(text, List.of(COINS, COINS_RECORD)));
-        assertEquals("Record: 80, now: 25", PlaceholderParser.resolveVariableReferences(text, List.of(COINS_RECORD, COINS)));
+        assertEquals("Record: 80, now: 25", resolve(text, values("coins", "25", "coins_record", "80")));
+        assertEquals("Record: 80, now: 25", resolve(text, values("coins_record", "80", "coins", "25")));
     }
 
     @Test
-    void everyReferenceOfAVariableGetsReplaced() {
-        assertEquals("25/25/80", PlaceholderParser.resolveVariableReferences("$$coins/$$coins/$$coins_record", List.of(COINS, COINS_RECORD)));
+    void findLongestNameFindsTheLongestNameThatStartsAtTheIndexInEveryOrder() {
+        List<String> shortFirst = List.of("c", "coins", "coins_record", "money");
+        List<String> longFirst = List.of("money", "coins_record", "coins", "c");
+        String text = "$$coins_record|$$coins|$$cash|$$nothing";
+
+        for (List<String> names : List.of(shortFirst, longFirst)) {
+            assertEquals("coins_record", ShortReferenceResolver.findLongestName(text, 2, names, name -> name));
+            assertEquals("coins", ShortReferenceResolver.findLongestName(text, text.indexOf("coins|"), names, name -> name));
+            assertEquals("c", ShortReferenceResolver.findLongestName(text, text.indexOf("cash"), names, name -> name));
+            assertNull(ShortReferenceResolver.findLongestName(text, text.indexOf("nothing"), names, name -> name));
+            assertNull(ShortReferenceResolver.findLongestName(text, text.length(), names, name -> name));
+        }
+    }
+
+    @Test
+    void everyReferenceOfANameGetsReplaced() {
+        assertEquals("25/25/80", resolve("$$coins/$$coins/$$coins_record", values("coins", "25", "coins_record", "80")));
     }
 
     @Test
     void referenceDirectlyAfterADollarSignStillResolves() {
-        assertEquals("$25", PlaceholderParser.resolveVariableReferences("$$$coins", List.of(COINS)));
+        assertEquals("$25", resolve("$$$coins", values("coins", "25")));
     }
 
     @Test
-    void textsWithoutKnownReferencesStayTheSameInstance() {
+    void textsWithoutReplacedReferencesStayTheSameInstance() {
         String unknownReference = "$$unknown and $$ alone";
         String noReference = "coins_record";
+        String keptReference = "$$coins stays";
 
-        assertSame(unknownReference, PlaceholderParser.resolveVariableReferences(unknownReference, List.of(COINS, COINS_RECORD)));
-        assertSame(noReference, PlaceholderParser.resolveVariableReferences(noReference, List.of(COINS, COINS_RECORD)));
-        assertSame(unknownReference, PlaceholderParser.resolveVariableReferences(unknownReference, List.of()));
+        assertSame(unknownReference, resolve(unknownReference, values("coins", "25", "coins_record", "80")));
+        assertSame(noReference, resolve(noReference, values("coins", "25", "coins_record", "80")));
+        assertSame(unknownReference, resolve(unknownReference, values()));
+        assertSame(keptReference, ShortReferenceResolver.resolve(keptReference, (text, nameStart) -> new ShortReferenceResolver.Reference(5, null)));
     }
 
     @Test
-    void emptyVariableNameNeverMatches() {
+    void emptyNameNeverMatches() {
         String text = "$$coins and $$";
 
-        assertSame(text, PlaceholderParser.resolveVariableReferences(text, List.of(variable("", "empty"))));
+        assertNull(ShortReferenceResolver.findLongestName(text, 2, List.of(""), name -> name));
+        assertSame(text, resolve(text, values("", "empty")));
+        assertEquals("25 and $$", resolve(text, values("", "empty", "coins", "25")));
     }
 
     @Test
     void replacementsAreNotSearchedForReferencesAgain() {
-        List<UserVariableSnapshot> variables = List.of(variable("pointer", "$$coins"), COINS);
-
-        assertEquals("$$coins|25", PlaceholderParser.resolveVariableReferences("$$pointer|$$coins", variables));
+        assertEquals("$$coins|25", resolve("$$pointer|$$coins", values("pointer", "$$coins", "coins", "25")));
     }
 
     @Test
-    void elementValueLeavesLongerVariableReferenceForTheVariable() {
-        Map<String, Supplier<String>> checkboxValues = Map.of("value", () -> "true");
-        List<UserVariableSnapshot> variables = List.of(variable("value_backup", "hello"));
-        List<String> variableNames = variables.stream().map(UserVariableSnapshot::name).toList();
+    void lookupGetsAskedOnceAtEveryPrefixThatIsNoPartOfAnEarlierReference() {
+        List<Integer> askedAt = new ArrayList<>();
+        AtomicInteger replaced = new AtomicInteger();
 
-        String withValues = ValuePlaceholderHolder.applyValuePlaceholders("$$value_backup|$$value", checkboxValues, variableNames);
+        String resolved = ShortReferenceResolver.resolve("$$a $$b$$a $$", (text, nameStart) -> {
+            askedAt.add(nameStart);
+            if (!text.startsWith("a", nameStart)) return null;
+            return new ShortReferenceResolver.Reference(1, "A" + replaced.incrementAndGet());
+        });
 
-        assertEquals("$$value_backup|true", withValues);
-        assertEquals("hello|true", PlaceholderParser.resolveVariableReferences(withValues, variables));
+        assertEquals("A1 $$bA2 $$", resolved);
+        assertEquals(List.of(2, 6, 9, 13), askedAt);
     }
 
     @Test
@@ -82,8 +105,20 @@ class ShortReferenceResolverTest {
         assertEquals("$$a$$b B", resolved);
     }
 
-    private static UserVariableSnapshot variable(String name, String value) {
-        return new UserVariableSnapshot(name, value, false);
+    @NotNull
+    private static String resolve(@NotNull String text, @NotNull Map<String, String> values) {
+        return ShortReferenceResolver.resolve(text, (in, nameStart) -> {
+            String name = ShortReferenceResolver.findLongestName(in, nameStart, values.keySet(), n -> n);
+            return (name != null) ? new ShortReferenceResolver.Reference(name.length(), values.get(name)) : null;
+        });
+    }
+
+    /** Names and values in the given order, as name, value, name, value and so on. */
+    @NotNull
+    private static Map<String, String> values(@NotNull String... namesAndValues) {
+        Map<String, String> values = new LinkedHashMap<>();
+        for (int i = 0; i < namesAndValues.length; i += 2) values.put(namesAndValues[i], namesAndValues[i + 1]);
+        return values;
     }
 
 }
