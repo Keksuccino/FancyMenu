@@ -155,7 +155,7 @@ final class PlaceholderEvaluator {
             String valueText = value.getValue();
             dps.values.put(value.getKey(), (valueText != null) ? replacePlaceholders(valueText, null, context, state) : EMPTY_STRING);
         }
-        return getReplacement(placeholder, raw, dps);
+        return getReplacement(placeholder, identifier, raw, dps);
     }
 
     /**
@@ -225,7 +225,7 @@ final class PlaceholderEvaluator {
             for (PlaceholderTemplate.ValueSlot slot : node.values) {
                 dps.values.put(slot.name, replacePlaceholders(slot.raw, slot, state.context, state));
             }
-            replacement = getReplacement(node.placeholder, node.raw, dps);
+            replacement = getReplacement(node.placeholder, node.identifier, node.raw, dps);
         }
         if (state.memo == null) state.memo = new HashMap<>();
         state.memo.put(node.raw, replacement);
@@ -233,12 +233,17 @@ final class PlaceholderEvaluator {
     }
 
     /**
-     * Asks the placeholder for its replacement. A placeholder that returns null keeps its raw text.
+     * Asks the placeholder for its replacement. A placeholder that fails or returns null keeps its raw text.
      */
     @NotNull
-    private static String getReplacement(@NotNull Placeholder placeholder, @NotNull String raw, @NotNull DeserializedPlaceholderString dps) {
-        String replacement = placeholder.getReplacementFor(dps);
-        return (replacement != null) ? replacement : raw;
+    private static String getReplacement(@NotNull Placeholder placeholder, @NotNull String identifier, @NotNull String raw, @NotNull DeserializedPlaceholderString dps) {
+        try {
+            String replacement = placeholder.getReplacementFor(dps);
+            return (replacement != null) ? replacement : raw;
+        } catch (Exception ex) {
+            logError("[FANCYMENU] Failed to replace placeholder: " + identifier, ex);
+            return raw;
+        }
     }
 
     /**
