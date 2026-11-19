@@ -53,6 +53,11 @@ public final class TestPlaceholders {
     }
 
     @NotNull
+    public static String echoIdentifier() {
+        return ECHO_IDENTIFIER;
+    }
+
+    @NotNull
     public static String joinIdentifier() {
         return JOIN_IDENTIFIER;
     }

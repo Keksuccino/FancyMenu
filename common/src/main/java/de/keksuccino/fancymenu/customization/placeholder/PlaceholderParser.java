@@ -200,12 +200,13 @@ public class PlaceholderParser {
 
     /**
      * Simple check if the given {@link String} contains placeholders or {@code $$} references to FancyMenu variables.<br>
-     * This basically only checks if the {@link String} contains <code>&#123;"placeholder"</code> or {@code $$} followed by at least one character,
-     * so it's not 100% safe, but performance-friendly. It does not check if a variable with that name exists.
+     * This only checks if the {@link String} contains the start of a placeholder (<code>&#123;"placeholder":"</code>, with the same whitespace
+     * between its tokens that placeholders allow) or {@code $$} followed by at least one character, so it's not 100% safe, but performance-friendly.
+     * It does not check if the placeholder has an end, or if a placeholder or variable with that name exists.
      */
     public static boolean containsPlaceholders(@Nullable String in) {
         if (in == null) return false;
-        if ((in.length() >= MIN_LENGTH_FOR_PARSING) && StringUtils.contains(in, "{\"placeholder\"")) return true;
+        if ((in.length() >= MIN_LENGTH_FOR_PARSING) && PlaceholderScanner.containsPlaceholderStart(in)) return true;
         return containsVariableReference(in);
     }
 
