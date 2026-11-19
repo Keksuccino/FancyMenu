@@ -25,12 +25,15 @@ public final class TestPlaceholders {
     private static final String ECHO_IDENTIFIER = "fancymenu_test_echo";
     private static final String VALUE_IDENTIFIER = "fancymenu_test_value";
     private static final String JOIN_IDENTIFIER = "fancymenu_test_join";
+    private static final String COUNTER_IDENTIFIER = "fancymenu_test_counter";
+    private static final String PER_OCCURRENCE_COUNTER_IDENTIFIER = "fancymenu_test_per_occurrence_counter";
     private static final String NULL_IDENTIFIER = "fancymenu_test_null";
     private static final String FAILING_IDENTIFIER = "fancymenu_test_failing";
     private static final String CAPTURE_IDENTIFIER = "fancymenu_test_capture";
     private static final String MAIN_THREAD_VALUE_IDENTIFIER = "fancymenu_test_main_thread_value";
     private static final Map<String, String> VALUES = new ConcurrentHashMap<>();
     private static final Map<String, AtomicInteger> EVALUATIONS = new ConcurrentHashMap<>();
+    private static final Map<String, AtomicInteger> COUNTERS = new ConcurrentHashMap<>();
     private static final Map<String, DeserializedPlaceholderString> CAPTURED = new ConcurrentHashMap<>();
     private static volatile Thread mainThread;
 
@@ -42,12 +45,14 @@ public final class TestPlaceholders {
             return VALUES.getOrDefault(key, "");
         });
         register(JOIN_IDENTIFIER, List.of("first", "second"), values -> values.get("first") + "|" + values.get("second"));
+        register(COUNTER_IDENTIFIER, List.of("key"), values -> Integer.toString(COUNTERS.computeIfAbsent(values.get("key"), ignored -> new AtomicInteger()).incrementAndGet()));
+        registerPlaceholder(new FunctionPlaceholder(PER_OCCURRENCE_COUNTER_IDENTIFIER, List.of("key"), values -> Integer.toString(COUNTERS.computeIfAbsent(values.get("key"), ignored -> new AtomicInteger()).incrementAndGet()), true, false));
         register(NULL_IDENTIFIER, List.of("text"), values -> null);
         register(FAILING_IDENTIFIER, List.of("text"), values -> {
             throw new IllegalStateException("Test placeholder failure");
         });
-        registerPlaceholder(new FunctionPlaceholder(CAPTURE_IDENTIFIER, List.of("key", "text"), null, false));
-        registerPlaceholder(new FunctionPlaceholder(MAIN_THREAD_VALUE_IDENTIFIER, List.of("key"), values -> VALUES.getOrDefault(values.get("key"), ""), true));
+        registerPlaceholder(new FunctionPlaceholder(CAPTURE_IDENTIFIER, List.of("key", "text"), null, false, false));
+        registerPlaceholder(new FunctionPlaceholder(MAIN_THREAD_VALUE_IDENTIFIER, List.of("key"), values -> VALUES.getOrDefault(values.get("key"), ""), false, true));
     }
 
     private TestPlaceholders() {
@@ -89,6 +94,21 @@ public final class TestPlaceholders {
     public static int evaluations(@NotNull String key) {
         AtomicInteger evaluations = EVALUATIONS.get(key);
         return (evaluations != null) ? evaluations.get() : 0;
+    }
+
+    /**
+     * A placeholder that gets replaced with how often a counter placeholder of the given key got replaced, so every call returns a new number.
+     * It does not get evaluated per occurrence, like most placeholders.
+     */
+    @NotNull
+    public static String counter(@NotNull String key) {
+        return serialize(COUNTER_IDENTIFIER, "key", key);
+    }
+
+    /** Like {@link #counter(String)} and sharing its counters, but evaluated per occurrence, see {@link Placeholder#isEvaluatedPerOccurrence(DeserializedPlaceholderString)}. */
+    @NotNull
+    public static String perOccurrenceCounter(@NotNull String key) {
+        return serialize(PER_OCCURRENCE_COUNTER_IDENTIFIER, "key", key);
     }
 
     /** A placeholder that returns null as replacement. */
@@ -134,7 +154,7 @@ public final class TestPlaceholders {
     }
 
     private static void register(@NotNull String identifier, @NotNull List<String> valueNames, @NotNull Function<Map<String, String>, String> replacement) {
-        registerPlaceholder(new FunctionPlaceholder(identifier, valueNames, replacement, false));
+        registerPlaceholder(new FunctionPlaceholder(identifier, valueNames, replacement, false, false));
     }
 
     private static void registerPlaceholder(@NotNull FunctionPlaceholder placeholder) {
@@ -147,12 +167,14 @@ public final class TestPlaceholders {
         /** Null for the capture placeholder. */
         @Nullable
         private final Function<Map<String, String>, String> replacement;
+        private final boolean perOccurrence;
         private final boolean mainThreadOnly;
 
-        private FunctionPlaceholder(@NotNull String identifier, @NotNull List<String> valueNames, @Nullable Function<Map<String, String>, String> replacement, boolean mainThreadOnly) {
+        private FunctionPlaceholder(@NotNull String identifier, @NotNull List<String> valueNames, @Nullable Function<Map<String, String>, String> replacement, boolean perOccurrence, boolean mainThreadOnly) {
             super(identifier);
             this.valueNames = valueNames;
             this.replacement = replacement;
+            this.perOccurrence = perOccurrence;
             this.mainThreadOnly = mainThreadOnly;
         }
 
@@ -161,6 +183,11 @@ public final class TestPlaceholders {
             if (this.replacement != null) return this.replacement.apply(dps.values);
             CAPTURED.put(dps.values.get("key"), new DeserializedPlaceholderString(dps.placeholderIdentifier, new HashMap<>(dps.values), dps.placeholderString));
             return "captured";
+        }
+
+        @Override
+        public boolean isEvaluatedPerOccurrence(@NotNull DeserializedPlaceholderString dps) {
+            return this.perOccurrence;
         }
 
         @Override
