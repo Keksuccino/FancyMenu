@@ -5,10 +5,14 @@ import de.keksuccino.fancymenu.customization.aiexport.exporters.DialogAiExporter
 import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcon;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollbar.ScrollBar;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -20,14 +24,14 @@ import java.util.function.Consumer;
 
 public class MessageDialogBody extends PiPWindowBody {
 
-    private static final int ICON_SIZE = 32;
-    private static final int ICON_GAP = 12;
-    private static final int PADDING = 16;
-    private static final int BUTTON_WIDTH = 120;
-    private static final int BUTTON_HEIGHT = 20;
-    private static final int BUTTON_GAP = 8;
-    private static final int BUTTON_BOTTOM_PADDING = 20;
-    private static final int LINE_SPACING = 14;
+    private static final int ICON_SIZE = MessageDialogLayout.ICON_SIZE;
+    private static final int PADDING = MessageDialogLayout.PADDING;
+    private static final int BUTTON_HEIGHT = MessageDialogLayout.BUTTON_HEIGHT;
+    private static final int BUTTON_WIDTH = MessageDialogLayout.BUTTON_WIDTH;
+    private static final int BUTTON_GAP = MessageDialogLayout.BUTTON_GAP;
+    private static final int LINE_SPACING = MessageDialogLayout.LINE_SPACING;
+    /** The share of the screen height the body of a dialog grows to at most for its message. */
+    private static final float MAX_SCREEN_SHARE = 0.75F;
 
     @NotNull
     private final Component message;
@@ -39,6 +43,13 @@ public class MessageDialogBody extends PiPWindowBody {
     @NotNull
     private List<MutableComponent> renderLines = new ArrayList<>();
     private int lastWrapWidth = -1;
+    @NotNull
+    private MessageDialogLayout layout = MessageDialogLayout.of(0, 0, 0, false);
+    /** Scrolls a message that is too long for the dialog. It keeps its scroll when the dialog gets resized. */
+    @NotNull
+    private final ScrollBar scrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, UIBase.VERTICAL_SCROLL_BAR_WIDTH, UIBase.VERTICAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, () -> UIBase.getUITheme().scroll_grabber_color_normal, () -> UIBase.getUITheme().scroll_grabber_color_hover);
+    /** The smallest body height this dialog last gave its window, or -1 before it gave one. */
+    private int windowMinBodyHeight = -1;
 
     @Nullable
     private ExtendedButton cancelButton;
@@ -65,12 +76,47 @@ public class MessageDialogBody extends PiPWindowBody {
         this.message = message;
         this.style = style;
         this.callback = callback;
+        this.scrollBar.setRoundedGrabberEnabled(true);
+        this.scrollBar.setGrabberEdgeInset(0.0F);
     }
 
     @Override
     protected void init() {
         rebuildButtons();
+        this.addWidget(this.scrollBar);
         this.updateRenderLines();
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        // A new body width wraps the message into a new number of lines. The window gets its new minimum here instead of in init(),
+        // because init() runs while the window is still busy resizing the body.
+        this.fitWindowToMessage();
+    }
+
+    /**
+     * Makes the window of this dialog at least as tall as its message needs to fit above the buttons without scrolling.
+     * The dialog grows to three quarters of the screen height at most, so a very long message scrolls instead of making the dialog
+     * cover the whole screen.<br>
+     * Windows open centered with the size they have at that moment, so this has to get called once after the window got this dialog
+     * and before it opens. After that, the dialog keeps the window in sync by itself.
+     */
+    public void fitWindowToMessage() {
+        PiPWindow window = this.getWindow();
+        if (window == null) return;
+        int minBodyHeight = Math.min(MessageDialogLayout.getFittingBodyHeight(this.renderLines.size(), this.style.getIcon() != null), getMaxFittingBodyHeight());
+        if (minBodyHeight == this.windowMinBodyHeight) return;
+        this.windowMinBodyHeight = minBodyHeight;
+        window.setMinBodySize(0, minBodyHeight);
+    }
+
+    private static int getMaxFittingBodyHeight() {
+        // Dialogs draw their body at the FancyMenu UI scale, which makes this the screen height in the units of the body
+        int screenHeight = Minecraft.getInstance().getWindow().getGuiScaledHeight();
+        float renderScale = UIBase.getFixedUIRenderScale();
+        if (!(renderScale > 0.0F)) return screenHeight;
+        return (int) ((screenHeight / renderScale) * MAX_SCREEN_SHARE);
     }
 
     @Override
@@ -84,32 +130,27 @@ public class MessageDialogBody extends PiPWindowBody {
     public void renderBody(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
 
         this.updateRenderLinesIfNeeded();
+        MessageDialogLayout layout = this.layout;
 
-        int buttonAreaHeight = BUTTON_HEIGHT + BUTTON_BOTTOM_PADDING;
-        int contentTop = PADDING;
-        int contentBottom = Math.max(contentTop, this.height - buttonAreaHeight);
-        int contentHeight = Math.max(0, contentBottom - contentTop);
-
-        int textHeight = this.renderLines.size() * LINE_SPACING;
-        int iconHeight = (this.style.getIcon() != null) ? ICON_SIZE : 0;
-        int contentBlockHeight = Math.max(textHeight, iconHeight);
-        int contentY = contentTop + Math.max(0, (contentHeight - contentBlockHeight) / 2);
-
-        int textX = PADDING;
-        if (this.style.getIcon() != null) {
-            int iconX = PADDING;
-            int iconY = contentY + (contentBlockHeight - ICON_SIZE) / 2;
+        MaterialIcon icon = this.style.getIcon();
+        if (icon != null) {
             DrawableColor tint = resolveIconTint();
-            this.style.getIcon().render(graphics, iconX, iconY, ICON_SIZE, ICON_SIZE, (tint != null) ? tint.getColorInt() : -1);
-            textX = iconX + ICON_SIZE + ICON_GAP;
+            icon.render(graphics, PADDING, layout.iconY(), ICON_SIZE, ICON_SIZE, (tint != null) ? tint.getColorInt() : -1);
         }
 
-        int textY = contentY + Math.max(0, (contentBlockHeight - textHeight) / 2);
-        int y = textY;
+        boolean scrollable = layout.isScrollable();
+        int scrollOffset = layout.getScrollOffset(this.scrollBar.getScroll());
+        if (scrollable) {
+            graphics.enableScissor(0, layout.messageAreaTop(), this.width, layout.messageAreaTop() + layout.messageAreaHeight());
+        }
         int textColor = UIBase.shouldBlur() ? UIBase.getUITheme().ui_blur_interface_generic_text_color.getColorInt() : UIBase.getUITheme().ui_interface_generic_text_color.getColorInt();
-        for (Component line : this.renderLines) {
-            UIBase.renderText(graphics, line, textX, y, textColor);
-            y += LINE_SPACING;
+        int lineEnd = layout.getVisibleLineEnd(scrollOffset, this.renderLines.size());
+        for (int i = layout.getFirstVisibleLine(scrollOffset); i < lineEnd; i++) {
+            UIBase.renderText(graphics, this.renderLines.get(i), layout.textX(), layout.textY() - scrollOffset + (i * LINE_SPACING), textColor);
+        }
+        if (scrollable) {
+            graphics.disableScissor();
+            this.scrollBar.extractRenderState(graphics, mouseX, mouseY, partial);
         }
 
         updateButtonPositions();
@@ -139,6 +180,17 @@ public class MessageDialogBody extends PiPWindowBody {
         return super.keyPressed(button, scanCode, modifiers);
     }
 
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollDeltaX, double scrollDeltaY) {
+        if (super.mouseScrolled(mouseX, mouseY, scrollDeltaX, scrollDeltaY)) return true;
+        // The wheel scrolls a message that is too long for the dialog from anywhere in the dialog, not only over the message
+        if ((scrollDeltaY != 0.0D) && this.layout.isScrollable() && !this.scrollBar.isGrabberGrabbed()) {
+            this.scrollBar.setScroll(this.layout.getScrollAfterWheel(this.scrollBar.getScroll(), scrollDeltaY));
+            return true;
+        }
+        return false;
+    }
+
     private void handleResult(boolean accepted) {
         if (accepted && !canAccept()) {
             return;
@@ -159,44 +211,67 @@ public class MessageDialogBody extends PiPWindowBody {
 
     private void updateRenderLines() {
         int wrapWidth = getWrapWidth();
-        List<MutableComponent> linesCopy = UIBase.lineWrapUIComponentsNormal(this.message, 100000.0F);
-        this.renderLines = UIBase.lineWrapUIComponentsNormal(linesCopy, (float)wrapWidth);
+        // The body gets drawn at the UI scale, where the UI font is one size bigger on small UI scales, so the lines have to get measured like that
+        UIBase.startUIScaleRendering();
+        try {
+            List<MutableComponent> linesCopy = UIBase.lineWrapUIComponentsNormal(this.message, 100000.0F);
+            this.renderLines = UIBase.lineWrapUIComponentsNormal(linesCopy, (float)wrapWidth);
+        } finally {
+            UIBase.stopUIScaleRendering();
+        }
         this.lastWrapWidth = wrapWidth;
+        this.updateLayout();
     }
 
     private int getWrapWidth() {
-        int iconSpace = (this.style.getIcon() != null) ? (ICON_SIZE + ICON_GAP) : 0;
-        return Math.max(20, this.width - (PADDING * 2) - iconSpace);
+        return MessageDialogLayout.getWrapWidth(this.width, this.style.getIcon() != null);
+    }
+
+    private void updateLayout() {
+        this.layout = MessageDialogLayout.of(this.width, this.height, this.renderLines.size(), this.style.getIcon() != null);
+        boolean scrollable = this.layout.isScrollable();
+        this.scrollBar.active = scrollable;
+        if (!scrollable) this.scrollBar.setScroll(0.0F);
+        // The grabber moves along the right side of the message area, in the middle of the padding next to the message.
+        // It is at most half as tall as the area, so it still has room to move in very small dialogs.
+        int grabberWidth = (int) this.scrollBar.grabberWidth;
+        this.scrollBar.grabberHeight = Math.max(1, Math.min(UIBase.VERTICAL_SCROLL_BAR_HEIGHT, this.layout.messageAreaHeight() / 2));
+        this.scrollBar.scrollAreaStartX = this.layout.textX();
+        this.scrollBar.scrollAreaStartY = this.layout.messageAreaTop();
+        this.scrollBar.scrollAreaEndX = this.layout.scrollBarCenterX() + (grabberWidth - (grabberWidth / 2));
+        this.scrollBar.scrollAreaEndY = this.layout.messageAreaTop() + this.layout.messageAreaHeight();
     }
 
     private void updateButtonPositions() {
-        int y = this.height - BUTTON_HEIGHT - BUTTON_BOTTOM_PADDING;
+        int y = this.layout.buttonY();
         if (this.okayButton != null) {
+            int buttonCount = (this.aiExportButton != null) ? 2 : 1;
+            int buttonWidth = MessageDialogLayout.getButtonWidth(this.width, buttonCount);
+            int x = MessageDialogLayout.getButtonRowX(this.width, buttonCount, buttonWidth);
             if (this.aiExportButton != null) {
-                int x = (this.width - ((BUTTON_WIDTH * 2) + BUTTON_GAP)) / 2;
-                this.aiExportButton.setX(x);
-                this.aiExportButton.setY(y);
-                this.okayButton.setX(x + BUTTON_WIDTH + BUTTON_GAP);
-            } else {
-                this.okayButton.setX((this.width - BUTTON_WIDTH) / 2);
+                placeButton(this.aiExportButton, x, y, buttonWidth);
+                x += buttonWidth + BUTTON_GAP;
             }
-            this.okayButton.setY(y);
+            placeButton(this.okayButton, x, y, buttonWidth);
         } else if (this.cancelButton != null && this.acceptButton != null) {
             int buttonCount = (this.alternativeButton != null) ? 3 : 2;
-            int totalWidth = (BUTTON_WIDTH * buttonCount) + (BUTTON_GAP * (buttonCount - 1));
-            int x = (this.width - totalWidth) / 2;
-            this.cancelButton.setX(x);
-            this.cancelButton.setY(y);
-            x += BUTTON_WIDTH + BUTTON_GAP;
+            int buttonWidth = MessageDialogLayout.getButtonWidth(this.width, buttonCount);
+            int x = MessageDialogLayout.getButtonRowX(this.width, buttonCount, buttonWidth);
+            placeButton(this.cancelButton, x, y, buttonWidth);
+            x += buttonWidth + BUTTON_GAP;
             // The other way to go on sits between canceling and accepting
             if (this.alternativeButton != null) {
-                this.alternativeButton.setX(x);
-                this.alternativeButton.setY(y);
-                x += BUTTON_WIDTH + BUTTON_GAP;
+                placeButton(this.alternativeButton, x, y, buttonWidth);
+                x += buttonWidth + BUTTON_GAP;
             }
-            this.acceptButton.setX(x);
-            this.acceptButton.setY(y);
+            placeButton(this.acceptButton, x, y, buttonWidth);
         }
+    }
+
+    private static void placeButton(@NotNull ExtendedButton button, int x, int y, int width) {
+        button.setX(x);
+        button.setY(y);
+        button.setWidth(width);
     }
 
     private void rebuildButtons() {
