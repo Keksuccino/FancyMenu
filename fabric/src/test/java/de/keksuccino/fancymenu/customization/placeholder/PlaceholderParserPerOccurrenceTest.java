@@ -89,6 +89,58 @@ class PlaceholderParserPerOccurrenceTest {
     }
 
     @Test
+    void identicalValuesWithSuchAPlaceholderGetTheirOwnReplacementWhileCaching() {
+        enableLongCaching();
+        String nested = echo(perOccurrenceCounter("per_occurrence_cached_value"));
+        String text = nested + " " + nested;
+        String first = PlaceholderParser.replacePlaceholders(text);
+        assertEquals(List.of("1", "2"), sortedWords(first));
+        assertEquals(first, PlaceholderParser.replacePlaceholders(text));
+    }
+
+    @Test
+    void differentPlaceholdersWithTheSameValueGetTheirOwnReplacementWhileCaching() {
+        enableLongCaching();
+        String counter = perOccurrenceCounter("per_occurrence_cached_shared");
+        String[] words = PlaceholderParser.replacePlaceholders(echo(counter) + " " + join(counter, "x")).split(" ");
+        assertEquals(2, words.length);
+        assertTrue(words[1].endsWith("|x"), words[1]);
+        assertEquals(List.of("1", "2"), sortedWords(words[0] + " " + words[1].substring(0, words[1].length() - 2)));
+        // A value at another nesting depth shares the same value text too
+        String counterDeep = perOccurrenceCounter("per_occurrence_cached_depth");
+        assertEquals(List.of("1", "2"), sortedWords(PlaceholderParser.replacePlaceholders(echo(echo(counterDeep)) + " " + echo(counterDeep))));
+    }
+
+    @Test
+    void deeplyNestedValuesWithSuchAPlaceholderGetTheirOwnReplacementWhileCaching() {
+        enableLongCaching();
+        String deep = join(echo(echo(perOccurrenceCounter("per_occurrence_cached_deep"))), "x");
+        assertEquals(List.of("1|x", "2|x"), sortedWords(PlaceholderParser.replacePlaceholders(deep + " " + deep)));
+    }
+
+    @Test
+    void occurrencesThatComeFromOutputGetTheirOwnReplacementWhileCaching() {
+        enableLongCaching();
+        TestPlaceholders.setValue("per_occurrence_cached_output", echo(perOccurrenceCounter("per_occurrence_cached_output_counter")));
+        String placeholder = value("per_occurrence_cached_output");
+        assertEquals(List.of("1", "2"), sortedWords(PlaceholderParser.replacePlaceholders(placeholder + " " + placeholder)));
+        // The output gets parsed again inside the values
+        TestPlaceholders.setValue("per_occurrence_cached_value_output", echo(perOccurrenceCounter("per_occurrence_cached_value_output_counter")));
+        String inValue = echo(value("per_occurrence_cached_value_output"));
+        assertEquals(List.of("1", "2"), sortedWords(PlaceholderParser.replacePlaceholders(inValue + " " + inValue)));
+    }
+
+    @Test
+    void valuesWithoutSuchAPlaceholderStillGetCached() {
+        enableLongCaching();
+        TestPlaceholders.setValue("per_occurrence_cached_normal", "v");
+        String placeholder = value("per_occurrence_cached_normal");
+        assertEquals("va", PlaceholderParser.replacePlaceholders(echo(placeholder) + "a"));
+        assertEquals("v|b", PlaceholderParser.replacePlaceholders(join(placeholder, "b")));
+        assertEquals(1, TestPlaceholders.evaluations("per_occurrence_cached_normal"));
+    }
+
+    @Test
     void parsedPlaceholderUsesTheFlagForItsValues() {
         String nested = echo(perOccurrenceCounter("per_occurrence_parsed"));
         HashMap<String, String> parsed = new HashMap<>();
@@ -110,6 +162,10 @@ class PlaceholderParserPerOccurrenceTest {
         dps.values.put("min", "1");
         dps.values.put("max", "100");
         assertTrue(randomNumber.isEvaluatedPerOccurrence(dps));
+    }
+
+    private static void enableLongCaching() {
+        PlaceholderParser.setPlaceholderCachingController(new PlaceholderParser.PlaceholderCachingController(() -> true, () -> 60000L));
     }
 
     /** The words of the text, sorted, because the order in which occurrences get replaced is not part of the contract. */
