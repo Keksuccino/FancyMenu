@@ -5,7 +5,6 @@
 package de.keksuccino.fancymenu.customization.placeholder;
 
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.customization.variables.UserVariableSnapshot;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -85,15 +84,6 @@ public class PlaceholderParser {
     public static String resolveVariableReferences(@NotNull String text) {
         if (!text.contains(ShortReferenceResolver.PREFIX)) return text;
         return VariableHandler.resolveVariableReferences(text);
-    }
-
-    @NotNull
-    static String resolveVariableReferences(@NotNull String text, @NotNull List<UserVariableSnapshot> variables) {
-        if (variables.isEmpty()) return text;
-        return ShortReferenceResolver.resolve(text, (in, nameStart) -> {
-            UserVariableSnapshot variable = ShortReferenceResolver.findLongestName(in, nameStart, variables, UserVariableSnapshot::name);
-            return (variable != null) ? new ShortReferenceResolver.Reference(variable.name().length(), variable.value()) : null;
-        });
     }
 
     /**
