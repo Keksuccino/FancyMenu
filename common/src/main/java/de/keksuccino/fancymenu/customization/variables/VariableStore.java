@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.variables;
 
+import de.keksuccino.fancymenu.customization.placeholder.ShortReferenceResolver;
 import de.keksuccino.fancymenu.util.Legacy;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
@@ -33,6 +34,14 @@ final class VariableStore {
     private final VariablePersistenceCoordinator persistence;
 
     private long stateRevision;
+    /**
+     * Increases on every change to the entries of {@link #variables} (adding, removing or replacing a variable object), but not on value
+     * changes. {@link #nameIndex} holds the variable objects of one revision, so every code path that changes the entries must call
+     * {@link #variableSetChangedLocked()} after the change, before anything else can run (listeners can reenter the store).
+     */
+    private long variableSetRevision;
+    @NotNull
+    private VariableNameIndex nameIndex = VariableNameIndex.EMPTY;
     private boolean initialized;
     private boolean replacementInProgress;
     private boolean shutdown;
@@ -68,6 +77,7 @@ final class VariableStore {
                 synchronized (this.stateLock) {
                     this.variables.clear();
                     this.variables.putAll(loadedVariables);
+                    this.variableSetChangedLocked();
                     for (Variable variable : this.variables.values()) {
                         if (variable.isResetOnLaunchLocked()) variable.setRawValueLocked("");
                     }
@@ -92,6 +102,7 @@ final class VariableStore {
             if (variable == null) {
                 variable = new Variable(checkedName, this);
                 this.variables.put(checkedName, variable);
+                this.variableSetChangedLocked();
                 created = true;
             }
             // Variable is deliberately only a state object; this handler mutation is the single persistence owner.
@@ -115,6 +126,7 @@ final class VariableStore {
             if (this.shutdown || this.variables.containsKey(checkedName)) return false;
             Variable variable = new Variable(checkedName, this);
             this.variables.put(checkedName, variable);
+            this.variableSetChangedLocked();
             variable.setRawValueLocked(Variable.encodeValue(value));
             revision = this.nextRevisionLocked();
             this.updateListener.onVariableUpdated(variable.getName(), "", Objects.requireNonNullElse(value, "0"));
@@ -139,6 +151,7 @@ final class VariableStore {
             }
             Variable variable = new Variable(candidate, this);
             this.variables.put(candidate, variable);
+            this.variableSetChangedLocked();
             variable.setRawValueLocked(Variable.encodeValue(value));
             variable.setResetOnLaunchLocked(resetOnLaunch);
             revision = this.nextRevisionLocked();
@@ -157,9 +170,11 @@ final class VariableStore {
             Map<String, Variable> previousVariables = new HashMap<>(this.variables);
             try {
                 this.variables.clear();
+                this.variableSetChangedLocked();
                 for (UserVariableSnapshot snapshot : stableSnapshots) {
                     Variable variable = new Variable(snapshot.name(), this);
                     this.variables.put(snapshot.name(), variable);
+                    this.variableSetChangedLocked();
                     variable.setRawValueLocked(Variable.encodeValue(snapshot.value()));
                     variable.setResetOnLaunchLocked(snapshot.resetOnLaunch());
                     this.updateListener.onVariableUpdated(snapshot.name(), "", snapshot.value());
@@ -167,6 +182,7 @@ final class VariableStore {
             } catch (RuntimeException | Error failure) {
                 this.variables.clear();
                 this.variables.putAll(previousVariables);
+                this.variableSetChangedLocked();
                 throw failure;
             }
             revision = this.nextRevisionLocked();
@@ -179,6 +195,7 @@ final class VariableStore {
         synchronized (this.stateLock) {
             this.awaitReplacementLocked();
             if (this.shutdown || this.variables.remove(Objects.requireNonNull(name)) == null) return;
+            this.variableSetChangedLocked();
             revision = this.nextRevisionLocked();
         }
         this.persistence.markDirty(revision, "removing variable '" + name + "'");
@@ -190,6 +207,7 @@ final class VariableStore {
             this.awaitReplacementLocked();
             if (this.shutdown || this.variables.isEmpty()) return;
             this.variables.clear();
+            this.variableSetChangedLocked();
             revision = this.nextRevisionLocked();
         }
         this.persistence.markDirty(revision, "clearing variables");
@@ -235,6 +253,34 @@ final class VariableStore {
             List<UserVariableSnapshot> snapshots = new ArrayList<>(this.variables.size());
             for (Variable variable : this.variables.values()) snapshots.add(variable.createSnapshotLocked());
             return List.copyOf(snapshots);
+        }
+    }
+
+    /**
+     * Replaces every {@code $$name} reference to one of the variables with the value of the variable. At every {@code $$}, the variable
+     * with the longest name that starts there wins (see {@link ShortReferenceResolver}), and replacements are not searched again.
+     *
+     * <p>All references of the text get the values of one state, like with {@link #getVariableSnapshots()}, but without copying the
+     * variables: the whole text gets resolved under the state lock. The lookup only reads the name index and the values, so it never
+     * runs foreign code while holding the lock.</p>
+     */
+    @NotNull
+    String resolveReferences(@NotNull String text) {
+        synchronized (this.stateLock) {
+            this.awaitReplacementLocked();
+            VariableNameIndex index = this.getNameIndexLocked();
+            if (index.isEmpty()) return text;
+            return ShortReferenceResolver.resolve(text, (in, nameStart) -> {
+                Variable variable = index.findLongest(in, nameStart);
+                return (variable != null) ? new ShortReferenceResolver.Reference(variable.getName().length(), variable.getValueLocked()) : null;
+            });
+        }
+    }
+
+    /** The revision of the store's variable set, see {@link #variableSetRevision}. */
+    long getVariableSetRevision() {
+        synchronized (this.stateLock) {
+            return this.variableSetRevision;
         }
     }
 
@@ -368,6 +414,7 @@ final class VariableStore {
                 synchronized (this.stateLock) {
                     this.variables.clear();
                     this.variables.putAll(loadedVariables);
+                    this.variableSetChangedLocked();
                     revision = this.nextRevisionLocked();
                 }
                 return VariablePersistenceCoordinator.ExclusiveCommit.clean(revision);
@@ -413,6 +460,21 @@ final class VariableStore {
     private long nextRevisionLocked() {
         this.stateRevision++;
         return this.stateRevision;
+    }
+
+    private void variableSetChangedLocked() {
+        this.variableSetRevision++;
+    }
+
+    /** Returns the name index of the current variable set, building a new one only after the set changed. */
+    @NotNull
+    private VariableNameIndex getNameIndexLocked() {
+        VariableNameIndex index = this.nameIndex;
+        if (index.revision() != this.variableSetRevision) {
+            index = VariableNameIndex.build(this.variableSetRevision, this.variables.values());
+            this.nameIndex = index;
+        }
+        return index;
     }
 
     private void requireOwner(@NotNull Variable variable) {
