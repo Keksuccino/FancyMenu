@@ -22,15 +22,22 @@ public final class MarkdownTestRenderer extends MarkdownRenderer {
     MarkdownFontCoverage fontCoverage = fontWithCharacters(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~");
     int parses = 0;
     int layouts = 0;
+    /** The revision of the variables this renderer sees. Tests increase it to act like a variable change, which never touches FancyMenu's real variables. */
+    long variablesRevision = 0L;
+    /** How often the renderer read {@link #variablesRevision}. */
+    int variablesRevisionReads = 0;
 
     public MarkdownTestRenderer() {
-        this(new UITheme[1]);
+        this(new MarkdownTestRenderer[1]);
     }
 
-    private MarkdownTestRenderer(UITheme[] theme) {
-        // The supplier gets asked after the renderer got built, which is when the theme of this renderer exists
-        super(new TestFont(), () -> theme[0]);
-        theme[0] = this.theme;
+    private MarkdownTestRenderer(MarkdownTestRenderer[] self) {
+        // The suppliers get asked after the renderer got built, which is when the fields of this renderer exist
+        super(new TestFont(), () -> self[0].theme, () -> {
+            self[0].variablesRevisionReads++;
+            return self[0].variablesRevision;
+        });
+        self[0] = this;
         // Fonts get read from the resources of the game, so every font of a test has the characters of this definition
         this.textFont.fontCoverage = font -> this.fontCoverage;
     }
