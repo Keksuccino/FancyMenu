@@ -23,8 +23,8 @@ import java.util.function.Supplier;
  * Replaces placeholders and {@code $$} variable references in texts.
  *
  * <p>The work is split by responsibility: {@link PlaceholderScanner} finds placeholders, {@link PlaceholderValueParser} reads their values,
- * {@link PlaceholderEvaluator} replaces them, {@link ParsingProcessorRegistry} holds the parsing processors and {@link PlaceholderResultCache}
- * caches results. This class is the public entry point.</p>
+ * {@link PlaceholderTemplate} compiles texts once, {@link PlaceholderEvaluator} replaces their placeholders, {@link ParsingProcessorRegistry}
+ * holds the parsing processors and {@link PlaceholderResultCache} caches results. This class is the public entry point.</p>
  */
 public class PlaceholderParser {
 
@@ -163,14 +163,14 @@ public class PlaceholderParser {
     @NotNull
     public static String replacePlaceholdersWithoutLengthLimit(@Nullable String in, boolean preserveFormattingCodes) {
         if (in == null) return EMPTY_STRING;
-        return PlaceholderEvaluator.replacePlaceholders(in, null, PlaceholderEvaluator.createParsingContext(preserveFormattingCodes, false));
+        return PlaceholderEvaluator.replacePlaceholders(in, null, PlaceholderEvaluator.createParsingContext(preserveFormattingCodes, false), null);
     }
 
     @NotNull
     private static String replacePlaceholders(@Nullable String in, boolean preserveFormattingCodes) {
         if (in == null) return EMPTY_STRING;
         if (in.length() >= MAX_TEXT_LENGTH) return TOO_LONG_TO_PARSE_ERROR_MESSAGE;
-        return PlaceholderEvaluator.replacePlaceholders(in, null, PlaceholderEvaluator.createParsingContext(preserveFormattingCodes, true));
+        return PlaceholderEvaluator.replacePlaceholders(in, null, PlaceholderEvaluator.createParsingContext(preserveFormattingCodes, true), null);
     }
 
     /**
@@ -182,13 +182,9 @@ public class PlaceholderParser {
      */
     @NotNull
     public static List<ParsedPlaceholder> findPlaceholders(@Nullable String in, @NotNull HashMap<String, String> parsed) {
-        return findPlaceholders(in, parsed, PlaceholderEvaluator.createParsingContext(false, true));
-    }
-
-    @NotNull
-    static List<ParsedPlaceholder> findPlaceholders(@Nullable String in, @NotNull HashMap<String, String> parsed, @NotNull PlaceholderEvaluator.ParsingContext context) {
         List<ParsedPlaceholder> placeholders = new ArrayList<>();
         if (in == null) return placeholders;
+        PlaceholderEvaluator.ParsingContext context = PlaceholderEvaluator.createParsingContext(false, true);
         PlaceholderScanner scanner = new PlaceholderScanner(in);
         while (scanner.next()) {
             int start = scanner.start();
@@ -251,6 +247,10 @@ public class PlaceholderParser {
             return null;
         }
 
+        /**
+         * Replaces the placeholder the same way parsing a text replaces it. Its values come from {@link #getValues()}.
+         * It keeps its raw text if it is unknown, can't run on this thread, has values that can't be read or returns null.
+         */
         @NotNull
         public String getReplacement() {
             String identifier = this.getIdentifier();

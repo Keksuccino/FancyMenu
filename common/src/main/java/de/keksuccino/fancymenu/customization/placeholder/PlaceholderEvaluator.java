@@ -4,8 +4,6 @@
 
 package de.keksuccino.fancymenu.customization.placeholder;
 
-import com.google.common.collect.Lists;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -21,13 +19,14 @@ import java.util.Map;
  *     <li>A cached result of the text gets returned (see {@link PlaceholderResultCache}).</li>
  *     <li>The BEFORE processors run on it. If it contains no placeholders and no {@code $$} references after that (see {@link #passesGate(String)}),
  *     it gets returned as it is, without running the AFTER processors.</li>
- *     <li>Its placeholders get replaced. The result gets replaced again and again, until a pass doesn't change it anymore,
+ *     <li>Its {@link PlaceholderTemplate} gets replaced. The result gets replaced again and again, until a pass doesn't change it anymore,
  *     because placeholders can return placeholders.</li>
  *     <li>The AFTER processors run on it.</li>
  *     <li>The result gets cached.</li>
  * </ol>
  *
- * <p>Identical placeholders of one parse get replaced once and share their replacement, across all values and passes.</p>
+ * <p>Identical placeholders of one parse get replaced once and share their replacement, across all values and passes
+ * (the memo of {@link EvaluationState}).</p>
  */
 final class PlaceholderEvaluator {
 
@@ -41,6 +40,7 @@ final class PlaceholderEvaluator {
     private static final int MIN_LENGTH_FOR_PARSING = 8;
     private static final String SHORT_VARIABLE_PLACEHOLDER_PREFIX = "$$";
     private static final String EMPTY_STRING = "";
+    private static final int MAX_BUILDER_CAPACITY = Integer.MAX_VALUE - 8;
 
     // String length is measured in retained UTF-16 code units, with a fixed allowance for each entry's objects.
     private static final LogCooldownTracker LOG_COOLDOWN = new LogCooldownTracker(LOG_COOLDOWN_MS, LOG_COOLDOWN_MAX_ENTRIES, LOG_COOLDOWN_MAX_WEIGHT);
@@ -99,49 +99,43 @@ final class PlaceholderEvaluator {
     /**
      * Replaces the placeholders of a text or of a placeholder value, see the class comment.
      *
-     * @param in The text before any processor ran on it.
-     * @param parsed Replacements of the placeholders of the running parse by their raw text, or null if this starts a new parse.
+     * @param text The text before any processor ran on it.
+     * @param slot The compiled value, if the text is the raw text of a value of a {@link PlaceholderTemplate}.
+     * @param context The context of the parse, which is the context of the state if there is one.
+     * @param state The state of the running parse, or null if this starts a new parse.
      */
     @NotNull
-    static String replacePlaceholders(@NotNull String in, @Nullable HashMap<String, String> parsed, @NotNull ParsingContext context) {
+    static String replacePlaceholders(@NotNull String text, @Nullable PlaceholderTemplate.ValueSlot slot, @NotNull ParsingContext context, @Nullable EvaluationState state) {
 
-        if (context.limitTextLength() && (in.length() >= PlaceholderParser.MAX_TEXT_LENGTH)) return PlaceholderParser.TOO_LONG_TO_PARSE_ERROR_MESSAGE;
+        if (context.limitTextLength() && (text.length() >= PlaceholderParser.MAX_TEXT_LENGTH)) return PlaceholderParser.TOO_LONG_TO_PARSE_ERROR_MESSAGE;
 
+        // Compiled values without placeholders or $$ references never get their result cached, so they skip the lookup.
         // Cache hits deliberately skip BEFORE processors, so insertion must use this exact pre-processor key too.
-        String cacheKey = in;
-        if (context.cachePlaceholders()) {
-            String cached = PlaceholderResultCache.get(cacheKey, context);
+        boolean plainValue = (slot != null) && (slot.template == null);
+        if (context.cachePlaceholders() && !plainValue) {
+            String cached = PlaceholderResultCache.get(text, context);
             if (cached != null) return cached;
         }
 
-        in = context.processors().processBeforeReplacement(in);
+        String processed = context.processors().processBeforeReplacement(text);
 
-        if (!passesGate(in)) return in;
-
-        // Used to cache replacements for already parsed placeholders, so they can get reused to improve performance
-        if (parsed == null) parsed = new HashMap<>();
-
-        int hash = in.hashCode();
-        while (true) {
-            // Reverse the list to start replacing from the end of the String, so all nested placeholders get replaced first
-            for (PlaceholderParser.ParsedPlaceholder p : Lists.reverse(PlaceholderParser.findPlaceholders(in, parsed, context))) {
-                String replacement = parsed.get(p.placeholderString);
-                if (replacement == null) {
-                    replacement = p.getReplacement();
-                    parsed.put(p.placeholderString, replacement);
-                }
-                in = StringUtils.replace(in, p.placeholderString, replacement);
-            }
-            int hashNew = in.hashCode();
-            if (hashNew == hash) break;
-            hash = hashNew;
+        PlaceholderTemplate template;
+        if ((slot != null) && slot.isProcessedText(processed)) {
+            if (slot.template == null) return processed;
+            template = slot.template;
+        } else {
+            if (!passesGate(processed)) return processed;
+            template = PlaceholderTemplate.get(processed, context);
         }
 
-        in = context.processors().processAfterReplacement(in, context.preserveFormattingCodes() ? PlaceholderParser.FORMATTING_CODE_PROCESSOR_ID : ParsingProcessorRegistry.NO_PROCESSOR_ID);
+        if (state == null) state = new EvaluationState(context, null);
+        String result = replaceTemplate(template, state);
 
-        if (context.cachePlaceholders()) PlaceholderResultCache.put(cacheKey, in, context);
+        result = context.processors().processAfterReplacement(result, context.preserveFormattingCodes() ? PlaceholderParser.FORMATTING_CODE_PROCESSOR_ID : ParsingProcessorRegistry.NO_PROCESSOR_ID);
 
-        return in;
+        if (context.cachePlaceholders()) PlaceholderResultCache.put(text, result, context);
+
+        return result;
 
     }
 
@@ -149,17 +143,102 @@ final class PlaceholderEvaluator {
      * Replaces one placeholder found by {@link PlaceholderParser#findPlaceholders(String, HashMap)}, see {@link PlaceholderParser.ParsedPlaceholder#getReplacement()}.
      * Its values come from {@link PlaceholderParser.ParsedPlaceholder#getValues()}, so subclasses can change them.
      */
+    @NotNull
     static String replaceParsedPlaceholder(@NotNull PlaceholderParser.ParsedPlaceholder parsed, @NotNull Placeholder placeholder, @NotNull String identifier, @NotNull HashMap<String, String> memo, @NotNull ParsingContext context) {
         String raw = parsed.placeholderString;
         if (!placeholder.checkAsync()) return raw;
         HashMap<String, String> values = parsed.getValues();
         if (values == null) return raw;
+        EvaluationState state = new EvaluationState(context, memo);
         DeserializedPlaceholderString dps = new DeserializedPlaceholderString(identifier, null, raw);
         for (Map.Entry<String, String> value : values.entrySet()) {
             String valueText = value.getValue();
-            dps.values.put(value.getKey(), (valueText != null) ? replacePlaceholders(valueText, memo, context) : EMPTY_STRING);
+            dps.values.put(value.getKey(), (valueText != null) ? replacePlaceholders(valueText, null, context, state) : EMPTY_STRING);
         }
-        return placeholder.getReplacementFor(dps);
+        return getReplacement(placeholder, raw, dps);
+    }
+
+    /**
+     * Replaces the template, then parses the result again and again until a pass doesn't change it anymore.
+     *
+     * <p>There is deliberately no limit for the number of passes, complex layouts can need many of them.
+     * Placeholders that return each other in a cycle never stop, which is a known limitation.</p>
+     */
+    @NotNull
+    private static String replaceTemplate(@NotNull PlaceholderTemplate template, @NotNull EvaluationState state) {
+        String text = template.source;
+        String result = replacePass(template, state);
+        while (!result.equals(text)) {
+            text = result;
+            // Without a placeholder start, the next pass can't change anything
+            if (!PlaceholderScanner.containsPlaceholderStart(text)) break;
+            // Pass results are new texts that often change from parse to parse, so caching their templates would only push
+            // stable templates out of the cache, and hashing long new texts for a lookup takes longer than compiling them
+            result = replacePass(PlaceholderTemplate.compile(text, state.context), state);
+        }
+        return result;
+    }
+
+    /**
+     * Replaces every node of the template once and puts the replacements between the text of the template, by position.
+     *
+     * @return The source of the template if nothing got replaced.
+     */
+    @NotNull
+    private static String replacePass(@NotNull PlaceholderTemplate template, @NotNull EvaluationState state) {
+        String source = template.source;
+        PlaceholderTemplate.Node[] nodes = template.nodes;
+        int count = nodes.length;
+        if (count == 0) return source;
+        String[] replacements = new String[count];
+        boolean replaced = false;
+        long length = source.length();
+        // Placeholders get replaced from the last to the first one. Keep this order, placeholders with side effects can depend on it.
+        for (int i = count - 1; i >= 0; i--) {
+            PlaceholderTemplate.Node node = nodes[i];
+            String replacement = replaceNode(node, state);
+            replacements[i] = replacement;
+            if (replacement != node.raw) replaced = true;
+            length += replacement.length() - (node.end - node.start);
+        }
+        if (!replaced) return source;
+        if ((count == 1) && (nodes[0].start == 0) && (nodes[0].end == source.length())) return replacements[0];
+        StringBuilder builder = new StringBuilder((int) Math.min(length, MAX_BUILDER_CAPACITY));
+        int position = 0;
+        for (int i = 0; i < count; i++) {
+            PlaceholderTemplate.Node node = nodes[i];
+            builder.append(source, position, node.start).append(replacements[i]);
+            position = node.end;
+        }
+        return builder.append(source, position, source.length()).toString();
+    }
+
+    @NotNull
+    private static String replaceNode(@NotNull PlaceholderTemplate.Node node, @NotNull EvaluationState state) {
+        if (state.memo != null) {
+            String memoized = state.memo.get(node.raw);
+            if (memoized != null) return memoized;
+        }
+        String replacement = node.raw;
+        if (node.placeholder.checkAsync()) {
+            DeserializedPlaceholderString dps = new DeserializedPlaceholderString(node.identifier, null, node.raw);
+            for (PlaceholderTemplate.ValueSlot slot : node.values) {
+                dps.values.put(slot.name, replacePlaceholders(slot.raw, slot, state.context, state));
+            }
+            replacement = getReplacement(node.placeholder, node.raw, dps);
+        }
+        if (state.memo == null) state.memo = new HashMap<>();
+        state.memo.put(node.raw, replacement);
+        return replacement;
+    }
+
+    /**
+     * Asks the placeholder for its replacement. A placeholder that returns null keeps its raw text.
+     */
+    @NotNull
+    private static String getReplacement(@NotNull Placeholder placeholder, @NotNull String raw, @NotNull DeserializedPlaceholderString dps) {
+        String replacement = placeholder.getReplacementFor(dps);
+        return (replacement != null) ? replacement : raw;
     }
 
     /**
@@ -173,6 +252,24 @@ final class PlaceholderEvaluator {
         } else {
             LOGGER.error(error);
         }
+    }
+
+    /**
+     * The state of one parse, shared by all of its values and passes. Only used by the thread that parses.
+     */
+    static final class EvaluationState {
+
+        @NotNull
+        final ParsingContext context;
+        /** Replacements of the placeholders of the parse, by raw placeholder text. */
+        @Nullable
+        HashMap<String, String> memo;
+
+        EvaluationState(@NotNull ParsingContext context, @Nullable HashMap<String, String> memo) {
+            this.context = context;
+            this.memo = memo;
+        }
+
     }
 
     /**
