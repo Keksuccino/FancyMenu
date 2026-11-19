@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.action;
 
+import de.keksuccino.fancymenu.customization.FreshValuesScope;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.util.Legacy;
@@ -41,9 +42,13 @@ public class ActionInstance implements Executable, ValuePlaceholderHolder {
         return this.identifier;
     }
 
+    /**
+     * Executes the action with its value. The value and everything the action reads while it executes get read fresh,
+     * because scripts read values right after other actions changed them, see {@link FreshValuesScope}.
+     */
     public void execute() {
         String v = this.value;
-        try {
+        try (FreshValuesScope ignored = FreshValuesScope.enter()) {
             if (!this.action.checkAsync()) return;
             if (v != null) {
                 //Replace value placeholders in value
