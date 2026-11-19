@@ -27,7 +27,8 @@ import java.util.Map;
  * </ol>
  *
  * <p>Identical placeholders of one parse get replaced once and share their replacement, across all values and passes
- * (the memo of {@link EvaluationState}).</p>
+ * (the memo of {@link EvaluationState}). Placeholders that get evaluated per occurrence (see {@link Placeholder#isEvaluatedPerOccurrence(DeserializedPlaceholderString)})
+ * and placeholders with such a placeholder in their values get replaced at every occurrence instead.</p>
  */
 final class PlaceholderEvaluator {
 
@@ -159,7 +160,7 @@ final class PlaceholderEvaluator {
             String valueText = value.getValue();
             dps.values.put(value.getKey(), (valueText != null) ? replacePlaceholders(valueText, null, true, context, state) : EMPTY_STRING);
         }
-        return getReplacement(placeholder, identifier, raw, dps);
+        return getReplacement(placeholder, identifier, raw, dps, state);
     }
 
     /**
@@ -228,13 +229,14 @@ final class PlaceholderEvaluator {
             return node.raw;
         }
         int asyncSkips = state.asyncSkips;
+        int perOccurrenceReplacements = state.perOccurrenceReplacements;
         DeserializedPlaceholderString dps = new DeserializedPlaceholderString(node.identifier, null, node.raw);
         for (PlaceholderTemplate.ValueSlot slot : node.values) {
             dps.values.put(slot.name, replacePlaceholders(slot.raw, slot, true, state.context, state));
         }
-        String replacement = getReplacement(node.placeholder, node.identifier, node.raw, dps);
-        // Replacements that miss skipped main-thread-only placeholders must not get shared
-        if (state.asyncSkips == asyncSkips) {
+        String replacement = getReplacement(node.placeholder, node.identifier, node.raw, dps, state);
+        // Replacements that depend on their occurrence or miss skipped main-thread-only placeholders must not get shared
+        if ((state.asyncSkips == asyncSkips) && (state.perOccurrenceReplacements == perOccurrenceReplacements)) {
             if (state.memo == null) state.memo = new HashMap<>();
             state.memo.put(node.raw, replacement);
         }
@@ -245,8 +247,9 @@ final class PlaceholderEvaluator {
      * Asks the placeholder for its replacement. A placeholder that fails or returns null keeps its raw text.
      */
     @NotNull
-    private static String getReplacement(@NotNull Placeholder placeholder, @NotNull String identifier, @NotNull String raw, @NotNull DeserializedPlaceholderString dps) {
+    private static String getReplacement(@NotNull Placeholder placeholder, @NotNull String identifier, @NotNull String raw, @NotNull DeserializedPlaceholderString dps, @NotNull EvaluationState state) {
         try {
+            if (placeholder.isEvaluatedPerOccurrence(dps)) state.perOccurrenceReplacements++;
             String replacement = placeholder.getReplacementFor(dps);
             return (replacement != null) ? replacement : raw;
         } catch (Exception ex) {
@@ -280,6 +283,8 @@ final class PlaceholderEvaluator {
         HashMap<String, String> memo;
         /** How many placeholders got skipped because they can only get replaced on the main thread. Only grows. */
         int asyncSkips;
+        /** How many placeholders got replaced that get evaluated per occurrence. Only grows. */
+        int perOccurrenceReplacements;
 
         EvaluationState(@NotNull ParsingContext context, @Nullable HashMap<String, String> memo) {
             this.context = context;
