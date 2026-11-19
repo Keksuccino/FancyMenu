@@ -28,6 +28,12 @@ public class RandomNumberPlaceholder extends Placeholder {
         return null;
     }
 
+    // Every call returns a new random number, so every occurrence gets its own one
+    @Override
+    public boolean isEvaluatedPerOccurrence(@NotNull DeserializedPlaceholderString dps) {
+        return true;
+    }
+
     @Override
     public @Nullable List<String> getValueNames() {
         List<String> l = new ArrayList<>();

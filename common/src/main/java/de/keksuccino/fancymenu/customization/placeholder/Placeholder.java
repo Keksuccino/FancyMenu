@@ -69,6 +69,25 @@ public abstract class Placeholder {
         return true;
     }
 
+    /**
+     * Identical placeholders in one text get replaced only once and share their replacement, which saves a lot of work in long texts.
+     * Return true here if this placeholder returns a new value on every call, like a random number, so every occurrence of it
+     * gets its own {@link #getReplacementFor(DeserializedPlaceholderString)} call and its own value.
+     * Placeholders that have such a placeholder in their values then get replaced at every occurrence too.
+     *
+     * <p>This only affects one parse of a text. Parsed texts still get cached for the placeholder caching duration, so a text keeps
+     * the values of its placeholders for that time.</p>
+     *
+     * <p>Gets called right before {@link #getReplacementFor(DeserializedPlaceholderString)}, with the same instance. Keep it cheap and
+     * don't change the given instance.</p>
+     *
+     * @param dps The placeholder with its values, which already have their own placeholders replaced.
+     * @return False by default.
+     */
+    public boolean isEvaluatedPerOccurrence(@NotNull DeserializedPlaceholderString dps) {
+        return false;
+    }
+
     public boolean canRunAsync() {
         return true;
     }
