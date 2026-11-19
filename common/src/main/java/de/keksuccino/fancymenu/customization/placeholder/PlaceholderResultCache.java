@@ -15,6 +15,10 @@ import java.util.Objects;
  * <p>Results are keyed by the text as it got passed to the parser, before any processor ran. Whole texts and the values of placeholders
  * have separate caches: values don't get their formatting codes converted, so their results differ from the result of the same text
  * parsed on its own.</p>
+ *
+ * <p>Parses inside a {@link de.keksuccino.fancymenu.customization.FreshValuesScope} (action scripts) don't read either cache, because scripts
+ * read values right after changing them, but they still store their results, so rendering gets the fresh results too.
+ * See {@link PlaceholderEvaluator.ParsingContext#readCachedResults()}.</p>
  */
 final class PlaceholderResultCache {
 
