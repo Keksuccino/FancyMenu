@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholder
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderRegistry;
+import de.keksuccino.fancymenu.testing.TestPlaceholders;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -74,6 +75,26 @@ class ScriptValueFreshValuesScopeTest {
             assertEquals("1", action.probeWhileExecuting, "Raw value: " + rawValue);
             assertFalse(FreshValuesScope.isActive());
         }
+    }
+
+    @Test
+    void actionValueSeesWhatChangedRightBeforeItWhilePlaceholderCachingIsOn() {
+        // Caching duration of a minute, so the result that rendering cached stays usable during the whole test
+        PlaceholderParser.setPlaceholderCachingController(new PlaceholderParser.PlaceholderCachingController(() -> true, () -> 60000L));
+        String key = "script_value_fresh_values_changed_value";
+        String value = TestPlaceholders.value(key);
+        TestPlaceholders.setValue(key, "old");
+        assertEquals("old", PlaceholderParser.replacePlaceholders(value));
+        // Like an action right before it, for example a Set Variable action
+        TestPlaceholders.setValue(key, "new");
+        RecordingAction action = new RecordingAction(false, null);
+
+        new ActionInstance(action, value).execute();
+
+        assertEquals("new", action.lastValue);
+        // Rendering gets the fresh result from the cache
+        TestPlaceholders.setValue(key, "newer");
+        assertEquals("new", PlaceholderParser.replacePlaceholders(value));
     }
 
     @Test

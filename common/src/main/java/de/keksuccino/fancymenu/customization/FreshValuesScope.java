@@ -13,14 +13,14 @@ import org.jetbrains.annotations.NotNull;
  *
  * <p>Contract for caches:</p>
  * <ul>
- *     <li><b>Time-based result caches</b>, which serve an already calculated result for some time (the result cache of
- *     the placeholder parser, the requirement cache of
- *     {@link de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer#requirementsMet()}),
- *     must skip their lookup while {@link #isActive()} returns {@code true}, but still store the fresh result, so rendering
- *     keeps profiting from it.</li>
+ *     <li><b>Time-based result caches</b>, which serve an already calculated result for some time, must skip their lookup
+ *     while {@link #isActive()} returns {@code true}, but still store the fresh result, so rendering keeps profiting from it.
+ *     These are the result caches of the placeholder parser for texts and for placeholder values (the parser checks the scope
+ *     once per parse, and every parse that a placeholder starts itself while it gets replaced checks it again) and the
+ *     requirement cache of {@link de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer#requirementsMet()}.</li>
  *     <li><b>Content-only caches</b>, whose entries only depend on the text they belong to and never get outdated
- *     (whether a text contains placeholders, compiled single-line texts, the memo for identical placeholders within one
- *     parse), stay active.</li>
+ *     (whether a text contains placeholders, compiled placeholder templates, compiled single-line texts, the memo for
+ *     identical placeholders within one parse), stay active.</li>
  *     <li>Caches and cooldowns of <b>asynchronous loads</b> (Web Text's cache of downloaded texts, the file and web content
  *     of other placeholders, values requested from the server) stay active too. Skipping them would only start more
  *     loads, the value would still arrive later.</li>
@@ -40,7 +40,9 @@ import org.jetbrains.annotations.NotNull;
  * }
  * }</pre>
  * <p>Scopes nest: the scope stays active until every {@link #enter()} got closed again. Every thread has its own scope,
- * so a script running on the thread of an Async Ticker never affects rendering on the main thread, and the other way around.</p>
+ * so a script running on the thread of an Async Ticker never affects rendering on the main thread, and the other way around.
+ * Everything that runs on the thread while the scope is open is inside it, including parses that placeholders start
+ * themselves while they get replaced (like Stringify does).</p>
  */
 public final class FreshValuesScope implements AutoCloseable {
 
