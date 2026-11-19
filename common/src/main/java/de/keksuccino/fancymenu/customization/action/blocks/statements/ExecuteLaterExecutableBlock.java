@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.action.blocks.statements;
 
+import de.keksuccino.fancymenu.customization.FreshValuesScope;
 import de.keksuccino.fancymenu.customization.action.Executable;
 import de.keksuccino.fancymenu.customization.action.ValuePlaceholderHolder;
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
@@ -102,7 +103,10 @@ public class ExecuteLaterExecutableBlock extends AbstractExecutableBlock {
         if (!this.valuePlaceholders.isEmpty()) {
             value = ValuePlaceholderHolder.applyValuePlaceholders(value, this.valuePlaceholders);
         }
-        return PlaceholderParser.replacePlaceholders(value);
+        // Actions before this block can have just changed the delay value
+        try (FreshValuesScope ignored = FreshValuesScope.enter()) {
+            return PlaceholderParser.replacePlaceholders(value);
+        }
     }
 
     @Override
