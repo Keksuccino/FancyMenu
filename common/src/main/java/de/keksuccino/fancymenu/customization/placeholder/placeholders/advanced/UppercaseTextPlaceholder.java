@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.placeholder.placeholders.advanced;
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.TextCaseUtils;
 import net.minecraft.client.resources.language.I18n;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -26,7 +27,7 @@ public class UppercaseTextPlaceholder extends Placeholder {
             String input = dps.values.get("text");
 
             if (input != null) {
-                return input.toUpperCase();
+                return TextCaseUtils.toUpperCase(input);
             }
 
         } catch (Exception ex) {
