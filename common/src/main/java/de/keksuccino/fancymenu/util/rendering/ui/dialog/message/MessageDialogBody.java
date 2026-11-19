@@ -8,11 +8,11 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcon;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowBody;
-import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollbar.ScrollBar;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
+import de.keksuccino.fancymenu.util.rendering.scissor.ScreenScissorEnabler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
@@ -163,11 +163,12 @@ public class MessageDialogBody extends PiPWindowBody {
 
     /**
      * Cuts everything drawn after this to the message area of the given layout, covering at least the whole area.<br>
-     * The GUI cuts at whole GUI pixels. While the body of a window renders, {@code MixinGuiGraphics} maps a scissor from the body to the screen by
-     * rounding its top left corner down and its size up, which moves the bottom edge up by up to almost one GUI pixel. That is several units of the
-     * body at small UI scales, enough to cut off the descenders of the last line when the message is scrolled to its end. So the corners get
-     * transformed by the pose here, which holds where the body is on the screen and how it is scaled, and get rounded outward, and the scissor gets
-     * enabled as one that is on the screen already. The small epsilon keeps float errors of edges that sit right on a GUI pixel from adding a pixel.
+     * The GUI cuts at whole GUI pixels of the screen, and {@link GuiGraphics#enableScissor(int, int, int, int)} knows nothing about the scaled pose
+     * of the body. While the body of a PiP window draws, {@code MixinGuiGraphics} maps a scissor to the screen through the scale and position of
+     * the window, and rounds its top left corner down and its size up. That moves the bottom edge up by up to almost one GUI pixel, which are
+     * several units of the body at small UI scales, enough to cut off the descenders of the last line when the message is scrolled to its end.
+     * So the corners get mapped through the pose and rounded outward here, and the scissor gets enabled as it is, without getting mapped again
+     * (see {@link ScreenScissorEnabler}). The small epsilon keeps float errors of edges that sit right on a GUI pixel from adding a pixel.
      */
     private void enableMessageAreaScissor(@NotNull GuiGraphics graphics, @NotNull MessageDialogLayout layout) {
         Matrix4f pose = graphics.pose().last().pose();
@@ -178,8 +179,7 @@ public class MessageDialogBody extends PiPWindowBody {
         pose.transformPosition(this.width, layout.messageAreaTop() + layout.messageAreaHeight(), 0.0F, corner);
         int right = Mth.ceil(corner.x - SCISSOR_EPSILON);
         int bottom = Mth.ceil(corner.y - SCISSOR_EPSILON);
-        PiPWindowHandler.INSTANCE.markNextScissorAsOnScreen();
-        graphics.enableScissor(left, top, right, bottom);
+        ((ScreenScissorEnabler) graphics).enableScreenScissor_FancyMenu(left, top, right, bottom);
     }
 
     @Override

@@ -37,8 +37,6 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
     @Nullable
     private PiPWindow activeScreenRenderWindow;
     private double activeScreenRenderScaleFactor = 1.0;
-    /** If the scissor that gets enabled next is on the screen already, see {@link #markNextScissorAsOnScreen()}. */
-    private boolean nextScissorOnScreen = false;
     private long blockedInputOverlayUntilMs = -1L;
     @Nullable
     private PiPWindow blockedInputOverlayWindow;
@@ -330,26 +328,7 @@ public class PiPWindowHandler implements GuiEventListener, Tickable, Renderable 
         if (activeScreenRenderWindow == window) {
             activeScreenRenderWindow = null;
             activeScreenRenderScaleFactor = 1.0;
-            nextScissorOnScreen = false;
         }
-    }
-
-    /**
-     * Tells that the scissor that gets enabled next got mapped to the screen by what enables it, so it does not get mapped from the body
-     * of the window that renders right now to the screen again. Does nothing while no body of a window renders.
-     */
-    public void markNextScissorAsOnScreen() {
-        if (activeScreenRenderWindow != null) nextScissorOnScreen = true;
-    }
-
-    /**
-     * Returns if a scissor that gets enabled right now is on the screen already, see {@link #markNextScissorAsOnScreen()},
-     * and forgets what got told about it.
-     */
-    public boolean consumeNextScissorOnScreen() {
-        boolean onScreen = nextScissorOnScreen;
-        nextScissorOnScreen = false;
-        return onScreen;
     }
 
     public int getActiveScreenRenderOffsetX() {

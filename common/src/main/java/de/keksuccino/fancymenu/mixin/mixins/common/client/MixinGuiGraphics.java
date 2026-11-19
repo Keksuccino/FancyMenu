@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.util.rendering.RenderTranslationUtil;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.scissor.ScissorShape;
 import de.keksuccino.fancymenu.util.rendering.scissor.ScissorShapes;
+import de.keksuccino.fancymenu.util.rendering.scissor.ScreenScissorEnabler;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.LayoutEditorWidgetRenderContext;
 import de.keksuccino.fancymenu.customization.element.container.ElementContainerDrawScale;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
@@ -30,8 +31,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 
 @Mixin(GuiGraphics.class)
-public class MixinGuiGraphics {
+public class MixinGuiGraphics implements ScreenScissorEnabler {
 
+    @Unique private boolean adjustingScissor_FancyMenu;
     /** The shape of the scissor {@code enableScissor} is about to push, handed from its arguments to the rectangle it creates. */
     @Unique @Nullable
     private ScissorShape pendingScissorShape_FancyMenu;
@@ -76,9 +78,10 @@ public class MixinGuiGraphics {
 
     @ModifyArgs(method = "enableScissor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/navigation/ScreenRectangle;<init>(IIII)V"))
     private void modify_enableScissor_FancyMenu(Args args) {
+        if (this.adjustingScissor_FancyMenu) {
+            return;
+        }
         boolean mappedByContainer = ElementContainerDrawScale.mapsNextScissor();
-        // A scissor of a window body that got mapped to the screen by what enables it stays where it is
-        if (PiPWindowHandler.INSTANCE.consumeNextScissorOnScreen()) return;
         // Under a rotated or tilted pose, the pose (which includes the scaling of PiP windows and editor widgets) decides where the scissor is
         if (ScissorShapes.isPoseRotated()) {
             int minX = args.get(0);
@@ -179,6 +182,18 @@ public class MixinGuiGraphics {
         }
         args.set(0, (int) Math.round(((int) args.get(0)) * scale + offsetX));
         args.set(1, (int) Math.round(((int) args.get(1)) * scale + offsetY));
+    }
+
+    @Unique
+    @Override
+    public void enableScreenScissor_FancyMenu(int minX, int minY, int maxX, int maxY) {
+        // The scissor is on the screen already, so modify_enableScissor_FancyMenu leaves its rectangle as it is
+        this.adjustingScissor_FancyMenu = true;
+        try {
+            ((GuiGraphics)(Object)this).enableScissor(minX, minY, maxX, maxY);
+        } finally {
+            this.adjustingScissor_FancyMenu = false;
+        }
     }
 
 }
