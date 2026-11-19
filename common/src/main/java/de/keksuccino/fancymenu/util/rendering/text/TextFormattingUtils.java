@@ -81,6 +81,21 @@ public class TextFormattingUtils {
         return in;
     }
 
+    /**
+     * Checks if a formatting code starts at the index: {@code &} followed by a code that {@link #replaceFormattingCodes(String, String, String)}
+     * converts (lowercase only), or {@code §} followed by a code in any case, because Minecraft reads the codes behind {@code §} case-insensitively.
+     *
+     * <p>Text transforms that change characters (like case transforms) use this to keep formatting codes as they are, so a code never turns into
+     * visible text or into another code. The code character is the character after the index.</p>
+     */
+    public static boolean isFormattingCodeAt(@NotNull String text, int index) {
+        if ((index + 1) >= text.length()) return false;
+        char prefix = text.charAt(index);
+        if (prefix == '&') return isFormattingCode(text.charAt(index + 1));
+        if (prefix == '§') return isFormattingCode(Character.toLowerCase(text.charAt(index + 1)));
+        return false;
+    }
+
     private static boolean containsFormattingCode(@NotNull String text) {
         for (int i = 0; i < text.length(); i++) {
             if (isFormattingCode(text.charAt(i))) return true;
