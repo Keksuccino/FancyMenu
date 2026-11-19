@@ -1,9 +1,9 @@
 package de.keksuccino.fancymenu.customization.requirement.internal;
 
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.FreshValuesScope;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.action.ValuePlaceholderHolder;
-import de.keksuccino.fancymenu.util.Pair;
 import de.keksuccino.fancymenu.util.input.CharacterFilter;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.ListUtils;
@@ -12,6 +12,9 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
 @SuppressWarnings("all")
@@ -19,8 +22,10 @@ public class RequirementContainer implements ValuePlaceholderHolder {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final Map<String, Pair<Long, Boolean>> COOLDOWN_CACHE = new HashMap<>();
     private static final String CONTAINER_TAG_PREFIX = "[container:";
+    /** Increased by {@link #clearCooldownCache()}, which makes every result cached before unusable. */
+    private static final AtomicLong CACHE_GENERATION = new AtomicLong();
+    private static volatile CachingSettings cachingSettings = CachingSettings.DEFAULT;
 
     protected final List<RequirementGroup> groups = new ArrayList<>();
     protected final List<RequirementInstance> instances = new ArrayList<>();
@@ -33,33 +38,60 @@ public class RequirementContainer implements ValuePlaceholderHolder {
     public String identifier = ScreenCustomization.generateUniqueIdentifier();
     protected boolean forceRequirementsMet = false;
     protected boolean forceRequirementsNotMet = false;
-    protected final String cachingIdentifier = ScreenCustomization.generateUniqueIdentifier();
+    /**
+     * The last result of {@link #requirementsMet()} while requirement caching is on. Every container caches its own result,
+     * so the cache can't outlive the container and can't grow when containers get created again, which happens on every layout load.
+     */
+    @Nullable
+    private volatile CachedResult cachedResult;
 
+    /**
+     * Makes every container check its requirements again the next time, instead of using its cached result.
+     */
     public static void clearCooldownCache() {
-        COOLDOWN_CACHE.clear();
+        CACHE_GENERATION.incrementAndGet();
     }
 
     public static boolean isCachingRequirements() {
-        return FancyMenu.getOptions().requirementCachingDurationMs.getValue() > 0;
+        return getRequirementCachingDurationMs() > 0;
     }
 
     public static long getRequirementCachingDurationMs() {
-        return FancyMenu.getOptions().requirementCachingDurationMs.getValue();
+        return cachingSettings.cachingDurationMillis().getAsLong();
     }
 
+    /**
+     * Checks if all requirements of this container are met.<br>
+     * While requirement caching is on, the result gets reused for the caching duration, which makes rendering cheaper.
+     * Script logic (inside a {@link FreshValuesScope}) always checks the requirements again, because it reads values right after
+     * changing them, but its fresh result still gets cached. Containers get checked by the render thread and by Async Ticker threads.
+     */
     public boolean requirementsMet() {
-        long now = System.currentTimeMillis();
-        if (isCachingRequirements()) {
-            // Use cache if last value update was less than 150ms ago for performance
-            if (COOLDOWN_CACHE.containsKey(this.cachingIdentifier) && ((COOLDOWN_CACHE.get(this.cachingIdentifier).getFirst() + getRequirementCachingDurationMs()) > now)) {
-                return COOLDOWN_CACHE.get(this.cachingIdentifier).getSecond();
-            }
+        CachingSettings settings = cachingSettings;
+        long cachingDurationMillis = settings.cachingDurationMillis().getAsLong();
+        if (cachingDurationMillis <= 0L) return this._requirementsMet();
+        // Read before checking the requirements, so a clear that happens while checking also makes this result unusable
+        long generation = CACHE_GENERATION.get();
+        long now = settings.nanoTime().getAsLong();
+        CachedResult cached = this.cachedResult;
+        if ((cached != null) && cached.isUsable(generation, now, TimeUnit.MILLISECONDS.toNanos(cachingDurationMillis)) && !FreshValuesScope.isActive()) {
+            return cached.met();
         }
-        boolean b = this._requirementsMet();
-        if (isCachingRequirements()) {
-            COOLDOWN_CACHE.put(this.cachingIdentifier, Pair.of(now, b));
-        }
-        return b;
+        boolean met = this._requirementsMet();
+        this.cachedResult = new CachedResult(generation, now, met);
+        return met;
+    }
+
+    /**
+     * Replaces where the requirement cache gets its caching duration and its time from, so tests need neither the options of FancyMenu nor a real clock.
+     */
+    static void setCachingSettings(@NotNull CachingSettings settings) {
+        cachingSettings = Objects.requireNonNull(settings);
+    }
+
+    @NotNull
+    static CachingSettings getCachingSettings() {
+        return cachingSettings;
     }
 
     private boolean _requirementsMet() {
@@ -541,6 +573,39 @@ public class RequirementContainer implements ValuePlaceholderHolder {
             g.setParentContainer(stack);
         }
         return stack;
+    }
+
+    /**
+     * A cached result of {@link #requirementsMet()}. Immutable, so threads that read it while another thread replaces it
+     * always see a complete result.
+     *
+     * @param generation The {@link #CACHE_GENERATION} from when the requirements got checked.
+     * @param cachedAtNanos The time from {@link CachingSettings#nanoTime()} when the requirements got checked.
+     */
+    private record CachedResult(long generation, long cachedAtNanos, boolean met) {
+
+        private boolean isUsable(long currentGeneration, long nowNanos, long cachingDurationNanos) {
+            if (this.generation != currentGeneration) return false;
+            // A negative age can only come from a clock that went backwards, so the age of the result is unknown
+            long age = nowNanos - this.cachedAtNanos;
+            return (age >= 0L) && (age < cachingDurationNanos);
+        }
+
+    }
+
+    /**
+     * @param cachingDurationMillis How long a result gets cached, in milliseconds. 0 or less turns requirement caching off.
+     * @param nanoTime The current time in nanoseconds, like {@link System#nanoTime()}.
+     */
+    record CachingSettings(@NotNull LongSupplier cachingDurationMillis, @NotNull LongSupplier nanoTime) {
+
+        static final CachingSettings DEFAULT = new CachingSettings(() -> FancyMenu.getOptions().requirementCachingDurationMs.getValue(), System::nanoTime);
+
+        CachingSettings {
+            Objects.requireNonNull(cachingDurationMillis);
+            Objects.requireNonNull(nanoTime);
+        }
+
     }
 
     /**
