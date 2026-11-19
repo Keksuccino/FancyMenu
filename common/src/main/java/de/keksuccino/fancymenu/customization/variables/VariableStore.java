@@ -33,7 +33,13 @@ final class VariableStore {
     private final SnapshotSerializer snapshotSerializer;
     private final VariablePersistenceCoordinator persistence;
 
-    private long stateRevision;
+    /**
+     * Increases on every change of the variables: adding, removing or replacing a variable, and every change of a value or setting. It only
+     * gets written under {@link #stateLock}, after the change it counts and before the lock gets released, so a reader that sees a revision
+     * and then reads values under the lock sees at least the values of that revision. It is volatile, so {@link #getRevision()} can read
+     * it without the lock.
+     */
+    private volatile long stateRevision;
     /**
      * Increases on every change to the entries of {@link #variables} (adding, removing or replacing a variable object), but not on value
      * changes. {@link #nameIndex} holds the variable objects of one revision, so every code path that changes the entries must call
@@ -275,6 +281,14 @@ final class VariableStore {
                 return (variable != null) ? new ShortReferenceResolver.Reference(variable.getName().length(), variable.getValueLocked()) : null;
             });
         }
+    }
+
+    /**
+     * The revision of the variables, see {@link #stateRevision}. Reading it never blocks, also not while a script changes variables or a
+     * reload replaces them.
+     */
+    long getRevision() {
+        return this.stateRevision;
     }
 
     /** The revision of the store's variable set, see {@link #variableSetRevision}. */

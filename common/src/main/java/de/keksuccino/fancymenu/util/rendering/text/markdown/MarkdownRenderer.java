@@ -2,6 +2,8 @@ package de.keksuccino.fancymenu.util.rendering.text.markdown;
 
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.customization.placeholder.ShortReferenceResolver;
+import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyle;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownStyleOption;
@@ -24,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.LongSupplier;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -42,6 +45,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     private static final String NEWLINE_ESCAPED = "\\n";
     private static final String EMPTY_STRING = "";
     private static final String HTML_BREAK = "<br>";
+    private static final char VARIABLE_REFERENCE_PREFIX_CHAR = '$';
 
     protected boolean parseMarkdown = true;
     @NotNull
@@ -49,6 +53,16 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     @NotNull
     protected String textPlaceholders = "";
     protected String lastTextPlaceholders;
+    /**
+     * If a {@code $$name} reference can start in the text itself, outside of its placeholders (see {@link #canStartVariableReference(String, List)}).
+     * Only then the renderer checks the revision of the variables every frame.
+     */
+    protected boolean watchesVariables = false;
+    /** The revision of the variables the render text got built with, while the renderer {@linkplain #watchesVariables watches them}. */
+    protected long lastVariablesRevision;
+    /** Supplies the revision of the variables, see {@link VariableHandler#getRevision()}. */
+    @NotNull
+    protected final LongSupplier variablesRevisionSupplier;
     @Nullable
     protected String renderText;
     protected float x;
@@ -113,15 +127,17 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     }
 
     MarkdownRenderer(@NotNull Font font) {
-        this(font, () -> UIBase.getUITheme());
+        this(font, () -> UIBase.getUITheme(), VariableHandler::getRevision);
     }
 
     /**
      * @param theme The UI theme the colors of the neutral look follow.
+     * @param variablesRevision The revision of the variables that {@code $$name} references resolve to, see {@link VariableHandler#getRevision()}.
      */
-    MarkdownRenderer(@NotNull Font font, @NotNull Supplier<UITheme> theme) {
+    MarkdownRenderer(@NotNull Font font, @NotNull Supplier<UITheme> theme, @NotNull LongSupplier variablesRevision) {
         this.font = Objects.requireNonNull(font);
         this.style = new MarkdownStyle(this::onStyleChanged, theme);
+        this.variablesRevisionSupplier = Objects.requireNonNull(variablesRevision);
     }
 
     @Override
@@ -210,13 +226,20 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
     }
 
     /**
-     * Builds the render text again when the text got changed or one of its placeholders has a new value.
-     * The text only needs a new parse when that results in a different render text.
+     * Builds the render text again when the text got changed, one of its placeholders has a new value, or the variables changed while the
+     * renderer {@linkplain #watchesVariables watches them}. The text only needs a new parse when that results in a different render text.
+     *
+     * <p>The placeholders get watched by replacing all of them every frame, joined to one text. That text also resolves the {@code $$name}
+     * references in their values and outputs, because the parser resolves references after replacing placeholders. References in the text
+     * itself get watched through the revision of the variables, which costs one field read per frame, and the render text only gets built
+     * again after a variable changed. It gets built by the parser, so the references resolve exactly like the parser resolves them.</p>
      */
     protected void updateRenderText() {
+        // Read before the text gets parsed, so a variable that changes while it gets parsed makes the next frame parse it again
+        long variablesRevision = this.watchesVariables ? this.variablesRevisionSupplier.getAsLong() : this.lastVariablesRevision;
         // A text without placeholders has nothing that changes on its own, so asking the placeholder parser every frame would be a waste
         String replaced = this.textPlaceholders.isEmpty() ? EMPTY_STRING : PlaceholderParser.replacePlaceholdersWithoutLengthLimit(this.textPlaceholders, false);
-        if ((this.renderText == null) || !replaced.equals(this.lastTextPlaceholders)) {
+        if ((this.renderText == null) || (variablesRevision != this.lastVariablesRevision) || !replaced.equals(this.lastTextPlaceholders)) {
             String newRenderText = this.buildRenderText();
             if (!newRenderText.equals(this.renderText)) {
                 this.renderText = newRenderText;
@@ -224,6 +247,7 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
             }
         }
         this.lastTextPlaceholders = replaced;
+        this.lastVariablesRevision = variablesRevision;
     }
 
     protected void rebuildFragments() {
@@ -305,15 +329,49 @@ public class MarkdownRenderer implements Renderable, FocuslessContainerEventHand
         if (text.length() > MAX_TEXT_LENGTH) {
             this.text = I18n.get("fancymenu.markdown.error.text_too_long");
             this.textPlaceholders = "";
+            this.watchesVariables = false;
         } else {
             this.text = text;
+            List<PlaceholderParser.ParsedPlaceholder> placeholders = PlaceholderParser.findPlaceholders(this.text, new HashMap<>());
             StringBuilder builder = new StringBuilder();
-            for (PlaceholderParser.ParsedPlaceholder p : PlaceholderParser.findPlaceholders(this.text, new HashMap<>())) {
+            for (PlaceholderParser.ParsedPlaceholder p : placeholders) {
                 builder.append(p.placeholderString);
             }
             this.textPlaceholders = builder.toString();
+            this.watchesVariables = canStartVariableReference(this.text, placeholders);
         }
         this.lastTextPlaceholders = null;
+    }
+
+    /**
+     * Checks if a {@code $$name} reference can start in the text itself, outside of its placeholders, which is where the text has to watch
+     * the variables itself (see {@link #updateRenderText()}). That is the case at a {@code $$} outside of the placeholders that has at least
+     * one character after it (the name can also come from a placeholder after it), and at a {@code $} right before or after a placeholder,
+     * whose output can add the other {@code $}. A {@code $$} can't start in a placeholder and end outside of it, and the other way around,
+     * because placeholders start with a brace and end with one.
+     *
+     * <p>Not covered: a placeholder whose output ends with a whole {@code $$}, with the name of the reference in the text after it.
+     * Which outputs end like that is only known after replacing the placeholders, and watching every text that has text after a
+     * placeholder would build almost every text with placeholders again on every change of any variable.</p>
+     *
+     * @param placeholders The placeholders of the text, in the order they are in it, like {@link PlaceholderParser#findPlaceholders(String, HashMap)} finds them.
+     */
+    private static boolean canStartVariableReference(@NotNull String text, @NotNull List<PlaceholderParser.ParsedPlaceholder> placeholders) {
+        int length = text.length();
+        int prefixLength = ShortReferenceResolver.PREFIX.length();
+        // The index of the first placeholder that doesn't end before the current $$, which moves forward with the $$, so this is one pass
+        int placeholder = 0;
+        int prefixIndex = text.indexOf(ShortReferenceResolver.PREFIX);
+        while ((prefixIndex >= 0) && ((prefixIndex + prefixLength) < length)) {
+            while ((placeholder < placeholders.size()) && (placeholders.get(placeholder).endIndex <= prefixIndex)) placeholder++;
+            if ((placeholder == placeholders.size()) || (prefixIndex < placeholders.get(placeholder).startIndex)) return true;
+            prefixIndex = text.indexOf(ShortReferenceResolver.PREFIX, prefixIndex + 1);
+        }
+        for (PlaceholderParser.ParsedPlaceholder p : placeholders) {
+            if ((p.startIndex > 0) && (text.charAt(p.startIndex - 1) == VARIABLE_REFERENCE_PREFIX_CHAR)) return true;
+            if ((p.endIndex < length) && (text.charAt(p.endIndex) == VARIABLE_REFERENCE_PREFIX_CHAR)) return true;
+        }
+        return false;
     }
 
     public float getX() {
