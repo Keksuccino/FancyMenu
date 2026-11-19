@@ -39,6 +39,13 @@ public class RequirementContainer implements ValuePlaceholderHolder {
     protected boolean forceRequirementsMet = false;
     protected boolean forceRequirementsNotMet = false;
     /**
+     * A unique identifier of this container that is not used for caching: every container caches its own result in itself (see {@link #requirementsMet()}).
+     *
+     * @deprecated FancyMenu doesn't use it, it only exists for add-ons that read it. Use {@link #identifier} to identify a container.
+     */
+    @Deprecated
+    protected final String cachingIdentifier = ScreenCustomization.generateUniqueIdentifier();
+    /**
      * The last result of {@link #requirementsMet()} while requirement caching is on. Every container caches its own result,
      * so the cache can't outlive the container and can't grow when containers get created again, which happens on every layout load.
      */
