@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -119,6 +120,48 @@ class TextFormattingUtilsFormattingCodesTest {
         assertEquals(calls * (label.length() + longText.length()), checked);
         // Building the 22 search strings for one call alone takes more than 1 KB
         assertTrue(allocated < 64L * 1024L, () -> "Allocated " + allocated + " bytes for " + (2 * calls) + " calls");
+    }
+
+    @Test
+    void formattingCodeStartsAtEveryPrefixWithACodeBehindIt() {
+        for (char code : ALL_CODES.toCharArray()) {
+            assertTrue(TextFormattingUtils.isFormattingCodeAt("&" + code, 0), () -> "&" + code);
+            assertTrue(TextFormattingUtils.isFormattingCodeAt("§" + code, 0), () -> "§" + code);
+            assertTrue(TextFormattingUtils.isFormattingCodeAt("x§" + code + "x", 1), () -> "§" + code);
+            if (Character.isLetter(code)) {
+                char uppercase = Character.toUpperCase(code);
+                // Minecraft reads the codes behind § case-insensitively, but only lowercase codes behind & get converted
+                assertTrue(TextFormattingUtils.isFormattingCodeAt("§" + uppercase, 0), () -> "§" + uppercase);
+                assertFalse(TextFormattingUtils.isFormattingCodeAt("&" + uppercase, 0), () -> "&" + uppercase);
+            }
+        }
+    }
+
+    @Test
+    void noFormattingCodeStartsAtOtherCharactersOrAtTheEnd() {
+        String[] noCodes = {"&g", "§g", "§G", "&&", "§§", "& a", "§ a", "&/", "&:", "&`", "§`", "aa", "a0", "%a"};
+        for (String text : noCodes) assertFalse(TextFormattingUtils.isFormattingCodeAt(text, 0), text);
+        assertFalse(TextFormattingUtils.isFormattingCodeAt("&", 0));
+        assertFalse(TextFormattingUtils.isFormattingCodeAt("a&", 1));
+        assertFalse(TextFormattingUtils.isFormattingCodeAt("a§", 1));
+        assertFalse(TextFormattingUtils.isFormattingCodeAt("&a", 1));
+        assertFalse(TextFormattingUtils.isFormattingCodeAt("&a", 2));
+        assertFalse(TextFormattingUtils.isFormattingCodeAt("", 0));
+        assertTrue(TextFormattingUtils.isFormattingCodeAt("&&a", 1));
+        assertFalse(TextFormattingUtils.isFormattingCodeAt("&&a", 0));
+    }
+
+    @Test
+    void ampersandCodesAreExactlyTheCodesTheConversionConverts() {
+        Random random = new Random(20261120L);
+        for (int i = 0; i < 20_000; i++) {
+            String text = randomText(random, INPUT_CHARACTERS, 30);
+            StringBuilder expected = new StringBuilder(text);
+            for (int index = 0; index < text.length(); index++) {
+                if ((text.charAt(index) == '&') && TextFormattingUtils.isFormattingCodeAt(text, index)) expected.setCharAt(index, '§');
+            }
+            assertEquals(expected.toString(), TextFormattingUtils.replaceFormattingCodes(text, "&", "§"), text);
+        }
     }
 
     private static void assertMatchesPassByPass(String input, String oldPrefix, String newPrefix) {
