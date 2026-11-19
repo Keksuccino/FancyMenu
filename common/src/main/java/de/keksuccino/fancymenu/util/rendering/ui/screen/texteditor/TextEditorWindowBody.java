@@ -60,7 +60,9 @@ public class TextEditorWindowBody extends PiPWindowBody {
     private static final Logger LOGGER = LogManager.getLogger();
 
     static final int COMPILED_SINGLE_LINE_STRINGS_MAX_ENTRIES = 2048;
-    static final long COMPILED_SINGLE_LINE_STRINGS_MAX_WEIGHT = 1_048_576L;
+    // The placeholder parser compiles every text it parses and its nested values through this cache, so it is sized for the parser's longest texts,
+    // see PlaceholderParser#MAX_TEXT_LENGTH. A long text with codes weighs twice its length, and every nested value adds its length.
+    static final long COMPILED_SINGLE_LINE_STRINGS_MAX_WEIGHT = 4_194_304L;
     private static final long COMPILED_SINGLE_LINE_STRING_OVERHEAD_WEIGHT = 64L;
     // Weights count the retained UTF-16 code units of the source text, and of the compiled text if it is not the source itself, plus a fixed allowance for each entry's objects
     private static final BoundedConcurrentCache<String, String> COMPILED_SINGLE_LINE_STRINGS = new BoundedConcurrentCache<>(COMPILED_SINGLE_LINE_STRINGS_MAX_ENTRIES, COMPILED_SINGLE_LINE_STRINGS_MAX_WEIGHT, (source, compiled) -> COMPILED_SINGLE_LINE_STRING_OVERHEAD_WEIGHT + source.length() + ((compiled == source) ? 0L : compiled.length()));

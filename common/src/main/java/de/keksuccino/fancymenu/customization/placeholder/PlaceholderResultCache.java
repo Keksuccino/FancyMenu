@@ -23,9 +23,10 @@ import java.util.Objects;
 final class PlaceholderResultCache {
 
     private static final int TEXT_CACHE_MAX_ENTRIES = 512;
+    // The weight limits are sized for PlaceholderParser#MAX_TEXT_LENGTH, see there. An entry weighs its text plus its result.
     private static final long TEXT_CACHE_MAX_WEIGHT = 4_194_304L;
     private static final int VALUE_CACHE_MAX_ENTRIES = 512;
-    private static final long VALUE_CACHE_MAX_WEIGHT = 1_048_576L;
+    private static final long VALUE_CACHE_MAX_WEIGHT = 2_097_152L;
     private static final long ENTRY_OVERHEAD_WEIGHT = 64L;
 
     // String length is measured in retained UTF-16 code units, with a fixed allowance for each entry's objects.
