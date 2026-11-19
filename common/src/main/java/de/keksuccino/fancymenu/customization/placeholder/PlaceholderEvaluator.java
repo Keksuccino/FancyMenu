@@ -22,7 +22,7 @@ import java.util.Map;
  *     <li>Its {@link PlaceholderTemplate} gets replaced. The result gets replaced again and again, until a pass doesn't change it anymore,
  *     because placeholders can return placeholders.</li>
  *     <li>The AFTER processors run on it.</li>
- *     <li>The result gets cached.</li>
+ *     <li>The result gets cached, unless it contains placeholders that got skipped because they can only get replaced on the main thread.</li>
  * </ol>
  *
  * <p>Identical placeholders of one parse get replaced once and share their replacement, across all values and passes
@@ -129,11 +129,13 @@ final class PlaceholderEvaluator {
         }
 
         if (state == null) state = new EvaluationState(context, null);
+        int asyncSkips = state.asyncSkips;
         String result = replaceTemplate(template, state);
 
         result = context.processors().processAfterReplacement(result, context.preserveFormattingCodes() ? PlaceholderParser.FORMATTING_CODE_PROCESSOR_ID : ParsingProcessorRegistry.NO_PROCESSOR_ID);
 
-        if (context.cachePlaceholders()) PlaceholderResultCache.put(text, result, context);
+        // The main thread must never get a result that still contains placeholders that got skipped because they can only get replaced on the main thread
+        if (context.cachePlaceholders() && (state.asyncSkips == asyncSkips)) PlaceholderResultCache.put(text, result, context);
 
         return result;
 
@@ -219,16 +221,21 @@ final class PlaceholderEvaluator {
             String memoized = state.memo.get(node.raw);
             if (memoized != null) return memoized;
         }
-        String replacement = node.raw;
-        if (node.placeholder.checkAsync()) {
-            DeserializedPlaceholderString dps = new DeserializedPlaceholderString(node.identifier, null, node.raw);
-            for (PlaceholderTemplate.ValueSlot slot : node.values) {
-                dps.values.put(slot.name, replacePlaceholders(slot.raw, slot, state.context, state));
-            }
-            replacement = getReplacement(node.placeholder, node.identifier, node.raw, dps);
+        if (!node.placeholder.checkAsync()) {
+            state.asyncSkips++;
+            return node.raw;
         }
-        if (state.memo == null) state.memo = new HashMap<>();
-        state.memo.put(node.raw, replacement);
+        int asyncSkips = state.asyncSkips;
+        DeserializedPlaceholderString dps = new DeserializedPlaceholderString(node.identifier, null, node.raw);
+        for (PlaceholderTemplate.ValueSlot slot : node.values) {
+            dps.values.put(slot.name, replacePlaceholders(slot.raw, slot, state.context, state));
+        }
+        String replacement = getReplacement(node.placeholder, node.identifier, node.raw, dps);
+        // Replacements that miss skipped main-thread-only placeholders must not get shared
+        if (state.asyncSkips == asyncSkips) {
+            if (state.memo == null) state.memo = new HashMap<>();
+            state.memo.put(node.raw, replacement);
+        }
         return replacement;
     }
 
@@ -269,6 +276,8 @@ final class PlaceholderEvaluator {
         /** Replacements of the placeholders of the parse, by raw placeholder text. */
         @Nullable
         HashMap<String, String> memo;
+        /** How many placeholders got skipped because they can only get replaced on the main thread. Only grows. */
+        int asyncSkips;
 
         EvaluationState(@NotNull ParsingContext context, @Nullable HashMap<String, String> memo) {
             this.context = context;
