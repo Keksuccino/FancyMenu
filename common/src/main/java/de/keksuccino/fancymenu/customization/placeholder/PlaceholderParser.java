@@ -277,8 +277,12 @@ public class PlaceholderParser {
             this.context = context;
         }
 
+        /**
+         * Placeholders found by {@link #findPlaceholders(String, HashMap)} start with their opening brace. Subclasses can pass any string,
+         * so structural whitespace (see {@link PlaceholderScanner#skipStructuralWhitespace(String, int)}) before the brace gets skipped.
+         */
         private int getIdentifierStart() {
-            if (this.identifierStart == UNKNOWN_IDENTIFIER_START) this.identifierStart = PlaceholderScanner.matchPlaceholderStart(this.placeholderString, 0);
+            if (this.identifierStart == UNKNOWN_IDENTIFIER_START) this.identifierStart = PlaceholderScanner.matchPlaceholderStart(this.placeholderString, PlaceholderScanner.skipStructuralWhitespace(this.placeholderString, 0));
             return this.identifierStart;
         }
 
