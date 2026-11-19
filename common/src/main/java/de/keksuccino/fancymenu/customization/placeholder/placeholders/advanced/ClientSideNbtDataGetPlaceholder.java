@@ -55,6 +55,16 @@ public class ClientSideNbtDataGetPlaceholder extends Placeholder {
         return false;
     }
 
+    // Entity selectors that sort randomly, like @r, pick a new random entity on every call
+    @Override
+    public boolean isEvaluatedPerOccurrence(@NotNull DeserializedPlaceholderString dps) {
+        String sourceType = dps.values.get("source_type");
+        String selector = dps.values.get("entity_selector");
+        if ((sourceType == null) || (selector == null) || !"entity".equals(sourceType.toLowerCase(Locale.ROOT))) return false;
+        ParsedSelector parsed = this.parseSelector(selector.trim());
+        return (parsed != null) && (getSortOrder(parsed) == SortOrder.RANDOM);
+    }
+
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
 
@@ -178,10 +188,13 @@ public class ClientSideNbtDataGetPlaceholder extends Placeholder {
         return tag.toString();
     }
 
+    /**
+     * @return The target and options of the selector, or null if it is no selector like {@code @e[...]}, but a direct reference to an entity.
+     */
     @Nullable
-    private Entity resolveEntitySelector(String selector, LocalPlayer player, ClientLevel level) {
+    private ParsedSelector parseSelector(String selector) {
         if (!selector.startsWith("@")) {
-            return resolveByDirectReference(selector, level);
+            return null;
         }
 
         int bracketIndex = selector.indexOf('[');
@@ -196,10 +209,37 @@ public class ClientSideNbtDataGetPlaceholder extends Placeholder {
 
         SelectorTarget target = SelectorTarget.fromToken(base.trim());
         if (target == null) {
+            return null;
+        }
+
+        return new ParsedSelector(target, parseSelectorOptions(optionsRaw));
+    }
+
+    /**
+     * The sort order of the target, or the last valid sort option of the selector.
+     */
+    private static SortOrder getSortOrder(ParsedSelector selector) {
+        SortOrder sort = selector.target().defaultSort;
+        for (OptionValue option : selector.options()) {
+            if ("sort".equals(option.key()) && !option.value().isEmpty()) {
+                SortOrder parsed = SortOrder.fromOption(option.value());
+                if (parsed != null) {
+                    sort = parsed;
+                }
+            }
+        }
+        return sort;
+    }
+
+    @Nullable
+    private Entity resolveEntitySelector(String selector, LocalPlayer player, ClientLevel level) {
+        ParsedSelector parsedSelector = parseSelector(selector);
+        if (parsedSelector == null) {
             return resolveByDirectReference(selector, level);
         }
 
-        List<OptionValue> options = parseSelectorOptions(optionsRaw);
+        SelectorTarget target = parsedSelector.target();
+        List<OptionValue> options = parsedSelector.options();
 
         double defaultX = player.getX();
         double defaultY = player.getY();
@@ -213,7 +253,7 @@ public class ClientSideNbtDataGetPlaceholder extends Placeholder {
         Double dz = null;
 
         MinMaxBounds.Doubles distance = MinMaxBounds.Doubles.ANY;
-        SortOrder sort = target.defaultSort;
+        SortOrder sort = getSortOrder(parsedSelector);
         int limit = target.defaultLimit;
 
         @Nullable Filter<ResourceLocation> typeFilter = null;
@@ -265,12 +305,7 @@ public class ClientSideNbtDataGetPlaceholder extends Placeholder {
                     }
                     break;
                 case "sort":
-                    if (!value.isEmpty()) {
-                        SortOrder parsed = SortOrder.fromOption(value);
-                        if (parsed != null) {
-                            sort = parsed;
-                        }
-                    }
+                    // Already part of the sort order, see getSortOrder()
                     break;
                 case "distance":
                     if (!value.isEmpty()) {
@@ -625,6 +660,9 @@ public class ClientSideNbtDataGetPlaceholder extends Placeholder {
     }
 
     private record OptionValue(String key, String value) {
+    }
+
+    private record ParsedSelector(SelectorTarget target, List<OptionValue> options) {
     }
 
     private record Filter<T>(T value, boolean inverted) {
