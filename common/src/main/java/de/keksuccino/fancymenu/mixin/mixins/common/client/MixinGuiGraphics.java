@@ -77,6 +77,8 @@ public class MixinGuiGraphics {
     @ModifyArgs(method = "enableScissor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/navigation/ScreenRectangle;<init>(IIII)V"))
     private void modify_enableScissor_FancyMenu(Args args) {
         boolean mappedByContainer = ElementContainerDrawScale.mapsNextScissor();
+        // A scissor of a window body that got mapped to the screen by what enables it stays where it is
+        if (PiPWindowHandler.INSTANCE.consumeNextScissorOnScreen()) return;
         // Under a rotated or tilted pose, the pose (which includes the scaling of PiP windows and editor widgets) decides where the scissor is
         if (ScissorShapes.isPoseRotated()) {
             int minX = args.get(0);
