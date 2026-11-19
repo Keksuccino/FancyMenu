@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.customization.placeholder;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Compares {@link PlaceholderScanner} (through {@link PlaceholderParser#findPlaceholders(String, HashMap)}) with a copy of the
  * original scanner, which copied the rest of the text for every brace, on fixed edge cases and many generated texts.
- * The results (start, end and text of every placeholder) must be identical.
+ * The results (start, end, text and identifier of every placeholder) must be identical.
  */
 @ResourceLock("PlaceholderParser global state")
 class PlaceholderScannerDifferentialTest {
@@ -173,6 +174,7 @@ class PlaceholderScannerDifferentialTest {
         List<Found> actual = new ArrayList<>();
         for (PlaceholderParser.ParsedPlaceholder p : PlaceholderParser.findPlaceholders(text, new HashMap<>())) {
             assertEquals(p.placeholderString, text.substring(p.startIndex, p.endIndex));
+            assertEquals(originalIdentifier(p.placeholderString), p.getIdentifier(), () -> "Identifier of: " + escape(p.placeholderString));
             actual.add(new Found(p.placeholderString, p.startIndex, p.endIndex));
         }
         assertEquals(expected, actual, () -> "Text: " + escape(text));
@@ -278,6 +280,13 @@ class PlaceholderScannerDifferentialTest {
             }
         }
         return placeholders;
+    }
+
+    @Nullable
+    private static String originalIdentifier(@NotNull String placeholderString) {
+        String afterPrefix = StringUtils.substring(originalNormalizePlaceholderString(placeholderString), OLD_PLACEHOLDER_PREFIX.length());
+        int endQuoteIndex = afterPrefix.indexOf('"');
+        return (endQuoteIndex > 0) ? afterPrefix.substring(0, endQuoteIndex) : null;
     }
 
     private static int originalFindPlaceholderEndIndex(@NotNull String placeholderStartSubString, int startIndex) {
