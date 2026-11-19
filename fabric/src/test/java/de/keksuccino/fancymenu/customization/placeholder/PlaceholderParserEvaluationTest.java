@@ -14,11 +14,13 @@ import java.util.List;
 
 import static de.keksuccino.fancymenu.testing.TestPlaceholders.capture;
 import static de.keksuccino.fancymenu.testing.TestPlaceholders.echo;
+import static de.keksuccino.fancymenu.testing.TestPlaceholders.failing;
 import static de.keksuccino.fancymenu.testing.TestPlaceholders.join;
 import static de.keksuccino.fancymenu.testing.TestPlaceholders.nullReplacement;
 import static de.keksuccino.fancymenu.testing.TestPlaceholders.value;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * How the parser replaces the placeholders of a text: by position, once per identical placeholder, again in their output,
@@ -28,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 class PlaceholderParserEvaluationTest {
 
     private static final String UNKNOWN = "{\"placeholder\":\"evaluation_test_unknown\",\"values\":{\"text\":\"x\"}}";
+    private static final String ERROR_IDENTIFIER = "evaluation_test_error";
 
     private final List<Long> processorIds = new ArrayList<>();
     private PlaceholderParser.PlaceholderCachingController originalCachingController;
@@ -122,6 +125,22 @@ class PlaceholderParserEvaluationTest {
     }
 
     @Test
+    void failingPlaceholderKeepsItsRawTextAndTheRestGetsReplaced() {
+        String placeholder = failing("x");
+        assertEquals(placeholder + " ok", PlaceholderParser.replacePlaceholders(placeholder + " " + echo("ok")));
+        assertEquals(placeholder + "|ok", PlaceholderParser.replacePlaceholders(join(placeholder, echo("ok"))));
+        PlaceholderParser.ParsedPlaceholder parsed = PlaceholderParser.findPlaceholders(placeholder, new HashMap<>()).get(0);
+        assertEquals(placeholder, parsed.getReplacement());
+    }
+
+    @Test
+    void placeholderErrorsAreNotCaught() {
+        if (PlaceholderRegistry.getPlaceholder(ERROR_IDENTIFIER) == null) PlaceholderRegistry.register(new ErrorPlaceholder());
+        String placeholder = "{\"placeholder\":\"" + ERROR_IDENTIFIER + "\"}";
+        assertThrows(TestError.class, () -> PlaceholderParser.replacePlaceholders("a " + placeholder));
+    }
+
+    @Test
     void textsStillGetTheirFormattingCodesConverted() {
         assertEquals("§ared §bblue", PlaceholderParser.replacePlaceholders(echo(echo("&ared")) + " &bblue"));
         assertEquals("&ared &bblue", PlaceholderParser.replacePlaceholdersPreservingFormattingCodes(echo(echo("&ared")) + " &bblue"));
@@ -174,6 +193,52 @@ class PlaceholderParserEvaluationTest {
         DeserializedPlaceholderString captured = TestPlaceholders.captured(key);
         assertNotNull(captured, key);
         assertEquals(expected, captured.placeholderString);
+    }
+
+    private static final class TestError extends Error {
+    }
+
+    private static final class ErrorPlaceholder extends Placeholder {
+
+        private ErrorPlaceholder() {
+            super(ERROR_IDENTIFIER);
+        }
+
+        @Override
+        public String getReplacementFor(DeserializedPlaceholderString dps) {
+            throw new TestError();
+        }
+
+        @Override
+        public List<String> getValueNames() {
+            return null;
+        }
+
+        @Override
+        public @NotNull String getDisplayName() {
+            return ERROR_IDENTIFIER;
+        }
+
+        @Override
+        public List<String> getDescription() {
+            return List.of();
+        }
+
+        @Override
+        public String getCategory() {
+            return "test";
+        }
+
+        @Override
+        public @NotNull DeserializedPlaceholderString getDefaultPlaceholderString() {
+            return new DeserializedPlaceholderString(ERROR_IDENTIFIER, new HashMap<>(), "{\"placeholder\":\"" + ERROR_IDENTIFIER + "\"}");
+        }
+
+        @Override
+        public boolean checkAsync() {
+            return true;
+        }
+
     }
 
 }

@@ -249,7 +249,7 @@ public class PlaceholderParser {
 
         /**
          * Replaces the placeholder the same way parsing a text replaces it. Its values come from {@link #getValues()}.
-         * It keeps its raw text if it is unknown, can't run on this thread, has values that can't be read or returns null.
+         * It keeps its raw text if it is unknown, can't run on this thread, has values that can't be read, fails or returns null.
          */
         @NotNull
         public String getReplacement() {
