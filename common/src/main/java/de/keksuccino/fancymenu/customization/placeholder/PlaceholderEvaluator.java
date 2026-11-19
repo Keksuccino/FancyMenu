@@ -23,7 +23,8 @@ import java.util.Map;
  *     because placeholders can return placeholders.</li>
  *     <li>The AFTER processors run on it. Values skip the formatting-code conversion, so placeholders get their values with the original
  *     {@code &} characters (URLs and file paths need them). The text they end up in still gets converted.</li>
- *     <li>The result gets cached, unless it contains placeholders that got skipped because they can only get replaced on the main thread.</li>
+ *     <li>The result gets cached, unless it contains placeholders that got skipped because they can only get replaced on the main thread.
+ *     Values that replaced a placeholder evaluated per occurrence don't get cached either, so every occurrence of them gets its own value.</li>
  * </ol>
  *
  * <p>Identical placeholders of one parse get replaced once and share their replacement, across all values and passes
@@ -133,12 +134,16 @@ final class PlaceholderEvaluator {
 
         if (state == null) state = new EvaluationState(context, null);
         int asyncSkips = state.asyncSkips;
+        int perOccurrenceReplacements = state.perOccurrenceReplacements;
         String result = replaceTemplate(template, state);
 
         result = context.processors().processAfterReplacement(result, (value || context.preserveFormattingCodes()) ? PlaceholderParser.FORMATTING_CODE_PROCESSOR_ID : ParsingProcessorRegistry.NO_PROCESSOR_ID);
 
-        // The main thread must never get a result that still contains placeholders that got skipped because they can only get replaced on the main thread
-        if (context.cachePlaceholders() && (state.asyncSkips == asyncSkips)) PlaceholderResultCache.put(text, result, value, context);
+        // The main thread must never get a result that still contains placeholders that got skipped because they can only get replaced on the main thread.
+        // Values that replaced a placeholder evaluated per occurrence don't get cached either, or the next occurrence of the same value would get the same result.
+        // Whole texts still keep their per-occurrence values for the caching duration. The counters include nested values and later passes, because they only grow.
+        boolean cacheable = (state.asyncSkips == asyncSkips) && (!value || (state.perOccurrenceReplacements == perOccurrenceReplacements));
+        if (context.cachePlaceholders() && cacheable) PlaceholderResultCache.put(text, result, value, context);
 
         return result;
 
