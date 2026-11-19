@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.action.blocks.statements;
 
+import de.keksuccino.fancymenu.customization.FreshValuesScope;
 import de.keksuccino.fancymenu.customization.action.Executable;
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
@@ -93,8 +94,13 @@ public class WhileExecutableBlock extends AbstractExecutableBlock {
         return b;
     }
 
+    /**
+     * Checks the condition with fresh values, because the contents of the loop usually change what the condition checks, see {@link FreshValuesScope}.
+     */
     public boolean check() {
-        return this.condition.requirementsMet();
+        try (FreshValuesScope ignored = FreshValuesScope.enter()) {
+            return this.condition.requirementsMet();
+        }
     }
 
     @Override
