@@ -118,6 +118,20 @@ class PlaceholderTemplateTest {
     }
 
     @Test
+    void valueThatAnEarlierCompileProcessedGetsKeptOnlyOnce() {
+        // The text editor's compile processor returns the instance it cached when the value got compiled for another text before
+        String value = "template_test_kept_once " + echo("x");
+        PlaceholderTemplate first = PlaceholderTemplate.compile("first " + echo(value), context());
+        PlaceholderTemplate second = PlaceholderTemplate.compile("second " + echo(value), context());
+        PlaceholderTemplate.ValueSlot firstSlot = first.nodes[0].values[0];
+        PlaceholderTemplate.ValueSlot secondSlot = second.nodes[0].values[0];
+
+        assertSame(firstSlot.processed, secondSlot.processed);
+        assertSame(secondSlot.processed, secondSlot.raw);
+        assertEquals("second template_test_kept_once x", PlaceholderParser.replacePlaceholders("second " + echo(value)));
+    }
+
+    @Test
     void beforeProcessorsRunOnValuesAtEveryParse() {
         AtomicReference<String> processed = new AtomicReference<>("one");
         this.addProcessor(PlaceholderParser.ParsingProcessorTiming.BEFORE_REPLACING_PLACEHOLDERS, in -> in.equals("template_test_dynamic") ? processed.get() : in);

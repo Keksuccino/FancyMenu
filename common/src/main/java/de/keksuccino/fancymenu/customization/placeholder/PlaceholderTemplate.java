@@ -28,6 +28,7 @@ import java.util.Map;
 final class PlaceholderTemplate {
 
     private static final int CACHE_MAX_ENTRIES = 1024;
+    // Sized for PlaceholderParser#MAX_TEXT_LENGTH, see there. A template weighs about two to four times its text, more for texts with deeply nested placeholders.
     private static final long CACHE_MAX_WEIGHT = 4_194_304L;
     private static final long OVERHEAD_WEIGHT = 64L;
     private static final Node[] NO_NODES = new Node[0];
@@ -135,6 +136,10 @@ final class PlaceholderTemplate {
     @NotNull
     private static ValueSlot compileValue(@NotNull String name, @NotNull String raw, @NotNull PlaceholderEvaluator.ParsingContext context, long registryRevision) {
         String processed = context.processors().processBeforeReplacement(raw);
+        // The BEFORE processors return their cached instance for a value that an earlier compile already processed (see TextEditorWindowBody#compileSingleLineString),
+        // which is an equal text, but not the new copy of the value. The slot then holds that instance as its raw value too, instead of keeping two copies of the
+        // same text, which would make the template twice as heavy. Evaluation passes it to the processors again, which return the same instance for it.
+        if ((processed != raw) && processed.equals(raw)) raw = processed;
         PlaceholderTemplate template = PlaceholderEvaluator.passesGate(processed) ? compile(processed, context, registryRevision) : null;
         long weight = OVERHEAD_WEIGHT + raw.length() + ((processed != raw) ? processed.length() : 0L) + ((template != null) ? (template.weight - processed.length()) : 0L);
         return new ValueSlot(name, raw, processed, template, weight);
