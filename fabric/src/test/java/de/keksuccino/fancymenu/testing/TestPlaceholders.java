@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.testing;
 
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
+import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderRegistry;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -31,6 +32,7 @@ public final class TestPlaceholders {
     private static final String FAILING_IDENTIFIER = "fancymenu_test_failing";
     private static final String CAPTURE_IDENTIFIER = "fancymenu_test_capture";
     private static final String MAIN_THREAD_VALUE_IDENTIFIER = "fancymenu_test_main_thread_value";
+    private static final String NESTED_PARSE_IDENTIFIER = "fancymenu_test_nested_parse";
     private static final Map<String, String> VALUES = new ConcurrentHashMap<>();
     private static final Map<String, AtomicInteger> EVALUATIONS = new ConcurrentHashMap<>();
     private static final Map<String, AtomicInteger> COUNTERS = new ConcurrentHashMap<>();
@@ -53,6 +55,7 @@ public final class TestPlaceholders {
         });
         registerPlaceholder(new FunctionPlaceholder(CAPTURE_IDENTIFIER, List.of("key", "text"), null, false, false));
         registerPlaceholder(new FunctionPlaceholder(MAIN_THREAD_VALUE_IDENTIFIER, List.of("key"), values -> VALUES.getOrDefault(values.get("key"), ""), false, true));
+        register(NESTED_PARSE_IDENTIFIER, List.of("key"), values -> PlaceholderParser.replacePlaceholders(value(values.get("key"))));
     }
 
     private TestPlaceholders() {
@@ -146,6 +149,15 @@ public final class TestPlaceholders {
 
     public static void setMainThread(@Nullable Thread thread) {
         mainThread = thread;
+    }
+
+    /**
+     * A placeholder that parses the value placeholder of the given key (see {@link #value(String)}) itself through {@link PlaceholderParser}
+     * while it gets replaced, like Stringify parses its text, and gets replaced with the result of that parse.
+     */
+    @NotNull
+    public static String nestedParse(@NotNull String key) {
+        return serialize(NESTED_PARSE_IDENTIFIER, "key", key);
     }
 
     @NotNull

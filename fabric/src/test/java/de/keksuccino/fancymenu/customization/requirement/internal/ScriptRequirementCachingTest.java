@@ -6,6 +6,8 @@ import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBloc
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseIfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.IfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.WhileExecutableBlock;
+import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.testing.TestPlaceholders;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * Action scripts with requirement caching turned on. The clock of the requirement cache stands still,
  * so every cached result stays usable for rendering during the whole test.
+ * Conditions whose values contain placeholders or {@code $$} references get checked with placeholder caching turned on too.
  */
 @ResourceLock("RequirementContainer caching settings")
 class ScriptRequirementCachingTest {
@@ -70,6 +73,30 @@ class ScriptRequirementCachingTest {
     }
 
     @Test
+    @ResourceLock("PlaceholderParser global state")
+    void whileLoopWhoseConditionParsesAPlaceholderItsContentsChangeStops() {
+        String key = "script_requirement_caching_while_placeholder";
+        AtomicInteger counter = new AtomicInteger();
+        TestPlaceholders.setValue(key, "0");
+
+        assertWhileLoopStopsWithPlaceholderCaching(TestPlaceholders.value(key), counter, () -> TestPlaceholders.setValue(key, Integer.toString(counter.incrementAndGet())));
+    }
+
+    @Test
+    @ResourceLock("PlaceholderParser global state")
+    void whileLoopWhoseConditionParsesAVariableReferenceItsContentsChangeStops() {
+        String reference = "$$script_requirement_caching_while_counter";
+        AtomicInteger counter = new AtomicInteger();
+        // Resolves the reference at the same point as the processor of FancyMenu's variables, which can't be used here because its store writes to disk
+        long processorId = PlaceholderParser.addParsingProcessor(PlaceholderParser.ParsingProcessorTiming.AFTER_REPLACING_PLACEHOLDERS, in -> in.replace(reference, Integer.toString(counter.get())));
+        try {
+            assertWhileLoopStopsWithPlaceholderCaching(reference, counter, counter::incrementAndGet);
+        } finally {
+            PlaceholderParser.removeParsingProcessor(processorId);
+        }
+    }
+
+    @Test
     void ifConditionSeesWhatTheActionsBeforeItChanged() {
         AtomicBoolean flag = new AtomicBoolean(false);
         CountingTestRequirement requirement = new CountingTestRequirement(flag::get);
@@ -110,6 +137,42 @@ class ScriptRequirementCachingTest {
         script.execute();
 
         assertEquals(List.of("two"), executed);
+    }
+
+    /**
+     * Runs a WHILE loop that counts to 3, with a condition whose value has to get parsed, while placeholder caching is on too.
+     * The caching duration is a minute, so every parse result that rendering cached stays usable during the whole test.
+     *
+     * @param conditionValue The value of the condition, which gets parsed into the current count.
+     * @param loopContents Increases the count, so the next parse of the condition value gets the new count.
+     */
+    private static void assertWhileLoopStopsWithPlaceholderCaching(@NotNull String conditionValue, @NotNull AtomicInteger counter, @NotNull Runnable loopContents) {
+        PlaceholderParser.PlaceholderCachingController originalCachingController = PlaceholderParser.getPlaceholderCachingController();
+        PlaceholderParser.setPlaceholderCachingController(new PlaceholderParser.PlaceholderCachingController(() -> true, () -> 60000L));
+        try {
+            CountingTestRequirement requirement = new CountingTestRequirement(value -> Integer.parseInt(value) < 3);
+            RequirementContainer condition = requirement.newContainer(conditionValue);
+            // Rendering cached the parsed value and "met" right before the script runs
+            assertTrue(condition.requirementsMet());
+            WhileExecutableBlock loop = new WhileExecutableBlock(condition);
+            loop.addExecutable(action(() -> {
+                if (counter.get() >= MAX_LOOP_RUNS) throw new AssertionError("The WHILE loop never stopped");
+                loopContents.run();
+            }));
+
+            loop.execute();
+
+            assertEquals(3, counter.get());
+            // The check of the rendering, then 3 met checks of the loop and the one that ends it
+            assertEquals(5, requirement.checks());
+            assertEquals(1, requirement.checksOutsideFreshValuesScope());
+            // Rendering gets the last results of the loop from the caches
+            assertFalse(condition.requirementsMet());
+            assertEquals("3", PlaceholderParser.replacePlaceholders(conditionValue));
+            assertEquals(5, requirement.checks());
+        } finally {
+            PlaceholderParser.setPlaceholderCachingController(originalCachingController);
+        }
     }
 
     @NotNull
