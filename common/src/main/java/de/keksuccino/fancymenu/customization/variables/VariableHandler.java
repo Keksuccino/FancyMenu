@@ -73,6 +73,15 @@ public final class VariableHandler {
         return STORE.getVariableNames();
     }
 
+    /**
+     * Replaces every {@code $$variable_name} reference to one of FancyMenu's variables with the value of the variable.
+     * At every {@code $$}, the variable with the longest name that starts there wins, and all references of the text get the values of the same moment.
+     */
+    @NotNull
+    public static String resolveVariableReferences(@NotNull String text) {
+        return STORE.resolveReferences(text);
+    }
+
     public static void clearVariables() {
         STORE.clearVariables();
     }
