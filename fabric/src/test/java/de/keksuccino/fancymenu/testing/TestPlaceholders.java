@@ -16,23 +16,25 @@ import java.util.function.Function;
 /**
  * Registered test placeholders for code that parses placeholders through the real {@code PlaceholderParser}.
  *
- * <p>The placeholder registry is global and has no removal API, so both placeholders get registered once per test JVM.
+ * <p>The placeholder registry is global and has no removal API, so all placeholders get registered once per test JVM.
  * Value placeholders are keyed, so every test should use its own keys to stay isolated from other tests.</p>
  */
 public final class TestPlaceholders {
 
     private static final String ECHO_IDENTIFIER = "fancymenu_test_echo";
     private static final String VALUE_IDENTIFIER = "fancymenu_test_value";
+    private static final String JOIN_IDENTIFIER = "fancymenu_test_join";
     private static final Map<String, String> VALUES = new ConcurrentHashMap<>();
     private static final Map<String, AtomicInteger> EVALUATIONS = new ConcurrentHashMap<>();
 
     static {
-        register(ECHO_IDENTIFIER, "text", values -> values.get("text"));
-        register(VALUE_IDENTIFIER, "key", values -> {
+        register(ECHO_IDENTIFIER, List.of("text"), values -> values.get("text"));
+        register(VALUE_IDENTIFIER, List.of("key"), values -> {
             String key = values.get("key");
             EVALUATIONS.computeIfAbsent(key, ignored -> new AtomicInteger()).incrementAndGet();
             return VALUES.getOrDefault(key, "");
         });
+        register(JOIN_IDENTIFIER, List.of("first", "second"), values -> values.get("first") + "|" + values.get("second"));
     }
 
     private TestPlaceholders() {
@@ -42,6 +44,17 @@ public final class TestPlaceholders {
     @NotNull
     public static String echo(@NotNull String text) {
         return serialize(ECHO_IDENTIFIER, "text", text);
+    }
+
+    /** A placeholder with two values that gets replaced with both values joined by "|". A missing value gets joined as "null". */
+    @NotNull
+    public static String join(@NotNull String first, @NotNull String second) {
+        return "{\"placeholder\":\"" + JOIN_IDENTIFIER + "\",\"values\":{\"first\":\"" + first + "\",\"second\":\"" + second + "\"}}";
+    }
+
+    @NotNull
+    public static String joinIdentifier() {
+        return JOIN_IDENTIFIER;
     }
 
     /** A placeholder that gets replaced with the current value of the given key, see {@link #setValue(String, String)}. */
@@ -65,18 +78,18 @@ public final class TestPlaceholders {
         return "{\"placeholder\":\"" + identifier + "\",\"values\":{\"" + valueName + "\":\"" + value + "\"}}";
     }
 
-    private static void register(@NotNull String identifier, @NotNull String valueName, @NotNull Function<Map<String, String>, String> replacement) {
-        if (PlaceholderRegistry.getPlaceholder(identifier) == null) PlaceholderRegistry.register(new FunctionPlaceholder(identifier, valueName, replacement));
+    private static void register(@NotNull String identifier, @NotNull List<String> valueNames, @NotNull Function<Map<String, String>, String> replacement) {
+        if (PlaceholderRegistry.getPlaceholder(identifier) == null) PlaceholderRegistry.register(new FunctionPlaceholder(identifier, valueNames, replacement));
     }
 
     private static final class FunctionPlaceholder extends Placeholder {
 
-        private final String valueName;
+        private final List<String> valueNames;
         private final Function<Map<String, String>, String> replacement;
 
-        private FunctionPlaceholder(@NotNull String identifier, @NotNull String valueName, @NotNull Function<Map<String, String>, String> replacement) {
+        private FunctionPlaceholder(@NotNull String identifier, @NotNull List<String> valueNames, @NotNull Function<Map<String, String>, String> replacement) {
             super(identifier);
-            this.valueName = valueName;
+            this.valueNames = valueNames;
             this.replacement = replacement;
         }
 
@@ -87,7 +100,7 @@ public final class TestPlaceholders {
 
         @Override
         public List<String> getValueNames() {
-            return List.of(this.valueName);
+            return this.valueNames;
         }
 
         @Override
@@ -107,7 +120,7 @@ public final class TestPlaceholders {
 
         @Override
         public @NotNull DeserializedPlaceholderString getDefaultPlaceholderString() {
-            return new DeserializedPlaceholderString(this.getIdentifier(), new HashMap<>(), serialize(this.getIdentifier(), this.valueName, ""));
+            return new DeserializedPlaceholderString(this.getIdentifier(), new HashMap<>(), serialize(this.getIdentifier(), this.valueNames.get(0), ""));
         }
 
         // The default check needs a running Minecraft client to compare threads.
