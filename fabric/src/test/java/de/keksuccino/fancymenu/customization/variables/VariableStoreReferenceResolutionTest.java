@@ -201,6 +201,99 @@ class VariableStoreReferenceResolutionTest {
     }
 
     @Test
+    void revisionIncreasesOnEveryChangeOfTheVariables() throws Exception {
+        VariableStore store = this.createStore();
+        assertRevisionIncreases(store, s -> s.setVariable("coins", "25"));
+        assertRevisionIncreases(store, s -> s.setVariable("coins", "26"));
+        assertRevisionIncreases(store, s -> s.setVariable("coins", null));
+        Variable handle = store.getVariable("coins");
+        assertNotNull(handle);
+        assertRevisionIncreases(store, s -> handle.setValue("27"));
+        assertRevisionIncreases(store, s -> assertTrue(s.setVariableIfAbsent("coins_record", "80")));
+        assertRevisionIncreases(store, s -> assertEquals("coins_Copy", s.createVariableWithUniqueCopyName("coins", "25", false)));
+        assertRevisionIncreases(store, s -> s.removeVariable("coins_Copy"));
+        assertRevisionIncreases(store, s -> s.replaceVariables(List.of(snapshot("coins", "1"))));
+        assertRevisionIncreases(store, VariableStore::clearVariables);
+
+        // Reloads write the variables first if they changed, so the file gets written after a flush
+        Path target = this.temporaryDirectory.resolve("user_variables.db");
+        assertTrue(store.flush());
+        Files.writeString(target, "type = user_variables\n\nvariable {\n  name = coins\n  value = 25\n  reset_on_launch = false\n}\n", StandardCharsets.UTF_8);
+        assertRevisionIncreases(store, VariableStore::readFromFile);
+        assertRevisionIncreases(store, VariableStore::init);
+        assertEquals("25", store.resolveReferences("$$coins"));
+        assertTrue(store.flush());
+        Files.writeString(target, "type = cached_variables\n\nvariables {\n  legacy_coins = 7\n}\n", StandardCharsets.UTF_8);
+        assertRevisionIncreases(store, VariableStore::readFromLegacyFile);
+        assertEquals("7", store.resolveReferences("$$legacy_coins"));
+    }
+
+    @Test
+    void revisionStaysWhenNoVariableChanges() {
+        VariableStore store = this.createStore();
+        assertRevisionStays(store, VariableStore::clearVariables);
+        assertRevisionStays(store, s -> s.removeVariable("missing"));
+        store.setVariable("coins", "25");
+        Variable handle = store.getVariable("coins");
+        assertNotNull(handle);
+
+        assertRevisionStays(store, s -> s.setVariable("coins", "25"));
+        assertRevisionStays(store, s -> handle.setValue("25"));
+        assertRevisionStays(store, s -> assertFalse(s.setVariableIfAbsent("coins", "ignored")));
+        assertRevisionStays(store, s -> {
+            s.resolveReferences("$$coins");
+            s.getVariableValue("coins");
+            s.getVariableSnapshots();
+            s.getVariableNames();
+            handle.getValue();
+        });
+        assertRevisionStays(store, VariableStore::flush);
+
+        store.shutdown();
+        assertRevisionStays(store, s -> {
+            s.setVariable("coins", "ignored");
+            s.setVariableIfAbsent("late", "ignored");
+            s.removeVariable("coins");
+            s.clearVariables();
+            s.replaceVariables(List.of(snapshot("replacement", "ignored")));
+            handle.setValue("ignored");
+        });
+    }
+
+    @Test
+    void revisionCanBeReadWhileAnotherThreadHoldsTheVariables() throws Exception {
+        CountDownLatch insideListener = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        VariableStore store = this.createStore(this.temporaryDirectory.resolve("user_variables.db"), (name, oldValue, newValue) -> {
+            if (!"blocking".equals(name)) return;
+            // Listeners run while the store is locked, like action scripts that change variables
+            insideListener.countDown();
+            try {
+                assertTrue(release.await(10L, TimeUnit.SECONDS));
+            } catch (InterruptedException ex) {
+                throw new IllegalStateException(ex);
+            }
+        });
+        long before = store.getRevision();
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            Future<?> writer = executor.submit(() -> store.setVariable("blocking", "1"));
+            assertTrue(insideListener.await(10L, TimeUnit.SECONDS));
+
+            // Would block until the listener finished if reading the revision needed the lock of the store
+            long whileLocked = executor.submit(store::getRevision).get(5L, TimeUnit.SECONDS);
+
+            release.countDown();
+            writer.get(10L, TimeUnit.SECONDS);
+            assertAll(() -> assertTrue(whileLocked > before), () -> assertEquals(whileLocked, store.getRevision()));
+        } finally {
+            release.countDown();
+            executor.shutdownNow();
+            assertTrue(executor.awaitTermination(10L, TimeUnit.SECONDS));
+        }
+    }
+
+    @Test
     void initializationAndReloadsChangeTheVariableSet() throws Exception {
         Path target = this.temporaryDirectory.resolve("user_variables.db");
         Files.writeString(target, "type = user_variables\n\nvariable {\n  name = coins\n  value = 25\n  reset_on_launch = false\n}\n\nvariable {\n  name = coins_today\n  value = 3\n  reset_on_launch = true\n}\n", StandardCharsets.UTF_8);
@@ -515,6 +608,19 @@ class VariableStoreReferenceResolutionTest {
         long before = store.getVariableSetRevision();
         operation.accept(store);
         assertEquals(before, store.getVariableSetRevision());
+    }
+
+    private static void assertRevisionIncreases(@NotNull VariableStore store, @NotNull Consumer<VariableStore> operation) {
+        long before = store.getRevision();
+        operation.accept(store);
+        long after = store.getRevision();
+        assertTrue(after > before, () -> "revision " + before + " -> " + after);
+    }
+
+    private static void assertRevisionStays(@NotNull VariableStore store, @NotNull Consumer<VariableStore> operation) {
+        long before = store.getRevision();
+        operation.accept(store);
+        assertEquals(before, store.getRevision());
     }
 
     @NotNull
