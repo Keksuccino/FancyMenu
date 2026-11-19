@@ -82,6 +82,18 @@ public final class VariableHandler {
         return STORE.resolveReferences(text);
     }
 
+    /**
+     * Returns a number that increases whenever FancyMenu's variables change: when a variable gets added, removed or replaced, or gets a new
+     * value or setting. Code that shows what {@code $$name} references resolve to can compare it once per frame, to find out if it has to
+     * resolve them again.
+     *
+     * <p>Reading it never blocks and costs about as much as reading a field. Read it before resolving the references, so a change while
+     * they get resolved still shows up as a new number the next time.</p>
+     */
+    public static long getRevision() {
+        return STORE.getRevision();
+    }
+
     public static void clearVariables() {
         STORE.clearVariables();
     }
