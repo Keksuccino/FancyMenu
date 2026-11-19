@@ -47,7 +47,9 @@ final class PlaceholderEvaluator {
     // Errors of placeholders whose values can't be read contain their raw text, which can be as long as a whole text, see PlaceholderParser#MAX_TEXT_LENGTH.
     // An error heavier than this would never get its cooldown and get logged every frame.
     private static final long LOG_COOLDOWN_MAX_WEIGHT = 1_048_576L;
-    private static final int CONTAINS_PLACEHOLDERS_MAX_ENTRIES = 2048;
+    // Every text that gets parsed goes through this cache on every parse, also texts without placeholders. Layouts parse their texts in the same order every frame,
+    // so with first-in-first-out eviction, a cache with fewer entries than a layout has texts evicts every entry before its next lookup.
+    private static final int CONTAINS_PLACEHOLDERS_MAX_ENTRIES = 8192;
     // Sized for PlaceholderParser#MAX_TEXT_LENGTH, see there
     private static final long CONTAINS_PLACEHOLDERS_MAX_WEIGHT = 2_097_152L;
     private static final long CACHE_ENTRY_OVERHEAD_WEIGHT = 64L;
