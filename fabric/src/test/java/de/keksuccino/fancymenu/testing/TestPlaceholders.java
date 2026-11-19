@@ -4,6 +4,7 @@ import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholder
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderRegistry;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.List;
@@ -24,8 +25,11 @@ public final class TestPlaceholders {
     private static final String ECHO_IDENTIFIER = "fancymenu_test_echo";
     private static final String VALUE_IDENTIFIER = "fancymenu_test_value";
     private static final String JOIN_IDENTIFIER = "fancymenu_test_join";
+    private static final String NULL_IDENTIFIER = "fancymenu_test_null";
+    private static final String CAPTURE_IDENTIFIER = "fancymenu_test_capture";
     private static final Map<String, String> VALUES = new ConcurrentHashMap<>();
     private static final Map<String, AtomicInteger> EVALUATIONS = new ConcurrentHashMap<>();
+    private static final Map<String, DeserializedPlaceholderString> CAPTURED = new ConcurrentHashMap<>();
 
     static {
         register(ECHO_IDENTIFIER, List.of("text"), values -> values.get("text"));
@@ -35,6 +39,8 @@ public final class TestPlaceholders {
             return VALUES.getOrDefault(key, "");
         });
         register(JOIN_IDENTIFIER, List.of("first", "second"), values -> values.get("first") + "|" + values.get("second"));
+        register(NULL_IDENTIFIER, List.of("text"), values -> null);
+        registerPlaceholder(new FunctionPlaceholder(CAPTURE_IDENTIFIER, List.of("key", "text"), null));
     }
 
     private TestPlaceholders() {
@@ -78,21 +84,45 @@ public final class TestPlaceholders {
         return (evaluations != null) ? evaluations.get() : 0;
     }
 
+    /** A placeholder that returns null as replacement. */
+    @NotNull
+    public static String nullReplacement(@NotNull String text) {
+        return serialize(NULL_IDENTIFIER, "text", text);
+    }
+
+    /** A placeholder that remembers what it got called with under the given key (see {@link #captured(String)}) and gets replaced with "captured". */
+    @NotNull
+    public static String capture(@NotNull String key, @NotNull String text) {
+        return "{\"placeholder\":\"" + CAPTURE_IDENTIFIER + "\",\"values\":{\"key\":\"" + key + "\",\"text\":\"" + text + "\"}}";
+    }
+
+    /** What the capture placeholder of the given key got called with the last time, or null if it never got called. */
+    @Nullable
+    public static DeserializedPlaceholderString captured(@NotNull String key) {
+        return CAPTURED.get(key);
+    }
+
     @NotNull
     private static String serialize(@NotNull String identifier, @NotNull String valueName, @NotNull String value) {
         return "{\"placeholder\":\"" + identifier + "\",\"values\":{\"" + valueName + "\":\"" + value + "\"}}";
     }
 
     private static void register(@NotNull String identifier, @NotNull List<String> valueNames, @NotNull Function<Map<String, String>, String> replacement) {
-        if (PlaceholderRegistry.getPlaceholder(identifier) == null) PlaceholderRegistry.register(new FunctionPlaceholder(identifier, valueNames, replacement));
+        registerPlaceholder(new FunctionPlaceholder(identifier, valueNames, replacement));
+    }
+
+    private static void registerPlaceholder(@NotNull FunctionPlaceholder placeholder) {
+        if (PlaceholderRegistry.getPlaceholder(placeholder.getIdentifier()) == null) PlaceholderRegistry.register(placeholder);
     }
 
     private static final class FunctionPlaceholder extends Placeholder {
 
         private final List<String> valueNames;
+        /** Null for the capture placeholder. */
+        @Nullable
         private final Function<Map<String, String>, String> replacement;
 
-        private FunctionPlaceholder(@NotNull String identifier, @NotNull List<String> valueNames, @NotNull Function<Map<String, String>, String> replacement) {
+        private FunctionPlaceholder(@NotNull String identifier, @NotNull List<String> valueNames, @Nullable Function<Map<String, String>, String> replacement) {
             super(identifier);
             this.valueNames = valueNames;
             this.replacement = replacement;
@@ -100,7 +130,9 @@ public final class TestPlaceholders {
 
         @Override
         public String getReplacementFor(DeserializedPlaceholderString dps) {
-            return this.replacement.apply(dps.values);
+            if (this.replacement != null) return this.replacement.apply(dps.values);
+            CAPTURED.put(dps.values.get("key"), new DeserializedPlaceholderString(dps.placeholderIdentifier, new HashMap<>(dps.values), dps.placeholderString));
+            return "captured";
         }
 
         @Override
