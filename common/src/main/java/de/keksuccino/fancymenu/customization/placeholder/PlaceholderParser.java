@@ -4,16 +4,12 @@
 
 package de.keksuccino.fancymenu.customization.placeholder;
 
-import com.google.common.collect.Lists;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.variables.UserVariableSnapshot;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
 import de.keksuccino.fancymenu.util.rendering.text.TextFormattingUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.*;
@@ -23,43 +19,24 @@ import java.util.function.Supplier;
 //{"placeholder":"ph_id","values":{"value_1":"{"placeholder":"ph_id_2"}","value_2":"content"}}
 //{"placeholder":"ph_id_2"}
 
+/**
+ * Replaces placeholders and {@code $$} variable references in texts.
+ *
+ * <p>The work is split by responsibility: {@link PlaceholderScanner} finds placeholders, {@link PlaceholderValueParser} reads their values,
+ * {@link PlaceholderEvaluator} replaces them, {@link ParsingProcessorRegistry} holds the parsing processors and {@link PlaceholderResultCache}
+ * caches results. This class is the public entry point.</p>
+ */
 public class PlaceholderParser {
 
-    private static final Logger LOGGER = LogManager.getLogger();
-    private static final long LOG_COOLDOWN_MS = 10000;
-    private static final int LOG_COOLDOWN_MAX_ENTRIES = 256;
-    private static final long LOG_COOLDOWN_MAX_WEIGHT = 262_144L;
-    private static final int CONTAINS_PLACEHOLDERS_MAX_ENTRIES = 2048;
-    private static final long CONTAINS_PLACEHOLDERS_MAX_WEIGHT = 1_048_576L;
-    private static final int PLACEHOLDER_CACHE_MAX_ENTRIES = 512;
-    private static final long PLACEHOLDER_CACHE_MAX_WEIGHT = 4_194_304L;
-    private static final long CACHE_ENTRY_OVERHEAD_WEIGHT = 64L;
-
-    // String length is measured in retained UTF-16 code units, with a fixed allowance for each entry's objects.
-    private static final LogCooldownTracker LOG_COOLDOWN = new LogCooldownTracker(LOG_COOLDOWN_MS, LOG_COOLDOWN_MAX_ENTRIES, LOG_COOLDOWN_MAX_WEIGHT);
-    private static final BoundedConcurrentCache<String, Boolean> CONTAINS_PLACEHOLDERS = new BoundedConcurrentCache<>(CONTAINS_PLACEHOLDERS_MAX_ENTRIES, CONTAINS_PLACEHOLDERS_MAX_WEIGHT, (text, ignored) -> CACHE_ENTRY_OVERHEAD_WEIGHT + text.length());
-    private static final BoundedConcurrentCache<String, CachedPlaceholder> PLACEHOLDER_CACHE = new BoundedConcurrentCache<>(PLACEHOLDER_CACHE_MAX_ENTRIES, PLACEHOLDER_CACHE_MAX_WEIGHT, (text, cached) -> CACHE_ENTRY_OVERHEAD_WEIGHT + text.length() + cached.replacement().length());
-    private static final Object PARSING_PROCESSOR_REGISTRATION_LOCK = new Object();
-    private static final Map<Long, ConsumingSupplier<String, String>> PARSING_PROCESSORS_BEFORE_REPLACING_PLACEHOLDERS = new LinkedHashMap<>();
-    private static final Map<Long, ConsumingSupplier<String, String>> PARSING_PROCESSORS_AFTER_REPLACING_PLACEHOLDERS = new LinkedHashMap<>();
-    private static volatile ParsingProcessorSnapshot parsingProcessorSnapshot = new ParsingProcessorSnapshot(0L, List.of(), List.of());
-    private static final Object CACHING_CONTROLLER_LOCK = new Object();
-
-    private static final int MIN_LENGTH_FOR_PARSING = 8;
-    private static final int MAX_TEXT_LENGTH = 17000;
+    /** Texts of this length or longer get answered with {@link #TOO_LONG_TO_PARSE_ERROR_MESSAGE}, unless they get parsed without length limit. */
+    static final int MAX_TEXT_LENGTH = 17000;
     private static final String EMPTY_STRING = "";
     private static final String FORMATTING_PREFIX_AND = "&";
     private static final String FORMATTING_PREFIX_PARAGRAPH = "§";
-    private static final String SHORT_VARIABLE_PLACEHOLDER_PREFIX = "$$";
-    private static final char DOLLAR_CHAR = '$';
     private static final char APOSTROPHE_CHAR = '\"';
-    private static final String TOO_LONG_TO_PARSE_ERROR_MESSAGE = "ERROR: Text too long to parse placeholders! 17,000 characters at max!";
+    static final String TOO_LONG_TO_PARSE_ERROR_MESSAGE = "ERROR: Text too long to parse placeholders! 17,000 characters at max!";
 
-    private static long processorId = 0L;
-    private static long processorRevision = 0L;
-    private static long cachingControllerRevision = 0L;
-    private static final long FORMATTING_CODE_PROCESSOR_ID;
-    private static volatile CachingControllerSnapshot cachingControllerSnapshot = new CachingControllerSnapshot(0L, new PlaceholderCachingController(() -> true, () -> 30L));
+    static final long FORMATTING_CODE_PROCESSOR_ID;
 
     static {
 
@@ -105,97 +82,38 @@ public class PlaceholderParser {
      * Adds a parsing processor. The timing controls if the processor should get executed before or after replacing placeholders in the string.
      *
      * <p>{@code ParsingProcessorTiming.BEFORE_REPLACING_PLACEHOLDERS} processors get executed if the input text is not null, is not too long to get parsed and is not currently in the cache.
+     * They also get executed on the values of placeholders, before the placeholders in these values get replaced.
      *
      * <p>{@code ParsingProcessorTiming.AFTER_REPLACING_PLACEHOLDERS} processors only get executed if the input text contains placeholders or {@code $$} variable references (see {@link #containsPlaceholders(String)}) and the system successfully replaced them.
+     * They also get executed on the values of placeholders that contain placeholders or {@code $$} variable references.
      *
      * @return The unique ID of the processor.
      */
     public static long addParsingProcessor(@NotNull ParsingProcessorTiming timing, @NotNull ConsumingSupplier<String, String> processor) {
-        Objects.requireNonNull(timing);
-        Objects.requireNonNull(processor);
-        synchronized (PARSING_PROCESSOR_REGISTRATION_LOCK) {
-            long id = Math.incrementExact(processorId);
-            processorId = id;
-            if (timing == ParsingProcessorTiming.BEFORE_REPLACING_PLACEHOLDERS) {
-                PARSING_PROCESSORS_BEFORE_REPLACING_PLACEHOLDERS.put(id, processor);
-            } else {
-                PARSING_PROCESSORS_AFTER_REPLACING_PLACEHOLDERS.put(id, processor);
-            }
-            publishParsingProcessorSnapshotLocked();
-            return id;
-        }
+        return ParsingProcessorRegistry.add(timing, processor);
     }
 
     public static void removeParsingProcessor(long id) {
-        synchronized (PARSING_PROCESSOR_REGISTRATION_LOCK) {
-            boolean removedBefore = PARSING_PROCESSORS_BEFORE_REPLACING_PLACEHOLDERS.remove(id) != null;
-            boolean removedAfter = PARSING_PROCESSORS_AFTER_REPLACING_PLACEHOLDERS.remove(id) != null;
-            if (removedBefore || removedAfter) publishParsingProcessorSnapshotLocked();
-        }
+        ParsingProcessorRegistry.remove(id);
     }
 
     @NotNull
     public static PlaceholderCachingController getPlaceholderCachingController() {
-        return cachingControllerSnapshot.controller();
+        return PlaceholderResultCache.cachingControllerSnapshot().controller();
     }
 
     public static void setPlaceholderCachingController(@NotNull PlaceholderCachingController cachingController) {
-        Objects.requireNonNull(cachingController);
-        synchronized (CACHING_CONTROLLER_LOCK) {
-            long revision = Math.incrementExact(cachingControllerRevision);
-            cachingControllerRevision = revision;
-            cachingControllerSnapshot = new CachingControllerSnapshot(revision, cachingController);
-        }
+        PlaceholderResultCache.setCachingController(cachingController);
     }
 
     public static boolean isCachingPlaceholders() {
-        PlaceholderCachingController controller = cachingControllerSnapshot.controller();
+        PlaceholderCachingController controller = PlaceholderResultCache.cachingControllerSnapshot().controller();
         return controller.shouldCachePlaceholders().get();
     }
 
     public static long getPlaceholderCachingDurationMs() {
-        PlaceholderCachingController controller = cachingControllerSnapshot.controller();
+        PlaceholderCachingController controller = PlaceholderResultCache.cachingControllerSnapshot().controller();
         return controller.cachingDurationMillis().get();
-    }
-
-    /**
-     * Registration mutates the ordered maps only while holding their lock, then publishes both processor phases as
-     * one immutable volatile snapshot. A parser can therefore retain one coherent revision without holding a lock
-     * while integration code executes.
-     */
-    private static void publishParsingProcessorSnapshotLocked() {
-        List<RegisteredParsingProcessor> beforeReplacement = createProcessorList(PARSING_PROCESSORS_BEFORE_REPLACING_PLACEHOLDERS);
-        List<RegisteredParsingProcessor> afterReplacement = createProcessorList(PARSING_PROCESSORS_AFTER_REPLACING_PLACEHOLDERS);
-        long revision = Math.incrementExact(processorRevision);
-        processorRevision = revision;
-        parsingProcessorSnapshot = new ParsingProcessorSnapshot(revision, beforeReplacement, afterReplacement);
-    }
-
-    @NotNull
-    private static List<RegisteredParsingProcessor> createProcessorList(@NotNull Map<Long, ConsumingSupplier<String, String>> processors) {
-        List<RegisteredParsingProcessor> snapshot = new ArrayList<>(processors.size());
-        for (Map.Entry<Long, ConsumingSupplier<String, String>> processor : processors.entrySet()) {
-            snapshot.add(new RegisteredParsingProcessor(processor.getKey(), processor.getValue()));
-        }
-        return List.copyOf(snapshot);
-    }
-
-    @NotNull
-    private static ParsingContext createParsingContext(boolean preserveFormattingCodes) {
-        return createParsingContext(preserveFormattingCodes, true);
-    }
-
-    @NotNull
-    private static ParsingContext createParsingContext(boolean preserveFormattingCodes, boolean limitTextLength) {
-        ParsingProcessorSnapshot processors = parsingProcessorSnapshot;
-        CachingControllerSnapshot caching = cachingControllerSnapshot;
-        boolean cachePlaceholders = false;
-        long cachingDurationMillis = 0L;
-        if (!preserveFormattingCodes && caching.controller().shouldCachePlaceholders().get()) {
-            cachingDurationMillis = caching.controller().cachingDurationMillis().get();
-            cachePlaceholders = cachingDurationMillis > 0L;
-        }
-        return new ParsingContext(processors, caching.revision(), cachePlaceholders, cachingDurationMillis, preserveFormattingCodes, limitTextLength);
     }
 
     /**
@@ -205,19 +123,7 @@ public class PlaceholderParser {
      * It does not check if the placeholder has an end, or if a placeholder or variable with that name exists.
      */
     public static boolean containsPlaceholders(@Nullable String in) {
-        if (in == null) return false;
-        if ((in.length() >= MIN_LENGTH_FOR_PARSING) && PlaceholderScanner.containsPlaceholderStart(in)) return true;
-        return containsVariableReference(in);
-    }
-
-    /**
-     * Checks if the text contains {@code $$} followed by at least one character, which is the shortest possible {@code $$name} reference.
-     * Variable names can contain any character, so this doesn't check the name itself.
-     */
-    private static boolean containsVariableReference(@NotNull String in) {
-        // Only the first "$$" needs a check: if nothing follows it, it ends the text, so there is no other "$$" after it
-        int prefixIndex = in.indexOf(SHORT_VARIABLE_PLACEHOLDER_PREFIX);
-        return (prefixIndex != -1) && ((prefixIndex + SHORT_VARIABLE_PLACEHOLDER_PREFIX.length()) < in.length());
+        return PlaceholderEvaluator.containsPlaceholders(in);
     }
 
     /**
@@ -230,7 +136,7 @@ public class PlaceholderParser {
      */
     @NotNull
     public static String replacePlaceholders(@Nullable String in) {
-        return replacePlaceholders(in, null, false);
+        return replacePlaceholders(in, false);
     }
 
     /**
@@ -242,7 +148,7 @@ public class PlaceholderParser {
      */
     @NotNull
     public static String replacePlaceholdersPreservingFormattingCodes(@Nullable String in) {
-        return replacePlaceholders(in, null, true);
+        return replacePlaceholders(in, true);
     }
 
     /**
@@ -256,93 +162,15 @@ public class PlaceholderParser {
      */
     @NotNull
     public static String replacePlaceholdersWithoutLengthLimit(@Nullable String in, boolean preserveFormattingCodes) {
-        return replacePlaceholders(in, null, createParsingContext(preserveFormattingCodes, false));
+        if (in == null) return EMPTY_STRING;
+        return PlaceholderEvaluator.replacePlaceholders(in, null, PlaceholderEvaluator.createParsingContext(preserveFormattingCodes, false));
     }
 
-    /**
-     * Replaces all placeholders in the given {@link String}.<br>
-     * Since placeholders can contain variables that are not always the same, this task can be performance-intensive,
-     * so you should keep in mind to not parse/update long texts too often in a short time frame.
-     *
-     * @param in The {@link String} to replace placeholders in.
-     * @param parsed The placeholder replacement cache.
-     * @return The given {@link String} with all placeholders replaced.
-     */
     @NotNull
-    private static String replacePlaceholders(@Nullable String in, @Nullable HashMap<String, String> parsed, boolean preserveFormattingCodes) {
+    private static String replacePlaceholders(@Nullable String in, boolean preserveFormattingCodes) {
         if (in == null) return EMPTY_STRING;
         if (in.length() >= MAX_TEXT_LENGTH) return TOO_LONG_TO_PARSE_ERROR_MESSAGE;
-        return replacePlaceholders(in, parsed, createParsingContext(preserveFormattingCodes));
-    }
-
-    @NotNull
-    private static String replacePlaceholders(@Nullable String in, @Nullable HashMap<String, String> parsed, @NotNull ParsingContext context) {
-
-        if (in == null) return EMPTY_STRING;
-
-        if (context.limitTextLength() && (in.length() >= MAX_TEXT_LENGTH)) return TOO_LONG_TO_PARSE_ERROR_MESSAGE;
-
-        // Cache hits deliberately skip BEFORE processors, so insertion must use this exact pre-processor key too.
-        String cacheKey = in;
-        if (context.cachePlaceholders()) {
-            CachedPlaceholder cached = PLACEHOLDER_CACHE.get(cacheKey);
-            if ((cached != null) && cached.isUsableFor(context, System.currentTimeMillis())) return cached.replacement();
-        }
-
-        in = processBeforeReplacement(in, context.processors());
-
-        if (in.length() < MIN_LENGTH_FOR_PARSING) {
-            // Texts this short can only contain variable references, and checking them directly is cheaper than a cache lookup
-            if (!containsVariableReference(in)) return in;
-        } else {
-            Boolean containsPlaceholders = CONTAINS_PLACEHOLDERS.get(in);
-            if (containsPlaceholders == null) {
-                containsPlaceholders = containsPlaceholders(in);
-                CONTAINS_PLACEHOLDERS.put(in, containsPlaceholders);
-            }
-            if (!containsPlaceholders) return in;
-        }
-
-        // Used to cache replacements for already parsed placeholders, so they can get reused to improve performance
-        if (parsed == null) parsed = new HashMap<>();
-
-        int hash = in.hashCode();
-        while (true) {
-            // Reverse the list to start replacing from the end of the String, so all nested placeholders get replaced first
-            for (ParsedPlaceholder p : Lists.reverse(findPlaceholders(in, parsed, context))) {
-                String replacement = parsed.get(p.placeholderString);
-                if (replacement == null) {
-                    replacement = p.getReplacement();
-                    parsed.put(p.placeholderString, replacement);
-                }
-                in = StringUtils.replace(in, p.placeholderString, replacement);
-            }
-            int hashNew = in.hashCode();
-            if (hashNew == hash) break;
-            hash = hashNew;
-        }
-
-        in = processAfterReplacement(in, context);
-
-        if (context.cachePlaceholders()) PLACEHOLDER_CACHE.put(cacheKey, new CachedPlaceholder(in, System.currentTimeMillis(), context.processors().revision(), context.cachingControllerRevision()));
-
-        return in;
-
-    }
-
-    private static String processBeforeReplacement(@NotNull String in, @NotNull ParsingProcessorSnapshot processors) {
-        for (RegisteredParsingProcessor processor : processors.beforeReplacement()) {
-            in = processor.processor().get(in);
-        }
-        return in;
-    }
-
-    private static String processAfterReplacement(@NotNull String in, @NotNull ParsingContext context) {
-        for (RegisteredParsingProcessor processor : context.processors().afterReplacement()) {
-            if (context.preserveFormattingCodes() && (processor.id() == FORMATTING_CODE_PROCESSOR_ID)) continue;
-            in = processor.processor().get(in);
-        }
-        return in;
+        return PlaceholderEvaluator.replacePlaceholders(in, null, PlaceholderEvaluator.createParsingContext(preserveFormattingCodes, true));
     }
 
     /**
@@ -350,14 +178,15 @@ public class PlaceholderParser {
      * Will not find placeholders that get added to the {@link String} by replacing other placeholders.
      *
      * @param in The {@link String} to get the placeholders from.
+     * @param parsed Replacements of placeholders by their raw text, shared by the placeholders in the values of the found placeholders when they get replaced.
      */
     @NotNull
     public static List<ParsedPlaceholder> findPlaceholders(@Nullable String in, @NotNull HashMap<String, String> parsed) {
-        return findPlaceholders(in, parsed, createParsingContext(false));
+        return findPlaceholders(in, parsed, PlaceholderEvaluator.createParsingContext(false, true));
     }
 
     @NotNull
-    private static List<ParsedPlaceholder> findPlaceholders(@Nullable String in, @NotNull HashMap<String, String> parsed, @NotNull ParsingContext context) {
+    static List<ParsedPlaceholder> findPlaceholders(@Nullable String in, @NotNull HashMap<String, String> parsed, @NotNull PlaceholderEvaluator.ParsingContext context) {
         List<ParsedPlaceholder> placeholders = new ArrayList<>();
         if (in == null) return placeholders;
         PlaceholderScanner scanner = new PlaceholderScanner(in);
@@ -368,15 +197,6 @@ public class PlaceholderParser {
         return placeholders;
     }
 
-    private static void logError(@NotNull String error, @Nullable Exception ex) {
-        if (!LOG_COOLDOWN.tryAcquire(error, System.currentTimeMillis())) return;
-        if (ex != null) {
-            LOGGER.error(error, ex);
-        } else {
-            LOGGER.error(error);
-        }
-    }
-
     public static class ParsedPlaceholder {
 
         private static final int UNKNOWN_IDENTIFIER_START = -2;
@@ -385,7 +205,7 @@ public class PlaceholderParser {
         public final int startIndex;
         public final int endIndex;
         private final HashMap<String, String> parsed;
-        private final ParsingContext context;
+        private final PlaceholderEvaluator.ParsingContext context;
         private Integer hashcode;
         /** Relative to the placeholder string, {@link #UNKNOWN_IDENTIFIER_START} until it gets searched, -1 if the string is no placeholder. */
         private int identifierStart;
@@ -395,10 +215,10 @@ public class PlaceholderParser {
         private boolean placeholderFailed = false;
 
         protected ParsedPlaceholder(@NotNull String placeholderString, int startIndex, int endIndex, @NotNull HashMap<String, String> parsed, boolean preserveFormattingCodes) {
-            this(placeholderString, startIndex, endIndex, UNKNOWN_IDENTIFIER_START, parsed, createParsingContext(preserveFormattingCodes));
+            this(placeholderString, startIndex, endIndex, UNKNOWN_IDENTIFIER_START, parsed, PlaceholderEvaluator.createParsingContext(preserveFormattingCodes, true));
         }
 
-        private ParsedPlaceholder(@NotNull String placeholderString, int startIndex, int endIndex, int identifierStart, @NotNull HashMap<String, String> parsed, @NotNull ParsingContext context) {
+        private ParsedPlaceholder(@NotNull String placeholderString, int startIndex, int endIndex, int identifierStart, @NotNull HashMap<String, String> parsed, @NotNull PlaceholderEvaluator.ParsingContext context) {
             this.placeholderString = placeholderString;
             this.startIndex = startIndex;
             this.endIndex = endIndex;
@@ -437,14 +257,7 @@ public class PlaceholderParser {
             if (identifier == null) return this.placeholderString;
             Placeholder p = this.getPlaceholder();
             if (p == null) return this.placeholderString;
-            if (!p.checkAsync()) return this.placeholderString;
-            HashMap<String, String> values = this.getValues();
-            if (values == null) return this.placeholderString;
-            DeserializedPlaceholderString deserialized = new DeserializedPlaceholderString(identifier, null, this.placeholderString);
-            for (Map.Entry<String, String> value : values.entrySet()) {
-                deserialized.values.put(value.getKey(), replacePlaceholders(value.getValue(), this.parsed, this.context));
-            }
-            return p.getReplacementFor(deserialized);
+            return PlaceholderEvaluator.replaceParsedPlaceholder(this, p, identifier, this.parsed, this.context);
         }
 
         /**
@@ -459,7 +272,7 @@ public class PlaceholderParser {
                 if (placeholder == null) return null;
                 return PlaceholderValueParser.parseValues(this.placeholderString, this.getIdentifierStart(), PlaceholderRegistry.getValueNames(placeholder));
             } catch (Exception ex) {
-                logError("[FANCYMENU] Failed to parse values of placeholder: " + this.placeholderString, ex);
+                PlaceholderEvaluator.logError("[FANCYMENU] Failed to parse values of placeholder: " + this.placeholderString, ex);
             }
             return null;
         }
@@ -493,42 +306,6 @@ public class PlaceholderParser {
             return this.hashcode;
         }
 
-    }
-
-    /**
-     * Revisions are validity tokens, not just diagnostics. An old parse may finish after a processor/controller
-     * change and overwrite the same cache slot; a later parse must reject that value instead of observing old logic.
-     */
-    private record CachedPlaceholder(@NotNull String replacement, long cachedAtMillis, long processorRevision, long cachingControllerRevision) {
-
-        private boolean isUsableFor(@NotNull ParsingContext context, long nowMillis) {
-            if ((this.processorRevision != context.processors().revision()) || (this.cachingControllerRevision != context.cachingControllerRevision())) return false;
-            if (nowMillis < this.cachedAtMillis) return false;
-            long elapsed = nowMillis - this.cachedAtMillis;
-            return (elapsed >= 0L) && (elapsed < context.cachingDurationMillis());
-        }
-
-    }
-
-    private record RegisteredParsingProcessor(long id, @NotNull ConsumingSupplier<String, String> processor) {
-    }
-
-    private record ParsingProcessorSnapshot(long revision, @NotNull List<RegisteredParsingProcessor> beforeReplacement, @NotNull List<RegisteredParsingProcessor> afterReplacement) {
-
-        private ParsingProcessorSnapshot {
-            beforeReplacement = List.copyOf(beforeReplacement);
-            afterReplacement = List.copyOf(afterReplacement);
-        }
-
-    }
-
-    private record CachingControllerSnapshot(long revision, @NotNull PlaceholderCachingController controller) {
-    }
-
-    /**
-     * @param limitTextLength If texts of MAX_TEXT_LENGTH characters or more get answered with an error text. This includes the values of nested placeholders.
-     */
-    private record ParsingContext(@NotNull ParsingProcessorSnapshot processors, long cachingControllerRevision, boolean cachePlaceholders, long cachingDurationMillis, boolean preserveFormattingCodes, boolean limitTextLength) {
     }
 
     public enum ParsingProcessorTiming {
