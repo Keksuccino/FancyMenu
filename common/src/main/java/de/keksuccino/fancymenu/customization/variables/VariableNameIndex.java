@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.variables;
 
+import de.keksuccino.fancymenu.customization.placeholder.ShortReferenceResolver;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -18,9 +19,10 @@ import java.util.List;
  *
  * <p>The index holds the {@link Variable} objects of the store's map, and reading their values stays the store's job. The store has to
  * build a new index whenever the entries of its map change, which includes replacing a variable with a new object of the same name.
- * Value changes need no new index.</p>
+ * Value changes need no new index. Names never change, so finding names works without the store's lock, which is what
+ * {@link #findLongestNameLength(String, int)} is for: code that only needs the names can use an index without blocking the variables.</p>
  */
-final class VariableNameIndex {
+final class VariableNameIndex implements ShortReferenceResolver.NameLookup {
 
     private static final int ASCII_GROUP_COUNT = 128;
     private static final Comparator<Variable> BY_FIRST_CHARACTER = (first, second) -> Character.compare(first.getName().charAt(0), second.getName().charAt(0));
@@ -140,6 +142,12 @@ final class VariableNameIndex {
             if (text.startsWith(variable.getName(), nameStart)) return variable;
         }
         return null;
+    }
+
+    @Override
+    public int findLongestNameLength(@NotNull String text, int nameStart) {
+        Variable variable = this.findLongest(text, nameStart);
+        return (variable != null) ? variable.getName().length() : 0;
     }
 
     @Nullable

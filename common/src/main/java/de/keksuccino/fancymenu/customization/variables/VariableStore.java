@@ -284,6 +284,18 @@ final class VariableStore {
     }
 
     /**
+     * Returns the name index of the current variable set (see {@link VariableNameIndex}), which only gets built again after the set changed.
+     * The index never changes and only reads names, which never change either, so it can find names after the lock got released.
+     */
+    @NotNull
+    VariableNameIndex getNameIndex() {
+        synchronized (this.stateLock) {
+            this.awaitReplacementLocked();
+            return this.getNameIndexLocked();
+        }
+    }
+
+    /**
      * The revision of the variables, see {@link #stateRevision}. Reading it never blocks, also not while a script changes variables or a
      * reload replaces them.
      */
