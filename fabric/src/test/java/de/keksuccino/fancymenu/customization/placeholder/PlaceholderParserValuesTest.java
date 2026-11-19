@@ -126,7 +126,7 @@ class PlaceholderParserValuesTest {
 
     @Test
     void identifierGetsReadAroundStructuralWhitespace() {
-        assertEquals("fancymenu_test_echo", parse("{ \"placeholder\" :%n% \"fancymenu_test_echo\" , \"values\":{\"text\":\"x\"}}").getIdentifier());
+        assertEquals(TestPlaceholders.echoIdentifier(), parse("{ \"placeholder\" :%n% \"" + TestPlaceholders.echoIdentifier() + "\" , \"values\":{\"text\":\"x\"}}").getIdentifier());
         assertEquals(" spaced id ", parse("{\"placeholder\":\" spaced id \"}").getIdentifier());
         assertNull(parse("{\"placeholder\":\"\"}").getIdentifier());
     }
@@ -143,9 +143,9 @@ class PlaceholderParserValuesTest {
 
     @Test
     void placeholderCreatedBySubclassReadsItsOwnString() {
-        String text = "{ \"placeholder\" : \"fancymenu_test_echo\", \"values\": { \"text\": \"sub class\" } }";
+        String text = "{ \"placeholder\" : \"" + TestPlaceholders.echoIdentifier() + "\", \"values\": { \"text\": \"sub class\" } }";
         PlaceholderParser.ParsedPlaceholder parsed = new PlaceholderParser.ParsedPlaceholder(text, 0, text.length(), new HashMap<>(), false) {};
-        assertEquals("fancymenu_test_echo", parsed.getIdentifier());
+        assertEquals(TestPlaceholders.echoIdentifier(), parsed.getIdentifier());
         assertEquals(Map.of("text", "sub class"), parsed.getValues());
         assertEquals("sub class", parsed.getReplacement());
         PlaceholderParser.ParsedPlaceholder noPlaceholder = new PlaceholderParser.ParsedPlaceholder("not a placeholder", 0, 17, new HashMap<>(), false) {};
