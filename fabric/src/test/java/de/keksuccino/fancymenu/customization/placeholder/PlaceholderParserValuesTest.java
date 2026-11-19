@@ -153,6 +153,29 @@ class PlaceholderParserValuesTest {
         assertNull(noPlaceholder.getPlaceholder());
     }
 
+    @Test
+    void placeholderCreatedBySubclassSkipsStructuralWhitespaceBeforeItsStart() {
+        String placeholder = "{\"placeholder\":\"" + TestPlaceholders.echoIdentifier() + "\",\"values\":{\"text\":\"x  y\"}}";
+        for (String text : List.of("%n% " + placeholder, " \t\n\r" + placeholder, "%n%%n%" + placeholder + " %n%", "%n%{ \"placeholder\" : \"" + TestPlaceholders.echoIdentifier() + "\" , \"values\" : { \"text\" : \"x  y\" } }")) {
+            PlaceholderParser.ParsedPlaceholder parsed = new PlaceholderParser.ParsedPlaceholder(text, 0, text.length(), new HashMap<>(), false) {};
+            assertEquals(TestPlaceholders.echoIdentifier(), parsed.getIdentifier(), text);
+            assertNotNull(parsed.getPlaceholder(), text);
+            assertEquals(Map.of("text", "x  y"), parsed.getValues(), text);
+            assertEquals("x  y", parsed.getReplacement(), text);
+        }
+    }
+
+    @Test
+    void placeholderCreatedBySubclassIsNoPlaceholderWithOtherTextBeforeItsStart() {
+        for (String text : List.of("x{\"placeholder\":\"" + TestPlaceholders.echoIdentifier() + "\",\"values\":{\"text\":\"x\"}}", "%n", "%n% ", "")) {
+            PlaceholderParser.ParsedPlaceholder parsed = new PlaceholderParser.ParsedPlaceholder(text, 0, text.length(), new HashMap<>(), false) {};
+            assertNull(parsed.getIdentifier(), text);
+            assertNull(parsed.getPlaceholder(), text);
+            assertNull(parsed.getValues(), text);
+            assertEquals(text, parsed.getReplacement(), text);
+        }
+    }
+
     @NotNull
     private static PlaceholderParser.ParsedPlaceholder parse(@NotNull String text) {
         List<PlaceholderParser.ParsedPlaceholder> found = PlaceholderParser.findPlaceholders(text, new HashMap<>());
