@@ -31,6 +31,14 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - Added label alignment settings for buttons and sliders to Global Customizations (#1866)
 - Added a background to the Text element, with a built-in pixel art panel, custom texture support, nine-slice settings, padding and an option to render behind the scroll bars
 - Added a pixel art scroll grabber style to the Text element
+- Placeholders are now replaced much faster, especially in long texts and texts with many placeholders, so big texts no longer cause lag
+- Texts can now have up to 100,000 characters for their placeholders to get replaced (was 17,000)
+- The "text too long" error is now translated into all supported languages
+- Every Random Number placeholder in a text now gets its own number, also when the same placeholder appears multiple times
+- NBT Data placeholders with random entity selectors like `@r` now pick a new entity for every copy in a text
+- `$$variable` references, Slider labels and element values now resolve faster when there are many variables
+- Message dialogs now grow to fit their message, and very long messages get a scroll bar
+- Message dialog buttons now shrink to fit in small game windows instead of getting cut off
 - Scroll grabbers of the Text element now fade with the opacity of the element
 - Fixed custom labels on vanilla image buttons always being centered and ignoring label settings like alignment, scale and shadow (#1866)
 - Fixed global button and slider label settings changing the buttons and sliders of FancyMenu's own UI
@@ -60,5 +68,20 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - Fixed element tilting not getting rendered in MC 1.21.11 and newer, which made tilted elements look untilted and react to the mouse in the wrong place
 - Fixed WHILE loops not running anymore after they hit their 3 second timeout once, until FancyMenu got reloaded (#1854)
 - Fixed WHILE loops that start themselves again while running, like a loop in an On Variable Updated listener that sets a variable, never stopping at their timeout and freezing the game (#1854)
+- Fixed spaces disappearing from placeholder values when placeholders are nested inside other placeholders
+- Fixed a single `{` in a placeholder value making all values of that placeholder disappear
+- Fixed placeholders written with spaces or line breaks not working when they are the only placeholder in a text
+- Fixed placeholders sometimes not getting replaced depending on their order in the text
+- Fixed a broken placeholder making the whole text fail instead of only itself
+- Fixed Async-mode Tickers sometimes making placeholders show their raw text in menus
+- Fixed `&` in placeholder values turning into `§` when the value contained other placeholders or `$$` references, which broke links and file paths
+- Fixed Uppercase, Lowercase and other text case placeholders breaking formatting codes
+- Fixed Text Width counting formatting codes as visible text
+- Fixed WHILE loops, IF conditions and delays in action scripts reading outdated placeholder, variable and requirement values while caching is enabled
+- Fixed errors and memory growing over time when texts got parsed by Async-mode Tickers and menus at the same time
+- Fixed Text and Tooltip elements not updating when a `$$variable` in their text changes
+- Fixed the last lines of message dialogs, like the "can't run async" error, being hidden behind the buttons
+- Fixed message dialog text running past the right edge at the Micro UI scale
+- Fixed an error getting logged when closing the game
 
 %changelog:end%
