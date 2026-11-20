@@ -5,6 +5,7 @@
   "client": [
     "client.AccessorMixinI18n",
     "client.AccessorMixinBlockModel",
+    "client.AccessorMixinMouseHandler",
     "client.IMixinAbstractContainerScreen",
     "client.IMixinAbstractSliderButton",
     "client.IMixinAbstractWidget",

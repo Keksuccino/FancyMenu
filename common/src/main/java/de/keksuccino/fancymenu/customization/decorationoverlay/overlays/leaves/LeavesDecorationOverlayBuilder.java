@@ -17,8 +17,15 @@ public class LeavesDecorationOverlayBuilder extends AbstractDecorationOverlayBui
         return new LeavesDecorationOverlay();
     }
 
+    /**
+     * Leaves saved before the overlay had the Colors option always used their start and end color. If they were switched on,
+     * they keep their colors through the Custom Range. Leaves that were never switched on count as new.
+     */
     @Override
     protected void deserialize(@NotNull LeavesDecorationOverlay instanceToWrite, @NotNull PropertyContainer deserializeFrom) {
+        if (deserializeFrom.getValue(instanceToWrite.leavesColors.getKey()) != null) return;
+        if (!instanceToWrite.showOverlay.tryGetNonNullElse(false)) return;
+        instanceToWrite.leavesColors.set(LeavesColorMode.CUSTOM_RANGE);
     }
 
     @Override

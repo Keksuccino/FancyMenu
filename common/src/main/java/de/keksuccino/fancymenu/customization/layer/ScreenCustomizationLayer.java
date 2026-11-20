@@ -7,6 +7,8 @@ import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
+import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlay;
+import de.keksuccino.fancymenu.customization.decorationoverlay.DecorationOverlayPass;
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElement;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierHandler;
@@ -432,6 +434,8 @@ public class ScreenCustomizationLayer implements ElementFactory {
 
 		//Render background elements in foreground if it wasn't possible to render to the menu background
 		if (!this.backgroundDrawable) {
+			// The background pass of decoration overlays has to come before any element, so it moves here too
+			AbstractDecorationOverlay._renderPassOfAll(this.layoutBase.decorationOverlays, DecorationOverlayPass.BACKGROUND, e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
 			for (AbstractElement element : new ArrayList<>(this.normalElements.backgroundElements)) {
 				renderIfNotInContainer(element, e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
 			}
@@ -441,9 +445,7 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			renderIfNotInContainer(element, e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
 		}
 
-        this.layoutBase.decorationOverlays.forEach(pair -> {
-            if (pair.getSecond().showOverlay.tryGetNonNullElse(false)) pair.getSecond()._render(e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
-        });
+		AbstractDecorationOverlay._renderPassOfAll(this.layoutBase.decorationOverlays, DecorationOverlayPass.FOREGROUND, e.getGraphics(), e.getMouseX(), e.getMouseY(), e.getPartial());
 
 	}
 
@@ -610,6 +612,8 @@ public class ScreenCustomizationLayer implements ElementFactory {
 			}
 
 		}
+
+		AbstractDecorationOverlay._renderPassOfAll(this.layoutBase.decorationOverlays, DecorationOverlayPass.BACKGROUND, graphics, mouseX, mouseY, partial);
 
 		//Render background elements
 		for (AbstractElement elements : new ArrayList<>(this.normalElements.backgroundElements)) {
