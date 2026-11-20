@@ -84,5 +84,8 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - Fixed message dialog text running past the right edge at the Micro UI scale
 - Fixed an error getting logged when closing the game
 - Fixed the description box in the Profiles window ending higher than the profile list next to it
+- Fixed the action script editor always asking whether to throw away your changes when you click Cancel or close it, even when nothing was changed (#1856)
+- Fixed the listener manager always asking whether to throw away your changes when you click Cancel or close it, even when nothing was changed
+- Fixed Cancel in the listener manager not undoing renamed listeners and edited listener actions
 
 %changelog:end%
