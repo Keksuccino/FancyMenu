@@ -83,5 +83,6 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - Fixed the last lines of message dialogs, like the "can't run async" error, being hidden behind the buttons
 - Fixed message dialog text running past the right edge at the Micro UI scale
 - Fixed an error getting logged when closing the game
+- Fixed the description box in the Profiles window ending higher than the profile list next to it
 
 %changelog:end%
