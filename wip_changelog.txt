@@ -31,6 +31,8 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - Added label alignment settings for buttons and sliders to Global Customizations (#1866)
 - Added a background to the Text element, with a built-in pixel art panel, custom texture support, nine-slice settings, padding and an option to render behind the scroll bars
 - Added a pixel art scroll grabber style to the Text element
+- Added "Export for AI" to many parts of FancyMenu, which copies or saves your setup (variables, listeners, schedulers, action scripts, layouts, elements, screens, settings, system info and more) as English text made for AI assistants like Alice, the support bot on Keksuccino's Discord
+- Added `/fmdata export_for_ai copy|file` to export the server's FMData listeners and welcome data for AI
 - Added a "Preserve Background Texture Aspect Ratio" toggle for the global custom menu background texture, so you can choose between stretching it to fill the screen and keeping its original proportions
 - Placeholders are now replaced much faster, especially in long texts and texts with many placeholders, so big texts no longer cause lag
 - Texts can now have up to 100,000 characters for their placeholders to get replaced (was 17,000)
@@ -106,5 +108,6 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - Fixed Slider labels turning longer variable names like `$$value_backup` into the slider value followed by `_backup` (#1858)
 - Fixed `$$name` variable references only showing the variable's value in texts that also contained a placeholder (#1859)
 - Fixed `$$name` variable references not working inside placeholder values, like in the expression of the Calculator placeholder (#1859)
+- Fixed the error messages when renaming a layout not being translated
 
 %changelog:end%
