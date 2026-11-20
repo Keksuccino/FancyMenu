@@ -96,5 +96,8 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - Fixed an error that got logged on Fabric 1.19.2 and 1.20.1 every time a player joined a world
 - Fixed actions, folders and other entries added to a selected block in the action script editor landing at the end of the block instead of right below its header, where dropped entries go (#1855)
 - Fixed the action script list not scrolling up while dragging an entry above it, and scrolling up instead when dragging near the left edge of the window (#1852)
+- Fixed `$$` references using a shorter name that a longer one starts with, so `$$coins_record` showed the value of `coins` followed by `_record` (#1858)
+- Fixed Listener Variables and element values like a Checkbox's `$$value` eating the start of longer FancyMenu variable names, so `$$value_backup` turned into `true_backup` (#1858)
+- Fixed Slider labels turning longer variable names like `$$value_backup` into the slider value followed by `_backup` (#1858)
 
 %changelog:end%
