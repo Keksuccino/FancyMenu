@@ -24,6 +24,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,6 +39,8 @@ public class LayoutHandler {
 	private static final List<Layout> LAYOUTS = new ArrayList<>();
 	private static final Map<String, UniversalLayoutInclusionRule> UNIVERSAL_LAYOUT_INCLUSION_RULES = new HashMap<>();
 	private static final LayoutRetirementTracker LAYOUT_RETIREMENT_TRACKER = new LayoutRetirementTracker();
+	@Nullable
+	private static Layout previewLayout = null;
 
 	public static void init() {
 
@@ -137,6 +140,10 @@ public class LayoutHandler {
 
 	@NotNull
 	public static List<Layout> getEnabledLayoutsForScreenIdentifier(@NotNull String screenIdentifier, boolean includeUniversalLayouts) {
+		Layout preview = previewLayout;
+		if ((preview != null) && (preview.screenIdentifier != null) && ScreenIdentifierHandler.equalIdentifiers(screenIdentifier, preview.screenIdentifier)) {
+			return new ArrayList<>(List.of(preview));
+		}
 		for (UniversalLayoutInclusionRule inclusionRule : UNIVERSAL_LAYOUT_INCLUSION_RULES.values()) {
 			if (!inclusionRule.includeUniversalLayouts(screenIdentifier)) {
 				includeUniversalLayouts = false;
@@ -303,6 +310,22 @@ public class LayoutHandler {
 
 	private static void cancelPendingAudioPlaybackOwnedBy(@NotNull Collection<Layout> layouts) {
 		ScreenCustomizationLayerHandler.cancelPendingAudioPlaybackOwnedBy(layouts);
+	}
+
+	/**
+	 * Only for the dev-only decoration overlay preview of off-screen test clients (see TESTING_GUIDELINES.md).<br>
+	 * While a preview layout is set, its screen shows only this layout and counts as customizable, so the preview never touches
+	 * the layouts of the game directory or its list of customizable screens. The preview layout never gets saved.
+	 */
+	@ApiStatus.Internal
+	public static void setPreviewLayout(@Nullable Layout layout) {
+		previewLayout = layout;
+	}
+
+	@ApiStatus.Internal
+	@Nullable
+	public static Layout getPreviewLayout() {
+		return previewLayout;
 	}
 
 	public static void addLayout(@NotNull Layout layout, boolean saveToFile) {
