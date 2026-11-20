@@ -33,7 +33,7 @@ public class ChooseAnimationScreen extends Screen {
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {}
 
-public void renderBackground(@NotNull GuiGraphics $$0, int $$1, int $$2, float $$3) {}
+    public void renderBackground(@NotNull GuiGraphics $$0, int $$1, int $$2, float $$3) {}
 
     protected void setSelectedAnimation(@Nullable AnimationScrollEntry entry) {}
 

@@ -95,7 +95,7 @@ public class CreditsScreen extends Screen {
 
     }
 
-public void renderBackground(@NotNull GuiGraphics graphics, int $$1, int $$2, float $$3) {
+    public void renderBackground(@NotNull GuiGraphics graphics, int $$1, int $$2, float $$3) {
     }
 
     @Override

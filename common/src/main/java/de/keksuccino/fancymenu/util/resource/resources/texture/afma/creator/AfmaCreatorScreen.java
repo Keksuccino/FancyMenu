@@ -597,7 +597,7 @@ public class AfmaCreatorScreen extends Screen {
         }
     }
 
-public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
         RenderingUtils.resetShaderColor(graphics);
         this.renderCreatorPanels(graphics, mouseX, mouseY, partialTick);

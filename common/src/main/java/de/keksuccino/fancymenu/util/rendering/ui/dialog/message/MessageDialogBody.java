@@ -182,7 +182,8 @@ public class MessageDialogBody extends PiPWindowBody {
         ((ScreenScissorEnabler) graphics).enableScreenScissor_FancyMenu(left, top, right, bottom);
     }
 
-public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    @Override
+    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
     }
 
     @Override

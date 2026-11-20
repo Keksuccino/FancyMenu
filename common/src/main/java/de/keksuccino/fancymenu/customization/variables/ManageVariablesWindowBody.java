@@ -477,7 +477,8 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
         this.variableListScrollArea.updateEntries(null);
     }
 
-public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    @Override
+    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
     }
 
     @Override

@@ -142,7 +142,8 @@ public class ColorPickerWindowBody extends PiPWindowBody {
 
     }
 
-public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    @Override
+    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
     }
 
     @Override

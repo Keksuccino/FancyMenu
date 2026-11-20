@@ -140,7 +140,8 @@ public class ChooseSlideshowScreen extends PiPWindowBody {
 
     }
 
-public void renderBackground(@NotNull GuiGraphics $$0, int $$1, int $$2, float $$3) {
+    @Override
+    public void renderBackground(@NotNull GuiGraphics $$0, int $$1, int $$2, float $$3) {
     }
 
     protected void setSelectedSlideshow(@Nullable ChooseSlideshowScreen.SlideshowScrollEntry entry) {

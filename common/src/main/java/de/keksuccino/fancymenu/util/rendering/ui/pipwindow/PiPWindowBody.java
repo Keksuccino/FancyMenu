@@ -87,7 +87,7 @@ public abstract class PiPWindowBody extends Screen implements PipableScreen {
         this.renderLateBody(graphics, mouseX, mouseY, partial);
     }
 
-public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         // PiP screens should render no background
     }
 

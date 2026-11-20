@@ -175,7 +175,8 @@ public class BuildRequirementWindowBody extends PiPWindowBody implements Initial
 
     }
 
-public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    @Override
+    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
     }
 
     @Override

@@ -498,7 +498,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
         graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
     }
 
-public final void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public final void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         // do nothing
     }
 

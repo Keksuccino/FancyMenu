@@ -259,7 +259,8 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
         this.onCancel.accept(this.presetValue);
     }
 
-public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    @Override
+    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.performInitialWidgetFocusActionInRender();
         RenderSystem.enableBlend();
     }
