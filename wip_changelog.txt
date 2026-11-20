@@ -87,5 +87,7 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - Fixed the action script editor always asking whether to throw away your changes when you click Cancel or close it, even when nothing was changed (#1856)
 - Fixed the listener manager always asking whether to throw away your changes when you click Cancel or close it, even when nothing was changed
 - Fixed Cancel in the listener manager not undoing renamed listeners and edited listener actions
+- Fixed the Seamless World Loading option making the game stutter about once per second while playing (#1868)
+- Fixed an error that got logged on Fabric 1.19.2 and 1.20.1 every time a player joined a world
 
 %changelog:end%
