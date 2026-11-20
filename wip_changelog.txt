@@ -89,5 +89,6 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - Fixed Cancel in the listener manager not undoing renamed listeners and edited listener actions
 - Fixed the Seamless World Loading option making the game stutter about once per second while playing (#1868)
 - Fixed an error that got logged on Fabric 1.19.2 and 1.20.1 every time a player joined a world
+- Fixed actions, folders and other entries added to a selected block in the action script editor landing at the end of the block instead of right below its header, where dropped entries go (#1855)
 
 %changelog:end%
