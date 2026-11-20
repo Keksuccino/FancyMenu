@@ -58,6 +58,10 @@ JAVA_HOME=$(/usr/libexec/java_home -v 21) sh offscreen_client.sh neoforge
 - The game still renders into its render targets, so screenshots (`Screenshot.grab()`, `Screenshot.takeScreenshot()`) work as usual.
 - The hidden window gets no input from the OS. Simulate input through the game's real input handlers instead,
   for example `KeyboardHandler#keyPress` with the key of the `KeyMapping` you want to trigger.
+- Mouse moves and drags only reach the screen while `Minecraft#isWindowActive()` is true (`MouseHandler#onMove` and
+  `#handleAccumulatedMovement` check it), and the hidden window never gets focus, so it stays false. Before simulating moves or drags
+  through `MouseHandler`, call `Minecraft.getInstance().setWindowActive(true)`, which only sets the game's own flag and never touches
+  the real window, and set it back to `false` when you're done. Mouse buttons and scrolling work without it.
 - The game still keeps track of the mouse being grabbed or released, only the real cursor stays untouched.
   Never call window or cursor functions of GLFW from test code (showing, raising or focusing the window, moving the cursor).
 - There is no window to close, so test code has to call `Minecraft#stop()` when it's done. If a run hangs, stop its Gradle process.
