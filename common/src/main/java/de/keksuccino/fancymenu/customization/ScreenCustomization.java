@@ -26,6 +26,7 @@ import de.keksuccino.fancymenu.customization.background.backgrounds.MenuBackgrou
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.element.elements.Elements;
+import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.requirement.requirements.Requirements;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
@@ -219,6 +220,11 @@ public class ScreenCustomization {
 			readCustomizableScreensFromFile();
 		}
 		if (screen instanceof CustomGuiBaseScreen) {
+			return true;
+		}
+		// The dev-only decoration overlay preview customizes its screen without saving it to the list of customizable screens
+		Layout previewLayout = LayoutHandler.getPreviewLayout();
+		if ((previewLayout != null) && (previewLayout.screenIdentifier != null) && ScreenIdentifierHandler.isIdentifierOfScreen(previewLayout.screenIdentifier, screen)) {
 			return true;
 		}
         // This makes the clear version of the Pause screen not get customized
