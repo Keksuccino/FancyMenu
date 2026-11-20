@@ -31,6 +31,7 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - Added label alignment settings for buttons and sliders to Global Customizations (#1866)
 - Added a background to the Text element, with a built-in pixel art panel, custom texture support, nine-slice settings, padding and an option to render behind the scroll bars
 - Added a pixel art scroll grabber style to the Text element
+- Added a "Preserve Background Texture Aspect Ratio" toggle for the global custom menu background texture, so you can choose between stretching it to fill the screen and keeping its original proportions
 - Placeholders are now replaced much faster, especially in long texts and texts with many placeholders, so big texts no longer cause lag
 - Texts can now have up to 100,000 characters for their placeholders to get replaced (was 17,000)
 - The "text too long" error is now translated into all supported languages
