@@ -84,7 +84,8 @@ public class TextInputWindowBody extends PiPWindowBody implements InitialWidgetF
         this.callback.accept(null);
     }
 
-public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    @Override
+    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 
         this.performInitialWidgetFocusActionInRender();
 

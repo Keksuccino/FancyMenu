@@ -96,7 +96,8 @@ public class CreditsScreen extends ModernScreen {
 
     }
 
-public void renderBackground(@NotNull GuiGraphics graphics, int $$1, int $$2, float $$3) {
+    @Override
+    public void renderBackground(@NotNull GuiGraphics graphics, int $$1, int $$2, float $$3) {
     }
 
     @Override

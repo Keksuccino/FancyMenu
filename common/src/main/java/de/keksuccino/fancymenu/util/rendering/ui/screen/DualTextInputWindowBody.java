@@ -170,7 +170,8 @@ public class DualTextInputWindowBody extends PiPWindowBody implements InitialWid
 
     }
 
-public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    @Override
+    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.performInitialWidgetFocusActionInRender();
         RenderSystem.enableBlend();
     }

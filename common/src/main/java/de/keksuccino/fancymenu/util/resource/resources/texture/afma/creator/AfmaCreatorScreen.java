@@ -598,7 +598,8 @@ public class AfmaCreatorScreen extends ModernScreen {
         }
     }
 
-public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    @Override
+    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
         RenderingUtils.resetShaderColor(graphics);
         this.renderCreatorPanels(graphics, mouseX, mouseY, partialTick);

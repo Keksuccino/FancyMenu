@@ -500,7 +500,8 @@ public abstract class CellScreen extends ModernScreen implements InitialWidgetFo
         graphics.fill(0, 0, this.width, this.height, UIBase.getUITheme().ui_interface_background_color.getColorInt());
     }
 
-public final void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    @Override
+    public final void renderBackground(GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         // do nothing
     }
 

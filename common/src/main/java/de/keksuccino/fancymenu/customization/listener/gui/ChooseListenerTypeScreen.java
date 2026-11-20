@@ -171,7 +171,8 @@ public class ChooseListenerTypeScreen extends PiPWindowBody implements InitialWi
         this.performInitialWidgetFocusActionInRender();
     }
 
-public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    @Override
+    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
     }
 
     protected void updateListenersList() {
@@ -368,7 +369,8 @@ public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mous
             this.populateDescription();
         }
 
-public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        @Override
+        public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         }
 
         private void populateDescription() {
