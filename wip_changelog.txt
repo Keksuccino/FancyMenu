@@ -58,5 +58,7 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - Fixed the content of rotated Text elements getting cut off along straight lines instead of following the element's rotation
 - Fixed scroll bars, links and other clickable Markdown content in rotated Text elements not reacting to the mouse where they are shown
 - Fixed element tilting not getting rendered in MC 1.21.11 and newer, which made tilted elements look untilted and react to the mouse in the wrong place
+- Fixed WHILE loops not running anymore after they hit their 3 second timeout once, until FancyMenu got reloaded (#1854)
+- Fixed WHILE loops that start themselves again while running, like a loop in an On Variable Updated listener that sets a variable, never stopping at their timeout and freezing the game (#1854)
 
 %changelog:end%
