@@ -42,6 +42,10 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - Scroll grabbers of the Text element now fade with the opacity of the element
 - Move Up and Move Down in the action script editor now move entries exactly one step at a time, going into and out of blocks one level at a time (#1853)
 - Move Up and Move Down in the action script editor now skip over collapsed blocks instead of hiding the entry inside them (#1853)
+- Requirement groups can now contain other groups, so you can build logic like "(A AND B) OR (C AND D)" without duplicating elements (#1873)
+- Editing a group opens a window with the group's path in its title, like "Edit Group: group_1 › group_2", so you always know which group you're in (#1873)
+- Group entries now show how many groups they contain, and the "Add Group" tooltip explains that groups can hold other groups (#1873)
+- Fixed groups with the same name in different requirement lists of the same element or action script getting merged into one group after loading, for example a button's loading requirements and active state requirements
 - Fixed Move Up and Move Down doing nothing for folders and comments in the action script editor (#1853)
 - Fixed Move Up not moving an entry past a comment in the action script editor (#1853)
 - Fixed Move Up in the action script editor sometimes moving an entry into the block above the entry it should swap places with (#1853)
