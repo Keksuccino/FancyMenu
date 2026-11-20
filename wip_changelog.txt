@@ -1,6 +1,17 @@
 
 CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 
+- Completely reworked the Decoration Overlays
+  - Existing overlays got a new look: Snow, Rain, Confetti, Fireworks, String Lights, Fireflies and Leaves
+  - Added 15 new decoration overlays: Cherry Blossoms, Shooting Stars, Aurora, Clouds, Fog, Sunbeams, Butterflies, Birds, Bats, Bubbles, Sky Lanterns, Overgrowth, Frost, Cobwebs and Embers
+  - Decoration overlays can now draw behind elements, so far snow, rain, clouds, the aurora and more pass behind buttons and the title
+  - Added a "Layers" setting to all decoration overlays to draw them in the background, the foreground or both
+  - Decorations that sit on elements, like snow caps, frost, moss or resting birds, always stay on their element
+  - Added a Detailed and a Simple look to String Lights, Fireflies, Leaves and Cherry Blossoms
+  - Added a Pine Garland option and a Light Program option to String Lights
+  - Added an Unlit Bodies option to Fireflies
+  - Added an Autumn Mix or Custom Range color choice to Leaves
+  - Added Amount and Size options to the decoration overlays
 - Completely reworked the Markdown renderer used for both the Text element and the Tooltip element
   - Added three Markdown looks to choose from: Pixel (new pixel art style), Classic (the previous look) and Neutral (follows the UI theme)
     - New Text and Tooltip elements now use the Pixel look by default, while existing layouts keep their old look
