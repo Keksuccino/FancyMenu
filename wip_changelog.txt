@@ -99,5 +99,7 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - Fixed `$$` references using a shorter name that a longer one starts with, so `$$coins_record` showed the value of `coins` followed by `_record` (#1858)
 - Fixed Listener Variables and element values like a Checkbox's `$$value` eating the start of longer FancyMenu variable names, so `$$value_backup` turned into `true_backup` (#1858)
 - Fixed Slider labels turning longer variable names like `$$value_backup` into the slider value followed by `_backup` (#1858)
+- Fixed `$$name` variable references only showing the variable's value in texts that also contained a placeholder (#1859)
+- Fixed `$$name` variable references not working inside placeholder values, like in the expression of the Calculator placeholder (#1859)
 
 %changelog:end%
