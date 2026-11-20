@@ -4,6 +4,7 @@
   "compatibilityLevel": "JAVA_17",
   "client": [
     "client.AccessorMixinI18n",
+    "client.AccessorMixinMouseHandler",
     "client.IMixinAbstractContainerScreen",
     "client.IMixinAbstractPackResources",
     "client.IMixinAbstractSelectionList",

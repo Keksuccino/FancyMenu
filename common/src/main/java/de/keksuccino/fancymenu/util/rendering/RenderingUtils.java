@@ -926,6 +926,14 @@ public class RenderingUtils {
         );
     }
 
+    /**
+     * FancyMenu's GUI texture shader for {@code POSITION_TEX_COLOR} vertices. Unlike the vanilla one, which drops pixels below 10% alpha,
+     * it keeps every pixel that isn't fully transparent.
+     */
+    public static ShaderInstance getAlphaTextureShader() {
+        return getAlphaTextureShader_FancyMenu();
+    }
+
     private static ShaderInstance getAlphaTextureShader_FancyMenu() {
         ensureAlphaTextureShaderReloadListener_FancyMenu();
         if (alphaTextureShaderFailed_FancyMenu) {

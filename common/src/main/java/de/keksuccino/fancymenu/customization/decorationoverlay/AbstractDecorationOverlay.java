@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.customization.element.HideableElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorHistory;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
+import de.keksuccino.fancymenu.util.Pair;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.properties.PropertyHolder;
 import de.keksuccino.fancymenu.util.rendering.overlay.CollisionAreaBounds;
@@ -15,6 +16,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuUiComponent;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuBuilder;
+import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import de.keksuccino.fancymenu.util.rendering.gui.Renderable;
@@ -30,6 +32,25 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
+/**
+ * Base of all decoration overlays.<br><br>
+ *
+ * <b>Render passes and parts</b><br>
+ * Overlays render in two passes per frame (see {@link DecorationOverlayPass}): the background pass draws behind all elements,
+ * the foreground pass in front of them. An overlay draws its content as parts ({@link DecorationOverlayPart}):
+ * {@link #renderBackPart}, {@link #renderElementPart} and {@link #renderFrontPart}. The {@link #layers Layers} setting of every
+ * overlay decides which pass draws which part ({@link DecorationOverlayLayers}). Each part gets drawn once per frame, by exactly one pass.<br>
+ * Overlays that only override {@link #render} draw front content: {@link #renderFrontPart} calls it by default.<br><br>
+ *
+ * <b>Simulation</b><br>
+ * {@link #updateFrame} runs exactly once per frame, at the start of the first pass that draws the overlay in that frame,
+ * however many passes run. Overlays that move things should advance them there and only draw in the part methods.<br><br>
+ *
+ * <b>Input</b><br>
+ * Overlays are the first children of their screen, so they see clicks before any widget. {@link #onPointerClicked} lets an overlay
+ * react to clicks without ever taking them away from widgets. {@link #isMouseOver} must stay false: the vanilla logic gives mouse
+ * releases and scrolls only to the first child the mouse is over, so an overlay that claims the mouse would swallow them.
+ */
 public abstract class AbstractDecorationOverlay<O extends AbstractDecorationOverlay<?>> implements Renderable, ContainerEventHandler, NarratableEntry, PropertyHolder, ContextMenuBuilder<O>, FancyMenuUiComponent {
 
     private final Map<String, Property<?>> propertyMap = new LinkedHashMap<>();
@@ -39,8 +60,11 @@ public abstract class AbstractDecorationOverlay<O extends AbstractDecorationOver
     private String instanceIdentifier = ScreenCustomization.generateUniqueIdentifier();
     @ApiStatus.Internal
     public final Property<Boolean> showOverlay = putProperty(Property.booleanProperty("show_decoration_overlay", false, "fancymenu.decoration_overlay.show_overlay"));
+    /** Which render pass draws which part of the overlay, see {@link DecorationOverlayLayers}. */
+    public final Property<DecorationOverlayLayers> layers = putProperty(Property.enumProperty("decoration_overlay_layers", DecorationOverlayLayers.DEFAULT, "fancymenu.decoration_overlay.layers", DecorationOverlayLayers::getLocalizationKey));
     private final List<GuiEventListener> children = new ArrayList<>();
     private final List<Renderable> renderables = new ArrayList<>();
+    private final DecorationOverlayFrameTracker frameTracker = new DecorationOverlayFrameTracker();
 
     @NotNull
     public String getInstanceIdentifier() {
@@ -72,6 +96,10 @@ public abstract class AbstractDecorationOverlay<O extends AbstractDecorationOver
         this.showOverlay.buildContextMenuEntryAndAddTo(menu, this)
                 .setIcon(MaterialIcons.VISIBILITY);
 
+        this.layers.buildContextMenuEntryAndAddTo(menu, this)
+                .setIcon(MaterialIcons.LAYERS)
+                .setTooltipSupplier((menu1, entry) -> UITooltip.of(Component.translatable("fancymenu.decoration_overlay.layers.desc")));
+
         AiExportMenus.addExportSubMenu(menu, "export_for_ai", Component.translatable("fancymenu.ai_export"), () -> LayoutAiExporter.exportDecorationOverlay(editor, this));
 
         menu.addSeparatorEntry("separator_after_show_overlay_toggle");
@@ -82,15 +110,117 @@ public abstract class AbstractDecorationOverlay<O extends AbstractDecorationOver
 
     }
 
+    /**
+     * Draws the front content of overlays that don't use the part methods. Gets called by {@link #renderFrontPart} by default.
+     */
     @Override
-    public abstract void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial);
+    public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    }
 
-    public final void _render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    /**
+     * Advances the overlay by one frame. Runs exactly once per frame, before the first part of that frame gets drawn.
+     *
+     * @param deltaSeconds time since the last update, from 0 (first update) to 0.1 seconds (longer gaps get shortened)
+     * @param mouseX pointer position in GUI pixels
+     * @param mouseY pointer position in GUI pixels
+     */
+    protected void updateFrame(float deltaSeconds, int mouseX, int mouseY) {
+    }
 
+    /**
+     * Draws the screen-wide content meant to be behind the elements ({@link DecorationOverlayPart#BACK}).
+     */
+    protected void renderBackPart(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    }
+
+    /**
+     * Draws the decorations attached to elements ({@link DecorationOverlayPart#ELEMENT}). Always part of the foreground pass.
+     */
+    protected void renderElementPart(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    }
+
+    /**
+     * Draws the screen-wide content meant to be in front of the elements ({@link DecorationOverlayPart#FRONT}).
+     * Calls {@link #render} by default, so overlays that only implement that one draw front content.
+     */
+    protected void renderFrontPart(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.render(graphics, mouseX, mouseY, partial);
+    }
 
-        this.renderables.forEach(renderable -> renderable.render(graphics, mouseX, mouseY, partial));
+    /**
+     * Gets called when the user clicks anywhere on the screen while the overlay is shown, before any widget sees the click.
+     * The click always goes on to the widgets, whatever the overlay does here. Not called in the layout editor.
+     *
+     * @param button the mouse button, compare it with {@code InputConstants.MOUSE_BUTTON_LEFT} and the like
+     */
+    protected void onPointerClicked(double mouseX, double mouseY, int button) {
+    }
 
+    @NotNull
+    public DecorationOverlayLayers getLayers() {
+        return this.layers.tryGetNonNullElse(DecorationOverlayLayers.DEFAULT);
+    }
+
+    /**
+     * Runs one render pass of the overlay: the frame's update if this is its first pass, then the parts the Layers setting gives this pass.
+     * Does nothing if the overlay is hidden or the pass already ran in this frame.
+     */
+    @ApiStatus.Internal
+    public final void _renderPass(@NotNull DecorationOverlayPass pass, @NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        if (!this.showOverlay.tryGetNonNullElse(false)) return;
+        if (!this.frameTracker.beginPass(pass)) return;
+        if (this.frameTracker.isUpdatePending()) {
+            this.updateFrame(this.frameTracker.consumeUpdate(), mouseX, mouseY);
+        }
+        List<DecorationOverlayPart> parts = this.getLayers().getParts(pass);
+        for (int i = 0; i < parts.size(); i++) {
+            this.renderPart(parts.get(i), graphics, mouseX, mouseY, partial);
+        }
+    }
+
+    private void renderPart(@NotNull DecorationOverlayPart part, @NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        switch (part) {
+            case BACK -> this.renderBackPart(graphics, mouseX, mouseY, partial);
+            case ELEMENT -> this.renderElementPart(graphics, mouseX, mouseY, partial);
+            case FRONT -> {
+                this.renderFrontPart(graphics, mouseX, mouseY, partial);
+                for (int i = 0; i < this.renderables.size(); i++) {
+                    this.renderables.get(i).render(graphics, mouseX, mouseY, partial);
+                }
+            }
+        }
+    }
+
+    /**
+     * Runs one render pass of all overlays in the list, in list order.
+     */
+    @ApiStatus.Internal
+    public static void _renderPassOfAll(@NotNull List<Pair<AbstractDecorationOverlayBuilder<?>, AbstractDecorationOverlay<?>>> overlays, @NotNull DecorationOverlayPass pass, @NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+        for (int i = 0; i < overlays.size(); i++) {
+            overlays.get(i).getSecond()._renderPass(pass, graphics, mouseX, mouseY, partial);
+        }
+    }
+
+    /**
+     * How often the overlay advanced its simulation so far. For checks of the dev-only overlay preview.
+     */
+    @ApiStatus.Internal
+    public long _getUpdateCount() {
+        return this.frameTracker.getUpdateCount();
+    }
+
+    /**
+     * How often the pass drew the overlay so far. For checks of the dev-only overlay preview.
+     */
+    @ApiStatus.Internal
+    public long _getPassCount(@NotNull DecorationOverlayPass pass) {
+        return this.frameTracker.getPassCount(pass);
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (this.showOverlay.tryGetNonNullElse(false) && !isEditor()) this.onPointerClicked(mouseX, mouseY, button);
+        return ContainerEventHandler.super.mouseClicked(mouseX, mouseY, button);
     }
 
     /**

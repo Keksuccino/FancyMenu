@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.background.MenuBackground;
 import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlay;
+import de.keksuccino.fancymenu.customization.decorationoverlay.DecorationOverlayPass;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.container.ContainerEditorElement;
 import de.keksuccino.fancymenu.customization.element.container.ElementContainer;
@@ -295,11 +296,12 @@ public class LayoutEditorScreen extends ModernScreen implements ElementFactory {
 
 		this.renderBackground(graphics, mouseX, mouseY, partial);
 
+		// Between the editor background (menu backgrounds and grid) and the elements, like outside of the editor
+		AbstractDecorationOverlay._renderPassOfAll(this.layout.decorationOverlays, DecorationOverlayPass.BACKGROUND, graphics, mouseX, mouseY, partial);
+
 		this.renderElements(graphics, mouseX, mouseY, partial);
 
-        this.layout.decorationOverlays.forEach(pair -> {
-            if (pair.getSecond().showOverlay.tryGetNonNullElse(false)) pair.getSecond()._render(graphics, mouseX, mouseY, partial);
-        });
+		AbstractDecorationOverlay._renderPassOfAll(this.layout.decorationOverlays, DecorationOverlayPass.FOREGROUND, graphics, mouseX, mouseY, partial);
 
 		this.renderMouseSelectionRectangle(graphics, mouseX, mouseY);
 
