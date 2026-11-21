@@ -207,6 +207,10 @@ class AnchorPointOverlayContainerTest {
         }
 
         @Override
+        public void scrollWhileDraggedOver(int mouseX, int mouseY) {
+        }
+
+        @Override
         public @NotNull List<AbstractEditorElement<?, ?>> getChildEditorElements() {
             return List.of();
         }
