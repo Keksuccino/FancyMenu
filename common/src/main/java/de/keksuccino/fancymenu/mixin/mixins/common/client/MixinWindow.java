@@ -6,7 +6,10 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.platform.Window;
 import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.ScreenOverlayHandler;
+import de.keksuccino.fancymenu.util.window.LoadingOverlayResizeTaskGate;
 import de.keksuccino.fancymenu.util.window.OffscreenTestClient;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.LoadingOverlay;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -26,6 +29,13 @@ public abstract class MixinWindow {
             InputUtils.resetActiveModifiers();
             ScreenOverlayHandler.INSTANCE.cancelMouseCaptures();
         }
+    }
+
+    // The new framebuffer size of the switch can arrive frames after the switch, see LoadingOverlayResizeTaskGate
+    @Inject(method = "updateFullscreen", at = @At("HEAD"))
+    private void before_updateFullscreen_FancyMenu(CallbackInfo info) {
+        Window self = (Window)(Object)this;
+        LoadingOverlayResizeTaskGate.INSTANCE.onFullscreenSwitch(Minecraft.getInstance().getOverlay() instanceof LoadingOverlay, self.getWidth(), self.getHeight());
     }
 
     // Dev-only off-screen test client mode (see OffscreenTestClient and TESTING_GUIDELINES.md)
