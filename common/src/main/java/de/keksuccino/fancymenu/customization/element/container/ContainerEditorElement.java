@@ -39,6 +39,12 @@ public interface ContainerEditorElement {
     boolean getDropMarker(int dropIndex, @NotNull List<AbstractEditorElement<?, ?>> dragged, int @NotNull [] marker);
 
     /**
+     * Scrolls the content of this container along while the user drags elements over it close to an edge of what it shows,
+     * so they can be taken to parts of the content that are out of sight. Gets called in every frame of such a drag.
+     */
+    void scrollWhileDraggedOver(int mouseX, int mouseY);
+
+    /**
      * Returns the children of this container as what they are in the editor, in the order they render in.
      * The list belongs to the container and must not be changed.
      */

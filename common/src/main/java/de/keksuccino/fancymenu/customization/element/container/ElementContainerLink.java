@@ -120,6 +120,14 @@ public final class ElementContainerLink {
         this.managedDragOffsetY = screenOffsetY;
     }
 
+    public int getManagedDragOffsetX() {
+        return this.managedDragOffsetX;
+    }
+
+    public int getManagedDragOffsetY() {
+        return this.managedDragOffsetY;
+    }
+
     /**
      * Tells the link if the user moves the element around in the layout editor right now.<br>
      * An element that stays on the screen stays in the content of its container, which would keep the user from dragging it
