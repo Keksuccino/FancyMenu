@@ -6,10 +6,8 @@ import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementSpaceInputListener;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
-import de.keksuccino.fancymenu.customization.element.container.ElementContainerLink;
 import de.keksuccino.fancymenu.customization.element.elements.scrollarea.layout.ScrollAreaAlignment;
 import de.keksuccino.fancymenu.customization.element.elements.scrollarea.layout.ScrollAreaLayoutMode;
-import de.keksuccino.fancymenu.customization.element.elements.scrollarea.layout.ScrollAreaResizeBehavior;
 import de.keksuccino.fancymenu.customization.element.scrolling.ElementScrolling;
 import de.keksuccino.fancymenu.customization.element.scrolling.ScrollBarVisibility;
 import de.keksuccino.fancymenu.customization.element.scrolling.ScrollDirection;
@@ -82,7 +80,6 @@ class ScrollAreaElementTest {
         area.scrollSettings.scrollDirection.set(ScrollDirection.HORIZONTAL);
         area.layoutMode.set(ScrollAreaLayoutMode.GRID);
         area.childAlignment.set(ScrollAreaAlignment.FILL);
-        area.resizeBehavior.set(ScrollAreaResizeBehavior.RESIZE);
         area.scrollSettings.scrollBarVisibility.set(ScrollBarVisibility.WHILE_SCROLLING);
         area.contentWidth.set(777);
         area.contentHeight.setManualInput("{\"placeholder\":\"some_height\"}");
@@ -99,7 +96,6 @@ class ScrollAreaElementTest {
         assertEquals(ScrollDirection.HORIZONTAL, loaded.scrollSettings.scrollDirection.get());
         assertEquals(ScrollAreaLayoutMode.GRID, loaded.getLayoutMode());
         assertEquals(ScrollAreaAlignment.FILL, loaded.getChildAlignment());
-        assertEquals(ScrollAreaResizeBehavior.RESIZE, loaded.resizeBehavior.get());
         assertEquals(ScrollBarVisibility.WHILE_SCROLLING, loaded.scrollSettings.scrollBarVisibility.get());
         assertEquals(777, loaded.contentWidth.getInteger());
         assertEquals(area.contentHeight.getManualInput(), loaded.contentHeight.getManualInput());
@@ -208,7 +204,6 @@ class ScrollAreaElementTest {
         area.childSpacing.set(3);
         area.nextFrame();
 
-        assertTrue(area.managesChildBoxes());
         assertTrue(area.arrangesChildren());
         assertEquals(105, first.getAbsoluteX());
         assertEquals(55, first.getAbsoluteY());
@@ -284,43 +279,6 @@ class ScrollAreaElementTest {
     }
 
     @Test
-    void theMouseOfAScaledChildIsInItWhereItIsOnTheScreen() {
-        // Without rounding, the mouse maps by the scale, around where the child starts
-        assertEquals(149, ScrollAreaElement.toUnscaledSpace(174, 100, 75, 50, 1.5F));
-        assertEquals(150, ScrollAreaElement.toUnscaledSpace(175, 100, 75, 50, 1.5F));
-        assertEquals(98, ScrollAreaElement.toUnscaledSpace(97, 100, 75, 50, 1.5F));
-        // Three units at a scale of 1.4 are four pixels on the screen. The pixel next to them would map into the child.
-        assertEquals(103, ScrollAreaElement.toUnscaledSpace(104, 100, 4, 3, 1.4F));
-        // A child that got a pixel more on the screen than its units make would have its last pixel map next to it
-        assertEquals(102, ScrollAreaElement.toUnscaledSpace(104, 100, 5, 3, 1.25F));
-    }
-
-    @Test
-    void whatAScaledChildGetsCutOffOfIsKnownInTheSpaceItRendersIn() {
-        TestChild child = child("child", 10, 40, 40, 30);
-        TestArea area = area(child);
-        area.layoutMode.set(ScrollAreaLayoutMode.PROPORTIONAL);
-        area.proportionalReferenceWidth.set(200);
-        area.proportionalReferenceHeight.set(100);
-        area.contentHeight.set(300);
-        area.width = 400;
-        area.nextFrame();
-        // At twice its size, the child spans (120, 130) to (200, 190) on the screen, and the area shows what is above 150
-        assertEquals(130, child.getAbsoluteY());
-        assertEquals(60, child.getAbsoluteHeight());
-        assertTrue(child.isRenderSpacePointVisibleInContainer(125, 145));
-        assertFalse(child.isRenderSpacePointVisibleInContainer(125, 155));
-
-        // While it renders, the child is in the unscaled space, where it spans (120, 130) to (160, 160). A point 15 units into it is 30 pixels into it on the screen.
-        ElementContainerLink link = child.getContainerLink();
-        assertNotNull(link);
-        ElementContainerLink.SizeSpace previous = link.setSizeSpace(ElementContainerLink.SizeSpace.CONTENT);
-        assertTrue(child.isRenderSpacePointVisibleInContainer(125, 135));
-        assertFalse(child.isRenderSpacePointVisibleInContainer(125, 145));
-        link.setSizeSpace(previous);
-    }
-
-    @Test
     void anAreaThatArrangesItsChildrenOnlyScrollsInOneDirection() {
         TestArea area = area(child("first", 0, 0, 50, 20));
         area.scrollSettings.scrollDirection.set(ScrollDirection.BOTH);
@@ -332,44 +290,6 @@ class ScrollAreaElementTest {
         assertEquals(ScrollDirection.VERTICAL, area.scrollSettings.scrollDirection.get());
         area.scrollSettings.scrollDirection.set(ScrollDirection.HORIZONTAL);
         assertEquals(ScrollDirection.HORIZONTAL, area.getScrollDirection());
-    }
-
-    @Test
-    void aProportionalContentScalesWithTheArea() {
-        TestChild child = child("child", 10, 20, 40, 30);
-        child.anchorPoint = ElementAnchorPoints.BOTTOM_RIGHT;
-        TestArea area = area(child);
-        area.layoutMode.set(ScrollAreaLayoutMode.PROPORTIONAL);
-        area.proportionalReferenceWidth.set(200);
-        area.proportionalReferenceHeight.set(100);
-        area.contentHeight.set(150);
-        area.nextFrame();
-
-        // At the size it was made for, the content shows unscaled, and anchors do not count
-        assertEquals(1.0F, area.getContentScale());
-        assertEquals(110, child.getAbsoluteX());
-        assertEquals(70, child.getAbsoluteY());
-        assertEquals(40, child.getAbsoluteWidth());
-        assertEquals(50, area.getScroller().y().getMax());
-        assertTrue(area.scalesChildVisuals());
-
-        // Twice as wide: everything is twice as big and twice as far from the top left of the content
-        area.width = 400;
-        area.nextFrame();
-        assertEquals(2.0F, area.getContentScale());
-        assertEquals(120, child.getAbsoluteX());
-        assertEquals(90, child.getAbsoluteY());
-        assertEquals(80, child.getAbsoluteWidth());
-        assertEquals(60, child.getAbsoluteHeight());
-        assertEquals(40, child.getContentSpaceWidth());
-        assertEquals(200, area.getContentWidth());
-        assertEquals(150, area.getContentHeight());
-        // 150 units are 300 pixels now, 200 more than the area shows
-        assertEquals(200, area.getScroller().y().getMax());
-
-        area.resizeBehavior.set(ScrollAreaResizeBehavior.RESIZE);
-        assertFalse(area.scalesChildVisuals());
-        assertEquals(80, child.getAbsoluteWidth());
     }
 
     @Test

@@ -1229,8 +1229,8 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
         int newAbsY = this.element.getAbsoluteY();
 
         // Adjust posOffset to counteract any shift—keeping the on-screen (absolute) position unchanged.
-        this.element.posOffsetX += this.toContentDistance(oldAbsX - newAbsX);
-        this.element.posOffsetY += this.toContentDistance(oldAbsY - newAbsY);
+        this.element.posOffsetX += (oldAbsX - newAbsX);
+        this.element.posOffsetY += (oldAbsY - newAbsY);
 
         this.element.stayOnScreen = stayOnScreen;
 
@@ -1273,8 +1273,8 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
             this.element.setAnchorPointElementIdentifier(null);
         }
 
-        if (keepsOwnWidth) this.setScreenWidth(screenWidth);
-        if (keepsOwnHeight) this.setScreenHeight(screenHeight);
+        if (keepsOwnWidth) this.setOwnWidth(screenWidth);
+        if (keepsOwnHeight) this.setOwnHeight(screenHeight);
         if (keepsOwnWidth || keepsOwnHeight) this.rebaseAutoSizing();
 
         this.moveToScreenPosition(screenX, screenY);
@@ -1292,26 +1292,23 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
         this.element.setAnchorPointElementIdentifier(null);
         boolean keepsOwnWidth = this.element.advancedWidth.isDefault() && !this.element.isStretchedX();
         boolean keepsOwnHeight = this.element.advancedHeight.isDefault() && !this.element.isStretchedY();
-        if (keepsOwnWidth) this.setScreenWidth(screenWidth);
-        if (keepsOwnHeight) this.setScreenHeight(screenHeight);
+        if (keepsOwnWidth) this.setOwnWidth(screenWidth);
+        if (keepsOwnHeight) this.setOwnHeight(screenHeight);
         if (keepsOwnWidth || keepsOwnHeight) this.rebaseAutoSizing();
         this.moveToScreenPosition(screenX, screenY);
     }
 
     /**
-     * Gives the element the width that makes it the given number of pixels wide on the screen.
-     * One unit of the content of a container is not always one pixel on the screen.
+     * Gives the element the width as its own, in place of a width it had from auto-sizing.
      */
-    protected void setScreenWidth(int screenWidth) {
-        ElementContainer container = this.element.getParentContainer();
-        this.element.baseWidth = Math.max(1, (container != null) ? ElementContainerLink.toContentSize(container, screenWidth) : screenWidth);
+    protected void setOwnWidth(int width) {
+        this.element.baseWidth = Math.max(1, width);
         this.element.autoSizingWidth = 0;
     }
 
-    /** The height counterpart of {@link #setScreenWidth(int)}. */
-    protected void setScreenHeight(int screenHeight) {
-        ElementContainer container = this.element.getParentContainer();
-        this.element.baseHeight = Math.max(1, (container != null) ? ElementContainerLink.toContentSize(container, screenHeight) : screenHeight);
+    /** The height counterpart of {@link #setOwnWidth(int)}. */
+    protected void setOwnHeight(int height) {
+        this.element.baseHeight = Math.max(1, height);
         this.element.autoSizingHeight = 0;
     }
 
@@ -1329,20 +1326,11 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
      * Does nothing for children of a container that arranges its children, which have no place of their own.
      */
     public void moveToScreenPosition(int screenX, int screenY) {
-        ElementContainer container = this.element.getParentContainer();
-        if ((container != null) && container.managesChildBoxes()) {
-            // The container places the child from its offset alone, which makes the offset its position in the content.
-            // The box the child has from the container is the one of its place before, so it is no help in getting there.
-            if (!container.arrangesChildren()) {
-                this.element.posOffsetX = ElementContainerLink.toContentX(container, screenX);
-                this.element.posOffsetY = ElementContainerLink.toContentY(container, screenY);
-            }
-            return;
-        }
+        if (this.element.isArrangedByContainer()) return;
         boolean stayOnScreen = this.element.stayOnScreen;
         this.element.stayOnScreen = false;
-        this.element.posOffsetX += this.toContentDistance(screenX - this.element.getAbsoluteX());
-        this.element.posOffsetY += this.toContentDistance(screenY - this.element.getAbsoluteY());
+        this.element.posOffsetX += (screenX - this.element.getAbsoluteX());
+        this.element.posOffsetY += (screenY - this.element.getAbsoluteY());
         this.element.stayOnScreen = stayOnScreen;
     }
 
@@ -1350,8 +1338,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
      * Returns if the element decides where it is. If not, it is a child of a container that gives its children their boxes.
      */
     public boolean placesItself() {
-        ElementContainer container = this.element.getParentContainer();
-        return (container == null) || !container.managesChildBoxes();
+        return !this.element.isArrangedByContainer();
     }
 
     /**
@@ -1368,15 +1355,6 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
             link.setManagedDragOffset(mouseX - this.movingStartPosX, mouseY - this.movingStartPosY);
         }
         return true;
-    }
-
-    /**
-     * Converts a distance on the screen to the units the element calculates its position and size in.
-     * These are screen pixels for elements of the main layout, and the units of the content for children of a container.
-     */
-    public int toContentDistance(int screenDistance) {
-        ElementContainer container = this.element.getParentContainer();
-        return (container != null) ? ElementContainerLink.toContentSize(container, screenDistance) : screenDistance;
     }
 
     /**
@@ -1615,9 +1593,8 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
                 this.element.horizontalTiltDegrees.set(this.snapTiltToZero(newTilt));
             } else if (this.leftMouseDown && !this.isGettingResized() && this.movingCrumpleZonePassed) { // MOVE ELEMENT
-                // The offsets of children are in the units of the content of their container, which the mouse does not move in
-                int diffX = this.toContentDistance((int)-(this.movingStartPosX - mouseX));
-                int diffY = this.toContentDistance((int)-(this.movingStartPosY - mouseY));
+                int diffX = (int)-(this.movingStartPosX - mouseX);
+                int diffY = (int)-(this.movingStartPosY - mouseY);
                 if (this.editor.allSelectedElementsMovable() && this.followMouseAsArrangedChild((int) mouseX, (int) mouseY)) {
                     this.recentlyMovedByDragging = true;
                 } else if (this.editor.allSelectedElementsMovable()) {
@@ -1680,9 +1657,9 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
                         // Apply grid snapping if enabled
                         if (FancyMenu.getOptions().showLayoutEditorGrid.getValue() && FancyMenu.getOptions().layoutEditorGridSnapping.getValue() && !this.isMultiSelected()) {
-                            // A container that gives its children their boxes has the box of where the element was until it works them out again
+                            // A container that arranges its children has the box of where the element was until it works them out again
                             ElementContainer boxContainer = this.element.getParentContainer();
-                            if ((boxContainer != null) && boxContainer.managesChildBoxes()) boxContainer.refreshChildBoxes();
+                            if ((boxContainer != null) && boxContainer.arrangesChildren()) boxContainer.refreshChildBoxes();
 
                             // Get element edges
                             int leftEdge = this.getX();
@@ -1741,7 +1718,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                                 int edgePos = (closestEdgeIndexX == 0) ? leftEdge : rightEdge;
                                 int gridPos = nearestGridLinesX[closestEdgeIndexX];
                                 int xAdjustment = gridPos - edgePos;
-                                this.element.posOffsetX += this.toContentDistance(xAdjustment);
+                                this.element.posOffsetX += xAdjustment;
                             }
 
                             // Repeat for Y direction with top and bottom edges
@@ -1780,7 +1757,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                                 int edgePos = (closestEdgeIndexY == 0) ? topEdge : bottomEdge;
                                 int gridPos = nearestGridLinesY[closestEdgeIndexY];
                                 int yAdjustment = gridPos - edgePos;
-                                this.element.posOffsetY += this.toContentDistance(yAdjustment);
+                                this.element.posOffsetY += yAdjustment;
                             }
                         }
                     }
@@ -1792,8 +1769,8 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                 }
             }
             if (this.leftMouseDown && this.isGettingResized()) { // RESIZE ELEMENT
-                int diffX = this.toContentDistance((int)-(this.resizingStartPosX - mouseX));
-                int diffY = this.toContentDistance((int)-(this.resizingStartPosY - mouseY));
+                int diffX = (int)-(this.resizingStartPosX - mouseX);
+                int diffY = (int)-(this.resizingStartPosY - mouseY);
                 if ((diffX > 0) || (diffY > 0)) this.recentlyResized = true;
 
                 ResizeGrabberType resizeType = this.activeResizeGrabberType;
@@ -1835,8 +1812,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                     this.element.baseWidth = newWidth;
                     this.element.posOffsetX = this.leftMouseDownBaseX + this.element.anchorPoint.getResizePositionOffsetX(this.element, usedDiffX, resizeType);
                     if (this.element.stickyAnchor) {
-                        // The correction is a distance on the screen, like the positions it comes from
-                        this.element.posOffsetX += this.toContentDistance(this.element.anchorPoint.getStickyResizePositionCorrectionX(this.element, usedDiffX, cachedOldOffsetX, this.element.posOffsetX, cachedOldPosX, this.element.getAbsoluteX(), cachedOldWidth, this.element.getAbsoluteWidth(), resizeType));
+                        this.element.posOffsetX += this.element.anchorPoint.getStickyResizePositionCorrectionX(this.element, usedDiffX, cachedOldOffsetX, this.element.posOffsetX, cachedOldPosX, this.element.getAbsoluteX(), cachedOldWidth, this.element.getAbsoluteWidth(), resizeType);
                     }
                     if (net.minecraft.client.Minecraft.getInstance().hasShiftDown() && !resizeCorner) {
                         this.element.baseHeight = this.resizeAspectRatio.getAspectRatioHeight(this.element.baseWidth);
@@ -1852,7 +1828,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
                     this.element.baseHeight = newHeight;
                     this.element.posOffsetY = this.leftMouseDownBaseY + this.element.anchorPoint.getResizePositionOffsetY(this.element, usedDiffY, resizeType);
                     if (this.element.stickyAnchor) {
-                        this.element.posOffsetY += this.toContentDistance(this.element.anchorPoint.getStickyResizePositionCorrectionY(this.element, usedDiffY, cachedOldOffsetY, this.element.posOffsetY, cachedOldPosY, this.element.getAbsoluteY(), cachedOldHeight, this.element.getAbsoluteHeight(), resizeType));
+                        this.element.posOffsetY += this.element.anchorPoint.getStickyResizePositionCorrectionY(this.element, usedDiffY, cachedOldOffsetY, this.element.posOffsetY, cachedOldPosY, this.element.getAbsoluteY(), cachedOldHeight, this.element.getAbsoluteHeight(), resizeType);
                     }
                     if (net.minecraft.client.Minecraft.getInstance().hasShiftDown() && !resizeCorner) {
                         this.element.baseWidth = this.resizeAspectRatio.getAspectRatioWidth(this.element.baseHeight);
@@ -1867,7 +1843,7 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
     public boolean isMouseOver(double mouseX, double mouseY) {
         if (this.element.layerHiddenInEditor) return false;
         // What a container cuts off of a child can't be hovered. A selected child shows its border and controls there, so it can.
-        if (!this.isSelected() && !this.element.isRenderSpacePointVisibleInContainer(mouseX, mouseY)) return false;
+        if (!this.isSelected() && !this.element.isScreenPointVisibleInContainer(mouseX, mouseY)) return false;
         return UIBase.isXYInArea((int) mouseX, (int) mouseY, this.getX(), this.getY(), this.getWidth(), this.getHeight());
     }
 
