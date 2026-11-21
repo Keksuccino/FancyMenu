@@ -97,6 +97,11 @@ public class FmaTexture implements ITexture, PlayableResource {
     protected volatile int playbackIndex = -1;
     protected volatile long playbackFrameStartMs = 0L;
     protected volatile long playbackFrameDelayMs = MIN_FRAME_DELAY_MS;
+    /**
+     * When the paused texture got rendered first, so the visible frame can continue its remaining time when it plays again. -1 while it didn't get rendered paused.
+     * The render thread writes it, the stream thread holds the visible frame while it is set, see {@link #trackRenderedPause(long)}.
+     */
+    protected volatile long pausedAtMs = -1L;
 
     protected volatile boolean decodeIntro = false;
     protected volatile int decodeIndex = 0;
@@ -301,74 +306,64 @@ public class FmaTexture implements ITexture, PlayableResource {
 
     protected void streamLoop(int generation) {
         while (!this.closed.get() && (generation == this.streamGeneration.get())) {
-            if (!this.playRequested || this.maxLoopsReached) {
-                sleepQuietly(IDLE_SLEEP_MS);
-                continue;
-            }
-            if (this.pausedRequested && this.playbackInitialized) {
-                sleepQuietly(IDLE_SLEEP_MS);
-                continue;
-            }
-
-            long now = System.currentTimeMillis();
-            if ((this.lastResourceLocationCall > 0L) && ((this.lastResourceLocationCall + INACTIVITY_TIMEOUT_MS) < now)) {
-                synchronized (this.streamStateLock) {
-                    this.clearPrefetchedFramesLocked();
-                }
-                sleepQuietly(100L);
-                continue;
-            }
-
-            try {
-                if (!this.playbackInitialized) {
-                    if (!this.initializeFirstFrame(generation)) {
-                        sleepQuietly(IDLE_SLEEP_MS);
-                    }
-                    continue;
-                }
-
-                this.fillPrefetchQueue(generation);
-
-                long elapsed = now - this.playbackFrameStartMs;
-                long delay = Math.max(MIN_FRAME_DELAY_MS, this.playbackFrameDelayMs);
-                if (elapsed < delay) {
-                    sleepQuietly(Math.min(IDLE_SLEEP_MS, delay - elapsed));
-                    continue;
-                }
-
-                if (this.isAtNormalCycleBoundary()) {
-                    boolean willRestart = this.handleCycleBoundary();
-                    if (!willRestart) {
-                        this.maxLoopsReached = true;
-                        this.playRequested = false;
-                        continue;
-                    }
-                }
-
-                DecodedFrame next = this.pollPrefetchedFrame();
-                if (next == null) {
-                    sleepQuietly(IDLE_SLEEP_MS);
-                    continue;
-                }
-                if (generation != this.streamGeneration.get()) {
-                    next.close();
-                    break;
-                }
-
-                if (!this.publishDecodedFrame(next, generation, now)) {
-                    break;
-                }
-                this.maybeEmitStartEvent(next.intro, next.index);
-            } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] An error happened in the streaming thread of an FMA texture!", ex);
-                sleepQuietly(50L);
-            }
+            long sleepMs = this.streamIteration(generation, this.currentTimeMillis());
+            if (sleepMs > 0L) sleepQuietly(sleepMs);
         }
 
         synchronized (this.streamStateLock) {
             if (generation == this.streamGeneration.get()) {
                 this.streamThread = null;
             }
+        }
+    }
+
+    /**
+     * Runs one iteration of the stream thread and returns the delay before it should run the next one, 0 to run it right away.<br>
+     * An iteration that notices that the texture got closed or that a newer stream replaced this one returns 0, then the loop ends, because it only runs for its own stream of an open texture.
+     */
+    protected long streamIteration(int generation, long now) {
+        if (!this.playRequested || this.maxLoopsReached) return IDLE_SLEEP_MS;
+        if (this.isHoldingPausedFrame()) return IDLE_SLEEP_MS;
+
+        if ((this.lastResourceLocationCall > 0L) && ((this.lastResourceLocationCall + INACTIVITY_TIMEOUT_MS) < now)) {
+            synchronized (this.streamStateLock) {
+                this.clearPrefetchedFramesLocked();
+            }
+            return 100L;
+        }
+
+        try {
+            if (!this.playbackInitialized) {
+                return this.initializeFirstFrame(generation) ? 0L : IDLE_SLEEP_MS;
+            }
+
+            this.fillPrefetchQueue(generation);
+
+            long elapsed = now - this.playbackFrameStartMs;
+            long delay = Math.max(MIN_FRAME_DELAY_MS, this.playbackFrameDelayMs);
+            if (elapsed < delay) return Math.min(IDLE_SLEEP_MS, delay - elapsed);
+
+            if (this.isAtNormalCycleBoundary()) {
+                boolean willRestart = this.handleCycleBoundary();
+                if (!willRestart) {
+                    this.maxLoopsReached = true;
+                    this.playRequested = false;
+                    return 0L;
+                }
+            }
+
+            DecodedFrame next = this.pollPrefetchedFrame();
+            if (next == null) return IDLE_SLEEP_MS;
+            if (generation != this.streamGeneration.get()) {
+                next.close();
+                return 0L;
+            }
+
+            if (this.publishDecodedFrame(next, generation, now)) this.maybeEmitStartEvent(next.intro, next.index);
+            return 0L;
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] An error happened in the streaming thread of an FMA texture!", ex);
+            return 50L;
         }
     }
 
@@ -382,7 +377,7 @@ public class FmaTexture implements ITexture, PlayableResource {
             return false;
         }
 
-        long now = System.currentTimeMillis();
+        long now = this.currentTimeMillis();
         if (!this.publishDecodedFrame(first, generation, now)) return false;
         this.maybeEmitStartEvent(first.intro, first.index);
         this.loadingCompleted.set(true);
@@ -570,6 +565,36 @@ public class FmaTexture implements ITexture, PlayableResource {
         return (this.cycles.get() + 1) < plays;
     }
 
+    /**
+     * If the stream thread holds the visible frame, because the texture got rendered while paused and didn't get rendered playing since.
+     * Pauses while nobody renders the texture paused don't hold it, so pauses of other users of a shared texture don't stall it.
+     */
+    protected boolean isHoldingPausedFrame() {
+        return this.playbackInitialized && (this.pausedAtMs >= 0L);
+    }
+
+    /**
+     * Runs on the render thread whenever the texture gets rendered, while the stream thread advances its frames.<br>
+     * Only the time the texture gets rendered while paused counts as pause, which the visible frame gets once the texture gets rendered playing again.
+     * Several users can share one texture, and one of them can pause it while another one keeps showing it, like widgets that pause the background of
+     * their hidden states, which can be the shown background of other widgets. Counting the time between their pause and play calls would stall it then.
+     */
+    protected void trackRenderedPause(long now) {
+        if (this.pausedRequested) {
+            if (this.playbackInitialized && (this.pausedAtMs < 0L)) this.pausedAtMs = now;
+            return;
+        }
+        if (this.pausedAtMs < 0L) return;
+        // The stream thread sets the frame start too when it shows the next frame
+        synchronized (this.streamStateLock) {
+            long pausedAt = this.pausedAtMs;
+            if (pausedAt < 0L) return;
+            // The visible frame continues with the time it had left when it got rendered paused
+            this.playbackFrameStartMs += Math.max(0L, now - pausedAt);
+            this.pausedAtMs = -1L;
+        }
+    }
+
     protected void requestPlaybackReset() {
         synchronized (this.streamStateLock) {
             this.streamGeneration.incrementAndGet();
@@ -582,6 +607,7 @@ public class FmaTexture implements ITexture, PlayableResource {
             this.playbackIndex = -1;
             this.playbackFrameStartMs = 0L;
             this.playbackFrameDelayMs = MIN_FRAME_DELAY_MS;
+            this.pausedAtMs = -1L;
             this.decodeIntro = this.introFrameCount > 0;
             this.decodeIndex = 0;
             this.clearPrefetchedFramesLocked();
@@ -642,7 +668,9 @@ public class FmaTexture implements ITexture, PlayableResource {
     public ResourceLocation getResourceLocation() {
         if (this.closed.get()) return FULLY_TRANSPARENT_TEXTURE;
 
-        this.lastResourceLocationCall = System.currentTimeMillis();
+        long now = this.currentTimeMillis();
+        this.lastResourceLocationCall = now;
+        this.trackRenderedPause(now);
         try {
             this.restoreResetFrameIfRequested();
         } catch (Exception ex) {
@@ -655,6 +683,13 @@ public class FmaTexture implements ITexture, PlayableResource {
 
         if (this.loadingFailed.get()) return FULLY_TRANSPARENT_TEXTURE;
         return (this.streamingResourceLocation != null) ? this.streamingResourceLocation : FULLY_TRANSPARENT_TEXTURE;
+    }
+
+    /**
+     * The clock playback runs on.
+     */
+    protected long currentTimeMillis() {
+        return System.currentTimeMillis();
     }
 
     @Override
@@ -737,9 +772,6 @@ public class FmaTexture implements ITexture, PlayableResource {
 
         if (this.maxLoopsReached) return;
 
-        if (this.pausedRequested) {
-            this.playbackFrameStartMs = System.currentTimeMillis();
-        }
         this.playRequested = true;
         this.pausedRequested = false;
         this.startTickerIfNeeded();
