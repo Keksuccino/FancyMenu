@@ -136,5 +136,6 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - Fixed JSON Model elements being invisible in MC 1.21.11 and newer
 - Fixed scroll bars scrolling down when the mouse wheel only got turned sideways
 - Fixed pasting elements with the keyboard shortcut in the layout editor not being undoable
+- Fixed the loading screen showing at the old window size in the top-left corner of a black screen for about a second when the game starts in fullscreen (#1865)
 
 %changelog:end%
