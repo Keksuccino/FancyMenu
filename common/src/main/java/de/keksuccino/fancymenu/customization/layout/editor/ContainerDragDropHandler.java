@@ -88,6 +88,9 @@ public class ContainerDragDropHandler {
             UIBase.renderBorder(graphics, x, y, x + width, y + height, 1, UIBase.getUITheme().layout_editor_element_border_color_selected.getColor(), true, true, true, true);
         }
 
+        // Parts of the content that are out of sight come into it while the mouse is close to an edge of the container
+        if (placesAny) container.scrollWhileDraggedOver(mouseX, mouseY);
+
         // A container that arranges its children shows where the dragged ones would go, also when they are its children already and only change their place
         if (placesAny) {
             int dropIndex = container.getDropIndex(mouseX, mouseY, dragged);

@@ -34,6 +34,10 @@ public class ScrollAreaEditorElement extends AbstractEditorElement<ScrollAreaEdi
 
     private static final int DROP_MARKER_THICKNESS = 2;
     private static final int DROP_MARKER_INSET = 2;
+    /** How close to an edge of the area the mouse has to be for the content to scroll along while the user drags elements over it. */
+    private static final int DRAG_SCROLL_ZONE = 16;
+    /** How many pixels per second the content scrolls along while the mouse is right at an edge. It gets slower further into the area. */
+    private static final double DRAG_SCROLL_MAX_SPEED = 600.0D;
 
     /** The children of the area as what they are in the editor, by the element they wrap. */
     protected final Map<AbstractElement, AbstractEditorElement<?, ?>> childEditorElements = new IdentityHashMap<>();
@@ -275,6 +279,33 @@ public class ScrollAreaEditorElement extends AbstractEditorElement<ScrollAreaEdi
         if (element instanceof VanillaWidgetEditorElement) return false;
         // An area in itself, in one of its own children or in something it is anchored to could never work out where it is
         return (element != this) && !ElementContainerHierarchy.dependsOn(this.element, element.element);
+    }
+
+    @Override
+    public void scrollWhileDraggedOver(int mouseX, int mouseY) {
+        ScrollGeometry geometry = this.element.getScrollGeometry();
+        double deltaSeconds = this.element.getScrolling().getFrameDeltaSeconds();
+        double speedX = getDragScrollSpeed(mouseX, geometry.getViewportX(), geometry.getViewportWidth());
+        double speedY = getDragScrollSpeed(mouseY, geometry.getViewportY(), geometry.getViewportHeight());
+        // An axis the area does not scroll on has no range, so the content stays where it is on it
+        if (speedX != 0.0D) this.element.getScroller().x().drift(speedX * deltaSeconds);
+        if (speedY != 0.0D) this.element.getScroller().y().drift(speedY * deltaSeconds);
+    }
+
+    /**
+     * Returns how many pixels per second the content scrolls along on one axis while the mouse drags elements at the given position:
+     * towards the start while the mouse is close to the start of what the area shows, towards the end while it is close to its end.
+     * The closer to the edge, the faster. A mouse beyond the edge drags the elements out of the area, which scrolls nothing.
+     */
+    protected static double getDragScrollSpeed(int mouse, int viewportStart, int viewportSize) {
+        // Small areas would be all edge, so the zones never take more than a quarter of the area
+        int zone = Math.min(DRAG_SCROLL_ZONE, viewportSize / 4);
+        if ((zone <= 0) || (mouse < viewportStart) || (mouse >= (viewportStart + viewportSize))) return 0.0D;
+        int intoStartZone = (viewportStart + zone) - mouse;
+        if (intoStartZone > 0) return -DRAG_SCROLL_MAX_SPEED * intoStartZone / zone;
+        int intoEndZone = mouse - ((viewportStart + viewportSize - 1) - zone);
+        if (intoEndZone > 0) return DRAG_SCROLL_MAX_SPEED * intoEndZone / zone;
+        return 0.0D;
     }
 
     @Override
