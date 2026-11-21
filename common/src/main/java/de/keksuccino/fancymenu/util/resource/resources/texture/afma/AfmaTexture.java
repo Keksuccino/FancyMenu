@@ -98,6 +98,11 @@ public class AfmaTexture implements ITexture, PlayableResource {
     protected volatile int playbackIndex = -1;
     protected volatile long playbackFrameStartMs = 0L;
     protected volatile long playbackFrameDelayMs = MIN_FRAME_DELAY_MS;
+    /**
+     * When the paused texture got rendered first, so the visible frame can continue its remaining time when it plays again. -1 while it didn't get rendered paused.
+     * Playback on the render thread and resets write it, the stream thread reads it to stop decoding ahead while the texture holds its paused frame.
+     */
+    protected volatile long pausedAtMs = -1L;
     protected volatile boolean playbackResetFrameRestorePending = false;
     protected volatile boolean playbackResetFrameRestored = false;
 
@@ -369,7 +374,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
     protected void streamLoop(int generation) {
         try {
             while (!this.closed.get() && !this.loadingFailed.get() && (generation == this.streamGeneration.get())) {
-                sleepQuietly(this.streamIteration(generation, System.currentTimeMillis()));
+                sleepQuietly(this.streamIteration(generation, this.currentTimeMillis()));
             }
         } finally {
             synchronized (this.streamStateLock) {
@@ -386,7 +391,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
     /** Runs one prefetch iteration and returns the delay before the worker should try again. */
     protected long streamIteration(int generation, long now) {
         if (!this.playRequested || this.maxLoopsReached) return IDLE_SLEEP_MS;
-        if (this.pausedRequested && this.playbackInitialized) return IDLE_SLEEP_MS;
+        if (this.isHoldingPausedFrame()) return IDLE_SLEEP_MS;
         if (this.shouldIdleOnTerminalSingleMainFrame()) {
             synchronized (this.streamStateLock) {
                 this.clearPrefetchedFramesLocked();
@@ -590,9 +595,8 @@ public class AfmaTexture implements ITexture, PlayableResource {
 
     protected void advancePlaybackIfNeeded() {
         if (this.closed.get() || this.loadingFailed.get() || !this.decoded.get() || !this.playRequested || this.maxLoopsReached) return;
-        if (this.pausedRequested && this.playbackInitialized) return;
 
-        long now = System.currentTimeMillis();
+        long now = this.currentTimeMillis();
         if (!this.playbackInitialized) {
             PreparedFrame first = this.pollPrefetchedFrame();
             if (first == null) return;
@@ -611,6 +615,8 @@ public class AfmaTexture implements ITexture, PlayableResource {
                 this.playbackIntro = first.intro;
                 this.playbackIndex = first.index;
                 this.playbackFrameStartMs = now;
+                // A frame that appears while paused starts its time once playback continues
+                this.pausedAtMs = this.pausedRequested ? now : -1L;
                 this.playbackFrameDelayMs = sanitizeDelay(first.delayMs);
                 this.loadingCompleted.set(true);
                 this.maybeEmitStartEvent(first.intro, first.index);
@@ -620,6 +626,22 @@ public class AfmaTexture implements ITexture, PlayableResource {
                 first.close();
             }
             return;
+        }
+
+        if (this.pausedRequested) {
+            /*
+             * Only the time the texture gets rendered while paused counts as pause, which the visible frame gets once playback continues.
+             * Several users can share one texture, and one of them can pause it while another one keeps showing it, like widgets that pause the background of
+             * their hidden states, which can be the shown background of other widgets. Counting the time between their pause and play calls would stall it then.
+             */
+            if (this.pausedAtMs < 0L) this.pausedAtMs = now;
+            return;
+        }
+        long pausedAt = this.pausedAtMs;
+        if (pausedAt >= 0L) {
+            // The visible frame continues with the time it had left when it got rendered paused
+            this.playbackFrameStartMs += Math.max(0L, now - pausedAt);
+            this.pausedAtMs = -1L;
         }
 
         if (this.shouldIdleOnTerminalSingleMainFrame()) {
@@ -1053,6 +1075,14 @@ public class AfmaTexture implements ITexture, PlayableResource {
         return restored && (frameIndex == 0) && (frameIntro || (introFrameCount <= 0));
     }
 
+    /**
+     * If the texture holds its visible frame, because it got rendered while paused and didn't get rendered playing since. The stream thread doesn't decode ahead then.
+     * Pauses while nobody renders the texture paused don't hold it, so pauses of other users of a shared texture don't stall it.
+     */
+    protected boolean isHoldingPausedFrame() {
+        return this.playbackInitialized && (this.pausedAtMs >= 0L);
+    }
+
     protected void requestPlaybackReset() {
         int nextGeneration = this.streamGeneration.incrementAndGet();
 
@@ -1065,6 +1095,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
         this.playbackIndex = -1;
         this.playbackFrameStartMs = 0L;
         this.playbackFrameDelayMs = MIN_FRAME_DELAY_MS;
+        this.pausedAtMs = -1L;
         this.playbackResetFrameRestorePending = false;
         this.playbackResetFrameRestored = false;
         this.decodeIntro = this.introFrameCount > 0;
@@ -1092,7 +1123,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
     public ResourceLocation getResourceLocation() {
         if (this.closed.get()) return FULLY_TRANSPARENT_TEXTURE;
 
-        this.lastResourceLocationCall = System.currentTimeMillis();
+        this.lastResourceLocationCall = this.currentTimeMillis();
         if (this.loadingFailed.get()) return FULLY_TRANSPARENT_TEXTURE;
         if (!this.decoded.get()) return FULLY_TRANSPARENT_TEXTURE;
         this.startTickerIfNeeded();
@@ -1109,6 +1140,13 @@ public class AfmaTexture implements ITexture, PlayableResource {
 
         if (this.loadingFailed.get()) return FULLY_TRANSPARENT_TEXTURE;
         return (this.loadingCompleted.get() && (this.streamingResourceLocation != null)) ? this.streamingResourceLocation : FULLY_TRANSPARENT_TEXTURE;
+    }
+
+    /**
+     * The clock playback runs on.
+     */
+    protected long currentTimeMillis() {
+        return System.currentTimeMillis();
     }
 
     @Override
@@ -1191,9 +1229,6 @@ public class AfmaTexture implements ITexture, PlayableResource {
 
         if (this.maxLoopsReached) return;
 
-        if (this.pausedRequested) {
-            this.playbackFrameStartMs = System.currentTimeMillis();
-        }
         this.playRequested = true;
         this.pausedRequested = false;
         this.startTickerIfNeeded();
