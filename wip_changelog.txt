@@ -117,5 +117,8 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - Fixed `$$name` variable references not working inside placeholder values, like in the expression of the Calculator placeholder (#1859)
 - Fixed the error messages when renaming a layout not being translated
 - Fixed sideways mouse wheel scrolling also scrolling up or down on Forge on macOS (MC 1.20.1 and 1.19.2)
+- Fixed pasting into the text editor putting all lines into a single line in Minecraft 26.3
+- Fixed Select All in the text editor only selecting the current line in Minecraft 26.3
+- Fixed Copy and Cut in the text editor only working on the current line in Minecraft 26.3
 
 %changelog:end%
