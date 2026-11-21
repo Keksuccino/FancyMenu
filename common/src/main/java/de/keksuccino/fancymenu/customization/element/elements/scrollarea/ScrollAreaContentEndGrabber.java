@@ -146,9 +146,8 @@ public class ScrollAreaContentEndGrabber implements GuiEventListener {
         // The end follows the mouse within the area, and moves on by what the content scrolls along, so it stays under the mouse while the content grows
         int target = Math.max(viewportStart, Math.min(viewportEnd, mouse)) + this.grabOffset;
         double contentStart = viewportStart - axis.getPosition();
-        int size = (int) Math.round(((target - contentStart) + scrollStep) / geometry.getScale());
-        int minSize = Math.round((viewportEnd - viewportStart) / geometry.getScale());
-        this.getSizeProperty().set(Math.max(minSize, size));
+        int size = (int) Math.round((target - contentStart) + scrollStep);
+        this.getSizeProperty().set(Math.max(viewportEnd - viewportStart, size));
         // The range of the scroll follows the new size in the next frame, where what could not be scrolled now gets caught up
         if (scrollStep != 0.0D) axis.drift(scrollStep);
 
@@ -183,8 +182,8 @@ public class ScrollAreaContentEndGrabber implements GuiEventListener {
     }
 
     protected int getEndOnScreen(@NotNull ScrollGeometry geometry) {
-        if (this.horizontal) return geometry.getContentScreenX() + Math.round(geometry.getContentWidth() * geometry.getScale());
-        return geometry.getContentScreenY() + Math.round(geometry.getContentHeight() * geometry.getScale());
+        if (this.horizontal) return geometry.getContentScreenX() + geometry.getContentWidth();
+        return geometry.getContentScreenY() + geometry.getContentHeight();
     }
 
     protected int getGrabberX(@NotNull ScrollGeometry geometry, int end) {

@@ -11,7 +11,7 @@ class ScrollGeometryTest {
     @Test
     void contentIsNeverSmallerThanTheViewport() {
         ScrollGeometry geometry = new ScrollGeometry();
-        geometry.setViewport(10, 20, 200, 100, 1.0F);
+        geometry.setViewport(10, 20, 200, 100);
         geometry.setContentSize(50, 30, true, true);
         assertEquals(200, geometry.getContentWidth());
         assertEquals(100, geometry.getContentHeight());
@@ -22,7 +22,7 @@ class ScrollGeometryTest {
     @Test
     void contentOnlyGrowsOnAxesThatScroll() {
         ScrollGeometry geometry = new ScrollGeometry();
-        geometry.setViewport(0, 0, 200, 100, 1.0F);
+        geometry.setViewport(0, 0, 200, 100);
 
         geometry.setContentSize(900, 700, false, true);
         assertEquals(200, geometry.getContentWidth());
@@ -42,35 +42,9 @@ class ScrollGeometryTest {
     }
 
     @Test
-    void aScaledContentIsMeasuredInItsOwnUnits() {
-        ScrollGeometry geometry = new ScrollGeometry();
-        geometry.setViewport(0, 0, 400, 200, 2.0F);
-        // The viewport shows 200x100 units of the content
-        geometry.setContentSize(0, 250, false, true);
-        assertEquals(200, geometry.getContentWidth());
-        assertEquals(250, geometry.getContentHeight());
-        // 250 units are 500 pixels on the screen, 300 more than the viewport shows
-        assertEquals(300, geometry.getMaxScrollY());
-
-        geometry.setViewport(0, 0, 100, 50, 0.5F);
-        geometry.setContentSize(0, 250, false, true);
-        assertEquals(200, geometry.getContentWidth());
-        assertEquals(75, geometry.getMaxScrollY());
-    }
-
-    @Test
-    void anInvalidScaleCountsAsNoScale() {
-        ScrollGeometry geometry = new ScrollGeometry();
-        geometry.setViewport(0, 0, 100, 50, 0.0F);
-        assertEquals(1.0F, geometry.getScale());
-        geometry.setViewport(0, 0, 100, 50, -3.0F);
-        assertEquals(1.0F, geometry.getScale());
-    }
-
-    @Test
     void wholePixelsOfTheScrollMoveTheContent() {
         ScrollGeometry geometry = new ScrollGeometry();
-        geometry.setViewport(10, 20, 200, 100, 1.0F);
+        geometry.setViewport(10, 20, 200, 100);
         geometry.setContentSize(0, 500, false, true);
         geometry.setScroll(0, 37);
         assertEquals(10, geometry.getContentScreenX());
@@ -80,7 +54,7 @@ class ScrollGeometryTest {
     @Test
     void aScrollBetweenTwoPixelsMovesTheContentToTheCloserOne() {
         ScrollGeometry geometry = new ScrollGeometry();
-        geometry.setViewport(0, 0, 200, 100, 1.0F);
+        geometry.setViewport(0, 0, 200, 100);
         geometry.setContentSize(500, 500, true, true);
 
         geometry.setScroll(0, 37.3);
@@ -97,7 +71,7 @@ class ScrollGeometryTest {
     @Test
     void onlyPointsInsideTheViewportAreInIt() {
         ScrollGeometry geometry = new ScrollGeometry();
-        geometry.setViewport(10, 20, 200, 100, 1.0F);
+        geometry.setViewport(10, 20, 200, 100);
         assertTrue(geometry.isInViewport(10, 20));
         assertTrue(geometry.isInViewport(209.5, 119.5));
         assertFalse(geometry.isInViewport(210, 60));
@@ -109,7 +83,7 @@ class ScrollGeometryTest {
     @Test
     void negativeViewportSizesCountAsEmpty() {
         ScrollGeometry geometry = new ScrollGeometry();
-        geometry.setViewport(0, 0, -5, -8, 1.0F);
+        geometry.setViewport(0, 0, -5, -8);
         geometry.setContentSize(300, 300, true, true);
         assertEquals(0, geometry.getViewportWidth());
         assertEquals(0, geometry.getViewportHeight());

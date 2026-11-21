@@ -50,9 +50,7 @@ final class ElementContainerTestElements {
         int contentHeight = 600;
         int contentScreenX = 0;
         int contentScreenY = 0;
-        float contentScale = 1.0F;
-        boolean scalesChildVisuals = false;
-        boolean managesChildBoxes = false;
+        boolean arrangesChildren = false;
         boolean showingChildren = true;
         float childOpacity = 1.0F;
         int visibleX = Integer.MIN_VALUE / 2;
@@ -96,27 +94,12 @@ final class ElementContainerTestElements {
         }
 
         @Override
-        public float getContentScale() {
-            return this.contentScale;
-        }
-
-        @Override
-        public boolean scalesChildVisuals() {
-            return this.scalesChildVisuals;
-        }
-
-        @Override
-        public boolean managesChildBoxes() {
-            return this.managesChildBoxes;
+        public boolean arrangesChildren() {
+            return this.arrangesChildren;
         }
 
         @Override
         public void refreshChildBoxes() {
-        }
-
-        @Override
-        public boolean arrangesChildren() {
-            return false;
         }
 
         @Override

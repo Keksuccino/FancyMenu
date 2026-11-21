@@ -8,20 +8,6 @@ import org.jetbrains.annotations.NotNull;
 public interface ScrollAreaArranger {
 
     /**
-     * Leaves every child where it wants to be, with the size it has on its own. The size of the content is up to the user.
-     */
-    ScrollAreaArranger FREE = arrangement -> {
-        for (int i = 0; i < arrangement.count; i++) {
-            arrangement.x[i] = arrangement.offsetX[i];
-            arrangement.y[i] = arrangement.offsetY[i];
-            arrangement.width[i] = arrangement.naturalWidth[i];
-            arrangement.height[i] = arrangement.naturalHeight[i];
-        }
-        arrangement.contentWidth = -1;
-        arrangement.contentHeight = -1;
-    };
-
-    /**
      * Puts the children in one line, one after another along the main axis.
      */
     ScrollAreaArranger STACK = arrangement -> {

@@ -24,7 +24,7 @@ import java.util.List;
  * An element in the content of another one gets its input before the outer one, and hands a scroll it has no use for on to it by not consuming it.<br><br>
  *
  * It takes the mouse where it is on the screen and maps it into the space the content scrolls in itself. An element whose content scrolls
- * in another space than the screen, because it can be rotated or drawn scaled by a container, has to register it to the screen as it is
+ * in another space than the screen, because it can be rotated or tilted, has to register it to the screen as it is
  * ({@link AbstractElement#registersChildWidgetsDirectly()}), or the mouse gets mapped twice.
  */
 public class ElementScrollInput implements GuiEventListener, NarratableEntry, FancyMenuUiComponent {
