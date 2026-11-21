@@ -3896,7 +3896,7 @@
   "fancymenu.ui.filechooser.no_preview": "Попередній перегляд недоступний.",
   "fancymenu.ui.filechooser.open_in_explorer": "Відкрити в провіднику",
   "fancymenu.ui.filechooser.preview": "Попередній перегляд",
-  "fancymenu.ui.filechooser.preview.watermedia_recommended_apng_gif": "Якщо працюєш із текстурами APNG і GIF, радимо встановити Watermedia — так буде краща продуктивність і менше споживання оперативної пам’яті.",
+  "fancymenu.ui.filechooser.preview.watermedia_recommended_gif": "Якщо працюєш із текстурами GIF, радимо встановити Watermedia — так буде краща продуктивність і менше споживання оперативної пам’яті.",
   "fancymenu.ui.filechooser.resource_name_check.not_passed.tooltip": "Назва цієї теки чи файлу містить\nнепідтримувані символи.\nВикористовуй лише [a-z], [0-9] і [_], [-], [.].\nПробіли та великі літери не підтримуються.",
   "fancymenu.ui.generic.continue": "Продовжити",
   "fancymenu.ui.generic.description": "Опис",

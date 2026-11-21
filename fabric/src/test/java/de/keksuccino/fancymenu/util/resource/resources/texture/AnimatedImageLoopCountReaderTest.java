@@ -61,35 +61,6 @@ class AnimatedImageLoopCountReaderTest {
         assertTrue(in.consumed <= 100L);
     }
 
-    @Test
-    void apngWithZeroPlaysLoopsForever() {
-        assertEquals(AnimatedImageLoopCountReader.INFINITE_LOOPS, AnimatedImageLoopCountReader.readApngLoopCount(apng(0, true)));
-    }
-
-    @Test
-    void apngWithPlayCountReturnsIt() {
-        assertEquals(2, AnimatedImageLoopCountReader.readApngLoopCount(apng(2, true)));
-    }
-
-    @Test
-    void pngWithoutAnimationControlLoopsForever() {
-        assertEquals(AnimatedImageLoopCountReader.INFINITE_LOOPS, AnimatedImageLoopCountReader.readApngLoopCount(apng(-1, true)));
-    }
-
-    @Test
-    void apngAnimationControlAfterImageDataGetsIgnored() {
-        assertEquals(AnimatedImageLoopCountReader.INFINITE_LOOPS, AnimatedImageLoopCountReader.readApngLoopCount(apng(2, false)));
-    }
-
-    @Test
-    void apngReadingStopsAtAnimationControl() throws IOException {
-        byte[] apng = apng(2, true);
-        CountingInputStream in = new CountingInputStream(apng);
-
-        assertEquals(2, AnimatedImageLoopCountReader.readApngLoopCount(in, Long.MAX_VALUE));
-        assertTrue(in.consumed < apng.length - 1000, "consumed " + in.consumed + " of " + apng.length + " bytes");
-    }
-
     /**
      * Builds a GIF with a loop extension before or after its image data, or without loop extension if the loop count is negative.
      */
@@ -118,33 +89,6 @@ class AnimatedImageLoopCountReaderTest {
         out.writeBytes(new byte[] {0x21, (byte) 0xFF, 11});
         out.writeBytes("NETSCAPE2.0".getBytes(StandardCharsets.US_ASCII));
         out.writeBytes(new byte[] {3, 1, (byte) (loops & 255), (byte) ((loops >> 8) & 255), 0});
-    }
-
-    /**
-     * Builds a PNG with an animation control chunk before or after its image data, or without one if the play count is negative.
-     */
-    private static byte[] apng(int plays, boolean animationControlBeforeImageData) {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        out.writeBytes(new byte[] {(byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1A, '\n'});
-        writePngChunk(out, "IHDR", new byte[13]);
-        if (animationControlBeforeImageData) writeAnimationControl(out, plays);
-        writePngChunk(out, "IDAT", new byte[2000]);
-        if (!animationControlBeforeImageData) writeAnimationControl(out, plays);
-        writePngChunk(out, "IEND", new byte[0]);
-        return out.toByteArray();
-    }
-
-    private static void writeAnimationControl(ByteArrayOutputStream out, int plays) {
-        if (plays < 0) return;
-        writePngChunk(out, "acTL", new byte[] {0, 0, 0, 2, (byte) (plays >>> 24), (byte) (plays >>> 16), (byte) (plays >>> 8), (byte) plays});
-    }
-
-    private static void writePngChunk(ByteArrayOutputStream out, String type, byte[] data) {
-        int length = data.length;
-        out.writeBytes(new byte[] {(byte) (length >>> 24), (byte) (length >>> 16), (byte) (length >>> 8), (byte) length});
-        out.writeBytes(type.getBytes(StandardCharsets.US_ASCII));
-        out.writeBytes(data);
-        out.writeBytes(new byte[4]); // CRC
     }
 
     private static final class CountingInputStream extends InputStream {
