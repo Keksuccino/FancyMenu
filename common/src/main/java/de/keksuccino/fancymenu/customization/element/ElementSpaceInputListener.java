@@ -20,8 +20,8 @@ import java.util.Objects;
  * Hands the mouse input a screen sends to a widget of an element on to that widget in the untransformed space of the element,
  * which is the space the element renders the widget in. Rotated and tilted elements register these instead of their widgets,
  * so the widgets react to the mouse where they appear on the screen.<br>
- * Widgets of children of a container always get registered through these: they map the mouse into a scaled content,
- * and they keep input away from everything the container cuts off or does not show.<br>
+ * Widgets of children of a container always get registered through these: they keep input away from everything the container
+ * cuts off or does not show.<br>
  * The listener is what the screen knows of the widget: it is what gets the focus, and it is as focusable and navigatable as the widget is.<br>
  * Use {@link #of(AbstractElement, GuiEventListener)} or {@link #ofChildWidget(AbstractElement, GuiEventListener)}, which keep the input routing
  * of FancyMenu UI components for widgets that are one.
@@ -34,7 +34,7 @@ public class ElementSpaceInputListener implements GuiEventListener, NarratableEn
     protected final GuiEventListener widget;
     @NotNull
     protected final NarratableEntry narratable;
-    /** If the rotation and the tilt of the element get taken out of the mouse. Widgets that work them out themselves only get the scale of a container taken out. */
+    /** If the rotation and the tilt of the element get taken out of the mouse. Widgets that work them out themselves get the mouse as it is. */
     protected final boolean unrotatesMouse;
 
     /**
@@ -76,11 +76,11 @@ public class ElementSpaceInputListener implements GuiEventListener, NarratableEn
     }
 
     protected double toElementSpaceX(double mouseX, double mouseY) {
-        return this.unrotatesMouse ? this.element.untransformMouseX(mouseX, mouseY) : this.element.unscaleMouseX(mouseX, mouseY);
+        return this.unrotatesMouse ? this.element.untransformMouseX(mouseX, mouseY) : mouseX;
     }
 
     protected double toElementSpaceY(double mouseX, double mouseY) {
-        return this.unrotatesMouse ? this.element.untransformMouseY(mouseX, mouseY) : this.element.unscaleMouseY(mouseX, mouseY);
+        return this.unrotatesMouse ? this.element.untransformMouseY(mouseX, mouseY) : mouseY;
     }
 
     @NotNull

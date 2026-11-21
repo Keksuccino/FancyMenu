@@ -6,13 +6,11 @@ import de.keksuccino.fancymenu.customization.element.ElementSpaceInputListener;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoint;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.container.ElementContainer;
-import de.keksuccino.fancymenu.customization.element.container.ElementContainerDrawScale;
 import de.keksuccino.fancymenu.customization.element.container.ElementContainerHierarchy;
 import de.keksuccino.fancymenu.customization.element.container.ElementContainerLink;
 import de.keksuccino.fancymenu.customization.element.elements.scrollarea.layout.ScrollAreaAlignment;
 import de.keksuccino.fancymenu.customization.element.elements.scrollarea.layout.ScrollAreaArranger;
 import de.keksuccino.fancymenu.customization.element.elements.scrollarea.layout.ScrollAreaLayoutMode;
-import de.keksuccino.fancymenu.customization.element.elements.scrollarea.layout.ScrollAreaResizeBehavior;
 import de.keksuccino.fancymenu.customization.element.style.ElementPanelBackground;
 import de.keksuccino.fancymenu.customization.element.style.ScrollBarGrabberStyle;
 import de.keksuccino.fancymenu.customization.element.style.ScrollBarTrackBackground;
@@ -56,13 +54,11 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
     protected static final int MOUSE_OUTSIDE = -100000;
     /** The frame an area that does not show its children last showed them in: none. */
     private static final long NEVER_SHOWN = -2L;
-    /** The smallest a proportional content gets. Smaller than this, nothing in it can be told apart anymore, and a scale of zero would break all math. */
-    private static final float MIN_PROPORTIONAL_SCALE = 0.05F;
     /** Where the content of an area can come to rest. It holds elements and no text, so it has neither lines nor headlines. */
     private static final Set<ScrollSnapMode> SNAP_MODES = Collections.unmodifiableSet(EnumSet.of(ScrollSnapMode.NONE, ScrollSnapMode.ELEMENTS, ScrollSnapMode.PAGES));
 
     public final ScrollSettings scrollSettings = new ScrollSettings(this, "fancymenu.elements.scroll_area", ScrollDirection.VERTICAL, SNAP_MODES);
-    /** The size of the content in the units of the content. Only counts on axes the area scrolls on, and never makes the content smaller than the area. */
+    /** The size of the content. Only counts on axes the area scrolls on, and never makes the content smaller than the area. */
     public final Property.IntegerProperty contentWidth = putProperty(Property.integerProperty("content_width", 0, "fancymenu.elements.scroll_area.content_width", Property.NumericInputBehavior.<Integer>builder().freeInput().build()));
     public final Property.IntegerProperty contentHeight = putProperty(Property.integerProperty("content_height", 0, "fancymenu.elements.scroll_area.content_height", Property.NumericInputBehavior.<Integer>builder().freeInput().build()));
     public final Property<ScrollAreaLayoutMode> layoutMode = putProperty(ScrollAreaLayoutMode.buildProperty());
@@ -72,13 +68,6 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
     public final Property.IntegerProperty gridLines = putProperty(Property.integerProperty("grid_lines", 3, "fancymenu.elements.scroll_area.grid_lines", Property.NumericInputBehavior.<Integer>builder().rangeInput(1, 12).build()));
     public final Property.BooleanProperty gridAutoFit = putProperty(Property.booleanProperty("grid_auto_fit", false, "fancymenu.elements.scroll_area.grid_auto_fit"));
     public final Property.IntegerProperty gridMinCellSize = putProperty(Property.integerProperty("grid_min_cell_size", 60, "fancymenu.elements.scroll_area.grid_min_cell_size", Property.NumericInputBehavior.<Integer>builder().rangeInput(10, 400).step(5).build()));
-    public final Property<ScrollAreaResizeBehavior> resizeBehavior = putProperty(ScrollAreaResizeBehavior.buildProperty());
-    /**
-     * The size the area had when its proportional content got made, in the units of the content. The content is as big on the screen
-     * as the area is in relation to this, so at this size one unit of the content is one screen pixel.
-     */
-    public final Property.IntegerProperty proportionalReferenceWidth = putProperty(Property.integerProperty("proportional_reference_width", 0, "fancymenu.elements.scroll_area.proportional_reference"));
-    public final Property.IntegerProperty proportionalReferenceHeight = putProperty(Property.integerProperty("proportional_reference_height", 0, "fancymenu.elements.scroll_area.proportional_reference"));
     /** If the layer list of the layout editor shows the area without the layers of its children. */
     public final Property.BooleanProperty collapsedInLayerList = putProperty(Property.booleanProperty("collapsed_in_layer_list", false, "fancymenu.elements.scroll_area.collapsed_in_layer_list"));
     public final ScrollBarGrabberStyle grabberStyle = new ScrollBarGrabberStyle(this);
@@ -197,10 +186,10 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
             for (int i = 0; i < this.children.size(); i++) {
                 AbstractElement child = this.children.get(i);
                 if (childrenSeeMouse) {
-                    this.renderChild(child, graphics, mouseX, mouseY, partial);
+                    this.childRenderer.render(child, graphics, mouseX, mouseY, partial);
                 } else {
                     moveOutOf(child, mouseX, mouseY, this.movedMouse);
-                    this.renderChild(child, graphics, this.movedMouse[0], this.movedMouse[1], partial);
+                    this.childRenderer.render(child, graphics, this.movedMouse[0], this.movedMouse[1], partial);
                 }
             }
         } finally {
@@ -244,61 +233,6 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
     }
 
     /**
-     * Renders a child. Children that draw scaled by the area get the scale on the pose, around their top-left corner,
-     * and are in the unscaled space while they render: they report the size they have in the units of the content
-     * and get the mouse where it is in that space.
-     */
-    protected void renderChild(@NotNull AbstractElement child, @NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
-        this.renderChild(child, graphics, mouseX, mouseY, partial, this.childRenderer);
-    }
-
-    /**
-     * Renders a child with the given renderer, in the space the area gives its children. Does not cut anything of the child off.
-     */
-    public void renderChild(@NotNull AbstractElement child, @NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial, @NotNull ChildRenderer renderer) {
-        ElementContainerLink link = child.getContainerLink();
-        if ((link == null) || !ElementContainerLink.drawsScaled(child, this)) {
-            renderer.render(child, graphics, mouseX, mouseY, partial);
-            return;
-        }
-        float scale = this.geometry.getScale();
-        int x = child.getAbsoluteX();
-        int y = child.getAbsoluteY();
-        int screenWidth = child.getAbsoluteWidth();
-        int screenHeight = child.getAbsoluteHeight();
-        graphics.pose().pushMatrix();
-        ElementContainerLink.SizeSpace previousSpace = link.setSizeSpace(ElementContainerLink.SizeSpace.CONTENT);
-        try {
-            int scaledMouseX = toUnscaledSpace(mouseX, x, screenWidth, child.getAbsoluteWidth(), scale);
-            int scaledMouseY = toUnscaledSpace(mouseY, y, screenHeight, child.getAbsoluteHeight(), scale);
-            graphics.pose().translate(x, y);
-            graphics.pose().scale(scale, scale);
-            graphics.pose().translate(-x, -y);
-            // What the child cuts and what it checks the mouse against are places in its unscaled space, which have to be found on the screen
-            ElementContainerDrawScale.begin(scale, x, y);
-            renderer.render(child, graphics, scaledMouseX, scaledMouseY, partial);
-        } finally {
-            ElementContainerDrawScale.end();
-            link.setSizeSpace(previousSpace);
-            graphics.pose().popMatrix();
-        }
-    }
-
-    /**
-     * Maps the mouse into the unscaled space a child renders in, on one axis.<br>
-     * The child has a whole number of pixels in both spaces, so its last pixel on the screen can map to the place next to it, and the
-     * place next to it can map into it. A mouse that is in the child on the screen is in it there as well, and one that is not is not.
-     *
-     * @param start Where the child starts, which is the same in both spaces.
-     */
-    protected static int toUnscaledSpace(int mouse, int start, int screenSize, int unscaledSize, float scale) {
-        int mapped = (int) Math.floor(start + ((mouse - start) / scale));
-        if (mouse >= (start + screenSize)) return Math.max(mapped, start + unscaledSize);
-        if (mouse >= start) return Math.min(mapped, (start + unscaledSize) - 1);
-        return mapped;
-    }
-
-    /**
      * Works out the geometry of the area for this frame and moves the content towards where it is scrolling to.
      */
     protected void updateFrame() {
@@ -307,25 +241,18 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
         this.updatingFrame = true;
         try {
 
-            ElementContainer parent = this.getParentContainer();
-            float parentScale = (parent != null) ? parent.getContentScale() : 1.0F;
             ScrollAreaLayoutMode mode = this.getLayoutMode();
             ScrollDirection direction = this.getScrollDirection();
-            int width = this.getAbsoluteWidth();
-            int height = this.getAbsoluteHeight();
-            float scale = parentScale;
-            if (mode == ScrollAreaLayoutMode.PROPORTIONAL) scale *= this.calculateProportionalScale(width / parentScale, height / parentScale, direction);
-            this.geometry.setViewport(this.getAbsoluteX(), this.getAbsoluteY(), width, height, scale);
+            this.geometry.setViewport(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight());
 
             int wantedContentWidth = this.contentWidth.getInteger();
             int wantedContentHeight = this.contentHeight.getInteger();
             ScrollAreaArranger arranger = mode.getArranger();
             if (arranger != null) {
+                // Arranged children make the content as big as they need it
                 this.childLayout.arrange(this, arranger, this.children, this.geometry);
-                if (!mode.hasUserContentSize()) {
-                    wantedContentWidth = this.childLayout.getContentWidth();
-                    wantedContentHeight = this.childLayout.getContentHeight();
-                }
+                wantedContentWidth = this.childLayout.getContentWidth();
+                wantedContentHeight = this.childLayout.getContentHeight();
             } else {
                 this.childLayout.clear(this.children);
             }
@@ -415,30 +342,6 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
     }
 
     /**
-     * Returns how many screen pixels one unit of a proportional content is, for an area of the given size.<br>
-     * The content follows the size the area has across the direction it scrolls in, which keeps its proportions:
-     * its width for an area that scrolls up and down, its height for one that scrolls sideways, and the smaller of both for one that does both.
-     */
-    protected float calculateProportionalScale(float width, float height, @NotNull ScrollDirection direction) {
-        int referenceWidth = this.proportionalReferenceWidth.getInteger();
-        int referenceHeight = this.proportionalReferenceHeight.getInteger();
-        float scaleX = (referenceWidth > 0) ? (width / referenceWidth) : 1.0F;
-        float scaleY = (referenceHeight > 0) ? (height / referenceHeight) : 1.0F;
-        float scale = (direction == ScrollDirection.VERTICAL) ? scaleX : ((direction == ScrollDirection.HORIZONTAL) ? scaleY : Math.min(scaleX, scaleY));
-        return Math.max(MIN_PROPORTIONAL_SCALE, scale);
-    }
-
-    /**
-     * Makes the size the area has right now the size its proportional content is made for, at which the content shows unscaled.
-     */
-    public void captureProportionalReference() {
-        ElementContainer parent = this.getParentContainer();
-        float parentScale = (parent != null) ? parent.getContentScale() : 1.0F;
-        this.proportionalReferenceWidth.set(Math.max(1, Math.round(this.getAbsoluteWidth() / parentScale)));
-        this.proportionalReferenceHeight.set(Math.max(1, Math.round(this.getAbsoluteHeight() / parentScale)));
-    }
-
-    /**
      * Works out the geometry of the area again right now, for changes that have to show before the next frame.
      */
     public void refreshFrame() {
@@ -467,8 +370,8 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
         int bottom = 0;
         for (int i = 0; i < this.children.size(); i++) {
             AbstractElement child = this.children.get(i);
-            if (isPlacedFromContentStart(child, true)) right = Math.max(right, ElementContainerLink.toContentX(this, child.getAbsoluteX()) + child.getContentSpaceWidth());
-            if (isPlacedFromContentStart(child, false)) bottom = Math.max(bottom, ElementContainerLink.toContentY(this, child.getAbsoluteY()) + child.getContentSpaceHeight());
+            if (isPlacedFromContentStart(child, true)) right = Math.max(right, ElementContainerLink.toContentX(this, child.getAbsoluteX()) + child.getAbsoluteWidth());
+            if (isPlacedFromContentStart(child, false)) bottom = Math.max(bottom, ElementContainerLink.toContentY(this, child.getAbsoluteY()) + child.getAbsoluteHeight());
         }
         ScrollDirection direction = this.getScrollDirection();
         if (direction.scrollsX() && !isAdvancedSize(this.contentWidth)) {
@@ -617,7 +520,7 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
     public void addSnapPoints(@NotNull ScrollSnapPoints points, boolean horizontal) {
         ScrollGeometry geometry = this.getScrollGeometry();
         // Arranged children have a padding in front of the first one, which stays in sight in front of all of them
-        int padding = this.arrangesChildren() ? Math.round(this.contentPadding.getInteger() * geometry.getScale()) : 0;
+        int padding = this.arrangesChildren() ? this.contentPadding.getInteger() : 0;
         int contentStart = horizontal ? geometry.getContentScreenX() : geometry.getContentScreenY();
         for (int i = 0; i < this.children.size(); i++) {
             AbstractElement child = this.children.get(i);
@@ -657,12 +560,6 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
     }
 
     @Override
-    public boolean supportsPoseScaling() {
-        // The area cuts its children with a scissor and positions them on the screen, which both happen past the pose
-        return false;
-    }
-
-    @Override
     public @NotNull AbstractElement getContainerElement() {
         return this;
     }
@@ -698,31 +595,13 @@ public class ScrollAreaElement extends AbstractElement implements ElementContain
     }
 
     @Override
-    public float getContentScale() {
-        this.ensureFrame();
-        return this.geometry.getScale();
-    }
-
-    @Override
-    public boolean scalesChildVisuals() {
-        if ((this.getLayoutMode() == ScrollAreaLayoutMode.PROPORTIONAL) && (this.resizeBehavior.tryGetNonNullElse(ScrollAreaResizeBehavior.SCALE) == ScrollAreaResizeBehavior.SCALE)) return true;
-        ElementContainer parent = this.getParentContainer();
-        return (parent != null) && parent.scalesChildVisuals();
-    }
-
-    @Override
-    public boolean managesChildBoxes() {
-        return this.getLayoutMode().getArranger() != null;
+    public boolean arrangesChildren() {
+        return this.getLayoutMode().arrangesChildren();
     }
 
     @Override
     public void refreshChildBoxes() {
         this.refreshFrame();
-    }
-
-    @Override
-    public boolean arrangesChildren() {
-        return this.getLayoutMode().arrangesChildren();
     }
 
     @Override

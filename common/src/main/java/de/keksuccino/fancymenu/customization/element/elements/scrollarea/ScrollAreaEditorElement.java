@@ -139,7 +139,7 @@ public class ScrollAreaEditorElement extends AbstractEditorElement<ScrollAreaEdi
         boolean horizontal = this.element.getScrollDirection() == ScrollDirection.HORIZONTAL;
         boolean oneLine = this.element.getLayoutMode() == ScrollAreaLayoutMode.STACK;
         // Half of the room between two children, so the line sits in the middle of it
-        int gap = Math.round((this.element.childSpacing.getInteger() * geometry.getScale()) / 2.0F) + (DROP_MARKER_THICKNESS / 2);
+        int gap = Math.round(this.element.childSpacing.getInteger() / 2.0F) + (DROP_MARKER_THICKNESS / 2);
         // A stack gets a line across the whole area. Everything else gets one next to the child, where the dropped elements would go.
         boolean lineRunsAcrossX = oneLine != horizontal;
         if (lineRunsAcrossX) {
@@ -192,8 +192,6 @@ public class ScrollAreaEditorElement extends AbstractEditorElement<ScrollAreaEdi
             if (!ScrollAreaElement.isAdvancedSize(area.contentWidth)) area.contentWidth.set(oldContentWidth);
             if (!ScrollAreaElement.isAdvancedSize(area.contentHeight)) area.contentHeight.set(oldContentHeight);
         }
-        // A new proportional content starts at the size the area has, so nothing is scaled until the area changes its size
-        if (mode == ScrollAreaLayoutMode.PROPORTIONAL) area.captureProportionalReference();
 
         if (mode.arrangesChildren()) {
             if (!oldMode.arrangesChildren()) this.orderChildrenByPosition(screenBoxes);
@@ -277,11 +275,6 @@ public class ScrollAreaEditorElement extends AbstractEditorElement<ScrollAreaEdi
         if (element instanceof VanillaWidgetEditorElement) return false;
         // An area in itself, in one of its own children or in something it is anchored to could never work out where it is
         return (element != this) && !ElementContainerHierarchy.dependsOn(this.element, element.element);
-    }
-
-    @Override
-    public void extractChildRenderStateUncut(@NotNull AbstractEditorElement<?, ?> child, @NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
-        this.element.renderChild(child.element, graphics, mouseX, mouseY, partial, (element, childGraphics, childMouseX, childMouseY, childPartial) -> child.extractElementRenderState(childGraphics, childMouseX, childMouseY, childPartial));
     }
 
     @Override
@@ -446,67 +439,16 @@ public class ScrollAreaEditorElement extends AbstractEditorElement<ScrollAreaEdi
                 .addIsActiveSupplier((menu, entry) -> this.element.gridAutoFit.getBoolean())
                 .setIcon(MaterialIcons.WIDTH);
 
-        this.element.resizeBehavior.buildContextMenuEntryAndAddTo(arrangementMenu, this)
-                .setStackable(true)
-                .addIsVisibleSupplier((menu, entry) -> this.element.getLayoutMode() == ScrollAreaLayoutMode.PROPORTIONAL)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.resize_behavior.desc")))
-                .setIcon(MaterialIcons.ASPECT_RATIO);
-
-        arrangementMenu.addClickableEntry("proportional_reference", Component.translatable("fancymenu.elements.scroll_area.proportional_reference.reset"), (menu, entry) -> {
-                    if (!entry.getStackMeta().isFirstInStack()) return;
-                    this.editor.history.saveSnapshot();
-                    for (AbstractEditorElement<?, ?> e : this.editor.getSelectedElements()) {
-                        if ((e instanceof ScrollAreaEditorElement area) && (area.element.getLayoutMode() == ScrollAreaLayoutMode.PROPORTIONAL)) area.resetProportionalReference();
-                    }
-                    menu.closeMenuChain();
-                })
-                .setStackable(true)
-                .addIsVisibleSupplier((menu, entry) -> this.element.getLayoutMode() == ScrollAreaLayoutMode.PROPORTIONAL)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.scroll_area.proportional_reference.reset.desc")))
-                .setIcon(MaterialIcons.FIT_SCREEN);
-
     }
 
     @NotNull
     private static MaterialIcon getLayoutModeIcon(@NotNull ScrollAreaLayoutMode mode) {
         return switch (mode) {
             case ANCHORS -> MaterialIcons.ANCHOR;
-            case PROPORTIONAL -> MaterialIcons.ASPECT_RATIO;
             case STACK -> MaterialIcons.VIEW_AGENDA;
             case GRID -> MaterialIcons.GRID_VIEW;
             case FLOW -> MaterialIcons.WRAP_TEXT;
         };
-    }
-
-    /**
-     * Makes the size the area has right now the size its proportional content shows unscaled at.
-     * The children get the places and sizes they have on the screen right now as their own, so nothing moves.
-     */
-    public void resetProportionalReference() {
-        int count = this.orderedChildEditorElements.size();
-        int[] screenBoxes = new int[count * 4];
-        for (int i = 0; i < count; i++) {
-            AbstractEditorElement<?, ?> child = this.orderedChildEditorElements.get(i);
-            screenBoxes[i * 4] = child.getX();
-            screenBoxes[(i * 4) + 1] = child.getY();
-            screenBoxes[(i * 4) + 2] = child.getWidth();
-            screenBoxes[(i * 4) + 3] = child.getHeight();
-        }
-        ScrollGeometry geometry = this.element.getScrollGeometry();
-        float oldScale = geometry.getScale();
-        int contentScreenWidth = Math.round(geometry.getContentWidth() * oldScale);
-        int contentScreenHeight = Math.round(geometry.getContentHeight() * oldScale);
-        this.element.captureProportionalReference();
-        this.element.refreshFrame();
-        // The content is as big on the screen as before, which is another number of its units now
-        float newScale = this.element.getScrollGeometry().getScale();
-        if (!ScrollAreaElement.isAdvancedSize(this.element.contentWidth)) this.element.contentWidth.set(Math.round(contentScreenWidth / newScale));
-        if (!ScrollAreaElement.isAdvancedSize(this.element.contentHeight)) this.element.contentHeight.set(Math.round(contentScreenHeight / newScale));
-        this.element.refreshFrame();
-        for (int i = 0; i < count; i++) {
-            this.orderedChildEditorElements.get(i).placeFreelyInContainer(screenBoxes[i * 4], screenBoxes[(i * 4) + 1], screenBoxes[(i * 4) + 2], screenBoxes[(i * 4) + 3]);
-        }
-        this.element.refreshFrame();
     }
 
 }
