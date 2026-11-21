@@ -101,7 +101,6 @@ subprojects {
                         'maven.modrinth',
                         'curse.maven',
                         'com.github.WaterMediaTeam',
-                        'com.github.rtyley',
                         'net.fabricmc',
                         'net.fabricmc.fabric-api',
                         'net.minecraftforge',
