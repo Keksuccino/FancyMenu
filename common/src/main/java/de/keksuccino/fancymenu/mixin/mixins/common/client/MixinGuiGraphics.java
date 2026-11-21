@@ -10,7 +10,6 @@ import de.keksuccino.fancymenu.util.rendering.scissor.ScissorShape;
 import de.keksuccino.fancymenu.util.rendering.scissor.ScissorShapes;
 import de.keksuccino.fancymenu.util.rendering.scissor.ScreenScissorEnabler;
 import de.keksuccino.fancymenu.customization.layout.editor.widget.LayoutEditorWidgetRenderContext;
-import de.keksuccino.fancymenu.customization.element.container.ElementContainerDrawScale;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -79,7 +78,6 @@ public class MixinGuiGraphics implements ScreenScissorEnabler {
         if (this.adjustingScissor_FancyMenu) {
             return;
         }
-        boolean mappedByContainer = ElementContainerDrawScale.mapsNextScissor();
         // Under a rotated or tilted pose, the pose (which includes the scaling of PiP windows and editor widgets) decides where the scissor is
         if (ScissorShapes.isPoseRotated()) {
             Matrix4f pose = ((GuiGraphics)(Object)this).pose().last().pose();
@@ -95,18 +93,9 @@ public class MixinGuiGraphics implements ScreenScissorEnabler {
             info.cancel();
             return;
         }
-        // A container that scales what a child draws does it through the pose, and the child cuts in its own unscaled space
-        if (mappedByContainer) {
-            int right = (int) Math.ceil(ElementContainerDrawScale.toScreenX(x2));
-            int bottom = (int) Math.ceil(ElementContainerDrawScale.toScreenY(y2));
-            x1 = (int) Math.floor(ElementContainerDrawScale.toScreenX(x1));
-            y1 = (int) Math.floor(ElementContainerDrawScale.toScreenY(y1));
-            x2 = right;
-            y2 = bottom;
-        }
         boolean pipActive = PiPWindowHandler.INSTANCE.isScreenRenderActive();
         boolean widgetActive = LayoutEditorWidgetRenderContext.isBodyRenderActive();
-        if (!pipActive && !widgetActive && !mappedByContainer) {
+        if (!pipActive && !widgetActive) {
             return;
         }
         double scale = 1.0;

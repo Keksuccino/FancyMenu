@@ -22,10 +22,10 @@ public final class ElementContainerLink {
     /** If something told the link what its container is, or that there is none. Until then, the link looks for it on its own. */
     private boolean connected = false;
     private long nextLookupTime = 0L;
-    @NotNull
-    private SizeSpace sizeSpace = SizeSpace.SCREEN;
-    /** Screen offset X and Y from the content, screen width and height, content width and height. */
-    private final int[] managedBox = new int[6];
+    /** If the element reports the size it has on its own right now, instead of the one its container gave it. */
+    private boolean reportsNaturalSize = false;
+    /** Offset X and Y from the top-left corner of the content, width and height. */
+    private final int[] managedBox = new int[4];
     private boolean hasManagedBox = false;
     private int managedDragOffsetX = 0;
     private int managedDragOffsetY = 0;
@@ -78,22 +78,16 @@ public final class ElementContainerLink {
     }
 
     /**
-     * Gives the element the box its container worked out for it. Only containers that manage the boxes of their children call this.
+     * Gives the element the box its container worked out for it. Only containers that arrange their children call this.
      *
-     * @param screenOffsetX How far the left edge of the element is from the left edge of the content, in screen pixels.
-     * @param screenOffsetY How far the top edge of the element is from the top edge of the content, in screen pixels.
-     * @param screenWidth The width of the element on the screen.
-     * @param screenHeight The height of the element on the screen.
-     * @param contentWidth The width of the element in the units of the content.
-     * @param contentHeight The height of the element in the units of the content.
+     * @param offsetX How far the left edge of the element is from the left edge of the content.
+     * @param offsetY How far the top edge of the element is from the top edge of the content.
      */
-    public void setManagedBox(int screenOffsetX, int screenOffsetY, int screenWidth, int screenHeight, int contentWidth, int contentHeight) {
-        this.managedBox[0] = screenOffsetX;
-        this.managedBox[1] = screenOffsetY;
-        this.managedBox[2] = screenWidth;
-        this.managedBox[3] = screenHeight;
-        this.managedBox[4] = contentWidth;
-        this.managedBox[5] = contentHeight;
+    public void setManagedBox(int offsetX, int offsetY, int width, int height) {
+        this.managedBox[0] = offsetX;
+        this.managedBox[1] = offsetY;
+        this.managedBox[2] = width;
+        this.managedBox[3] = height;
         this.hasManagedBox = true;
     }
 
@@ -139,90 +133,45 @@ public final class ElementContainerLink {
         return this.movedByUser;
     }
 
-    /**
-     * Returns the width the container gave the element, in the space the element reports its size in right now.
-     */
     public int getManagedWidth() {
-        return (this.sizeSpace == SizeSpace.SCREEN) ? this.managedBox[2] : this.managedBox[4];
+        return this.managedBox[2];
     }
 
-    /**
-     * Returns the height the container gave the element, in the space the element reports its size in right now.
-     */
     public int getManagedHeight() {
-        return (this.sizeSpace == SizeSpace.SCREEN) ? this.managedBox[3] : this.managedBox[5];
-    }
-
-    @NotNull
-    public SizeSpace getSizeSpace() {
-        return this.sizeSpace;
+        return this.managedBox[3];
     }
 
     /**
-     * Sets the space the element reports its width and height in and returns the one it was in before, to set it back afterwards.
+     * Returns if the element reports the size it has on its own right now, before its container changes it.
+     * Containers arrange their children with that size.
      */
-    @NotNull
-    public SizeSpace setSizeSpace(@NotNull SizeSpace sizeSpace) {
-        SizeSpace previous = this.sizeSpace;
-        this.sizeSpace = sizeSpace;
+    public boolean reportsNaturalSize() {
+        return this.reportsNaturalSize;
+    }
+
+    /**
+     * Sets if the element reports the size it has on its own and returns what it did before, to set it back afterwards.
+     */
+    public boolean setReportsNaturalSize(boolean reportsNaturalSize) {
+        boolean previous = this.reportsNaturalSize;
+        this.reportsNaturalSize = reportsNaturalSize;
         return previous;
     }
 
-    /**
-     * Returns if the element draws scaled by its container: the container scales what children draw, there is a scale to apply,
-     * and the element draws in a way that follows the scale.
-     */
-    public static boolean drawsScaled(@NotNull AbstractElement element, @NotNull ElementContainer container) {
-        return container.scalesChildVisuals() && (container.getContentScale() != 1.0F) && element.supportsPoseScaling();
-    }
-
     public static int toScreenX(@NotNull ElementContainer container, int contentX) {
-        return container.getContentScreenX() + Math.round(contentX * container.getContentScale());
+        return container.getContentScreenX() + contentX;
     }
 
     public static int toScreenY(@NotNull ElementContainer container, int contentY) {
-        return container.getContentScreenY() + Math.round(contentY * container.getContentScale());
-    }
-
-    public static int toScreenSize(@NotNull ElementContainer container, int contentSize) {
-        float scale = container.getContentScale();
-        return (scale == 1.0F) ? contentSize : Math.round(contentSize * scale);
+        return container.getContentScreenY() + contentY;
     }
 
     public static int toContentX(@NotNull ElementContainer container, int screenX) {
-        return Math.round((screenX - container.getContentScreenX()) / safeScale(container));
+        return screenX - container.getContentScreenX();
     }
 
     public static int toContentY(@NotNull ElementContainer container, int screenY) {
-        return Math.round((screenY - container.getContentScreenY()) / safeScale(container));
-    }
-
-    public static int toContentSize(@NotNull ElementContainer container, int screenSize) {
-        float scale = container.getContentScale();
-        return (scale == 1.0F) ? screenSize : Math.round(screenSize / safeScale(container));
-    }
-
-    private static float safeScale(@NotNull ElementContainer container) {
-        float scale = container.getContentScale();
-        return (scale > 0.0F) ? scale : 1.0F;
-    }
-
-    /**
-     * The spaces an element in a container can report its width and height in. Its position is the same in all of them.
-     */
-    public enum SizeSpace {
-
-        /** The size the element has on the screen. This is what everything outside of the element works with. */
-        SCREEN,
-        /**
-         * The size the element has in the units of the content, with what its container made of it.
-         * Elements that draw scaled by their container are in this space while they render, so they draw
-         * the way they do without a scale, and the scale of the container makes it the size on the screen.
-         */
-        CONTENT,
-        /** The size the element has on its own, in the units of the content, before its container changes it. Containers lay out their children with it. */
-        NATURAL
-
+        return screenY - container.getContentScreenY();
     }
 
 }

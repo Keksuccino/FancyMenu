@@ -73,15 +73,6 @@ public class GlslElement extends AbstractElement implements AiExportRuntimeInfo 
         this.setSupportsTilting(false);
     }
 
-    /**
-     * The shader renders into the area it gets as numbers, past the pose of the GUI. A container that scales its content
-     * gives it the scaled box instead, which the shader fills like any other box.
-     */
-    @Override
-    public boolean supportsPoseScaling() {
-        return false;
-    }
-
     @Override
     public void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
 

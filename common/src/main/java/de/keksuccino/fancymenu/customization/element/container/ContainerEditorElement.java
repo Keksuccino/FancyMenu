@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.customization.element.container;
 
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
-import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
@@ -21,12 +20,6 @@ public interface ContainerEditorElement {
      * Returns if the element can become a child of this container.
      */
     boolean canHoldChild(@NotNull AbstractEditorElement<?, ?> element);
-
-    /**
-     * Renders a child of this container the way the container shows it, but without cutting anything of it off.
-     * The editor shows children like this while the user drags them, so they can be seen leaving the container.
-     */
-    void renderChildUncut(@NotNull AbstractEditorElement<?, ?> child, @NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial);
 
     /**
      * Returns the place elements dropped at the given position get among the children of this container: the number of children

@@ -64,35 +64,15 @@ class ElementContainerChildTest {
     }
 
     @Test
-    void positionsAndSizesFollowTheScaleOfTheContent() {
-        Container container = new Container("area");
-        container.contentScreenX = 100;
-        container.contentScreenY = 100;
-        container.contentScale = 2.0F;
-        Child child = child(container, 40, 20);
-        child.anchorPoint = ElementAnchorPoints.TOP_LEFT;
-        child.posOffsetX = 10;
-        child.posOffsetY = 5;
-
-        assertEquals(120, child.getAbsoluteX());
-        assertEquals(110, child.getAbsoluteY());
-        assertEquals(80, child.getAbsoluteWidth());
-        assertEquals(40, child.getAbsoluteHeight());
-        // The size the element has in the content does not change with the scale
-        assertEquals(40, child.getContentSpaceWidth());
-        assertEquals(20, child.getContentSpaceHeight());
-    }
-
-    @Test
-    void stickyAnchorsUseTheSizeTheElementHasInTheContent() {
+    void stickyAnchorsPutTheEdgeOfTheElementOnTheEdgeOfTheContent() {
         Container container = new Container("area");
         container.contentWidth = 300;
-        container.contentScale = 2.0F;
+        container.contentScreenX = 50;
         Child child = child(container, 40, 20);
         child.stickyAnchor = true;
         child.anchorPoint = ElementAnchorPoints.TOP_RIGHT;
-        // The right edge of the element sits on the right edge of the content: (300 - 40) units, times the scale
-        assertEquals(520, child.getAbsoluteX());
+        // The right edge of the element sits on the right edge of the content, which starts at 50 on the screen
+        assertEquals(50 + 300 - 40, child.getAbsoluteX());
     }
 
     @Test
@@ -136,25 +116,23 @@ class ElementContainerChildTest {
     }
 
     @Test
-    void containersThatManageBoxesDecideWhereChildrenAre() {
+    void containersThatArrangeChildrenDecideWhereTheyAre() {
         Container container = new Container("area");
         container.contentScreenX = 30;
         container.contentScreenY = 40;
         Child child = child(container, 40, 20);
         child.anchorPoint = ElementAnchorPoints.BOTTOM_RIGHT;
         child.posOffsetX = 123;
-        child.getContainerLink().setManagedBox(8, 16, 120, 50, 60, 25);
+        child.getContainerLink().setManagedBox(8, 16, 120, 50);
 
-        // The box only counts while the container manages boxes
+        // The box only counts while the container arranges its children
         assertEquals(40, child.getAbsoluteWidth());
 
-        container.managesChildBoxes = true;
+        container.arrangesChildren = true;
         assertEquals(38, child.getAbsoluteX());
         assertEquals(56, child.getAbsoluteY());
         assertEquals(120, child.getAbsoluteWidth());
         assertEquals(50, child.getAbsoluteHeight());
-        assertEquals(60, child.getContentSpaceWidth());
-        assertEquals(25, child.getContentSpaceHeight());
         // What the element is on its own is what the container lays it out with
         assertEquals(40, child.getNaturalWidth());
         assertEquals(20, child.getNaturalHeight());
@@ -167,28 +145,29 @@ class ElementContainerChildTest {
     }
 
     @Test
-    void askingForASizeInAnotherSpaceLeavesTheElementInItsOwn() {
+    void askingForTheNaturalSizeLeavesTheElementWithItsBox() {
         Container container = new Container("area");
-        container.contentScale = 3.0F;
+        container.arrangesChildren = true;
         Child child = child(container, 40, 20);
-        assertEquals(40, child.getContentSpaceWidth());
+        child.getContainerLink().setManagedBox(0, 0, 120, 50);
         assertEquals(40, child.getNaturalWidth());
-        assertEquals(ElementContainerLink.SizeSpace.SCREEN, child.getContainerLink().getSizeSpace());
+        assertEquals(20, child.getNaturalHeight());
+        assertFalse(child.getContainerLink().reportsNaturalSize());
         assertEquals(120, child.getAbsoluteWidth());
+        assertEquals(50, child.getAbsoluteHeight());
 
-        // An element that renders scaled is in the space of the content and stays in it
-        child.getContainerLink().setSizeSpace(ElementContainerLink.SizeSpace.CONTENT);
-        assertEquals(40, child.getAbsoluteWidth());
+        // An element that reports its natural size already keeps doing so
+        child.getContainerLink().setReportsNaturalSize(true);
         assertEquals(40, child.getNaturalWidth());
-        assertEquals(ElementContainerLink.SizeSpace.CONTENT, child.getContainerLink().getSizeSpace());
+        assertEquals(40, child.getAbsoluteWidth());
+        assertTrue(child.getContainerLink().reportsNaturalSize());
     }
 
     @Test
-    void elementAnchorsWorkBetweenChildrenOfAScaledContent() {
+    void elementAnchorsWithoutAnElementStartAtTheContent() {
         Container container = new Container("area");
         container.contentScreenX = 100;
         container.contentScreenY = 50;
-        container.contentScale = 2.0F;
         Child anchor = new Child("anchor");
         anchor.setParentContainer(container);
         anchor.anchorPoint = ElementAnchorPoints.TOP_LEFT;
@@ -201,8 +180,8 @@ class ElementContainerChildTest {
         child.posOffsetY = 6;
 
         // Without an anchor element, the element anchor is the top left of the content
-        assertEquals(110, child.getAbsoluteX());
-        assertEquals(62, child.getAbsoluteY());
+        assertEquals(105, child.getAbsoluteX());
+        assertEquals(56, child.getAbsoluteY());
     }
 
     @Test
@@ -226,31 +205,6 @@ class ElementContainerChildTest {
         assertFalse(child.containsMousePosition(70, 70));
         assertFalse(child.isShownByContainer());
         assertFalse(child.shouldRender());
-    }
-
-    @Test
-    void theMouseGetsMappedIntoAScaledChild() {
-        Container container = new Container("area");
-        container.contentScale = 2.0F;
-        container.scalesChildVisuals = true;
-        Child child = child(container, 40, 20);
-        child.anchorPoint = ElementAnchorPoints.TOP_LEFT;
-        child.posOffsetX = 50;
-        child.posOffsetY = 25;
-
-        // The element is at (100, 50) on the screen and draws twice as big around that corner
-        assertEquals(100.0, child.untransformMouseX(100, 50), 1.0E-6);
-        assertEquals(120.0, child.untransformMouseX(140, 70), 1.0E-6);
-        assertEquals(60.0, child.untransformMouseY(140, 70), 1.0E-6);
-
-        // While it renders, it is in the unscaled space already, and so is the mouse it gets
-        child.getContainerLink().setSizeSpace(ElementContainerLink.SizeSpace.CONTENT);
-        assertEquals(140.0, child.untransformMouseX(140, 70), 1.0E-6);
-        child.getContainerLink().setSizeSpace(ElementContainerLink.SizeSpace.SCREEN);
-
-        // A container that only scales boxes leaves what the element draws as it is
-        container.scalesChildVisuals = false;
-        assertEquals(140.0, child.untransformMouseX(140, 70), 1.0E-6);
     }
 
     @Test
@@ -310,29 +264,6 @@ class ElementContainerChildTest {
 
         child.getContainerLink().setMovedByUser(false);
         assertTrue(child.getAbsoluteX() < 300);
-    }
-
-    @Test
-    void theMouseCanGetMappedIntoAScaledChildWithoutItsRotation() {
-        Container container = new Container("area");
-        container.contentScale = 2.0F;
-        container.scalesChildVisuals = true;
-        Child child = child(container, 40, 20);
-        child.anchorPoint = ElementAnchorPoints.TOP_LEFT;
-        child.posOffsetX = 50;
-        child.posOffsetY = 25;
-        child.rotationDegrees.set(90.0F);
-
-        // Only the scale around the top left corner at (100, 50) comes out, which leaves the point where the rotated element has it
-        assertEquals(125.0, child.unscaleMouseX(150, 70), 1.0E-6);
-        assertEquals(60.0, child.unscaleMouseY(150, 70), 1.0E-6);
-        // With the rotation around the middle of the element at (120, 60) taken out as well, the point ends up somewhere else
-        assertEquals(120.0, child.untransformMouseX(150, 70), 1.0E-6);
-        assertEquals(55.0, child.untransformMouseY(150, 70), 1.0E-6);
-
-        container.scalesChildVisuals = false;
-        assertEquals(150.0, child.unscaleMouseX(150, 70), 1.0E-6);
-        assertEquals(70.0, child.unscaleMouseY(150, 70), 1.0E-6);
     }
 
 }
