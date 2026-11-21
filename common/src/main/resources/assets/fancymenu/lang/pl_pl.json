@@ -3896,7 +3896,6 @@
   "fancymenu.ui.filechooser.no_preview": "Brak dostępnego podglądu.",
   "fancymenu.ui.filechooser.open_in_explorer": "Otwórz w Eksploratorze",
   "fancymenu.ui.filechooser.preview": "Podgląd",
-  "fancymenu.ui.filechooser.preview.watermedia_recommended_gif": "Przy pracy z teksturami GIF zaleca się zainstalować Watermedia, dla lepszej wydajności i mniejszego zużycia RAM.",
   "fancymenu.ui.filechooser.resource_name_check.not_passed.tooltip": "Nazwa tego katalogu albo pliku zawiera\nniewspierane znaki.\nUpewnij się, że używasz tylko [a-z], [0-9] oraz [_], [-], [.].\nSpacje i wielkie litery nie są obsługiwane.",
   "fancymenu.ui.generic.continue": "Kontynuuj",
   "fancymenu.ui.generic.description": "Opis",

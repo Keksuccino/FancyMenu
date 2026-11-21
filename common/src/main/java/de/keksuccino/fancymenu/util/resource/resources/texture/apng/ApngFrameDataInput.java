@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.apng;
 
+import de.keksuccino.fancymenu.util.resource.resources.texture.animated.AnimatedImageSource;
+import de.keksuccino.fancymenu.util.resource.resources.texture.animated.AnimatedImageSourceChangedException;
 import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -13,7 +15,7 @@ import java.util.zip.Inflater;
  * Every chunk gets checked again while it gets read: its length field and type must match what got parsed, and its CRC must still match its bytes.
  * The buffer is smaller than big chunks, so the inflater gets the data of a chunk before its CRC can get checked at the end of the chunk.
  * That's why {@link #finishChunk()} must get called once decoding a frame stopped, also when its data turned out corrupted, so changed bytes never go unnoticed
- * and never get mistaken for corrupted data. A mismatch, or a source that ends too early, throws an {@link ApngSourceChangedException}.<br>
+ * and never get mistaken for corrupted data. A mismatch, or a source that ends too early, throws an {@link AnimatedImageSourceChangedException}.<br>
  * Not thread-safe, every decoder has its own instance.
  */
 final class ApngFrameDataInput {
@@ -28,7 +30,7 @@ final class ApngFrameDataInput {
     private static final ApngFrame.DataChunks NO_CHUNKS = new ApngFrame.DataChunks(ApngReader.CHUNK_IDAT, new long[0], new int[0]);
 
     @NotNull
-    private final ApngSource source;
+    private final AnimatedImageSource source;
     @NotNull
     private final byte[] buffer;
     @NotNull
@@ -107,7 +109,7 @@ final class ApngFrameDataInput {
         int length = ApngReader.readInt(this.buffer, this.bufferPosition);
         int type = ApngReader.readInt(this.buffer, this.bufferPosition + 4);
         if ((length != dataChunks.lengths()[index]) || (type != dataChunks.type())) {
-            throw new ApngSourceChangedException("A data chunk of the APNG image does not match the chunk that got parsed anymore");
+            throw new AnimatedImageSourceChangedException("A data chunk of the APNG image does not match the chunk that got parsed anymore");
         }
         // The CRC covers the type and all data, the sequence number of fdAT chunks included
         this.crc.reset();
@@ -135,7 +137,7 @@ final class ApngFrameDataInput {
         this.ensureBuffered(4);
         int storedCrc = ApngReader.readInt(this.buffer, this.bufferPosition);
         this.bufferPosition += 4;
-        if (storedCrc != (int) this.crc.getValue()) throw new ApngSourceChangedException("The CRC of a data chunk of the APNG image does not match its bytes anymore");
+        if (storedCrc != (int) this.crc.getValue()) throw new AnimatedImageSourceChangedException("The CRC of a data chunk of the APNG image does not match its bytes anymore");
         this.chunkIndex++;
         this.state = STATE_HEADER;
     }
@@ -177,9 +179,9 @@ final class ApngFrameDataInput {
             try {
                 read = this.source.read(this.bufferView, this.bufferStart + this.bufferLimit);
             } catch (IOException ex) {
-                throw new ApngSourceChangedException("Failed to read the frame data of the APNG image from its source", ex);
+                throw new AnimatedImageSourceChangedException("Failed to read the frame data of the APNG image from its source", ex);
             }
-            if (read <= 0) throw new ApngSourceChangedException("The source of the APNG image ends before the frame data, so it got shorter");
+            if (read <= 0) throw new AnimatedImageSourceChangedException("The source of the APNG image ends before the frame data, so it got shorter");
             this.bufferLimit += read;
         }
     }

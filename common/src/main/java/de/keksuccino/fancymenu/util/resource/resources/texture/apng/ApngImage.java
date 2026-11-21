@@ -1,5 +1,8 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.apng;
 
+import de.keksuccino.fancymenu.util.resource.resources.texture.animated.AnimatedFrameDecoder;
+import de.keksuccino.fancymenu.util.resource.resources.texture.animated.AnimatedImage;
+import de.keksuccino.fancymenu.util.resource.resources.texture.animated.AnimatedImageSource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
@@ -9,15 +12,15 @@ import java.util.Objects;
  * Plain PNG images, and APNG images whose animation breaks before its first intact frame, become a single non-animated frame.<br>
  * The image owns its source, so closing the image closes the source.
  */
-public final class ApngImage implements AutoCloseable {
+public final class ApngImage implements AnimatedImage {
 
+    /** Name of the format, for log messages. **/
+    public static final String FORMAT_NAME = "APNG";
     public static final int COLOR_TYPE_GRAYSCALE = 0;
     public static final int COLOR_TYPE_RGB = 2;
     public static final int COLOR_TYPE_PALETTE = 3;
     public static final int COLOR_TYPE_GRAYSCALE_ALPHA = 4;
     public static final int COLOR_TYPE_RGBA = 6;
-    /** Number of plays of animations that loop forever. **/
-    public static final int INFINITE_PLAYS = 0;
     /** Transparency sample value of images without a transparent color. **/
     public static final int NO_TRANSPARENT_SAMPLE = -1;
 
@@ -37,9 +40,9 @@ public final class ApngImage implements AutoCloseable {
     @NotNull
     private final ApngFrame[] frames;
     @NotNull
-    private final ApngSource source;
+    private final AnimatedImageSource source;
 
-    ApngImage(int width, int height, int bitDepth, int colorType, boolean interlaced, @Nullable int[] palette, int transparentGray, int transparentRed, int transparentGreen, int transparentBlue, boolean animated, int numPlays, @NotNull ApngFrame[] frames, @NotNull ApngSource source) {
+    ApngImage(int width, int height, int bitDepth, int colorType, boolean interlaced, @Nullable int[] palette, int transparentGray, int transparentRed, int transparentGreen, int transparentBlue, boolean animated, int numPlays, @NotNull ApngFrame[] frames, @NotNull AnimatedImageSource source) {
         if (frames.length == 0) throw new IllegalArgumentException("An image needs at least one frame");
         this.width = width;
         this.height = height;
@@ -57,10 +60,17 @@ public final class ApngImage implements AutoCloseable {
         this.source = Objects.requireNonNull(source);
     }
 
+    @Override
+    public @NotNull String getFormatName() {
+        return FORMAT_NAME;
+    }
+
+    @Override
     public int getWidth() {
         return this.width;
     }
 
+    @Override
     public int getHeight() {
         return this.height;
     }
@@ -110,6 +120,7 @@ public final class ApngImage implements AutoCloseable {
     /**
      * If the image is an APNG animation. Plain PNG images and animations that break before their first intact frame only have their default image as single frame.
      */
+    @Override
     public boolean isAnimated() {
         return this.animated;
     }
@@ -117,16 +128,18 @@ public final class ApngImage implements AutoCloseable {
     /**
      * How often the animation plays, or {@link #INFINITE_PLAYS} if it loops forever.
      */
+    @Override
     public int getNumPlays() {
         return this.numPlays;
     }
 
+    @Override
     public int getFrameCount() {
         return this.frames.length;
     }
 
-    @NotNull
-    public ApngFrame getFrame(int index) {
+    @Override
+    public @NotNull ApngFrame getFrame(int index) {
         return this.frames[index];
     }
 
@@ -142,11 +155,16 @@ public final class ApngImage implements AutoCloseable {
         };
     }
 
+    @Override
+    public @NotNull AnimatedFrameDecoder createFrameDecoder() {
+        return new ApngFrameDecoder(this);
+    }
+
     /**
      * Where the frames read their compressed data from.
      */
     @NotNull
-    ApngSource getSource() {
+    AnimatedImageSource getSource() {
         return this.source;
     }
 
@@ -161,9 +179,6 @@ public final class ApngImage implements AutoCloseable {
         return size;
     }
 
-    /**
-     * Closes the source. Frames can't get decoded anymore afterwards.
-     */
     @Override
     public void close() {
         this.source.close();

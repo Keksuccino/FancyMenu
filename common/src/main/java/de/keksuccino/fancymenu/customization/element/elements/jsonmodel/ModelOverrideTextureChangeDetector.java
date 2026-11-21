@@ -5,8 +5,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 
 /**
- * Separates override-texture state that affects baked UV data from its render location. GIF resources rotate their
- * location as frames advance, but that only requires rebinding the render texture, not rebuilding the model.
+ * Separates override-texture state that affects baked UV data from its render location. Texture resources can change
+ * their location while they stay the same resource, like animated textures, which have none while their image loads and
+ * get a new one when it gets loaded again, but that only requires rebinding the render texture, not rebuilding the model.
  */
 final class ModelOverrideTextureChangeDetector {
 
