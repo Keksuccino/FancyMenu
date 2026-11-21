@@ -27,9 +27,6 @@ runs {
         systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         // Rinku's release wrapper normally sets this before NeoForge creates its early window. NeoGradle 7 cannot place a consumer dependency in that early service layer, so mirror the bootstrap property for development runs.
         systemProperty 'java.awt.headless', 'true'
-        dependencies {
-            runtime "com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7"
-        }
     }
     server {
         workingDirectory project.file('../run_server')
@@ -84,10 +81,6 @@ dependencies {
     implementation "net.neoforged:neoforge:${neoforge_version}"
     implementation "maven.modrinth:konkrete:1.9.9-1.21-neoforge"
     implementation "maven.modrinth:melody:1.0.10-1.21-neoforge"
-    //Also needs to get added to the client run configuration (runs -> client -> dependencies) since it's a non-Minecraft library
-    implementation(jarJar("com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7")) {
-        jarJar.ranged(it, "[1.7,)")
-    }
     implementation "it.crystalnest:fancy-entity-renderer-neoforge:$fer_mc_version-$fer_version"
     // Rinku's NeoForge artifact is a bootstrap jar with its API nested as JarJar. NeoGradle 7 does not expose nested classes to javac, so extract that exact loader-native API for compilation.
     rinkuNeoForgeCompileApi "de.keksuccino:rinku-neoforge:3.0.4-1.21.1"

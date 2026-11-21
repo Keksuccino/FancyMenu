@@ -15,6 +15,7 @@ import de.keksuccino.fancymenu.util.resource.resources.texture.*;
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaTexture;
 import de.keksuccino.fancymenu.util.resource.resources.texture.apng.ApngTexture;
 import de.keksuccino.fancymenu.util.resource.resources.texture.fma.FmaTexture;
+import de.keksuccino.fancymenu.util.resource.resources.texture.gif.GifTexture;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
 import de.keksuccino.fancymenu.util.resource.resources.video.Mp4Video;
 import net.minecraft.network.chat.Component;

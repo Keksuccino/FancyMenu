@@ -3896,7 +3896,6 @@
   "fancymenu.ui.filechooser.no_preview": "Предпросмотр недоступен.",
   "fancymenu.ui.filechooser.open_in_explorer": "Открыть в проводнике",
   "fancymenu.ui.filechooser.preview": "Предпросмотр",
-  "fancymenu.ui.filechooser.preview.watermedia_recommended_gif": "Рекомендуется установить Watermedia при работе с текстурами GIF, для лучшей производительности и меньшего расхода RAM.",
   "fancymenu.ui.filechooser.resource_name_check.not_passed.tooltip": "Имя этой папки или файла содержит\nнеподдерживаемые символы.\nИспользуйте только [a-z], [0-9] и [_], [-], [.].\nПробелы и заглавные буквы не поддерживаются.",
   "fancymenu.ui.generic.continue": "Продолжить",
   "fancymenu.ui.generic.description": "Описание",

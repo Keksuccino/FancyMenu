@@ -1,5 +1,8 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.apng;
 
+import de.keksuccino.fancymenu.util.resource.resources.texture.animated.AnimatedFrameDecoder;
+import de.keksuccino.fancymenu.util.resource.resources.texture.animated.AnimatedImageSourceChangedException;
+import de.keksuccino.fancymenu.util.resource.resources.texture.animated.AnimatedImageTestSupport;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -20,23 +23,20 @@ class ApngFrameDataInputTest {
     @Test
     void decodingReadsTheContiguousChunksOfAFrameWithOneRead() throws IOException {
         byte[] file = animation(5);
-        int[][] expected = ApngCompositorTest.composeAll(file);
-        ApngTestFiles.MemorySource source = new ApngTestFiles.MemorySource(file);
+        AnimatedImageTestSupport.MemorySource source = new AnimatedImageTestSupport.MemorySource(file);
         ApngImage image = ApngReader.read(source, "test.png");
         ApngFrame.DataChunks chunks = image.getFrame(1).dataChunks();
         assertTrue(chunks.count() > 1);
-        ApngCompositor compositor = new ApngCompositor(image);
+        source.reads.clear();
 
-        try (ApngFrameDecoder decoder = new ApngFrameDecoder(image)) {
-            compositor.composeFrame(0, decoder, new ApngFrameUpdate(0, 0, 0L));
-            source.reads.clear();
-            compositor.composeFrame(1, decoder, new ApngFrameUpdate(1, 0, 0L));
+        try (AnimatedFrameDecoder decoder = image.createFrameDecoder()) {
+            decoder.decode(1, (y, x, step, pixels, count) -> {});
         }
 
-        assertArrayEquals(expected[1], ApngFrameDecoderTest.readCanvas(compositor, WIDTH, HEIGHT));
         // One read that covers all chunks of the frame and nothing else
         assertEquals(1, source.reads.size());
         assertArrayEquals(new long[] {chunks.positions()[0], chunks.end(chunks.count() - 1) - chunks.positions()[0]}, source.reads.get(0));
+        assertArrayEquals(ApngTestFiles.composeAll(file), AnimatedImageTestSupport.composeAll(image));
     }
 
     @Test
@@ -47,7 +47,7 @@ class ApngFrameDataInputTest {
                 .frameControl(WIDTH, HEIGHT, 0, 0, 1, 10, 0, 0).imageData(new int[WIDTH * HEIGHT * 4])
                 .frameControl(WIDTH, HEIGHT, 0, 0, 1, 10, 0, 0);
         png.fdAT(Arrays.copyOf(zlib, zlib.length / 2)).chunk("tEXt", new byte[300]).fdAT(Arrays.copyOfRange(zlib, zlib.length / 2, zlib.length));
-        ApngTestFiles.MemorySource source = new ApngTestFiles.MemorySource(png.end());
+        AnimatedImageTestSupport.MemorySource source = new AnimatedImageTestSupport.MemorySource(png.end());
         ApngImage image = ApngReader.read(source, "test.png");
         ApngFrame.DataChunks chunks = image.getFrame(1).dataChunks();
         source.reads.clear();
@@ -55,7 +55,7 @@ class ApngFrameDataInputTest {
         int[] canvas = decode(image, 1);
 
         for (int i = 0; i < canvas.length; i++) {
-            assertEquals(ApngTestFiles.abgr(samples[i * 4], samples[i * 4 + 1], samples[i * 4 + 2], samples[i * 4 + 3]), canvas[i], "pixel " + i);
+            assertEquals(AnimatedImageTestSupport.abgr(samples[i * 4], samples[i * 4 + 1], samples[i * 4 + 2], samples[i * 4 + 3]), canvas[i], "pixel " + i);
         }
         assertEquals(2, source.reads.size());
         assertArrayEquals(new long[] {chunks.positions()[0], chunks.end(0) - chunks.positions()[0]}, source.reads.get(0));
@@ -67,14 +67,14 @@ class ApngFrameDataInputTest {
         // Random pixels barely compress, so the single IDAT chunk is much bigger than the read buffer
         int[] samples = ApngTestFiles.randomSamples(160, 160, 8, ApngImage.COLOR_TYPE_RGBA, new Random(3));
         byte[] file = ApngTestFiles.png(160, 160, 8, ApngImage.COLOR_TYPE_RGBA).header().imageData(samples).end();
-        ApngTestFiles.MemorySource source = new ApngTestFiles.MemorySource(file);
+        AnimatedImageTestSupport.MemorySource source = new AnimatedImageTestSupport.MemorySource(file);
         ApngImage image = ApngReader.read(source, "test.png");
         source.reads.clear();
 
         int[] canvas = decode(image, 0);
 
         for (int i = 0; i < canvas.length; i++) {
-            assertEquals(ApngTestFiles.abgr(samples[i * 4], samples[i * 4 + 1], samples[i * 4 + 2], samples[i * 4 + 3]), canvas[i], "pixel " + i);
+            assertEquals(AnimatedImageTestSupport.abgr(samples[i * 4], samples[i * 4 + 1], samples[i * 4 + 2], samples[i * 4 + 3]), canvas[i], "pixel " + i);
         }
         assertTrue(source.reads.size() > 1);
         for (long[] read : source.reads) assertTrue(read[1] <= 64 * 1024, "read of " + read[1] + " bytes");
@@ -84,27 +84,27 @@ class ApngFrameDataInputTest {
     void changedByteAtTheEndOfABigChunkGetsNoticed() throws IOException {
         int[] samples = ApngTestFiles.randomSamples(160, 160, 8, ApngImage.COLOR_TYPE_RGBA, new Random(4));
         byte[] file = ApngTestFiles.png(160, 160, 8, ApngImage.COLOR_TYPE_RGBA).header().imageData(samples).end();
-        ApngTestFiles.MemorySource source = new ApngTestFiles.MemorySource(file);
+        AnimatedImageTestSupport.MemorySource source = new AnimatedImageTestSupport.MemorySource(file);
         ApngImage image = ApngReader.read(source, "test.png");
         ApngFrame.DataChunks chunks = image.getFrame(0).dataChunks();
         // The last byte of the zlib checksum, which the inflater never needs for the pixels
         source.data = file.clone();
         source.data[(int) chunks.end(0) - 5] ^= 0x01;
 
-        assertThrows(ApngSourceChangedException.class, () -> decode(image, 0));
+        assertThrows(AnimatedImageSourceChangedException.class, () -> decode(image, 0));
     }
 
     @ParameterizedTest
     @EnumSource(Change.class)
     void changedSourceThrowsTheSourceChangedException(Change change) throws IOException {
         byte[] file = animation(4);
-        ApngTestFiles.MemorySource source = new ApngTestFiles.MemorySource(file);
+        AnimatedImageTestSupport.MemorySource source = new AnimatedImageTestSupport.MemorySource(file);
         ApngImage image = ApngReader.read(source, "test.png");
         ApngFrame.DataChunks chunks = image.getFrame(1).dataChunks();
 
         source.data = change.apply(file.clone(), chunks);
 
-        assertThrows(ApngSourceChangedException.class, () -> decode(image, 1));
+        assertThrows(AnimatedImageSourceChangedException.class, () -> decode(image, 1));
     }
 
     @Test
@@ -113,21 +113,21 @@ class ApngFrameDataInputTest {
                 .frameControl(WIDTH, HEIGHT, 0, 0, 1, 10, 0, 0).imageData(randomPixels(5));
         int textStart = 8 + 25;
         byte[] file = png.frame(4, 4, 2, 2, 1, 10, 0, 0, ApngTestFiles.randomSamples(4, 4, 8, ApngImage.COLOR_TYPE_RGBA, new Random(6))).end();
-        int[][] expected = ApngCompositorTest.composeAll(file);
-        ApngTestFiles.MemorySource source = new ApngTestFiles.MemorySource(file);
+        int[][] expected = ApngTestFiles.composeAll(file);
+        AnimatedImageTestSupport.MemorySource source = new AnimatedImageTestSupport.MemorySource(file);
         ApngImage image = ApngReader.read(source, "test.png");
 
         source.data = file.clone();
         source.data[textStart + 8 + 20] ^= 0x01;
         source.data[source.data.length - 1] ^= 0x01;
 
-        assertArrayEquals(expected, ApngCompositorTest.composeAll(image));
+        assertArrayEquals(expected, AnimatedImageTestSupport.composeAll(image));
     }
 
     @Test
     void decodingAFrameAgainReadsItAgain() throws IOException {
         byte[] file = animation(3);
-        ApngTestFiles.MemorySource source = new ApngTestFiles.MemorySource(file);
+        AnimatedImageTestSupport.MemorySource source = new AnimatedImageTestSupport.MemorySource(file);
         ApngImage image = ApngReader.read(source, "test.png");
         source.reads.clear();
 
@@ -140,11 +140,7 @@ class ApngFrameDataInputTest {
     }
 
     private static int[] decode(ApngImage image, int frameIndex) throws IOException {
-        ApngCompositor compositor = new ApngCompositor(image);
-        try (ApngFrameDecoder decoder = new ApngFrameDecoder(image)) {
-            compositor.composeFrame(frameIndex, decoder, new ApngFrameUpdate(frameIndex, 0, 0L));
-        }
-        return ApngFrameDecoderTest.readCanvas(compositor, image.getWidth(), image.getHeight());
+        return AnimatedImageTestSupport.composeSingleFrame(image, frameIndex);
     }
 
     /**

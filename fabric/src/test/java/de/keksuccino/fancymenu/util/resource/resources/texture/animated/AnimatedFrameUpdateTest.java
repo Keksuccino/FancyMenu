@@ -1,14 +1,14 @@
-package de.keksuccino.fancymenu.util.resource.resources.texture.apng;
+package de.keksuccino.fancymenu.util.resource.resources.texture.animated;
 
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class ApngFrameUpdateTest {
+class AnimatedFrameUpdateTest {
 
     @Test
     void containedRectangleChangesNothing() {
-        ApngFrameUpdate update = new ApngFrameUpdate(1, 0, 0L);
+        AnimatedFrameUpdate update = new AnimatedFrameUpdate(1, 0, 0L);
         update.addRectangle(10, 10, 300, 200);
         update.addRectangle(50, 60, 20, 20);
 
@@ -18,7 +18,7 @@ class ApngFrameUpdateTest {
 
     @Test
     void bigRectanglesFarApartStaySeparate() {
-        ApngFrameUpdate update = new ApngFrameUpdate(1, 0, 0L);
+        AnimatedFrameUpdate update = new AnimatedFrameUpdate(1, 0, 0L);
         update.addRectangle(0, 0, 100, 100);
         update.addRectangle(900, 900, 100, 100);
 
@@ -30,7 +30,7 @@ class ApngFrameUpdateTest {
 
     @Test
     void bigRectanglesCloseTogetherGetMerged() {
-        ApngFrameUpdate update = new ApngFrameUpdate(1, 0, 0L);
+        AnimatedFrameUpdate update = new AnimatedFrameUpdate(1, 0, 0L);
         update.addRectangle(0, 0, 100, 100);
         update.addRectangle(10, 0, 100, 100);
 
@@ -41,7 +41,7 @@ class ApngFrameUpdateTest {
 
     @Test
     void smallRectanglesGetMergedEvenWhenFarApart() {
-        ApngFrameUpdate update = new ApngFrameUpdate(1, 0, 0L);
+        AnimatedFrameUpdate update = new AnimatedFrameUpdate(1, 0, 0L);
         update.addRectangle(0, 0, 2, 2);
         update.addRectangle(40, 40, 2, 2);
 
@@ -51,7 +51,7 @@ class ApngFrameUpdateTest {
 
     @Test
     void thirdRectangleMergesEverything() {
-        ApngFrameUpdate update = new ApngFrameUpdate(1, 0, 0L);
+        AnimatedFrameUpdate update = new AnimatedFrameUpdate(1, 0, 0L);
         update.addRectangle(0, 0, 100, 100);
         update.addRectangle(900, 900, 100, 100);
         update.addRectangle(500, 0, 10, 10);
@@ -63,7 +63,7 @@ class ApngFrameUpdateTest {
 
     @Test
     void emptyRectanglesGetIgnored() {
-        ApngFrameUpdate update = new ApngFrameUpdate(1, 0, 0L);
+        AnimatedFrameUpdate update = new AnimatedFrameUpdate(1, 0, 0L);
         update.addRectangle(5, 5, 0, 10);
         update.addRectangle(5, 5, 10, -1);
 

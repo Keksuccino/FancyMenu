@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.watermedia;
 
 /**
  * Counts loop restarts of a repeating media player by noticing its play time jumping back to the start.<br>
+ * Jumps back only count as restart after the current pass got played through, which ignores jumps caused by seeking, or by play times that are still stale right after seeking.
  * The play time needs to get sampled at least once per loop, otherwise restarts can get missed.
  */
 public final class PlaybackLoopTracker {
@@ -11,17 +12,9 @@ public final class PlaybackLoopTracker {
     /** How much of the duration a pass can miss and still count as played through, which covers the time between two samples. **/
     static final long MAX_UNPLAYED_MS = 1000L;
 
-    private final boolean requirePlayedThrough;
     private volatile long lastTimeMs = -1L;
     private volatile long playedMs = 0L;
     private volatile int completedLoops = 0;
-
-    /**
-     * @param requirePlayedThrough if jumps back only count as restart after the current pass got played through, which ignores jumps caused by seeking, or by play times that are still stale right after seeking
-     */
-    public PlaybackLoopTracker(boolean requirePlayedThrough) {
-        this.requirePlayedThrough = requirePlayedThrough;
-    }
 
     /**
      * Samples the current play time and returns if the player restarted its loop since the last sample.<br>
@@ -40,7 +33,7 @@ public final class PlaybackLoopTracker {
             this.playedMs += Math.max(0L, currentTimeMs - previousTimeMs);
             return false;
         }
-        boolean restarted = !this.requirePlayedThrough || this.isPlayedThrough(durationMs);
+        boolean restarted = this.isPlayedThrough(durationMs);
         this.playedMs = 0L;
         if (restarted) this.completedLoops++;
         return restarted;

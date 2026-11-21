@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.util.resource.resources.texture.apng;
+package de.keksuccino.fancymenu.util.resource.resources.texture.animated;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -9,24 +9,24 @@ import java.nio.IntBuffer;
 import java.util.Arrays;
 
 /**
- * Composes APNG frames onto the animation canvas as the APNG specification describes: every play starts on a fully transparent canvas,
+ * Composes the frames of an animated image onto its canvas, the way the APNG specification and browsers (for APNG and GIF images) do it: every play starts on a fully transparent canvas,
  * a frame disposes its region (keep, clear or revert) before the next frame gets composed, and frames either replace their region or get alpha-composited over it.<br>
  * The canvas holds 8-bit ABGR pixels with straight alpha, which is what textures use, so the composed pixels can get uploaded without converting them.<br>
  * Not thread-safe, a compositor belongs to one decoding thread at a time.
  */
-final class ApngCompositor implements ApngFrameDecoder.RowConsumer {
+final class AnimatedFrameCompositor implements AnimatedFrameDecoder.RowConsumer {
 
     @NotNull
-    private final ApngImage image;
+    private final AnimatedImage image;
     private final int canvasWidth;
     private final int canvasHeight;
     @Nullable
     private int[] canvas;
-    /** What the region of a frame with {@link ApngFrame#DISPOSE_OP_PREVIOUS} showed before that frame got composed. **/
+    /** What the region of a frame with {@link AnimatedImageFrame#DISPOSE_OP_PREVIOUS} showed before that frame got composed. **/
     @Nullable
     private int[] savedRegion;
     private boolean canvasCleared = true;
-    private int pendingDisposeOp = ApngFrame.DISPOSE_OP_NONE;
+    private int pendingDisposeOp = AnimatedImageFrame.DISPOSE_OP_NONE;
     private int pendingX;
     private int pendingY;
     private int pendingWidth;
@@ -35,7 +35,7 @@ final class ApngCompositor implements ApngFrameDecoder.RowConsumer {
     private int frameY;
     private int frameBlendOp;
 
-    ApngCompositor(@NotNull ApngImage image) {
+    AnimatedFrameCompositor(@NotNull AnimatedImage image) {
         this.image = image;
         this.canvasWidth = image.getWidth();
         this.canvasHeight = image.getHeight();
@@ -47,33 +47,31 @@ final class ApngCompositor implements ApngFrameDecoder.RowConsumer {
      *
      * @throws IOException If the frame data is corrupted. The canvas then shows a partially composed frame, so the next composed frame has to be the first one.
      */
-    void composeFrame(int frameIndex, @NotNull ApngFrameDecoder decoder, @NotNull ApngFrameUpdate update) throws IOException {
-        ApngFrame frame = this.image.getFrame(frameIndex);
+    void composeFrame(int frameIndex, @NotNull AnimatedFrameDecoder decoder, @NotNull AnimatedFrameUpdate update) throws IOException {
+        AnimatedImageFrame frame = this.image.getFrame(frameIndex);
         int[] pixels = this.ensureCanvas();
         if (frameIndex == 0) {
-            // Frames that replace every pixel need no cleared canvas
-            boolean replacesCanvas = frame.coversCanvas(this.canvasWidth, this.canvasHeight) && (frame.blendOp() == ApngFrame.BLEND_OP_SOURCE);
-            if (!this.canvasCleared && !replacesCanvas) Arrays.fill(pixels, 0);
+            // Even frames that cover the canvas need a cleared one, because decoders leave the pixels that broken frame data doesn't reach untouched
+            if (!this.canvasCleared) Arrays.fill(pixels, 0);
             update.setFullCanvas(this.canvasWidth, this.canvasHeight);
         } else {
-            if (this.pendingDisposeOp == ApngFrame.DISPOSE_OP_BACKGROUND) {
+            if (this.pendingDisposeOp == AnimatedImageFrame.DISPOSE_OP_BACKGROUND) {
                 this.fillPendingRegion(pixels);
                 update.addRectangle(this.pendingX, this.pendingY, this.pendingWidth, this.pendingHeight);
-            } else if (this.pendingDisposeOp == ApngFrame.DISPOSE_OP_PREVIOUS) {
+            } else if (this.pendingDisposeOp == AnimatedImageFrame.DISPOSE_OP_PREVIOUS) {
                 this.restorePendingRegion(pixels);
                 update.addRectangle(this.pendingX, this.pendingY, this.pendingWidth, this.pendingHeight);
             }
             update.addRectangle(frame.x(), frame.y(), frame.width(), frame.height());
         }
-        // The APNG specification says that reverting the first frame means clearing it
-        int disposeOp = ((frameIndex == 0) && (frame.disposeOp() == ApngFrame.DISPOSE_OP_PREVIOUS)) ? ApngFrame.DISPOSE_OP_BACKGROUND : frame.disposeOp();
-        if (disposeOp == ApngFrame.DISPOSE_OP_PREVIOUS) this.saveRegion(pixels, frame);
-        this.pendingDisposeOp = ApngFrame.DISPOSE_OP_NONE;
+        int disposeOp = resolveDisposeOp(frameIndex, frame);
+        if (disposeOp == AnimatedImageFrame.DISPOSE_OP_PREVIOUS) this.saveRegion(pixels, frame);
+        this.pendingDisposeOp = AnimatedImageFrame.DISPOSE_OP_NONE;
         this.canvasCleared = false;
         this.frameX = frame.x();
         this.frameY = frame.y();
         this.frameBlendOp = frame.blendOp();
-        decoder.decode(frame, this);
+        decoder.decode(frameIndex, this);
         this.setPendingDispose(disposeOp, frame);
     }
 
@@ -83,15 +81,15 @@ final class ApngCompositor implements ApngFrameDecoder.RowConsumer {
     void restoreFirstFrame(@NotNull ByteBuffer snapshot) {
         int[] pixels = this.ensureCanvas();
         snapshot.duplicate().order(ByteOrder.LITTLE_ENDIAN).asIntBuffer().get(pixels, 0, pixels.length);
-        ApngFrame first = this.image.getFrame(0);
+        AnimatedImageFrame first = this.image.getFrame(0);
         this.canvasCleared = false;
-        this.setPendingDispose((first.disposeOp() == ApngFrame.DISPOSE_OP_PREVIOUS) ? ApngFrame.DISPOSE_OP_BACKGROUND : first.disposeOp(), first);
+        this.setPendingDispose(resolveDisposeOp(0, first), first);
     }
 
     /**
      * Copies the canvas pixels of all rectangles of the update into the buffer, starting at its position 0.
      */
-    void writePixels(@NotNull ApngFrameUpdate update, @NotNull ByteBuffer target) {
+    void writePixels(@NotNull AnimatedFrameUpdate update, @NotNull ByteBuffer target) {
         int[] pixels = this.ensureCanvas();
         IntBuffer out = target.duplicate().order(ByteOrder.LITTLE_ENDIAN).clear().asIntBuffer();
         for (int i = 0; i < update.getRectangleCount(); i++) {
@@ -116,14 +114,14 @@ final class ApngCompositor implements ApngFrameDecoder.RowConsumer {
         this.canvas = null;
         this.savedRegion = null;
         this.canvasCleared = true;
-        this.pendingDisposeOp = ApngFrame.DISPOSE_OP_NONE;
+        this.pendingDisposeOp = AnimatedImageFrame.DISPOSE_OP_NONE;
     }
 
     @Override
     public void acceptRow(int y, int x, int step, @NotNull int[] rowPixels, int count) {
         int[] pixels = this.canvas;
         int index = (this.frameY + y) * this.canvasWidth + this.frameX + x;
-        if (this.frameBlendOp == ApngFrame.BLEND_OP_SOURCE) {
+        if (this.frameBlendOp == AnimatedImageFrame.BLEND_OP_SOURCE) {
             if (step == 1) {
                 System.arraycopy(rowPixels, 0, pixels, index, count);
                 return;
@@ -140,6 +138,7 @@ final class ApngCompositor implements ApngFrameDecoder.RowConsumer {
 
     /**
      * Composites a straight-alpha ABGR source pixel over a straight-alpha ABGR destination pixel, with the formulas of the APNG specification, rounded to the nearest value.
+     * Fully transparent source pixels keep the destination, like transparent GIF pixels do.
      */
     static int blendOver(int source, int destination) {
         int sourceAlpha = source >>> 24;
@@ -159,6 +158,14 @@ final class ApngCompositor implements ApngFrameDecoder.RowConsumer {
         return (alpha << 24) | (blue << 16) | (green << 8) | red;
     }
 
+    /**
+     * Reverting the first frame means clearing it, because the canvas was fully transparent before it. The APNG specification says so, and browsers do the same for GIF images.
+     */
+    private static int resolveDisposeOp(int frameIndex, @NotNull AnimatedImageFrame frame) {
+        int disposeOp = frame.disposeOp();
+        return ((frameIndex == 0) && (disposeOp == AnimatedImageFrame.DISPOSE_OP_PREVIOUS)) ? AnimatedImageFrame.DISPOSE_OP_BACKGROUND : disposeOp;
+    }
+
     @NotNull
     private int[] ensureCanvas() {
         int[] pixels = this.canvas;
@@ -170,7 +177,7 @@ final class ApngCompositor implements ApngFrameDecoder.RowConsumer {
         return pixels;
     }
 
-    private void setPendingDispose(int disposeOp, @NotNull ApngFrame frame) {
+    private void setPendingDispose(int disposeOp, @NotNull AnimatedImageFrame frame) {
         this.pendingDisposeOp = disposeOp;
         this.pendingX = frame.x();
         this.pendingY = frame.y();
@@ -185,7 +192,7 @@ final class ApngCompositor implements ApngFrameDecoder.RowConsumer {
         }
     }
 
-    private void saveRegion(@NotNull int[] pixels, @NotNull ApngFrame frame) {
+    private void saveRegion(@NotNull int[] pixels, @NotNull AnimatedImageFrame frame) {
         int size = frame.width() * frame.height();
         int[] saved = this.savedRegion;
         if ((saved == null) || (saved.length < size)) {

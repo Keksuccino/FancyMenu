@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.apng;
 
+import de.keksuccino.fancymenu.util.resource.resources.texture.animated.AnimatedImage;
+import de.keksuccino.fancymenu.util.resource.resources.texture.animated.AnimatedImageSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -26,11 +28,6 @@ public final class ApngReader {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    /** Largest supported canvas width and height. Most GPUs can't use bigger textures. **/
-    public static final int MAX_DIMENSION = 16384;
-    /** Largest supported canvas pixel count, which keeps the 32-bit canvas of an image at 256 MB or less. **/
-    public static final long MAX_PIXEL_COUNT = 1L << 26;
-
     private static final byte[] PNG_SIGNATURE = {(byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1A, '\n'};
     private static final int CHUNK_IHDR = 0x49484452;
     private static final int CHUNK_PLTE = 0x504C5445;
@@ -44,7 +41,7 @@ public final class ApngReader {
     private static final int READ_BUFFER_SIZE = 64 * 1024;
 
     @NotNull
-    private final ApngSource source;
+    private final AnimatedImageSource source;
     @NotNull
     private final String sourceName;
     private final CRC32 crc = new CRC32();
@@ -90,7 +87,7 @@ public final class ApngReader {
     private ApngFrame.DataChunks defaultImageChunks;
     private int previousChunkType;
 
-    private ApngReader(@NotNull ApngSource source, @NotNull String sourceName) {
+    private ApngReader(@NotNull AnimatedImageSource source, @NotNull String sourceName) {
         this.source = source;
         this.sourceName = sourceName;
     }
@@ -103,7 +100,7 @@ public final class ApngReader {
      * @throws IOException If the source is no valid PNG image or reading it failed.
      */
     @NotNull
-    public static ApngImage read(@NotNull ApngSource source, @NotNull String sourceName) throws IOException {
+    public static ApngImage read(@NotNull AnimatedImageSource source, @NotNull String sourceName) throws IOException {
         try {
             return new ApngReader(source, sourceName).readImage();
         } catch (Throwable throwable) {
@@ -180,7 +177,7 @@ public final class ApngReader {
         int filterMethod = data[11] & 0xFF;
         int interlaceMethod = data[12] & 0xFF;
         if ((this.width <= 0) || (this.height <= 0)) throw new IOException("Invalid PNG image size: " + Integer.toUnsignedString(this.width) + "x" + Integer.toUnsignedString(this.height));
-        if ((this.width > MAX_DIMENSION) || (this.height > MAX_DIMENSION) || (((long) this.width * this.height) > MAX_PIXEL_COUNT)) {
+        if ((this.width > AnimatedImage.MAX_DIMENSION) || (this.height > AnimatedImage.MAX_DIMENSION) || (((long) this.width * this.height) > AnimatedImage.MAX_PIXEL_COUNT)) {
             throw new IOException("PNG image is too big to get used as texture: " + this.width + "x" + this.height);
         }
         if (!isValidBitDepth(this.colorType, this.bitDepth)) throw new IOException("Invalid PNG color type and bit depth combination: " + this.colorType + "/" + this.bitDepth);
@@ -358,7 +355,7 @@ public final class ApngReader {
             transparentGreen = readShort(transparency, 2) & sampleMask;
             transparentBlue = readShort(transparency, 4) & sampleMask;
         }
-        return new ApngImage(this.width, this.height, this.bitDepth, this.colorType, this.interlaced, this.buildPalette(), transparentGray, transparentRed, transparentGreen, transparentBlue, animated, animated ? this.numPlays : ApngImage.INFINITE_PLAYS, resultFrames, this.source);
+        return new ApngImage(this.width, this.height, this.bitDepth, this.colorType, this.interlaced, this.buildPalette(), transparentGray, transparentRed, transparentGreen, transparentBlue, animated, animated ? this.numPlays : AnimatedImage.INFINITE_PLAYS, resultFrames, this.source);
     }
 
     /**
