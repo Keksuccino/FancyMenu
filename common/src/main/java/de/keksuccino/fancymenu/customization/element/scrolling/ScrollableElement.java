@@ -18,7 +18,7 @@ import org.jetbrains.annotations.Nullable;
  * The element owns everything that scrolls its content ({@link ElementScrolling}, {@link ElementScrollBars}, {@link ElementScrollInput})
  * and tells them here what they can't know: what the content is, where it shows and what is in it.<br><br>
  *
- * The content scrolls in the space the element renders it in. For an element that can be rotated, tilted or scaled by a container,
+ * The content scrolls in the space the element renders it in. For an element that can be rotated or tilted,
  * that is not the screen, so everything that comes from the screen goes through {@link #toScrollSpaceX(double, double)} first.
  */
 public interface ScrollableElement {
