@@ -10,6 +10,7 @@ import net.minecraft.server.packs.resources.ResourceProvider;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.util.shaderc.ShadercIncludeResult;
 
 import java.io.ByteArrayInputStream;
@@ -92,8 +93,9 @@ class EarlyShaderSourceTest {
         assertSame(include, source.getInclude(FANCYMENU_INCLUDE));
         assertEquals(1, reads[0]);
         ShadercIncludeResult result = ShadercIncludeResult.create(include.includeResultPtr());
-        assertEquals(FANCYMENU_INCLUDE.toString(), result.source_nameString());
-        assertEquals("float roundedBox();", result.contentString());
+        // Both strings have no NUL terminator, only their lengths, so the NUL-terminated string getters of the struct would read past them
+        assertEquals(FANCYMENU_INCLUDE.toString(), MemoryUtil.memUTF8(MemoryUtil.memGetAddress(result.address() + ShadercIncludeResult.SOURCE_NAME), (int) result.source_name_length()));
+        assertEquals("float roundedBox();", MemoryUtil.memUTF8(MemoryUtil.memGetAddress(result.address() + ShadercIncludeResult.CONTENT), (int) result.content_length()));
 
         source.close();
         assertTrue(vanilla.closed);
