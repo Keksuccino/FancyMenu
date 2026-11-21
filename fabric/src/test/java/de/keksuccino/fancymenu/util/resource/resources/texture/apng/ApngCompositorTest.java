@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.apng;
 
 import org.junit.jupiter.api.Test;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Random;
@@ -236,7 +235,13 @@ class ApngCompositorTest {
     }
 
     static int[][] composeAll(byte[] file) throws IOException {
-        ApngImage image = read(file);
+        return composeAll(read(file));
+    }
+
+    /**
+     * Composes every frame of the first play and returns the canvas after each frame.
+     */
+    static int[][] composeAll(ApngImage image) throws IOException {
         ApngCompositor compositor = new ApngCompositor(image);
         int[][] canvases = new int[image.getFrameCount()][];
         try (ApngFrameDecoder decoder = new ApngFrameDecoder(image)) {
@@ -255,7 +260,7 @@ class ApngCompositorTest {
     }
 
     private static ApngImage read(byte[] file) throws IOException {
-        return ApngReader.read(new ByteArrayInputStream(file), "test.png");
+        return ApngTestFiles.read(file);
     }
 
 }

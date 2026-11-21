@@ -1,6 +1,8 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.apng;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,7 +11,7 @@ import java.util.zip.CRC32;
 import java.util.zip.Deflater;
 
 /**
- * Writes PNG and APNG files for tests, with full control over chunks, scanline filters, interlacing and chunk splitting.
+ * Writes PNG and APNG files for tests, with full control over chunks, scanline filters, interlacing and chunk splitting, and reads them from memory.
  */
 final class ApngTestFiles {
 
@@ -21,6 +23,13 @@ final class ApngTestFiles {
     static final int RANDOM_FILTERS = -1;
 
     private ApngTestFiles() {
+    }
+
+    /**
+     * Parses a file from memory.
+     */
+    static ApngImage read(byte[] file) throws IOException {
+        return ApngReader.read(new MemorySource(file), "test.png");
     }
 
     static int channels(int colorType) {
@@ -259,13 +268,18 @@ final class ApngTestFiles {
          */
         Png frameData(int width, int height, int[] samples) {
             byte[] zlib = encodeImageData(width, height, this.bitDepth, this.colorType, samples, this.interlaced, this.filterType, this.random);
-            for (byte[] part : this.split(zlib)) {
-                byte[] data = new byte[part.length + 4];
-                putInt(data, 0, this.sequenceNumber++);
-                System.arraycopy(part, 0, data, 4, part.length);
-                this.chunk("fdAT", data);
-            }
+            for (byte[] part : this.split(zlib)) this.fdAT(part);
             return this;
+        }
+
+        /**
+         * Writes one fdAT chunk with the next sequence number, for frames whose data chunks get written by hand.
+         */
+        Png fdAT(byte[] zlibPart) {
+            byte[] data = new byte[zlibPart.length + 4];
+            putInt(data, 0, this.sequenceNumber++);
+            System.arraycopy(zlibPart, 0, data, 4, zlibPart.length);
+            return this.chunk("fdAT", data);
         }
 
         /**
@@ -321,6 +335,46 @@ final class ApngTestFiles {
         data[offset + 1] = (byte) (value >>> 16);
         data[offset + 2] = (byte) (value >>> 8);
         data[offset + 3] = (byte) value;
+    }
+
+    /**
+     * A source in memory that remembers its reads. Its bytes can get changed or cut after parsing, like a file that gets edited while it plays.
+     */
+    static final class MemorySource implements ApngSource {
+
+        byte[] data;
+        /** Position and length of every read that returned bytes. **/
+        final List<long[]> reads = new ArrayList<>();
+        int closeCount;
+
+        MemorySource(byte[] data) {
+            this.data = data;
+        }
+
+        @Override
+        public int read(ByteBuffer target, long position) throws IOException {
+            if (this.closeCount > 0) throw new IOException("The source is closed");
+            if (position >= this.data.length) return -1;
+            int count = (int) Math.min(target.remaining(), this.data.length - position);
+            target.put(this.data, (int) position, count);
+            this.reads.add(new long[] {position, count});
+            return count;
+        }
+
+        @Override
+        public long size() {
+            return this.data.length;
+        }
+
+        @Override
+        public void close() {
+            this.closeCount++;
+        }
+
+        boolean isClosed() {
+            return this.closeCount > 0;
+        }
+
     }
 
 }

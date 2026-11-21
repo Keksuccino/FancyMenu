@@ -19,6 +19,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ApngFrameDecoderTest {
@@ -144,18 +145,21 @@ class ApngFrameDecoderTest {
         byte[] zlib = ApngTestFiles.encodeImageData(16, 16, 8, ApngImage.COLOR_TYPE_RGBA, samples, false, ApngTestFiles.RANDOM_FILTERS, new Random(5));
         byte[] file = ApngTestFiles.png(16, 16, 8, ApngImage.COLOR_TYPE_RGBA).header().chunk("IDAT", Arrays.copyOf(zlib, zlib.length / 2)).end();
 
-        assertThrows(IOException.class, () -> decodeFirstFrame(file));
+        IOException ex = assertThrows(IOException.class, () -> decodeFirstFrame(file));
+        // The chunks are intact, so the data itself is broken and the source did not change
+        assertFalse(ex instanceof ApngSourceChangedException);
     }
 
     @Test
     void invalidFilterTypeFails() throws IOException {
         byte[] file = ApngTestFiles.png(2, 1, 8, ApngImage.COLOR_TYPE_GRAYSCALE).header().chunk("IDAT", ApngTestFiles.deflate(new byte[] {5, 1, 2})).end();
 
-        assertThrows(IOException.class, () -> decodeFirstFrame(file));
+        IOException ex = assertThrows(IOException.class, () -> decodeFirstFrame(file));
+        assertFalse(ex instanceof ApngSourceChangedException);
     }
 
     static int[] decodeFirstFrame(byte[] file) throws IOException {
-        ApngImage image = ApngReader.read(new ByteArrayInputStream(file), "test.png");
+        ApngImage image = ApngTestFiles.read(file);
         ApngCompositor compositor = new ApngCompositor(image);
         try (ApngFrameDecoder decoder = new ApngFrameDecoder(image)) {
             ApngFrameUpdate update = new ApngFrameUpdate(0, 0, 0L);
