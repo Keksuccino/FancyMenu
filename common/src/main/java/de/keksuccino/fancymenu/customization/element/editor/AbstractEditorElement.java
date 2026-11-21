@@ -133,6 +133,11 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
     public boolean recentlyLeftClickSelected = false;
     public boolean recentlyResized = false;
     public boolean movingCrumpleZonePassed = false;
+    /** If {@link #movedContentScreenX} and {@link #movedContentScreenY} are known for the move the user makes right now. */
+    protected boolean movedContentKnown = false;
+    /** Where the content of the container of this element was on the screen in the frame before, while the user moves the element. */
+    protected int movedContentScreenX = 0;
+    protected int movedContentScreenY = 0;
     /** What of this element the current call of {@link #render(GuiGraphics, int, int, float)} renders. */
     @NotNull
     protected RenderPass renderPass = RenderPass.EVERYTHING;
@@ -806,6 +811,8 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
 
         this.tick();
 
+        this.stayUnderMouseWhileContentScrolls();
+
         this.hovered = this.isMouseOver(mouseX, mouseY);
         this.updateResizeHoverState(mouseX, mouseY);
 
@@ -1359,6 +1366,42 @@ public abstract class AbstractEditorElement<E extends AbstractEditorElement<?, ?
             link.setManagedDragOffset(mouseX - this.movingStartPosX, mouseY - this.movingStartPosY);
         }
         return true;
+    }
+
+    /**
+     * Keeps a child the user moves under the mouse while its container scrolls its content, with the mouse wheel or because the mouse
+     * is close to an edge of the container. The child has its place in that content, so it would scroll away with it otherwise.<br>
+     * Has to run in every frame after the container worked out where its content is, which it does when it renders.
+     */
+    protected void stayUnderMouseWhileContentScrolls() {
+        ElementContainer container = this.element.getParentContainer();
+        // An element that follows its anchor element or its container moves along with them, and a move that is not allowed moves nothing
+        boolean movesOnItsOwn = this.isGettingMovedFreely() && this.editor.allSelectedElementsMovable() && (!this.isMultiSelected() || !this.isElementAnchorAndParentIsSelected());
+        if ((container == null) || !movesOnItsOwn) {
+            this.movedContentKnown = false;
+            return;
+        }
+        int contentX = container.getContentScreenX();
+        int contentY = container.getContentScreenY();
+        if (this.movedContentKnown) {
+            int scrolledX = contentX - this.movedContentScreenX;
+            int scrolledY = contentY - this.movedContentScreenY;
+            if ((scrolledX != 0) || (scrolledY != 0)) {
+                // The mouse moves the element by how far it got from where it started the move, which is a place in the content as well
+                this.movingStartPosX += scrolledX;
+                this.movingStartPosY += scrolledY;
+                ElementContainerLink link = this.element.getContainerLink();
+                if (this.element.isArrangedByContainer()) {
+                    if (link != null) link.setManagedDragOffset(link.getManagedDragOffsetX() - scrolledX, link.getManagedDragOffsetY() - scrolledY);
+                } else {
+                    this.element.posOffsetX -= scrolledX;
+                    this.element.posOffsetY -= scrolledY;
+                }
+            }
+        }
+        this.movedContentScreenX = contentX;
+        this.movedContentScreenY = contentY;
+        this.movedContentKnown = true;
     }
 
     /**
