@@ -1,5 +1,8 @@
 package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
+import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.platform.Window;
 import de.keksuccino.fancymenu.customization.global.SeamlessWorldLoadingHandler;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.customization.listener.listeners.OnStartLookingAtBlockListener;
@@ -25,6 +28,7 @@ import java.net.SocketAddress;
 import java.nio.file.Path;
 import java.util.Optional;
 import net.minecraft.core.BlockPos;
+import net.minecraft.client.gui.screens.LoadingOverlay;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ClientPacketListener;
@@ -55,6 +59,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import de.keksuccino.fancymenu.util.window.LoadingOverlayResizeTaskGate;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import net.minecraft.client.Minecraft;
 
@@ -301,6 +306,24 @@ public class MixinMinecraft {
 	@Inject(method = "clearClientLevel", at = @At("RETURN"))
 	private void afterClearClientLevelFancyMenu(Screen nextScreen, CallbackInfo info) {
 		SeamlessWorldLoadingHandler.clearCapture();
+	}
+
+	/** @reason Holds back the queued main thread tasks after a fullscreen switch or resize during the loading overlay, until a frame with the new window size is on screen (see LoadingOverlayResizeTaskGate). */
+	@WrapWithCondition(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;runAllTasks()V"))
+	private boolean wrap_runAllTasks_in_runTick_FancyMenu(Minecraft instance) {
+		return LoadingOverlayResizeTaskGate.INSTANCE.shouldRunTasks(((Minecraft)(Object)this).gui.overlay() instanceof LoadingOverlay);
+	}
+
+	@Inject(method = "renderFrame", at = @At(value = "INVOKE", target = "Lcom/mojang/renderpearl/api/device/GpuSurface;present()V"))
+	private void before_present_in_renderFrame_FancyMenu(boolean advanceGameTime, CallbackInfo info) {
+		RenderTarget frame = ((Minecraft)(Object)this).gameRenderer.mainRenderTarget();
+		LoadingOverlayResizeTaskGate.INSTANCE.onFramePresenting(frame.width, frame.height);
+	}
+
+	@Inject(method = "framebufferSizeChanged", at = @At("HEAD"))
+	private void before_framebufferSizeChanged_FancyMenu(CallbackInfo info) {
+		Window window = ((Minecraft)(Object)this).getWindow();
+		LoadingOverlayResizeTaskGate.INSTANCE.onDisplayResized(((Minecraft)(Object)this).gui.overlay() instanceof LoadingOverlay, window.getWidth(), window.getHeight());
 	}
 
 	@Inject(method = "resizeGui", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Window;setGuiScale(I)V", shift = At.Shift.AFTER))
