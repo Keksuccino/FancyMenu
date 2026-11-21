@@ -5,10 +5,11 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 
 /**
- * A parsed APNG or PNG image: its canvas size, pixel format, transparency info, loop count and frames.<br>
- * Plain PNG images, and APNG images whose animation breaks before its first intact frame, become a single non-animated frame.
+ * A parsed APNG or PNG image: its canvas size, pixel format, transparency info, loop count and frames, and the source its frames read their data from.<br>
+ * Plain PNG images, and APNG images whose animation breaks before its first intact frame, become a single non-animated frame.<br>
+ * The image owns its source, so closing the image closes the source.
  */
-public final class ApngImage {
+public final class ApngImage implements AutoCloseable {
 
     public static final int COLOR_TYPE_GRAYSCALE = 0;
     public static final int COLOR_TYPE_RGB = 2;
@@ -35,8 +36,10 @@ public final class ApngImage {
     private final int numPlays;
     @NotNull
     private final ApngFrame[] frames;
+    @NotNull
+    private final ApngSource source;
 
-    ApngImage(int width, int height, int bitDepth, int colorType, boolean interlaced, @Nullable int[] palette, int transparentGray, int transparentRed, int transparentGreen, int transparentBlue, boolean animated, int numPlays, @NotNull ApngFrame[] frames) {
+    ApngImage(int width, int height, int bitDepth, int colorType, boolean interlaced, @Nullable int[] palette, int transparentGray, int transparentRed, int transparentGreen, int transparentBlue, boolean animated, int numPlays, @NotNull ApngFrame[] frames, @NotNull ApngSource source) {
         if (frames.length == 0) throw new IllegalArgumentException("An image needs at least one frame");
         this.width = width;
         this.height = height;
@@ -51,6 +54,7 @@ public final class ApngImage {
         this.animated = animated;
         this.numPlays = numPlays;
         this.frames = Objects.requireNonNull(frames);
+        this.source = Objects.requireNonNull(source);
     }
 
     public int getWidth() {
@@ -139,14 +143,30 @@ public final class ApngImage {
     }
 
     /**
-     * How many bytes of compressed frame data the image keeps in memory.
+     * Where the frames read their compressed data from.
+     */
+    @NotNull
+    ApngSource getSource() {
+        return this.source;
+    }
+
+    /**
+     * How many bytes of compressed frame data the frames read from the source together.
      */
     public long getCompressedDataSize() {
         long size = 0L;
         for (ApngFrame frame : this.frames) {
-            size += frame.data().length;
+            size += frame.dataChunks().dataSize();
         }
         return size;
+    }
+
+    /**
+     * Closes the source. Frames can't get decoded anymore afterwards.
+     */
+    @Override
+    public void close() {
+        this.source.close();
     }
 
 }

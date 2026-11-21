@@ -18,8 +18,9 @@ import java.util.function.LongSupplier;
 /**
  * Decodes and composes the frames of one APNG image in the background, a few frames ahead of playback, and hands them out as {@link ApngFrameUpdate}s
  * that only hold the pixels that changed since the frame before.<br>
- * Frames get decoded again for every play instead of being cached, so an animation only needs its compressed data, one canvas and a few small updates in memory,
- * no matter how many frames it has. Only the first frame gets stored, so restarting the animation can show it instantly and every later play starts without decoding it.<br><br>
+ * Frames get decoded again for every play instead of being cached, reading their compressed data from the source of the image, so an animation only needs one canvas
+ * and a few small updates in memory, no matter how many frames it has. Only the first frame gets stored, so restarting the animation can show it instantly and every later play starts without decoding it.<br>
+ * The stream owns the image and with it its source, which gets closed when the stream gets closed or fails.<br><br>
  *
  * <b>Threading:</b> {@link #poll()}, {@link #recycle(ApngFrameUpdate)}, {@link #restart()} and {@link #close()} belong to one consumer thread (the render thread),
  * because the consumer reads the pixel buffers of the updates it got without holding the lock. Decoding runs on a shared executor, with at most one task per stream
@@ -92,6 +93,9 @@ final class ApngFrameStream implements AutoCloseable {
     private int nextPlay;
     private int playableFrameCount;
 
+    /**
+     * Takes ownership of the image.
+     */
     ApngFrameStream(@NotNull ApngImage image, @NotNull String sourceName) {
         this(image, sourceName, SharedExecutor.INSTANCE, System::nanoTime);
     }
@@ -205,7 +209,8 @@ final class ApngFrameStream implements AutoCloseable {
     }
 
     /**
-     * If the first frame could not get decoded, so the stream has nothing to show.
+     * If the stream can't decode any more frames, because its first frame could not get decoded or its source changed after it got parsed.
+     * Frames the consumer polled before stay valid.
      */
     boolean hasFailed() {
         synchronized (this.lock) {
@@ -241,6 +246,7 @@ final class ApngFrameStream implements AutoCloseable {
         }
         if (first != null) MemoryUtil.memFree(first);
         this.releaseDecodingState();
+        this.image.close();
     }
 
     private void runTask() {
@@ -271,6 +277,9 @@ final class ApngFrameStream implements AutoCloseable {
         try {
             if (restart) this.applyRestart(restartAfterFirst ? first : null);
             if (!this.isProductionFinished()) update = this.produceNextUpdate(fullCanvas, first);
+        } catch (ApngSourceChangedException ex) {
+            fatal = true;
+            LOGGER.warn("[FANCYMENU] Stopped playing an APNG image, because its file changed after it got loaded or can't get read anymore ({}): {}", ex.getMessage(), this.sourceName);
         } catch (IOException ex) {
             fatal = true;
             LOGGER.error("[FANCYMENU] Failed to decode the first frame of an APNG image: {}", this.sourceName, ex);
@@ -297,7 +306,11 @@ final class ApngFrameStream implements AutoCloseable {
                 this.stopTaskLocked();
             }
         }
-        if (fatal) this.releaseDecodingState();
+        if (fatal) {
+            // A failed stream never decodes again, so its source gets closed right away, which also releases its file
+            this.releaseDecodingState();
+            this.image.close();
+        }
     }
 
     /**
@@ -321,6 +334,9 @@ final class ApngFrameStream implements AutoCloseable {
         ApngCompositor activeCompositor = this.ensureCompositor();
         try {
             activeCompositor.composeFrame(index, this.ensureDecoder(), update);
+        } catch (ApngSourceChangedException ex) {
+            // No problem of this frame, so cutting the animation before it would not help
+            throw ex;
         } catch (IOException ex) {
             if (index == 0) throw ex;
             // Like browsers, keep playing all frames before the broken one
@@ -526,8 +542,9 @@ final class ApngFrameStream implements AutoCloseable {
         ByteBuffer first = this.firstFrame;
         this.firstFrame = null;
         if (first != null) MemoryUtil.memFree(first);
-        // The decoding state is only used by tasks, and no other task can run anymore
+        // The decoding state and the source are only used by tasks, and no other task can run anymore
         this.releaseDecodingState();
+        this.image.close();
     }
 
     private void dropReadyUpdatesLocked() {

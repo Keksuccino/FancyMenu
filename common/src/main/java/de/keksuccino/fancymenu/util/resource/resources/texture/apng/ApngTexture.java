@@ -1,8 +1,10 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.apng;
 
+import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.util.WebUtils;
+import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
@@ -20,6 +22,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.file.Path;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -29,7 +32,11 @@ import java.util.concurrent.atomic.AtomicReference;
  * An APNG (or plain PNG) image that plays its animation on a single texture.<br>
  * The image gets parsed once, then {@link ApngFrameStream} decodes and composes its frames in the background, a few frames ahead of playback.
  * The render thread shows frames on time while the texture gets rendered and only uploads the pixels that changed since the frame before.<br>
- * Playback only advances while the texture gets rendered, like with AFMA textures. A texture that wasn't rendered for a while continues with the frame it showed.
+ * Playback only advances while the texture gets rendered, like with AFMA textures. A texture that wasn't rendered for a while continues with the frame it showed.<br><br>
+ *
+ * Frames read their compressed data from a file whenever they get decoded: local images read their own file, images that only come as stream
+ * (resources, web images and other streams) get copied to a temporary file first, which gets deleted once the image is not needed anymore.
+ * If the file changes while the animation plays, the animation stops at the frame it shows.
  */
 public class ApngTexture implements ITexture, PlayableResource {
 
@@ -116,14 +123,7 @@ public class ApngTexture implements ITexture, PlayableResource {
             LOGGER.error("[FANCYMENU] Failed to read APNG image from file! File not found: " + apngFile.getPath());
             return texture;
         }
-        FancyMenuThreads.startDaemonThread(() -> {
-            try {
-                populateTexture(texture, new FileInputStream(apngFile), apngFile.getPath());
-            } catch (Exception ex) {
-                texture.publishFailure();
-                LOGGER.error("[FANCYMENU] Failed to read APNG image from file: " + apngFile.getPath(), ex);
-            }
-        }, "ApngTexture-LocalLoader");
+        FancyMenuThreads.startDaemonThread(() -> populateTexture(texture, () -> ApngFileSource.open(apngFile.toPath()), apngFile.getPath()), "ApngTexture-LocalLoader");
         return texture;
     }
 
@@ -175,13 +175,32 @@ public class ApngTexture implements ITexture, PlayableResource {
     }
 
     /**
-     * Parses the image and starts decoding its frames. Closes the stream.
+     * Copies the stream to a temporary file, parses the image from there and starts decoding its frames. Closes the stream.
      */
     protected static void populateTexture(@NotNull ApngTexture texture, @NotNull InputStream in, @NotNull String apngTextureName) {
-        texture.sourceName = apngTextureName;
         try (InputStream input = in) {
+            populateTexture(texture, () -> ApngFileSource.copyToTempFile(input, resolveTempDirectory()), apngTextureName);
+        } catch (IOException ex) {
+            LOGGER.warn("[FANCYMENU] Failed to close the stream of APNG image: " + apngTextureName, ex);
+        }
+    }
+
+    /**
+     * Where streams get copied to. Resolved for every copy instead of once, so the directory comes back if it got deleted, and loading this class doesn't initialize FancyMenu.
+     */
+    @NotNull
+    private static Path resolveTempDirectory() {
+        return FileUtils.createDirectory(new File(FancyMenu.TEMP_DATA_DIR, "/apng_textures")).toPath();
+    }
+
+    /**
+     * Opens the source, parses the image from it and starts decoding its frames. Closed textures don't open the source.
+     */
+    protected static void populateTexture(@NotNull ApngTexture texture, @NotNull SourceOpener sourceOpener, @NotNull String apngTextureName) {
+        texture.sourceName = apngTextureName;
+        try {
             if (texture.closed.get()) return;
-            texture.applyImage(ApngReader.read(input, apngTextureName), apngTextureName);
+            texture.applyImage(ApngReader.read(sourceOpener.open(), apngTextureName), apngTextureName);
         } catch (Exception ex) {
             texture.publishFailure();
             LOGGER.error("[FANCYMENU] Failed to read APNG image: " + apngTextureName, ex);
@@ -191,8 +210,17 @@ public class ApngTexture implements ITexture, PlayableResource {
     protected ApngTexture() {
     }
 
+    /**
+     * Starts playing the image. The texture takes ownership of the image.
+     */
     protected void applyImage(@NotNull ApngImage image, @NotNull String apngTextureName) {
-        ApngFrameStream newStream = new ApngFrameStream(image, apngTextureName);
+        this.applyStream(image, new ApngFrameStream(image, apngTextureName));
+    }
+
+    /**
+     * Starts playing the stream of a newly parsed image. The texture takes ownership of the stream.
+     */
+    protected void applyStream(@NotNull ApngImage image, @NotNull ApngFrameStream newStream) {
         this.width = image.getWidth();
         this.height = image.getHeight();
         this.aspectRatio = new AspectRatio(image.getWidth(), image.getHeight());
@@ -217,8 +245,8 @@ public class ApngTexture implements ITexture, PlayableResource {
     public Identifier getResourceLocation() {
         if (this.closed.get()) return FULLY_TRANSPARENT_TEXTURE;
         ApngFrameStream activeStream = this.stream.get();
-        // Static images need nothing but their texture once it shows them
-        if ((activeStream == null) && this.frameShown && !this.animated) return this.textureLocation;
+        // Static images once their texture shows them, and animations that can't play any further, need nothing but their texture
+        if ((activeStream == null) && this.frameShown) return this.textureLocation;
         // Returning NULL while loading or after failing lets callers show their fallback, like they do for other images
         if ((activeStream == null) || this.loadingFailed.get()) return null;
         if (activeStream != this.playingStream) this.switchStream(activeStream);
@@ -231,6 +259,11 @@ public class ApngTexture implements ITexture, PlayableResource {
             return null;
         }
         if (activeStream.hasFailed()) {
+            if (this.frameShown) {
+                // The stream can fail after it showed frames when the file of the image changes, then the frame the texture shows stays
+                this.releaseStream(activeStream);
+                return this.textureLocation;
+            }
             this.publishFailure();
             return null;
         }
@@ -267,12 +300,8 @@ public class ApngTexture implements ITexture, PlayableResource {
             if (first == null) return;
             this.ensureGpuTexture(activeStream.getWidth(), activeStream.getHeight());
             this.showFrame(activeStream, first, now);
-            if (!this.animated) {
-                // The texture keeps the image, so the image data and the stream are not needed anymore
-                activeStream.close();
-                this.stream.compareAndSet(activeStream, null);
-                this.playingStream = null;
-            }
+            // The texture keeps the image, so the stream and the file are not needed anymore
+            if (!this.animated) this.releaseStream(activeStream);
             return;
         }
         if (this.maxLoopsReached || this.paused) return;
@@ -301,6 +330,15 @@ public class ApngTexture implements ITexture, PlayableResource {
             this.nextFrameNanos += update.getDelayNanos();
             this.uploadAndRecycle(activeStream, update);
         }
+    }
+
+    /**
+     * Closes the stream while the texture keeps showing the frame it shows, which also closes the file of the image.
+     */
+    protected void releaseStream(@NotNull ApngFrameStream activeStream) {
+        activeStream.close();
+        this.stream.compareAndSet(activeStream, null);
+        this.playingStream = null;
     }
 
     protected void showFrame(@NotNull ApngFrameStream activeStream, @NotNull ApngFrameUpdate update, long now) {
@@ -521,6 +559,17 @@ public class ApngTexture implements ITexture, PlayableResource {
         this.sourceLocation = null;
         // Streams and the texture belong to the render thread
         TextureManagerReleaseDispatcher.dispatch(this::releaseRenderResources);
+    }
+
+    /**
+     * Opens the source an image gets parsed from.
+     */
+    @FunctionalInterface
+    protected interface SourceOpener {
+
+        @NotNull
+        ApngSource open() throws IOException;
+
     }
 
 }

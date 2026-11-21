@@ -11,9 +11,9 @@ import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
 /**
- * Decodes the compressed data of APNG frames row by row: inflates it, reverses the scanline filters, walks the seven Adam7 passes of interlaced images
- * and converts the pixels of all PNG color types and bit depths to 8-bit ABGR (the pixel layout of RGBA textures in memory).<br>
- * Every decoded row goes straight to a {@link RowConsumer}, so decoding a frame only needs two rows of memory, no matter how big the frame is.<br><br>
+ * Decodes the compressed data of APNG frames row by row: reads it from the source of the image, inflates it, reverses the scanline filters, walks the seven Adam7 passes
+ * of interlaced images and converts the pixels of all PNG color types and bit depths to 8-bit ABGR (the pixel layout of RGBA textures in memory).<br>
+ * Every decoded row goes straight to a {@link RowConsumer}, so decoding a frame only needs two rows and a small read buffer of memory, no matter how big the frame is.<br><br>
  *
  * 16-bit samples get rounded to the nearest 8-bit value. tRNS colors of 16-bit images get compared with the full 16-bit samples, as the PNG specification says.
  * Not thread-safe, every decoding thread needs its own instance.
@@ -39,6 +39,8 @@ final class ApngFrameDecoder implements AutoCloseable {
 
     @NotNull
     private final Inflater inflater = new Inflater();
+    @NotNull
+    private final ApngFrameDataInput input;
     private final int format;
     private final int bitDepth;
     private final int bitsPerPixel;
@@ -61,6 +63,7 @@ final class ApngFrameDecoder implements AutoCloseable {
     private final int[] rowPixels;
 
     ApngFrameDecoder(@NotNull ApngImage image) {
+        this.input = new ApngFrameDataInput(image);
         this.bitDepth = image.getBitDepth();
         this.bitsPerPixel = image.getBitsPerPixel();
         this.filterDistance = Math.max(1, this.bitsPerPixel >>> 3);
@@ -80,27 +83,33 @@ final class ApngFrameDecoder implements AutoCloseable {
     /**
      * Decodes all pixels of the frame and hands them row by row to the consumer.
      *
+     * @throws ApngSourceChangedException If the source does not hold the data anymore that got parsed from it.
      * @throws IOException If the frame data is corrupted or ends too early.
      */
     void decode(@NotNull ApngFrame frame, @NotNull RowConsumer consumer) throws IOException {
         this.inflater.reset();
-        this.inflater.setInput(frame.data());
+        this.input.start(frame.dataChunks());
         try {
             if (!this.interlaced) {
                 this.decodePass(frame.width(), frame.height(), 0, 0, 1, 1, consumer);
-                return;
-            }
-            for (int pass = 0; pass < 7; pass++) {
-                int passWidth = passSize(frame.width(), ADAM7_X_START[pass], ADAM7_X_STEP[pass]);
-                int passHeight = passSize(frame.height(), ADAM7_Y_START[pass], ADAM7_Y_STEP[pass]);
-                // Passes without pixels have no rows at all in the data, not even filter type bytes
-                if ((passWidth > 0) && (passHeight > 0)) {
-                    this.decodePass(passWidth, passHeight, ADAM7_X_START[pass], ADAM7_Y_START[pass], ADAM7_X_STEP[pass], ADAM7_Y_STEP[pass], consumer);
+            } else {
+                for (int pass = 0; pass < 7; pass++) {
+                    int passWidth = passSize(frame.width(), ADAM7_X_START[pass], ADAM7_X_STEP[pass]);
+                    int passHeight = passSize(frame.height(), ADAM7_Y_START[pass], ADAM7_Y_STEP[pass]);
+                    // Passes without pixels have no rows at all in the data, not even filter type bytes
+                    if ((passWidth > 0) && (passHeight > 0)) {
+                        this.decodePass(passWidth, passHeight, ADAM7_X_START[pass], ADAM7_Y_START[pass], ADAM7_X_STEP[pass], ADAM7_Y_STEP[pass], consumer);
+                    }
                 }
             }
-        } catch (DataFormatException ex) {
-            throw new IOException("Corrupted APNG frame data", ex);
+        } catch (ApngSourceChangedException ex) {
+            throw ex;
+        } catch (IOException | DataFormatException ex) {
+            // Changed bytes in the chunk that got read last look like corrupted data, because its CRC only gets checked at its end, so the chunk gets checked first
+            this.input.finishChunk();
+            throw (ex instanceof IOException) ? (IOException) ex : new IOException("Corrupted APNG frame data", ex);
         }
+        this.input.finishChunk();
     }
 
     private void decodePass(int passWidth, int passHeight, int xStart, int yStart, int xStep, int yStep, @NotNull RowConsumer consumer) throws IOException, DataFormatException {
@@ -131,7 +140,8 @@ final class ApngFrameDecoder implements AutoCloseable {
             int read = this.inflater.inflate(target, offset, length - offset);
             if (read == 0) {
                 if (this.inflater.needsDictionary()) throw new IOException("APNG frame data needs a preset dictionary, which PNG does not allow");
-                if (this.inflater.finished() || this.inflater.needsInput()) throw new IOException("APNG frame data ends before all rows of the frame");
+                if (this.inflater.finished()) throw new IOException("APNG frame data ends before all rows of the frame");
+                if (this.inflater.needsInput() && !this.input.feed(this.inflater)) throw new IOException("APNG frame data ends before all rows of the frame");
             }
             offset += read;
         }
