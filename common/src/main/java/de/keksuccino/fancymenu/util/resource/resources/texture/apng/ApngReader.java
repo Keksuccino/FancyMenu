@@ -4,10 +4,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import java.io.BufferedInputStream;
 import java.io.EOFException;
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -15,10 +14,11 @@ import java.util.Objects;
 import java.util.zip.CRC32;
 
 /**
- * Reads APNG and plain PNG images chunk by chunk from a stream, as specified by the PNG and APNG specifications.<br>
- * Only the compressed image data of the frames gets kept, so reading never needs much more memory than the file itself, and the stream gets read only once.<br><br>
+ * Reads APNG and plain PNG images chunk by chunk from a source, as specified by the PNG and APNG specifications. The source gets read once, from start to end.<br>
+ * Frames only remember which chunks of the source hold their compressed image data, so parsing keeps no image data in memory, no matter how big the file is.
+ * Frames read their data from the source again whenever they get decoded.<br><br>
  *
- * Chunk CRCs of all chunks that get interpreted are verified. Problems in the animation chunks don't fail the whole image: the animation ends with the last
+ * Chunk CRCs of all chunks that get interpreted are verified, image data chunks included. Problems in the animation chunks don't fail the whole image: the animation ends with the last
  * intact frame before the problem, or the image shows its default image if there is no intact frame. Truncated files keep all complete frames.
  * Ancillary chunks that don't affect the pixels (text, color profiles, etc.) get skipped.
  */
@@ -34,30 +34,36 @@ public final class ApngReader {
     private static final byte[] PNG_SIGNATURE = {(byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1A, '\n'};
     private static final int CHUNK_IHDR = 0x49484452;
     private static final int CHUNK_PLTE = 0x504C5445;
-    private static final int CHUNK_IDAT = 0x49444154;
+    static final int CHUNK_IDAT = 0x49444154;
     private static final int CHUNK_IEND = 0x49454E44;
     private static final int CHUNK_TRNS = 0x74524E53;
     private static final int CHUNK_ACTL = 0x6163544C;
     private static final int CHUNK_FCTL = 0x6663544C;
-    private static final int CHUNK_FDAT = 0x66644154;
+    static final int CHUNK_FDAT = 0x66644154;
     private static final int FCTL_LENGTH = 26;
     private static final int READ_BUFFER_SIZE = 64 * 1024;
-    /** Image data gets read in steps of this size, so a corrupted chunk length can't make the reader allocate more than the stream really holds. **/
-    private static final int DATA_READ_STEP = 1024 * 1024;
 
     @NotNull
-    private final InputStream in;
+    private final ApngSource source;
     @NotNull
     private final String sourceName;
     private final CRC32 crc = new CRC32();
     /** Holds the length and type of the current chunk, the type gets read from here to compute the CRC. **/
     private final byte[] scratch = new byte[8];
     private final byte[] crcBytes = new byte[4];
+    /** Holds the next bytes of the source. **/
+    private final byte[] buffer = new byte[READ_BUFFER_SIZE];
     @NotNull
-    private final GrowableByteArray frameData = new GrowableByteArray();
+    private final ByteBuffer bufferView = ByteBuffer.wrap(this.buffer);
+    @NotNull
+    private final ChunkIndex frameChunks = new ChunkIndex();
     @NotNull
     private final List<ApngFrame> frames = new ArrayList<>();
 
+    /** The source position of the first byte in the buffer. **/
+    private long bufferStart;
+    private int bufferPosition;
+    private int bufferLimit;
     private boolean headerRead;
     private int width;
     private int height;
@@ -81,23 +87,29 @@ public final class ApngReader {
     private boolean defaultImageStarted;
     private boolean defaultImageFinished;
     @Nullable
-    private byte[] defaultImageData;
+    private ApngFrame.DataChunks defaultImageChunks;
     private int previousChunkType;
 
-    private ApngReader(@NotNull InputStream in, @NotNull String sourceName) {
-        this.in = (in instanceof BufferedInputStream) ? in : new BufferedInputStream(in, READ_BUFFER_SIZE);
+    private ApngReader(@NotNull ApngSource source, @NotNull String sourceName) {
+        this.source = source;
         this.sourceName = sourceName;
     }
 
     /**
-     * Reads a complete APNG or PNG image. Does not close the stream.
+     * Reads a complete APNG or PNG image, starting at position 0 of the source.<br>
+     * Takes ownership of the source: the returned image closes it when it gets closed, and if reading fails, the source gets closed right away.
      *
      * @param sourceName Name of the image source, only used for log messages.
-     * @throws IOException If the stream is no valid PNG image or reading it failed.
+     * @throws IOException If the source is no valid PNG image or reading it failed.
      */
     @NotNull
-    public static ApngImage read(@NotNull InputStream in, @NotNull String sourceName) throws IOException {
-        return new ApngReader(in, sourceName).readImage();
+    public static ApngImage read(@NotNull ApngSource source, @NotNull String sourceName) throws IOException {
+        try {
+            return new ApngReader(source, sourceName).readImage();
+        } catch (Throwable throwable) {
+            source.close();
+            throw throwable;
+        }
     }
 
     @NotNull
@@ -117,13 +129,14 @@ public final class ApngReader {
     }
 
     /**
-     * Reads all chunks until the IEND chunk or until the stream ends between two chunks, so all data that got read is complete.
+     * Reads all chunks until the IEND chunk or until the source ends between two chunks, so all data that got read is complete.
      *
-     * @throws EOFException If the stream ends in the middle of a chunk.
+     * @throws EOFException If the source ends in the middle of a chunk.
      */
     private boolean readChunks() throws IOException {
         while (true) {
-            int headerBytes = this.in.readNBytes(this.scratch, 0, 8);
+            long chunkPosition = this.position();
+            int headerBytes = this.readNBytes(this.scratch, 0, 8);
             if ((headerBytes == 0) && this.defaultImageStarted) {
                 LOGGER.warn("[FANCYMENU] APNG image has no IEND chunk: {}", this.sourceName);
                 return true;
@@ -140,8 +153,8 @@ public final class ApngReader {
                 case CHUNK_TRNS -> this.readTransparency(length);
                 case CHUNK_ACTL -> this.readAnimationControl(length);
                 case CHUNK_FCTL -> this.readFrameControl(length);
-                case CHUNK_IDAT -> this.readDefaultImageData(length);
-                case CHUNK_FDAT -> this.readFrameData(length);
+                case CHUNK_IDAT -> this.readDefaultImageData(chunkPosition, length);
+                case CHUNK_FDAT -> this.readFrameData(chunkPosition, length);
                 case CHUNK_IEND -> {
                     return true;
                 }
@@ -257,25 +270,26 @@ public final class ApngReader {
         this.finishPendingFrame();
         this.pendingFrame = control;
         this.pendingFrameUsesDefaultImage = false;
-        this.frameData.clear();
+        this.frameChunks.clear();
     }
 
-    private void readDefaultImageData(int length) throws IOException {
+    private void readDefaultImageData(long chunkPosition, int length) throws IOException {
         if (this.defaultImageFinished || (this.defaultImageStarted && (this.previousChunkType != CHUNK_IDAT))) {
             throw new IOException("The IDAT chunks of the PNG image are not consecutive");
         }
         if (!this.defaultImageStarted) {
             if ((this.colorType == ApngImage.COLOR_TYPE_PALETTE) && (this.paletteRgb == null)) throw new IOException("The palette PNG image has no PLTE chunk");
             this.defaultImageStarted = true;
-            this.frameData.clear();
+            this.frameChunks.clear();
         }
         this.crc.reset();
         this.crc.update(this.scratch, 4, 4);
-        this.readFrameBytes(length);
+        this.readDataIntoCrc(length);
         if (!this.readAndCheckCrc()) throw new IOException("Corrupted PNG chunk, its CRC does not match: IDAT");
+        this.frameChunks.add(chunkPosition, length, length);
     }
 
-    private void readFrameData(int length) throws IOException {
+    private void readFrameData(long chunkPosition, int length) throws IOException {
         boolean expected = this.animationControlRead && !this.animationStopped && this.defaultImageFinished && (this.pendingFrame != null) && !this.pendingFrameUsesDefaultImage;
         if (!expected || (length < 4)) {
             this.skipFully(length + 4L);
@@ -287,33 +301,21 @@ public final class ApngReader {
         this.readFully(this.scratch, 0, 4);
         this.crc.update(this.scratch, 0, 4);
         int sequenceNumber = readInt(this.scratch, 0);
-        this.readFrameBytes(length - 4);
+        this.readDataIntoCrc(length - 4);
         if (!this.readAndCheckCrc()) {
             this.stopAnimation("one of its fdAT chunks is corrupted", false);
             return;
         }
         this.checkSequenceNumber(sequenceNumber);
-    }
-
-    private void readFrameBytes(int length) throws IOException {
-        int remaining = length;
-        while (remaining > 0) {
-            int step = Math.min(remaining, DATA_READ_STEP);
-            int offset = this.frameData.size();
-            this.frameData.ensureAdditionalCapacity(step);
-            this.readFully(this.frameData.array(), offset, step);
-            this.frameData.setSize(offset + step);
-            this.crc.update(this.frameData.array(), offset, step);
-            remaining -= step;
-        }
+        this.frameChunks.add(chunkPosition, length, length - 4);
     }
 
     private void finishDefaultImage() {
         this.defaultImageFinished = true;
-        this.defaultImageData = this.frameData.toArray();
-        this.frameData.clear();
+        this.defaultImageChunks = this.frameChunks.build(CHUNK_IDAT);
+        this.frameChunks.clear();
         if ((this.pendingFrame != null) && this.pendingFrameUsesDefaultImage) {
-            this.frames.add(this.pendingFrame.toFrame(this.defaultImageData));
+            this.frames.add(this.pendingFrame.toFrame(this.defaultImageChunks));
             this.pendingFrame = null;
             this.pendingFrameUsesDefaultImage = false;
         }
@@ -323,23 +325,23 @@ public final class ApngReader {
         FrameControl control = this.pendingFrame;
         if ((control == null) || this.pendingFrameUsesDefaultImage) return;
         this.pendingFrame = null;
-        if (this.frameData.size() == 0) {
+        if (this.frameChunks.dataSize() == 0L) {
             this.stopAnimation("one of its frames has no image data", false);
             return;
         }
-        this.frames.add(control.toFrame(this.frameData.toArray()));
-        this.frameData.clear();
+        this.frames.add(control.toFrame(this.frameChunks.build(CHUNK_FDAT)));
+        this.frameChunks.clear();
     }
 
     @NotNull
     private ApngImage buildImage(boolean lastFrameComplete) throws IOException {
         if (!this.defaultImageStarted) throw new IOException("The PNG image has no image data");
         if (!this.defaultImageFinished) this.finishDefaultImage();
-        // The data of a frame that got cut off by the end of a truncated stream is incomplete, so that frame gets dropped
+        // The data of a frame that got cut off by the end of a truncated file is incomplete, so that frame gets dropped
         if (lastFrameComplete && !this.animationStopped) this.finishPendingFrame();
         this.pendingFrame = null;
-        byte[] defaultImage = this.defaultImageData;
-        if ((defaultImage == null) || (defaultImage.length == 0)) throw new IOException("The PNG image has no image data");
+        ApngFrame.DataChunks defaultImage = this.defaultImageChunks;
+        if ((defaultImage == null) || (defaultImage.dataSize() == 0L)) throw new IOException("The PNG image has no image data");
         boolean animated = this.animationControlRead && !this.frames.isEmpty();
         ApngFrame[] resultFrames = animated ? this.frames.toArray(new ApngFrame[0]) : new ApngFrame[] {new ApngFrame(0, 0, this.width, this.height, 0L, ApngFrame.DISPOSE_OP_NONE, ApngFrame.BLEND_OP_SOURCE, defaultImage)};
         int transparentGray = ApngImage.NO_TRANSPARENT_SAMPLE;
@@ -356,7 +358,7 @@ public final class ApngReader {
             transparentGreen = readShort(transparency, 2) & sampleMask;
             transparentBlue = readShort(transparency, 4) & sampleMask;
         }
-        return new ApngImage(this.width, this.height, this.bitDepth, this.colorType, this.interlaced, this.buildPalette(), transparentGray, transparentRed, transparentGreen, transparentBlue, animated, animated ? this.numPlays : ApngImage.INFINITE_PLAYS, resultFrames);
+        return new ApngImage(this.width, this.height, this.bitDepth, this.colorType, this.interlaced, this.buildPalette(), transparentGray, transparentRed, transparentGreen, transparentBlue, animated, animated ? this.numPlays : ApngImage.INFINITE_PLAYS, resultFrames, this.source);
     }
 
     /**
@@ -385,13 +387,13 @@ public final class ApngReader {
     private void stopAnimation(@NotNull String reason, boolean pendingFrameComplete) {
         if (this.animationStopped) return;
         FrameControl pending = this.pendingFrame;
-        if (pendingFrameComplete && (pending != null) && !this.pendingFrameUsesDefaultImage && (this.frameData.size() > 0)) {
-            this.frames.add(pending.toFrame(this.frameData.toArray()));
+        if (pendingFrameComplete && (pending != null) && !this.pendingFrameUsesDefaultImage && (this.frameChunks.dataSize() > 0L)) {
+            this.frames.add(pending.toFrame(this.frameChunks.build(CHUNK_FDAT)));
         }
         this.animationStopped = true;
         this.pendingFrame = null;
         this.pendingFrameUsesDefaultImage = false;
-        if (this.defaultImageFinished) this.frameData.clear();
+        if (this.defaultImageFinished) this.frameChunks.clear();
         if (this.frames.isEmpty()) {
             LOGGER.warn("[FANCYMENU] The animation of an APNG image is broken, because {}, so only its default image gets shown: {}", reason, this.sourceName);
         } else {
@@ -429,12 +431,73 @@ public final class ApngReader {
         return readInt(this.crcBytes, 0) == (int) this.crc.getValue();
     }
 
+    /**
+     * Runs the data of an image data chunk through the CRC. The data itself is not needed now, frames read it again when they get decoded.
+     */
+    private void readDataIntoCrc(int length) throws IOException {
+        int remaining = length;
+        while (remaining > 0) {
+            if ((this.bufferPosition == this.bufferLimit) && !this.fillBuffer()) throw new EOFException();
+            int count = Math.min(remaining, this.bufferLimit - this.bufferPosition);
+            this.crc.update(this.buffer, this.bufferPosition, count);
+            this.bufferPosition += count;
+            remaining -= count;
+        }
+    }
+
     private void readFully(@NotNull byte[] target, int offset, int length) throws IOException {
-        if (this.in.readNBytes(target, offset, length) < length) throw new EOFException();
+        if (this.readNBytes(target, offset, length) < length) throw new EOFException();
+    }
+
+    /**
+     * Reads up to the given number of bytes, fewer only at the end of the source.
+     */
+    private int readNBytes(@NotNull byte[] target, int offset, int length) throws IOException {
+        int done = 0;
+        while (done < length) {
+            if ((this.bufferPosition == this.bufferLimit) && !this.fillBuffer()) break;
+            int count = Math.min(length - done, this.bufferLimit - this.bufferPosition);
+            System.arraycopy(this.buffer, this.bufferPosition, target, offset + done, count);
+            this.bufferPosition += count;
+            done += count;
+        }
+        return done;
     }
 
     private void skipFully(long count) throws IOException {
-        this.in.skipNBytes(count);
+        if (count <= (this.bufferLimit - this.bufferPosition)) {
+            this.bufferPosition += (int) count;
+            return;
+        }
+        long target = this.position() + count;
+        // Positions after the buffer don't get read, so skipping past the end of the source gets noticed here, like reading past it would
+        if (target > this.source.size()) throw new EOFException();
+        this.bufferStart = target;
+        this.bufferPosition = 0;
+        this.bufferLimit = 0;
+    }
+
+    /**
+     * Reads the next bytes of the source into the buffer, once all bytes in it got used.
+     *
+     * @return False if the source has no more bytes.
+     */
+    private boolean fillBuffer() throws IOException {
+        this.bufferStart += this.bufferLimit;
+        this.bufferPosition = 0;
+        this.bufferLimit = 0;
+        this.bufferView.clear();
+        int read = this.source.read(this.bufferView, this.bufferStart);
+        if (read <= 0) return false;
+        this.bufferLimit = read;
+        return true;
+    }
+
+    /**
+     * The source position of the next byte that gets read.
+     */
+    private long position() {
+        return this.bufferStart + this.bufferPosition;
     }
 
     private static boolean isValidBitDepth(int colorType, int bitDepth) {
@@ -456,7 +519,7 @@ public final class ApngReader {
         return new String(name);
     }
 
-    private static int readInt(@NotNull byte[] data, int offset) {
+    static int readInt(@NotNull byte[] data, int offset) {
         return ((data[offset] & 0xFF) << 24) | ((data[offset + 1] & 0xFF) << 16) | ((data[offset + 2] & 0xFF) << 8) | (data[offset + 3] & 0xFF);
     }
 
@@ -476,54 +539,59 @@ public final class ApngReader {
         }
 
         @NotNull
-        private ApngFrame toFrame(@NotNull byte[] data) {
+        private ApngFrame toFrame(@NotNull ApngFrame.DataChunks dataChunks) {
             // A denominator of 0 means 1/100 seconds, as the APNG specification says
             int denominator = (this.delayDenominator == 0) ? 100 : this.delayDenominator;
             long delayNanos = (this.delayNumerator * 1_000_000_000L) / denominator;
-            return new ApngFrame(this.x, this.y, this.width, this.height, delayNanos, this.disposeOp, this.blendOp, data);
+            return new ApngFrame(this.x, this.y, this.width, this.height, delayNanos, this.disposeOp, this.blendOp, dataChunks);
         }
 
     }
 
     /**
-     * Collects the compressed data of one frame. The buffer gets reused for all frames, and every frame gets an exactly sized copy.
+     * Collects where the data chunks of the frame that gets read right now lie. Gets reused for all frames, and every frame gets exactly sized copies.
      */
-    private static final class GrowableByteArray {
+    private static final class ChunkIndex {
 
-        private static final int INITIAL_CAPACITY = 64 * 1024;
-
-        @NotNull
-        private byte[] array = new byte[0];
-        private int size;
-
-        private void ensureAdditionalCapacity(int additional) throws IOException {
-            long required = (long) this.size + additional;
-            if (required > (Integer.MAX_VALUE - 8)) throw new IOException("APNG frame data is too big");
-            if (required <= this.array.length) return;
-            long grown = Math.max(required, Math.max(INITIAL_CAPACITY, this.array.length * 2L));
-            this.array = Arrays.copyOf(this.array, (int) Math.min(grown, Integer.MAX_VALUE - 8));
-        }
+        private static final int INITIAL_CAPACITY = 16;
 
         @NotNull
-        private byte[] array() {
-            return this.array;
+        private long[] positions = new long[INITIAL_CAPACITY];
+        @NotNull
+        private int[] lengths = new int[INITIAL_CAPACITY];
+        private int count;
+        private long dataSize;
+
+        /**
+         * @param length The value of the length field of the chunk.
+         * @param dataLength How many bytes of zlib data the chunk holds.
+         */
+        private void add(long position, int length, int dataLength) {
+            if (this.count == this.positions.length) {
+                this.positions = Arrays.copyOf(this.positions, this.count * 2);
+                this.lengths = Arrays.copyOf(this.lengths, this.count * 2);
+            }
+            this.positions[this.count] = position;
+            this.lengths[this.count] = length;
+            this.count++;
+            this.dataSize += dataLength;
         }
 
-        private int size() {
-            return this.size;
-        }
-
-        private void setSize(int size) {
-            this.size = size;
+        /**
+         * How many bytes of zlib data the collected chunks hold together.
+         */
+        private long dataSize() {
+            return this.dataSize;
         }
 
         private void clear() {
-            this.size = 0;
+            this.count = 0;
+            this.dataSize = 0L;
         }
 
         @NotNull
-        private byte[] toArray() {
-            return Arrays.copyOf(this.array, this.size);
+        private ApngFrame.DataChunks build(int type) {
+            return new ApngFrame.DataChunks(type, Arrays.copyOf(this.positions, this.count), Arrays.copyOf(this.lengths, this.count));
         }
 
     }
