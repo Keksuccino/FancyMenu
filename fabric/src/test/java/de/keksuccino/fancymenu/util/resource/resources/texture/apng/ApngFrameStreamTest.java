@@ -2,7 +2,6 @@ package de.keksuccino.fancymenu.util.resource.resources.texture.apng;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
@@ -35,12 +34,14 @@ class ApngFrameStreamTest {
     private long now = 1_000_000_000L;
     private final ManualExecutor executor = new ManualExecutor(() -> this.now);
     private final List<ApngFrameStream> streams = new ArrayList<>();
+    private final List<ApngTestFiles.MemorySource> sources = new ArrayList<>();
 
     @AfterEach
     void closeStreams() {
         this.streams.forEach(ApngFrameStream::close);
         this.executor.runTasks();
         for (ApngFrameStream stream : this.streams) assertEquals(0L, stream.getNativeMemoryBytes());
+        for (ApngTestFiles.MemorySource source : this.sources) assertTrue(source.isClosed());
     }
 
     @Test
@@ -272,13 +273,67 @@ class ApngFrameStreamTest {
     @Test
     void corruptedFirstFrameFailsTheStream() throws IOException {
         byte[] file = ApngTestFiles.png(4, 4, 8, ApngImage.COLOR_TYPE_RGBA).header().chunk("IDAT", new byte[] {0x78, (byte) 0x9C, 1, 2, 3}).end();
-        ApngFrameStream stream = this.stream(file);
+        ApngTestFiles.MemorySource source = new ApngTestFiles.MemorySource(file);
+        ApngFrameStream stream = this.stream(source);
 
         this.executor.runTasks();
 
         assertTrue(stream.hasFailed());
         assertNull(stream.poll());
         assertEquals(0L, stream.getNativeMemoryBytes());
+        // A failed stream never decodes again, so it releases its source right away
+        assertTrue(source.isClosed());
+    }
+
+    @Test
+    void changedSourceFailsTheStreamInsteadOfCuttingTheAnimation() throws IOException {
+        byte[] file = fourFrames();
+        ApngTestFiles.MemorySource source = new ApngTestFiles.MemorySource(file);
+        ApngFrameStream stream = this.stream(source);
+        this.executor.runTasks();
+        // The stream decoded the first two frames ahead, the third one changes before it gets decoded
+        source.data = changedFrameData(file, 2);
+
+        List<String> shown = new ArrayList<>();
+        // Bounded, because an animation that got cut instead would loop forever
+        for (int i = 0; i < 20; i++) {
+            this.executor.runTasks();
+            ApngFrameUpdate update = stream.poll();
+            if (update == null) break;
+            shown.add(update.getFrameIndex() + "/" + update.getPlay());
+            stream.recycle(update);
+        }
+
+        // A corrupted frame would make the animation continue with the next play instead
+        assertEquals(List.of("0/0", "1/0"), shown);
+        assertTrue(stream.hasFailed());
+        assertFalse(stream.isFinished());
+        assertNull(stream.restart());
+        assertTrue(source.isClosed());
+    }
+
+    @Test
+    void changedSourceFailsTheStreamInLaterPlaysToo() throws IOException {
+        byte[] file = fourFrames();
+        ApngTestFiles.MemorySource source = new ApngTestFiles.MemorySource(file);
+        ApngFrameStream stream = this.stream(source);
+        for (int i = 0; i < 4; i++) stream.recycle(this.next(stream));
+        this.executor.runTasks();
+
+        source.data = changedFrameData(file, 3);
+        int shown = 0;
+        for (int i = 0; i < 20; i++) {
+            this.executor.runTasks();
+            ApngFrameUpdate update = stream.poll();
+            if (update == null) break;
+            assertEquals(1, update.getPlay());
+            shown++;
+            stream.recycle(update);
+        }
+
+        assertEquals(3, shown);
+        assertTrue(stream.hasFailed());
+        assertTrue(source.isClosed());
     }
 
     @Test
@@ -313,12 +368,14 @@ class ApngFrameStreamTest {
 
     @Test
     void closingFreesAllNativeMemoryEvenWithAPolledUpdate() throws IOException {
-        ApngFrameStream stream = this.stream(ApngCompositorTest.randomAnimation(new Random(13), WIDTH, HEIGHT, 8));
+        ApngTestFiles.MemorySource source = new ApngTestFiles.MemorySource(ApngCompositorTest.randomAnimation(new Random(13), WIDTH, HEIGHT, 8));
+        ApngFrameStream stream = this.stream(source);
         stream.recycle(this.next(stream));
         ApngFrameUpdate held = this.next(stream);
         this.executor.runTasks();
 
         stream.close();
+        assertTrue(source.isClosed());
         stream.recycle(held);
         this.executor.runTasks();
 
@@ -329,19 +386,41 @@ class ApngFrameStreamTest {
 
     @Test
     void closingBeforeThePendingTaskRunsLetsTheTaskCleanUp() throws IOException {
-        ApngFrameStream stream = this.stream(ApngCompositorTest.randomAnimation(new Random(14), WIDTH, HEIGHT, 8));
+        ApngTestFiles.MemorySource source = new ApngTestFiles.MemorySource(ApngCompositorTest.randomAnimation(new Random(14), WIDTH, HEIGHT, 8));
+        ApngFrameStream stream = this.stream(source);
 
         stream.close();
+        // The pending task owns the source until it noticed the close
+        assertFalse(source.isClosed());
         this.executor.runTasks();
 
+        assertTrue(source.isClosed());
         assertEquals(0L, stream.getNativeMemoryBytes());
         assertNull(stream.poll());
     }
 
+    @Test
+    void closingAStaticImageAfterItsFrameClosesTheSource() throws IOException {
+        ApngTestFiles.MemorySource source = new ApngTestFiles.MemorySource(ApngTestFiles.png(4, 4, 8, ApngImage.COLOR_TYPE_RGBA).header().imageData(ApngTestFiles.solid(4, 4, 1, 2, 3, 4)).end());
+        ApngFrameStream stream = this.stream(source);
+        stream.recycle(this.next(stream));
+        this.executor.runTasks();
+        assertFalse(source.isClosed());
+
+        stream.close();
+
+        assertTrue(source.isClosed());
+    }
+
     private ApngFrameStream stream(byte[] file) throws IOException {
-        ApngImage image = ApngReader.read(new ByteArrayInputStream(file), "test.png");
+        return this.stream(new ApngTestFiles.MemorySource(file));
+    }
+
+    private ApngFrameStream stream(ApngTestFiles.MemorySource source) throws IOException {
+        ApngImage image = ApngReader.read(source, "test.png");
         ApngFrameStream stream = new ApngFrameStream(image, "test.png", this.executor, () -> this.now);
         this.streams.add(stream);
+        this.sources.add(source);
         stream.start();
         return stream;
     }
@@ -351,6 +430,29 @@ class ApngFrameStreamTest {
         ApngFrameUpdate update = stream.poll();
         assertNotNull(update, "no frame was ready");
         return update;
+    }
+
+    /**
+     * Four 4x4 frames that loop forever, every frame shows for 100 ms.
+     */
+    static byte[] fourFrames() {
+        return ApngTestFiles.png(4, 4, 8, ApngImage.COLOR_TYPE_RGBA).header().animationControl(4, 0)
+                .frameControl(4, 4, 0, 0, 1, 10, 0, 0).imageData(ApngTestFiles.solid(4, 4, 255, 0, 0, 255))
+                .frame(2, 2, 0, 0, 1, 10, 0, 0, ApngTestFiles.solid(2, 2, 0, 255, 0, 255))
+                .frame(2, 2, 2, 2, 1, 10, 0, 0, ApngTestFiles.solid(2, 2, 0, 0, 255, 255))
+                .frame(1, 1, 1, 1, 1, 10, 0, 0, ApngTestFiles.solid(1, 1, 9, 9, 9, 255))
+                .end();
+    }
+
+    /**
+     * A copy of the file with one changed byte in the middle of the data of a frame, like an edit of the file.
+     */
+    static byte[] changedFrameData(byte[] file, int frameIndex) throws IOException {
+        ApngFrame.DataChunks chunks = ApngTestFiles.read(file).getFrame(frameIndex).dataChunks();
+        byte[] changed = file.clone();
+        int dataStart = (int) chunks.positions()[0] + chunks.headerLength();
+        changed[dataStart + (chunks.lengths()[0] - (chunks.headerLength() - 8)) / 2] ^= 0x10;
+        return changed;
     }
 
     /**
@@ -383,13 +485,13 @@ class ApngFrameStreamTest {
     /**
      * Runs tasks only when the test says so, and delayed tasks once the fake clock reached their time.
      */
-    private static final class ManualExecutor extends AbstractExecutorService implements ScheduledExecutorService {
+    static final class ManualExecutor extends AbstractExecutorService implements ScheduledExecutorService {
 
         private final LongSupplier clock;
         private final ArrayDeque<Runnable> tasks = new ArrayDeque<>();
         private final List<DelayedTask> delayedTasks = new ArrayList<>();
 
-        private ManualExecutor(LongSupplier clock) {
+        ManualExecutor(LongSupplier clock) {
             this.clock = clock;
         }
 

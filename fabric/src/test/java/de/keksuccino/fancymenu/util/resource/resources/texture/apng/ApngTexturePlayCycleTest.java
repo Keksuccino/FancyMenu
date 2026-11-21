@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.resource.resources.texture.apng;
 
 import org.junit.jupiter.api.Test;
 import java.io.ByteArrayInputStream;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -71,23 +72,49 @@ class ApngTexturePlayCycleTest {
     @Test
     void invalidImageDataPublishesTheFailure() {
         ApngTexture texture = new ApngTexture();
+        ApngTestFiles.MemorySource source = new ApngTestFiles.MemorySource(new byte[0]);
 
-        ApngTexture.populateTexture(texture, new ByteArrayInputStream(new byte[0]), "invalid.png");
+        ApngTexture.populateTexture(texture, () -> source, "invalid.png");
 
         assertTrue(texture.loadingFailed.get());
         assertTrue(texture.isReady());
         assertTrue(texture.isLoadingFailed());
         assertFalse(texture.isLoadingCompleted());
+        assertTrue(source.isClosed());
     }
 
     @Test
     void closedTextureDoesNotLoadAnymore() {
         ApngTexture texture = new ApngTexture();
         texture.closed.set(true);
+        AtomicBoolean opened = new AtomicBoolean();
 
-        ApngTexture.populateTexture(texture, new ByteArrayInputStream(new byte[0]), "invalid.png");
+        ApngTexture.populateTexture(texture, () -> {
+            opened.set(true);
+            return new ApngTestFiles.MemorySource(new byte[0]);
+        }, "invalid.png");
 
+        assertFalse(opened.get());
         assertFalse(texture.loadingFailed.get());
+        assertFalse(texture.decoded.get());
+    }
+
+    @Test
+    void closedTextureClosesItsStreamWithoutCopyingIt() {
+        ApngTexture texture = new ApngTexture();
+        texture.closed.set(true);
+        AtomicBoolean streamClosed = new AtomicBoolean();
+        ByteArrayInputStream in = new ByteArrayInputStream(new byte[10]) {
+            @Override
+            public void close() {
+                streamClosed.set(true);
+            }
+        };
+
+        ApngTexture.populateTexture(texture, in, "image.apng");
+
+        assertTrue(streamClosed.get());
+        assertEquals(10, in.available());
         assertFalse(texture.decoded.get());
     }
 
