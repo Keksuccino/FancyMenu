@@ -46,6 +46,20 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
   - Pausing and resuming APNGs (like button backgrounds that only play while hovered) continues right where they stopped
   - APNGs that play a limited number of times now stop on their last frame
   - Broken or partly downloaded APNGs play all intact frames instead of failing completely
+- GIFs got the same treatment as APNGs and now use FancyMenu's own GIF decoder and renderer, so they also barely use any memory while playing with great performance
+  - No longer needs WaterMedia or any other library to play GIFs
+  - Supports every GIF feature, including transparency, interlaced GIFs, per-frame color palettes, loop counts and all frame dispose modes
+  - Plays GIFs just like web browsers do, including frame timing and how often they loop
+  - Decodes frames in the background, a few frames ahead, and only updates the parts of the image that change between frames
+  - Big GIFs (like 1080p menu backgrounds) play smoothly at their full frame rate
+  - Frame data gets read from disk while playing instead of being kept in memory, so even huge GIF files take almost no RAM
+  - Local GIF files can be renamed or deleted while they play, and a GIF whose file gets replaced while playing stops cleanly on its last frame
+  - Restarting a GIF (like on menu load or button hover) shows its first frame instantly
+  - Pausing and resuming GIFs (like button backgrounds that only play while hovered) continues right where they stopped
+  - GIFs that play a limited number of times now stop on their last frame
+  - Broken or partly downloaded GIFs play all intact frames instead of failing completely
+- Fixed paused AFMA and FMA textures starting their current frame over when they play again, instead of continuing where they left off
+- Fixed AFMA and FMA textures freezing when several buttons use the same texture as their background
 - Added a Label Alignment option (Left, Centered or Right) to custom buttons and sliders, and to vanilla buttons and sliders (#1866)
 - Added label alignment settings for buttons and sliders to Global Customizations (#1866)
 - Added a background to the Text element, with a built-in pixel art panel, custom texture support, nine-slice settings, padding and an option to render behind the scroll bars
