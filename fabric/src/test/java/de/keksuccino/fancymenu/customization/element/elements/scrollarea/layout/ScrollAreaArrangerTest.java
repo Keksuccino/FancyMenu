@@ -197,21 +197,6 @@ class ScrollAreaArrangerTest {
     }
 
     @Test
-    void freeChildrenStayWhereTheyWantToBe() {
-        ScrollAreaArrangement arrangement = arrangement(30, 20, 40, 50);
-        arrangement.offsetX[0] = 12;
-        arrangement.offsetY[0] = 34;
-        arrangement.offsetX[1] = -5;
-        arrangement.offsetY[1] = 600;
-        ScrollAreaArranger.FREE.arrange(arrangement);
-        assertArrayEquals(new int[] { 12, 34, 30, 20 }, box(arrangement, 0));
-        assertArrayEquals(new int[] { -5, 600, 40, 50 }, box(arrangement, 1));
-        // The size of the content stays up to the user
-        assertEquals(-1, arrangement.contentWidth);
-        assertEquals(-1, arrangement.contentHeight);
-    }
-
-    @Test
     void arrangementsKeepWorkingWhenAnAreaGetsMoreChildren() {
         ScrollAreaArrangement arrangement = arrangement(10, 10);
         ScrollAreaArranger.STACK.arrange(arrangement);

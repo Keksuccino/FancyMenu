@@ -42,9 +42,8 @@ public final class ScrollAreaChildLayout {
 
         ScrollAreaArrangement arrangement = this.arrangement;
         int count = this.arranged.size();
-        float scale = geometry.getScale();
-        int viewportWidth = geometry.getViewportContentWidth();
-        int viewportHeight = geometry.getViewportContentHeight();
+        int viewportWidth = geometry.getViewportWidth();
+        int viewportHeight = geometry.getViewportHeight();
         boolean horizontal = area.getScrollDirection() == ScrollDirection.HORIZONTAL;
         int padding = Math.max(0, area.contentPadding.getInteger());
         int spacing = Math.max(0, area.childSpacing.getInteger());
@@ -56,7 +55,6 @@ public final class ScrollAreaChildLayout {
         // It has 64 bits, so two different states that end up with the same one are nothing that happens in practice.
         long signature = System.identityHashCode(arranger);
         signature = (31 * signature) + count;
-        signature = (31 * signature) + Float.floatToIntBits(scale);
         signature = (31 * signature) + viewportWidth;
         signature = (31 * signature) + viewportHeight;
         signature = (31 * signature) + (horizontal ? 1 : 0);
@@ -76,16 +74,9 @@ public final class ScrollAreaChildLayout {
             int naturalHeight = child.getNaturalHeight();
             arrangement.naturalWidth[i] = naturalWidth;
             arrangement.naturalHeight[i] = naturalHeight;
-            // A child that is as big as the content starts where the content starts
-            int offsetX = child.isStretchedX() ? 0 : child.posOffsetX;
-            int offsetY = child.isStretchedY() ? 0 : child.posOffsetY;
-            arrangement.offsetX[i] = offsetX;
-            arrangement.offsetY[i] = offsetY;
             signature = (31 * signature) + System.identityHashCode(child);
             signature = (31 * signature) + naturalWidth;
             signature = (31 * signature) + naturalHeight;
-            signature = (31 * signature) + offsetX;
-            signature = (31 * signature) + offsetY;
             // A child that lost its box, like one that just got put into the area, needs a new one
             ElementContainerLink link = child.getContainerLink();
             if ((link == null) || !link.hasManagedBox()) signature++;
@@ -106,13 +97,7 @@ public final class ScrollAreaChildLayout {
 
         for (int i = 0; i < count; i++) {
             ElementContainerLink link = this.arranged.get(i).getContainerLink();
-            if (link == null) continue;
-            // Both edges of a box get rounded on their own, so boxes that touch in the content also touch on the screen
-            int left = Math.round(arrangement.x[i] * scale);
-            int top = Math.round(arrangement.y[i] * scale);
-            int right = Math.round((arrangement.x[i] + arrangement.width[i]) * scale);
-            int bottom = Math.round((arrangement.y[i] + arrangement.height[i]) * scale);
-            link.setManagedBox(left, top, right - left, bottom - top, arrangement.width[i], arrangement.height[i]);
+            if (link != null) link.setManagedBox(arrangement.x[i], arrangement.y[i], arrangement.width[i], arrangement.height[i]);
         }
 
         this.signature = signature;
@@ -142,14 +127,14 @@ public final class ScrollAreaChildLayout {
     }
 
     /**
-     * Returns the width the content needs for the arranged children, or -1 if its size is up to the user.
+     * Returns the width the content needs for the arranged children, or -1 if they got no arrangement.
      */
     public int getContentWidth() {
         return this.hasArrangement ? this.arrangement.contentWidth : -1;
     }
 
     /**
-     * Returns the height the content needs for the arranged children, or -1 if its size is up to the user.
+     * Returns the height the content needs for the arranged children, or -1 if they got no arrangement.
      */
     public int getContentHeight() {
         return this.hasArrangement ? this.arrangement.contentHeight : -1;

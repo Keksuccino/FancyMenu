@@ -1,6 +1,5 @@
 package de.keksuccino.fancymenu.util.rendering;
 
-import de.keksuccino.fancymenu.customization.element.container.ElementContainerDrawScale;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.platform.GlStateManager;
@@ -990,8 +989,6 @@ public class RenderingUtils {
     public static void enableScissor(@NotNull GuiGraphics graphics, int minX, int minY, int maxX, int maxY) {
         ScreenRectangle r = new ScreenRectangle(minX, minY, maxX - minX, maxY - minY);
         r = transformAxisAligned(r, graphics.pose().last().pose());
-        // The pose includes the scale a container draws a child with, which scissors get mapped by on their own otherwise
-        ElementContainerDrawScale.markNextScissorAsOnScreen();
         graphics.enableScissor(r.left(), r.top(), r.right(), r.bottom());
     }
 

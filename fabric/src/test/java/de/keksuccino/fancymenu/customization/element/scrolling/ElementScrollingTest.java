@@ -245,7 +245,7 @@ class ElementScrollingTest {
             // 50 milliseconds per frame
             this.nanoTime += 50_000_000L;
             ScrollDirection direction = this.getScrollDirection();
-            this.geometry.setViewport(100, 50, 200, 100, 1.0F);
+            this.geometry.setViewport(100, 50, 200, 100);
             this.geometry.setContentSize(this.contentWidth, this.contentHeight, direction.scrollsX(), direction.scrollsY());
             this.scrolling.update(this.geometry, false);
         }

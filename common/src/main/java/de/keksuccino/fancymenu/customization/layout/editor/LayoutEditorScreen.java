@@ -357,9 +357,7 @@ public class LayoutEditorScreen extends Screen implements ElementFactory {
 			} else {
 				// Children render in their container, which cuts them to what it shows. Only their border and controls go on top of everything.
 				// A child the user moves around is the exception: it has to be seen where the mouse takes it, also outside of its container.
-				if (e.isGettingMovedFreely() && (this.getElementByInstanceIdentifier(e.element.getParentContainer().getContainerElement().getInstanceIdentifier()) instanceof ContainerEditorElement container)) {
-					container.renderChildUncut(e, graphics, mouseX, mouseY, partial);
-				}
+				if (e.isGettingMovedFreely()) e.renderElement(graphics, mouseX, mouseY, partial);
 				// A child of a container that does not show has nothing its border and controls could belong to
 				if (e.element.isShownByContainer()) e.renderEditorControls(graphics, mouseX, mouseY, partial);
 			}

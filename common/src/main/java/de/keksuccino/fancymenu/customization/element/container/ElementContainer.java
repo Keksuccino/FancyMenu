@@ -7,11 +7,11 @@ import java.util.List;
 /**
  * An element that holds other elements as its children and shows them in a space of its own: the content.<br>
  * The content is what the anchors, the stretching and the stay-on-screen logic of children refer to instead of the screen.
- * It can be bigger than what the container shows of it, it can be moved (scrolled) and it can be scaled.<br><br>
+ * It can be bigger than what the container shows of it, and it can be moved (scrolled).<br><br>
  *
- * Positions and sizes of children that leave {@link AbstractElement} are always in screen space, so everything that works
- * with elements on the screen keeps working for children. Children calculate their position in the units of the content
- * and convert it with the values the container gives them here.<br><br>
+ * Positions of children that leave {@link AbstractElement} are always on the screen, so everything that works
+ * with elements on the screen keeps working for children. Children calculate their position in the content
+ * and move it to where the container shows the content.<br><br>
  *
  * All of these get called many times per frame for every child, so implementations have to answer from values they
  * worked out once per frame.
@@ -30,14 +30,8 @@ public interface ElementContainer {
      */
     void setContainerChildren(@NotNull List<? extends AbstractElement> children);
 
-    /**
-     * Returns the width of the content, in the units of the content.
-     */
     int getContentWidth();
 
-    /**
-     * Returns the height of the content, in the units of the content.
-     */
     int getContentHeight();
 
     /**
@@ -51,33 +45,17 @@ public interface ElementContainer {
     int getContentScreenY();
 
     /**
-     * Returns how many screen pixels one unit of the content is. Includes the scale of all containers this container is in.
+     * Returns if this container decides where its children are and how big they are, instead of the children themselves:
+     * it arranges them one after another, in the order they have. Children of such a container can only be put in another order.<br>
+     * A container that does gives every child its box through {@link ElementContainerLink#setManagedBox(int, int, int, int)}.
      */
-    float getContentScale();
+    boolean arrangesChildren();
 
     /**
-     * Returns if the content scale also scales what children draw, like a picture of the content getting scaled.
-     * If not, only the positions and sizes of children follow the scale.
-     */
-    boolean scalesChildVisuals();
-
-    /**
-     * Returns if this container decides where its children are and how big they are, instead of the children themselves.<br>
-     * A container that does gives every child its box through {@link ElementContainerLink#setManagedBox(int, int, int, int, int, int)}.
-     */
-    boolean managesChildBoxes();
-
-    /**
-     * Works the boxes of the children out again right now, for a container that manages them. The boxes are the ones of the last frame
+     * Works the boxes of the children out again right now, for a container that arranges them. The boxes are the ones of the last frame
      * otherwise, which is too old for something that just moved a child and needs to know where it is now.
      */
     void refreshChildBoxes();
-
-    /**
-     * Returns if this container decides where its children are in a way that leaves the user no place to put them:
-     * it arranges them one after another, in the order they have. Children of such a container can only be put in another order.
-     */
-    boolean arrangesChildren();
 
     /**
      * Returns if the point on the screen lies in the part of the content the container shows, and in the shown part of
