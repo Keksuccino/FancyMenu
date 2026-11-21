@@ -41,14 +41,6 @@ class AnimatedTextureDirectSourceLoopCountTest {
         assertEquals(AnimatedImageLoopCountReader.INFINITE_LOOPS, GifTexture.readDirectSourceLoopCount(texture, "missing.gif"));
     }
 
-    @Test
-    void apngSourceUsesPlayCountOfFile() throws IOException {
-        ApngTexture texture = new ApngTexture();
-        texture.sourceFile = this.writeFile("two_plays.png", apngWithPlays(2));
-
-        assertEquals(2, ApngTexture.readDirectSourceLoopCount(texture, "two_plays.png"));
-    }
-
     private File writeFile(String name, byte[] data) throws IOException {
         return Files.write(this.tempDir.resolve(name), data).toFile();
     }
@@ -64,16 +56,6 @@ class AnimatedTextureDirectSourceLoopCountTest {
             out.writeBytes(new byte[] {3, 1, (byte) loops, 0, 0});
         }
         out.writeBytes(new byte[] {0x2C, 0, 0, 0, 0, 1, 0, 1, 0, 0, 2, 2, 0x4C, 0x01, 0, 0x3B});
-        return out.toByteArray();
-    }
-
-    private static byte[] apngWithPlays(int plays) {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        out.writeBytes(new byte[] {(byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1A, '\n'});
-        out.writeBytes(new byte[] {0, 0, 0, 13, 'I', 'H', 'D', 'R'});
-        out.writeBytes(new byte[13 + 4]);
-        out.writeBytes(new byte[] {0, 0, 0, 8, 'a', 'c', 'T', 'L', 0, 0, 0, 2, 0, 0, 0, (byte) plays});
-        out.writeBytes(new byte[4]);
         return out.toByteArray();
     }
 

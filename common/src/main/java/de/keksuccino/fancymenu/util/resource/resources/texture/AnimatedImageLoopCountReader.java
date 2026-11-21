@@ -8,7 +8,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 /**
- * Reads how often animated GIF and APNG images should play, straight from their raw data.<br>
+ * Reads how often animated GIF images should play, straight from their raw data.<br>
  * Only the structure of the image gets read and all image data gets skipped, so this stays cheap for big images and for streams that should only get read partially.
  */
 public final class AnimatedImageLoopCountReader {
@@ -17,9 +17,6 @@ public final class AnimatedImageLoopCountReader {
     public static final int INFINITE_LOOPS = -1;
     /** Web sources only get read up to this many bytes. Loop counts are near the start of real-world images, while reading further could download the whole image a second time. **/
     public static final long MAX_WEB_SOURCE_BYTES = 1024L * 1024L;
-
-    private static final int APNG_ACTL_CHUNK = 0x6163544C;
-    private static final int APNG_IDAT_CHUNK = 0x49444154;
 
     private AnimatedImageLoopCountReader() {
     }
@@ -86,42 +83,6 @@ public final class AnimatedImageLoopCountReader {
         }
     }
 
-    /**
-     * Returns the number of plays of the APNG, or {@link #INFINITE_LOOPS} if it loops forever or has no animation control chunk.
-     */
-    public static int readApngLoopCount(@NotNull byte[] apngData) {
-        try {
-            return readApngLoopCount(new ByteArrayInputStream(apngData), apngData.length);
-        } catch (IOException ex) {
-            // Byte array streams never fail
-            throw new IllegalStateException(ex);
-        }
-    }
-
-    /**
-     * Returns the number of plays of the APNG, or {@link #INFINITE_LOOPS} if it loops forever or has no animation control chunk.<br>
-     * The animation control chunk is only valid before the first image data chunk, so reading stops there, and it never reads more than the given number of bytes.
-     */
-    public static int readApngLoopCount(@NotNull InputStream in, long maxBytes) throws IOException {
-        LimitedReader reader = new LimitedReader(in, maxBytes);
-        try {
-            reader.skip(8); // PNG signature
-            while (true) {
-                long chunkLength = reader.readInt() & 0xFFFFFFFFL;
-                int chunkType = reader.readInt();
-                if (chunkType == APNG_ACTL_CHUNK) {
-                    reader.skip(4); // number of frames
-                    int plays = reader.readInt();
-                    return (plays == 0) ? INFINITE_LOOPS : Math.max(1, plays);
-                }
-                if (chunkType == APNG_IDAT_CHUNK) return INFINITE_LOOPS;
-                reader.skip(chunkLength + 4L); // chunk data and CRC
-            }
-        } catch (EOFException ex) {
-            return INFINITE_LOOPS;
-        }
-    }
-
     private static void skipGifSubBlocks(@NotNull LimitedReader reader) throws IOException {
         int size;
         while ((size = reader.read()) != 0) {
@@ -149,10 +110,6 @@ public final class AnimatedImageLoopCountReader {
             if (value < 0) throw new EOFException();
             this.remaining--;
             return value;
-        }
-
-        private int readInt() throws IOException {
-            return (this.read() << 24) | (this.read() << 16) | (this.read() << 8) | this.read();
         }
 
         @NotNull
