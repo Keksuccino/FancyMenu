@@ -36,6 +36,17 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
   - Link targets can now contain pairs of round brackets
   - The Markdown renderer now has much better performance, especially with long texts, tables and scrolling
   - Reworked the Markdown config menu of Text and Tooltip elements with around 150 style options for text, headlines, lists, links, code, quotes, callouts, tables, images and separators
+- Completely reworked APNG textures with FancyMenu's own APNG decoder and renderer, so APNGs now barely use any memory while playing with great performance, which puts them on the same level as AFMA (or even above it) and makes them a great choice for animated content
+  - No longer needs WaterMedia or any other library to play APNGs
+  - Supports every APNG and PNG feature, including interlaced images, all color types and bit depths, transparency and all frame blend and dispose modes
+  - Decodes frames in the background, a few frames ahead, and only updates the parts of the image that change between frames
+  - Big APNGs (like 1080p menu backgrounds) play smoothly at their full frame rate
+  - Frame data gets read from disk while playing instead of being kept in memory, so even huge APNG files take almost no RAM
+  - Local APNG files can be renamed or deleted while they play, and an APNG whose file gets replaced while playing stops cleanly on its last frame
+  - Restarting an APNG (like on menu load or button hover) shows its first frame instantly
+  - Pausing and resuming APNGs (like button backgrounds that only play while hovered) continues right where they stopped
+  - APNGs that play a limited number of times now stop on their last frame
+  - Broken or partly downloaded APNGs play all intact frames instead of failing completely
 - Added a Label Alignment option (Left, Centered or Right) to custom buttons and sliders, and to vanilla buttons and sliders (#1866)
 - Added label alignment settings for buttons and sliders to Global Customizations (#1866)
 - Added a background to the Text element, with a built-in pixel art panel, custom texture support, nine-slice settings, padding and an option to render behind the scroll bars
