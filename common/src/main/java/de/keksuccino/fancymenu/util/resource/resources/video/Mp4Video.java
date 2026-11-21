@@ -81,7 +81,7 @@ public class Mp4Video implements IVideo {
     protected volatile double listenerLastKnownPlaybackTimeSeconds = 0.0D;
     protected final Object playerInitLock = new Object();
     /** Notices full playthroughs, also when another user of this shared video makes it loop. **/
-    protected final PlaybackLoopTracker loopTracker = new PlaybackLoopTracker(true);
+    protected final PlaybackLoopTracker loopTracker = new PlaybackLoopTracker();
     protected final DeferredPlayerReleaseController<Object> closeReleaseController = new DeferredPlayerReleaseController<>();
 
     @NotNull

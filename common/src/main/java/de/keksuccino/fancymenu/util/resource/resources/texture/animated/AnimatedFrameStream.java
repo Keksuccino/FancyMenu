@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.util.resource.resources.texture.apng;
+package de.keksuccino.fancymenu.util.resource.resources.texture.animated;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,13 +16,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.LongSupplier;
 
 /**
- * Decodes and composes the frames of one APNG image in the background, a few frames ahead of playback, and hands them out as {@link ApngFrameUpdate}s
+ * Decodes and composes the frames of one animated image in the background, a few frames ahead of playback, and hands them out as {@link AnimatedFrameUpdate}s
  * that only hold the pixels that changed since the frame before.<br>
  * Frames get decoded again for every play instead of being cached, reading their compressed data from the source of the image, so an animation only needs one canvas
  * and a few small updates in memory, no matter how many frames it has. Only the first frame gets stored, so restarting the animation can show it instantly and every later play starts without decoding it.<br>
  * The stream owns the image and with it its source, which gets closed when the stream gets closed or fails.<br><br>
  *
- * <b>Threading:</b> {@link #poll()}, {@link #recycle(ApngFrameUpdate)}, {@link #restart()} and {@link #close()} belong to one consumer thread (the render thread),
+ * <b>Threading:</b> {@link #poll()}, {@link #recycle(AnimatedFrameUpdate)}, {@link #restart()} and {@link #close()} belong to one consumer thread (the render thread),
  * because the consumer reads the pixel buffers of the updates it got without holding the lock. Decoding runs on a shared executor, with at most one task per stream
  * at a time, so the decoder and the compositor never get used concurrently. Every task decodes a single frame and then gets queued again, so streams sharing the executor take turns.<br><br>
  *
@@ -31,7 +31,7 @@ import java.util.function.LongSupplier;
  * queued updates and pooled buffers get freed. Once it polls again, decoding continues with an update of the whole canvas, which skips the few frames that got dropped.
  * Streams that never had a frame polled start again at their first frame instead.
  */
-final class ApngFrameStream implements AutoCloseable {
+final class AnimatedFrameStream implements AutoCloseable {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -41,14 +41,14 @@ final class ApngFrameStream implements AutoCloseable {
     static final int MIN_QUEUED_UPDATES = 2;
     static final int MAX_QUEUED_UPDATES = 6;
     /** Ready frames should cover this much playback time, so fast animations still play at full speed when the game renders slower than the animation. **/
-    static final long QUEUED_PLAYBACK_NANOS = 80_000_000L;
+    private static final long QUEUED_PLAYBACK_NANOS = 80_000_000L;
     /** Ready frames of big canvases get limited to about this many bytes, as if every update covered the whole canvas, but never to fewer than {@link #MIN_QUEUED_UPDATES}. **/
-    static final long QUEUED_BYTES_LIMIT = 16L * 1024L * 1024L;
+    private static final long QUEUED_BYTES_LIMIT = 16L * 1024L * 1024L;
     /** Streams that don't get polled for this long free their ready frames and pooled buffers. **/
     static final long INACTIVITY_TIMEOUT_NANOS = 10_000_000_000L;
 
     @NotNull
-    private final ApngImage image;
+    private final AnimatedImage image;
     @NotNull
     private final String sourceName;
     @NotNull
@@ -61,7 +61,7 @@ final class ApngFrameStream implements AutoCloseable {
     private final Object lock = new Object();
     // Guarded by the lock
     @NotNull
-    private final ArrayDeque<ApngFrameUpdate> readyUpdates = new ArrayDeque<>();
+    private final ArrayDeque<AnimatedFrameUpdate> readyUpdates = new ArrayDeque<>();
     @NotNull
     private final ArrayDeque<ByteBuffer> freeBuffers = new ArrayDeque<>();
     /** Increases whenever ready updates get dropped, so updates of a task that started before can't get queued anymore. **/
@@ -81,14 +81,14 @@ final class ApngFrameStream implements AutoCloseable {
     @Nullable
     private ByteBuffer firstFrame;
     private volatile long lastActiveNanos;
-    /** Set when decoding stopped because nobody polled for a while, so the next sign of activity starts it again. **/
+    /** Set when decoding stopped, like because nobody polled for a while, so the next sign of activity checks if decoding has to start again. **/
     private volatile boolean waitingForActivity;
 
     // Only used by the decoding task
     @Nullable
-    private ApngFrameDecoder decoder;
+    private AnimatedFrameDecoder decoder;
     @Nullable
-    private ApngCompositor compositor;
+    private AnimatedFrameCompositor compositor;
     private int nextFrameIndex;
     private int nextPlay;
     private int playableFrameCount;
@@ -96,11 +96,11 @@ final class ApngFrameStream implements AutoCloseable {
     /**
      * Takes ownership of the image.
      */
-    ApngFrameStream(@NotNull ApngImage image, @NotNull String sourceName) {
+    AnimatedFrameStream(@NotNull AnimatedImage image, @NotNull String sourceName) {
         this(image, sourceName, SharedExecutor.INSTANCE, System::nanoTime);
     }
 
-    ApngFrameStream(@NotNull ApngImage image, @NotNull String sourceName, @NotNull ScheduledExecutorService executor, @NotNull LongSupplier nanoClock) {
+    AnimatedFrameStream(@NotNull AnimatedImage image, @NotNull String sourceName, @NotNull ScheduledExecutorService executor, @NotNull LongSupplier nanoClock) {
         this.image = image;
         this.sourceName = sourceName;
         this.executor = executor;
@@ -132,10 +132,10 @@ final class ApngFrameStream implements AutoCloseable {
      * Returns the next frame update, or NULL if no frame is ready yet or all frames got played. Also tells the stream that its frames are still wanted.
      */
     @Nullable
-    ApngFrameUpdate poll() {
+    AnimatedFrameUpdate poll() {
         this.lastActiveNanos = this.nanoClock.getAsLong();
         synchronized (this.lock) {
-            ApngFrameUpdate update = this.readyUpdates.pollFirst();
+            AnimatedFrameUpdate update = this.readyUpdates.pollFirst();
             if (update != null) this.frameDelivered = true;
             this.waitingForActivity = false;
             this.scheduleTaskLocked();
@@ -159,7 +159,7 @@ final class ApngFrameStream implements AutoCloseable {
     /**
      * Gives the pixel buffer of a polled update back, after its pixels got uploaded.
      */
-    void recycle(@NotNull ApngFrameUpdate update) {
+    void recycle(@NotNull AnimatedFrameUpdate update) {
         ByteBuffer buffer = update.takeOwnedPixels();
         if (buffer == null) return;
         synchronized (this.lock) {
@@ -177,7 +177,7 @@ final class ApngFrameStream implements AutoCloseable {
      * @return The stored first frame, so it can get shown right away, or NULL if it didn't get decoded yet. Then the next polled update is the first frame.
      */
     @Nullable
-    ApngFrameUpdate restart() {
+    AnimatedFrameUpdate restart() {
         synchronized (this.lock) {
             if (this.closed || this.failed) return null;
             this.generation++;
@@ -192,7 +192,7 @@ final class ApngFrameStream implements AutoCloseable {
             this.lastActiveNanos = this.nanoClock.getAsLong();
             this.scheduleTaskLocked();
             if (first == null) return null;
-            ApngFrameUpdate update = new ApngFrameUpdate(0, 0, displayDelayNanos(this.image.getFrame(0)));
+            AnimatedFrameUpdate update = new AnimatedFrameUpdate(0, 0, displayDelayNanos(this.image.getFrame(0)));
             update.setFullCanvas(this.image.getWidth(), this.image.getHeight());
             update.setPixels(first, true);
             return update;
@@ -201,10 +201,11 @@ final class ApngFrameStream implements AutoCloseable {
 
     /**
      * If all frames of all plays got polled, so the animation ended.
+     * Production finishes while the task composes the last frame, so the animation only ended once no task can queue that frame anymore.
      */
     boolean isFinished() {
         synchronized (this.lock) {
-            return this.productionFinished && this.readyUpdates.isEmpty() && !this.restartPending;
+            return this.productionFinished && !this.taskScheduled && this.readyUpdates.isEmpty() && !this.restartPending;
         }
     }
 
@@ -224,7 +225,7 @@ final class ApngFrameStream implements AutoCloseable {
     long getNativeMemoryBytes() {
         synchronized (this.lock) {
             long bytes = (this.firstFrame != null) ? this.firstFrame.capacity() : 0L;
-            for (ApngFrameUpdate update : this.readyUpdates) bytes += ownedBytes(update);
+            for (AnimatedFrameUpdate update : this.readyUpdates) bytes += ownedBytes(update);
             for (ByteBuffer buffer : this.freeBuffers) bytes += buffer.capacity();
             return bytes;
         }
@@ -272,24 +273,29 @@ final class ApngFrameStream implements AutoCloseable {
             this.fullCanvasPending = false;
             first = this.firstFrame;
         }
-        ApngFrameUpdate update = null;
+        AnimatedFrameUpdate update = null;
         boolean fatal = false;
         try {
             if (restart) this.applyRestart(restartAfterFirst ? first : null);
             if (!this.isProductionFinished()) update = this.produceNextUpdate(fullCanvas, first);
-        } catch (ApngSourceChangedException ex) {
+        } catch (AnimatedImageSourceChangedException ex) {
             fatal = true;
-            LOGGER.warn("[FANCYMENU] Stopped playing an APNG image, because its file changed after it got loaded or can't get read anymore ({}): {}", ex.getMessage(), this.sourceName);
+            LOGGER.warn("[FANCYMENU] Stopped playing the {} image, because its file changed after it got loaded or can't get read anymore ({}): {}", this.image.getFormatName(), ex.getMessage(), this.sourceName);
         } catch (IOException ex) {
             fatal = true;
-            LOGGER.error("[FANCYMENU] Failed to decode the first frame of an APNG image: {}", this.sourceName, ex);
+            LOGGER.error("[FANCYMENU] Failed to decode the first frame of the {} image: {}", this.image.getFormatName(), this.sourceName, ex);
         } catch (Throwable throwable) {
             fatal = true;
-            LOGGER.error("[FANCYMENU] Failed to decode an APNG image: {}", this.sourceName, throwable);
+            LOGGER.error("[FANCYMENU] Failed to decode the {} image: {}", this.image.getFormatName(), this.sourceName, throwable);
         }
-        boolean closedNow;
         synchronized (this.lock) {
-            if (fatal) this.failed = true;
+            if (fatal) {
+                this.failed = true;
+                // A failed stream never decodes again, so its source gets closed right away, which also releases its file.
+                // This happens before the task counts as stopped, so a close() at the same time never releases the same state again.
+                this.releaseDecodingState();
+                this.image.close();
+            }
             if (update != null) {
                 if (!this.closed && (taskGeneration == this.generation)) {
                     this.readyUpdates.addLast(update);
@@ -297,8 +303,7 @@ final class ApngFrameStream implements AutoCloseable {
                     this.discardLocked(update);
                 }
             }
-            closedNow = this.closed;
-            if (closedNow) {
+            if (this.closed) {
                 this.finishClosedTaskLocked();
             } else if (this.wantsMoreUpdatesLocked()) {
                 this.executor.execute(this::runTask);
@@ -306,22 +311,17 @@ final class ApngFrameStream implements AutoCloseable {
                 this.stopTaskLocked();
             }
         }
-        if (fatal) {
-            // A failed stream never decodes again, so its source gets closed right away, which also releases its file
-            this.releaseDecodingState();
-            this.image.close();
-        }
     }
 
     /**
      * Decodes and composes the next frame and returns its update, or NULL if the frame turned out broken and got cut from the animation.
      */
     @Nullable
-    private ApngFrameUpdate produceNextUpdate(boolean fullCanvas, @Nullable ByteBuffer first) throws IOException {
+    private AnimatedFrameUpdate produceNextUpdate(boolean fullCanvas, @Nullable ByteBuffer first) throws IOException {
         int index = this.nextFrameIndex;
         int play = this.nextPlay;
-        ApngFrame frame = this.image.getFrame(index);
-        ApngFrameUpdate update = new ApngFrameUpdate(index, play, displayDelayNanos(frame));
+        AnimatedImageFrame frame = this.image.getFrame(index);
+        AnimatedFrameUpdate update = new AnimatedFrameUpdate(index, play, displayDelayNanos(frame));
         if ((index == 0) && (first != null)) {
             // Every play starts with the same canvas, so later plays reuse the stored first frame instead of decoding it again
             if (this.playableFrameCount > 1) this.ensureCompositor().restoreFirstFrame(first);
@@ -331,16 +331,16 @@ final class ApngFrameStream implements AutoCloseable {
             this.advance(index, play);
             return update;
         }
-        ApngCompositor activeCompositor = this.ensureCompositor();
+        AnimatedFrameCompositor activeCompositor = this.ensureCompositor();
         try {
             activeCompositor.composeFrame(index, this.ensureDecoder(), update);
-        } catch (ApngSourceChangedException ex) {
+        } catch (AnimatedImageSourceChangedException ex) {
             // No problem of this frame, so cutting the animation before it would not help
             throw ex;
         } catch (IOException ex) {
             if (index == 0) throw ex;
             // Like browsers, keep playing all frames before the broken one
-            LOGGER.warn("[FANCYMENU] Frame {} of an APNG image is corrupted, so the animation only plays the frames before it: {}", index, this.sourceName, ex);
+            LOGGER.warn("[FANCYMENU] Frame {} of the {} image is corrupted, so the animation only plays the frames before it: {}", index, this.image.getFormatName(), this.sourceName, ex);
             this.playableFrameCount = index;
             this.nextFrameIndex = 0;
             this.nextPlay = play + 1;
@@ -355,6 +355,9 @@ final class ApngFrameStream implements AutoCloseable {
             update.setPixels(snapshot, true);
             // The stored first frame is all a single-frame animation ever shows, so the canvas is not needed anymore
             if (this.playableFrameCount == 1) this.releaseDecodingState();
+        } else if (update.getRectangleCount() == 0) {
+            // Frames without visible pixels that dispose nothing (like GIF frames outside the canvas) only take up their time, so they need no pixels and no upload
+            update.setContentUnchanged(true);
         } else {
             ByteBuffer buffer = this.takeBuffer((int) (update.getPixelCount() * 4L));
             activeCompositor.writePixels(update, buffer);
@@ -392,7 +395,7 @@ final class ApngFrameStream implements AutoCloseable {
 
     private void updateProductionFinished() {
         int numPlays = this.image.isAnimated() ? this.image.getNumPlays() : 1;
-        boolean finished = (numPlays != ApngImage.INFINITE_PLAYS) && (this.nextPlay >= numPlays);
+        boolean finished = (numPlays != AnimatedImage.INFINITE_PLAYS) && (this.nextPlay >= numPlays);
         synchronized (this.lock) {
             this.productionFinished = finished;
         }
@@ -443,37 +446,45 @@ final class ApngFrameStream implements AutoCloseable {
     }
 
     @NotNull
-    private ApngCompositor ensureCompositor() {
-        ApngCompositor active = this.compositor;
+    private AnimatedFrameCompositor ensureCompositor() {
+        AnimatedFrameCompositor active = this.compositor;
         if (active == null) {
-            active = new ApngCompositor(this.image);
+            active = new AnimatedFrameCompositor(this.image);
             this.compositor = active;
         }
         return active;
     }
 
     @NotNull
-    private ApngFrameDecoder ensureDecoder() {
-        ApngFrameDecoder active = this.decoder;
+    private AnimatedFrameDecoder ensureDecoder() {
+        AnimatedFrameDecoder active = this.decoder;
         if (active == null) {
-            active = new ApngFrameDecoder(this.image);
+            active = this.image.createFrameDecoder();
             this.decoder = active;
         }
         return active;
     }
 
     private void releaseDecodingState() {
-        ApngFrameDecoder activeDecoder = this.decoder;
+        AnimatedFrameDecoder activeDecoder = this.decoder;
         this.decoder = null;
         if (activeDecoder != null) activeDecoder.close();
-        ApngCompositor activeCompositor = this.compositor;
+        AnimatedFrameCompositor activeCompositor = this.compositor;
         this.compositor = null;
         if (activeCompositor != null) activeCompositor.release();
     }
 
     private void stopTaskLocked() {
         this.taskScheduled = false;
-        if (this.isInactiveLocked()) this.waitingForActivity = true;
+        /*
+         * markActive() only starts decoding again while the stream waits for activity. The flag gets set before the stream checks once more if it wants more frames,
+         * and markActive() reads it after writing its activity, so activity that came in after the task decided to stop gets noticed by one of them.
+         */
+        this.waitingForActivity = true;
+        if (this.wantsMoreUpdatesLocked()) {
+            this.scheduleTaskLocked();
+            return;
+        }
         this.scheduleTrimCheckLocked();
     }
 
@@ -509,7 +520,7 @@ final class ApngFrameStream implements AutoCloseable {
         this.executor.schedule(this::runTrimCheck, delay, TimeUnit.NANOSECONDS);
     }
 
-    void runTrimCheck() {
+    private void runTrimCheck() {
         synchronized (this.lock) {
             this.trimCheckScheduled = false;
             if (this.closed) return;
@@ -548,13 +559,13 @@ final class ApngFrameStream implements AutoCloseable {
     }
 
     private void dropReadyUpdatesLocked() {
-        ApngFrameUpdate update;
+        AnimatedFrameUpdate update;
         while ((update = this.readyUpdates.pollFirst()) != null) {
             this.discardLocked(update);
         }
     }
 
-    private void discardLocked(@NotNull ApngFrameUpdate update) {
+    private void discardLocked(@NotNull AnimatedFrameUpdate update) {
         ByteBuffer buffer = update.takeOwnedPixels();
         if (buffer == null) return;
         if (!this.closed && this.canPoolBufferLocked()) {
@@ -571,16 +582,16 @@ final class ApngFrameStream implements AutoCloseable {
         }
     }
 
-    private static long ownedBytes(@NotNull ApngFrameUpdate update) {
+    private static long ownedBytes(@NotNull AnimatedFrameUpdate update) {
         ByteBuffer pixels = update.getPixels();
         return ((pixels != null) && !update.hasSharedPixels()) ? pixels.capacity() : 0L;
     }
 
-    static long displayDelayNanos(@NotNull ApngFrame frame) {
+    private static long displayDelayNanos(@NotNull AnimatedImageFrame frame) {
         return Math.max(MIN_FRAME_DELAY_NANOS, frame.delayNanos());
     }
 
-    private static int resolveTargetQueuedUpdates(@NotNull ApngImage image, int canvasBytes) {
+    private static int resolveTargetQueuedUpdates(@NotNull AnimatedImage image, int canvasBytes) {
         long totalDelay = 0L;
         for (int i = 0; i < image.getFrameCount(); i++) {
             totalDelay += displayDelayNanos(image.getFrame(i));
@@ -592,7 +603,7 @@ final class ApngFrameStream implements AutoCloseable {
     }
 
     /**
-     * The decoding threads shared by all APNG streams. They have a slightly lower priority than normal threads, so decoding never competes with the render thread.
+     * The decoding threads shared by the streams of all animated images. They have a slightly lower priority than normal threads, so decoding never competes with the render thread.
      */
     private static final class SharedExecutor {
 
@@ -603,10 +614,10 @@ final class ApngFrameStream implements AutoCloseable {
             int threads = Math.max(1, Math.min(3, Runtime.getRuntime().availableProcessors() / 4));
             AtomicInteger counter = new AtomicInteger();
             ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(threads, runnable -> {
-                Thread thread = new Thread(runnable, "FancyMenu-ApngDecoder-" + counter.incrementAndGet());
+                Thread thread = new Thread(runnable, "FancyMenu-AnimatedImageDecoder-" + counter.incrementAndGet());
                 thread.setDaemon(true);
                 thread.setPriority(Thread.NORM_PRIORITY - 1);
-                thread.setUncaughtExceptionHandler((failedThread, throwable) -> LOGGER.error("[FANCYMENU] Uncaught exception in APNG decoder thread '{}'.", failedThread.getName(), throwable));
+                thread.setUncaughtExceptionHandler((failedThread, throwable) -> LOGGER.error("[FANCYMENU] Uncaught exception in animated image decoder thread '{}'.", failedThread.getName(), throwable));
                 return thread;
             });
             executor.setRemoveOnCancelPolicy(true);

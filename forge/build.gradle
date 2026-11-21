@@ -83,9 +83,6 @@ dependencies {
     implementation(jarJar("io.github.llamalad7:mixinextras-forge:${mixin_extras_version}")) {
         jarJar.ranged(it, "[${mixin_extras_version},)")
     }
-    minecraftLibrary(jarJar("com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7")) {
-        jarJar.ranged(it, "[1.7,)")
-    }
     minecraftLibrary(jarJar("org.joml:joml:1.10.8")) {
         jarJar.ranged(it, "[1.10.8,)")
         // Drop JetBrains annotations coming from Kotlin so we don't get a second module

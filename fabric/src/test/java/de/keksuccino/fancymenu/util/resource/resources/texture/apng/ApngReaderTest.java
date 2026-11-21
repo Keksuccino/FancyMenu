@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.apng;
 
+import de.keksuccino.fancymenu.util.resource.resources.texture.animated.AnimatedImage;
+import de.keksuccino.fancymenu.util.resource.resources.texture.animated.AnimatedImageTestSupport;
 import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -25,7 +27,7 @@ class ApngReaderTest {
         assertFalse(image.isAnimated());
         assertEquals(1, image.getFrameCount());
         ApngFrame frame = image.getFrame(0);
-        assertTrue(frame.coversCanvas(4, 4));
+        assertRegion(frame, 0, 0, 4, 4);
         assertEquals(ApngFrame.BLEND_OP_SOURCE, frame.blendOp());
         assertEquals(ApngFrame.DISPOSE_OP_NONE, frame.disposeOp());
     }
@@ -77,7 +79,7 @@ class ApngReaderTest {
         assertTrue(image.isAnimated());
         assertEquals(1, image.getFrameCount());
         assertEquals(2, image.getFrame(0).width());
-        assertEquals(ApngImage.INFINITE_PLAYS, image.getNumPlays());
+        assertEquals(AnimatedImage.INFINITE_PLAYS, image.getNumPlays());
     }
 
     @Test
@@ -86,7 +88,7 @@ class ApngReaderTest {
         byte[] whole = rgba(9, 9).header().imageData(samples).end();
         byte[] split = rgba(9, 9).splitDataChunks(1).header().imageData(samples).end();
 
-        assertArrayEquals(ApngFrameDecoderTest.decodeFirstFrame(whole), ApngFrameDecoderTest.decodeFirstFrame(split));
+        assertArrayEquals(ApngTestFiles.decodeFirstFrame(whole), ApngTestFiles.decodeFirstFrame(split));
     }
 
     @Test
@@ -114,7 +116,7 @@ class ApngReaderTest {
         ApngImage image = read(file);
 
         assertFalse(image.isAnimated());
-        assertTrue(image.getFrame(0).coversCanvas(4, 4));
+        assertRegion(image.getFrame(0), 0, 0, 4, 4);
     }
 
     @Test
@@ -285,7 +287,7 @@ class ApngReaderTest {
     @Test
     void invalidBitDepthAndOversizedImagesFail() {
         assertThrows(IOException.class, () -> read(ApngTestFiles.png(2, 2, 4, ApngImage.COLOR_TYPE_RGB).header().end()));
-        assertThrows(IOException.class, () -> read(rgba(ApngReader.MAX_DIMENSION + 1, 1).header().end()));
+        assertThrows(IOException.class, () -> read(rgba(AnimatedImage.MAX_DIMENSION + 1, 1).header().end()));
         assertThrows(IOException.class, () -> read(rgba(0, 4).header().end()));
     }
 
@@ -319,7 +321,7 @@ class ApngReaderTest {
     void parsingReadsTheSourceOnceFromStartToEnd() throws IOException {
         int[] samples = ApngTestFiles.randomSamples(128, 128, 8, ApngImage.COLOR_TYPE_RGBA, new Random(4));
         byte[] file = rgba(128, 128).header().chunk("tEXt", new byte[300_000]).imageData(samples).end();
-        ApngTestFiles.MemorySource source = new ApngTestFiles.MemorySource(file);
+        AnimatedImageTestSupport.MemorySource source = new AnimatedImageTestSupport.MemorySource(file);
 
         ApngReader.read(source, "test.png");
 
@@ -352,7 +354,7 @@ class ApngReaderTest {
 
     @Test
     void failedReadingClosesTheSource() {
-        ApngTestFiles.MemorySource source = new ApngTestFiles.MemorySource(rgba(4, 4).header().end());
+        AnimatedImageTestSupport.MemorySource source = new AnimatedImageTestSupport.MemorySource(rgba(4, 4).header().end());
 
         assertThrows(IOException.class, () -> ApngReader.read(source, "test.png"));
         assertTrue(source.isClosed());
@@ -360,7 +362,7 @@ class ApngReaderTest {
 
     @Test
     void closingTheImageClosesItsSource() throws IOException {
-        ApngTestFiles.MemorySource source = new ApngTestFiles.MemorySource(rgba(4, 4).header().imageData(RED).end());
+        AnimatedImageTestSupport.MemorySource source = new AnimatedImageTestSupport.MemorySource(rgba(4, 4).header().imageData(RED).end());
         ApngImage image = ApngReader.read(source, "test.png");
         assertFalse(source.isClosed());
 
@@ -376,7 +378,7 @@ class ApngReaderTest {
         byte[] file = png.transparency(7).imageData(new int[] {7, 8}).end();
         file[transparencyStart + 8 + 1] ^= 0x01;
 
-        int[] pixels = ApngFrameDecoderTest.decodeFirstFrame(file);
+        int[] pixels = ApngTestFiles.decodeFirstFrame(file);
 
         assertEquals(0xFF, pixels[0] >>> 24);
     }
@@ -412,6 +414,13 @@ class ApngReaderTest {
         data[21] = 1;
         data[23] = 10;
         return data;
+    }
+
+    private static void assertRegion(ApngFrame frame, int x, int y, int width, int height) {
+        assertEquals(x, frame.x());
+        assertEquals(y, frame.y());
+        assertEquals(width, frame.width());
+        assertEquals(height, frame.height());
     }
 
 }
