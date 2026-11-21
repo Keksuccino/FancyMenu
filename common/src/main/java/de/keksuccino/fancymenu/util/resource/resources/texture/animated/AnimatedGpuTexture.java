@@ -1,4 +1,4 @@
-package de.keksuccino.fancymenu.util.resource.resources.texture.apng;
+package de.keksuccino.fancymenu.util.resource.resources.texture.animated;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.renderpearl.api.GpuFormat;
@@ -10,16 +10,16 @@ import org.jetbrains.annotations.NotNull;
 import java.nio.ByteBuffer;
 
 /**
- * The GPU texture an APNG animation plays on. Unlike {@link net.minecraft.client.renderer.texture.DynamicTexture}, it keeps no copy of its pixels in memory,
+ * The GPU texture an animated image plays on. Unlike {@link net.minecraft.client.renderer.texture.DynamicTexture}, it keeps no copy of its pixels in memory,
  * because playback only uploads the regions that change between frames.<br>
- * It samples like DynamicTexture, so APNG images look exactly like PNG images. Must only be used on the render thread.
+ * It samples like DynamicTexture, so animated images look exactly like PNG images. Must only be used on the render thread.
  */
-public class ApngGpuTexture extends AbstractTexture {
+public class AnimatedGpuTexture extends AbstractTexture {
 
     private final int width;
     private final int height;
 
-    public ApngGpuTexture(@NotNull String label, int width, int height) {
+    public AnimatedGpuTexture(@NotNull String label, int width, int height) {
         this.width = width;
         this.height = height;
         GpuDevice device = RenderSystem.getDevice();

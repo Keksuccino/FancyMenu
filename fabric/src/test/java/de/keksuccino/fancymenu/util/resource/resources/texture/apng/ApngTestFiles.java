@@ -1,8 +1,8 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.apng;
 
+import de.keksuccino.fancymenu.util.resource.resources.texture.animated.AnimatedImageTestSupport;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,14 +13,14 @@ import java.util.zip.Deflater;
 /**
  * Writes PNG and APNG files for tests, with full control over chunks, scanline filters, interlacing and chunk splitting, and reads them from memory.
  */
-final class ApngTestFiles {
+public final class ApngTestFiles {
 
-    static final int[] ADAM7_X_START = {0, 4, 0, 2, 0, 1, 0};
-    static final int[] ADAM7_Y_START = {0, 0, 4, 0, 2, 0, 1};
-    static final int[] ADAM7_X_STEP = {8, 8, 4, 4, 2, 2, 1};
-    static final int[] ADAM7_Y_STEP = {8, 8, 8, 4, 4, 2, 2};
+    public static final int[] ADAM7_X_START = {0, 4, 0, 2, 0, 1, 0};
+    public static final int[] ADAM7_Y_START = {0, 0, 4, 0, 2, 0, 1};
+    public static final int[] ADAM7_X_STEP = {8, 8, 4, 4, 2, 2, 1};
+    public static final int[] ADAM7_Y_STEP = {8, 8, 8, 4, 4, 2, 2};
     /** Picks a random filter type for every row. **/
-    static final int RANDOM_FILTERS = -1;
+    public static final int RANDOM_FILTERS = -1;
 
     private ApngTestFiles() {
     }
@@ -28,11 +28,92 @@ final class ApngTestFiles {
     /**
      * Parses a file from memory.
      */
-    static ApngImage read(byte[] file) throws IOException {
-        return ApngReader.read(new MemorySource(file), "test.png");
+    public static ApngImage read(byte[] file) throws IOException {
+        return ApngReader.read(new AnimatedImageTestSupport.MemorySource(file), "test.png");
     }
 
-    static int channels(int colorType) {
+    /**
+     * Composes every frame of the first play of a file and returns the canvas after each frame.
+     */
+    public static int[][] composeAll(byte[] file) throws IOException {
+        return AnimatedImageTestSupport.composeAll(read(file));
+    }
+
+    /**
+     * Composes the first frame of a file on a transparent canvas and returns the canvas.
+     */
+    public static int[] decodeFirstFrame(byte[] file) throws IOException {
+        return AnimatedImageTestSupport.composeSingleFrame(read(file), 0);
+    }
+
+    /**
+     * An RGBA animation of random frames with random regions, dispose and blend operations.
+     */
+    public static byte[] randomAnimation(Random random, int width, int height, int frames) {
+        return randomAnimation(random, width, height, frames, false);
+    }
+
+    public static byte[] randomAnimation(Random random, int width, int height, int frames, boolean interlaced) {
+        Png png = png(width, height, 8, ApngImage.COLOR_TYPE_RGBA).interlaced(interlaced).header().animationControl(frames, 0);
+        png.frameControl(width, height, 0, 0, 1, 20, random.nextInt(3), random.nextInt(2)).imageData(randomPixels(random, width, height));
+        for (int i = 1; i < frames; i++) {
+            int frameWidth = 1 + random.nextInt(width);
+            int frameHeight = 1 + random.nextInt(height);
+            int x = random.nextInt(width - frameWidth + 1);
+            int y = random.nextInt(height - frameHeight + 1);
+            png.frame(frameWidth, frameHeight, x, y, 1, 20, random.nextInt(3), random.nextInt(2), randomPixels(random, frameWidth, frameHeight));
+        }
+        return png.end();
+    }
+
+    private static int[] randomPixels(Random random, int width, int height) {
+        int[] samples = new int[width * height * 4];
+        for (int i = 0; i < width * height; i++) {
+            samples[i * 4] = random.nextInt(256);
+            samples[i * 4 + 1] = random.nextInt(256);
+            samples[i * 4 + 2] = random.nextInt(256);
+            // Mostly opaque or clear pixels, like real animations, plus some in between
+            int alphaKind = random.nextInt(4);
+            samples[i * 4 + 3] = (alphaKind == 0) ? 0 : ((alphaKind == 1) ? random.nextInt(256) : 255);
+        }
+        return samples;
+    }
+
+    /**
+     * Four 4x4 frames that loop forever, every frame shows for 100 ms.
+     */
+    public static byte[] fourFrames() {
+        return png(4, 4, 8, ApngImage.COLOR_TYPE_RGBA).header().animationControl(4, 0)
+                .frameControl(4, 4, 0, 0, 1, 10, 0, 0).imageData(solid(4, 4, 255, 0, 0, 255))
+                .frame(2, 2, 0, 0, 1, 10, 0, 0, solid(2, 2, 0, 255, 0, 255))
+                .frame(2, 2, 2, 2, 1, 10, 0, 0, solid(2, 2, 0, 0, 255, 255))
+                .frame(1, 1, 1, 1, 1, 10, 0, 0, solid(1, 1, 9, 9, 9, 255))
+                .end();
+    }
+
+    /**
+     * Three 4x4 frames that play the given number of times.
+     */
+    public static byte[] threeFrames(int numPlays) {
+        return png(4, 4, 8, ApngImage.COLOR_TYPE_RGBA).header().animationControl(3, numPlays)
+                .frameControl(4, 4, 0, 0, 1, 10, 0, 0).imageData(solid(4, 4, 255, 0, 0, 255))
+                .frame(2, 2, 0, 0, 1, 10, 0, 0, solid(2, 2, 0, 255, 0, 255))
+                .frame(2, 2, 2, 2, 1, 10, 0, 0, solid(2, 2, 0, 0, 255, 255))
+                .end();
+    }
+
+    /**
+     * A copy of the file with one changed byte in the middle of the data of a frame, like an edit of the file.
+     */
+    public static byte[] changedFrameData(byte[] file, int frameIndex) throws IOException {
+        ApngFrame.DataChunks chunks = read(file).getFrame(frameIndex).dataChunks();
+        byte[] changed = file.clone();
+        int dataStart = (int) chunks.positions()[0] + chunks.headerLength();
+        changed[dataStart + (chunks.lengths()[0] - (chunks.headerLength() - 8)) / 2] ^= 0x10;
+        return changed;
+    }
+
+    public static int channels(int colorType) {
         return switch (colorType) {
             case ApngImage.COLOR_TYPE_RGB -> 3;
             case ApngImage.COLOR_TYPE_GRAYSCALE_ALPHA -> 2;
@@ -44,7 +125,7 @@ final class ApngTestFiles {
     /**
      * Encodes raw samples (channels interleaved, row by row) to a zlib stream of filtered scanlines.
      */
-    static byte[] encodeImageData(int width, int height, int bitDepth, int colorType, int[] samples, boolean interlaced, int filterType, Random random) {
+    public static byte[] encodeImageData(int width, int height, int bitDepth, int colorType, int[] samples, boolean interlaced, int filterType, Random random) {
         int channels = channels(colorType);
         ByteArrayOutputStream raw = new ByteArrayOutputStream();
         if (!interlaced) {
@@ -113,7 +194,7 @@ final class ApngTestFiles {
         return c;
     }
 
-    static byte[] deflate(byte[] data) {
+    public static byte[] deflate(byte[] data) {
         Deflater deflater = new Deflater(6);
         deflater.setInput(data);
         deflater.finish();
@@ -126,7 +207,7 @@ final class ApngTestFiles {
         return out.toByteArray();
     }
 
-    static int[] randomSamples(int width, int height, int bitDepth, int colorType, Random random) {
+    public static int[] randomSamples(int width, int height, int bitDepth, int colorType, Random random) {
         int[] samples = new int[width * height * channels(colorType)];
         int max = (1 << bitDepth) - 1;
         for (int i = 0; i < samples.length; i++) {
@@ -138,7 +219,7 @@ final class ApngTestFiles {
     /**
      * Builds an RGBA8 frame of a single color.
      */
-    static int[] solid(int width, int height, int red, int green, int blue, int alpha) {
+    public static int[] solid(int width, int height, int red, int green, int blue, int alpha) {
         int[] samples = new int[width * height * 4];
         for (int i = 0; i < width * height; i++) {
             samples[i * 4] = red;
@@ -149,21 +230,14 @@ final class ApngTestFiles {
         return samples;
     }
 
-    /**
-     * ABGR pixel of 8-bit RGBA values, as the decoder produces it.
-     */
-    static int abgr(int red, int green, int blue, int alpha) {
-        return (alpha << 24) | (blue << 16) | (green << 8) | red;
-    }
-
-    static Png png(int width, int height, int bitDepth, int colorType) {
+    public static Png png(int width, int height, int bitDepth, int colorType) {
         return new Png(width, height, bitDepth, colorType);
     }
 
     /**
      * A PNG or APNG file under construction. Chunks get written in the order the methods get called.
      */
-    static final class Png {
+    public static final class Png {
 
         final int width;
         final int height;
@@ -185,22 +259,22 @@ final class ApngTestFiles {
             this.out.writeBytes(new byte[] {(byte) 0x89, 'P', 'N', 'G', '\r', '\n', 0x1A, '\n'});
         }
 
-        Png interlaced(boolean interlaced) {
+        public Png interlaced(boolean interlaced) {
             this.interlaced = interlaced;
             return this;
         }
 
-        Png filter(int filterType) {
+        public Png filter(int filterType) {
             this.filterType = filterType;
             return this;
         }
 
-        Png splitDataChunks(int maxDataChunkSize) {
+        public Png splitDataChunks(int maxDataChunkSize) {
             this.maxDataChunkSize = maxDataChunkSize;
             return this;
         }
 
-        Png header() {
+        public Png header() {
             byte[] data = new byte[13];
             putInt(data, 0, this.width);
             putInt(data, 4, this.height);
@@ -210,13 +284,13 @@ final class ApngTestFiles {
             return this.chunk("IHDR", data);
         }
 
-        Png palette(int[] rgb) {
+        public Png palette(int[] rgb) {
             byte[] data = new byte[rgb.length];
             for (int i = 0; i < rgb.length; i++) data[i] = (byte) rgb[i];
             return this.chunk("PLTE", data);
         }
 
-        Png transparency(int... values) {
+        public Png transparency(int... values) {
             byte[] data;
             if (this.colorType == ApngImage.COLOR_TYPE_PALETTE) {
                 data = new byte[values.length];
@@ -231,14 +305,14 @@ final class ApngTestFiles {
             return this.chunk("tRNS", data);
         }
 
-        Png animationControl(int frameCount, int numPlays) {
+        public Png animationControl(int frameCount, int numPlays) {
             byte[] data = new byte[8];
             putInt(data, 0, frameCount);
             putInt(data, 4, numPlays);
             return this.chunk("acTL", data);
         }
 
-        Png frameControl(int width, int height, int x, int y, int delayNumerator, int delayDenominator, int disposeOp, int blendOp) {
+        public Png frameControl(int width, int height, int x, int y, int delayNumerator, int delayDenominator, int disposeOp, int blendOp) {
             byte[] data = new byte[26];
             putInt(data, 0, this.sequenceNumber++);
             putInt(data, 4, width);
@@ -257,7 +331,7 @@ final class ApngTestFiles {
         /**
          * Writes the default image (IDAT chunks) from raw samples of the whole canvas.
          */
-        Png imageData(int[] samples) {
+        public Png imageData(int[] samples) {
             byte[] zlib = encodeImageData(this.width, this.height, this.bitDepth, this.colorType, samples, this.interlaced, this.filterType, this.random);
             for (byte[] part : this.split(zlib)) this.chunk("IDAT", part);
             return this;
@@ -266,7 +340,7 @@ final class ApngTestFiles {
         /**
          * Writes the data of an animation frame (fdAT chunks) from raw samples of the frame region.
          */
-        Png frameData(int width, int height, int[] samples) {
+        public Png frameData(int width, int height, int[] samples) {
             byte[] zlib = encodeImageData(width, height, this.bitDepth, this.colorType, samples, this.interlaced, this.filterType, this.random);
             for (byte[] part : this.split(zlib)) this.fdAT(part);
             return this;
@@ -275,7 +349,7 @@ final class ApngTestFiles {
         /**
          * Writes one fdAT chunk with the next sequence number, for frames whose data chunks get written by hand.
          */
-        Png fdAT(byte[] zlibPart) {
+        public Png fdAT(byte[] zlibPart) {
             byte[] data = new byte[zlibPart.length + 4];
             putInt(data, 0, this.sequenceNumber++);
             System.arraycopy(zlibPart, 0, data, 4, zlibPart.length);
@@ -285,11 +359,11 @@ final class ApngTestFiles {
         /**
          * Writes a frame control and its data chunks. Frames before the first IDAT chunk must use {@link #imageData(int[])} instead.
          */
-        Png frame(int width, int height, int x, int y, int delayNumerator, int delayDenominator, int disposeOp, int blendOp, int[] samples) {
+        public Png frame(int width, int height, int x, int y, int delayNumerator, int delayDenominator, int disposeOp, int blendOp, int[] samples) {
             return this.frameControl(width, height, x, y, delayNumerator, delayDenominator, disposeOp, blendOp).frameData(width, height, samples);
         }
 
-        Png chunk(String type, byte[] data) {
+        public Png chunk(String type, byte[] data) {
             byte[] typeBytes = type.getBytes(StandardCharsets.US_ASCII);
             byte[] length = new byte[4];
             putInt(length, 0, data.length);
@@ -305,7 +379,7 @@ final class ApngTestFiles {
             return this;
         }
 
-        byte[] end() {
+        public byte[] end() {
             this.chunk("IEND", new byte[0]);
             return this.out.toByteArray();
         }
@@ -313,7 +387,7 @@ final class ApngTestFiles {
         /**
          * The file so far, without IEND, like a download that got cut off.
          */
-        byte[] truncated() {
+        public byte[] truncated() {
             return this.out.toByteArray();
         }
 
@@ -330,51 +404,11 @@ final class ApngTestFiles {
 
     }
 
-    static void putInt(byte[] data, int offset, int value) {
+    public static void putInt(byte[] data, int offset, int value) {
         data[offset] = (byte) (value >>> 24);
         data[offset + 1] = (byte) (value >>> 16);
         data[offset + 2] = (byte) (value >>> 8);
         data[offset + 3] = (byte) value;
-    }
-
-    /**
-     * A source in memory that remembers its reads. Its bytes can get changed or cut after parsing, like a file that gets edited while it plays.
-     */
-    static final class MemorySource implements ApngSource {
-
-        byte[] data;
-        /** Position and length of every read that returned bytes. **/
-        final List<long[]> reads = new ArrayList<>();
-        int closeCount;
-
-        MemorySource(byte[] data) {
-            this.data = data;
-        }
-
-        @Override
-        public int read(ByteBuffer target, long position) throws IOException {
-            if (this.closeCount > 0) throw new IOException("The source is closed");
-            if (position >= this.data.length) return -1;
-            int count = (int) Math.min(target.remaining(), this.data.length - position);
-            target.put(this.data, (int) position, count);
-            this.reads.add(new long[] {position, count});
-            return count;
-        }
-
-        @Override
-        public long size() {
-            return this.data.length;
-        }
-
-        @Override
-        public void close() {
-            this.closeCount++;
-        }
-
-        boolean isClosed() {
-            return this.closeCount > 0;
-        }
-
     }
 
 }

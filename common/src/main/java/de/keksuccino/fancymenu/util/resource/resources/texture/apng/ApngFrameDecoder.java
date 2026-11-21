@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.apng;
 
+import de.keksuccino.fancymenu.util.resource.resources.texture.animated.AnimatedFrameDecoder;
+import de.keksuccino.fancymenu.util.resource.resources.texture.animated.AnimatedImageSourceChangedException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
@@ -13,12 +15,12 @@ import java.util.zip.Inflater;
 /**
  * Decodes the compressed data of APNG frames row by row: reads it from the source of the image, inflates it, reverses the scanline filters, walks the seven Adam7 passes
  * of interlaced images and converts the pixels of all PNG color types and bit depths to 8-bit ABGR (the pixel layout of RGBA textures in memory).<br>
- * Every decoded row goes straight to a {@link RowConsumer}, so decoding a frame only needs two rows and a small read buffer of memory, no matter how big the frame is.<br><br>
+ * Every decoded row goes straight to a {@link AnimatedFrameDecoder.RowConsumer}, so decoding a frame only needs two rows and a small read buffer of memory, no matter how big the frame is.<br><br>
  *
  * 16-bit samples get rounded to the nearest 8-bit value. tRNS colors of 16-bit images get compared with the full 16-bit samples, as the PNG specification says.
  * Not thread-safe, every decoding thread needs its own instance.
  */
-final class ApngFrameDecoder implements AutoCloseable {
+final class ApngFrameDecoder implements AnimatedFrameDecoder {
 
     private static final int[] ADAM7_X_START = {0, 4, 0, 2, 0, 1, 0};
     private static final int[] ADAM7_Y_START = {0, 0, 4, 0, 2, 0, 1};
@@ -39,6 +41,8 @@ final class ApngFrameDecoder implements AutoCloseable {
 
     @NotNull
     private final Inflater inflater = new Inflater();
+    @NotNull
+    private final ApngImage image;
     @NotNull
     private final ApngFrameDataInput input;
     private final int format;
@@ -63,6 +67,7 @@ final class ApngFrameDecoder implements AutoCloseable {
     private final int[] rowPixels;
 
     ApngFrameDecoder(@NotNull ApngImage image) {
+        this.image = image;
         this.input = new ApngFrameDataInput(image);
         this.bitDepth = image.getBitDepth();
         this.bitsPerPixel = image.getBitsPerPixel();
@@ -83,10 +88,12 @@ final class ApngFrameDecoder implements AutoCloseable {
     /**
      * Decodes all pixels of the frame and hands them row by row to the consumer.
      *
-     * @throws ApngSourceChangedException If the source does not hold the data anymore that got parsed from it.
+     * @throws AnimatedImageSourceChangedException If the source does not hold the data anymore that got parsed from it.
      * @throws IOException If the frame data is corrupted or ends too early.
      */
-    void decode(@NotNull ApngFrame frame, @NotNull RowConsumer consumer) throws IOException {
+    @Override
+    public void decode(int frameIndex, @NotNull RowConsumer consumer) throws IOException {
+        ApngFrame frame = this.image.getFrame(frameIndex);
         this.inflater.reset();
         this.input.start(frame.dataChunks());
         try {
@@ -102,7 +109,7 @@ final class ApngFrameDecoder implements AutoCloseable {
                     }
                 }
             }
-        } catch (ApngSourceChangedException ex) {
+        } catch (AnimatedImageSourceChangedException ex) {
             throw ex;
         } catch (IOException | DataFormatException ex) {
             // Changed bytes in the chunk that got read last look like corrupted data, because its CRC only gets checked at its end, so the chunk gets checked first
@@ -408,22 +415,6 @@ final class ApngFrameDecoder implements AutoCloseable {
     @Override
     public void close() {
         this.inflater.end();
-    }
-
-    /**
-     * Receives the decoded rows of a frame.
-     */
-    interface RowConsumer {
-
-        /**
-         * @param y The frame row of the pixels.
-         * @param x The frame column of the first pixel.
-         * @param step The column distance of consecutive pixels. Rows of interlaced frames only have every n-th pixel of their row.
-         * @param pixels The ABGR pixels of the row. The array gets reused for the next row, so it must not be kept.
-         * @param count How many pixels of the array belong to the row.
-         */
-        void acceptRow(int y, int x, int step, @NotNull int[] pixels, int count);
-
     }
 
 }

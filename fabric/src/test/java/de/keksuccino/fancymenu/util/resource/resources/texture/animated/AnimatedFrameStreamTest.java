@@ -1,22 +1,17 @@
-package de.keksuccino.fancymenu.util.resource.resources.texture.apng;
+package de.keksuccino.fancymenu.util.resource.resources.texture.animated;
 
+import de.keksuccino.fancymenu.util.resource.resources.texture.apng.ApngTestFiles;
+import de.keksuccino.fancymenu.util.resource.resources.texture.apng.ApngImage;
+import de.keksuccino.fancymenu.util.resource.resources.texture.apng.ApngReader;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.AbstractExecutorService;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Delayed;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.function.LongSupplier;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,34 +21,34 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class ApngFrameStreamTest {
+class AnimatedFrameStreamTest {
 
     private static final int WIDTH = 16;
     private static final int HEIGHT = 12;
 
     private long now = 1_000_000_000L;
-    private final ManualExecutor executor = new ManualExecutor(() -> this.now);
-    private final List<ApngFrameStream> streams = new ArrayList<>();
-    private final List<ApngTestFiles.MemorySource> sources = new ArrayList<>();
+    private final AnimatedImageTestSupport.ManualExecutor executor = new AnimatedImageTestSupport.ManualExecutor(() -> this.now);
+    private final List<AnimatedFrameStream> streams = new ArrayList<>();
+    private final List<AnimatedImageTestSupport.MemorySource> sources = new ArrayList<>();
 
     @AfterEach
     void closeStreams() {
-        this.streams.forEach(ApngFrameStream::close);
+        this.streams.forEach(AnimatedFrameStream::close);
         this.executor.runTasks();
-        for (ApngFrameStream stream : this.streams) assertEquals(0L, stream.getNativeMemoryBytes());
-        for (ApngTestFiles.MemorySource source : this.sources) assertTrue(source.isClosed());
+        for (AnimatedFrameStream stream : this.streams) assertEquals(0L, stream.getNativeMemoryBytes());
+        for (AnimatedImageTestSupport.MemorySource source : this.sources) assertTrue(source.isClosed());
     }
 
     @Test
     void updatesRebuildEveryComposedFrameOnTheTexture() throws IOException {
-        byte[] file = ApngCompositorTest.randomAnimation(new Random(7), WIDTH, HEIGHT, 10);
-        int[][] expected = ApngCompositorTest.composeAll(file);
-        ApngFrameStream stream = this.stream(file);
+        byte[] file = ApngTestFiles.randomAnimation(new Random(7), WIDTH, HEIGHT, 10);
+        int[][] expected = ApngTestFiles.composeAll(file);
+        AnimatedFrameStream stream = this.stream(file);
         int[] texture = new int[WIDTH * HEIGHT];
 
         for (int play = 0; play < 3; play++) {
             for (int frame = 0; frame < expected.length; frame++) {
-                ApngFrameUpdate update = this.next(stream);
+                AnimatedFrameUpdate update = this.next(stream);
                 assertEquals(frame, update.getFrameIndex());
                 assertEquals(play, update.getPlay());
                 apply(update, texture);
@@ -65,27 +60,27 @@ class ApngFrameStreamTest {
 
     @Test
     void keepsOnlyAFewFramesReady() throws IOException {
-        ApngFrameStream stream = this.stream(ApngCompositorTest.randomAnimation(new Random(8), WIDTH, HEIGHT, 30));
+        AnimatedFrameStream stream = this.stream(ApngTestFiles.randomAnimation(new Random(8), WIDTH, HEIGHT, 30));
         this.executor.runTasks();
 
         int ready = 0;
-        ApngFrameUpdate update;
+        AnimatedFrameUpdate update;
         while ((update = stream.poll()) != null) {
             ready++;
             stream.recycle(update);
         }
 
-        assertTrue((ready >= ApngFrameStream.MIN_QUEUED_UPDATES) && (ready <= ApngFrameStream.MAX_QUEUED_UPDATES), "ready frames: " + ready);
+        assertTrue((ready >= AnimatedFrameStream.MIN_QUEUED_UPDATES) && (ready <= AnimatedFrameStream.MAX_QUEUED_UPDATES), "ready frames: " + ready);
     }
 
     @Test
     void finitePlaysEndAfterTheirLastFrame() throws IOException {
-        ApngFrameStream stream = this.stream(threeFrames(2));
+        AnimatedFrameStream stream = this.stream(ApngTestFiles.threeFrames(2));
 
         List<String> shown = new ArrayList<>();
         while (true) {
             this.executor.runTasks();
-            ApngFrameUpdate update = stream.poll();
+            AnimatedFrameUpdate update = stream.poll();
             if (update == null) break;
             shown.add(update.getFrameIndex() + "/" + update.getPlay());
             stream.recycle(update);
@@ -97,11 +92,11 @@ class ApngFrameStreamTest {
 
     @Test
     void laterPlaysReuseTheStoredFirstFrame() throws IOException {
-        ApngFrameStream stream = this.stream(threeFrames(0));
-        ApngFrameUpdate firstPlay = this.next(stream);
+        AnimatedFrameStream stream = this.stream(ApngTestFiles.threeFrames(0));
+        AnimatedFrameUpdate firstPlay = this.next(stream);
         stream.recycle(this.next(stream));
         stream.recycle(this.next(stream));
-        ApngFrameUpdate secondPlay = this.next(stream);
+        AnimatedFrameUpdate secondPlay = this.next(stream);
 
         assertEquals(1, secondPlay.getPlay());
         assertSame(firstPlay.getPixels(), secondPlay.getPixels());
@@ -110,24 +105,24 @@ class ApngFrameStreamTest {
 
     @Test
     void restartShowsTheStoredFirstFrameAndContinuesWithTheSecondOne() throws IOException {
-        byte[] file = ApngCompositorTest.randomAnimation(new Random(9), WIDTH, HEIGHT, 6);
-        int[][] expected = ApngCompositorTest.composeAll(file);
-        ApngFrameStream stream = this.stream(file);
+        byte[] file = ApngTestFiles.randomAnimation(new Random(9), WIDTH, HEIGHT, 6);
+        int[][] expected = ApngTestFiles.composeAll(file);
+        AnimatedFrameStream stream = this.stream(file);
         int[] texture = new int[WIDTH * HEIGHT];
         for (int i = 0; i < 4; i++) {
-            ApngFrameUpdate update = this.next(stream);
+            AnimatedFrameUpdate update = this.next(stream);
             apply(update, texture);
             stream.recycle(update);
         }
 
-        ApngFrameUpdate first = stream.restart();
+        AnimatedFrameUpdate first = stream.restart();
         assertNotNull(first);
         apply(first, texture);
         stream.recycle(first);
         assertArrayEquals(expected[0], texture);
 
         for (int frame = 1; frame < expected.length; frame++) {
-            ApngFrameUpdate update = this.next(stream);
+            AnimatedFrameUpdate update = this.next(stream);
             assertEquals(frame, update.getFrameIndex());
             assertEquals(0, update.getPlay());
             apply(update, texture);
@@ -138,10 +133,10 @@ class ApngFrameStreamTest {
 
     @Test
     void restartBeforeTheFirstFrameExistsStartsFromTheBeginning() throws IOException {
-        ApngFrameStream stream = this.stream(threeFrames(0));
+        AnimatedFrameStream stream = this.stream(ApngTestFiles.threeFrames(0));
 
         assertNull(stream.restart());
-        ApngFrameUpdate update = this.next(stream);
+        AnimatedFrameUpdate update = this.next(stream);
 
         assertEquals(0, update.getFrameIndex());
         assertEquals(0, update.getPlay());
@@ -149,29 +144,29 @@ class ApngFrameStreamTest {
 
     @Test
     void restartingAFinishedAnimationPlaysItAgain() throws IOException {
-        ApngFrameStream stream = this.stream(threeFrames(1));
+        AnimatedFrameStream stream = this.stream(ApngTestFiles.threeFrames(1));
         for (int i = 0; i < 3; i++) stream.recycle(this.next(stream));
         this.executor.runTasks();
         assertNull(stream.poll());
         assertTrue(stream.isFinished());
 
-        ApngFrameUpdate first = stream.restart();
+        AnimatedFrameUpdate first = stream.restart();
 
         assertNotNull(first);
         assertFalse(stream.isFinished());
-        ApngFrameUpdate second = this.next(stream);
+        AnimatedFrameUpdate second = this.next(stream);
         assertEquals(1, second.getFrameIndex());
         stream.recycle(second);
     }
 
     @Test
     void idleStreamFreesItsReadyFramesAndResumesWithTheWholeCanvas() throws IOException {
-        byte[] file = ApngCompositorTest.randomAnimation(new Random(10), WIDTH, HEIGHT, 12);
-        int[][] expected = ApngCompositorTest.composeAll(file);
-        ApngFrameStream stream = this.stream(file);
+        byte[] file = ApngTestFiles.randomAnimation(new Random(10), WIDTH, HEIGHT, 12);
+        int[][] expected = ApngTestFiles.composeAll(file);
+        AnimatedFrameStream stream = this.stream(file);
         int[] texture = new int[WIDTH * HEIGHT];
         for (int i = 0; i < 3; i++) {
-            ApngFrameUpdate update = this.next(stream);
+            AnimatedFrameUpdate update = this.next(stream);
             apply(update, texture);
             stream.recycle(update);
         }
@@ -179,20 +174,20 @@ class ApngFrameStreamTest {
         long firstFrameBytes = WIDTH * HEIGHT * 4L;
         assertTrue(stream.getNativeMemoryBytes() > firstFrameBytes);
 
-        this.now += ApngFrameStream.INACTIVITY_TIMEOUT_NANOS + 1L;
+        this.now += AnimatedFrameStream.INACTIVITY_TIMEOUT_NANOS + 1L;
         this.executor.runTasks();
 
         assertEquals(firstFrameBytes, stream.getNativeMemoryBytes());
         // Rendering the texture again starts decoding right away
         stream.markActive();
-        ApngFrameUpdate resumed = this.next(stream);
+        AnimatedFrameUpdate resumed = this.next(stream);
         assertEquals(1, resumed.getRectangleCount());
         assertEquals((long) WIDTH * HEIGHT, resumed.getPixelCount());
         apply(resumed, texture);
         assertArrayEquals(expected[resumed.getFrameIndex()], texture);
         stream.recycle(resumed);
         // Playback continues normally after the frames that got dropped
-        ApngFrameUpdate following = this.next(stream);
+        AnimatedFrameUpdate following = this.next(stream);
         apply(following, texture);
         assertArrayEquals(expected[following.getFrameIndex()], texture);
         stream.recycle(following);
@@ -200,18 +195,18 @@ class ApngFrameStreamTest {
 
     @Test
     void idleStreamThatShowedNothingStartsAtItsFirstFrame() throws IOException {
-        byte[] file = ApngCompositorTest.randomAnimation(new Random(15), WIDTH, HEIGHT, 12);
-        int[][] expected = ApngCompositorTest.composeAll(file);
-        ApngFrameStream stream = this.stream(file);
+        byte[] file = ApngTestFiles.randomAnimation(new Random(15), WIDTH, HEIGHT, 12);
+        int[][] expected = ApngTestFiles.composeAll(file);
+        AnimatedFrameStream stream = this.stream(file);
         this.executor.runTasks();
 
-        this.now += ApngFrameStream.INACTIVITY_TIMEOUT_NANOS + 1L;
+        this.now += AnimatedFrameStream.INACTIVITY_TIMEOUT_NANOS + 1L;
         this.executor.runTasks();
         stream.markActive();
 
         int[] texture = new int[WIDTH * HEIGHT];
         for (int frame = 0; frame < 4; frame++) {
-            ApngFrameUpdate update = this.next(stream);
+            AnimatedFrameUpdate update = this.next(stream);
             assertEquals(frame, update.getFrameIndex());
             assertEquals(0, update.getPlay());
             apply(update, texture);
@@ -221,8 +216,29 @@ class ApngFrameStreamTest {
     }
 
     @Test
+    void streamIsNotFinishedWhileItsTaskStillComposesTheLastFrame() throws IOException {
+        // Production finishes while the task composes the last frame, and the decoder gets closed before the task queues that frame
+        ApngImage image = ApngReader.read(new AnimatedImageTestSupport.MemorySource(ApngTestFiles.threeFrames(1)), "test.png");
+        List<Boolean> finishedWhileComposing = new ArrayList<>();
+        AnimatedFrameStream[] stream = new AnimatedFrameStream[1];
+        AnimatedImage hooked = new DecoderCloseHook(image, () -> finishedWhileComposing.add(stream[0].isFinished()));
+        stream[0] = new AnimatedFrameStream(hooked, "test.png", this.executor, () -> this.now);
+        this.streams.add(stream[0]);
+        stream[0].start();
+        stream[0].recycle(this.next(stream[0]));
+        stream[0].recycle(stream[0].poll());
+
+        this.executor.runTasks();
+
+        assertEquals(List.of(false), finishedWhileComposing);
+        assertFalse(stream[0].isFinished());
+        stream[0].recycle(this.next(stream[0]));
+        assertTrue(stream[0].isFinished());
+    }
+
+    @Test
     void restartedStreamIsNotFinishedBeforeItDecodedAgain() throws IOException {
-        ApngFrameStream stream = this.stream(threeFrames(1));
+        AnimatedFrameStream stream = this.stream(ApngTestFiles.threeFrames(1));
         for (int i = 0; i < 3; i++) stream.recycle(this.next(stream));
         this.executor.runTasks();
         assertTrue(stream.isFinished());
@@ -236,12 +252,12 @@ class ApngFrameStreamTest {
 
     @Test
     void streamThatStaysActiveKeepsItsReadyFrames() throws IOException {
-        ApngFrameStream stream = this.stream(ApngCompositorTest.randomAnimation(new Random(12), WIDTH, HEIGHT, 12));
+        AnimatedFrameStream stream = this.stream(ApngTestFiles.randomAnimation(new Random(12), WIDTH, HEIGHT, 12));
         this.executor.runTasks();
         long bytes = stream.getNativeMemoryBytes();
 
         for (int i = 0; i < 5; i++) {
-            this.now += ApngFrameStream.INACTIVITY_TIMEOUT_NANOS / 2L;
+            this.now += AnimatedFrameStream.INACTIVITY_TIMEOUT_NANOS / 2L;
             stream.markActive();
             this.executor.runTasks();
         }
@@ -257,11 +273,11 @@ class ApngFrameStreamTest {
                 .frameControl(2, 2, 2, 2, 1, 10, 0, 0);
         png.chunk("fdAT", new byte[] {0, 0, 0, 4, 0x78, (byte) 0x9C, 1, 2, 3});
         png.frame(1, 1, 0, 0, 1, 10, 0, 0, ApngTestFiles.solid(1, 1, 0, 0, 255, 255));
-        ApngFrameStream stream = this.stream(png.end());
+        AnimatedFrameStream stream = this.stream(png.end());
 
         List<String> shown = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
-            ApngFrameUpdate update = this.next(stream);
+            AnimatedFrameUpdate update = this.next(stream);
             shown.add(update.getFrameIndex() + "/" + update.getPlay());
             stream.recycle(update);
         }
@@ -273,8 +289,8 @@ class ApngFrameStreamTest {
     @Test
     void corruptedFirstFrameFailsTheStream() throws IOException {
         byte[] file = ApngTestFiles.png(4, 4, 8, ApngImage.COLOR_TYPE_RGBA).header().chunk("IDAT", new byte[] {0x78, (byte) 0x9C, 1, 2, 3}).end();
-        ApngTestFiles.MemorySource source = new ApngTestFiles.MemorySource(file);
-        ApngFrameStream stream = this.stream(source);
+        AnimatedImageTestSupport.MemorySource source = new AnimatedImageTestSupport.MemorySource(file);
+        AnimatedFrameStream stream = this.stream(source);
 
         this.executor.runTasks();
 
@@ -287,18 +303,18 @@ class ApngFrameStreamTest {
 
     @Test
     void changedSourceFailsTheStreamInsteadOfCuttingTheAnimation() throws IOException {
-        byte[] file = fourFrames();
-        ApngTestFiles.MemorySource source = new ApngTestFiles.MemorySource(file);
-        ApngFrameStream stream = this.stream(source);
+        byte[] file = ApngTestFiles.fourFrames();
+        AnimatedImageTestSupport.MemorySource source = new AnimatedImageTestSupport.MemorySource(file);
+        AnimatedFrameStream stream = this.stream(source);
         this.executor.runTasks();
         // The stream decoded the first two frames ahead, the third one changes before it gets decoded
-        source.data = changedFrameData(file, 2);
+        source.data = ApngTestFiles.changedFrameData(file, 2);
 
         List<String> shown = new ArrayList<>();
         // Bounded, because an animation that got cut instead would loop forever
         for (int i = 0; i < 20; i++) {
             this.executor.runTasks();
-            ApngFrameUpdate update = stream.poll();
+            AnimatedFrameUpdate update = stream.poll();
             if (update == null) break;
             shown.add(update.getFrameIndex() + "/" + update.getPlay());
             stream.recycle(update);
@@ -314,17 +330,17 @@ class ApngFrameStreamTest {
 
     @Test
     void changedSourceFailsTheStreamInLaterPlaysToo() throws IOException {
-        byte[] file = fourFrames();
-        ApngTestFiles.MemorySource source = new ApngTestFiles.MemorySource(file);
-        ApngFrameStream stream = this.stream(source);
+        byte[] file = ApngTestFiles.fourFrames();
+        AnimatedImageTestSupport.MemorySource source = new AnimatedImageTestSupport.MemorySource(file);
+        AnimatedFrameStream stream = this.stream(source);
         for (int i = 0; i < 4; i++) stream.recycle(this.next(stream));
         this.executor.runTasks();
 
-        source.data = changedFrameData(file, 3);
+        source.data = ApngTestFiles.changedFrameData(file, 3);
         int shown = 0;
         for (int i = 0; i < 20; i++) {
             this.executor.runTasks();
-            ApngFrameUpdate update = stream.poll();
+            AnimatedFrameUpdate update = stream.poll();
             if (update == null) break;
             assertEquals(1, update.getPlay());
             shown++;
@@ -338,9 +354,9 @@ class ApngFrameStreamTest {
 
     @Test
     void staticImageFinishesAfterItsOnlyFrame() throws IOException {
-        ApngFrameStream stream = this.stream(ApngTestFiles.png(4, 4, 8, ApngImage.COLOR_TYPE_RGBA).header().imageData(ApngTestFiles.solid(4, 4, 1, 2, 3, 4)).end());
+        AnimatedFrameStream stream = this.stream(ApngTestFiles.png(4, 4, 8, ApngImage.COLOR_TYPE_RGBA).header().imageData(ApngTestFiles.solid(4, 4, 1, 2, 3, 4)).end());
 
-        ApngFrameUpdate update = this.next(stream);
+        AnimatedFrameUpdate update = this.next(stream);
         stream.recycle(update);
         this.executor.runTasks();
 
@@ -353,13 +369,13 @@ class ApngFrameStreamTest {
     void singleFrameAnimationsOnlyChangeTheTextureOnce() throws IOException {
         byte[] file = ApngTestFiles.png(4, 4, 8, ApngImage.COLOR_TYPE_RGBA).header().animationControl(1, 0)
                 .frameControl(4, 4, 0, 0, 1, 10, 0, 0).imageData(ApngTestFiles.solid(4, 4, 1, 2, 3, 4)).end();
-        ApngFrameStream stream = this.stream(file);
+        AnimatedFrameStream stream = this.stream(file);
 
-        ApngFrameUpdate first = this.next(stream);
+        AnimatedFrameUpdate first = this.next(stream);
         assertFalse(first.isContentUnchanged());
         stream.recycle(first);
         for (int play = 1; play < 4; play++) {
-            ApngFrameUpdate update = this.next(stream);
+            AnimatedFrameUpdate update = this.next(stream);
             assertEquals(play, update.getPlay());
             assertTrue(update.isContentUnchanged());
             stream.recycle(update);
@@ -368,10 +384,10 @@ class ApngFrameStreamTest {
 
     @Test
     void closingFreesAllNativeMemoryEvenWithAPolledUpdate() throws IOException {
-        ApngTestFiles.MemorySource source = new ApngTestFiles.MemorySource(ApngCompositorTest.randomAnimation(new Random(13), WIDTH, HEIGHT, 8));
-        ApngFrameStream stream = this.stream(source);
+        AnimatedImageTestSupport.MemorySource source = new AnimatedImageTestSupport.MemorySource(ApngTestFiles.randomAnimation(new Random(13), WIDTH, HEIGHT, 8));
+        AnimatedFrameStream stream = this.stream(source);
         stream.recycle(this.next(stream));
-        ApngFrameUpdate held = this.next(stream);
+        AnimatedFrameUpdate held = this.next(stream);
         this.executor.runTasks();
 
         stream.close();
@@ -386,8 +402,8 @@ class ApngFrameStreamTest {
 
     @Test
     void closingBeforeThePendingTaskRunsLetsTheTaskCleanUp() throws IOException {
-        ApngTestFiles.MemorySource source = new ApngTestFiles.MemorySource(ApngCompositorTest.randomAnimation(new Random(14), WIDTH, HEIGHT, 8));
-        ApngFrameStream stream = this.stream(source);
+        AnimatedImageTestSupport.MemorySource source = new AnimatedImageTestSupport.MemorySource(ApngTestFiles.randomAnimation(new Random(14), WIDTH, HEIGHT, 8));
+        AnimatedFrameStream stream = this.stream(source);
 
         stream.close();
         // The pending task owns the source until it noticed the close
@@ -401,8 +417,8 @@ class ApngFrameStreamTest {
 
     @Test
     void closingAStaticImageAfterItsFrameClosesTheSource() throws IOException {
-        ApngTestFiles.MemorySource source = new ApngTestFiles.MemorySource(ApngTestFiles.png(4, 4, 8, ApngImage.COLOR_TYPE_RGBA).header().imageData(ApngTestFiles.solid(4, 4, 1, 2, 3, 4)).end());
-        ApngFrameStream stream = this.stream(source);
+        AnimatedImageTestSupport.MemorySource source = new AnimatedImageTestSupport.MemorySource(ApngTestFiles.png(4, 4, 8, ApngImage.COLOR_TYPE_RGBA).header().imageData(ApngTestFiles.solid(4, 4, 1, 2, 3, 4)).end());
+        AnimatedFrameStream stream = this.stream(source);
         stream.recycle(this.next(stream));
         this.executor.runTasks();
         assertFalse(source.isClosed());
@@ -412,64 +428,30 @@ class ApngFrameStreamTest {
         assertTrue(source.isClosed());
     }
 
-    private ApngFrameStream stream(byte[] file) throws IOException {
-        return this.stream(new ApngTestFiles.MemorySource(file));
+    private AnimatedFrameStream stream(byte[] file) throws IOException {
+        return this.stream(new AnimatedImageTestSupport.MemorySource(file));
     }
 
-    private ApngFrameStream stream(ApngTestFiles.MemorySource source) throws IOException {
+    private AnimatedFrameStream stream(AnimatedImageTestSupport.MemorySource source) throws IOException {
         ApngImage image = ApngReader.read(source, "test.png");
-        ApngFrameStream stream = new ApngFrameStream(image, "test.png", this.executor, () -> this.now);
+        AnimatedFrameStream stream = new AnimatedFrameStream(image, "test.png", this.executor, () -> this.now);
         this.streams.add(stream);
         this.sources.add(source);
         stream.start();
         return stream;
     }
 
-    private ApngFrameUpdate next(ApngFrameStream stream) {
+    private AnimatedFrameUpdate next(AnimatedFrameStream stream) {
         this.executor.runTasks();
-        ApngFrameUpdate update = stream.poll();
+        AnimatedFrameUpdate update = stream.poll();
         assertNotNull(update, "no frame was ready");
         return update;
     }
 
     /**
-     * Four 4x4 frames that loop forever, every frame shows for 100 ms.
-     */
-    static byte[] fourFrames() {
-        return ApngTestFiles.png(4, 4, 8, ApngImage.COLOR_TYPE_RGBA).header().animationControl(4, 0)
-                .frameControl(4, 4, 0, 0, 1, 10, 0, 0).imageData(ApngTestFiles.solid(4, 4, 255, 0, 0, 255))
-                .frame(2, 2, 0, 0, 1, 10, 0, 0, ApngTestFiles.solid(2, 2, 0, 255, 0, 255))
-                .frame(2, 2, 2, 2, 1, 10, 0, 0, ApngTestFiles.solid(2, 2, 0, 0, 255, 255))
-                .frame(1, 1, 1, 1, 1, 10, 0, 0, ApngTestFiles.solid(1, 1, 9, 9, 9, 255))
-                .end();
-    }
-
-    /**
-     * A copy of the file with one changed byte in the middle of the data of a frame, like an edit of the file.
-     */
-    static byte[] changedFrameData(byte[] file, int frameIndex) throws IOException {
-        ApngFrame.DataChunks chunks = ApngTestFiles.read(file).getFrame(frameIndex).dataChunks();
-        byte[] changed = file.clone();
-        int dataStart = (int) chunks.positions()[0] + chunks.headerLength();
-        changed[dataStart + (chunks.lengths()[0] - (chunks.headerLength() - 8)) / 2] ^= 0x10;
-        return changed;
-    }
-
-    /**
-     * Three 4x4 frames that play the given number of times.
-     */
-    private static byte[] threeFrames(int numPlays) {
-        return ApngTestFiles.png(4, 4, 8, ApngImage.COLOR_TYPE_RGBA).header().animationControl(3, numPlays)
-                .frameControl(4, 4, 0, 0, 1, 10, 0, 0).imageData(ApngTestFiles.solid(4, 4, 255, 0, 0, 255))
-                .frame(2, 2, 0, 0, 1, 10, 0, 0, ApngTestFiles.solid(2, 2, 0, 255, 0, 255))
-                .frame(2, 2, 2, 2, 1, 10, 0, 0, ApngTestFiles.solid(2, 2, 0, 0, 255, 255))
-                .end();
-    }
-
-    /**
      * Does what the GPU texture upload does, on an array.
      */
-    private static void apply(ApngFrameUpdate update, int[] texture) {
+    private static void apply(AnimatedFrameUpdate update, int[] texture) {
         if (update.isContentUnchanged()) return;
         IntBuffer pixels = update.getPixels().duplicate().order(ByteOrder.LITTLE_ENDIAN).asIntBuffer();
         int offset = 0;
@@ -483,127 +465,65 @@ class ApngFrameStreamTest {
     }
 
     /**
-     * Runs tasks only when the test says so, and delayed tasks once the fake clock reached their time.
+     * An image that runs a hook whenever one of its decoders gets closed, and otherwise is the given image.
      */
-    static final class ManualExecutor extends AbstractExecutorService implements ScheduledExecutorService {
+    private record DecoderCloseHook(AnimatedImage image, Runnable onClose) implements AnimatedImage {
 
-        private final LongSupplier clock;
-        private final ArrayDeque<Runnable> tasks = new ArrayDeque<>();
-        private final List<DelayedTask> delayedTasks = new ArrayList<>();
-
-        ManualExecutor(LongSupplier clock) {
-            this.clock = clock;
+        @Override
+        public @NotNull String getFormatName() {
+            return this.image.getFormatName();
         }
 
-        void runTasks() {
-            boolean ranSomething = true;
-            while (ranSomething) {
-                ranSomething = false;
-                Runnable task;
-                while ((task = this.tasks.pollFirst()) != null) {
-                    task.run();
-                    ranSomething = true;
+        @Override
+        public int getWidth() {
+            return this.image.getWidth();
+        }
+
+        @Override
+        public int getHeight() {
+            return this.image.getHeight();
+        }
+
+        @Override
+        public boolean isAnimated() {
+            return this.image.isAnimated();
+        }
+
+        @Override
+        public int getNumPlays() {
+            return this.image.getNumPlays();
+        }
+
+        @Override
+        public int getFrameCount() {
+            return this.image.getFrameCount();
+        }
+
+        @Override
+        public @NotNull AnimatedImageFrame getFrame(int index) {
+            return this.image.getFrame(index);
+        }
+
+        @Override
+        public @NotNull AnimatedFrameDecoder createFrameDecoder() {
+            AnimatedFrameDecoder decoder = this.image.createFrameDecoder();
+            return new AnimatedFrameDecoder() {
+                @Override
+                public void decode(int frameIndex, @NotNull RowConsumer consumer) throws IOException {
+                    decoder.decode(frameIndex, consumer);
                 }
-                for (Iterator<DelayedTask> iterator = this.delayedTasks.iterator(); iterator.hasNext(); ) {
-                    DelayedTask delayed = iterator.next();
-                    if (delayed.time <= this.clock.getAsLong()) {
-                        iterator.remove();
-                        this.tasks.addLast(delayed.task);
-                        ranSomething = true;
-                        break;
-                    }
+
+                @Override
+                public void close() {
+                    DecoderCloseHook.this.onClose.run();
+                    decoder.close();
                 }
-            }
+            };
         }
 
         @Override
-        public void execute(Runnable command) {
-            this.tasks.addLast(command);
-        }
-
-        @Override
-        public ScheduledFuture<?> schedule(Runnable command, long delay, TimeUnit unit) {
-            DelayedTask task = new DelayedTask(command, this.clock.getAsLong() + unit.toNanos(delay));
-            this.delayedTasks.add(task);
-            return task;
-        }
-
-        @Override
-        public <V> ScheduledFuture<V> schedule(Callable<V> callable, long delay, TimeUnit unit) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public ScheduledFuture<?> scheduleAtFixedRate(Runnable command, long initialDelay, long period, TimeUnit unit) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public ScheduledFuture<?> scheduleWithFixedDelay(Runnable command, long initialDelay, long delay, TimeUnit unit) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public void shutdown() {
-        }
-
-        @Override
-        public List<Runnable> shutdownNow() {
-            return List.of();
-        }
-
-        @Override
-        public boolean isShutdown() {
-            return false;
-        }
-
-        @Override
-        public boolean isTerminated() {
-            return false;
-        }
-
-        @Override
-        public boolean awaitTermination(long timeout, TimeUnit unit) {
-            return true;
-        }
-
-        private record DelayedTask(Runnable task, long time) implements ScheduledFuture<Object> {
-
-            @Override
-            public long getDelay(TimeUnit unit) {
-                return 0L;
-            }
-
-            @Override
-            public int compareTo(Delayed other) {
-                return 0;
-            }
-
-            @Override
-            public boolean cancel(boolean mayInterruptIfRunning) {
-                return false;
-            }
-
-            @Override
-            public boolean isCancelled() {
-                return false;
-            }
-
-            @Override
-            public boolean isDone() {
-                return false;
-            }
-
-            @Override
-            public Object get() {
-                return null;
-            }
-
-            @Override
-            public Object get(long timeout, TimeUnit unit) {
-                return null;
-            }
-
+        public void close() {
+            this.image.close();
         }
 
     }

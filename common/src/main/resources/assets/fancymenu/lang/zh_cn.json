@@ -3896,7 +3896,6 @@
   "fancymenu.ui.filechooser.no_preview": "没有可用的预览。",
   "fancymenu.ui.filechooser.open_in_explorer": "在资源管理器中打开",
   "fancymenu.ui.filechooser.preview": "预览",
-  "fancymenu.ui.filechooser.preview.watermedia_recommended_gif": "在处理 GIF 纹理时，建议安装 Watermedia，这样可以获得更好的性能并减少内存占用。",
   "fancymenu.ui.filechooser.resource_name_check.not_passed.tooltip": "这个文件夹或文件的名称包含\n不支持的字符。\n请确保只使用 [a-z]、[0-9] 和 [_]、[-]、[.]。\n不支持空格和大写字母。",
   "fancymenu.ui.generic.continue": "继续",
   "fancymenu.ui.generic.description": "说明",

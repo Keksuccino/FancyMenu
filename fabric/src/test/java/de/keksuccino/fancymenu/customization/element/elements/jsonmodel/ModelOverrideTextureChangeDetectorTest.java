@@ -8,13 +8,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ModelOverrideTextureChangeDetectorTest {
 
     @Test
-    void animatedFrameLocationIsNotPartOfTheBakeState() {
-        Object animatedTexture = new Object();
+    void renderLocationIsNotPartOfTheBakeState() {
+        Object texture = new Object();
 
-        boolean rebuild = ModelOverrideTextureChangeDetector.requiresModelRebuild(animatedTexture, animatedTexture, 64, 64, 32, 32, true, true, false, false);
+        boolean rebuild = ModelOverrideTextureChangeDetector.requiresModelRebuild(texture, texture, 64, 64, 32, 32, true, true, false, false);
 
         assertFalse(rebuild);
-        assertTrue(ModelOverrideTextureChangeDetector.hasRenderLocationChanged("fancymenu:dynamic/gif_frame_1", "fancymenu:dynamic/gif_frame_0"));
+        assertTrue(ModelOverrideTextureChangeDetector.hasRenderLocationChanged("fancymenu:dynamic/gif_texture_2", "fancymenu:dynamic/gif_texture_1"));
     }
 
     @Test

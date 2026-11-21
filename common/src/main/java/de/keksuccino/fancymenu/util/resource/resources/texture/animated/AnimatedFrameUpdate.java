@@ -1,18 +1,18 @@
-package de.keksuccino.fancymenu.util.resource.resources.texture.apng;
+package de.keksuccino.fancymenu.util.resource.resources.texture.animated;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.nio.ByteBuffer;
 
 /**
- * The canvas pixels that changed from one composed APNG frame to the next, ready to get uploaded to the texture.<br>
+ * The canvas pixels that changed from one composed frame to the next, ready to get uploaded to the texture.<br>
  * The changed region is made of up to two rectangles. Their RGBA pixels lie in {@link #getPixels()} one rectangle after the other, row by row, without padding.
  */
-final class ApngFrameUpdate {
+final class AnimatedFrameUpdate {
 
-    static final int MAX_RECTANGLES = 2;
+    private static final int MAX_RECTANGLES = 2;
     /** Rectangles get merged if their union has at most this many pixels, because every upload has a fixed cost that is bigger than uploading a few extra pixels. **/
-    static final long ALWAYS_MERGED_PIXELS = 64L * 64L;
+    private static final long ALWAYS_MERGED_PIXELS = 64L * 64L;
 
     private final int frameIndex;
     private final int play;
@@ -24,7 +24,7 @@ final class ApngFrameUpdate {
     private boolean sharedPixels;
     private boolean contentUnchanged;
 
-    ApngFrameUpdate(int frameIndex, int play, long delayNanos) {
+    AnimatedFrameUpdate(int frameIndex, int play, long delayNanos) {
         this.frameIndex = frameIndex;
         this.play = play;
         this.delayNanos = delayNanos;
@@ -42,7 +42,7 @@ final class ApngFrameUpdate {
     }
 
     /**
-     * How long the frame stays visible, never shorter than {@link ApngFrameStream#MIN_FRAME_DELAY_NANOS}.
+     * How long the frame stays visible, never shorter than {@link AnimatedFrameStream#MIN_FRAME_DELAY_NANOS}.
      */
     long getDelayNanos() {
         return this.delayNanos;
@@ -122,6 +122,13 @@ final class ApngFrameUpdate {
             count += (long) this.getRectangleWidth(i) * this.getRectangleHeight(i);
         }
         return count;
+    }
+
+    /**
+     * If the update replaces every pixel of the canvas, so updates before it don't need to get uploaded when both get shown in the same render.
+     */
+    boolean replacesCanvas(int canvasWidth, int canvasHeight) {
+        return !this.contentUnchanged && (this.rectangleCount == 1) && (this.rectangles[0] == 0) && (this.rectangles[1] == 0) && (this.rectangles[2] == canvasWidth) && (this.rectangles[3] == canvasHeight);
     }
 
     /**
