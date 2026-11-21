@@ -2,6 +2,8 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.Window;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.WelcomeWindowBody;
@@ -33,6 +35,7 @@ import de.keksuccino.fancymenu.util.player.PlayerPositionObserver;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.window.InitialLoadingOverlayIconRefreshController;
+import de.keksuccino.fancymenu.util.window.LoadingOverlayResizeTaskGate;
 import de.keksuccino.fancymenu.util.window.OffscreenTestClient;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import java.net.SocketAddress;
@@ -496,6 +499,24 @@ public class MixinMinecraft {
 		EventHandler.INSTANCE.postEvent(new OpenScreenEvent(this.screen));
 	}
 
+
+	/** @reason Holds back the queued main thread tasks after a fullscreen switch or resize during the loading overlay, until a frame with the new window size is on screen (see LoadingOverlayResizeTaskGate). */
+	@WrapWithCondition(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;runAllTasks()V"))
+	private boolean wrap_runAllTasks_in_runTick_FancyMenu(Minecraft instance) {
+		return LoadingOverlayResizeTaskGate.INSTANCE.shouldRunTasks(this.overlay instanceof LoadingOverlay);
+	}
+
+	@Inject(method = "renderFrame", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;flipFrame(Lcom/mojang/blaze3d/TracyFrameCapture;)V"))
+	private void before_flipFrame_in_renderFrame_FancyMenu(boolean advanceGameTime, CallbackInfo info) {
+		RenderTarget frame = ((Minecraft)(Object)this).getMainRenderTarget();
+		LoadingOverlayResizeTaskGate.INSTANCE.onFramePresenting(frame.width, frame.height);
+	}
+
+	@Inject(method = "resizeGui", at = @At("HEAD"))
+	private void before_resizeGui_FancyMenu(CallbackInfo info) {
+		Window window = ((Minecraft)(Object)this).getWindow();
+		LoadingOverlayResizeTaskGate.INSTANCE.onDisplayResized(this.overlay instanceof LoadingOverlay, window.getWidth(), window.getHeight());
+	}
 
 	@Inject(method = "resizeGui", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/Window;setGuiScale(I)V", shift = At.Shift.AFTER))
 	private void beforeResizeCurrentScreenFancyMenu(CallbackInfo info) {
