@@ -210,7 +210,7 @@ public class TextElement extends AbstractElement implements ScrollableElement {
                 this.background.render(graphics, x, y, width, height, this.bars.isVerticalShown(), this.bars.isHorizontalShown(), this.scrollSettings.verticalScrollBarLeft.getBoolean(), this.scrollSettings.horizontalScrollBarTop.getBoolean(), this.opacity);
 
                 // Nothing in the text reacts to a mouse that is not over what shows of it, or that drags the text along
-                boolean textSeesMouse = geometry.isInViewport(elementMouseX, elementMouseY) && this.isRenderSpacePointVisibleInContainer(mouseX, mouseY) && !this.scrolling.isDragging();
+                boolean textSeesMouse = geometry.isInViewport(elementMouseX, elementMouseY) && this.isScreenPointVisibleInContainer(mouseX, mouseY) && !this.scrolling.isDragging();
 
                 MarkdownRenderer markdown = this.markdownRenderer;
                 markdown.setX(geometry.getContentScreenX() + TEXT_INSET);
@@ -245,7 +245,7 @@ public class TextElement extends AbstractElement implements ScrollableElement {
         int width = this.getAbsoluteWidth();
         // The text wraps at the width of the element. Asking for its real size lays it out again if that width changed.
         markdown.setOptimalWidth(Math.max(0, width - (TEXT_INSET * 2)));
-        this.geometry.setViewport(this.getAbsoluteX(), this.getAbsoluteY(), width, this.getAbsoluteHeight(), 1.0F);
+        this.geometry.setViewport(this.getAbsoluteX(), this.getAbsoluteY(), width, this.getAbsoluteHeight());
         this.geometry.setContentSize((int) Math.ceil(markdown.getRealWidth()) + (TEXT_INSET * 2), this.getContentHeight(), direction.scrollsX(), direction.scrollsY());
         this.scrolling.update(this.geometry, this.geometry.isInViewport(this.frameMouseX, this.frameMouseY));
         this.frameReady = true;
@@ -269,7 +269,7 @@ public class TextElement extends AbstractElement implements ScrollableElement {
     }
 
     /**
-     * The text and the scrolling map the mouse into the space of the element themselves, which includes the scale of a container.
+     * The text and the scrolling map the mouse into the space of the element themselves, which includes its rotation and its tilt.
      */
     @Override
     public boolean registersChildWidgetsDirectly() {
