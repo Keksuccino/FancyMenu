@@ -34,6 +34,13 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - Added "Export for AI" to many parts of FancyMenu, which copies or saves your setup (variables, listeners, schedulers, action scripts, layouts, elements, screens, settings, system info and more) as English text made for AI assistants like Alice, the support bot on Keksuccino's Discord
 - Added `/fmdata export_for_ai copy|file` to export the server's FMData listeners and welcome data for AI
 - Added a "Preserve Background Texture Aspect Ratio" toggle for the global custom menu background texture, so you can choose between stretching it to fill the screen and keeping its original proportions
+- Added smooth scrolling, a scroll speed setting, sideways and Shift + mouse wheel scrolling, drag scrolling and keyboard scrolling (Page Up/Down, Home, End) to the Text element
+- Added a scroll direction setting (vertical, horizontal or both) to the Text element
+- Added auto-scroll to the Text element, with speed, loop and pause-on-hover settings
+- Added scroll snapping to the Text element (to lines, to Markdown headlines or to pages)
+- Added a scroll start position setting (start or end) to the Text element
+- The Text element now remembers its scroll position across resizes and reopening, with a "reset on open" toggle
+- Added scroll bar settings to the Text element: visibility (always, while scrolling, never), thickness, vertical bar on the left and horizontal bar at the top
 - Placeholders are now replaced much faster, especially in long texts and texts with many placeholders, so big texts no longer cause lag
 - Texts can now have up to 100,000 characters for their placeholders to get replaced (was 17,000)
 - The "text too long" error is now translated into all supported languages
@@ -109,5 +116,6 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - Fixed `$$name` variable references only showing the variable's value in texts that also contained a placeholder (#1859)
 - Fixed `$$name` variable references not working inside placeholder values, like in the expression of the Calculator placeholder (#1859)
 - Fixed the error messages when renaming a layout not being translated
+- Fixed sideways mouse wheel scrolling also scrolling up or down on Forge on macOS (MC 1.20.1 and 1.19.2)
 
 %changelog:end%
