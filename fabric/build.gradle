@@ -22,7 +22,6 @@ dependencies {
     implementation "com.google.code.findbugs:jsr305:3.0.1"
     implementation project(":common")
     include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:${mixin_extras_version}")))
-    include(implementation 'com.github.Keksuccino:japng:0.5.3')
     include(implementation 'com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7')
     modImplementation "maven.modrinth:watermedia:${watermedia_version}"
     modImplementation "maven.modrinth:watermedia-binaries:${watermedia_binaries_version}"

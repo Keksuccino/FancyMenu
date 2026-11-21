@@ -3896,7 +3896,7 @@
   "fancymenu.ui.filechooser.no_preview": "미리보기를 사용할 수 없어요.",
   "fancymenu.ui.filechooser.open_in_explorer": "탐색기에서 열기",
   "fancymenu.ui.filechooser.preview": "미리보기",
-  "fancymenu.ui.filechooser.preview.watermedia_recommended_apng_gif": "APNG와 GIF 텍스처를 다룰 때는 더 좋은 성능과 더 적은 RAM 사용을 위해 Watermedia 설치를 권장해요.",
+  "fancymenu.ui.filechooser.preview.watermedia_recommended_gif": "GIF 텍스처를 다룰 때는 더 좋은 성능과 더 적은 RAM 사용을 위해 Watermedia 설치를 권장해요.",
   "fancymenu.ui.filechooser.resource_name_check.not_passed.tooltip": "이 디렉터리나 파일 이름에는\n지원되지 않는 문자가 들어 있어요.\n[a-z], [0-9], 그리고 [_], [-], [.]만 사용해 주세요.\n공백과 대문자는 지원되지 않아요.",
   "fancymenu.ui.generic.continue": "계속",
   "fancymenu.ui.generic.description": "설명",
