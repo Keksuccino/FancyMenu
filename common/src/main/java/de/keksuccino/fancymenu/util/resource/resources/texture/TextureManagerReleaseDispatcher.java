@@ -21,7 +21,7 @@ public final class TextureManagerReleaseDispatcher {
 
     private TextureManagerReleaseDispatcher() {}
 
-    static void dispatch(@NotNull Runnable releaseTask) {
+    public static void dispatch(@NotNull Runnable releaseTask) {
         DISPATCHER.dispatch(releaseTask);
     }
 

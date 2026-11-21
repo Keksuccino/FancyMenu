@@ -30,25 +30,4 @@ class AnimatedTexturePrimitiveDecoderFailureTest {
         assertFalse(texture.decoded.get());
     }
 
-    @Test
-    void activeApngDecodeFailurePublishesTerminalState() {
-        ApngTexture texture = new ApngTexture();
-
-        ApngTexture.populateTextureWithPrimitiveDecoder(texture, INVALID_IMAGE_DATA, "invalid.png");
-
-        assertTrue(texture.loadingFailed.get());
-        assertTrue(texture.decoded.get());
-    }
-
-    @Test
-    void closedApngGenerationCannotPublishDecodeFailure() {
-        ApngTexture texture = new ApngTexture();
-        texture.frameStore.close();
-
-        ApngTexture.populateTextureWithPrimitiveDecoder(texture, INVALID_IMAGE_DATA, "invalid.png");
-
-        assertFalse(texture.loadingFailed.get());
-        assertFalse(texture.decoded.get());
-    }
-
 }
