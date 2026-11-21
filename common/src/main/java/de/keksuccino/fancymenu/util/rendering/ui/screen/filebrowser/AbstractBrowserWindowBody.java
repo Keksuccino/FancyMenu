@@ -28,7 +28,6 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
-import de.keksuccino.fancymenu.util.resource.resources.texture.ApngTexture;
 import de.keksuccino.fancymenu.util.resource.resources.texture.GifTexture;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.video.IVideo;
@@ -1217,8 +1216,7 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
     }
 
     protected boolean shouldRenderAnimatedImageWatermediaRecommendation_FancyMenu(@Nullable ITexture texture) {
-        return !WatermediaUtil.isWatermediaVideoPlaybackAvailable()
-                && ((texture instanceof ApngTexture) || (texture instanceof GifTexture));
+        return !WatermediaUtil.isWatermediaVideoPlaybackAvailable() && (texture instanceof GifTexture);
     }
 
     protected boolean shouldHandleWatermediaDownloadLinks_FancyMenu() {
@@ -1229,7 +1227,7 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
 
     protected int getAnimatedImageWatermediaRecommendationHeight_FancyMenu(int width) {
         float contentWidth = Math.max(1.0F, width);
-        Component infoText = Component.translatable("fancymenu.ui.filechooser.preview.watermedia_recommended_apng_gif");
+        Component infoText = Component.translatable("fancymenu.ui.filechooser.preview.watermedia_recommended_gif");
         List<MutableComponent> infoLines = UIBase.lineWrapUIComponentsSmall(infoText, contentWidth);
         float textSize = UIBase.getUITextSizeSmall();
         float textHeight = UIBase.getUITextHeight(textSize);
@@ -1239,7 +1237,7 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
     }
 
     protected void renderAnimatedImageWatermediaRecommendation_FancyMenu(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, int x, int y, int width) {
-        Component infoText = Component.translatable("fancymenu.ui.filechooser.preview.watermedia_recommended_apng_gif");
+        Component infoText = Component.translatable("fancymenu.ui.filechooser.preview.watermedia_recommended_gif");
         Component downloadText = Component.translatable("fancymenu.backgrounds.video.watermedia_missing.download");
         Component downloadBinariesText = Component.translatable("fancymenu.backgrounds.video.watermedia_missing.download_binaries");
         Component boldDownloadText = downloadText.copy().setStyle(Style.EMPTY.withBold(true));

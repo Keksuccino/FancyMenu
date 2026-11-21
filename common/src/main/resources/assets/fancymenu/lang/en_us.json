@@ -3896,7 +3896,7 @@
   "fancymenu.ui.filechooser.no_preview": "No preview available.",
   "fancymenu.ui.filechooser.open_in_explorer": "Open in Explorer",
   "fancymenu.ui.filechooser.preview": "Preview",
-  "fancymenu.ui.filechooser.preview.watermedia_recommended_apng_gif": "It is recommended to install Watermedia when working with APNG and GIF textures, for better performance and less RAM consumption.",
+  "fancymenu.ui.filechooser.preview.watermedia_recommended_gif": "It is recommended to install Watermedia when working with GIF textures, for better performance and less RAM consumption.",
   "fancymenu.ui.filechooser.resource_name_check.not_passed.tooltip": "The name of this directory or file contains\nunsupported characters.\nMake sure to only use [a-z], [0-9] and [_], [-], [.].\nSpaces and uppercase letters are not supported.",
   "fancymenu.ui.generic.continue": "Continue",
   "fancymenu.ui.generic.description": "Description",
