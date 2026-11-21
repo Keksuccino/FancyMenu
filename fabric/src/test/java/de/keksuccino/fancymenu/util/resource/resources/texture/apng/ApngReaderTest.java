@@ -1,9 +1,10 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.apng;
 
 import org.junit.jupiter.api.Test;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -289,15 +290,83 @@ class ApngReaderTest {
     }
 
     @Test
-    void compressedDataIsAllTheImageKeeps() throws IOException {
-        byte[] file = rgba(4, 4).header().chunk("tEXt", new byte[5000]).animationControl(2, 0)
+    void framesOnlyKnowWhereTheirDataLies() throws IOException {
+        byte[] file = rgba(4, 4).filter(0).splitDataChunks(7).header().chunk("tEXt", new byte[5000]).animationControl(2, 0)
                 .frameControl(4, 4, 0, 0, 1, 10, 0, 0).imageData(RED)
                 .frame(2, 2, 0, 0, 1, 10, 0, 0, GREEN_2X2)
                 .end();
 
         ApngImage image = read(file);
 
-        assertTrue(image.getCompressedDataSize() < 200, "kept " + image.getCompressedDataSize() + " bytes");
+        long zlibBytes = ApngTestFiles.encodeImageData(4, 4, 8, ApngImage.COLOR_TYPE_RGBA, RED, false, 0, new Random()).length
+                + ApngTestFiles.encodeImageData(2, 2, 8, ApngImage.COLOR_TYPE_RGBA, GREEN_2X2, false, 0, new Random()).length;
+        assertEquals(zlibBytes, image.getCompressedDataSize());
+        assertChunksPointAt(file, image.getFrame(0).dataChunks(), "IDAT");
+        assertChunksPointAt(file, image.getFrame(1).dataChunks(), "fdAT");
+    }
+
+    @Test
+    void staticImageUsesTheChunksOfItsDefaultImage() throws IOException {
+        byte[] file = rgba(4, 4).splitDataChunks(5).header().imageData(RED).end();
+
+        ApngFrame.DataChunks chunks = read(file).getFrame(0).dataChunks();
+
+        assertTrue(chunks.count() > 1);
+        assertChunksPointAt(file, chunks, "IDAT");
+    }
+
+    @Test
+    void parsingReadsTheSourceOnceFromStartToEnd() throws IOException {
+        int[] samples = ApngTestFiles.randomSamples(128, 128, 8, ApngImage.COLOR_TYPE_RGBA, new Random(4));
+        byte[] file = rgba(128, 128).header().chunk("tEXt", new byte[300_000]).imageData(samples).end();
+        ApngTestFiles.MemorySource source = new ApngTestFiles.MemorySource(file);
+
+        ApngReader.read(source, "test.png");
+
+        long readBytes = 0L;
+        long previousEnd = 0L;
+        for (long[] read : source.reads) {
+            assertTrue(read[0] >= previousEnd, "read at " + read[0] + " overlaps the read before, which ended at " + previousEnd);
+            previousEnd = read[0] + read[1];
+            readBytes += read[1];
+        }
+        // The text chunk gets skipped, only its start that came with the first buffered read got read
+        assertTrue(readBytes < file.length - 200_000L, "read " + readBytes + " of " + file.length + " bytes");
+        assertTrue(source.reads.size() > 1);
+    }
+
+    @Test
+    void ancillaryChunkCutOffByTheEndOfTheFileDropsTheFrameBeforeIt() throws IOException {
+        byte[] complete = rgba(4, 4).header().animationControl(3, 0)
+                .frameControl(4, 4, 0, 0, 1, 10, 0, 0).imageData(RED)
+                .frame(2, 2, 0, 0, 1, 10, 0, 0, GREEN_2X2)
+                .frame(2, 2, 2, 2, 1, 10, 0, 0, GREEN_2X2)
+                .chunk("tEXt", new byte[1000])
+                .truncated();
+
+        ApngImage image = read(Arrays.copyOf(complete, complete.length - 500));
+
+        assertTrue(image.isAnimated());
+        assertEquals(2, image.getFrameCount());
+    }
+
+    @Test
+    void failedReadingClosesTheSource() {
+        ApngTestFiles.MemorySource source = new ApngTestFiles.MemorySource(rgba(4, 4).header().end());
+
+        assertThrows(IOException.class, () -> ApngReader.read(source, "test.png"));
+        assertTrue(source.isClosed());
+    }
+
+    @Test
+    void closingTheImageClosesItsSource() throws IOException {
+        ApngTestFiles.MemorySource source = new ApngTestFiles.MemorySource(rgba(4, 4).header().imageData(RED).end());
+        ApngImage image = ApngReader.read(source, "test.png");
+        assertFalse(source.isClosed());
+
+        image.close();
+
+        assertTrue(source.isClosed());
     }
 
     @Test
@@ -317,7 +386,20 @@ class ApngReaderTest {
     }
 
     private static ApngImage read(byte[] file) throws IOException {
-        return ApngReader.read(new ByteArrayInputStream(file), "test.png");
+        return ApngTestFiles.read(file);
+    }
+
+    /**
+     * Checks that every chunk starts with its recorded length and the type, and that the chunks lie right after each other, like the test files write them.
+     */
+    private static void assertChunksPointAt(byte[] file, ApngFrame.DataChunks chunks, String type) {
+        assertTrue(chunks.count() > 0);
+        for (int i = 0; i < chunks.count(); i++) {
+            int position = (int) chunks.positions()[i];
+            assertEquals(chunks.lengths()[i], ApngReader.readInt(file, position), "chunk " + i);
+            assertEquals(type, new String(file, position + 4, 4, StandardCharsets.US_ASCII), "chunk " + i);
+            if (i > 0) assertEquals(chunks.end(i - 1), chunks.positions()[i], "chunk " + i);
+        }
     }
 
     private static byte[] fcTL(int sequenceNumber, int width, int height, int x, int y) {
