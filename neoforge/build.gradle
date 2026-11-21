@@ -65,10 +65,6 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
     implementation "net.neoforged:neoforge:${neoforge_version}"
-    //Also needs to get added to the client run configuration (runs -> client -> dependencies) since it's a non-Minecraft library
-    implementation(jarJar("com.github.rtyley:animated-gif-lib-for-java:animated-gif-lib-1.7")) {
-        jarJar.ranged(it, "[1.7,)")
-    }
     implementation(jarJar("net.objecthunter:exp4j:0.4.8")) {
         jarJar.ranged(it, "[0.4.8,)")
     }

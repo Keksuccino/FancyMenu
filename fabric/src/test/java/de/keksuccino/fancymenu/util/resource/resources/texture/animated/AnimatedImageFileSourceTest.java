@@ -1,5 +1,8 @@
-package de.keksuccino.fancymenu.util.resource.resources.texture.apng;
+package de.keksuccino.fancymenu.util.resource.resources.texture.animated;
 
+import de.keksuccino.fancymenu.util.resource.resources.texture.apng.ApngTestFiles;
+import de.keksuccino.fancymenu.util.resource.resources.texture.apng.ApngImage;
+import de.keksuccino.fancymenu.util.resource.resources.texture.apng.ApngReader;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import java.io.ByteArrayInputStream;
@@ -17,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class ApngFileSourceTest {
+class AnimatedImageFileSourceTest {
 
     @TempDir
     Path directory;
@@ -26,9 +29,9 @@ class ApngFileSourceTest {
     void tempCopyHoldsTheStreamAndGetsDeletedOnClose() throws IOException {
         byte[] bytes = new byte[200_000];
         new Random(1).nextBytes(bytes);
-        Path tempDirectory = Files.createDirectory(this.directory.resolve("apng_textures"));
+        Path tempDirectory = Files.createDirectory(this.directory.resolve("animated_textures"));
 
-        ApngFileSource source = ApngFileSource.copyToTempFile(new ByteArrayInputStream(bytes), tempDirectory);
+        AnimatedImageFileSource source = AnimatedImageFileSource.copyToTempFile(new ByteArrayInputStream(bytes), tempDirectory, "apng");
         try {
             assertEquals(bytes.length, source.size());
             assertArrayEquals(bytes, readAll(source));
@@ -41,11 +44,11 @@ class ApngFileSourceTest {
 
     @Test
     void imageFromATempCopyPlaysAndDeletesItsCopyWhenClosed() throws IOException {
-        byte[] file = ApngFrameStreamTest.fourFrames();
-        Path tempDirectory = Files.createDirectory(this.directory.resolve("apng_textures"));
+        byte[] file = ApngTestFiles.fourFrames();
+        Path tempDirectory = Files.createDirectory(this.directory.resolve("animated_textures"));
 
-        ApngImage image = ApngReader.read(ApngFileSource.copyToTempFile(new ByteArrayInputStream(file), tempDirectory), "test.png");
-        assertArrayEquals(ApngCompositorTest.composeAll(file), ApngCompositorTest.composeAll(image));
+        ApngImage image = ApngReader.read(AnimatedImageFileSource.copyToTempFile(new ByteArrayInputStream(file), tempDirectory, "apng"), "test.png");
+        assertArrayEquals(ApngTestFiles.composeAll(file), AnimatedImageTestSupport.composeAll(image));
         image.close();
 
         assertEquals(List.of(), list(tempDirectory));
@@ -53,7 +56,7 @@ class ApngFileSourceTest {
 
     @Test
     void failedTempCopyLeavesNoFile() throws IOException {
-        Path tempDirectory = Files.createDirectory(this.directory.resolve("apng_textures"));
+        Path tempDirectory = Files.createDirectory(this.directory.resolve("animated_textures"));
         InputStream brokenDownload = new InputStream() {
             private int count;
             @Override
@@ -63,45 +66,45 @@ class ApngFileSourceTest {
             }
         };
 
-        assertThrows(IOException.class, () -> ApngFileSource.copyToTempFile(brokenDownload, tempDirectory));
+        assertThrows(IOException.class, () -> AnimatedImageFileSource.copyToTempFile(brokenDownload, tempDirectory, "apng"));
 
         assertEquals(List.of(), list(tempDirectory));
     }
 
     @Test
     void imageThatFailsToParseDeletesItsTempCopy() throws IOException {
-        Path tempDirectory = Files.createDirectory(this.directory.resolve("apng_textures"));
+        Path tempDirectory = Files.createDirectory(this.directory.resolve("animated_textures"));
 
-        assertThrows(IOException.class, () -> ApngReader.read(ApngFileSource.copyToTempFile(new ByteArrayInputStream(new byte[100]), tempDirectory), "broken.png"));
+        assertThrows(IOException.class, () -> ApngReader.read(AnimatedImageFileSource.copyToTempFile(new ByteArrayInputStream(new byte[100]), tempDirectory, "apng"), "broken.png"));
 
         assertEquals(List.of(), list(tempDirectory));
     }
 
     @Test
     void localFileGetsReadInPlaceWithoutACopy() throws IOException {
-        byte[] file = ApngFrameStreamTest.fourFrames();
+        byte[] file = ApngTestFiles.fourFrames();
         Path path = Files.write(this.directory.resolve("image.apng"), file);
 
-        try (ApngImage image = ApngReader.read(ApngFileSource.open(path), path.toString())) {
-            assertArrayEquals(ApngCompositorTest.composeAll(file), ApngCompositorTest.composeAll(image));
+        try (ApngImage image = ApngReader.read(AnimatedImageFileSource.open(path), path.toString())) {
+            assertArrayEquals(ApngTestFiles.composeAll(file), AnimatedImageTestSupport.composeAll(image));
             assertEquals(List.of(path), list(this.directory));
             // Frames read the file itself, so they notice when it gets changed in place
-            Files.write(path, ApngFrameStreamTest.changedFrameData(file, 2));
-            assertThrows(ApngSourceChangedException.class, () -> ApngCompositorTest.composeAll(image));
+            Files.write(path, ApngTestFiles.changedFrameData(file, 2));
+            assertThrows(AnimatedImageSourceChangedException.class, () -> AnimatedImageTestSupport.composeAll(image));
         }
     }
 
     @Test
     void localFileCanGetRenamedAndDeletedWhileItPlays() throws IOException {
-        byte[] file = ApngFrameStreamTest.fourFrames();
-        int[][] expected = ApngCompositorTest.composeAll(file);
+        byte[] file = ApngTestFiles.fourFrames();
+        int[][] expected = ApngTestFiles.composeAll(file);
         Path path = Files.write(this.directory.resolve("image.apng"), file);
 
-        try (ApngImage image = ApngReader.read(ApngFileSource.open(path), path.toString())) {
+        try (ApngImage image = ApngReader.read(AnimatedImageFileSource.open(path), path.toString())) {
             Path renamed = Files.move(path, this.directory.resolve("renamed.apng"));
-            assertArrayEquals(expected, ApngCompositorTest.composeAll(image));
+            assertArrayEquals(expected, AnimatedImageTestSupport.composeAll(image));
             Files.delete(renamed);
-            assertArrayEquals(expected, ApngCompositorTest.composeAll(image));
+            assertArrayEquals(expected, AnimatedImageTestSupport.composeAll(image));
         }
 
         assertEquals(List.of(), list(this.directory));
@@ -109,16 +112,16 @@ class ApngFileSourceTest {
 
     @Test
     void localFileThatGetsShorterWhileItPlaysCountsAsChanged() throws IOException {
-        byte[] file = ApngFrameStreamTest.fourFrames();
+        byte[] file = ApngTestFiles.fourFrames();
         Path path = Files.write(this.directory.resolve("image.apng"), file);
 
-        try (ApngImage image = ApngReader.read(ApngFileSource.open(path), path.toString())) {
+        try (ApngImage image = ApngReader.read(AnimatedImageFileSource.open(path), path.toString())) {
             Files.write(path, new byte[file.length / 2]);
-            assertThrows(ApngSourceChangedException.class, () -> ApngCompositorTest.composeAll(image));
+            assertThrows(AnimatedImageSourceChangedException.class, () -> AnimatedImageTestSupport.composeAll(image));
         }
     }
 
-    private static byte[] readAll(ApngSource source) throws IOException {
+    private static byte[] readAll(AnimatedImageSource source) throws IOException {
         ByteBuffer buffer = ByteBuffer.allocate((int) source.size());
         while (buffer.hasRemaining()) {
             if (source.read(buffer, buffer.position()) < 0) break;

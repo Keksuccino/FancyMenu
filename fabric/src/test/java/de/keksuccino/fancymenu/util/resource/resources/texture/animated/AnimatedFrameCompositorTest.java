@@ -1,17 +1,21 @@
-package de.keksuccino.fancymenu.util.resource.resources.texture.apng;
+package de.keksuccino.fancymenu.util.resource.resources.texture.animated;
 
+import de.keksuccino.fancymenu.util.resource.resources.texture.apng.ApngTestFiles;
+import de.keksuccino.fancymenu.util.resource.resources.texture.apng.ApngImage;
+import de.keksuccino.fancymenu.util.resource.resources.texture.gif.GifImage;
+import de.keksuccino.fancymenu.util.resource.resources.texture.gif.GifTestFiles;
 import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Random;
 
-import static de.keksuccino.fancymenu.util.resource.resources.texture.apng.ApngTestFiles.abgr;
+import static de.keksuccino.fancymenu.util.resource.resources.texture.animated.AnimatedImageTestSupport.abgr;
 import static de.keksuccino.fancymenu.util.resource.resources.texture.apng.ApngTestFiles.solid;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class ApngCompositorTest {
+class AnimatedFrameCompositorTest {
 
     private static final int RED = abgr(255, 0, 0, 255);
     private static final int GREEN = abgr(0, 255, 0, 255);
@@ -20,7 +24,7 @@ class ApngCompositorTest {
 
     @Test
     void disposeNoneKeepsTheFrameForTheNextOne() throws IOException {
-        int[][] canvases = composeAll(animation(ApngFrame.DISPOSE_OP_NONE, ApngFrame.BLEND_OP_SOURCE));
+        int[][] canvases = ApngTestFiles.composeAll(animation(AnimatedImageFrame.DISPOSE_OP_NONE, AnimatedImageFrame.BLEND_OP_SOURCE));
 
         assertEquals(RED, canvases[1][0]);
         assertEquals(GREEN, canvases[1][1 * 4 + 1]);
@@ -30,7 +34,7 @@ class ApngCompositorTest {
 
     @Test
     void disposeBackgroundClearsTheFrameRegionBeforeTheNextFrame() throws IOException {
-        int[][] canvases = composeAll(animation(ApngFrame.DISPOSE_OP_BACKGROUND, ApngFrame.BLEND_OP_SOURCE));
+        int[][] canvases = ApngTestFiles.composeAll(animation(AnimatedImageFrame.DISPOSE_OP_BACKGROUND, AnimatedImageFrame.BLEND_OP_SOURCE));
 
         assertEquals(GREEN, canvases[1][1 * 4 + 1]);
         // The region of the green frame got cleared, the red default image around it stays
@@ -42,7 +46,7 @@ class ApngCompositorTest {
 
     @Test
     void disposePreviousRevertsTheFrameRegion() throws IOException {
-        int[][] canvases = composeAll(animation(ApngFrame.DISPOSE_OP_PREVIOUS, ApngFrame.BLEND_OP_SOURCE));
+        int[][] canvases = ApngTestFiles.composeAll(animation(AnimatedImageFrame.DISPOSE_OP_PREVIOUS, AnimatedImageFrame.BLEND_OP_SOURCE));
 
         assertEquals(GREEN, canvases[1][1 * 4 + 1]);
         assertEquals(RED, canvases[2][1 * 4 + 1]);
@@ -53,11 +57,11 @@ class ApngCompositorTest {
     @Test
     void revertingTheFirstFrameClearsIt() throws IOException {
         byte[] file = rgba().animationControl(2, 0)
-                .frameControl(4, 4, 0, 0, 1, 10, ApngFrame.DISPOSE_OP_PREVIOUS, ApngFrame.BLEND_OP_SOURCE).imageData(solid(4, 4, 255, 0, 0, 255))
-                .frame(1, 1, 0, 0, 1, 10, ApngFrame.DISPOSE_OP_NONE, ApngFrame.BLEND_OP_SOURCE, solid(1, 1, 0, 255, 0, 255))
+                .frameControl(4, 4, 0, 0, 1, 10, AnimatedImageFrame.DISPOSE_OP_PREVIOUS, AnimatedImageFrame.BLEND_OP_SOURCE).imageData(solid(4, 4, 255, 0, 0, 255))
+                .frame(1, 1, 0, 0, 1, 10, AnimatedImageFrame.DISPOSE_OP_NONE, AnimatedImageFrame.BLEND_OP_SOURCE, solid(1, 1, 0, 255, 0, 255))
                 .end();
 
-        int[][] canvases = composeAll(file);
+        int[][] canvases = ApngTestFiles.composeAll(file);
 
         assertEquals(GREEN, canvases[1][0]);
         assertEquals(CLEAR, canvases[1][5]);
@@ -67,12 +71,12 @@ class ApngCompositorTest {
     void blendOverCompositesOverTheCanvas() throws IOException {
         byte[] file = rgba().animationControl(2, 0)
                 .frameControl(4, 4, 0, 0, 1, 10, 0, 0).imageData(solid(4, 4, 200, 100, 0, 255))
-                .frame(2, 2, 0, 0, 1, 10, 0, ApngFrame.BLEND_OP_OVER, solid(2, 2, 0, 0, 255, 128))
+                .frame(2, 2, 0, 0, 1, 10, 0, AnimatedImageFrame.BLEND_OP_OVER, solid(2, 2, 0, 0, 255, 128))
                 .end();
 
-        int[][] canvases = composeAll(file);
+        int[][] canvases = ApngTestFiles.composeAll(file);
 
-        assertEquals(ApngCompositor.blendOver(abgr(0, 0, 255, 128), abgr(200, 100, 0, 255)), canvases[1][0]);
+        assertEquals(AnimatedFrameCompositor.blendOver(abgr(0, 0, 255, 128), abgr(200, 100, 0, 255)), canvases[1][0]);
         assertEquals(abgr(200, 100, 0, 255), canvases[1][3]);
     }
 
@@ -82,7 +86,7 @@ class ApngCompositorTest {
         for (int i = 0; i < 200_000; i++) {
             int source = random.nextInt();
             int destination = random.nextInt();
-            int result = ApngCompositor.blendOver(source, destination);
+            int result = AnimatedFrameCompositor.blendOver(source, destination);
             double sourceAlpha = (source >>> 24) / 255.0;
             double destinationAlpha = (destination >>> 24) / 255.0;
             double outAlpha = sourceAlpha + destinationAlpha * (1.0 - sourceAlpha);
@@ -93,27 +97,27 @@ class ApngCompositorTest {
                 assertEquals(expected, (result >>> shift) & 0xFF, 0.5 + 1e-9);
             }
         }
-        assertEquals(0x12345678, ApngCompositor.blendOver(abgr(9, 9, 9, 0), 0x12345678));
-        assertEquals(abgr(1, 2, 3, 255), ApngCompositor.blendOver(abgr(1, 2, 3, 255), abgr(9, 9, 9, 9)));
-        assertEquals(abgr(1, 2, 3, 77), ApngCompositor.blendOver(abgr(1, 2, 3, 77), CLEAR));
+        assertEquals(0x12345678, AnimatedFrameCompositor.blendOver(abgr(9, 9, 9, 0), 0x12345678));
+        assertEquals(abgr(1, 2, 3, 255), AnimatedFrameCompositor.blendOver(abgr(1, 2, 3, 255), abgr(9, 9, 9, 9)));
+        assertEquals(abgr(1, 2, 3, 77), AnimatedFrameCompositor.blendOver(abgr(1, 2, 3, 77), CLEAR));
     }
 
     @Test
     void everyPlayStartsOnATransparentCanvas() throws IOException {
         // The first frame does not cover the canvas, so the second play must not see the pixels of the first play
         byte[] file = rgba().animationControl(2, 0).imageData(solid(4, 4, 255, 0, 0, 255))
-                .frame(2, 2, 0, 0, 1, 10, 0, ApngFrame.BLEND_OP_OVER, solid(2, 2, 0, 255, 0, 255))
+                .frame(2, 2, 0, 0, 1, 10, 0, AnimatedImageFrame.BLEND_OP_OVER, solid(2, 2, 0, 255, 0, 255))
                 .frame(2, 2, 2, 2, 1, 10, 0, 0, solid(2, 2, 0, 0, 255, 255))
                 .end();
         ApngImage image = read(file);
-        ApngCompositor compositor = new ApngCompositor(image);
-        try (ApngFrameDecoder decoder = new ApngFrameDecoder(image)) {
-            compositor.composeFrame(0, decoder, new ApngFrameUpdate(0, 0, 0L));
-            compositor.composeFrame(1, decoder, new ApngFrameUpdate(1, 0, 0L));
-            ApngFrameUpdate secondPlay = new ApngFrameUpdate(0, 1, 0L);
+        AnimatedFrameCompositor compositor = new AnimatedFrameCompositor(image);
+        try (AnimatedFrameDecoder decoder = image.createFrameDecoder()) {
+            compositor.composeFrame(0, decoder, new AnimatedFrameUpdate(0, 0, 0L));
+            compositor.composeFrame(1, decoder, new AnimatedFrameUpdate(1, 0, 0L));
+            AnimatedFrameUpdate secondPlay = new AnimatedFrameUpdate(0, 1, 0L);
             compositor.composeFrame(0, decoder, secondPlay);
 
-            int[] canvas = ApngFrameDecoderTest.readCanvas(compositor, 4, 4);
+            int[] canvas = AnimatedImageTestSupport.readCanvas(compositor, 4, 4);
             assertEquals(GREEN, canvas[0]);
             assertEquals(CLEAR, canvas[3 * 4 + 3]);
             assertEquals(1, secondPlay.getRectangleCount());
@@ -123,14 +127,14 @@ class ApngCompositorTest {
 
     @Test
     void updatesOnlyCoverWhatChanged() throws IOException {
-        ApngImage image = read(animation(ApngFrame.DISPOSE_OP_BACKGROUND, ApngFrame.BLEND_OP_SOURCE));
-        ApngCompositor compositor = new ApngCompositor(image);
-        try (ApngFrameDecoder decoder = new ApngFrameDecoder(image)) {
-            ApngFrameUpdate first = new ApngFrameUpdate(0, 0, 0L);
+        ApngImage image = read(animation(AnimatedImageFrame.DISPOSE_OP_BACKGROUND, AnimatedImageFrame.BLEND_OP_SOURCE));
+        AnimatedFrameCompositor compositor = new AnimatedFrameCompositor(image);
+        try (AnimatedFrameDecoder decoder = image.createFrameDecoder()) {
+            AnimatedFrameUpdate first = new AnimatedFrameUpdate(0, 0, 0L);
             compositor.composeFrame(0, decoder, first);
-            ApngFrameUpdate second = new ApngFrameUpdate(1, 0, 0L);
+            AnimatedFrameUpdate second = new AnimatedFrameUpdate(1, 0, 0L);
             compositor.composeFrame(1, decoder, second);
-            ApngFrameUpdate third = new ApngFrameUpdate(2, 0, 0L);
+            AnimatedFrameUpdate third = new AnimatedFrameUpdate(2, 0, 0L);
             compositor.composeFrame(2, decoder, third);
 
             assertEquals(16, first.getPixelCount());
@@ -146,22 +150,22 @@ class ApngCompositorTest {
 
     @Test
     void restoringTheFirstFrameContinuesExactlyLikeDecodingIt() throws IOException {
-        byte[] file = randomAnimation(new Random(11), 12, 10, 8);
+        byte[] file = ApngTestFiles.randomAnimation(new Random(11), 12, 10, 8);
         ApngImage image = read(file);
-        int[][] expected = composeAll(file);
-        ApngCompositor compositor = new ApngCompositor(image);
-        try (ApngFrameDecoder decoder = new ApngFrameDecoder(image)) {
-            ApngFrameUpdate first = new ApngFrameUpdate(0, 0, 0L);
+        int[][] expected = ApngTestFiles.composeAll(file);
+        AnimatedFrameCompositor compositor = new AnimatedFrameCompositor(image);
+        try (AnimatedFrameDecoder decoder = image.createFrameDecoder()) {
+            AnimatedFrameUpdate first = new AnimatedFrameUpdate(0, 0, 0L);
             compositor.composeFrame(0, decoder, first);
             ByteBuffer snapshot = ByteBuffer.allocate(12 * 10 * 4);
             compositor.writePixels(first, snapshot);
-            compositor.composeFrame(1, decoder, new ApngFrameUpdate(1, 0, 0L));
+            compositor.composeFrame(1, decoder, new AnimatedFrameUpdate(1, 0, 0L));
 
-            ApngCompositor restored = new ApngCompositor(image);
+            AnimatedFrameCompositor restored = new AnimatedFrameCompositor(image);
             restored.restoreFirstFrame(snapshot);
             for (int i = 1; i < image.getFrameCount(); i++) {
-                restored.composeFrame(i, decoder, new ApngFrameUpdate(i, 0, 0L));
-                assertArrayEquals(expected[i], ApngFrameDecoderTest.readCanvas(restored, 12, 10), "frame " + i);
+                restored.composeFrame(i, decoder, new AnimatedFrameUpdate(i, 0, 0L));
+                assertArrayEquals(expected[i], AnimatedImageTestSupport.readCanvas(restored, 12, 10), "frame " + i);
             }
         }
     }
@@ -171,8 +175,8 @@ class ApngCompositorTest {
         Random random = new Random(99);
         for (int round = 0; round < 20; round++) {
             long seed = random.nextLong();
-            int[][] plain = composeAll(randomAnimation(new Random(seed), 13, 11, 6, false));
-            int[][] interlaced = composeAll(randomAnimation(new Random(seed), 13, 11, 6, true));
+            int[][] plain = ApngTestFiles.composeAll(ApngTestFiles.randomAnimation(new Random(seed), 13, 11, 6, false));
+            int[][] interlaced = ApngTestFiles.composeAll(ApngTestFiles.randomAnimation(new Random(seed), 13, 11, 6, true));
             for (int frame = 0; frame < plain.length; frame++) {
                 assertArrayEquals(plain[frame], interlaced[frame], "round " + round + ", frame " + frame);
             }
@@ -181,15 +185,40 @@ class ApngCompositorTest {
 
     @Test
     void releasedCanvasStartsTheNextPlayFromScratch() throws IOException {
-        ApngImage image = read(animation(ApngFrame.DISPOSE_OP_NONE, ApngFrame.BLEND_OP_SOURCE));
-        ApngCompositor compositor = new ApngCompositor(image);
-        try (ApngFrameDecoder decoder = new ApngFrameDecoder(image)) {
-            compositor.composeFrame(0, decoder, new ApngFrameUpdate(0, 0, 0L));
+        ApngImage image = read(animation(AnimatedImageFrame.DISPOSE_OP_NONE, AnimatedImageFrame.BLEND_OP_SOURCE));
+        AnimatedFrameCompositor compositor = new AnimatedFrameCompositor(image);
+        try (AnimatedFrameDecoder decoder = image.createFrameDecoder()) {
+            compositor.composeFrame(0, decoder, new AnimatedFrameUpdate(0, 0, 0L));
             compositor.release();
-            compositor.composeFrame(0, decoder, new ApngFrameUpdate(0, 1, 0L));
+            compositor.composeFrame(0, decoder, new AnimatedFrameUpdate(0, 1, 0L));
 
-            int[] canvas = ApngFrameDecoderTest.readCanvas(compositor, 4, 4);
+            int[] canvas = AnimatedImageTestSupport.readCanvas(compositor, 4, 4);
             for (int pixel : canvas) assertEquals(RED, pixel);
+        }
+    }
+
+    @Test
+    void firstFrameOfANewPlayStartsOnACleanCanvasEvenIfItsDataIsBroken() throws IOException {
+        // The red first frame covers the canvas, but its data ends after a few pixels, so the rest of it shows the canvas, which must be the transparent canvas of a new play
+        int[] redFrame = new int[16];
+        int[] greenFrame = new int[16];
+        Arrays.fill(greenFrame, 1);
+        byte[] file = GifTestFiles.gif(4, 4, TestTextures.GIF_COLORS)
+                .image(new GifTestFiles.Frame(4, 4, redFrame).lzw(new GifTestFiles.Lzw().literalsOnly().maxCodes(4)))
+                .image(new GifTestFiles.Frame(4, 4, greenFrame))
+                .end();
+        GifImage image = GifTestFiles.read(file);
+        AnimatedFrameCompositor compositor = new AnimatedFrameCompositor(image);
+        try (AnimatedFrameDecoder decoder = image.createFrameDecoder()) {
+            compositor.composeFrame(0, decoder, new AnimatedFrameUpdate(0, 0, 0L));
+            compositor.composeFrame(1, decoder, new AnimatedFrameUpdate(1, 0, 0L));
+            assertEquals(GREEN, AnimatedImageTestSupport.readCanvas(compositor, 4, 4)[15]);
+
+            compositor.composeFrame(0, decoder, new AnimatedFrameUpdate(0, 1, 0L));
+
+            int[] canvas = AnimatedImageTestSupport.readCanvas(compositor, 4, 4);
+            assertEquals(RED, canvas[0]);
+            for (int i = 4; i < 16; i++) assertEquals(CLEAR, canvas[i], "pixel " + i);
         }
     }
 
@@ -202,57 +231,6 @@ class ApngCompositorTest {
                 .frame(2, 2, 1, 1, 1, 10, greenDisposeOp, greenBlendOp, solid(2, 2, 0, 255, 0, 255))
                 .frame(1, 1, 3, 3, 1, 10, 0, 0, solid(1, 1, 0, 0, 255, 255))
                 .end();
-    }
-
-    static byte[] randomAnimation(Random random, int width, int height, int frames) {
-        return randomAnimation(random, width, height, frames, false);
-    }
-
-    static byte[] randomAnimation(Random random, int width, int height, int frames, boolean interlaced) {
-        ApngTestFiles.Png png = ApngTestFiles.png(width, height, 8, ApngImage.COLOR_TYPE_RGBA).interlaced(interlaced).header().animationControl(frames, 0);
-        png.frameControl(width, height, 0, 0, 1, 20, random.nextInt(3), random.nextInt(2)).imageData(randomPixels(random, width, height));
-        for (int i = 1; i < frames; i++) {
-            int frameWidth = 1 + random.nextInt(width);
-            int frameHeight = 1 + random.nextInt(height);
-            int x = random.nextInt(width - frameWidth + 1);
-            int y = random.nextInt(height - frameHeight + 1);
-            png.frame(frameWidth, frameHeight, x, y, 1, 20, random.nextInt(3), random.nextInt(2), randomPixels(random, frameWidth, frameHeight));
-        }
-        return png.end();
-    }
-
-    private static int[] randomPixels(Random random, int width, int height) {
-        int[] samples = new int[width * height * 4];
-        for (int i = 0; i < width * height; i++) {
-            samples[i * 4] = random.nextInt(256);
-            samples[i * 4 + 1] = random.nextInt(256);
-            samples[i * 4 + 2] = random.nextInt(256);
-            // Mostly opaque or clear pixels, like real animations, plus some in between
-            int alphaKind = random.nextInt(4);
-            samples[i * 4 + 3] = (alphaKind == 0) ? 0 : ((alphaKind == 1) ? random.nextInt(256) : 255);
-        }
-        return samples;
-    }
-
-    static int[][] composeAll(byte[] file) throws IOException {
-        return composeAll(read(file));
-    }
-
-    /**
-     * Composes every frame of the first play and returns the canvas after each frame.
-     */
-    static int[][] composeAll(ApngImage image) throws IOException {
-        ApngCompositor compositor = new ApngCompositor(image);
-        int[][] canvases = new int[image.getFrameCount()][];
-        try (ApngFrameDecoder decoder = new ApngFrameDecoder(image)) {
-            for (int i = 0; i < image.getFrameCount(); i++) {
-                ApngFrameUpdate update = new ApngFrameUpdate(i, 0, 0L);
-                compositor.composeFrame(i, decoder, update);
-                assertTrue(update.getPixelCount() > 0);
-                canvases[i] = ApngFrameDecoderTest.readCanvas(compositor, image.getWidth(), image.getHeight());
-            }
-        }
-        return canvases;
     }
 
     private static ApngTestFiles.Png rgba() {

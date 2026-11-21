@@ -371,7 +371,7 @@ public class JsonModelElement extends AbstractElement {
             this.lastUseTextureOverride = override;
             this.lastParentResourceGeneration = parentResourceGeneration;
         } else if (textureRenderLocationChanged) {
-            // Animated textures rotate locations as frames advance; the baked full-texture UVs remain valid.
+            // The texture got a new location while it stayed the same resource; the baked full-texture UVs remain valid.
             this.lastOverrideTextureLocation = overrideTextureLocation;
             JsonModelCache cache = this.modelCache.current();
             if (cache != null && overrideTextureReady) cache.updateRenderTexture(overrideTextureLocation);

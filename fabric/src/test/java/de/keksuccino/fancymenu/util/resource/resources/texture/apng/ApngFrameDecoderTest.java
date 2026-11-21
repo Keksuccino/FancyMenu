@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.apng;
 
+import de.keksuccino.fancymenu.util.resource.resources.texture.animated.AnimatedImageTestSupport;
+import de.keksuccino.fancymenu.util.resource.resources.texture.animated.AnimatedImageSourceChangedException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -9,8 +11,6 @@ import java.awt.image.BufferedImage;
 import java.awt.image.Raster;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -60,7 +60,7 @@ class ApngFrameDecoderTest {
         for (int i = 0; i < expected.length; i++) {
             expected[i] = expectedPixel(colorType, bitDepth, samples, i, palette);
         }
-        assertArrayEquals(expected, decodeFirstFrame(file));
+        assertArrayEquals(expected, ApngTestFiles.decodeFirstFrame(file));
     }
 
     @Test
@@ -70,7 +70,7 @@ class ApngFrameDecoderTest {
                 Random random = new Random(filter);
                 int[] samples = ApngTestFiles.randomSamples(23, 7, format[1], format[0], random);
                 byte[] file = ApngTestFiles.png(23, 7, format[1], format[0]).filter(filter).header().imageData(samples).end();
-                int[] decoded = decodeFirstFrame(file);
+                int[] decoded = ApngTestFiles.decodeFirstFrame(file);
                 for (int i = 0; i < decoded.length; i++) {
                     assertEquals(expectedPixel(format[0], format[1], samples, i, null), decoded[i], "filter " + filter + ", color type " + format[0] + ", pixel " + i);
                 }
@@ -83,7 +83,7 @@ class ApngFrameDecoderTest {
         int[] samples = {0, 1000, 1001, 65535};
         byte[] file = ApngTestFiles.png(4, 1, 16, ApngImage.COLOR_TYPE_GRAYSCALE).header().transparency(1000).imageData(samples).end();
 
-        int[] decoded = decodeFirstFrame(file);
+        int[] decoded = ApngTestFiles.decodeFirstFrame(file);
 
         assertEquals(0xFF000000, decoded[0]);
         assertEquals(0, decoded[1] >>> 24);
@@ -97,7 +97,7 @@ class ApngFrameDecoderTest {
         // Out of range for 8 bits, which breaks the specification, libpng and browsers only use the low byte
         byte[] file = ApngTestFiles.png(2, 1, 8, ApngImage.COLOR_TYPE_GRAYSCALE).header().transparency(0x0105).imageData(new int[] {5, 6}).end();
 
-        int[] decoded = decodeFirstFrame(file);
+        int[] decoded = ApngTestFiles.decodeFirstFrame(file);
 
         assertEquals(0, decoded[0] >>> 24);
         assertEquals(0xFF, decoded[1] >>> 24);
@@ -108,11 +108,11 @@ class ApngFrameDecoderTest {
         int[] samples = {10, 20, 30, 10, 20, 31, 0, 0, 0};
         byte[] file = ApngTestFiles.png(3, 1, 8, ApngImage.COLOR_TYPE_RGB).header().transparency(10, 20, 30).imageData(samples).end();
 
-        int[] decoded = decodeFirstFrame(file);
+        int[] decoded = ApngTestFiles.decodeFirstFrame(file);
 
-        assertEquals(ApngTestFiles.abgr(10, 20, 30, 0), decoded[0]);
-        assertEquals(ApngTestFiles.abgr(10, 20, 31, 255), decoded[1]);
-        assertEquals(ApngTestFiles.abgr(0, 0, 0, 255), decoded[2]);
+        assertEquals(AnimatedImageTestSupport.abgr(10, 20, 30, 0), decoded[0]);
+        assertEquals(AnimatedImageTestSupport.abgr(10, 20, 31, 255), decoded[1]);
+        assertEquals(AnimatedImageTestSupport.abgr(0, 0, 0, 255), decoded[2]);
     }
 
     @Test
@@ -121,10 +121,10 @@ class ApngFrameDecoderTest {
         // Two palette entries, only the first has a tRNS alpha; index 2 and 3 are outside the palette
         byte[] file = ApngTestFiles.png(4, 1, 8, ApngImage.COLOR_TYPE_PALETTE).header().palette(new int[] {255, 0, 0, 0, 255, 0}).transparency(128).imageData(samples).end();
 
-        int[] decoded = decodeFirstFrame(file);
+        int[] decoded = ApngTestFiles.decodeFirstFrame(file);
 
-        assertEquals(ApngTestFiles.abgr(255, 0, 0, 128), decoded[0]);
-        assertEquals(ApngTestFiles.abgr(0, 255, 0, 255), decoded[1]);
+        assertEquals(AnimatedImageTestSupport.abgr(255, 0, 0, 128), decoded[0]);
+        assertEquals(AnimatedImageTestSupport.abgr(0, 255, 0, 255), decoded[1]);
         assertEquals(0xFF000000, decoded[2]);
         assertEquals(0xFF000000, decoded[3]);
     }
@@ -145,37 +145,17 @@ class ApngFrameDecoderTest {
         byte[] zlib = ApngTestFiles.encodeImageData(16, 16, 8, ApngImage.COLOR_TYPE_RGBA, samples, false, ApngTestFiles.RANDOM_FILTERS, new Random(5));
         byte[] file = ApngTestFiles.png(16, 16, 8, ApngImage.COLOR_TYPE_RGBA).header().chunk("IDAT", Arrays.copyOf(zlib, zlib.length / 2)).end();
 
-        IOException ex = assertThrows(IOException.class, () -> decodeFirstFrame(file));
+        IOException ex = assertThrows(IOException.class, () -> ApngTestFiles.decodeFirstFrame(file));
         // The chunks are intact, so the data itself is broken and the source did not change
-        assertFalse(ex instanceof ApngSourceChangedException);
+        assertFalse(ex instanceof AnimatedImageSourceChangedException);
     }
 
     @Test
     void invalidFilterTypeFails() throws IOException {
         byte[] file = ApngTestFiles.png(2, 1, 8, ApngImage.COLOR_TYPE_GRAYSCALE).header().chunk("IDAT", ApngTestFiles.deflate(new byte[] {5, 1, 2})).end();
 
-        IOException ex = assertThrows(IOException.class, () -> decodeFirstFrame(file));
-        assertFalse(ex instanceof ApngSourceChangedException);
-    }
-
-    static int[] decodeFirstFrame(byte[] file) throws IOException {
-        ApngImage image = ApngTestFiles.read(file);
-        ApngCompositor compositor = new ApngCompositor(image);
-        try (ApngFrameDecoder decoder = new ApngFrameDecoder(image)) {
-            ApngFrameUpdate update = new ApngFrameUpdate(0, 0, 0L);
-            compositor.composeFrame(0, decoder, update);
-            return readCanvas(compositor, image.getWidth(), image.getHeight());
-        }
-    }
-
-    static int[] readCanvas(ApngCompositor compositor, int width, int height) {
-        ApngFrameUpdate fullCanvas = new ApngFrameUpdate(0, 0, 0L);
-        fullCanvas.setFullCanvas(width, height);
-        ByteBuffer buffer = ByteBuffer.allocate(width * height * 4);
-        compositor.writePixels(fullCanvas, buffer);
-        int[] pixels = new int[width * height];
-        buffer.order(ByteOrder.LITTLE_ENDIAN).asIntBuffer().get(pixels);
-        return pixels;
+        IOException ex = assertThrows(IOException.class, () -> ApngTestFiles.decodeFirstFrame(file));
+        assertFalse(ex instanceof AnimatedImageSourceChangedException);
     }
 
     private static int expectedPixel(int colorType, int bitDepth, int[] samples, int pixel, int[] palette) {
@@ -183,7 +163,7 @@ class ApngFrameDecoderTest {
         int base = pixel * channels;
         if (colorType == ApngImage.COLOR_TYPE_PALETTE) {
             int index = samples[base];
-            return ApngTestFiles.abgr(palette[index * 3], palette[index * 3 + 1], palette[index * 3 + 2], 255);
+            return AnimatedImageTestSupport.abgr(palette[index * 3], palette[index * 3 + 1], palette[index * 3 + 2], 255);
         }
         int[] values = new int[channels];
         for (int channel = 0; channel < channels; channel++) {
@@ -191,10 +171,10 @@ class ApngFrameDecoderTest {
             values[channel] = (bitDepth == 16) ? (int) Math.round(sample * 255.0 / 65535.0) : (sample * 255) / ((1 << bitDepth) - 1);
         }
         return switch (colorType) {
-            case ApngImage.COLOR_TYPE_GRAYSCALE -> ApngTestFiles.abgr(values[0], values[0], values[0], 255);
-            case ApngImage.COLOR_TYPE_GRAYSCALE_ALPHA -> ApngTestFiles.abgr(values[0], values[0], values[0], values[1]);
-            case ApngImage.COLOR_TYPE_RGB -> ApngTestFiles.abgr(values[0], values[1], values[2], 255);
-            default -> ApngTestFiles.abgr(values[0], values[1], values[2], values[3]);
+            case ApngImage.COLOR_TYPE_GRAYSCALE -> AnimatedImageTestSupport.abgr(values[0], values[0], values[0], 255);
+            case ApngImage.COLOR_TYPE_GRAYSCALE_ALPHA -> AnimatedImageTestSupport.abgr(values[0], values[0], values[0], values[1]);
+            case ApngImage.COLOR_TYPE_RGB -> AnimatedImageTestSupport.abgr(values[0], values[1], values[2], 255);
+            default -> AnimatedImageTestSupport.abgr(values[0], values[1], values[2], values[3]);
         };
     }
 
