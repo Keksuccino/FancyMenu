@@ -8,8 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PlaybackLoopTrackerTest {
 
-    private final PlaybackLoopTracker tracker = new PlaybackLoopTracker(false);
-    private final PlaybackLoopTracker playedThroughTracker = new PlaybackLoopTracker(true);
+    private final PlaybackLoopTracker tracker = new PlaybackLoopTracker();
 
     @Test
     void forwardPlaybackIsNoRestart() {
@@ -21,13 +20,15 @@ class PlaybackLoopTrackerTest {
 
     @Test
     void firstSampleOnlySetsStartingPoint() {
+        // Joining a pass near its end means it didn't get played through from the starting point, so the jump back is no restart yet
         assertFalse(this.tracker.update(2900L, 3000L));
-        assertTrue(this.tracker.update(0L, 3000L));
-        assertEquals(1, this.tracker.getCompletedLoops());
+        assertFalse(this.tracker.update(0L, 3000L));
+        assertEquals(0, this.tracker.getCompletedLoops());
     }
 
     @Test
-    void jumpBackToStartCountsEveryLoop() {
+    void jumpBackToStartCountsEveryPlayedThroughLoop() {
+        this.tracker.update(0L, 3000L);
         this.tracker.update(2900L, 3000L);
         assertTrue(this.tracker.update(20L, 3000L));
         this.tracker.update(2990L, 3000L);
@@ -66,9 +67,11 @@ class PlaybackLoopTrackerTest {
 
     @Test
     void resetClearsLoopsAndStartingPoint() {
+        this.tracker.update(0L, 3000L);
         this.tracker.update(2900L, 3000L);
         this.tracker.update(0L, 3000L);
         this.tracker.update(2900L, 3000L);
+        assertEquals(1, this.tracker.getCompletedLoops());
 
         this.tracker.reset();
 
@@ -79,6 +82,7 @@ class PlaybackLoopTrackerTest {
 
     @Test
     void negativeTimeIsTreatedAsStart() {
+        this.tracker.update(0L, 3000L);
         this.tracker.update(2900L, 3000L);
 
         assertTrue(this.tracker.update(-1L, 3000L));
@@ -89,66 +93,66 @@ class PlaybackLoopTrackerTest {
     @Test
     void playedThroughLoopCountsAsRestart() {
         for (long time = 0L; time <= 9990L; time += 33L) {
-            assertFalse(this.playedThroughTracker.update(time, 10_000L));
+            assertFalse(this.tracker.update(time, 10_000L));
         }
-        assertTrue(this.playedThroughTracker.isPlayedThrough(10_000L));
+        assertTrue(this.tracker.isPlayedThrough(10_000L));
 
-        assertTrue(this.playedThroughTracker.update(15L, 10_000L));
-        assertEquals(1, this.playedThroughTracker.getCompletedLoops());
-        assertFalse(this.playedThroughTracker.isPlayedThrough(10_000L));
+        assertTrue(this.tracker.update(15L, 10_000L));
+        assertEquals(1, this.tracker.getCompletedLoops());
+        assertFalse(this.tracker.isPlayedThrough(10_000L));
     }
 
     @Test
     void playedThroughLoopIsNoticedWithRareSamples() {
         // Low frame rates sample the play time less often, so the last sample before the restart can be far from the end
         for (long time = 0L; time <= 9200L; time += 400L) {
-            this.playedThroughTracker.update(time, 10_000L);
+            this.tracker.update(time, 10_000L);
         }
 
-        assertTrue(this.playedThroughTracker.update(300L, 10_000L));
+        assertTrue(this.tracker.update(300L, 10_000L));
     }
 
     @Test
     void stalePlayTimeAfterSeekIsNoRestart() {
         // Right after seeking to the start of a shared video, the player can still report the old position for a moment
-        this.playedThroughTracker.restartPass();
-        this.playedThroughTracker.update(12_000L, 30_000L);
-        this.playedThroughTracker.update(12_016L, 30_000L);
+        this.tracker.restartPass();
+        this.tracker.update(12_000L, 30_000L);
+        this.tracker.update(12_016L, 30_000L);
 
-        assertFalse(this.playedThroughTracker.update(0L, 30_000L));
-        assertEquals(0, this.playedThroughTracker.getCompletedLoops());
+        assertFalse(this.tracker.update(0L, 30_000L));
+        assertEquals(0, this.tracker.getCompletedLoops());
     }
 
     @Test
     void backwardSeekBeforePlayingThroughIsNoRestart() {
         for (long time = 0L; time <= 4000L; time += 33L) {
-            this.playedThroughTracker.update(time, 10_000L);
+            this.tracker.update(time, 10_000L);
         }
 
-        assertFalse(this.playedThroughTracker.update(1000L, 10_000L));
-        assertEquals(0, this.playedThroughTracker.getCompletedLoops());
+        assertFalse(this.tracker.update(1000L, 10_000L));
+        assertEquals(0, this.tracker.getCompletedLoops());
     }
 
     @Test
     void restartedPassKeepsLoopsAndNeedsNewStartingPoint() {
-        this.playedThroughTracker.update(0L, 1000L);
-        this.playedThroughTracker.update(990L, 1000L);
-        assertTrue(this.playedThroughTracker.update(0L, 1000L));
+        this.tracker.update(0L, 1000L);
+        this.tracker.update(990L, 1000L);
+        assertTrue(this.tracker.update(0L, 1000L));
 
-        this.playedThroughTracker.restartPass();
+        this.tracker.restartPass();
 
-        assertEquals(1, this.playedThroughTracker.getCompletedLoops());
-        assertFalse(this.playedThroughTracker.update(900L, 1000L));
-        assertFalse(this.playedThroughTracker.isPlayedThrough(1000L));
+        assertEquals(1, this.tracker.getCompletedLoops());
+        assertFalse(this.tracker.update(900L, 1000L));
+        assertFalse(this.tracker.isPlayedThrough(1000L));
     }
 
     @Test
     void passIsNeverPlayedThroughWithUnknownDuration() {
-        this.playedThroughTracker.update(0L, 0L);
-        this.playedThroughTracker.update(5000L, 0L);
+        this.tracker.update(0L, 0L);
+        this.tracker.update(5000L, 0L);
 
-        assertFalse(this.playedThroughTracker.isPlayedThrough(0L));
-        assertFalse(this.playedThroughTracker.update(0L, 0L));
+        assertFalse(this.tracker.isPlayedThrough(0L));
+        assertFalse(this.tracker.update(0L, 0L));
     }
 
 }

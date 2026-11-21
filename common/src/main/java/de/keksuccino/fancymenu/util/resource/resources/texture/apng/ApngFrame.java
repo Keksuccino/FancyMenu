@@ -1,30 +1,17 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.apng;
 
+import de.keksuccino.fancymenu.util.resource.resources.texture.animated.AnimatedImageFrame;
 import org.jetbrains.annotations.NotNull;
 
 /**
  * One frame of an APNG image: the canvas region it covers, how long it stays visible, how it gets composed onto the canvas and where its compressed image data lies in the source.<br>
  * Frames keep no image data, so a parsed image needs only a few bytes per frame, no matter how big its file is.
+ * The dispose and blend operations of APNG use the same values as the DISPOSE_OP and BLEND_OP constants of {@link AnimatedImageFrame}.
  *
  * @param delayNanos How long the frame stays visible, exactly as stored in the file.
  * @param dataChunks The chunks of the source that hold the zlib stream of the frame.
  */
-public record ApngFrame(int x, int y, int width, int height, long delayNanos, int disposeOp, int blendOp, @NotNull DataChunks dataChunks) {
-
-    /** The frame stays on the canvas as it is when the next frame gets composed. **/
-    public static final int DISPOSE_OP_NONE = 0;
-    /** The frame region gets cleared to fully transparent black before the next frame gets composed. **/
-    public static final int DISPOSE_OP_BACKGROUND = 1;
-    /** The frame region gets reverted to what it showed before this frame got composed. **/
-    public static final int DISPOSE_OP_PREVIOUS = 2;
-    /** The frame replaces all pixels of its region, alpha included. **/
-    public static final int BLEND_OP_SOURCE = 0;
-    /** The frame gets alpha-composited over the pixels of its region. **/
-    public static final int BLEND_OP_OVER = 1;
-
-    public boolean coversCanvas(int canvasWidth, int canvasHeight) {
-        return (this.x == 0) && (this.y == 0) && (this.width == canvasWidth) && (this.height == canvasHeight);
-    }
+public record ApngFrame(int x, int y, int width, int height, long delayNanos, int disposeOp, int blendOp, @NotNull DataChunks dataChunks) implements AnimatedImageFrame {
 
     /**
      * Where the zlib stream of a frame lies in the source: the IDAT or fdAT chunks it got split into, in file order. Every chunk got its CRC verified when the image got parsed.

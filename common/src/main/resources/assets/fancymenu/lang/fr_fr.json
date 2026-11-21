@@ -3896,7 +3896,6 @@
   "fancymenu.ui.filechooser.no_preview": "Aucun aperçu disponible.",
   "fancymenu.ui.filechooser.open_in_explorer": "Ouvrir dans l’explorateur",
   "fancymenu.ui.filechooser.preview": "Aperçu",
-  "fancymenu.ui.filechooser.preview.watermedia_recommended_gif": "Il est recommandé d’installer Watermedia pour travailler avec des textures GIF, pour de meilleures performances et une consommation de RAM plus faible.",
   "fancymenu.ui.filechooser.resource_name_check.not_passed.tooltip": "Le nom de ce dossier ou fichier contient\ndes caractères non pris en charge.\nAssure-toi d’utiliser uniquement [a-z], [0-9] et [_], [-], [.].\nLes espaces et les majuscules ne sont pas pris en charge.",
   "fancymenu.ui.generic.continue": "Continuer",
   "fancymenu.ui.generic.description": "Description",
