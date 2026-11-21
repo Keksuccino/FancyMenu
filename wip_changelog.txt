@@ -1,6 +1,15 @@
 
 CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 
+- Added the "Scrollable Area" element, a container that holds other elements, scrolls them vertically, horizontally or both, and cuts them to its size
+  - Place elements freely with anchors, or let the area arrange them automatically (Stack, Grid, Flow)
+  - Scrolling options: scroll speed, smooth scrolling, drag-to-scroll, snapping to elements or pages, auto-scrolling, start position, keyboard scrolling and following the focused element
+  - Customizable scroll bars (grabber styles, bar backgrounds, thickness, side, visibility) and a background
+  - Drag elements into and out of areas in the layout editor, and resize the content with a handle
+  - Anchor points of elements in an area sit at the edges and the middle of its whole content and scroll with it
+  - Areas scroll on their own while you drag elements close to their edges, and dragged elements stay under the mouse while the area scrolls
+  - Nested layers in the layer list, and copying, pasting or deleting an area with everything in it
+  - An action to scroll areas, placeholders for their scroll position and content size, a requirement for areas scrolled to their end, and listeners for scrolled content
 - Completely reworked the Decoration Overlays
   - Existing overlays got a new look: Snow, Rain, Confetti, Fireworks, String Lights, Fireflies and Leaves
   - Added 15 new decoration overlays: Cherry Blossoms, Shooting Stars, Aurora, Clouds, Fog, Sunbeams, Butterflies, Birds, Bats, Bubbles, Sky Lanterns, Overgrowth, Frost, Cobwebs and Embers
@@ -35,6 +44,7 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - Added `/fmdata export_for_ai copy|file` to export the server's FMData listeners and welcome data for AI
 - Added a "Preserve Background Texture Aspect Ratio" toggle for the global custom menu background texture, so you can choose between stretching it to fill the screen and keeping its original proportions
 - Added smooth scrolling, a scroll speed setting, sideways and Shift + mouse wheel scrolling, drag scrolling and keyboard scrolling (Page Up/Down, Home, End) to the Text element
+- Added nine-sliced backgrounds behind the scroll bars of Text elements
 - Added a scroll direction setting (vertical, horizontal or both) to the Text element
 - Added auto-scroll to the Text element, with speed, loop and pause-on-hover settings
 - Added scroll snapping to the Text element (to lines, to Markdown headlines or to pages)
@@ -123,5 +133,8 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - Fixed the content of rotated Text elements getting cut off along straight lines instead of following the element's rotation
 - Fixed scroll bars, links and other clickable Markdown content in rotated Text elements not reacting to the mouse where they are shown
 - Fixed element tilting not getting rendered in MC 1.21.11 and newer, which made tilted elements look untilted and react to the mouse in the wrong place
+- Fixed JSON Model elements being invisible in MC 1.21.11 and newer
+- Fixed scroll bars scrolling down when the mouse wheel only got turned sideways
+- Fixed pasting elements with the keyboard shortcut in the layout editor not being undoable
 
 %changelog:end%
