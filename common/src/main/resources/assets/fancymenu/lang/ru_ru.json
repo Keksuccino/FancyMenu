@@ -3372,7 +3372,7 @@
   "fancymenu.placeholders.world.effects_count": "Количество активных эффектов",
   "fancymenu.placeholders.world.effects_count.desc": "Возвращает количество активных эффектов.\nВозвращает '0', если ты не в мире или если нет активных эффектов.",
   "fancymenu.placeholders.world.gamerule_value": "Значение gamerule",
-  "fancymenu.placeholders.world.gamerule_value.desc": "§xДля этого FancyMenu должен быть установлен на сервере!\n\nВозвращает значение указанной gamerule в текущем мире/на сервере. Принимает имя gamerule (например, doDaylightCycle). Возвращает пустое значение, если мир не загружен или если gamerule не существует.",
+  "fancymenu.placeholders.world.gamerule_value.desc": "§xДля этого FancyMenu должен быть установлен на сервере!\n\nВозвращает значение указанной gamerule в текущем мире/на сервере. Принимает имя gamerule (например, advance_time). Возвращает пустое значение, если мир не загружен или если gamerule не существует.",
   "fancymenu.placeholders.world.highlighted_item_time_fm": "Время выделенного предмета (FM)",
   "fancymenu.placeholders.world.highlighted_item_time_fm.desc": "Оставшееся время в тиках, в течение которого оригинальное ванильное название выделенного предмета отображается над хотбаром.",
   "fancymenu.placeholders.world.hovered_inventory_item": "Предмет под курсором в инвентаре",

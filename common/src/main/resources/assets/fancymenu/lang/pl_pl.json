@@ -3372,7 +3372,7 @@
   "fancymenu.placeholders.world.effects_count": "Liczba aktywnych efektów",
   "fancymenu.placeholders.world.effects_count.desc": "Zwraca liczbę aktualnie aktywnych efektów.\nZwraca „0”, gdy nie jesteś w świecie albo gdy żaden efekt nie jest aktywny.",
   "fancymenu.placeholders.world.gamerule_value": "Wartość gamerule",
-  "fancymenu.placeholders.world.gamerule_value.desc": "§xFancyMenu musi być zainstalowane na serwerze, żeby to działało!\n\nZwraca wartość podanego gamerule w aktualnym świecie/serwerze. Przyjmuje nazwę gamerule (na przykład doDaylightCycle). Zwraca pustą wartość, jeśli żaden świat nie jest wczytany albo jeśli gamerule nie istnieje.",
+  "fancymenu.placeholders.world.gamerule_value.desc": "§xFancyMenu musi być zainstalowane na serwerze, żeby to działało!\n\nZwraca wartość podanego gamerule w aktualnym świecie/serwerze. Przyjmuje nazwę gamerule (na przykład advance_time). Zwraca pustą wartość, jeśli żaden świat nie jest wczytany albo jeśli gamerule nie istnieje.",
   "fancymenu.placeholders.world.highlighted_item_time_fm": "Czas podświetlonego przedmiotu (FM)",
   "fancymenu.placeholders.world.highlighted_item_time_fm.desc": "Pozostały czas w tickach, przez jaki oryginalna domyślna nazwa podświetlonego przedmiotu jest wyświetlana nad hotbarem.",
   "fancymenu.placeholders.world.hovered_inventory_item": "Najechany przedmiot w ekwipunku",

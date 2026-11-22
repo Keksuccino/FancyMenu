@@ -3372,7 +3372,7 @@
   "fancymenu.placeholders.world.effects_count": "Кількість активних ефектів",
   "fancymenu.placeholders.world.effects_count.desc": "Повертає кількість активних зараз ефектів.\nПовертає '0', якщо гравець не у світі або жоден ефект не активний.",
   "fancymenu.placeholders.world.gamerule_value": "Значення ігрового правила",
-  "fancymenu.placeholders.world.gamerule_value.desc": "§xЩоб це працювало, FancyMenu має бути встановлено на сервері!\n\nПовертає значення вказаного ігрового правила в поточному світі/на сервері. Приймає назву ігрового правила (наприклад, doDaylightCycle). Повертає порожнє значення, якщо світ не завантажено або такого ігрового правила не існує.",
+  "fancymenu.placeholders.world.gamerule_value.desc": "§xЩоб це працювало, FancyMenu має бути встановлено на сервері!\n\nПовертає значення вказаного ігрового правила в поточному світі/на сервері. Приймає назву ігрового правила (наприклад, advance_time). Повертає порожнє значення, якщо світ не завантажено або такого ігрового правила не існує.",
   "fancymenu.placeholders.world.highlighted_item_time_fm": "Час показу назви предмета (FM)",
   "fancymenu.placeholders.world.highlighted_item_time_fm.desc": "Скільки тактів іще лишилося показувати над панеллю швидкого доступу оригінальну ванільну назву вибраного предмета.",
   "fancymenu.placeholders.world.hovered_inventory_item": "Предмет під курсором в інвентарі",

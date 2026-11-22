@@ -3372,7 +3372,7 @@
   "fancymenu.placeholders.world.effects_count": "활성 효과 수",
   "fancymenu.placeholders.world.effects_count.desc": "현재 활성화된 효과 수를 반환합니다.\n월드에 없거나 활성 효과가 없으면 '0'을 반환합니다.",
   "fancymenu.placeholders.world.gamerule_value": "게임룰 값",
-  "fancymenu.placeholders.world.gamerule_value.desc": "§x이 기능이 작동하려면 서버에 FancyMenu가 설치되어 있어야 합니다!\n\n현재 월드/서버에서 지정한 게임룰의 값을 반환합니다. 게임룰 이름(예: doDaylightCycle)을 받습니다. 월드가 로드되지 않았거나 게임룰이 존재하지 않으면 빈 값을 반환합니다.",
+  "fancymenu.placeholders.world.gamerule_value.desc": "§x이 기능이 작동하려면 서버에 FancyMenu가 설치되어 있어야 합니다!\n\n현재 월드/서버에서 지정한 게임룰의 값을 반환합니다. 게임룰 이름(예: advance_time)을 받습니다. 월드가 로드되지 않았거나 게임룰이 존재하지 않으면 빈 값을 반환합니다.",
   "fancymenu.placeholders.world.highlighted_item_time_fm": "강조된 아이템 시간(FM)",
   "fancymenu.placeholders.world.highlighted_item_time_fm.desc": "기본 바닐라의 강조된 아이템 이름이 핫바 위에 표시되는 남은 틱 시간을 반환합니다.",
   "fancymenu.placeholders.world.hovered_inventory_item": "마우스 오버된 인벤토리 아이템",
