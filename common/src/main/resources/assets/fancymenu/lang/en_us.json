@@ -4115,6 +4115,7 @@
   "fancymenu.profiles.drop.rejected.desc": "Only FancyMenu profile files (.fmp) can get imported here.",
   "fancymenu.profiles.archive.file_type": "FancyMenu Profile",
   "fancymenu.profiles.error.switch": "Couldn't load the profile, so your current setup stays loaded.",
+  "fancymenu.profiles.error.switch_incomplete": "The last profile switch isn't done yet, so some files of the loaded profile are still in the profiles folder. Nothing got lost! Load a profile again or restart the game to finish it.",
   "fancymenu.profiles.error.create": "Couldn't create the profile.",
   "fancymenu.profiles.error.duplicate": "Couldn't duplicate the profile.",
   "fancymenu.profiles.error.delete": "Couldn't delete the profile.",

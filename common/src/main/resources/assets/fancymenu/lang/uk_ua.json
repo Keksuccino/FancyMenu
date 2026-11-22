@@ -4115,6 +4115,7 @@
   "fancymenu.profiles.drop.rejected.desc": "Сюди можна імпортувати лише файли профілів FancyMenu (.fmp).",
   "fancymenu.profiles.archive.file_type": "Профіль FancyMenu",
   "fancymenu.profiles.error.switch": "Не вдалося завантажити профіль, тож поточне налаштування лишається завантаженим.",
+  "fancymenu.profiles.error.switch_incomplete": "Остання зміна профілю ще не завершилася, тож частина файлів завантаженого профілю поки лежить у теці профілів. Нічого не загубилося! Завантаж профіль ще раз або перезапусти гру, щоб її завершити.",
   "fancymenu.profiles.error.create": "Не вдалося створити профіль.",
   "fancymenu.profiles.error.duplicate": "Не вдалося дублювати профіль.",
   "fancymenu.profiles.error.delete": "Не вдалося видалити профіль.",

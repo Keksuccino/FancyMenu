@@ -4115,6 +4115,7 @@
   "fancymenu.profiles.drop.rejected.desc": "这里只能导入 FancyMenu 配置档文件（.fmp）。",
   "fancymenu.profiles.archive.file_type": "FancyMenu 配置档",
   "fancymenu.profiles.error.switch": "无法加载配置档，当前设置会继续保持加载。",
+  "fancymenu.profiles.error.switch_incomplete": "上一次的配置档切换还没完成，所以当前加载的配置档有一部分文件还在配置档文件夹里。什么都没丢！再加载一次配置档或者重启游戏，就能完成切换。",
   "fancymenu.profiles.error.create": "无法创建配置档。",
   "fancymenu.profiles.error.duplicate": "无法复制配置档。",
   "fancymenu.profiles.error.delete": "无法删除配置档。",

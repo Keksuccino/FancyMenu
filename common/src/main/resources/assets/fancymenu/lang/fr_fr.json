@@ -4115,6 +4115,7 @@
   "fancymenu.profiles.drop.rejected.desc": "Seuls les fichiers de profil FancyMenu (.fmp) peuvent être importés ici.",
   "fancymenu.profiles.archive.file_type": "Profil FancyMenu",
   "fancymenu.profiles.error.switch": "Impossible de charger le profil, ta config actuelle reste donc chargée.",
+  "fancymenu.profiles.error.switch_incomplete": "Le dernier changement de profil n'est pas encore terminé, donc certains fichiers du profil chargé sont encore dans le dossier des profils. Rien n'est perdu ! Charge à nouveau un profil ou redémarre le jeu pour le terminer.",
   "fancymenu.profiles.error.create": "Impossible de créer le profil.",
   "fancymenu.profiles.error.duplicate": "Impossible de dupliquer le profil.",
   "fancymenu.profiles.error.delete": "Impossible de supprimer le profil.",

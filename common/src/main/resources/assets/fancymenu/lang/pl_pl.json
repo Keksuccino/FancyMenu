@@ -4115,6 +4115,7 @@
   "fancymenu.profiles.drop.rejected.desc": "Tutaj można importować tylko pliki profili FancyMenu (.fmp).",
   "fancymenu.profiles.archive.file_type": "Profil FancyMenu",
   "fancymenu.profiles.error.switch": "Nie udało się wczytać profilu, więc obecna konfiguracja zostaje wczytana.",
+  "fancymenu.profiles.error.switch_incomplete": "Ostatnia zmiana profilu jeszcze się nie zakończyła, więc część plików wczytanego profilu wciąż leży w folderze profili. Nic nie przepadło! Wczytaj profil jeszcze raz albo uruchom grę ponownie, żeby ją dokończyć.",
   "fancymenu.profiles.error.create": "Nie udało się utworzyć profilu.",
   "fancymenu.profiles.error.duplicate": "Nie udało się zduplikować profilu.",
   "fancymenu.profiles.error.delete": "Nie udało się usunąć profilu.",

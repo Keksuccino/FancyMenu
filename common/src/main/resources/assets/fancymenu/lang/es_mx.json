@@ -4115,6 +4115,7 @@
   "fancymenu.profiles.drop.rejected.desc": "Aquí solo se pueden importar archivos de perfil de FancyMenu (.fmp).",
   "fancymenu.profiles.archive.file_type": "Perfil de FancyMenu",
   "fancymenu.profiles.error.switch": "No se pudo cargar el perfil, así que tu configuración actual sigue cargada.",
+  "fancymenu.profiles.error.switch_incomplete": "El último cambio de perfil todavía no terminó, así que algunos archivos del perfil cargado siguen en la carpeta de perfiles. ¡No se perdió nada! Carga un perfil otra vez o reinicia el juego para terminarlo.",
   "fancymenu.profiles.error.create": "No se pudo crear el perfil.",
   "fancymenu.profiles.error.duplicate": "No se pudo duplicar el perfil.",
   "fancymenu.profiles.error.delete": "No se pudo eliminar el perfil.",

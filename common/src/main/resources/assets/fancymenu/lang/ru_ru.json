@@ -4115,6 +4115,7 @@
   "fancymenu.profiles.drop.rejected.desc": "Сюда можно импортировать только файлы профилей FancyMenu (.fmp).",
   "fancymenu.profiles.archive.file_type": "Профиль FancyMenu",
   "fancymenu.profiles.error.switch": "Не удалось загрузить профиль, поэтому текущая настройка остаётся загруженной.",
+  "fancymenu.profiles.error.switch_incomplete": "Последняя смена профиля ещё не завершилась, поэтому часть файлов загруженного профиля пока лежит в папке профилей. Ничего не потерялось! Загрузи профиль ещё раз или перезапусти игру, чтобы её завершить.",
   "fancymenu.profiles.error.create": "Не удалось создать профиль.",
   "fancymenu.profiles.error.duplicate": "Не удалось дублировать профиль.",
   "fancymenu.profiles.error.delete": "Не удалось удалить профиль.",
