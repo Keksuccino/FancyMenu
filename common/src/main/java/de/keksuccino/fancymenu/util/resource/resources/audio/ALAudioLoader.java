@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.resource.resources.audio;
 
 import de.keksuccino.fancymenu.util.CloseableUtils;
+import de.keksuccino.fancymenu.util.lifecycle.ClientShutdownHandler;
 import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.melody.resources.audio.openal.ALAudioBuffer;
 import de.keksuccino.melody.resources.audio.openal.ALAudioClip;
@@ -40,7 +41,8 @@ public final class ALAudioLoader {
             if (in != null) return in;
             LOGGER.error("[FANCYMENU] Failed to open audio source: " + sourceName);
         } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to open audio source: " + sourceName, ex);
+            // Shutting down the client cancels web loads, which is no error
+            if (!ClientShutdownHandler.isShuttingDown()) LOGGER.error("[FANCYMENU] Failed to open audio source: " + sourceName, ex);
         }
         // No audio took the clip yet, so nobody else would ever close it
         CloseableUtils.closeQuietly(pendingClip);
@@ -72,7 +74,8 @@ public final class ALAudioLoader {
             }
         } catch (Exception ex) {
             target.onLoadingFailed();
-            LOGGER.error("[FANCYMENU] Failed to load audio: " + sourceName, ex);
+            // Shutting down the client cancels web loads, so reading fails then, which is no error
+            if (!ClientShutdownHandler.isShuttingDown()) LOGGER.error("[FANCYMENU] Failed to load audio: " + sourceName, ex);
         }
     }
 

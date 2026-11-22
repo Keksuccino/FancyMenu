@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.util.SerializationHelper;
 import de.keksuccino.fancymenu.util.TaskExecutor;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.lifecycle.ClientShutdownHandler;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.threading.AsyncRefreshingValueCache;
@@ -138,20 +139,14 @@ public class RandomTextPlaceholder extends Placeholder {
         }
         
         List<String> lines = new ArrayList<>();
-        try (InputStream stream = WebUtils.openResourceStream(url, WebUtils.WebResourceType.TEXT)) {
-            if (stream == null) {
-                LOGGER.warn("[FANCYMENU] Failed to open URL stream: " + url);
-                return lines;
-            }
-            
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    lines.add(line);
-                }
+        try (InputStream stream = WebUtils.openResourceStreamOrThrow(url, WebUtils.WebResourceType.TEXT); BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                lines.add(line);
             }
         } catch (Exception e) {
-            LOGGER.error("[FANCYMENU] Error reading from URL: " + url, e);
+            // Shutting down the client cancels web loads, which is no error
+            if (!ClientShutdownHandler.isShuttingDown()) LOGGER.error("[FANCYMENU] Error reading from URL: " + url, e);
         }
         
         return lines;
