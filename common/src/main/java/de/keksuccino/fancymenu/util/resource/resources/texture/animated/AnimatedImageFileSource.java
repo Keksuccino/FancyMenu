@@ -21,7 +21,8 @@ import java.util.concurrent.ThreadLocalRandom;
  * and decoding notices bytes that changed in place through the checksums of the frame data.<br><br>
  *
  * A channel gets closed for good when a thread that reads from it gets interrupted, so sources must only be read by threads that never get interrupted,
- * like the loading threads and the decoding threads of animated textures.
+ * like the loading threads and the decoding threads of animated textures. Closing it from another thread is safe though: the channel waits for a read
+ * that runs right now and makes all later reads fail, so the file never gets read after it got closed.
  */
 public final class AnimatedImageFileSource implements AnimatedImageSource {
 

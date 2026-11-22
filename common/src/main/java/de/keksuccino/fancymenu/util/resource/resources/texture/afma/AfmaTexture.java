@@ -68,6 +68,9 @@ public class AfmaTexture implements ITexture, PlayableResource {
 
     @Nullable
     protected volatile AfmaDecoder decoder = null;
+    /** The decoder that reads the archive while the texture loads, so closing the texture can release its file right away, also while the loading thread still reads it. **/
+    @Nullable
+    protected volatile AfmaDecoder loadingDecoder = null;
     @Nullable
     protected volatile AfmaFrameIndex frameIndex = null;
 
@@ -217,29 +220,11 @@ public class AfmaTexture implements ITexture, PlayableResource {
         return of(in, null, null);
     }
 
+    /**
+     * Closes the passed {@link InputStream}.
+     */
     protected static void populateTexture(@NotNull AfmaTexture texture, @NotNull InputStream in, @NotNull String afmaTextureName) {
-        DecodedAfmaImage decodedImage = null;
-        if (!texture.closed.get()) {
-            decodedImage = decodeAfma(in, afmaTextureName);
-            if (decodedImage == null) {
-                texture.decoded.set(true);
-                texture.loadingFailed.set(true);
-                LOGGER.error("[FANCYMENU] Failed to read AFMA image, because DecodedAfmaImage was NULL: {}", afmaTextureName);
-                CloseableUtils.closeQuietly(in);
-                return;
-            }
-
-            try {
-                texture.configureStreamingState(decodedImage);
-            } catch (Exception ex) {
-                texture.loadingFailed.set(true);
-                texture.releaseDecoder();
-                LOGGER.error("[FANCYMENU] Failed to initialize streaming state for AFMA image: " + afmaTextureName, ex);
-            }
-
-            texture.decoded.set(true);
-        }
-
+        texture.populate(decoder -> decoder.read(in), afmaTextureName);
         CloseableUtils.closeQuietly(in);
     }
 
@@ -250,29 +235,55 @@ public class AfmaTexture implements ITexture, PlayableResource {
     }
 
     protected static void populateTexture(@NotNull AfmaTexture texture, @NotNull File afmaFile, @NotNull String afmaTextureName) {
-        DecodedAfmaImage decodedImage = null;
-        if (!texture.closed.get()) {
-            decodedImage = decodeAfma(afmaFile, afmaTextureName);
-            if (decodedImage == null) {
-                texture.decoded.set(true);
-                texture.loadingFailed.set(true);
-                LOGGER.error("[FANCYMENU] Failed to read AFMA image, because DecodedAfmaImage was NULL: {}", afmaTextureName);
+        texture.populate(decoder -> decoder.read(afmaFile), afmaTextureName);
+    }
+
+    protected AfmaTexture() {
+    }
+
+    /**
+     * Reads the archive with a new decoder and prepares streaming it. Closed textures don't read it.<br>
+     * The decoder is the {@link #loadingDecoder} while it reads, so closing the texture releases its file right away. Its reads fail then, which is no error.
+     */
+    protected void populate(@NotNull ArchiveReader reader, @NotNull String afmaTextureName) {
+        if (this.closed.get()) return;
+        AfmaDecoder decoder = this.createDecoder();
+        this.loadingDecoder = decoder;
+        try {
+            // close() first marks the texture as closed and then releases the loading decoder, so checking again after tracking the decoder never misses a close
+            if (this.closed.get()) return;
+            DecodedAfmaImage decodedImage;
+            try {
+                reader.read(decoder);
+                AfmaMetadata metadata = Objects.requireNonNull(decoder.getMetadata(), "AfmaDecoder returned NULL for metadata");
+                decodedImage = new DecodedAfmaImage(decoder, metadata.getCanvasWidth(), metadata.getCanvasHeight(), metadata.getLoopCount());
+            } catch (Exception ex) {
+                this.decoded.set(true);
+                this.loadingFailed.set(true);
+                if (!this.closed.get()) LOGGER.error("[FANCYMENU] Failed to decode AFMA image: " + afmaTextureName, ex);
                 return;
             }
 
             try {
-                texture.configureStreamingState(decodedImage);
+                this.configureStreamingState(decodedImage);
+                // The texture owns the decoder now
+                decoder = null;
             } catch (Exception ex) {
-                texture.loadingFailed.set(true);
-                texture.releaseDecoder();
+                this.loadingFailed.set(true);
+                this.releaseDecoder();
                 LOGGER.error("[FANCYMENU] Failed to initialize streaming state for AFMA image: " + afmaTextureName, ex);
             }
 
-            texture.decoded.set(true);
+            this.decoded.set(true);
+        } finally {
+            this.loadingDecoder = null;
+            CloseableUtils.closeQuietly(decoder);
         }
     }
 
-    protected AfmaTexture() {
+    @NotNull
+    protected AfmaDecoder createDecoder() {
+        return new AfmaDecoder();
     }
 
     protected void configureStreamingState(@NotNull DecodedAfmaImage decodedImage) {
@@ -473,6 +484,8 @@ public class AfmaTexture implements ITexture, PlayableResource {
             primaryPayload = this.readPayloadByCodec(activeDecoder, this.resolvePrimaryPayloadCodec(descriptor), descriptor.getPrimaryPayloadPath());
             patchPayload = this.readPayloadByCodec(activeDecoder, this.resolveSecondaryPayloadCodec(descriptor), descriptor.getSecondaryPayloadPath());
         } catch (Exception ex) {
+            // Closing the texture releases the archive file right away, so reads that come after it fail, which is no error
+            if (this.closed.get()) return null;
             this.failStreaming("Failed to decode AFMA payload for " + (intro ? "intro" : "normal") + " frame " + index, ex);
             return null;
         }
@@ -1286,41 +1299,16 @@ public class AfmaTexture implements ITexture, PlayableResource {
         this.playbackResetFrameRestorePending = false;
         this.playbackResetFrameRestored = false;
         this.resetFrame.close();
+        // Released before the streaming decoder, because a loading thread that finishes right now first makes its decoder the streaming decoder and then stops tracking it
+        AfmaDecoder activeLoadingDecoder = this.loadingDecoder;
+        if (activeLoadingDecoder != null) {
+            activeLoadingDecoder.closeArchiveFile();
+        }
         this.requestDecoderRelease();
 
         this.sourceLocation = null;
         this.sourceFile = null;
         this.sourceURL = null;
-    }
-
-    @Nullable
-    public static DecodedAfmaImage decodeAfma(@NotNull InputStream in, @NotNull String afmaName) {
-        AfmaDecoder decoder = null;
-        try {
-            decoder = new AfmaDecoder();
-            decoder.read(in);
-            AfmaMetadata metadata = Objects.requireNonNull(decoder.getMetadata(), "AfmaDecoder returned NULL for metadata");
-            return new DecodedAfmaImage(decoder, metadata.getCanvasWidth(), metadata.getCanvasHeight(), metadata.getLoopCount());
-        } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to decode AFMA image: " + afmaName, ex);
-            CloseableUtils.closeQuietly(decoder);
-            return null;
-        }
-    }
-
-    @Nullable
-    public static DecodedAfmaImage decodeAfma(@NotNull File file, @NotNull String afmaName) {
-        AfmaDecoder decoder = null;
-        try {
-            decoder = new AfmaDecoder();
-            decoder.read(file);
-            AfmaMetadata metadata = Objects.requireNonNull(decoder.getMetadata(), "AfmaDecoder returned NULL for metadata");
-            return new DecodedAfmaImage(decoder, metadata.getCanvasWidth(), metadata.getCanvasHeight(), metadata.getLoopCount());
-        } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to decode AFMA image: " + afmaName, ex);
-            CloseableUtils.closeQuietly(decoder);
-            return null;
-        }
     }
 
     protected static void sleepQuietly(long millis) {
@@ -1358,7 +1346,15 @@ public class AfmaTexture implements ITexture, PlayableResource {
         }
     }
 
+    /**
+     * Releases the archive file of the decoder right away, so it is never open anymore once the texture got closed or failed. A read of the stream thread that runs right now finishes first.
+     * The rest of the decoder gets released by the stream thread once it stops, if it still runs, because it can still be using it.
+     */
     protected void requestDecoderRelease() {
+        AfmaDecoder activeDecoder = this.decoder;
+        if (activeDecoder != null) {
+            activeDecoder.closeArchiveFile();
+        }
         Thread running = this.streamThread;
         if ((running != null) && running.isAlive() && (running != Thread.currentThread())) {
             this.deferredDecoderRelease.set(true);
@@ -1489,6 +1485,16 @@ public class AfmaTexture implements ITexture, PlayableResource {
     }
 
     public record DecodedAfmaImage(@NotNull AfmaDecoder decoder, int imageWidth, int imageHeight, int numPlays) {
+    }
+
+    /**
+     * Reads an archive with the decoder, like {@link AfmaDecoder#read(File)}.
+     */
+    @FunctionalInterface
+    protected interface ArchiveReader {
+
+        void read(@NotNull AfmaDecoder decoder) throws IOException;
+
     }
 
 }
