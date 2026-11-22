@@ -13,7 +13,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/** Owns shared daemon executors needed by lifecycle backports and closes them as one client-shutdown operation. */
 public final class FancyMenuExecutors {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -22,7 +21,8 @@ public final class FancyMenuExecutors {
 
     private static boolean shutdown;
 
-    private FancyMenuExecutors() {}
+    private FancyMenuExecutors() {
+    }
 
     public static @NotNull ScheduledExecutorService newSingleThreadScheduledExecutor(@NotNull String name) {
         return newScheduledThreadPool(1, name);
@@ -43,7 +43,9 @@ public final class FancyMenuExecutors {
             shutdown = true;
             executors = new ArrayList<>(EXECUTORS);
         }
-        for (ExecutorService executor : executors) shutdownNow(executor);
+        for (ExecutorService executor : executors) {
+            shutdownNow(executor);
+        }
     }
 
     private static @NotNull ThreadFactory createDaemonThreadFactory(@NotNull String name) {
@@ -58,11 +60,14 @@ public final class FancyMenuExecutors {
     }
 
     private static <T extends ExecutorService> @NotNull T register(@NotNull T executor) {
-        // Registration and shutdown share one lock so no executor can escape a concurrent shutdown snapshot.
+        // Registration and the shutdown state share one lock so no executor can escape a concurrent shutdown snapshot.
         synchronized (SHUTDOWN_LOCK) {
             EXECUTORS.add(executor);
-            if (!shutdown) return executor;
+            if (!shutdown) {
+                return executor;
+            }
         }
+        // Classes can initialize during client teardown; executors registered after the snapshot must stop immediately.
         shutdownNow(executor);
         return executor;
     }
@@ -74,4 +79,5 @@ public final class FancyMenuExecutors {
             LOGGER.error("[FANCYMENU] Failed to shut down managed executor.", ex);
         }
     }
+
 }

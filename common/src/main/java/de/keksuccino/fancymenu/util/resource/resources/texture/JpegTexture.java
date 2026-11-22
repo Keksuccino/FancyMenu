@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.util.file.ReleasableFileInputStream;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.NativeImageUtil;
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
@@ -137,7 +138,7 @@ public class JpegTexture implements ITexture {
             return texture;
         }
 
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             try {
                 InputStream in = WebUtils.openResourceStream(textureURL, WebUtils.WebResourceType.IMAGE);
                 if (in == null) throw new NullPointerException("Web resource input stream was NULL!");
@@ -146,7 +147,7 @@ public class JpegTexture implements ITexture {
                 texture.loadingFailed = true;
                 LOGGER.error("[FANCYMENU] Failed to read texture from URL: " + textureURL, ex);
             }
-        }).start();
+        }, "JpegTexture-WebLoader");
 
         return texture;
 
@@ -162,10 +163,10 @@ public class JpegTexture implements ITexture {
         Objects.requireNonNull(in);
         JpegTexture texture = (writeTo != null) ? writeTo : new JpegTexture();
 
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             populateTexture(texture, in, (textureName != null) ? textureName : "[Generic InputStream Source]");
             if (texture.closed) MainThreadTaskExecutor.executeInMainThread(texture::close, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
-        }).start();
+        }, "JpegTexture-Decoder");
 
         return texture;
 
