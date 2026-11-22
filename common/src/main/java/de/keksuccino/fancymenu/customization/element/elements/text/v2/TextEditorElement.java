@@ -53,12 +53,11 @@ public class TextEditorElement extends AbstractEditorElement<TextEditorElement, 
                 .addIsVisibleSupplier((menu, entry) -> this.element.sourceMode == TextElement.SourceMode.RESOURCE)
                 .setStackable(false);
 
-        this.addStringInputContextMenuEntryTo(this.rightClickMenu, "set_text_content",
+        this.addMarkdownInputContextMenuEntryTo(this.rightClickMenu, "set_text_content",
                         TextEditorElement.class,
                         consumes -> consumes.element.source,
                         (textEditorElement, s) -> textEditorElement.element.setSource(TextElement.SourceMode.DIRECT, s),
-                        null, true, true, Component.translatable("fancymenu.elements.text.v2.source.input"),
-                        false, null, null, null)
+                        Component.translatable("fancymenu.elements.text.v2.source.input"))
                 .setIcon(MaterialIcons.TEXT_FIELDS)
                 .addIsVisibleSupplier((menu, entry) -> this.element.sourceMode == TextElement.SourceMode.DIRECT)
                 .setStackable(false);

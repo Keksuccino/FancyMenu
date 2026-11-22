@@ -50,6 +50,14 @@ public class InputUtils {
         return (modifiers & getGuiShortcutModifier(macOS)) != 0;
     }
 
+    /**
+     * Returns whether the GUI shortcut modifier is active without Shift and Alt, which is how edit shortcuts like copy and paste get pressed.<br>
+     * Windows reports AltGr as Control and Alt together, so a shortcut that ignores Alt would also fire while typing a character like "€" (AltGr + E).
+     */
+    public static boolean isOnlyGuiShortcutModifierDown(int modifiers) {
+        return isGuiShortcutModifierDown(modifiers) && ((modifiers & GLFW.GLFW_MOD_SHIFT) == 0) && ((modifiers & GLFW.GLFW_MOD_ALT) == 0);
+    }
+
     public static boolean isSelectAll(int keyCode, int modifiers) {
         return isEditShortcut(keyCode, GLFW.GLFW_KEY_A, modifiers);
     }
@@ -67,7 +75,7 @@ public class InputUtils {
     }
 
     private static boolean isEditShortcut(int keyCode, int expectedKeyCode, int modifiers) {
-        return (keyCode == expectedKeyCode) && isGuiShortcutModifierDown(modifiers) && ((modifiers & GLFW.GLFW_MOD_SHIFT) == 0) && ((modifiers & GLFW.GLFW_MOD_ALT) == 0);
+        return (keyCode == expectedKeyCode) && isOnlyGuiShortcutModifierDown(modifiers);
     }
 
 }

@@ -53,11 +53,40 @@ public class MarkdownParser {
     }
 
     /**
+     * Returns how the lines of the Markdown text are aligned, for tools that edit the text instead of showing it.<br>
+     * There is one entry for every line of the text, which is NULL for a marker line that opens or closes an aligned block.
+     *
+     * <p>Tables are left out, because finding them needs a renderer. A marker line that the parser would take as a row of a table counts as a marker line here.</p>
+     */
+    @NotNull
+    public static MarkdownRenderer.MarkdownLineAlignment[] getLineAlignments(@NotNull String markdownText) {
+        // The settings of lists and callouts change nothing here, because no list item and no callout starts with the marker of an aligned block
+        MarkdownStructure structure = new MarkdownStructure(markdownText, true, Collections.emptyList(), false, false, false);
+        MarkdownRenderer.MarkdownLineAlignment[] alignments = new MarkdownRenderer.MarkdownLineAlignment[countLineBreaks(markdownText, 0, markdownText.length()) + 1];
+        MarkdownRenderer.MarkdownLineAlignment alignment = MarkdownRenderer.MarkdownLineAlignment.LEFT;
+        int line = 0;
+        boolean markerLine = false;
+        for (int index = 0; index < markdownText.length(); index++) {
+            if (structure.getEventAt(index) == MarkdownStructure.Event.ALIGNMENT) {
+                alignment = LINE_ALIGNMENTS[structure.getEventValue()];
+                markerLine = true;
+            }
+            if (markdownText.charAt(index) == NEWLINE_CHAR) {
+                if (!markerLine) alignments[line] = alignment;
+                markerLine = false;
+                line++;
+            }
+        }
+        if (!markerLine) alignments[line] = alignment;
+        return alignments;
+    }
+
+    /**
      * Parses text that has its tables found already.
      *
      * <p>The text gets read twice. {@link MarkdownStructure} reads it first and finds everything that decides how the loop here has to read
      * each character. The loop then builds the fragments from that, and decides on its own only about the formats that need a marker
-     * to close them: bold, italic and struck through text, fonts and colors. It opens one of them only if {@link MarkdownFormatMarkers}
+     * to close them: bold, italic, struck through and underlined text, fonts and colors. It opens one of them only if {@link MarkdownFormatMarkers}
      * knows a marker behind it that the loop will read as a marker, so no format stays open because its closing marker turned out to be text.</p>
      *
      * <p>Both read the text once and never copy the rest of it. Everything that looks ahead is either limited to
@@ -478,6 +507,24 @@ public class MarkdownParser {
                     }
                 }
 
+                //Handle Underline
+                // Two plus signs open and close underlined text, but only where the structure found them able to, which they are not in front of or behind whitespace, for example
+                if (c == PLUS_CHAR) {
+                    if (!builder.underlined && formatMarkers.isAt(FormatMarker.PLUS_PAIR_OPEN, index) && formatMarkers.existsFrom(FormatMarker.PLUS_PAIR_CLOSE, index + 2)) {
+                        buildTextInFrontOfOpeningMarker(fragments, builder, isStartOfLine);
+                        lastBuiltFragment = null;
+                        builder.underlined = true;
+                        index++;
+                        continue;
+                    }
+                    if (builder.underlined && formatMarkers.isAt(FormatMarker.PLUS_PAIR_CLOSE, index)) {
+                        lastBuiltFragment = addFragment(fragments, builder.build(false, false));
+                        builder.underlined = false;
+                        index++;
+                        continue;
+                    }
+                }
+
             }
 
             if (c != NEWLINE_CHAR) {
@@ -567,6 +614,7 @@ public class MarkdownParser {
         protected boolean bold = false;
         protected boolean italic = false;
         protected boolean strikethrough = false;
+        protected boolean underlined = false;
         @NotNull
         protected MinecraftFormattingState minecraftFormatting = MinecraftFormattingState.EMPTY;
         protected boolean bulletListItemStart = false;
@@ -608,6 +656,7 @@ public class MarkdownParser {
             frag.bold = bold;
             frag.italic = italic;
             frag.strikethrough = strikethrough;
+            frag.underlined = underlined;
             frag.minecraftFormatting = minecraftFormatting;
             frag.bulletListLevel = bulletListLevel;
             frag.listItemMarker = listItemMarker;

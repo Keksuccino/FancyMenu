@@ -165,11 +165,11 @@ class MarkdownSpacelessTextWrapTest {
      */
     @Test
     void pieceSharesEverythingThatFormatsItsFragment() throws ReflectiveOperationException {
-        Set<String> shared = Set.of("parent", "unscaledTextHeight", "textColor", "bold", "italic", "strikethrough", "minecraftFormatting", "bulletListLevel", "listItemMarker",
+        Set<String> shared = Set.of("parent", "unscaledTextHeight", "textColor", "bold", "italic", "strikethrough", "underlined", "minecraftFormatting", "bulletListLevel", "listItemMarker",
                 "listItemNumber", "listHasPlusItems", "alignment", "hyperlink", "clickEvent", "hoverEvent", "headlineType", "quoteContext", "codeBlockContext", "plainText", "font",
                 "sourceLine", "lastSourceLine");
         Set<String> own = Set.of("parentLine", "text", "x", "y", "unscaledTextWidth", "unscaledTrailingSpaceWidth", "startOfRenderLine", "naturalLineBreakAfter", "autoLineBreakAfter",
-                "endOfWord", "strikethroughEnd", "hovered", "breaksInside", "pieces", "renderComponent", "fixedWidthText", "renderComponentState", "renderComponentStyleVersion", "renderComponentCustomColor",
+                "endOfWord", "strikethroughEnd", "underlineEnd", "hovered", "breaksInside", "pieces", "renderComponent", "fixedWidthText", "renderComponentState", "renderComponentStyleVersion", "renderComponentCustomColor",
                 // What marks a fragment as the first one of something, and what only fragments have that no line ends inside of
                 "bulletListItemStart", "calloutMarker", "imageSupplier", "imageAltText", "imageCaption", "separationLine", "tableContext", "table", "tableHeader");
         MarkdownTestRenderer renderer = new MarkdownTestRenderer("", 600);
@@ -182,6 +182,7 @@ class MarkdownSpacelessTextWrapTest {
         fragment.bold = true;
         fragment.italic = true;
         fragment.strikethrough = true;
+        fragment.underlined = true;
         fragment.minecraftFormatting = MinecraftFormattingState.EMPTY.apply(ChatFormatting.UNDERLINE);
         fragment.bulletListLevel = 2;
         fragment.listItemMarker = MarkdownTextFragment.ListItemMarker.NUMBER;
