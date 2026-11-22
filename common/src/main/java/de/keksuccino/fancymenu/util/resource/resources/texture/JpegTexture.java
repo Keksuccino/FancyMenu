@@ -218,7 +218,7 @@ public class JpegTexture implements ITexture {
     }
 
     /**
-     * Converts JPEG images to PNG, because Minecraft dropped support for JPEGs.
+     * Converts JPEG images to PNG, because Minecraft dropped support for JPEGs. Closes the passed {@link InputStream}.
      */
     @Nullable
     protected static SizedNativeImage convertJpegToPng(@NotNull InputStream in) {
@@ -227,7 +227,11 @@ public class JpegTexture implements ITexture {
         NativeImage nativeImage = null;
         ByteArrayOutputStream byteArrayOut = null;
         try {
-            BufferedImage bufferedImage = ImageIO.read(in);
+            BufferedImage bufferedImage;
+            // Closes the stream right after reading the JPEG, so its file isn't open while the image gets converted
+            try (InputStream input = in) {
+                bufferedImage = ImageIO.read(input);
+            }
             w = bufferedImage.getWidth();
             h = bufferedImage.getHeight();
             byteArrayOut = new ByteArrayOutputStream();
@@ -237,7 +241,6 @@ public class JpegTexture implements ITexture {
         } catch (Exception ex) {
             LOGGER.error("[FANCYMENU] Failed to convert JPEG image to PNG!", ex);
         }
-        CloseableUtils.closeQuietly(in);
         CloseableUtils.closeQuietly(byteArrayOut);
         return (nativeImage != null) ? new SizedNativeImage(nativeImage, w, h) : null;
     }
