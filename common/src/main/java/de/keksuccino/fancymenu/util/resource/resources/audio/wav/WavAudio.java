@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.resource.resources.audio.ALAudio;
+import de.keksuccino.fancymenu.util.resource.resources.audio.ALAudioLoader;
 import de.keksuccino.fancymenu.util.resource.resources.audio.AudioPlayTimeTracker;
 import de.keksuccino.fancymenu.util.resource.resources.audio.AudioResourceReloadTracker;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
@@ -52,6 +53,11 @@ public class WavAudio implements IAudio, ALAudio {
     protected volatile boolean loadingFailed = false;
     protected volatile boolean retryWhenOpenAlReady = false;
     protected volatile boolean closed = false;
+    /**
+     * Makes the checks and the buffer hand-over of background loads exclusive with {@link #close()}: a load either attaches its buffer
+     * before the audio gets closed, and close() deletes it then, or the load sees the closed audio and its loader deletes the buffer.
+     */
+    private final Object backgroundLoadLock = new Object();
 
     @NotNull
     public static WavAudio location(@NotNull Identifier location) {
@@ -188,93 +194,49 @@ public class WavAudio implements IAudio, ALAudio {
 
     }
 
+    /**
+     * Closes the passed {@link InputStream}, also when loading fails or doesn't start.
+     */
     @NotNull
     public static WavAudio of(@NotNull InputStream in, @Nullable String wavAudioName, @Nullable WavAudio writeTo, @Nullable ALAudioClip clip) {
         String name = (wavAudioName != null) ? wavAudioName : "[Generic InputStream Source]";
         WavAudio audio = (writeTo != null) ? writeTo : new WavAudio();
 
-        // Clips need to get created on the main thread, so make sure we're in the correct thread
-        if (clip == null) RenderSystem.assertOnRenderThread();
+        // The loader closes the stream once it read it, so it only gets closed here when loading doesn't start
+        boolean loadingStarted = false;
+        try {
+            // Clips need to get created on the main thread, so make sure we're in the correct thread
+            if (clip == null) RenderSystem.assertOnRenderThread();
 
-        if (isOpenAlNotReadyOrReloading()) {
-            CloseableUtils.closeQuietly(clip);
-            failBecauseOpenAlNotReady(audio, name);
-            return audio;
-        }
-
-        audio.clip = (clip != null) ? clip : OpenAlAudioClipFactory.createSafe();
-
-        ALAudioClip cachedClip = audio.clip;
-        if (cachedClip == null) {
-            failBecauseOpenAlReload(audio, name, "failed to allocate OpenAL source");
-            return audio;
-        }
-        if (!audio.configureNonPositionalSource(name)) {
-            return audio;
-        }
-
-        FancyMenuThreads.startDaemonThread(() -> {
-            AudioInputStream stream = null;
-            ByteArrayInputStream byteIn = null;
-            try {
-                // Read the full stream into a byte array
-                byte[] fullData = in.readAllBytes();
-
-                // Read header first - WAV header is minimum 44 bytes
-                if (fullData.length >= 44) {
-                    try {
-                        // Create a new input stream that wraps your fullData
-                        WavHeader header = null;
-                        InputStream headerStream = null;
-                        try {
-                            headerStream = new ByteArrayInputStream(fullData);
-                            header = WavHeader.read(headerStream);
-                        } catch (IOException ex) {
-                            LOGGER.error("[FANCYMENU] Failed to read WAV header of WavAudio: " + name, ex);
-                        }
-                        CloseableUtils.closeQuietly(headerStream);
-                        float calculatedDuration = 0;
-                        if (header != null) calculatedDuration = header.getDurationInSeconds();
-                        if (calculatedDuration > 0) {
-                            audio.duration = calculatedDuration;
-                        } else {
-                            LOGGER.warn("[FANCYMENU] Invalid WAV header duration calculated for: " + name);
-                        }
-                    } catch (Exception ex) {
-                        LOGGER.warn("[FANCYMENU] Failed to read WAV header of WavAudio: " + name, ex);
-                    }
-                } else {
-                    LOGGER.warn("[FANCYMENU] WAV file too small, missing header data: " + name);
-                }
-
-                // Continue with normal audio loading
-                if (!audio.canContinueBackgroundLoading(cachedClip, name)) {
-                    return;
-                }
-                byteIn = new ByteArrayInputStream(fullData);
-                stream = AudioSystem.getAudioInputStream(byteIn);
-                ByteBuffer byteBuffer = ALUtils.readStreamIntoBuffer(stream);
-                ALAudioBuffer audioBuffer = new ALAudioBuffer(byteBuffer, stream.getFormat());
-                audio.audioBuffer = audioBuffer;
-                if (!audio.tryAttachDecodedBuffer(cachedClip, audioBuffer, name)) {
-                    return;
-                }
-                audio.loadingFailed = false;
-                audio.retryWhenOpenAlReady = false;
-                audio.decoded = true;
-                audio.loadingCompleted = true;
-            } catch (Exception ex) {
-                audio.loadingFailed = true;
-                LOGGER.error("[FANCYMENU] Failed to read WAV audio: " + name, ex);
+            if (isOpenAlNotReadyOrReloading()) {
+                CloseableUtils.closeQuietly(clip);
+                failBecauseOpenAlNotReady(audio, name);
+                return audio;
             }
-            CloseableUtils.closeQuietly(stream);
-            CloseableUtils.closeQuietly(in);
-            CloseableUtils.closeQuietly(byteIn);
-        }, "WavAudio-Decoder");
+
+            audio.clip = (clip != null) ? clip : OpenAlAudioClipFactory.createSafe();
+
+            ALAudioClip cachedClip = audio.clip;
+            if (cachedClip == null) {
+                failBecauseOpenAlReload(audio, name, "failed to allocate OpenAL source");
+                return audio;
+            }
+            if (!audio.configureNonPositionalSource(name)) {
+                return audio;
+            }
+
+            ALAudioLoader.loadInBackground(in, name, new BackgroundLoad(audio, cachedClip, name));
+            loadingStarted = true;
+        } finally {
+            if (!loadingStarted) CloseableUtils.closeQuietly(in);
+        }
 
         return audio;
     }
 
+    /**
+     * Closes the passed {@link InputStream}, also when loading fails or doesn't start.
+     */
     @NotNull
     public static WavAudio of(@NotNull InputStream in) {
         return of(in, null, null, null);
@@ -517,58 +479,74 @@ public class WavAudio implements IAudio, ALAudio {
     }
 
     private boolean canContinueBackgroundLoading(@NotNull ALAudioClip targetClip, @NotNull String sourceName) {
-        if (this.closed || (this.clip != targetClip) || targetClip.isClosed()) return false;
-        if (isOpenAlNotReadyOrReloading()) {
-            failBecauseOpenAlNotReady(this, sourceName);
-            return false;
-        }
-        if (!targetClip.isValidOpenAlSource()) {
-            failBecauseOpenAlReload(this, sourceName, "OpenAL source became invalid");
-            return false;
-        }
-        return true;
-    }
-
-    private boolean tryAttachDecodedBuffer(@NotNull ALAudioClip targetClip, @NotNull ALAudioBuffer decodedBuffer, @NotNull String sourceName) {
-        if (!this.canContinueBackgroundLoading(targetClip, sourceName)) return false;
-        Integer preparedBuffer = decodedBuffer.getSource();
-        if ((preparedBuffer == null) || !decodedBuffer.isValidOpenAlSource()) {
-            failBecauseOpenAlReload(this, sourceName, "failed to prepare OpenAL buffer");
-            return false;
-        }
-        try {
-            targetClip.setStaticBuffer(decodedBuffer);
+        synchronized (this.backgroundLoadLock) {
+            if (this.closed || (this.clip != targetClip) || targetClip.isClosed()) return false;
+            if (isOpenAlNotReadyOrReloading()) {
+                failBecauseOpenAlNotReady(this, sourceName);
+                return false;
+            }
             if (!targetClip.isValidOpenAlSource()) {
-                failBecauseOpenAlReload(this, sourceName, "OpenAL source became invalid while attaching decoded audio");
+                failBecauseOpenAlReload(this, sourceName, "OpenAL source became invalid");
                 return false;
             }
             return true;
-        } catch (Exception ex) {
-            failBecauseOpenAlReload(this, sourceName, "failed to attach decoded audio buffer");
-            LOGGER.debug("[FANCYMENU] WAV buffer attach error details: " + sourceName, ex);
         }
-        return false;
+    }
+
+    /**
+     * @return True when the clip plays the buffer and the audio owns it, false when the caller has to delete the buffer.
+     */
+    private boolean tryAttachDecodedBuffer(@NotNull ALAudioClip targetClip, @NotNull ALAudioBuffer decodedBuffer, @NotNull String sourceName) {
+        if (!this.canContinueBackgroundLoading(targetClip, sourceName)) return false;
+        // Uploads the audio data to OpenAL without holding the lock, so close() never waits for that
+        boolean prepared = (decodedBuffer.getSource() != null) && decodedBuffer.isValidOpenAlSource();
+        synchronized (this.backgroundLoadLock) {
+            if (!this.canContinueBackgroundLoading(targetClip, sourceName)) return false;
+            if (!prepared) {
+                failBecauseOpenAlReload(this, sourceName, "failed to prepare OpenAL buffer");
+                return false;
+            }
+            try {
+                targetClip.setStaticBuffer(decodedBuffer);
+                if (!targetClip.isValidOpenAlSource()) {
+                    failBecauseOpenAlReload(this, sourceName, "OpenAL source became invalid while attaching decoded audio");
+                    return false;
+                }
+                this.audioBuffer = decodedBuffer;
+                this.loadingFailed = false;
+                this.retryWhenOpenAlReady = false;
+                this.decoded = true;
+                this.loadingCompleted = true;
+                return true;
+            } catch (Exception ex) {
+                failBecauseOpenAlReload(this, sourceName, "failed to attach decoded audio buffer");
+                LOGGER.debug("[FANCYMENU] WAV buffer attach error details: " + sourceName, ex);
+            }
+            return false;
+        }
     }
 
     @Override
     public void close() {
-        this.closed = true;
-        this.retryWhenOpenAlReady = false;
-        try {
-            ALAudioClip cachedClip = this.clip;
-            if (cachedClip != null) cachedClip.close();
-        } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to close WAV audio clip!", ex);
+        synchronized (this.backgroundLoadLock) {
+            this.closed = true;
+            this.retryWhenOpenAlReady = false;
+            try {
+                ALAudioClip cachedClip = this.clip;
+                if (cachedClip != null) cachedClip.close();
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to close WAV audio clip!", ex);
+            }
+            this.clip = null;
+            try {
+                ALAudioBuffer cachedBuffer = this.audioBuffer;
+                if (cachedBuffer != null) cachedBuffer.delete();
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to delete WAV audio buffer!", ex);
+            }
+            this.audioBuffer = null;
+            this.decoded = false;
         }
-        this.clip = null;
-        try {
-            ALAudioBuffer cachedBuffer = this.audioBuffer;
-            if (cachedBuffer != null) cachedBuffer.delete();
-        } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to delete WAV audio buffer!", ex);
-        }
-        this.audioBuffer = null;
-        this.decoded = false;
     }
 
     @Override
@@ -588,6 +566,69 @@ public class WavAudio implements IAudio, ALAudio {
             }
         }
         return this.closed;
+    }
+
+    /**
+     * Connects a background load to the audio and the clip it got started for.
+     */
+    private static final class BackgroundLoad implements ALAudioLoader.Target {
+
+        @NotNull
+        private final WavAudio audio;
+        @NotNull
+        private final ALAudioClip clip;
+        @NotNull
+        private final String sourceName;
+
+        private BackgroundLoad(@NotNull WavAudio audio, @NotNull ALAudioClip clip, @NotNull String sourceName) {
+            this.audio = audio;
+            this.clip = clip;
+            this.sourceName = sourceName;
+        }
+
+        @Override
+        public boolean canContinueLoading() {
+            return this.audio.canContinueBackgroundLoading(this.clip, this.sourceName);
+        }
+
+        @Override
+        public @NotNull ALAudioBuffer decode(@NotNull byte[] audioData) throws Exception {
+            this.readDuration(audioData);
+            try (AudioInputStream stream = AudioSystem.getAudioInputStream(new ByteArrayInputStream(audioData))) {
+                ByteBuffer byteBuffer = ALUtils.readStreamIntoBuffer(stream);
+                return new ALAudioBuffer(byteBuffer, stream.getFormat());
+            }
+        }
+
+        private void readDuration(@NotNull byte[] audioData) {
+            // WAV headers are at least 44 bytes long
+            if (audioData.length < 44) {
+                LOGGER.warn("[FANCYMENU] WAV file too small, missing header data: " + this.sourceName);
+                return;
+            }
+            try {
+                WavHeader header = WavHeader.read(new ByteArrayInputStream(audioData));
+                float calculatedDuration = header.getDurationInSeconds();
+                if (calculatedDuration > 0) {
+                    this.audio.duration = calculatedDuration;
+                } else {
+                    LOGGER.warn("[FANCYMENU] Invalid WAV header duration calculated for: " + this.sourceName);
+                }
+            } catch (Exception ex) {
+                LOGGER.warn("[FANCYMENU] Failed to read WAV header of WavAudio: " + this.sourceName, ex);
+            }
+        }
+
+        @Override
+        public boolean attachDecodedBuffer(@NotNull ALAudioBuffer buffer) {
+            return this.audio.tryAttachDecodedBuffer(this.clip, buffer, this.sourceName);
+        }
+
+        @Override
+        public void onLoadingFailed() {
+            this.audio.loadingFailed = true;
+        }
+
     }
 
 }
