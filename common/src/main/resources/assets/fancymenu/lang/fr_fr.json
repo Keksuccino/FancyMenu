@@ -3383,6 +3383,8 @@
   "fancymenu.placeholders.world.inventory_slot_food_point_restore_amount.desc": "Renvoie le nombre de points de faim que l'objet dans l'emplacement d'inventaire donné restaurera quand tu le manges.\nPrend un numéro d'emplacement pour cibler un slot d'inventaire.\nRenvoie '0.0' quand tu n'es pas dans un monde, que l'emplacement est vide ou que l'objet n'est pas de la nourriture.",
   "fancymenu.placeholders.world.item_category": "Catégorie d'objet",
   "fancymenu.placeholders.world.item_category.desc": "Renvoie la catégorie de l'inventaire créatif de l'objet donné.\nPrend une clé d'objet en entrée.\nMets \"as_key\" sur true pour renvoyer la clé de la catégorie (minecraft:building_blocks) au lieu du nom affiché.\nRenvoie une valeur vide quand le joueur n'est pas dans un monde.\nRenvoie \"UNKNOWN\" si l'objet n'a pas de catégorie ou est invalide.",
+  "fancymenu.placeholders.world.level_save_count": "Nombre de sauvegardes de mondes",
+  "fancymenu.placeholders.world.level_save_count.desc": "Renvoie le nombre de toutes les sauvegardes de mondes locales disponibles.\nRenvoie '0' quand tu n'as aucune sauvegarde de monde locale.",
   "fancymenu.placeholders.world.level_save_data": "Données de sauvegarde du monde",
   "fancymenu.placeholders.world.level_save_data.desc": "Renvoie toutes les données de niveau d'une sauvegarde de monde spécifique sous forme de JSON sur une seule ligne.\n\nValeurs :\n§elevel_name§r = Le nom exact de la sauvegarde du monde dont récupérer les données.",
   "fancymenu.placeholders.world.level_save_names": "Noms des sauvegardes de mondes",
