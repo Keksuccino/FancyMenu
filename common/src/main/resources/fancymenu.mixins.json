@@ -57,6 +57,7 @@
     "client.MixinCreativeModeInventoryScreen",
     "client.MixinCycleButton",
     "client.MixinDeathScreen",
+    "client.MixinDirectoryLock",
     "client.MixinDisconnectedScreen",
     "client.MixinExperimentsScreen",
     "client.MixinFilePackResources",
