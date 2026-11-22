@@ -157,7 +157,7 @@ public class WavAudio implements IAudio, ALAudio {
         }
 
         FancyMenuThreads.startDaemonThread(() -> {
-            InputStream in = ALAudioLoader.openSource(() -> WebUtils.openResourceStream(wavAudioURL, WebUtils.WebResourceType.AUDIO), wavAudioURL, clip, () -> audio.loadingFailed = true);
+            InputStream in = ALAudioLoader.openSource(() -> WebUtils.openResourceStreamOrThrow(wavAudioURL, WebUtils.WebResourceType.AUDIO), wavAudioURL, clip, () -> audio.loadingFailed = true);
             if (in != null) of(in, wavAudioURL, audio, clip);
         }, "WavAudio-WebLoader");
 
@@ -374,7 +374,7 @@ public class WavAudio implements IAudio, ALAudio {
 
     @Override
     public @Nullable InputStream open() throws IOException {
-        if (this.sourceURL != null) return WebUtils.openResourceStream(this.sourceURL, WebUtils.WebResourceType.AUDIO);
+        if (this.sourceURL != null) return WebUtils.openResourceStreamOrThrow(this.sourceURL, WebUtils.WebResourceType.AUDIO);
         if (this.sourceFile != null) return new FileInputStream(this.sourceFile);
         if (this.sourceLocation != null) return Minecraft.getInstance().getResourceManager().open(this.sourceLocation);
         return null;

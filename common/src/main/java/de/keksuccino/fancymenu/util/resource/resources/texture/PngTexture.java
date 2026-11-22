@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.file.ReleasableFileInputStream;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.lifecycle.ClientShutdownHandler;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.NativeImageUtil;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
@@ -159,12 +160,11 @@ public class PngTexture implements ITexture {
 
         FancyMenuThreads.startDaemonThread(() -> {
             try {
-                InputStream in = WebUtils.openResourceStream(textureURL, WebUtils.WebResourceType.IMAGE);
-                if (in == null) throw new NullPointerException("Web resource input stream was NULL!");
-                of(in, textureURL, texture);
+                of(WebUtils.openResourceStreamOrThrow(textureURL, WebUtils.WebResourceType.IMAGE), textureURL, texture);
             } catch (Exception ex) {
                 texture.loadingFailed = true;
-                LOGGER.error("[FANCYMENU] Failed to read texture from URL: " + textureURL, ex);
+                // Shutting down the client cancels web loads, which is no error
+                if (!ClientShutdownHandler.isShuttingDown()) LOGGER.error("[FANCYMENU] Failed to read texture from URL: " + textureURL, ex);
             }
         }, "PngTexture-WebLoader");
 
@@ -236,8 +236,8 @@ public class PngTexture implements ITexture {
                 }
             } catch (Exception ex) {
                 texture.loadingFailed = true;
-                // Closing the texture closes the stream of its file right away, so reading it fails then, which is no error
-                if (!texture.closed) LOGGER.error("[FANCYMENU] Failed to load texture: " + textureName, ex);
+                // Closing the texture closes the stream of its file right away and shutting down the client cancels web loads, so reading fails then, which is no error
+                if (!texture.closed && !ClientShutdownHandler.isShuttingDown()) LOGGER.error("[FANCYMENU] Failed to load texture: " + textureName, ex);
             }
         }
         texture.decoded = true;

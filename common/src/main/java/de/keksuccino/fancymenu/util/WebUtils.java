@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util;
 
+import de.keksuccino.fancymenu.util.lifecycle.ClientShutdownHandler;
 import de.keksuccino.fancymenu.util.threading.FancyMenuExecutors;
 import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.fancymenu.util.window.OffscreenTestClient;
@@ -9,6 +10,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
@@ -38,9 +40,14 @@ public class WebUtils {
         INTERNET_AVAILABILITY_MONITOR.init();
     }
 
+    /**
+     * Cancels all web loads that still run. They fail then, which is no error, so loaders don't log their failures
+     * while the client shuts down, see {@link ClientShutdownHandler#isShuttingDown()}.
+     */
     public static void shutdown() {
         try {
-            RESOURCE_CLIENT.shutdown();
+            int cancelledRequests = RESOURCE_CLIENT.shutdown();
+            if (cancelledRequests > 0) LOGGER.info("[FANCYMENU] Cancelled {} unfinished web requests during client shutdown.", cancelledRequests);
         } finally {
             INTERNET_AVAILABILITY_MONITOR.shutdown();
         }
@@ -72,17 +79,30 @@ public class WebUtils {
     /**
      * Opens an HTTP(S) resource with limits selected for its consumption model. The byte limit is enforced while
      * streaming even when the response omits Content-Length, and the overall deadline is cumulative across all reads.
+     *
+     * @return The stream, or null when the URL is no HTTP(S) URL or the resource can't get opened, which gets logged.
      */
     @Nullable
     public static InputStream openResourceStream(@NotNull String resourceURL, @NotNull WebResourceType resourceType) {
-        URI resourceUri = parseHttpUri(resourceURL);
-        if (resourceUri == null) return null;
+        if (parseHttpUri(resourceURL) == null) return null;
         try {
-            return RESOURCE_CLIENT.openResourceStream(resourceUri, Objects.requireNonNull(resourceType, "resourceType").limits());
+            return openResourceStreamOrThrow(resourceURL, resourceType);
         } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to open bounded web resource stream: {}", resourceURL, ex);
+            // Shutting down the client cancels all web loads, which is no error
+            if (!ClientShutdownHandler.isShuttingDown()) LOGGER.error("[FANCYMENU] Failed to open bounded web resource stream: {}", resourceURL, ex);
         }
         return null;
+    }
+
+    /**
+     * Same as {@link #openResourceStream(String, WebResourceType)}, but throws why the resource can't get opened instead of logging it,
+     * so loaders can report it as part of their own failure.
+     */
+    @NotNull
+    public static InputStream openResourceStreamOrThrow(@NotNull String resourceURL, @NotNull WebResourceType resourceType) throws IOException {
+        URI resourceUri = parseHttpUri(resourceURL);
+        if (resourceUri == null) throw new IOException("Not an HTTP(S) URL: " + resourceURL);
+        return RESOURCE_CLIENT.openResourceStream(resourceUri, Objects.requireNonNull(resourceType, "resourceType").limits());
     }
 
     @Nullable
