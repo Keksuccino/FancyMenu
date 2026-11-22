@@ -6,9 +6,6 @@ import de.keksuccino.fancymenu.networking.packets.placeholders.gamerule.ServerGa
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.server.IntegratedServer;
-import net.minecraft.world.level.gamerules.GameRule;
-import net.minecraft.world.level.gamerules.GameRuleTypeVisitor;
-import net.minecraft.world.level.gamerules.GameRules;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,7 +29,7 @@ public class GameruleValuePlaceholder extends AbstractWorldPlaceholder {
 
     @Override
     public String getReplacementFor(DeserializedPlaceholderString dps) {
-        String gameruleName = normalizeGameruleName(dps.values.get("name"));
+        String gameruleName = GameruleValueResolver.normalizeName(dps.values.get("name"));
         if (gameruleName == null) {
             return "";
         }
@@ -44,7 +41,7 @@ public class GameruleValuePlaceholder extends AbstractWorldPlaceholder {
 
         IntegratedServer singleplayerServer = Minecraft.getInstance().getSingleplayerServer();
         if (singleplayerServer != null) {
-            String value = getGameruleValue(singleplayerServer.getGameRules(), gameruleName);
+            String value = GameruleValueResolver.getValue(singleplayerServer.getGameRules(), gameruleName);
             return value == null ? "" : value;
         }
 
@@ -74,32 +71,6 @@ public class GameruleValuePlaceholder extends AbstractWorldPlaceholder {
         }
 
         return "";
-    }
-
-    @Nullable
-    private String getGameruleValue(@NotNull GameRules gameRules, @NotNull String gameruleName) {
-        final String[] value = new String[1];
-        gameRules.visitGameRuleTypes(new GameRuleTypeVisitor() {
-            @Override
-            public <T> void visit(GameRule<T> gameRule) {
-                if (value[0] != null) {
-                    return;
-                }
-                if (gameRule.id().equalsIgnoreCase(gameruleName)) {
-                    value[0] = gameRules.getAsString(gameRule);
-                }
-            }
-        });
-        return value[0];
-    }
-
-    @Nullable
-    private String normalizeGameruleName(@Nullable String name) {
-        if (name == null) {
-            return null;
-        }
-        String trimmed = name.trim();
-        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private void requestDataFromServer(@NotNull String placeholderKey, @NotNull String gameruleName, long now) {
@@ -134,7 +105,7 @@ public class GameruleValuePlaceholder extends AbstractWorldPlaceholder {
     @Override
     public @NotNull DeserializedPlaceholderString getDefaultPlaceholderString() {
         LinkedHashMap<String, String> values = new LinkedHashMap<>();
-        values.put("name", "doDaylightCycle");
+        values.put("name", "advance_time");
         return new DeserializedPlaceholderString(this.getIdentifier(), values, "");
     }
 
