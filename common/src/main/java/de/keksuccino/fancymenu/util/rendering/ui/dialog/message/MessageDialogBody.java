@@ -44,9 +44,11 @@ public class MessageDialogBody extends PiPWindowBody {
 
     @NotNull
     private List<MutableComponent> renderLines = new ArrayList<>();
+    /** The width of the widest of the {@link #renderLines}, measured like they get drawn. */
+    private int renderLinesWidth = 0;
     private int lastWrapWidth = -1;
     @NotNull
-    private MessageDialogLayout layout = MessageDialogLayout.of(0, 0, 0, false);
+    private MessageDialogLayout layout = MessageDialogLayout.of(0, 0, 0, 0, false);
     /** Scrolls a message that is too long for the dialog. It keeps its scroll when the dialog gets resized. */
     @NotNull
     private final ScrollBar scrollBar = new ScrollBar(ScrollBar.ScrollBarDirection.VERTICAL, UIBase.VERTICAL_SCROLL_BAR_WIDTH, UIBase.VERTICAL_SCROLL_BAR_HEIGHT, 0, 0, 0, 0, () -> UIBase.getUITheme().scroll_grabber_color_normal, () -> UIBase.getUITheme().scroll_grabber_color_hover);
@@ -138,7 +140,7 @@ public class MessageDialogBody extends PiPWindowBody {
         MaterialIcon icon = this.style.getIcon();
         if (icon != null) {
             DrawableColor tint = resolveIconTint();
-            icon.render(graphics, PADDING, layout.iconY(), ICON_SIZE, ICON_SIZE, (tint != null) ? tint.getColorInt() : -1);
+            icon.render(graphics, layout.iconX(), layout.iconY(), ICON_SIZE, ICON_SIZE, (tint != null) ? tint.getColorInt() : -1);
         }
 
         boolean scrollable = layout.isScrollable();
@@ -242,6 +244,7 @@ public class MessageDialogBody extends PiPWindowBody {
         try {
             List<MutableComponent> linesCopy = UIBase.lineWrapUIComponentsNormal(this.message, 100000.0F);
             this.renderLines = UIBase.lineWrapUIComponentsNormal(linesCopy, (float)wrapWidth);
+            this.renderLinesWidth = UIBase.getWidestUITextWidthNormal(this.renderLines);
         } finally {
             UIBase.stopUIScaleRendering();
         }
@@ -254,7 +257,7 @@ public class MessageDialogBody extends PiPWindowBody {
     }
 
     private void updateLayout() {
-        this.layout = MessageDialogLayout.of(this.width, this.height, this.renderLines.size(), this.style.getIcon() != null);
+        this.layout = MessageDialogLayout.of(this.width, this.height, this.renderLines.size(), this.renderLinesWidth, this.style.getIcon() != null);
         boolean scrollable = this.layout.isScrollable();
         this.scrollBar.active = scrollable;
         if (!scrollable) this.scrollBar.setScroll(0.0F);
