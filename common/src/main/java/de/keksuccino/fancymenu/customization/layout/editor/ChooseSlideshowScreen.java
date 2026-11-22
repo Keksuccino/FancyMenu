@@ -97,14 +97,14 @@ public class ChooseSlideshowScreen extends PiPWindowBody {
         com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
 
         float listAreaX = 20.0F;
-        float listLabelY = 50.0F;
+        float listLabelY = CONTENT_MARGIN;
         float labelHeight = UIBase.getUITextHeightNormal();
         float labelPadding = UIBase.getAreaLabelVerticalPadding();
         float listAreaY = listLabelY + labelHeight + labelPadding;
         UIBase.renderText(graphics, Component.translatable("fancymenu.slideshow.choose.available_slideshows"), listAreaX, listLabelY, getGenericTextColor());
 
         this.slideshowListScrollArea.setWidth(((float) this.width / 2) - 40, true);
-        this.slideshowListScrollArea.setHeight(this.height - 85, true);
+        this.slideshowListScrollArea.setHeight(this.height - listAreaY - CONTENT_MARGIN, true);
         this.slideshowListScrollArea.setX(listAreaX, true);
         this.slideshowListScrollArea.setY(listAreaY, true);
 

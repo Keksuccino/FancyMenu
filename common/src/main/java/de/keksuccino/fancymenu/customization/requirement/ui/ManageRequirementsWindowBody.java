@@ -389,17 +389,18 @@ public class ManageRequirementsWindowBody extends PiPWindowBody {
         int textColor = UIBase.shouldBlur()
                 ? UIBase.getUITheme().ui_blur_interface_generic_text_color.getColorInt()
                 : UIBase.getUITheme().ui_interface_generic_text_color.getColorInt();
-        int scrollAreaTop = 50 + 15;
+        // The label shares the top row with the Done and Cancel buttons
+        int scrollAreaTop = CONTENT_MARGIN + this.doneButton.getHeight() + 5;
         float labelY = scrollAreaTop - UIBase.getUITextHeightNormal() - UIBase.getAreaLabelVerticalPadding();
         UIBase.renderText(graphics, Component.translatable("fancymenu.requirements.screens.manage_screen.requirements_and_groups"), 20, labelY, textColor);
 
         this.requirementsScrollArea.setWidth(this.width - 20 - 20, true);
-        this.requirementsScrollArea.setHeight(this.height - 85, true);
+        this.requirementsScrollArea.setHeight(this.height - scrollAreaTop - CONTENT_MARGIN, true);
         this.requirementsScrollArea.setX(20, true);
         this.requirementsScrollArea.setY(scrollAreaTop, true);
 
         int buttonsRightEdge = this.width - 20;
-        int buttonY = Math.max(20, (int)(this.requirementsScrollArea.getYWithBorder() - this.doneButton.getHeight() - 5));
+        int buttonY = Math.max(CONTENT_MARGIN, (int)(this.requirementsScrollArea.getYWithBorder() - this.doneButton.getHeight() - 5));
         this.doneButton.setX(buttonsRightEdge - this.doneButton.getWidth());
         this.doneButton.setY(buttonY);
         this.cancelButton.setX(Math.max(20, this.doneButton.getX() - 5 - this.cancelButton.getWidth()));

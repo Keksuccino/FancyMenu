@@ -80,9 +80,10 @@ public class BuildRequirementWindowBody extends PiPWindowBody implements Initial
     @Override
     protected void init() {
         boolean blur = UIBase.shouldBlur();
+        int contentTop = getLabeledContentTop();
 
         String oldSearchValue = (this.searchBar != null) ? this.searchBar.getValue() : "";
-        this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, 20 + 1, 50 + 15 + 1, (this.width / 2) - 40 - 2, 20 - 2, Component.empty());
+        this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, 20 + 1, contentTop + 1, (this.width / 2) - 40 - 2, 20 - 2, Component.empty());
         this.searchBar.setHintFancyMenu(consumes -> Component.translatable("fancymenu.requirements.build_requirement.screen.search_requirement"));
         this.searchBar.setValue(oldSearchValue);
         this.searchBar.setResponder(s -> this.updateRequirementsList());
@@ -93,16 +94,16 @@ public class BuildRequirementWindowBody extends PiPWindowBody implements Initial
         // Set positions for scroll areas
         this.requirementsListScrollArea.setSetupForBlurInterface(blur);
         this.requirementsListScrollArea.setWidth((this.width / 2) - 40, true);
-        this.requirementsListScrollArea.setHeight(this.height - 85 - 25, true);
+        this.requirementsListScrollArea.setHeight(this.height - contentTop - 25 - CONTENT_MARGIN, true);
         this.requirementsListScrollArea.setX(20, true);
-        this.requirementsListScrollArea.setY(50 + 15 + 25, true);
+        this.requirementsListScrollArea.setY(contentTop + 25, true);
         this.addRenderableWidget(this.requirementsListScrollArea);
 
         this.descriptionScrollArea.setSetupForBlurInterface(blur);
         this.descriptionScrollArea.setWidth((this.width / 2) - 40, true);
-        this.descriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
+        this.descriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 10 - contentTop), true);
         this.descriptionScrollArea.setX(this.width - 20 - this.descriptionScrollArea.getWidthWithBorder(), true);
-        this.descriptionScrollArea.setY(50 + 15, true);
+        this.descriptionScrollArea.setY(contentTop, true);
         this.descriptionScrollArea.horizontalScrollBar.active = false;
         this.addRenderableWidget(this.descriptionScrollArea);
 
@@ -163,13 +164,13 @@ public class BuildRequirementWindowBody extends PiPWindowBody implements Initial
     public void renderBody(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         int textColor = this.getGenericTextColor();
         float labelHeight = UIBase.getUITextHeightNormal();
-        int availableAreaTop = (this.searchBar != null) ? this.searchBar.getY() : (50 + 15 + 1);
+        int availableAreaTop = (this.searchBar != null) ? this.searchBar.getY() : (getLabeledContentTop() + 1);
         float availableLabelY = availableAreaTop - labelHeight - UIBase.getAreaLabelVerticalPadding();
         UIBase.renderText(graphics, Component.translatable("fancymenu.requirements.screens.build_screen.available_requirements"), 20, availableLabelY, textColor);
 
         Component descLabel = Component.translatable("fancymenu.requirements.screens.build_screen.requirement_description");
         float descLabelWidth = UIBase.getUITextWidthNormal(descLabel);
-        float descAreaTop = (this.descriptionScrollArea != null) ? this.descriptionScrollArea.getYWithBorder() : (50 + 15);
+        float descAreaTop = (this.descriptionScrollArea != null) ? this.descriptionScrollArea.getYWithBorder() : getLabeledContentTop();
         float descLabelY = descAreaTop - labelHeight - UIBase.getAreaLabelVerticalPadding();
         UIBase.renderText(graphics, descLabel, this.width - 20 - descLabelWidth, descLabelY, textColor);
 
