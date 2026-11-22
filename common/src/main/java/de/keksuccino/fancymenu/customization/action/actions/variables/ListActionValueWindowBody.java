@@ -46,6 +46,7 @@ public abstract class ListActionValueWindowBody extends PiPCellWindowBody {
     protected ListActionValueWindowBody(@NotNull Component title, @NotNull Consumer<String> callback) {
         super(title);
         this.callback = Objects.requireNonNull(callback);
+        this.setInitialTextInputFocusEnabled(true);
     }
 
     /**

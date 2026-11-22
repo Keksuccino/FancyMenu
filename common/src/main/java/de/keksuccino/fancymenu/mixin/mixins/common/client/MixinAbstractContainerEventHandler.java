@@ -2,11 +2,14 @@ package de.keksuccino.fancymenu.mixin.mixins.common.client;
 
 import de.keksuccino.fancymenu.util.rendering.ui.FancyMenuInputRouter;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
+import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -61,11 +64,31 @@ public abstract class MixinAbstractContainerEventHandler implements ContainerEve
         return false;
     }
 
+    /**
+     * @reason Unfocusable widgets never get the focus. Otherwise, the widget that had the focus before loses it, like in newer versions.
+     * 1.19.2 only remembers the focused listener here, so without this, clicking a field that comes before the focused one in children() would leave
+     * both fields focused, because only the children up to the clicked one get the click. The new listener doesn't get focused here on purpose:
+     * 1.19.2 focuses it itself, edit boxes when they get clicked, and setInitialFocus and Tab navigation by toggling it with changeFocus,
+     * which would toggle it off again if it was focused here already.
+     */
     @Inject(method = "setFocused", at = @At("HEAD"), cancellable = true)
     private void beforeSetFocusedFancyMenu(GuiEventListener guiEventListener, CallbackInfo info) {
         if ((guiEventListener instanceof NavigatableWidget n) && !n.isFocusable()) {
             info.cancel();
+            return;
         }
+        GuiEventListener previous = this.getFocused();
+        if ((previous != guiEventListener) && (previous instanceof AbstractWidget previousWidget) && canLoseFocus_FancyMenu(previousWidget)) {
+            previousWidget.setFocused(false);
+        }
+    }
+
+    /**
+     * Edit boxes that can't lose their focus keep it, like the chat input, the same way EditBox#setFocused handles them in newer versions.
+     */
+    @Unique
+    private static boolean canLoseFocus_FancyMenu(@NotNull AbstractWidget widget) {
+        return !(widget instanceof IMixinEditBox editBox) || editBox.getCanLoseFocusFancyMenu();
     }
 
 }

@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
 import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.konkrete.gui.content.AdvancedTextField;
 import de.keksuccino.konkrete.input.CharacterFilter;
 import net.minecraft.Util;
@@ -196,7 +197,7 @@ public class TextEditorLine extends AdvancedTextField {
                 float highlightWidth = UIBase.getUITextWidth(text.substring(0, highlightPos));
                 this.currentHighlightPosXStart = (int) cursorPosRender;
                 this.currentHighlightPosXEnd = (int) (textX + highlightWidth) - 1;
-                this.getAsAccessor().invokeRenderHighlightFancyMenu(this.currentHighlightPosXStart, (int) (textY - 1), this.currentHighlightPosXEnd, (int) (textY + 1 + textHeight));
+                ExtendedEditBox.renderHighlight(graphics, this, this.currentHighlightPosXStart, (int) (textY - 1), this.currentHighlightPosXEnd, (int) (textY + 1 + textHeight));
             } else {
                 this.currentHighlightPosXStart = 0;
                 this.currentHighlightPosXEnd = 0;

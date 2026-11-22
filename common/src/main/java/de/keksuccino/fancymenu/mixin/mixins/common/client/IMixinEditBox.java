@@ -12,6 +12,8 @@ public interface IMixinEditBox {
 
     @Accessor("isEditable") boolean getIsEditableFancyMenu();
 
+    @Accessor("canLoseFocus") boolean getCanLoseFocusFancyMenu();
+
     @Accessor("displayPos") int getDisplayPosFancyMenu();
 
     @Accessor("displayPos") void setDisplayPosFancyMenu(int displayPos);
@@ -35,7 +37,5 @@ public interface IMixinEditBox {
     @Accessor("frame") int getFocusedTimeFancyMenu();
 
     @Accessor("suggestion") String getSuggestionFancyMenu();
-
-    @Invoker("renderHighlight") void invokeRenderHighlightFancyMenu(int xStart, int yStart, int xEnd, int yEnd);
 
 }

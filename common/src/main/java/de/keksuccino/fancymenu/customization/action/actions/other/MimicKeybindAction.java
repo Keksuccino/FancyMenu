@@ -261,6 +261,7 @@ public class MimicKeybindAction extends Action {
         protected MimicKeybindActionValueScreen(@NotNull String value, @NotNull Consumer<String> callback) {
             super(Component.translatable("fancymenu.actions.mimic_keybind.edit.title"), callback);
             this.config = MimicKeybindConfig.parse(value);
+            this.setInitialTextInputFocusEnabled(true);
         }
 
         @Override

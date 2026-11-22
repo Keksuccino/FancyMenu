@@ -1,6 +1,13 @@
 package de.keksuccino.fancymenu.util.rendering.ui.widget.editbox;
 
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.math.Matrix4f;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinEditBox;
 import de.keksuccino.fancymenu.util.ConsumingSupplier;
@@ -22,6 +29,7 @@ import net.minecraft.client.gui.Font;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.sounds.SoundManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -262,7 +270,7 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
             if (highlightPos != cursorPos) {
                 float highlightWidth = this.getRenderedTextWidth(text, highlightPos, access.getDisplayPosFancyMenu(), renderWithUiBase);
                 int highlightEndX = (int) (textX + highlightWidth) - 1;
-                access.invokeRenderHighlightFancyMenu((int) finalTextXAfterCursor, (int) (textY - 1), highlightEndX, (int) (textY + 1 + textHeight));
+                renderHighlight(graphics, this, (int) finalTextXAfterCursor, (int) (textY - 1), highlightEndX, (int) (textY + 1 + textHeight));
             }
 
         }
@@ -286,6 +294,46 @@ public class ExtendedEditBox extends EditBox implements UniqueWidget, Navigatabl
             characterRenderIndex++;
         }
         return renderWithUiBase ? UIBase.getUITextWidthNormal(component) : this.font.width(component);
+    }
+
+    /**
+     * Renders the highlight of the selected text of an edit box, which inverts the colors below it, like {@code EditBox#renderHighlight} of newer versions.<br>
+     * The highlight of the 1.19.2 {@link EditBox} ignores the {@link PoseStack}, so in moved or layered UIs, like FancyMenu's windows, it ends up in the wrong
+     * place or behind them. This draws it the same way, but with the PoseStack. It draws right away after flushing what got drawn before,
+     * because inverting the colors below the highlight needs them in the framebuffer.
+     */
+    public static void renderHighlight(@NotNull GuiGraphics graphics, @NotNull EditBox editBox, int minX, int minY, int maxX, int maxY) {
+        if (minX < maxX) {
+            int i = minX;
+            minX = maxX;
+            maxX = i;
+        }
+        if (minY < maxY) {
+            int i = minY;
+            minY = maxY;
+            maxY = i;
+        }
+        int rightEdge = editBox.x + editBox.getWidth();
+        if (maxX > rightEdge) maxX = rightEdge;
+        if (minX > rightEdge) minX = rightEdge;
+        graphics.flush();
+        Matrix4f matrix = graphics.pose().last().pose();
+        Tesselator tesselator = Tesselator.getInstance();
+        BufferBuilder bufferBuilder = tesselator.getBuilder();
+        RenderSystem.setShader(GameRenderer::getPositionShader);
+        RenderSystem.setShaderColor(0.0F, 0.0F, 1.0F, 1.0F);
+        RenderSystem.disableTexture();
+        RenderSystem.enableColorLogicOp();
+        RenderSystem.logicOp(GlStateManager.LogicOp.OR_REVERSE);
+        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
+        bufferBuilder.vertex(matrix, minX, maxY, 0.0F).endVertex();
+        bufferBuilder.vertex(matrix, maxX, maxY, 0.0F).endVertex();
+        bufferBuilder.vertex(matrix, maxX, minY, 0.0F).endVertex();
+        bufferBuilder.vertex(matrix, minX, minY, 0.0F).endVertex();
+        tesselator.end();
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.disableColorLogicOp();
+        RenderSystem.enableTexture();
     }
 
     private void renderFancyHighlight(@NotNull GuiGraphics graphics, int minX, int minY, int maxX, int maxY, int textColor) {
