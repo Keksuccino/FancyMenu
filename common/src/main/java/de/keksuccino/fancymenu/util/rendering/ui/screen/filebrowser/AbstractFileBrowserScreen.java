@@ -24,7 +24,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.Text
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.TooltipHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
-import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
+import de.keksuccino.fancymenu.util.resource.OwnedResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
@@ -80,10 +80,12 @@ public abstract class AbstractFileBrowserScreen extends ModernScreen {
     protected ScrollArea fileListScrollArea = new ScrollArea(0, 0, 0, 0);
     protected ScrollArea fileTypeScrollArea = new ScrollArea(0, 0, 0, 20);
     protected ScrollArea previewTextScrollArea = new ScrollArea(0, 0, 0, 0);
+    // Previews own their resources instead of sharing them through the resource cache, so they never affect elements that use the
+    // same files, and close them as soon as they stop being previewed. Only set them through their setters, which close replaced ones.
     @Nullable
-    protected ResourceSupplier<ITexture> previewTextureSupplier;
+    protected OwnedResourceSupplier<ITexture> previewTextureSupplier;
     @Nullable
-    protected ResourceSupplier<IText> previewTextSupplier;
+    protected OwnedResourceSupplier<IText> previewTextSupplier;
     @Nullable
     protected IText currentPreviewText;
     protected ExtendedButton confirmButton;
@@ -154,6 +156,12 @@ public abstract class AbstractFileBrowserScreen extends ModernScreen {
     @Override
     public void onClose() {
         this.callback.accept(null);
+    }
+
+    @Override
+    public void removed() {
+        this.closePreviewResources();
+        super.removed();
     }
 
     @Override
@@ -500,28 +508,46 @@ public abstract class AbstractFileBrowserScreen extends ModernScreen {
         if ((file != null) && file.isFile()) {
             this.setTextPreview(file);
             if (FileTypes.getLocalType(file) instanceof ImageFileType) {
-                this.previewTextureSupplier = ResourceSupplier.image(file.getPath());
+                this.setPreviewTexture(OwnedResourceSupplier.image(file.getPath()));
             } else {
-                this.previewTextureSupplier = null;
+                this.setPreviewTexture(null);
             }
         } else {
             this.setTextPreview(null);
-            this.previewTextureSupplier = null;
+            this.setPreviewTexture(null);
         }
     }
 
     protected void setTextPreview(@Nullable File file) {
         if (file == null) {
-            this.previewTextSupplier = null;
+            this.setPreviewText(null);
         } else {
             for (TextFileType type : FileTypes.getAllTextFileTypes()) {
                 if (type.isFileTypeLocal(file)) {
-                    this.previewTextSupplier = ResourceSupplier.text(GameDirectoryUtils.getAbsoluteGameDirectoryPath(file.getPath()));
+                    this.setPreviewText(OwnedResourceSupplier.text(GameDirectoryUtils.getAbsoluteGameDirectoryPath(file.getPath())));
                     return;
                 }
             }
-            this.previewTextSupplier = null;
+            this.setPreviewText(null);
         }
+    }
+
+    protected void setPreviewTexture(@Nullable OwnedResourceSupplier<ITexture> supplier) {
+        AbstractBrowserWindowBody.closeIfReplaced(this.previewTextureSupplier, supplier);
+        this.previewTextureSupplier = supplier;
+    }
+
+    protected void setPreviewText(@Nullable OwnedResourceSupplier<IText> supplier) {
+        AbstractBrowserWindowBody.closeIfReplaced(this.previewTextSupplier, supplier);
+        this.previewTextSupplier = supplier;
+    }
+
+    /**
+     * Closes the resources of the current preview, so the textures and memory of files that are no longer previewed get released right away.
+     */
+    protected void closePreviewResources() {
+        this.setPreviewTexture(null);
+        this.setPreviewText(null);
     }
 
     protected void tickTextPreview() {

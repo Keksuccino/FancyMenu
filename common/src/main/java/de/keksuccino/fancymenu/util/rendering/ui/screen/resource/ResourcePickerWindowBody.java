@@ -14,7 +14,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.Scro
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.component.ComponentWidget;
-import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
+import de.keksuccino.fancymenu.util.resource.OwnedResourceSupplier;
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
@@ -187,19 +187,19 @@ public class ResourcePickerWindowBody extends AbstractBrowserWindowBody {
         if (!(previewKey instanceof ResourceLocation location)) return;
         this.setTextPreview(location);
         if (this.isImageLocation(location)) {
-            this.previewTextureSupplier = ResourceSupplier.image(location.toString());
+            this.setPreviewTexture(OwnedResourceSupplier.image(location.toString()));
             this.setPreviewAudio(null, null);
             this.setPreviewVideo(null, null);
         } else if (this.isAudioLocation(location)) {
-            this.previewTextureSupplier = null;
+            this.setPreviewTexture(null);
             this.setPreviewVideo(null, null);
-            this.setPreviewAudio(ResourceSupplier.audio(location.toString()), location);
+            this.setPreviewAudio(OwnedResourceSupplier.audio(location.toString()), location);
         } else if (this.isVideoLocation(location)) {
-            this.previewTextureSupplier = null;
+            this.setPreviewTexture(null);
             this.setPreviewAudio(null, null);
-            this.setPreviewVideo(ResourceSupplier.video(location.toString()), location);
+            this.setPreviewVideo(OwnedResourceSupplier.video(location.toString()), location);
         } else {
-            this.previewTextureSupplier = null;
+            this.setPreviewTexture(null);
             this.setPreviewAudio(null, null);
             this.setPreviewVideo(null, null);
         }
@@ -257,15 +257,15 @@ public class ResourcePickerWindowBody extends AbstractBrowserWindowBody {
 
     protected void setTextPreview(@Nullable ResourceLocation location) {
         if (location == null) {
-            this.previewTextSupplier = null;
+            this.setPreviewText(null);
         } else {
             for (TextFileType type : FileTypes.getAllTextFileTypes()) {
                 if (type.isFileTypeLocation(location)) {
-                    this.previewTextSupplier = ResourceSupplier.text(location.toString());
+                    this.setPreviewText(OwnedResourceSupplier.text(location.toString()));
                     return;
                 }
             }
-            this.previewTextSupplier = null;
+            this.setPreviewText(null);
         }
     }
 

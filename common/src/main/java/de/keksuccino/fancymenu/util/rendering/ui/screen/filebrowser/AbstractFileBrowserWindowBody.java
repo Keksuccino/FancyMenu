@@ -18,7 +18,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.Scro
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.button.ExtendedButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.component.ComponentWidget;
-import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
+import de.keksuccino.fancymenu.util.resource.OwnedResourceSupplier;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
@@ -203,19 +203,19 @@ public abstract class AbstractFileBrowserWindowBody extends AbstractBrowserWindo
         this.setTextPreview(file);
         FileType<?> type = FileTypes.getLocalType(file);
         if (type instanceof ImageFileType) {
-            this.previewTextureSupplier = ResourceSupplier.image(file.getPath());
+            this.setPreviewTexture(OwnedResourceSupplier.image(file.getPath()));
             this.setPreviewAudio(null, null);
             this.setPreviewVideo(null, null);
         } else if (type instanceof AudioFileType) {
-            this.previewTextureSupplier = null;
+            this.setPreviewTexture(null);
             this.setPreviewVideo(null, null);
-            this.setPreviewAudio(ResourceSupplier.audio(GameDirectoryUtils.getAbsoluteGameDirectoryPath(file.getPath())), file);
+            this.setPreviewAudio(OwnedResourceSupplier.audio(GameDirectoryUtils.getAbsoluteGameDirectoryPath(file.getPath())), file);
         } else if (type instanceof VideoFileType) {
-            this.previewTextureSupplier = null;
+            this.setPreviewTexture(null);
             this.setPreviewAudio(null, null);
-            this.setPreviewVideo(ResourceSupplier.video(GameDirectoryUtils.getAbsoluteGameDirectoryPath(file.getPath())), file);
+            this.setPreviewVideo(OwnedResourceSupplier.video(GameDirectoryUtils.getAbsoluteGameDirectoryPath(file.getPath())), file);
         } else {
-            this.previewTextureSupplier = null;
+            this.setPreviewTexture(null);
             this.setPreviewAudio(null, null);
             this.setPreviewVideo(null, null);
         }
@@ -529,15 +529,15 @@ public abstract class AbstractFileBrowserWindowBody extends AbstractBrowserWindo
 
     protected void setTextPreview(@Nullable File file) {
         if (file == null) {
-            this.previewTextSupplier = null;
+            this.setPreviewText(null);
         } else {
             for (TextFileType type : FileTypes.getAllTextFileTypes()) {
                 if (type.isFileTypeLocal(file)) {
-                    this.previewTextSupplier = ResourceSupplier.text(GameDirectoryUtils.getAbsoluteGameDirectoryPath(file.getPath()));
+                    this.setPreviewText(OwnedResourceSupplier.text(GameDirectoryUtils.getAbsoluteGameDirectoryPath(file.getPath())));
                     return;
                 }
             }
-            this.previewTextSupplier = null;
+            this.setPreviewText(null);
         }
     }
 

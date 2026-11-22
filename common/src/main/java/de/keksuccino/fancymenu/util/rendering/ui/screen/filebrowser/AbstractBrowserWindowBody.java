@@ -24,7 +24,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.button.UIIconButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.component.ComponentWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.slider.v2.RangeSlider;
-import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
+import de.keksuccino.fancymenu.util.resource.OwnedResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
@@ -88,14 +88,16 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
     @NotNull
     protected Component searchBarPlaceholder = Component.translatable("fancymenu.ui.generic.search");
     protected boolean enterKeyForDoneEnabled = true;
+    // Previews own their resources instead of sharing them through the resource cache, so they never affect elements that use the
+    // same files, and close them as soon as they stop being previewed. Only set them through their setters, which close replaced ones.
     @Nullable
-    protected ResourceSupplier<ITexture> previewTextureSupplier;
+    protected OwnedResourceSupplier<ITexture> previewTextureSupplier;
     @Nullable
-    protected ResourceSupplier<IText> previewTextSupplier;
+    protected OwnedResourceSupplier<IText> previewTextSupplier;
     @Nullable
-    protected ResourceSupplier<IAudio> previewAudioSupplier;
+    protected OwnedResourceSupplier<IAudio> previewAudioSupplier;
     @Nullable
-    protected ResourceSupplier<IVideo> previewVideoSupplier;
+    protected OwnedResourceSupplier<IVideo> previewVideoSupplier;
     @Nullable
     protected IText currentPreviewText;
     @Nullable
@@ -271,7 +273,10 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
 
     @Override
     public void onScreenClosed() {
+        this.cancelPendingPreview();
+        this.activePreviewKey = null;
         this.stopPreviewMedia();
+        this.closePreviewResources();
     }
 
     @Override
@@ -772,10 +777,7 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
     }
 
     protected void clearPreviewDisplay(boolean showNoPreview) {
-        this.previewTextureSupplier = null;
-        this.previewTextSupplier = null;
-        this.previewAudioSupplier = null;
-        this.previewVideoSupplier = null;
+        this.closePreviewResources();
         this.audioPreviewProgressBarWidth = 0;
         this.audioPreviewProgressBarHeight = 0;
         this.videoPreviewProgressBarWidth = 0;
@@ -1041,17 +1043,44 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
         this.setPreviewVideoPlaying(!this.previewVideoPlaying);
     }
 
-    protected void setPreviewAudio(@Nullable ResourceSupplier<IAudio> supplier, @Nullable Object previewKey) {
+    protected void setPreviewTexture(@Nullable OwnedResourceSupplier<ITexture> supplier) {
+        closeIfReplaced(this.previewTextureSupplier, supplier);
+        this.previewTextureSupplier = supplier;
+    }
+
+    protected void setPreviewText(@Nullable OwnedResourceSupplier<IText> supplier) {
+        closeIfReplaced(this.previewTextSupplier, supplier);
+        this.previewTextSupplier = supplier;
+    }
+
+    protected void setPreviewAudio(@Nullable OwnedResourceSupplier<IAudio> supplier, @Nullable Object previewKey) {
         this.stopPreviewAudio();
+        closeIfReplaced(this.previewAudioSupplier, supplier);
         this.previewAudioSupplier = supplier;
         this.previewAudioPlaying = false;
         this.previewAudioSeed = (previewKey != null) ? previewKey.hashCode() * 37L : System.nanoTime();
     }
 
-    protected void setPreviewVideo(@Nullable ResourceSupplier<IVideo> supplier, @Nullable Object previewKey) {
+    protected void setPreviewVideo(@Nullable OwnedResourceSupplier<IVideo> supplier, @Nullable Object previewKey) {
         this.stopPreviewVideo();
+        closeIfReplaced(this.previewVideoSupplier, supplier);
         this.previewVideoSupplier = supplier;
         this.previewVideoPlaying = false;
+    }
+
+    /**
+     * Closes the resources of the current preview, so the OpenAL sources, textures, video players and memory of files that are no
+     * longer previewed get released right away.
+     */
+    protected void closePreviewResources() {
+        this.setPreviewTexture(null);
+        this.setPreviewText(null);
+        this.setPreviewAudio(null, null);
+        this.setPreviewVideo(null, null);
+    }
+
+    protected static void closeIfReplaced(@Nullable OwnedResourceSupplier<?> current, @Nullable OwnedResourceSupplier<?> replacement) {
+        if ((current != null) && (current != replacement)) current.close();
     }
 
     protected void setPreviewAudioPlaying(boolean playing) {
