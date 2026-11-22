@@ -2,13 +2,17 @@ package de.keksuccino.fancymenu.customization.element.elements.inputfield;
 
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.variables.VariableHandler;
+import de.keksuccino.fancymenu.customization.variables.VariableType;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import de.keksuccino.fancymenu.util.ListUtils;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 
 public class InputFieldEditorElement extends AbstractEditorElement<InputFieldEditorElement, InputFieldElement> {
@@ -22,12 +26,15 @@ public class InputFieldEditorElement extends AbstractEditorElement<InputFieldEdi
 
         super.init();
 
-        this.addGenericStringInputContextMenuEntryTo(this.rightClickMenu, "set_variable",
+        this.topLeftDisplay.addLine("linked_to_list_variable", () -> ((this.element.linkedVariable != null) && VariableHandler.isListVariable(this.element.linkedVariable))
+                ? Component.translatable("fancymenu.elements.input_field.editor.linked_to_list_variable").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt())) : null);
+
+        this.rightClickMenu.addEntry(this.buildInputContextMenuEntry(this.rightClickMenu, "set_variable",
                         consumes -> (consumes instanceof InputFieldEditorElement),
                         consumes -> consumes.element.linkedVariable,
                         (element, varName) -> element.element.linkedVariable = varName,
                         null, false, false, Component.translatable("fancymenu.elements.input_field.editor.set_variable"),
-                        true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null)
+                        true, null, TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR, null, () -> VariableHandler.getVariableNames(VariableType.TEXT)))
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.input_field.editor.set_variable.desc")))
                 .setIcon(MaterialIcons.VARIABLES);
 

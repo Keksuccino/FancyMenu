@@ -33,7 +33,8 @@ public final class TextAiExporter {
             AiExportReferences references = new AiExportReferences();
             writer.heading(2, "Text");
             writer.paragraph("A text from FancyMenu's text editor. Placeholders are JSON-like snippets like `{\"placeholder\":\"playername\"}` that get replaced with a value, "
-                    + "and `$$name` gets replaced with the value of the FancyMenu variable with that name. Placeholders can be inside the values of other placeholders.");
+                    + "and `$$name` gets replaced with the value of the FancyMenu variable with that name (list variables give their entries as JSON array of strings, like `[\"apple\",\"banana\"]`). "
+                    + "Placeholders can be inside the values of other placeholders.");
             writer.heading(3, "Raw Text");
             writer.codeBlock(null, text);
             writer.heading(3, "What It Shows Right Now");
@@ -80,13 +81,13 @@ public final class TextAiExporter {
 
     private static void writeVariableReferences(@NotNull AiExportWriter writer, @NotNull String text) {
         List<UserVariableSnapshot> variables = VariableHandler.getVariableSnapshots();
-        Map<String, String> found = new LinkedHashMap<>();
+        Map<String, UserVariableSnapshot> found = new LinkedHashMap<>();
         int prefixIndex = text.indexOf(ShortReferenceResolver.PREFIX);
         while (prefixIndex >= 0) {
             int nameStart = prefixIndex + ShortReferenceResolver.PREFIX.length();
             UserVariableSnapshot variable = ShortReferenceResolver.findLongestName(text, nameStart, variables, UserVariableSnapshot::name);
             if (variable != null) {
-                found.put(variable.name(), variable.value());
+                found.put(variable.name(), variable);
                 prefixIndex = text.indexOf(ShortReferenceResolver.PREFIX, nameStart + variable.name().length());
             } else {
                 int nameEnd = nameStart;
@@ -97,9 +98,12 @@ public final class TextAiExporter {
         }
         if (found.isEmpty()) return;
         writer.heading(3, "$$ References in the Text");
-        found.forEach((name, value) -> {
-            if (value != null) {
-                writer.field("$$" + name, value, "a FancyMenu variable with this value right now");
+        found.forEach((name, variable) -> {
+            if ((variable != null) && variable.isList()) {
+                int size = variable.listEntries().size();
+                writer.field("$$" + name, variable.value(), "a FancyMenu list variable with " + size + ((size == 1) ? " entry" : " entries") + " right now, which `$$` gives as JSON array like this");
+            } else if (variable != null) {
+                writer.field("$$" + name, variable.value(), "a FancyMenu variable with this value right now");
             } else {
                 writer.fieldText("$$" + name, "no FancyMenu variable starts with this name, so it stays as it is, unless it is a value placeholder of an action script or listener");
             }

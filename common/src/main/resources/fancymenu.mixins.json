@@ -21,6 +21,7 @@
     "client.IMixinEditBox",
     "client.IMixinGameRenderer",
     "client.IMixinGui",
+    "client.IMixinKeyboardHandler",
     "client.IMixinLevelLoadingScreen",
     "client.IMixinMinecraft",
     "client.IMixinMusicManager",

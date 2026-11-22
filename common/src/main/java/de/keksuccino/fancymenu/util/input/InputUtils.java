@@ -16,6 +16,15 @@ public class InputUtils {
     }
 
     /**
+     * Returns the semantic GUI shortcut modifier mask for the supplied platform.
+     *
+     * The platform is an argument so the mapping stays deterministic and testable without depending on the host running Minecraft.
+     */
+    public static int getGuiShortcutModifierMask(boolean macOs) {
+        return macOs ? GLFW.GLFW_MOD_SUPER : GLFW.GLFW_MOD_CONTROL;
+    }
+
+    /**
      * Updates the semantic modifier state reported with the latest GLFW input event.
      *
      * GLFW key identities cannot be polled for this state on macOS because System Settings can remap physical modifier keys. The event mask already reflects that remapping and is also available while FancyMenu handles drag and character paths without a new event object.
@@ -45,8 +54,7 @@ public class InputUtils {
     }
 
     static boolean isGuiShortcutModifierDown(int modifiers, boolean onMacOS) {
-        int shortcutModifier = onMacOS ? GLFW.GLFW_MOD_SUPER : GLFW.GLFW_MOD_CONTROL;
-        return (modifiers & shortcutModifier) != 0;
+        return (modifiers & getGuiShortcutModifierMask(onMacOS)) != 0;
     }
 
     /**

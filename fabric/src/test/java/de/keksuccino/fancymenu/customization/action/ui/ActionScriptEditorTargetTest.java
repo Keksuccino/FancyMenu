@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.customization.action.blocks.statements.DelayExecu
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseIfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ExecuteLaterExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.statements.ForEachExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.IfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.WhileExecutableBlock;
 import org.junit.jupiter.api.Test;
@@ -24,7 +25,7 @@ class ActionScriptEditorTargetTest {
     @Test
     void targetBelowABlockIsTheStartOfTheBlock() {
         GenericExecutableBlock root = new GenericExecutableBlock();
-        List<AbstractExecutableBlock> blocks = List.of(new IfExecutableBlock(), new ElseIfExecutableBlock(), new ElseExecutableBlock(), new WhileExecutableBlock(), new DelayExecutableBlock(), new ExecuteLaterExecutableBlock(), new FolderExecutableBlock());
+        List<AbstractExecutableBlock> blocks = List.of(new IfExecutableBlock(), new ElseIfExecutableBlock(), new ElseExecutableBlock(), new WhileExecutableBlock(), new ForEachExecutableBlock(), new DelayExecutableBlock(), new ExecuteLaterExecutableBlock(), new FolderExecutableBlock());
         for (AbstractExecutableBlock block : blocks) {
             block.addExecutable(newAction()).addExecutable(newAction()).addExecutable(newAction());
             root.addExecutable(block);

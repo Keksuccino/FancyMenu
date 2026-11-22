@@ -2,11 +2,14 @@ package de.keksuccino.fancymenu.customization.element.elements.checkbox;
 
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 
 public class CheckboxEditorElement extends AbstractEditorElement<CheckboxEditorElement, CheckboxElement> {
@@ -19,6 +22,9 @@ public class CheckboxEditorElement extends AbstractEditorElement<CheckboxEditorE
     public void init() {
 
         super.init();
+
+        this.topLeftDisplay.addLine("linked_to_list_variable", () -> this.isLinkedToListVariable()
+                ? Component.translatable("fancymenu.elements.checkbox.editor.linked_to_list_variable").setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt())) : null);
 
         this.element.actionExecutor.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.checkbox.manage_actions.desc")))
@@ -75,6 +81,12 @@ public class CheckboxEditorElement extends AbstractEditorElement<CheckboxEditorE
                 .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.widgets.generic.navigatable.desc")))
                 .setIcon(MaterialIcons.MOUSE);
 
+    }
+
+    protected boolean isLinkedToListVariable() {
+        if (!this.element.variableMode.tryGetNonNull()) return false;
+        String variable = this.element.linkedVariable.get();
+        return (variable != null) && VariableHandler.isListVariable(variable);
     }
 
     protected void addTextureSettings() {

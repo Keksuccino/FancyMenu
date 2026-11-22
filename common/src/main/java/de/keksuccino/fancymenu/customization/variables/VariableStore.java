@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 /**
  * Owns variable state and persistence. Mutations become visible under {@link #stateLock} immediately, while one
@@ -85,7 +86,7 @@ final class VariableStore {
                     this.variables.putAll(loadedVariables);
                     this.variableSetChangedLocked();
                     for (Variable variable : this.variables.values()) {
-                        if (variable.isResetOnLaunchLocked()) variable.setRawValueLocked("");
+                        if (variable.isResetOnLaunchLocked()) variable.resetValueLocked();
                     }
                     this.initialized = true;
                     revision = this.nextRevisionLocked();
@@ -112,16 +113,129 @@ final class VariableStore {
                 created = true;
             }
             // Variable is deliberately only a state object; this handler mutation is the single persistence owner.
-            String oldValue = variable.getRawValueLocked();
-            String encodedValue = Variable.encodeValue(value);
-            if (created || !oldValue.equals(encodedValue)) {
-                // Publish before dispatch because listener action scripts may immediately read or supersede this assignment.
-                variable.setRawValueLocked(encodedValue);
-                revision = this.nextRevisionLocked();
-            }
-            this.updateListener.onVariableUpdated(variable.getName(), oldValue, Objects.requireNonNullElse(value, "0"));
+            // The listener gets text forms, so line breaks of the old value are real ones, not their stored replacement.
+            String oldValue = variable.getValueLocked();
+            // Publish before dispatch because listener action scripts may immediately read or supersede this assignment.
+            if (this.assignTextLocked(variable, value) || created) revision = this.nextRevisionLocked();
+            String newValue = variable.isListLocked() ? variable.getValueLocked() : Objects.requireNonNullElse(value, "0");
+            this.updateListener.onVariableUpdated(variable.getName(), oldValue, newValue);
         }
         if (revision >= 0L) this.persistence.markDirty(revision, "setting variable '" + name + "'");
+    }
+
+    /**
+     * Sets the value of the variable from text. A list variable stays a list and reads the text as its entries, see
+     * {@link VariableLists#fromAssignedText(String)}, so text that only knows text (actions, commands, input fields) never changes the type.
+     *
+     * @return If the value changed.
+     */
+    private boolean assignTextLocked(@NotNull Variable variable, @Nullable String value) {
+        if (variable.isListLocked()) {
+            if (!VariableLists.replaceAll(variable.getMutableListEntriesLocked(), VariableLists.fromAssignedText(value)).isChanged()) return false;
+            variable.listChangedLocked();
+            return true;
+        }
+        String encodedValue = Variable.encodeValue(value);
+        if (variable.getRawValueLocked().equals(encodedValue)) return false;
+        variable.setRawValueLocked(encodedValue);
+        return true;
+    }
+
+    /**
+     * Edits the entries of a list variable. A missing variable gets created as a list and an empty text variable becomes one, but only if
+     * the edit has no {@link ListEditResult#INDEX_OUT_OF_RANGE} result. Text variables with a value stay as they are
+     * ({@link ListEditResult#NOT_A_LIST}), so list edits never overwrite text.
+     *
+     * <p>The edit runs under the state lock, so it must not run foreign code, and it must leave the entries untouched whenever it doesn't
+     * return {@link ListEditResult#CHANGED}. The edits of {@link VariableLists} do both. The old and new text forms for the update listener
+     * only get built while it listens, so scripts that edit long lists in loops don't build them for nothing.</p>
+     */
+    @NotNull
+    ListEditResult editList(@NotNull String name, @NotNull ListEdit edit) {
+        long revision;
+        synchronized (this.stateLock) {
+            this.awaitReplacementLocked();
+            if (this.shutdown) return ListEditResult.UNAVAILABLE;
+            String checkedName = Objects.requireNonNull(name);
+            Variable variable = this.variables.get(checkedName);
+            boolean claimed = (variable == null) || !variable.isListLocked();
+            if ((variable != null) && claimed && !variable.getRawValueLocked().isEmpty()) return ListEditResult.NOT_A_LIST;
+            boolean listening = this.updateListener.isListening();
+            String oldValue = (listening && (variable != null)) ? variable.getValueLocked() : "";
+            // Missing variables and empty text variables get edited as an empty list, which only becomes the variable if the edit worked
+            List<String> entries = claimed ? new ArrayList<>() : variable.getMutableListEntriesLocked();
+            ListEditResult result = Objects.requireNonNull(edit.apply(entries));
+            if (result == ListEditResult.INDEX_OUT_OF_RANGE) return result;
+            if (claimed) {
+                if (variable == null) {
+                    variable = new Variable(checkedName, this);
+                    this.variables.put(checkedName, variable);
+                    this.variableSetChangedLocked();
+                }
+                variable.makeListLocked(entries);
+            } else if (result == ListEditResult.CHANGED) {
+                variable.listChangedLocked();
+            } else {
+                return result;
+            }
+            revision = this.nextRevisionLocked();
+            if (listening) this.updateListener.onVariableUpdated(checkedName, oldValue, variable.getValueLocked());
+        }
+        this.persistence.markDirty(revision, "editing list variable '" + name + "'");
+        return ListEditResult.CHANGED;
+    }
+
+    boolean setListIfAbsent(@NotNull String name, @NotNull List<String> entries) {
+        long revision;
+        synchronized (this.stateLock) {
+            this.awaitReplacementLocked();
+            String checkedName = Objects.requireNonNull(name);
+            if (this.shutdown || this.variables.containsKey(checkedName)) return false;
+            Variable variable = new Variable(checkedName, this);
+            variable.makeListLocked(entries);
+            this.variables.put(checkedName, variable);
+            this.variableSetChangedLocked();
+            revision = this.nextRevisionLocked();
+            this.updateListener.onVariableUpdated(checkedName, "", variable.getValueLocked());
+        }
+        this.persistence.markDirty(revision, "creating list variable '" + name + "'");
+        return true;
+    }
+
+    /**
+     * Makes an existing variable a list with the given entries, also when it is a text variable with a value. Only for explicit
+     * conversions by the user, everything else edits lists through {@link #editList(String, ListEdit)}.
+     *
+     * @return If the variable exists.
+     */
+    boolean convertToList(@NotNull String name, @NotNull List<String> entries) {
+        return this.changeVariable(name, variable -> variable.makeListLocked(entries), "converting variable '" + name + "' to a list");
+    }
+
+    /**
+     * Makes an existing variable a text variable with the given value, also when it is a list. Only for explicit conversions by the user.
+     *
+     * @return If the variable exists.
+     */
+    boolean convertToText(@NotNull String name, @NotNull String value) {
+        return this.changeVariable(name, variable -> variable.setRawValueLocked(Variable.encodeValue(value)), "converting variable '" + name + "' to text");
+    }
+
+    private boolean changeVariable(@NotNull String name, @NotNull Consumer<Variable> change, @NotNull String operation) {
+        long revision;
+        synchronized (this.stateLock) {
+            this.awaitReplacementLocked();
+            if (this.shutdown) return false;
+            Variable variable = this.variables.get(Objects.requireNonNull(name));
+            if (variable == null) return false;
+            UserVariableSnapshot before = variable.createSnapshotLocked();
+            change.accept(variable);
+            if (variable.createSnapshotLocked().equals(before)) return true;
+            revision = this.nextRevisionLocked();
+            this.updateListener.onVariableUpdated(variable.getName(), before.value(), variable.getValueLocked());
+        }
+        this.persistence.markDirty(revision, operation);
+        return true;
     }
 
     boolean setVariableIfAbsent(@NotNull String name, @Nullable String value) {
@@ -143,12 +257,23 @@ final class VariableStore {
 
     @Nullable
     String createVariableWithUniqueCopyName(@NotNull String sourceName, @NotNull String value, boolean resetOnLaunch) {
+        return this.createVariableWithUniqueCopyName(new UserVariableSnapshot(Objects.requireNonNull(sourceName), Objects.requireNonNull(value), resetOnLaunch));
+    }
+
+    /**
+     * Creates a copy of the variable the snapshot describes (its type, value and settings), named after it with a {@code _Copy} suffix
+     * that gets a number when the name is taken.
+     *
+     * @return The name of the copy, or {@code null} if the variables are shut down.
+     */
+    @Nullable
+    String createVariableWithUniqueCopyName(@NotNull UserVariableSnapshot source) {
         String candidate;
         long revision;
         synchronized (this.stateLock) {
             this.awaitReplacementLocked();
             if (this.shutdown) return null;
-            String baseName = Objects.requireNonNull(sourceName) + "_Copy";
+            String baseName = source.name() + "_Copy";
             candidate = baseName;
             int suffix = 2;
             while (this.variables.containsKey(candidate)) {
@@ -158,10 +283,9 @@ final class VariableStore {
             Variable variable = new Variable(candidate, this);
             this.variables.put(candidate, variable);
             this.variableSetChangedLocked();
-            variable.setRawValueLocked(Variable.encodeValue(value));
-            variable.setResetOnLaunchLocked(resetOnLaunch);
+            variable.applySnapshotLocked(source);
             revision = this.nextRevisionLocked();
-            this.updateListener.onVariableUpdated(candidate, "", Objects.requireNonNull(value));
+            this.updateListener.onVariableUpdated(candidate, "", source.value());
         }
         this.persistence.markDirty(revision, "creating copied variable '" + candidate + "'");
         return candidate;
@@ -181,8 +305,7 @@ final class VariableStore {
                     Variable variable = new Variable(snapshot.name(), this);
                     this.variables.put(snapshot.name(), variable);
                     this.variableSetChangedLocked();
-                    variable.setRawValueLocked(Variable.encodeValue(snapshot.value()));
-                    variable.setResetOnLaunchLocked(snapshot.resetOnLaunch());
+                    variable.applySnapshotLocked(snapshot);
                     this.updateListener.onVariableUpdated(snapshot.name(), "", snapshot.value());
                 }
             } catch (RuntimeException | Error failure) {
@@ -236,6 +359,33 @@ final class VariableStore {
         }
     }
 
+    /**
+     * Returns the entries of a list variable as an immutable list. The store keeps that copy until the list changes, so reading the same
+     * list again (like placeholders do every frame) copies nothing.
+     *
+     * @return The entries, or {@code null} if the variable doesn't exist or is a text variable.
+     */
+    @Nullable
+    List<String> getListEntries(@NotNull String name) {
+        synchronized (this.stateLock) {
+            this.awaitReplacementLocked();
+            Variable variable = this.variables.get(Objects.requireNonNull(name));
+            return ((variable != null) && variable.isListLocked()) ? variable.getListEntriesLocked() : null;
+        }
+    }
+
+    /**
+     * @return The type of the variable, or {@code null} if it doesn't exist.
+     */
+    @Nullable
+    VariableType getVariableType(@NotNull String name) {
+        synchronized (this.stateLock) {
+            this.awaitReplacementLocked();
+            Variable variable = this.variables.get(Objects.requireNonNull(name));
+            return (variable != null) ? variable.getTypeLocked() : null;
+        }
+    }
+
     @NotNull
     List<Variable> getVariables() {
         synchronized (this.stateLock) {
@@ -249,6 +399,19 @@ final class VariableStore {
         synchronized (this.stateLock) {
             this.awaitReplacementLocked();
             return new ArrayList<>(this.variables.keySet());
+        }
+    }
+
+    @NotNull
+    List<String> getVariableNames(@NotNull VariableType type) {
+        Objects.requireNonNull(type);
+        synchronized (this.stateLock) {
+            this.awaitReplacementLocked();
+            List<String> names = new ArrayList<>();
+            for (Variable variable : this.variables.values()) {
+                if (variable.getTypeLocked() == type) names.add(variable.getName());
+            }
+            return names;
         }
     }
 
@@ -332,12 +495,28 @@ final class VariableStore {
             this.awaitReplacementLocked();
             this.requireOwner(variable);
             if (this.shutdown) return;
-            String encodedValue = Variable.encodeValue(value);
-            if (variable.getRawValueLocked().equals(encodedValue)) return;
-            variable.setRawValueLocked(encodedValue);
+            if (!this.assignTextLocked(variable, value)) return;
             if (this.variables.get(variable.getName()) == variable) revision = this.nextRevisionLocked();
         }
         if (revision >= 0L) this.persistence.markDirty(revision, "updating variable '" + variable.getName() + "'");
+    }
+
+    @NotNull
+    VariableType getType(@NotNull Variable variable) {
+        synchronized (this.stateLock) {
+            this.awaitReplacementLocked();
+            this.requireOwner(variable);
+            return variable.getTypeLocked();
+        }
+    }
+
+    @NotNull
+    List<String> getListEntries(@NotNull Variable variable) {
+        synchronized (this.stateLock) {
+            this.awaitReplacementLocked();
+            this.requireOwner(variable);
+            return variable.getListEntriesLocked();
+        }
     }
 
     boolean isResetOnLaunch(@NotNull Variable variable) {
@@ -586,7 +765,7 @@ final class VariableStore {
         synchronized (this.stateLock) {
             revision = this.stateRevision;
             snapshots = new ArrayList<>(this.variables.size());
-            for (Variable variable : this.variables.values()) snapshots.add(new StoredVariableSnapshot(variable.getName(), variable.getRawValueLocked(), variable.isResetOnLaunchLocked()));
+            for (Variable variable : this.variables.values()) snapshots.add(new StoredVariableSnapshot(variable.getName(), variable.getRawValueLocked(), variable.isResetOnLaunchLocked(), variable.getTypeLocked()));
         }
         return new VariablePersistenceCoordinator.PersistenceSnapshot(revision, this.snapshotSerializer.serialize(List.copyOf(snapshots)));
     }
@@ -611,6 +790,8 @@ final class VariableStore {
         for (StoredVariableSnapshot snapshot : snapshots) {
             PropertyContainer container = new PropertyContainer("variable");
             container.putProperty("name", snapshot.name());
+            // Text variables write no type, so their containers stay exactly like the ones of older versions
+            if (snapshot.type() != VariableType.TEXT) container.putProperty("type", snapshot.type().getSerializedName());
             container.putProperty("value", snapshot.rawValue());
             container.putProperty("reset_on_launch", Boolean.toString(snapshot.resetOnLaunch()));
             set.putContainer(container);
@@ -623,6 +804,24 @@ final class VariableStore {
 
         void onVariableUpdated(@NotNull String name, @NotNull String oldValue, @NotNull String newValue);
 
+        /**
+         * Lets edits skip building values only the listener needs, like the old and new text forms of a list. Updates that already have
+         * their values at hand still get dispatched without asking.
+         */
+        default boolean isListening() {
+            return true;
+        }
+
+    }
+
+    /**
+     * An edit of the entries of a list variable, see {@link VariableStore#editList(String, ListEdit)}.
+     */
+    @FunctionalInterface
+    interface ListEdit {
+
+        @NotNull ListEditResult apply(@NotNull List<String> entries);
+
     }
 
     @FunctionalInterface
@@ -632,7 +831,7 @@ final class VariableStore {
 
     }
 
-    record StoredVariableSnapshot(@NotNull String name, @NotNull String rawValue, boolean resetOnLaunch) {
+    record StoredVariableSnapshot(@NotNull String name, @NotNull String rawValue, boolean resetOnLaunch, @NotNull VariableType type) {
     }
 
     private record ReplacementAdmission(long revision, boolean initialized) {
