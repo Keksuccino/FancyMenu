@@ -344,6 +344,7 @@ public class SelectFileAction extends Action {
             this.callback = callback;
             SelectFileConfig parsed = SelectFileConfig.parse(value);
             this.config = Objects.requireNonNullElseGet(parsed, SelectFileConfig::new);
+            this.setInitialTextInputFocusEnabled(true);
         }
 
         @Override

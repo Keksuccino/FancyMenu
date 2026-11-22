@@ -261,8 +261,11 @@ public class NumberPickerWindowBody<N extends Number> extends PiPWindowBody impl
         this.onCancel.accept(this.presetValue);
     }
 
+    /**
+     * PiP windows never render the background of their body, so the input gets its initial focus here.
+     */
     @Override
-    public void extractBackground(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
+    public void renderBody(@NotNull GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partial) {
         this.performInitialWidgetFocusActionInRender();
     }
 

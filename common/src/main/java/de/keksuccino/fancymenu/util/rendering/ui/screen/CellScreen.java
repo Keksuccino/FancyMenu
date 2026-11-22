@@ -77,6 +77,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
     protected boolean descriptionAreaEnabled = false;
     @Nullable
     protected ScrollArea descriptionScrollArea;
+    protected boolean initialTextInputFocusEnabled = false;
     protected boolean shouldAutoScale = false;
     protected boolean initialized = false;
 
@@ -125,6 +126,16 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
      */
     protected void setDescriptionAreaEnabled(boolean enabled) {
         this.descriptionAreaEnabled = enabled;
+    }
+
+    /**
+     * Enable or disable focusing the first text input cell when the screen opens, with its text selected, so it's possible to type right away,
+     * without clicking the input first. Meant for screens that are all about their inputs, like the value editors of actions and requirements,
+     * not for settings screens whose first cell just happens to be a text input. Screens with a search bar focus their search bar instead.<br>
+     * Should be called before {@link #init()} for proper initialization.
+     */
+    protected void setInitialTextInputFocusEnabled(boolean enabled) {
+        this.initialTextInputFocusEnabled = enabled;
     }
 
     /**
@@ -268,6 +279,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
     @Override
     protected void init() {
 
+        boolean opening = !this.initialized;
         this.initialized = true;
 
         this.rightSideWidgets.clear();
@@ -350,8 +362,74 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
 
         this.fitDescriptionAreaAboveRightSideWidgets(topRightSideWidget);
 
+        // Only when the screen opens, because the focus of a rebuilt screen stays where the user was, see rebuildWidgets()
+        if (opening && this.initialTextInputFocusEnabled && !this.searchBarEnabled) {
+            this.focusFirstTextInputCell();
+        }
+
         this.autoScaleScreen(topRightSideWidget);
 
+    }
+
+    /**
+     * Rebuilding the screen, like when it gets resized, replaces all of its cells. This moves the focus of the text input the user is typing in,
+     * together with its cursor, to the text input that replaces it, so the rebuild doesn't take the focus away from the user.<br>
+     * Screens with a search bar move the focus to their search bar whenever they get built, so they don't need this.
+     */
+    @Override
+    protected void rebuildWidgets() {
+        TextInputFocus focus = this.searchBarEnabled ? null : this.getTextInputFocus();
+        super.rebuildWidgets();
+        if (focus != null) {
+            this.restoreTextInputFocus(focus);
+        }
+    }
+
+    @Nullable
+    private TextInputFocus getTextInputFocus() {
+        if (!(this.getFocused() instanceof TextInputCell cell) || (cell.getFocused() != cell.editBox) || !cell.editBox.isFocused()) return null;
+        int cellIndex = this.allCells.indexOf(cell);
+        if (cellIndex < 0) return null;
+        return new TextInputFocus(cellIndex, cell.isSelected(), cell.editBox.getCursorPosition(), cell.editBox.getHighlightPosition());
+    }
+
+    private void restoreTextInputFocus(@NotNull TextInputFocus focus) {
+        // The cells of a rebuilt screen are the same as before, unless something changed them, so the index finds the cell that replaces the old one
+        if ((focus.cellIndex() >= this.allCells.size()) || !(this.allCells.get(focus.cellIndex()) instanceof TextInputCell cell)) return;
+        if (!this.focusTextInputCell(cell, focus.selected())) return;
+        // The text input of a new cell only gets its width when it renders, but placing the cursor scrolls its text to fit that width
+        cell.setWidgetSizes();
+        cell.editBox.setCursorPosition(focus.cursorPosition());
+        cell.editBox.setHighlightPos(focus.highlightPosition());
+    }
+
+    private void focusFirstTextInputCell() {
+        for (ScrollAreaEntry entry : this.scrollArea.getEntries()) {
+            if ((entry instanceof CellScrollEntry cellEntry) && (cellEntry.cell instanceof TextInputCell cell) && this.focusTextInputCell(cell, false)) {
+                // Its text gets selected, so typing replaces it, like a preset. Selecting from the end to the start keeps the start of the text visible.
+                cell.editBox.setCursorPosition(cell.editBox.getValue().length());
+                cell.editBox.setHighlightPos(0);
+                return;
+            }
+        }
+    }
+
+    /**
+     * Focuses the text input of the cell, so typing goes into it.
+     *
+     * @param select If the cell should get selected too, like when clicking it. Enter goes to the text input of a selected cell instead of
+     *               pressing Done, so the text input that takes the focus when the screen opens doesn't get selected.
+     * @return If the text input took the focus. Text inputs that are hidden, inactive or not navigatable don't.
+     */
+    protected boolean focusTextInputCell(@NotNull TextInputCell cell, boolean select) {
+        if (!this.isNavigatableTarget(cell.editBox) || (this.getCellEntry(cell) == null)) return false;
+        if (select && cell.isSelectable()) {
+            this.selectCell(cell, true);
+        } else {
+            this.focusTarget(cell, cell.editBox);
+            this.ensureCellVisible(cell);
+        }
+        return true;
     }
 
     /**
@@ -774,7 +852,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
     protected boolean navigateVerticalCells(boolean moveDown) {
         List<RenderCell> cells = this.getSelectableVisibleCells();
         boolean searchBarNavigatable = this.isSearchBarNavigatable();
-        RenderCell selected = this.getSelectedCell();
+        RenderCell selected = this.getVerticalNavigationOriginCell();
         int selectedIndex = cells.indexOf(selected);
         boolean searchBarFocused = searchBarNavigatable && this.searchBar.isFocused();
 
@@ -824,6 +902,17 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
 
         this.selectCell(moveDown ? cells.get(0) : cells.get(cells.size() - 1), true);
         return true;
+    }
+
+    /**
+     * The cell the up and down keys move away from: the selected cell, or else the cell that has the focus without being selected,
+     * like the one of the text input that takes the focus when the screen opens.
+     */
+    @Nullable
+    protected RenderCell getVerticalNavigationOriginCell() {
+        RenderCell selected = this.getSelectedCell();
+        if (selected != null) return selected;
+        return (this.getFocused() instanceof RenderCell focused) ? focused : null;
     }
 
     protected boolean isSearchBarNavigatable() {
@@ -1178,6 +1267,13 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
 
     public FocusNavigationEvent.TabNavigation createTabEvent() {
         return null;
+    }
+
+    /**
+     * Where the user is typing in a text input cell: the index of the cell in {@link #allCells}, if the cell is selected, and the cursor and
+     * highlight positions of its text input.
+     */
+    private record TextInputFocus(int cellIndex, boolean selected, int cursorPosition, int highlightPosition) {
     }
 
     protected class CellScrollEntry extends ScrollAreaEntry {

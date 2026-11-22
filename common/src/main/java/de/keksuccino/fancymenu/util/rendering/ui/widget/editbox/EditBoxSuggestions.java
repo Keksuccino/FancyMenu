@@ -79,6 +79,10 @@ public class EditBoxSuggestions extends CommandSuggestions {
         variableNameSuggestions.setAllowRenderUsage(false);
         variableNameSuggestions.setCustomSuggestions(suggestions);
         variableNameSuggestions.updateCommandInfo();
+        // The list of suggestions gets placed at the edit box when it gets built. Windows create their suggestions while they build their widgets,
+        // when edit boxes in cells don't have their position yet, so a list built now would show up in the wrong spot. Edit boxes without focus
+        // don't show suggestions anyway, and an edit box that gets the focus later shows them as soon as the user types or presses Tab.
+        if (!editBox.isFocused()) variableNameSuggestions.setSuggestions(null);
         return variableNameSuggestions;
     }
 
