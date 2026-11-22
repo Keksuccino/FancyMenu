@@ -31,15 +31,25 @@ public class ActiveEffectPlaceholder extends Placeholder {
     public String getReplacementFor(DeserializedPlaceholderString dps) {
         LocalPlayer player = Minecraft.getInstance().player;
         ClientLevel level = Minecraft.getInstance().level;
-        int index = SerializationHelper.INSTANCE.deserializeNumber(Integer.class, 0, dps.values.get("effect_index"));
         if ((player != null) && (level != null)) {
-            List<MobEffectInstance> effects = Ordering.natural().reverse().sortedCopy(player.getActiveEffects());
-            if (effects.size() >= (index + 1)) {
-                ResourceLocation key = Services.PLATFORM.getEffectKey(effects.get(index).getEffect().value());
+            int index = SerializationHelper.INSTANCE.deserializeNumber(Integer.class, 0, dps.values.get("effect_index"));
+            MobEffectInstance effect = getEffectAt(player.getActiveEffects(), index);
+            if (effect != null) {
+                ResourceLocation key = Services.PLATFORM.getEffectKey(effect.getEffect().value());
                 if (key != null) return key.toString();
             }
         }
         return "";
+    }
+
+    /**
+     * @return The effect at the given index of the active effects sorted in reverse natural order, or NULL if there is no effect at this index.
+     */
+    @Nullable
+    static MobEffectInstance getEffectAt(@NotNull Collection<MobEffectInstance> activeEffects, int index) {
+        if ((index < 0) || (index >= activeEffects.size())) return null;
+        List<MobEffectInstance> effects = Ordering.natural().reverse().sortedCopy(activeEffects);
+        return effects.get(index);
     }
 
     @Override
