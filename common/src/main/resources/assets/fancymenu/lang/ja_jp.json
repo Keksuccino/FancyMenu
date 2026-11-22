@@ -36,8 +36,6 @@
   "fancymenu.actions.blocks.folder.collapsed": "(折りたたみ済み)",
   "fancymenu.actions.blocks.folder.display": "フォルダー: %s",
   "fancymenu.actions.blocks.if": "IF (%s)",
-  "fancymenu.actions.blocks.overview.collapsed.one": "(折りたたみ済み、アクション 1 個)",
-  "fancymenu.actions.blocks.overview.collapsed.other": "(折りたたみ済み、アクション %s 個)",
   "fancymenu.actions.blocks.unknown": "不明な項目",
   "fancymenu.actions.blocks.while": "WHILE (%s)",
   "fancymenu.actions.blocks.for_each": "FOR EACH ENTRY IN (%s)",
