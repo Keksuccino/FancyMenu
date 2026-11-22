@@ -20,11 +20,13 @@ import java.util.function.LongSupplier;
  * that only hold the pixels that changed since the frame before.<br>
  * Frames get decoded again for every play instead of being cached, reading their compressed data from the source of the image, so an animation only needs one canvas
  * and a few small updates in memory, no matter how many frames it has. Only the first frame gets stored, so restarting the animation can show it instantly and every later play starts without decoding it.<br>
- * The stream owns the image and with it its source, which gets closed when the stream gets closed or fails.<br><br>
+ * The stream owns the image and with it its source, which gets closed when the stream gets closed or fails. Closing the stream closes the source right away,
+ * also while a task decodes a frame from it, so the file of the image is never open anymore once the stream got closed.<br><br>
  *
  * <b>Threading:</b> {@link #poll()}, {@link #recycle(AnimatedFrameUpdate)}, {@link #restart()} and {@link #close()} belong to one consumer thread (the render thread),
- * because the consumer reads the pixel buffers of the updates it got without holding the lock. Decoding runs on a shared executor, with at most one task per stream
- * at a time, so the decoder and the compositor never get used concurrently. Every task decodes a single frame and then gets queued again, so streams sharing the executor take turns.<br><br>
+ * because the consumer reads the pixel buffers of the updates it got without holding the lock. {@link #closeSource()} works on any thread.
+ * Decoding runs on a shared executor, with at most one task per stream at a time, so the decoder and the compositor never get used concurrently.
+ * Every task decodes a single frame and then gets queued again, so streams sharing the executor take turns.<br><br>
  *
  * <b>Memory:</b> Pixel buffers are native memory that gets freed explicitly. Queued and pooled buffers belong to the stream, the buffer of a polled update belongs
  * to the consumer until it recycles the update, and the buffer being filled belongs to the decoding task. When the consumer stops polling for a while,
@@ -77,6 +79,8 @@ final class AnimatedFrameStream implements AutoCloseable {
     private boolean productionFinished;
     private boolean failed;
     private boolean closed;
+    /** Set once the source got closed before the stream failed, so failing reads of a task that runs right now are no errors. Only gets written while holding the lock. **/
+    private volatile boolean sourceClosed;
     /** The whole canvas right after the first frame. Shared by all updates of the first frame, never pooled. **/
     @Nullable
     private ByteBuffer firstFrame;
@@ -231,23 +235,39 @@ final class AnimatedFrameStream implements AutoCloseable {
         }
     }
 
+    /**
+     * Closes the source of the image right away, so its file is not open anymore once this returns, also while a task decodes a frame from it: the read of the task
+     * finishes or fails first, and the task ignores the failure. The stream can't decode frames afterwards, so this is only for streams that are not needed anymore,
+     * like the stream of a texture that gets closed on another thread than the render thread, which closes the stream itself later. Closing the source more than once does nothing.
+     */
+    void closeSource() {
+        synchronized (this.lock) {
+            this.sourceClosed = true;
+        }
+        this.image.close();
+    }
+
     @Override
     public void close() {
         ByteBuffer first;
+        boolean taskRunning;
         synchronized (this.lock) {
             if (this.closed) return;
             this.closed = true;
+            this.sourceClosed = true;
             this.generation++;
             this.dropReadyUpdatesLocked();
             this.freePooledBuffersLocked();
             // A running task may still read the first frame or use the decoder, so it frees them itself when it notices the stream got closed
-            if (this.taskScheduled) return;
-            first = this.firstFrame;
-            this.firstFrame = null;
+            taskRunning = this.taskScheduled;
+            first = taskRunning ? null : this.firstFrame;
+            if (!taskRunning) this.firstFrame = null;
         }
+        // The source gets closed in any case, so the file of the image is never open anymore once the stream got closed
+        this.image.close();
+        if (taskRunning) return;
         if (first != null) MemoryUtil.memFree(first);
         this.releaseDecodingState();
-        this.image.close();
     }
 
     private void runTask() {
@@ -280,13 +300,14 @@ final class AnimatedFrameStream implements AutoCloseable {
             if (!this.isProductionFinished()) update = this.produceNextUpdate(fullCanvas, first);
         } catch (AnimatedImageSourceChangedException ex) {
             fatal = true;
-            LOGGER.warn("[FANCYMENU] Stopped playing the {} image, because its file changed after it got loaded or can't get read anymore ({}): {}", this.image.getFormatName(), ex.getMessage(), this.sourceName);
+            // Reads fail once the source got closed, which is no error
+            if (!this.sourceClosed) LOGGER.warn("[FANCYMENU] Stopped playing the {} image, because its file changed after it got loaded or can't get read anymore ({}): {}", this.image.getFormatName(), ex.getMessage(), this.sourceName);
         } catch (IOException ex) {
             fatal = true;
-            LOGGER.error("[FANCYMENU] Failed to decode the first frame of the {} image: {}", this.image.getFormatName(), this.sourceName, ex);
+            if (!this.sourceClosed) LOGGER.error("[FANCYMENU] Failed to decode the first frame of the {} image: {}", this.image.getFormatName(), this.sourceName, ex);
         } catch (Throwable throwable) {
             fatal = true;
-            LOGGER.error("[FANCYMENU] Failed to decode the {} image: {}", this.image.getFormatName(), this.sourceName, throwable);
+            if (!this.sourceClosed) LOGGER.error("[FANCYMENU] Failed to decode the {} image: {}", this.image.getFormatName(), this.sourceName, throwable);
         }
         synchronized (this.lock) {
             if (fatal) {
