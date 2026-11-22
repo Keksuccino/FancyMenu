@@ -188,7 +188,9 @@ public abstract class Requirement {
 
         protected RequirementValueEditScreen(@NotNull Component title, @NotNull Consumer<String> callback) {
             super(title, callback);
+            this.setInitialTextInputFocusEnabled(true);
         }
+
     }
 
     /**

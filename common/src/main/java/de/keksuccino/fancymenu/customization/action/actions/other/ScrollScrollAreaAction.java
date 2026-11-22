@@ -247,6 +247,7 @@ public class ScrollScrollAreaAction extends Action {
             super(Component.translatable(LOCALIZATION_KEY + ".edit_value"));
             this.callback = callback;
             this.config = Objects.requireNonNullElse(Config.parse(value), new Config());
+            this.setInitialTextInputFocusEnabled(true);
         }
 
         @Override
