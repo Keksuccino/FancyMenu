@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util;
 
+import de.keksuccino.fancymenu.util.threading.FancyMenuExecutors;
 import de.keksuccino.fancymenu.util.window.OffscreenTestClient;
 import net.minecraft.Util;
 import org.apache.logging.log4j.LogManager;
@@ -14,8 +15,6 @@ import java.net.URL;
 import java.time.Duration;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 
 public class WebUtils {
 
@@ -31,8 +30,8 @@ public class WebUtils {
     private static final BoundedWebResourceClient.RequestLimits METADATA_LIMITS = new BoundedWebResourceClient.RequestLimits(METADATA_CONNECT_TIMEOUT, METADATA_READ_TIMEOUT, METADATA_OVERALL_TIMEOUT, Long.MAX_VALUE);
 
     private static volatile boolean isConnectionAvailable = false;
-    private static final InternetAvailabilityMonitor INTERNET_AVAILABILITY_MONITOR = new InternetAvailabilityMonitor(new HttpInternetAvailabilityProbe(INTERNET_AVAILABILITY_ENDPOINT, INTERNET_AVAILABILITY_TIMEOUT_MILLIS, INTERNET_AVAILABILITY_TIMEOUT_MILLIS, endpoint -> (HttpURLConnection) endpoint.toURL().openConnection()), () -> new FixedDelayScheduler.ExecutorFixedDelayScheduler(Executors.newSingleThreadScheduledExecutor(daemonThreadFactory("FancyMenu-WebUtils-ConnectivityCheck"))), INTERNET_AVAILABILITY_REFRESH_DELAY, available -> isConnectionAvailable = available);
-    private static final BoundedWebResourceClient RESOURCE_CLIENT = new BoundedWebResourceClient(resourceUri -> (HttpURLConnection) resourceUri.toURL().openConnection(), new DeadlineScheduler.ExecutorDeadlineScheduler(Executors.newSingleThreadScheduledExecutor(daemonThreadFactory("FancyMenu-WebUtils-ResourceDeadline"))), System::nanoTime);
+    private static final InternetAvailabilityMonitor INTERNET_AVAILABILITY_MONITOR = new InternetAvailabilityMonitor(new HttpInternetAvailabilityProbe(INTERNET_AVAILABILITY_ENDPOINT, INTERNET_AVAILABILITY_TIMEOUT_MILLIS, INTERNET_AVAILABILITY_TIMEOUT_MILLIS, endpoint -> (HttpURLConnection) endpoint.toURL().openConnection()), () -> new FixedDelayScheduler.ExecutorFixedDelayScheduler(FancyMenuExecutors.newSingleThreadScheduledExecutor("FancyMenu-WebUtils-ConnectivityCheck")), INTERNET_AVAILABILITY_REFRESH_DELAY, available -> isConnectionAvailable = available);
+    private static final BoundedWebResourceClient RESOURCE_CLIENT = new BoundedWebResourceClient(resourceUri -> (HttpURLConnection) resourceUri.toURL().openConnection(), new DeadlineScheduler.ExecutorDeadlineScheduler(FancyMenuExecutors.newSingleThreadScheduledExecutor("FancyMenu-WebUtils-ResourceDeadline")), System::nanoTime);
 
     public static void init() {
         INTERNET_AVAILABILITY_MONITOR.init();
@@ -141,15 +140,6 @@ public class WebUtils {
         } catch (Exception ignored) {
             return null;
         }
-    }
-
-    @NotNull
-    private static ThreadFactory daemonThreadFactory(@NotNull String name) {
-        return runnable -> {
-            Thread thread = new Thread(runnable, name);
-            thread.setDaemon(true);
-            return thread;
-        };
     }
 
     /**

@@ -1,12 +1,12 @@
 package de.keksuccino.fancymenu.customization.panorama;
 
+import de.keksuccino.fancymenu.util.threading.FancyMenuExecutors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -215,15 +215,7 @@ final class PanoramaRotationTicker implements AutoCloseable {
 
     private static final class SharedSchedulerHolder {
 
-        private static final Scheduler INSTANCE = new ExecutorScheduler(createExecutor());
-
-        private static @NotNull ScheduledExecutorService createExecutor() {
-            return Executors.newSingleThreadScheduledExecutor(runnable -> {
-                Thread thread = new Thread(runnable, "FancyMenu-Panorama-Ticker");
-                thread.setDaemon(true);
-                return thread;
-            });
-        }
+        private static final Scheduler INSTANCE = new ExecutorScheduler(FancyMenuExecutors.newSingleThreadScheduledExecutor("FancyMenu-Panorama-Ticker"));
 
     }
 

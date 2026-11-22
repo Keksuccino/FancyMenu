@@ -25,6 +25,7 @@ import de.keksuccino.fancymenu.util.rendering.video.rinku.RinkuVideoPlayer;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.Resource;
 import de.keksuccino.fancymenu.util.file.type.FileMediaType;
+import de.keksuccino.fancymenu.util.threading.FancyMenuExecutors;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -39,11 +40,13 @@ import java.awt.*;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class RinkuVideoMenuBackground extends MenuBackground<RinkuVideoMenuBackground> implements IVideoMenuBackground {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final ScheduledExecutorService EXECUTOR = FancyMenuExecutors.newSingleThreadScheduledExecutor("FancyMenu-RinkuVideoMenuBackground");
     private static final DrawableColor MISSING_RINKU_COLOR = DrawableColor.of(Color.RED);
 
     @SuppressWarnings("unchecked")
@@ -85,7 +88,7 @@ public class RinkuVideoMenuBackground extends MenuBackground<RinkuVideoMenuBackg
 
     public RinkuVideoMenuBackground(MenuBackgroundBuilder<RinkuVideoMenuBackground> builder) {
         super(builder);
-        this.taskController = new VideoBackgroundTaskController(this::runGarbageCheck, 100L, this::updateCachedPlaybackState, 900L);
+        this.taskController = new VideoBackgroundTaskController(EXECUTOR, this::runGarbageCheck, 100L, this::updateCachedPlaybackState, 900L);
         if (RinkuUtil.isRinkuLoaded() && RinkuUtil.rinku_initialized) this.videoManager = RinkuVideoManager.getInstance();
     }
 

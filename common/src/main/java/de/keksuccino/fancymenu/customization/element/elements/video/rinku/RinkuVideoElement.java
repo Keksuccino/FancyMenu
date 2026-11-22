@@ -14,7 +14,7 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.video.rinku.RinkuVideoManager;
 import de.keksuccino.fancymenu.util.rendering.video.rinku.RinkuVideoPlayer;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
-import de.keksuccino.fancymenu.util.rinku.RinkuExecutors;
+import de.keksuccino.fancymenu.util.threading.FancyMenuExecutors;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class RinkuVideoElement extends AbstractElement implements IVideoElement {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ScheduledExecutorService EXECUTOR = RinkuExecutors.newSingleThreadScheduledExecutor("FancyMenu-RinkuVideoElement");
+    private static final ScheduledExecutorService EXECUTOR = FancyMenuExecutors.newSingleThreadScheduledExecutor("FancyMenu-RinkuVideoElement");
     private static final DrawableColor MISSING_RINKU_COLOR = DrawableColor.of(Color.RED);
 
     @Nullable

@@ -6,7 +6,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -18,11 +17,6 @@ import java.util.concurrent.TimeUnit;
 public final class VideoBackgroundTaskController implements AutoCloseable {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ScheduledExecutorService SHARED_EXECUTOR = Executors.newSingleThreadScheduledExecutor(runnable -> {
-        Thread thread = new Thread(runnable, "FancyMenu-VideoBackgroundTasks");
-        thread.setDaemon(true);
-        return thread;
-    });
 
     private final Object lifecycleLock = new Object();
     private final FixedRateScheduler scheduler;
@@ -38,15 +32,6 @@ public final class VideoBackgroundTaskController implements AutoCloseable {
 
     public VideoBackgroundTaskController(@NotNull ScheduledExecutorService executor, @NotNull Runnable watchdogTask, long watchdogPeriodMillis, @NotNull Runnable asyncTickerTask, long asyncTickerPeriodMillis) {
         this(new ExecutorFixedRateScheduler(executor), watchdogTask, watchdogPeriodMillis, asyncTickerTask, asyncTickerPeriodMillis);
-    }
-
-    public VideoBackgroundTaskController(@NotNull Runnable watchdogTask, long watchdogPeriodMillis, @NotNull Runnable asyncTickerTask, long asyncTickerPeriodMillis) {
-        this(SHARED_EXECUTOR, watchdogTask, watchdogPeriodMillis, asyncTickerTask, asyncTickerPeriodMillis);
-    }
-
-    /** Stops the shared daemon scheduler after every layout-owned controller has released its recurring tasks. */
-    public static void shutdownSharedExecutor() {
-        SHARED_EXECUTOR.shutdownNow();
     }
 
     VideoBackgroundTaskController(@NotNull FixedRateScheduler scheduler, @NotNull Runnable watchdogTask, long watchdogPeriodMillis, @NotNull Runnable asyncTickerTask, long asyncTickerPeriodMillis) {

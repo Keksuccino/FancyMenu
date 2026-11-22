@@ -121,7 +121,7 @@ public class PlainText implements IText {
         }
 
         String url = textFileUrl;
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             try {
                 InputStream in = WebUtils.openResourceStream(url, WebUtils.WebResourceType.TEXT);
                 if (in != null) {
@@ -134,7 +134,7 @@ public class PlainText implements IText {
                 text.loadingFailed = true;
                 LOGGER.error("[FANCYMENU] Failed to read text content from URL: " + url, ex);
             }
-        }).start();
+        }, "PlainText-WebLoader");
 
         return text;
 
