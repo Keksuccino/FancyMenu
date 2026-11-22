@@ -184,6 +184,7 @@ public class ShowToastAction extends Action {
             super(Component.translatable("fancymenu.actions.show_toast.edit.title"));
             this.config = Objects.requireNonNull(config);
             this.callback = Objects.requireNonNull(callback);
+            this.setInitialTextInputFocusEnabled(true);
         }
 
         @Override

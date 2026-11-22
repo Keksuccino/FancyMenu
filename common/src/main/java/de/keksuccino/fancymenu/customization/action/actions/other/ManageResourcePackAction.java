@@ -267,6 +267,7 @@ public class ManageResourcePackAction extends Action {
             if (this.config == null) {
                 this.config = new ResourcePackConfig();
             }
+            this.setInitialTextInputFocusEnabled(true);
         }
 
         @Override
