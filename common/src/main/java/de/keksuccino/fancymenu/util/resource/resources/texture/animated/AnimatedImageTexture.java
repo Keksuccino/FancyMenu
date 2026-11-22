@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
 import de.keksuccino.fancymenu.util.resource.resources.texture.TextureManagerReleaseDispatcher;
+import de.keksuccino.fancymenu.util.resource.resources.texture.TextureManagerReleaser;
 import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
@@ -478,7 +479,7 @@ public abstract class AnimatedImageTexture implements ITexture, PlayableResource
         this.gpuTexture = null;
         // Releasing the texture manager entry also frees the GPU texture
         if (location != null) {
-            Minecraft.getInstance().getTextureManager().release(location);
+            TextureManagerReleaser.release(location);
         } else if (texture != null) {
             texture.close();
         }

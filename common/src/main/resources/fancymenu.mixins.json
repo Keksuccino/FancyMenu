@@ -5,6 +5,7 @@
   "client": [
     "client.AccessorMixinI18n",
     "client.AccessorMixinMouseHandler",
+    "client.AccessorMixinTextureManager",
     "client.IMixinAbstractContainerScreen",
     "client.IMixinAbstractPackResources",
     "client.IMixinAbstractSelectionList",

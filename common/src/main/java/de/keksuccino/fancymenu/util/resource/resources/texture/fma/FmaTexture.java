@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.resources.texture.AnimatedTextureResetFrame;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.resource.resources.texture.TextureManagerReleaser;
 import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
@@ -769,32 +770,24 @@ public class FmaTexture implements ITexture, PlayableResource {
         return (texturePixels != null) && (texturePixels.format() == frameImage.format()) && (texturePixels.getWidth() == frameImage.getWidth()) && (texturePixels.getHeight() == frameImage.getHeight());
     }
 
-    /**
-     * Reuses the existing texture location when replacing an incompatible 1.19.2 DynamicTexture. Registering by the
-     * generated string name again would create a second location and leave the old manager entry behind.
-     */
     protected void replaceStreamingTexture(@NotNull DecodedFrame frame) {
         NativeImage frameImage = Objects.requireNonNull(frame.nativeImage, "FMA frame NativeImage was NULL");
         DynamicTexture previousTexture = this.streamingTexture;
         ResourceLocation resourceLocation = this.streamingResourceLocation;
         boolean hadResourceLocation = resourceLocation != null;
-        DynamicTexture replacementTexture = new DynamicTexture(frameImage);
-        frame.nativeImage = null;
-        try {
-            if (resourceLocation == null) {
-                resourceLocation = Minecraft.getInstance().getTextureManager().register("fancymenu_fma_stream_" + this.uniqueId, replacementTexture);
-                this.streamingResourceLocation = resourceLocation;
-            } else {
-                Minecraft.getInstance().getTextureManager().register(resourceLocation, replacementTexture);
-            }
-            this.streamingTexture = replacementTexture;
-            if ((previousTexture != null) && !hadResourceLocation) {
-                previousTexture.close();
-            }
-        } catch (RuntimeException | Error ex) {
-            replacementTexture.close();
-            throw ex;
+        if (resourceLocation == null) {
+            resourceLocation = new ResourceLocation("fancymenu", "dynamic/fma_stream_" + this.uniqueId);
+            this.streamingResourceLocation = resourceLocation;
+        } else {
+            TextureManagerReleaser.release(resourceLocation);
         }
+        if ((previousTexture != null) && !hadResourceLocation) {
+            previousTexture.close();
+        }
+
+        this.streamingTexture = new DynamicTexture(frameImage);
+        frame.nativeImage = null;
+        Minecraft.getInstance().getTextureManager().register(resourceLocation, this.streamingTexture);
     }
 
     @Nullable
@@ -963,16 +956,8 @@ public class FmaTexture implements ITexture, PlayableResource {
         }
         this.clearPendingUploadFrame();
 
+        this.releaseStreamingTextureNow();
         this.resetFrame.close();
-        if (this.streamingTexture != null) {
-            try {
-                this.streamingTexture.close();
-            } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to close streaming DynamicTexture of FMA", ex);
-            }
-            this.streamingTexture = null;
-        }
-        this.streamingResourceLocation = null;
 
         // Released before the streaming decoder, because a loading thread that finishes right now first makes its decoder the streaming decoder and then stops tracking it
         FmaDecoder activeLoadingDecoder = this.loadingDecoder;
@@ -1009,6 +994,29 @@ public class FmaTexture implements ITexture, PlayableResource {
     protected void markLoadingFailed() {
         this.loadingFailed.set(true);
         this.resetFrame.clear();
+    }
+
+    protected void releaseStreamingTextureNow() {
+        DynamicTexture activeTexture = this.streamingTexture;
+        ResourceLocation activeLocation = this.streamingResourceLocation;
+        this.streamingTexture = null;
+        this.streamingResourceLocation = null;
+        this.releaseStreamingTexture(activeLocation, activeTexture);
+    }
+
+    /**
+     * A registered texture belongs to the texture manager, so releasing its entry closes it. Only a texture that never got registered gets closed here.
+     */
+    protected void releaseStreamingTexture(@Nullable ResourceLocation resourceLocation, @Nullable DynamicTexture texture) {
+        if (resourceLocation != null) {
+            TextureManagerReleaser.release(resourceLocation);
+        } else if (texture != null) {
+            try {
+                texture.close();
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to close streaming DynamicTexture of FMA", ex);
+            }
+        }
     }
 
     /**

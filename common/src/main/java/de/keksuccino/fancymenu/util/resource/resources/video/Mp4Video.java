@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.lifecycle.ClientShutdownHandler;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.resource.resources.texture.TextureManagerReleaser;
 import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.watermedia.PlaybackLoopTracker;
@@ -693,7 +694,7 @@ public class Mp4Video implements IVideo {
             }
         }
         try {
-            Minecraft.getInstance().getTextureManager().release(this.frameLocation);
+            TextureManagerReleaser.release(this.frameLocation);
         } catch (Exception ignored) {}
         this.frameTexture.setHandle(0L);
         File temp = this.generatedTempFile;

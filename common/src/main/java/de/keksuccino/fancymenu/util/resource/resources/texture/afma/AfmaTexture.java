@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.resources.texture.AnimatedTextureResetFrame;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.resource.resources.texture.TextureManagerReleaser;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
@@ -715,14 +716,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
             return currentTexture;
         }
 
-        if (currentTexture != null) {
-            try {
-                currentTexture.close();
-            } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to close old AFMA DynamicTexture", ex);
-            }
-        }
-        // Closing the old texture released its GL texture already, see releaseStreamingTexture(DynamicTexture)
+        this.releaseStreamingTexture(this.streamingResourceLocation, currentTexture);
         this.streamingResourceLocation = null;
 
         this.streamingTexture = new DynamicTexture(new NativeImage(this.width, this.height, true));
@@ -1389,30 +1383,32 @@ public class AfmaTexture implements ITexture, PlayableResource {
 
     protected void scheduleStreamingTextureRelease() {
         DynamicTexture activeTexture = this.streamingTexture;
+        ResourceLocation activeLocation = this.streamingResourceLocation;
         this.streamingTexture = null;
         this.streamingResourceLocation = null;
-        if (activeTexture == null) {
+        if ((activeTexture == null) && (activeLocation == null)) {
             return;
         }
 
-        MainThreadTaskExecutor.executeInMainThread(() -> this.releaseStreamingTexture(activeTexture),
+        MainThreadTaskExecutor.executeInMainThread(() -> this.releaseStreamingTexture(activeLocation, activeTexture),
                 MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
     }
 
     protected void releaseStreamingTextureNow() {
         DynamicTexture activeTexture = this.streamingTexture;
+        ResourceLocation activeLocation = this.streamingResourceLocation;
         this.streamingTexture = null;
         this.streamingResourceLocation = null;
-        this.releaseStreamingTexture(activeTexture);
+        this.releaseStreamingTexture(activeLocation, activeTexture);
     }
 
     /**
-     * Closes the texture, which frees its pixels and its GL texture, also off the render thread.<br>
-     * 1.19.2's TextureManager#release doesn't get used, because it only deletes the GL texture of the entry, which closing does already, and it fails off the render thread.
-     * 1.19.2's TextureManager can't remove entries, so the closed texture stays registered under its location, without native resources.
+     * A registered texture belongs to the texture manager, so releasing its entry closes it. Only a texture that never got registered gets closed here.
      */
-    protected void releaseStreamingTexture(@Nullable DynamicTexture texture) {
-        if (texture != null) {
+    protected void releaseStreamingTexture(@Nullable ResourceLocation resourceLocation, @Nullable DynamicTexture texture) {
+        if (resourceLocation != null) {
+            TextureManagerReleaser.release(resourceLocation);
+        } else if (texture != null) {
             try {
                 texture.close();
             } catch (Exception ex) {

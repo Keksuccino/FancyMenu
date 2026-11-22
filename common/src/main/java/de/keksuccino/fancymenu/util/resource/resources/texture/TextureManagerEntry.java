@@ -52,7 +52,7 @@ final class TextureManagerEntry<I extends AutoCloseable, T extends AutoCloseable
 
     @NotNull
     static TextureManagerEntry<NativeImage, DynamicTexture> dynamicTexture() {
-        return new TextureManagerEntry<>((identifier, image) -> new DynamicTexture(image), (identifier, texture) -> Minecraft.getInstance().getTextureManager().register(identifier, texture), identifier -> Minecraft.getInstance().getTextureManager().release(identifier), DynamicTexture::getPixels, TextureManagerReleaseDispatcher::dispatch);
+        return new TextureManagerEntry<>((identifier, image) -> new DynamicTexture(image), (identifier, texture) -> Minecraft.getInstance().getTextureManager().register(identifier, texture), identifier -> TextureManagerReleaser.release(identifier), DynamicTexture::getPixels, TextureManagerReleaseDispatcher::dispatch);
     }
 
     boolean adopt(@NotNull I image) {
