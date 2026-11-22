@@ -1040,14 +1040,14 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
 
         UITheme theme = UIBase.getUITheme();
 
-        // "Script Body" label
-        int scrollAreaTop = 50 + 15;
+        // "Script Body" label, which shares the top row with the Done and Cancel buttons
+        int scrollAreaTop = CONTENT_MARGIN + this.doneButton.getHeight() + ACTION_BUTTON_GAP;
         float labelY = scrollAreaTop - UIBase.getUITextHeightNormal() - UIBase.getAreaLabelVerticalPadding();
         UIBase.renderText(graphics, Component.translatable("fancymenu.actions.screens.manage_screen.actions"), 20, labelY, theme.ui_interface_generic_text_color.getColorInt());
 
         int scrollAreaWidth = Math.max(120, this.width - LEFT_MARGIN - RIGHT_MARGIN - MINIMAP_WIDTH - MINIMAP_GAP);
         this.scriptEntriesScrollArea.setWidth(scrollAreaWidth, true);
-        this.scriptEntriesScrollArea.setHeight(this.height - 85, true);
+        this.scriptEntriesScrollArea.setHeight(this.height - scrollAreaTop - CONTENT_MARGIN, true);
         this.scriptEntriesScrollArea.setX(LEFT_MARGIN, true);
         this.scriptEntriesScrollArea.setY(scrollAreaTop, true);
 
@@ -1069,7 +1069,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         this.rebuildMinimapSegments(mouseX, mouseY);
 
         int buttonsRightEdge = this.width - RIGHT_MARGIN;
-        int buttonY = Math.max(20, (int)(this.scriptEntriesScrollArea.getYWithBorder() - this.doneButton.getHeight() - ACTION_BUTTON_GAP));
+        int buttonY = Math.max(CONTENT_MARGIN, (int)(this.scriptEntriesScrollArea.getYWithBorder() - this.doneButton.getHeight() - ACTION_BUTTON_GAP));
         this.doneButton.setX(buttonsRightEdge - this.doneButton.getWidth());
         this.doneButton.setY(buttonY);
         this.cancelButton.setX(Math.max(LEFT_MARGIN, this.doneButton.getX() - ACTION_BUTTON_GAP - this.cancelButton.getWidth()));

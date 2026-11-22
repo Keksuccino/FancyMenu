@@ -76,11 +76,12 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
     @Override
     protected void init() {
         boolean blur = UIBase.shouldBlur();
+        int contentTop = getLabeledContentTop();
         this.variableListScrollArea.setSetupForBlurInterface(blur);
         this.updateRightClickContextMenu(false);
 
         String oldSearchValue = (this.searchBar != null) ? this.searchBar.getValue() : "";
-        this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, 20 + 1, 50 + 15 + 1, 200, 20 - 2, Component.empty());
+        this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, 20 + 1, contentTop + 1, 200, 20 - 2, Component.empty());
         this.searchBar.setHintFancyMenu(consumes -> Component.translatable("fancymenu.variables.manage_variables.screen.search_variable"));
         this.searchBar.setValue(oldSearchValue);
         this.searchBar.setResponder(s -> this.updateVariablesList());
@@ -90,9 +91,9 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
 
         // Set positions for scroll area
         this.variableListScrollArea.setWidth(this.width - 40, true);
-        this.variableListScrollArea.setHeight(this.height - 85 - 25, true);
+        this.variableListScrollArea.setHeight(this.height - contentTop - 25 - CONTENT_MARGIN, true);
         this.variableListScrollArea.setX(20, true);
-        this.variableListScrollArea.setY(50 + 15 + 25, true);
+        this.variableListScrollArea.setY(contentTop + 25, true);
         this.addRenderableWidget(this.variableListScrollArea);
 
         this.doneButton = new ExtendedButton(0, 0, 150, 20, Component.translatable("fancymenu.common_components.done"), (button) -> this.triggerDoneAction());
@@ -222,20 +223,21 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
 
         RenderSystem.enableBlend();
 
+        int contentTop = getLabeledContentTop();
         this.variableListScrollArea.setWidth(this.width - 40, true);
-        this.variableListScrollArea.setHeight(this.height - 85 - 25, true);
+        this.variableListScrollArea.setHeight(this.height - contentTop - 25 - CONTENT_MARGIN, true);
         this.variableListScrollArea.setX(20, true);
-        this.variableListScrollArea.setY(50 + 15 + 25, true);
+        this.variableListScrollArea.setY(contentTop + 25, true);
 
         int buttonsRightEdge = this.width - 20;
         if (this.doneButton != null) {
-            int buttonY = Math.max(20, (int)(this.variableListScrollArea.getYWithBorder() - this.doneButton.getHeight() - 5));
+            int buttonY = Math.max(CONTENT_MARGIN, (int)(this.variableListScrollArea.getYWithBorder() - this.doneButton.getHeight() - 5));
             this.doneButton.setX(buttonsRightEdge - this.doneButton.getWidth());
             this.doneButton.setY(buttonY);
         }
         if ((this.searchBar != null) && (this.doneButton != null)) {
             int searchBarX = 20 + 1;
-            int searchBarY = 50 + 15 + 1;
+            int searchBarY = contentTop + 1;
             int searchBarWidth = Math.max(120, this.doneButton.getX() - 5 - searchBarX);
             this.searchBar.setX(searchBarX);
             this.searchBar.setY(searchBarY);
@@ -245,7 +247,7 @@ public class ManageVariablesWindowBody extends PiPWindowBody implements InitialW
         int textColor = UIBase.shouldBlur()
                 ? UIBase.getUITheme().ui_blur_interface_generic_text_color.getColorInt()
                 : UIBase.getUITheme().ui_interface_generic_text_color.getColorInt();
-        int searchBarTop = (this.searchBar != null) ? this.searchBar.getY() : (50 + 15 + 1);
+        int searchBarTop = (this.searchBar != null) ? this.searchBar.getY() : (contentTop + 1);
         float labelY = searchBarTop - UIBase.getUITextHeightNormal() - UIBase.getAreaLabelVerticalPadding();
         UIBase.renderText(graphics, Component.translatable("fancymenu.overlay.menu_bar.variables.manage.variables"), 20, labelY, textColor);
 
