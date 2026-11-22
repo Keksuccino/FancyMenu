@@ -6,6 +6,7 @@ import com.google.gson.GsonBuilder;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.MathUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
+import de.keksuccino.fancymenu.util.file.ReleasableZipFile;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.logging.log4j.LogManager;
@@ -17,6 +18,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -36,19 +38,30 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Reads FMA archives, ZIP files of PNG frames, straight from their file while they play: the decoder keeps the archive file open and reads the frames whenever they get decoded.<br><br>
+ *
+ * <b>Threading:</b> The archive file can get released from any thread with {@link #closeArchiveFile()}, also while another thread reads from it, like when a texture gets closed on the render thread
+ * while its stream thread or its loading thread reads a frame. Opening and releasing the file take turns through {@link #archiveFileLock}, and every read takes turns with releasing it through the
+ * lock of its {@link ReleasableZipFile}, which holds it for at most {@link ReleasableZipFile#MAX_LOCKED_READ_BYTES} at a time, so releasing the file is fast. Reads after the release fail.<br>
+ * Once the archive got read, any thread can read frames. Never interrupt a thread while it reads, see {@link ReleasableZipFile}. All other state belongs to the thread that owns the decoder.
+ */
 public class FmaDecoder implements Closeable {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson GSON = new GsonBuilder().create();
-    private static final File TEMP_DIR = FileUtils.createDirectory(new File(FancyMenu.TEMP_DATA_DIR, "/decoded_fma_images"));
     private static final Pattern FRAME_ENTRY_PATTERN = Pattern.compile("^frames/(\\d+)\\.png$", Pattern.CASE_INSENSITIVE);
     private static final Pattern INTRO_FRAME_ENTRY_PATTERN = Pattern.compile("^intro_frames/(\\d+)\\.png$", Pattern.CASE_INSENSITIVE);
     private static final int EXPENSIVE_FRAME_SAMPLE_COUNT = 10;
     private static final int PNG_HEADER_PROBE_BYTES = 33;
     private static final byte[] PNG_SIGNATURE = new byte[] {(byte) 137, 80, 78, 71, 13, 10, 26, 10};
 
+    /** Guards the archive file fields and {@link #archiveFileReleased}, see the threading notes of the class. **/
+    protected final Object archiveFileLock = new Object();
     @Nullable
-    protected ZipFile zipFile = null;
+    protected ReleasableZipFile zipFile = null;
+    /** Set once the archive file got released. The decoder never opens or reads its file again afterwards. Only gets written while holding the file lock. **/
+    protected volatile boolean archiveFileReleased = false;
     @Nullable
     protected FmaMetadata metadata = null;
     @NotNull
@@ -68,7 +81,7 @@ public class FmaDecoder implements Closeable {
      */
     public void read(@NotNull InputStream in) throws IOException {
         Objects.requireNonNull(in);
-        if (this.zipFile != null) throw new IllegalStateException("The decoder is already reading a file!");
+        if (this.isOpen()) throw new IllegalStateException("The decoder is already reading a file!");
 
         try {
             File tempArchive = this.spoolToTempArchive(in);
@@ -90,7 +103,7 @@ public class FmaDecoder implements Closeable {
      */
     public void read(@NotNull File fmaFile) throws IOException {
         Objects.requireNonNull(fmaFile);
-        if (this.zipFile != null) throw new IllegalStateException("The decoder is already reading a file!");
+        if (this.isOpen()) throw new IllegalStateException("The decoder is already reading a file!");
 
         try {
             this.openArchive(fmaFile, false);
@@ -101,14 +114,30 @@ public class FmaDecoder implements Closeable {
         }
     }
 
+    protected boolean isOpen() {
+        synchronized (this.archiveFileLock) {
+            return this.zipFile != null;
+        }
+    }
+
+    /**
+     * Where streams get spooled to. Resolved for every spool instead of once, so the directory comes back if it got deleted, and loading this class doesn't initialize FancyMenu.
+     */
+    @NotNull
+    protected File resolveTempDirectory() {
+        return FileUtils.createDirectory(new File(FancyMenu.TEMP_DATA_DIR, "/decoded_fma_images"));
+    }
+
     @NotNull
     protected File spoolToTempArchive(@NotNull InputStream in) throws IOException {
-        File tempArchive = File.createTempFile("fma_stream_", ".fma", TEMP_DIR);
+        File tempArchive = File.createTempFile("fma_stream_", ".fma", this.resolveTempDirectory());
         try (BufferedInputStream bufferedIn = new BufferedInputStream(in);
              BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(tempArchive))) {
             byte[] buffer = new byte[8192];
             int read;
             while ((read = bufferedIn.read(buffer)) >= 0) {
+                // A decoder whose file got released would never open the archive, so it stops copying
+                if (this.archiveFileReleased) throw new IOException("The FMA archive file got released while the stream got spooled");
                 bufferedOut.write(buffer, 0, read);
             }
             bufferedOut.flush();
@@ -122,9 +151,62 @@ public class FmaDecoder implements Closeable {
     }
 
     protected void openArchive(@NotNull File archiveFile, boolean deleteOnClose) throws IOException {
-        this.zipFile = new ZipFile(archiveFile);
-        this.tempArchiveFile = deleteOnClose ? archiveFile : null;
-        this.deleteTempArchiveOnClose = deleteOnClose;
+        synchronized (this.archiveFileLock) {
+            // Set first, so releasing the file deletes a spooled archive even if it never got opened
+            this.tempArchiveFile = deleteOnClose ? archiveFile : null;
+            this.deleteTempArchiveOnClose = deleteOnClose;
+            if (this.archiveFileReleased) throw new IOException("The FMA archive file got released before it got opened");
+            this.zipFile = new ReleasableZipFile(this.openZipFile(archiveFile));
+        }
+    }
+
+    /**
+     * Opens the archive file for reading.
+     */
+    @NotNull
+    protected ZipFile openZipFile(@NotNull File archiveFile) throws IOException {
+        return new ZipFile(archiveFile);
+    }
+
+    /**
+     * Closes the archive file right away and deletes the spooled archive of decoders that read a stream, from any thread, so the file is not open anymore once this returns.
+     * A read that another thread does right now finishes first, which is at most {@link ReleasableZipFile#MAX_LOCKED_READ_BYTES}. All later reads fail.<br>
+     * Everything else stays as it is, because the thread that owns the decoder can still use it, so the owner still has to {@link #close()} it. Releasing the file more than once does nothing.
+     */
+    public void closeArchiveFile() {
+        File tempArchive;
+        boolean shouldDeleteTempArchive;
+        synchronized (this.archiveFileLock) {
+            this.archiveFileReleased = true;
+            ReleasableZipFile activeZipFile = this.zipFile;
+            tempArchive = this.tempArchiveFile;
+            shouldDeleteTempArchive = this.deleteTempArchiveOnClose;
+            this.zipFile = null;
+            this.tempArchiveFile = null;
+            this.deleteTempArchiveOnClose = false;
+            if (activeZipFile != null) {
+                try {
+                    activeZipFile.close();
+                } catch (Exception ex) {
+                    LOGGER.error("[FANCYMENU] Failed to close FMA ZipFile", ex);
+                }
+            }
+        }
+        if (shouldDeleteTempArchive && (tempArchive != null) && tempArchive.exists() && !tempArchive.delete()) {
+            LOGGER.warn("[FANCYMENU] Failed to delete temporary FMA archive: {}", tempArchive.getAbsolutePath());
+        }
+    }
+
+    /**
+     * The open archive file. Reads of it take turns with releasing it, see the threading notes of the class.
+     */
+    @NotNull
+    protected ReleasableZipFile requireZipFile() throws IOException {
+        synchronized (this.archiveFileLock) {
+            ReleasableZipFile file = this.zipFile;
+            if (file == null) throw new IOException(this.archiveFileReleased ? "The FMA archive file got released" : "No FMA archive is currently open");
+            return file;
+        }
     }
 
     protected void initializeArchiveState() throws IOException {
@@ -146,7 +228,7 @@ public class FmaDecoder implements Closeable {
      * If this index is absent or invalid, decoder falls back to classic directory scanning.
      */
     protected boolean readFrameIndexIfPresent() throws IOException {
-        Objects.requireNonNull(this.zipFile);
+        ReleasableZipFile activeZipFile = this.requireZipFile();
         this.orderedFramePaths.clear();
         this.orderedIntroFramePaths.clear();
 
@@ -154,10 +236,7 @@ public class FmaDecoder implements Closeable {
         if (frameIndexEntry == null) return false;
 
         try {
-            String indexJson;
-            try (InputStream indexIn = this.zipFile.getInputStream(frameIndexEntry)) {
-                indexJson = new String(indexIn.readAllBytes(), StandardCharsets.UTF_8);
-            }
+            String indexJson = new String(activeZipFile.readEntry(frameIndexEntry), StandardCharsets.UTF_8);
 
             FmaFrameIndex frameIndex = GSON.fromJson(indexJson, FmaFrameIndex.class);
             if (frameIndex == null) return false;
@@ -197,10 +276,11 @@ public class FmaDecoder implements Closeable {
     }
 
     protected void indexEntries() throws IOException {
-        Objects.requireNonNull(this.zipFile);
+        ReleasableZipFile activeZipFile = this.requireZipFile();
         this.entriesByNormalizedPath.clear();
 
-        var entries = this.zipFile.getEntries();
+        // The entries got read when the archive got opened, so listing them doesn't read the file
+        var entries = activeZipFile.getEntries();
         while (entries.hasMoreElements()) {
             ZipArchiveEntry entry = entries.nextElement();
             if (entry == null || entry.isDirectory()) continue;
@@ -210,7 +290,6 @@ public class FmaDecoder implements Closeable {
     }
 
     protected void readFramePaths() throws IOException {
-        Objects.requireNonNull(this.zipFile);
         this.orderedFramePaths.clear();
 
         try {
@@ -233,7 +312,6 @@ public class FmaDecoder implements Closeable {
     }
 
     protected void readIntroFramePaths() throws IOException {
-        Objects.requireNonNull(this.zipFile);
         this.orderedIntroFramePaths.clear();
 
         try {
@@ -256,7 +334,7 @@ public class FmaDecoder implements Closeable {
     }
 
     protected void readMetadata() throws IOException {
-        Objects.requireNonNull(this.zipFile);
+        ReleasableZipFile activeZipFile = this.requireZipFile();
 
         try {
             ZipArchiveEntry metadataEntry = this.findEntry("metadata.json");
@@ -264,10 +342,7 @@ public class FmaDecoder implements Closeable {
                 throw new FileNotFoundException("No metadata.json found in FMA file! Unable to read metadata!");
             }
 
-            String metadataString;
-            try (InputStream metadataIn = this.zipFile.getInputStream(metadataEntry)) {
-                metadataString = new String(metadataIn.readAllBytes(), StandardCharsets.UTF_8);
-            }
+            String metadataString = new String(activeZipFile.readEntry(metadataEntry), StandardCharsets.UTF_8);
 
             if (metadataString.trim().isEmpty()) {
                 throw new IOException("metadata.json of FMA file is empty!");
@@ -303,8 +378,6 @@ public class FmaDecoder implements Closeable {
 
     @Nullable
     public ExpensiveFrameSample findExpensiveFrameSample() throws IOException {
-        Objects.requireNonNull(this.zipFile);
-
         for (String framePath : this.pickSampleFramePaths()) {
             PngFrameHeader pngHeader = this.readPngFrameHeader(framePath);
             if ((pngHeader != null) && pngHeader.isExpensive()) {
@@ -315,59 +388,51 @@ public class FmaDecoder implements Closeable {
         return null;
     }
 
+    /**
+     * Reads the PNG of a main frame, or returns NULL if there is no frame with the index.
+     */
     @Nullable
-    public InputStream getFrame(int index) throws IOException {
-        Objects.requireNonNull(this.zipFile);
-        if (this.orderedFramePaths.isEmpty()) return null;
-        if (index < 0) return null;
-        if (this.getFrameCount() - 1 < index) return null;
-
-        try {
-            String framePath = this.orderedFramePaths.get(index);
-            ZipArchiveEntry frameEntry = this.findEntry(framePath);
-            if (frameEntry == null) {
-                throw new FileNotFoundException("Frame file of FMA not found: " + framePath);
-            }
-            return this.zipFile.getInputStream(frameEntry);
-        } catch (Exception ex) {
-            throw new IOException(ex);
-        }
+    public byte[] readFrame(int index) throws IOException {
+        return this.readFramePng(this.orderedFramePaths, index, "Frame");
     }
 
+    /**
+     * Reads the PNG of the first main frame, or returns NULL if there is none.
+     */
     @Nullable
-    public InputStream getFirstFrame() throws IOException {
-        return this.getFrame(0);
+    public byte[] readFirstFrame() throws IOException {
+        return this.readFrame(0);
     }
 
     @Nullable
     public BufferedImage getFirstFrameAsBufferedImage() throws IOException {
-        InputStream in = this.getFirstFrame();
-        if (in == null) return null;
+        byte[] png = this.readFirstFrame();
+        if (png == null) return null;
 
-        try (InputStream closeableIn = in) {
-            return ImageIO.read(closeableIn);
+        try {
+            return ImageIO.read(new ByteArrayInputStream(png));
         } catch (Exception ex) {
             throw new IOException(ex);
         }
     }
 
+    /**
+     * Reads the PNG of an intro frame, or returns NULL if there is no intro frame with the index.
+     */
     @Nullable
-    public InputStream getIntroFrame(int index) throws IOException {
-        Objects.requireNonNull(this.zipFile);
-        if (this.orderedIntroFramePaths.isEmpty()) return null;
-        if (index < 0) return null;
-        if (this.getIntroFrameCount() - 1 < index) return null;
+    public byte[] readIntroFrame(int index) throws IOException {
+        return this.readFramePng(this.orderedIntroFramePaths, index, "Intro frame");
+    }
 
-        try {
-            String framePath = this.orderedIntroFramePaths.get(index);
-            ZipArchiveEntry frameEntry = this.findEntry(framePath);
-            if (frameEntry == null) {
-                throw new FileNotFoundException("Intro frame file of FMA not found: " + framePath);
-            }
-            return this.zipFile.getInputStream(frameEntry);
-        } catch (Exception ex) {
-            throw new IOException(ex);
+    @Nullable
+    protected byte[] readFramePng(@NotNull List<String> framePaths, int index, @NotNull String frameKind) throws IOException {
+        if ((index < 0) || (index >= framePaths.size())) return null;
+        String framePath = framePaths.get(index);
+        ZipArchiveEntry frameEntry = this.findEntry(framePath);
+        if (frameEntry == null) {
+            throw new FileNotFoundException(frameKind + " file of FMA not found: " + framePath);
         }
+        return this.requireZipFile().readEntry(frameEntry);
     }
 
     /**
@@ -376,16 +441,9 @@ public class FmaDecoder implements Closeable {
      */
     @Nullable
     public InputStream getBackgroundImage() throws IOException {
-        Objects.requireNonNull(this.zipFile);
-
         ZipArchiveEntry backgroundImageEntry = this.findEntry("background.png");
         if (backgroundImageEntry == null) return null;
-
-        try {
-            return this.zipFile.getInputStream(backgroundImageEntry);
-        } catch (Exception ex) {
-            throw new IOException(ex);
-        }
+        return new ByteArrayInputStream(this.requireZipFile().readEntry(backgroundImageEntry));
     }
 
     @Nullable
@@ -430,22 +488,11 @@ public class FmaDecoder implements Closeable {
 
     @Nullable
     protected PngFrameHeader readPngFrameHeader(@NotNull String framePath) throws IOException {
-        Objects.requireNonNull(this.zipFile);
-
         ZipArchiveEntry frameEntry = this.findEntry(framePath);
         if (frameEntry == null) return null;
 
         byte[] headerBytes = new byte[PNG_HEADER_PROBE_BYTES];
-        int totalRead = 0;
-        try (InputStream frameIn = this.zipFile.getInputStream(frameEntry)) {
-            while (totalRead < headerBytes.length) {
-                int read = frameIn.read(headerBytes, totalRead, headerBytes.length - totalRead);
-                if (read < 0) break;
-                totalRead += read;
-            }
-        } catch (Exception ex) {
-            throw new IOException(ex);
-        }
+        int totalRead = this.requireZipFile().readEntryStart(frameEntry, headerBytes);
 
         if (totalRead < PNG_HEADER_PROBE_BYTES) return null;
         if (!matchesPngSignature(headerBytes)) return null;
@@ -496,30 +543,16 @@ public class FmaDecoder implements Closeable {
         return normalized;
     }
 
+    /**
+     * Releases the archive file and everything the decoder holds. Only the thread that owns the decoder may call this, other threads can only release the file with {@link #closeArchiveFile()}.
+     */
     @Override
     public void close() throws IOException {
+        this.closeArchiveFile();
         this.orderedFramePaths.clear();
         this.orderedIntroFramePaths.clear();
         this.entriesByNormalizedPath.clear();
         this.metadata = null;
-
-        if (this.zipFile != null) {
-            try {
-                this.zipFile.close();
-            } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to close FMA ZipFile", ex);
-            }
-            this.zipFile = null;
-        }
-
-        File tempArchive = this.tempArchiveFile;
-        boolean shouldDeleteTempArchive = this.deleteTempArchiveOnClose;
-        this.tempArchiveFile = null;
-        this.deleteTempArchiveOnClose = false;
-
-        if (shouldDeleteTempArchive && (tempArchive != null) && tempArchive.exists() && !tempArchive.delete()) {
-            LOGGER.warn("[FANCYMENU] Failed to delete temporary FMA archive: {}", tempArchive.getAbsolutePath());
-        }
     }
 
     public static class FmaMetadata {
