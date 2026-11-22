@@ -171,6 +171,11 @@ public class IsPlayerInBiomeRequirement extends Requirement {
         }
 
         @Override
+        protected boolean isLateBodyHovered(int mouseX, int mouseY) {
+            return this.suggestions.isMouseOverList(mouseX, mouseY);
+        }
+
+        @Override
         public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
             return this.keyPressed(event.key(), event.keycode(), event.modifiers());
         }
