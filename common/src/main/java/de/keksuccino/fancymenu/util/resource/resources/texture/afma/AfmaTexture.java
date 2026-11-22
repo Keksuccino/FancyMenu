@@ -99,6 +99,10 @@ public class AfmaTexture implements ITexture, PlayableResource {
     @Nullable
     protected volatile Thread streamThread = null;
     protected volatile boolean sequenceUsesBlockInter = false;
+    /**
+     * The canvas before the current block-inter frame, which the tiles of the frame get copied from. The render thread creates it and applies frames onto it without holding a lock,
+     * so only the render thread closes it, together with the streaming texture in {@link #releaseStreamingTexture}. The decoder release never closes it, because it can run on the stream thread.
+     */
     @Nullable
     protected volatile NativeImage blockInterReferenceCanvas = null;
     protected volatile boolean playbackInitialized = false;
@@ -1010,6 +1014,15 @@ public class AfmaTexture implements ITexture, PlayableResource {
         return Objects.requireNonNull(this.blockInterReferenceCanvas);
     }
 
+    /**
+     * Closes the reference canvas of block-inter frames. Only the render thread may call this, see {@link #blockInterReferenceCanvas}.
+     */
+    protected void releaseBlockInterReferenceCanvas() {
+        NativeImage referenceCanvas = this.blockInterReferenceCanvas;
+        this.blockInterReferenceCanvas = null;
+        CloseableUtils.closeQuietly(referenceCanvas);
+    }
+
     protected void applyRawTilePayload(@NotNull byte[] rawBytes, int rawOffset, int rawLength, int channels, @NotNull NativeImage canvas,
                                        int dstX, int dstY, int width, int height) {
         AfmaNativeImageHelper.blitInterleavedBytes(canvas, dstX, dstY, width, height, rawBytes, rawOffset, rawLength, channels);
@@ -1381,8 +1394,6 @@ public class AfmaTexture implements ITexture, PlayableResource {
         this.frameIndex = null;
         this.sequenceUsesBlockInter = false;
         this.payloadDecodeScratch.clear();
-        CloseableUtils.closeQuietly(this.blockInterReferenceCanvas);
-        this.blockInterReferenceCanvas = null;
         if (activeDecoder != null) {
             CloseableUtils.closeQuietly(activeDecoder);
         }
@@ -1413,6 +1424,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
      * A registered texture belongs to the texture manager, so releasing its entry closes it. Only a texture that never got registered gets closed here.
      */
     protected void releaseStreamingTexture(@Nullable ResourceLocation resourceLocation, @Nullable DynamicTexture texture) {
+        this.releaseBlockInterReferenceCanvas();
         if (resourceLocation != null) {
             TextureManagerReleaser.release(resourceLocation);
         } else if (texture != null) {
