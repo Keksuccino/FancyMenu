@@ -3372,7 +3372,7 @@
   "fancymenu.placeholders.world.effects_count": "Cantidad de efectos activos",
   "fancymenu.placeholders.world.effects_count.desc": "Devuelve la cantidad de efectos activos actualmente.\nDevuelve '0' cuando no estás en un mundo o cuando no hay ningún efecto activo.",
   "fancymenu.placeholders.world.gamerule_value": "Valor de gamerule",
-  "fancymenu.placeholders.world.gamerule_value.desc": "§x¡FancyMenu necesita estar instalado en el servidor para que esto funcione!\n\nDevuelve el valor de la gamerule especificada en el mundo/servidor actual. Toma el nombre de la gamerule (por ejemplo, doDaylightCycle). Devuelve un valor vacío si no hay un mundo cargado o si la gamerule no existe.",
+  "fancymenu.placeholders.world.gamerule_value.desc": "§x¡FancyMenu necesita estar instalado en el servidor para que esto funcione!\n\nDevuelve el valor de la gamerule especificada en el mundo/servidor actual. Toma el nombre de la gamerule (por ejemplo, advance_time). Devuelve un valor vacío si no hay un mundo cargado o si la gamerule no existe.",
   "fancymenu.placeholders.world.highlighted_item_time_fm": "Tiempo del objeto resaltado (FM)",
   "fancymenu.placeholders.world.highlighted_item_time_fm.desc": "El tiempo en ticks que le queda al nombre del objeto resaltado vanilla original para mostrarse arriba de la hotbar.",
   "fancymenu.placeholders.world.hovered_inventory_item": "Objeto del inventario sobre el que pasas el cursor",

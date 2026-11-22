@@ -3372,7 +3372,7 @@
   "fancymenu.placeholders.world.effects_count": "Nombre d'effets actifs",
   "fancymenu.placeholders.world.effects_count.desc": "Renvoie le nombre d'effets actuellement actifs.\nRenvoie '0' quand tu n'es pas dans un monde ou qu'aucun effet n'est actif.",
   "fancymenu.placeholders.world.gamerule_value": "Valeur de gamerule",
-  "fancymenu.placeholders.world.gamerule_value.desc": "§xFancyMenu doit être installé sur le serveur pour que ça marche !\n\nRenvoie la valeur de la gamerule spécifiée dans le monde/serveur actuel. Prend le nom de la gamerule (par exemple doDaylightCycle). Renvoie une valeur vide si aucun monde n'est chargé ou si la gamerule n'existe pas.",
+  "fancymenu.placeholders.world.gamerule_value.desc": "§xFancyMenu doit être installé sur le serveur pour que ça marche !\n\nRenvoie la valeur de la gamerule spécifiée dans le monde/serveur actuel. Prend le nom de la gamerule (par exemple advance_time). Renvoie une valeur vide si aucun monde n'est chargé ou si la gamerule n'existe pas.",
   "fancymenu.placeholders.world.highlighted_item_time_fm": "Temps de l'objet surligné (FM)",
   "fancymenu.placeholders.world.highlighted_item_time_fm.desc": "Le temps restant en ticks pendant lequel le nom de l'objet surligné Vanilla original s'affiche au-dessus de la barre rapide.",
   "fancymenu.placeholders.world.hovered_inventory_item": "Objet survolé dans l'inventaire",

@@ -3372,7 +3372,7 @@
   "fancymenu.placeholders.world.effects_count": "有効な効果の数",
   "fancymenu.placeholders.world.effects_count.desc": "現在有効な効果の数を返します。\nワールドにいない場合や、効果が有効でない場合は '0' を返します。",
   "fancymenu.placeholders.world.gamerule_value": "ゲームルール値",
-  "fancymenu.placeholders.world.gamerule_value.desc": "§xこの機能を使うには、サーバーにFancyMenuがインストールされている必要があります！\n\n現在のワールド/サーバーで指定したゲームルールの値を返します。ゲームルール名（たとえば doDaylightCycle）を指定してください。ワールドが読み込まれていない場合や、ゲームルールが存在しない場合は空の値を返します。",
+  "fancymenu.placeholders.world.gamerule_value.desc": "§xこの機能を使うには、サーバーにFancyMenuがインストールされている必要があります！\n\n現在のワールド/サーバーで指定したゲームルールの値を返します。ゲームルール名（たとえば advance_time）を指定してください。ワールドが読み込まれていない場合や、ゲームルールが存在しない場合は空の値を返します。",
   "fancymenu.placeholders.world.highlighted_item_time_fm": "ハイライト中アイテムの表示時間（FM）",
   "fancymenu.placeholders.world.highlighted_item_time_fm.desc": "バニラのハイライト中アイテム名がホットバーの上に表示される残りティック数です。",
   "fancymenu.placeholders.world.hovered_inventory_item": "ホバー中のインベントリアイテム",
