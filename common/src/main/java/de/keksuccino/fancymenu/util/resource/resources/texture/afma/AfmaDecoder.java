@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import de.keksuccino.fancymenu.FancyMenu;
 import de.keksuccino.fancymenu.util.file.FileUtils;
+import de.keksuccino.fancymenu.util.file.ReleasableZipFile;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.logging.log4j.LogManager;
@@ -43,7 +44,9 @@ import java.util.zip.InflaterInputStream;
  * like when a texture gets closed on the render thread while its stream thread or its loading thread reads a frame. Opening the file, every read from it and releasing it
  * take turns through {@link #archiveFileLock}, so the file never gets closed in the middle of a read: java.io files must not get closed while another thread reads them,
  * because the system can give the number of the closed file to the next file that gets opened, so the read could continue in that file.
- * Reads take the lock for at most {@link #MAX_LOCKED_READ_BYTES} at a time, which keeps releasing the file fast. All other state belongs to the thread that owns the decoder.
+ * Reads take the lock for at most {@link #MAX_LOCKED_READ_BYTES} at a time, which keeps releasing the file fast. Reads of legacy ZIP archives take turns with releasing the file
+ * through the lock of their {@link ReleasableZipFile} instead, which works the same way. Never interrupt a thread while it reads a legacy ZIP archive, see {@link ReleasableZipFile}.
+ * All other state belongs to the thread that owns the decoder.
  */
 public class AfmaDecoder implements Closeable {
 
@@ -55,7 +58,7 @@ public class AfmaDecoder implements Closeable {
     /** Guards the archive file fields and {@link #archiveFileReleased}, see the threading notes of the class. **/
     protected final Object archiveFileLock = new Object();
     @Nullable
-    protected ZipFile zipFile = null;
+    protected ReleasableZipFile zipFile = null;
     @Nullable
     protected RandomAccessFile containerFile = null;
     /** Set once the archive file got released. The decoder never opens or reads its file again afterwards. Only gets written while holding the file lock. **/
@@ -175,10 +178,18 @@ public class AfmaDecoder implements Closeable {
                 if (file != null) file.close();
             }
             if (this.containerFile == null) {
-                this.zipFile = new ZipFile(archiveFile);
+                this.zipFile = new ReleasableZipFile(this.openZipFile(archiveFile));
                 this.legacyZipArchive = true;
             }
         }
+    }
+
+    /**
+     * Opens a legacy ZIP archive for reading.
+     */
+    @NotNull
+    protected ZipFile openZipFile(@NotNull File archiveFile) throws IOException {
+        return new ZipFile(archiveFile);
     }
 
     /**
@@ -195,7 +206,7 @@ public class AfmaDecoder implements Closeable {
      * Everything else stays as it is, because the thread that owns the decoder can still use it, so the owner still has to {@link #close()} it. Releasing the file more than once does nothing.
      */
     public void closeArchiveFile() {
-        ZipFile activeZipFile;
+        ReleasableZipFile activeZipFile;
         RandomAccessFile activeContainerFile;
         File tempArchive;
         boolean shouldDeleteTempArchive;
@@ -209,7 +220,7 @@ public class AfmaDecoder implements Closeable {
             this.containerFile = null;
             this.tempArchiveFile = null;
             this.deleteTempArchiveOnClose = false;
-            // Closed while holding the lock, so no read can run on the closed file
+            // Closed while holding the lock, so no read can run on the closed file. The ZIP file waits for a read of another thread on its own.
             if (activeZipFile != null) {
                 try {
                     activeZipFile.close();
@@ -244,8 +255,8 @@ public class AfmaDecoder implements Closeable {
      * Must only get called while holding the file lock.
      */
     @NotNull
-    protected ZipFile requireZipFileLocked() throws IOException {
-        ZipFile file = this.zipFile;
+    protected ReleasableZipFile requireZipFileLocked() throws IOException {
+        ReleasableZipFile file = this.zipFile;
         if (file == null) throw new IOException(this.archiveFileReleased ? "The AFMA archive file got released" : "No legacy AFMA archive is currently open");
         return file;
     }
@@ -273,29 +284,15 @@ public class AfmaDecoder implements Closeable {
     }
 
     /**
-     * Reads a whole entry of a legacy ZIP archive, holding the file lock while opening the entry and for one piece of at most {@link #MAX_LOCKED_READ_BYTES} at a time.
+     * Reads a whole entry of a legacy ZIP archive, in pieces of at most {@link ReleasableZipFile#MAX_LOCKED_READ_BYTES} that take turns with releasing the file.
      */
     @NotNull
     protected byte[] readLegacyEntry(@NotNull ZipArchiveEntry entry) throws IOException {
-        InputStream entryIn;
+        ReleasableZipFile activeZipFile;
         synchronized (this.archiveFileLock) {
-            entryIn = this.requireZipFileLocked().getInputStream(entry);
+            activeZipFile = this.requireZipFileLocked();
         }
-        try (InputStream in = entryIn) {
-            long size = entry.getSize();
-            ByteArrayOutputStream out = new ByteArrayOutputStream(((size > 0L) && (size <= MAX_LOCKED_READ_BYTES)) ? (int) size : MAX_LOCKED_READ_BYTES);
-            byte[] buffer = new byte[MAX_LOCKED_READ_BYTES];
-            while (true) {
-                int read;
-                synchronized (this.archiveFileLock) {
-                    this.requireZipFileLocked();
-                    read = in.read(buffer);
-                }
-                if (read < 0) break;
-                out.write(buffer, 0, read);
-            }
-            return out.toByteArray();
-        }
+        return activeZipFile.readEntry(entry);
     }
 
     protected void initializeArchiveState() throws IOException {
@@ -311,7 +308,7 @@ public class AfmaDecoder implements Closeable {
     }
 
     protected void indexEntries() throws IOException {
-        ZipFile activeZipFile;
+        ReleasableZipFile activeZipFile;
         synchronized (this.archiveFileLock) {
             activeZipFile = this.requireZipFileLocked();
         }
