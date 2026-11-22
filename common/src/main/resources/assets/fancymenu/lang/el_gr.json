@@ -4126,7 +4126,7 @@
   "fancymenu.profiles.error.busy": "Μια άλλη ενέργεια προφίλ εκτελείται ακόμα. Περίμενε να τελειώσει.",
   "fancymenu.profiles.error.reason.invalid_archive": "Αυτό το αρχείο δεν είναι έγκυρο προφίλ του FancyMenu.",
   "fancymenu.profiles.error.reason.no_space": "Δεν υπάρχει αρκετός ελεύθερος χώρος στον δίσκο. Το προφίλ χρειάζεται %s, αλλά είναι ελεύθερα μόνο %s.",
-  "fancymenu.profiles.error.reason.file_in_use": "Κάποια αρχεία χρησιμοποιούνται από άλλο πρόγραμμα. Κλείσε τα προγράμματα που μπορεί να τα χρησιμοποιούν και δοκίμασε ξανά.",
+  "fancymenu.profiles.error.reason.file_in_use": "Κάποια αρχεία χρησιμοποιούνται ακόμα. Μπορεί απλώς το ίδιο το παιχνίδι να φορτώνει κάτι, όπως ήχο, οπότε περίμενε λίγα δευτερόλεπτα και δοκίμασε ξανά. Αν συνεχίζει να γίνεται, κλείσε προγράμματα που μπορεί να τα χρησιμοποιούν, όπως το antivirus, τον συγχρονισμό cloud ή ένα παράθυρο εξερεύνησης αρχείων.",
   "fancymenu.profiles.error.reason.generic": "Λεπτομέρειες: %s",
   "fancymenu.profiles.edit.title": "Επεξεργασία προφίλ",
   "fancymenu.profiles.edit.profile_title": "Τίτλος",

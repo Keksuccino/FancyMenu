@@ -4126,7 +4126,7 @@
   "fancymenu.profiles.error.busy": "Ещё выполняется другая операция с профилем. Подожди, пока она закончится.",
   "fancymenu.profiles.error.reason.invalid_archive": "Этот файл не является профилем FancyMenu.",
   "fancymenu.profiles.error.reason.no_space": "Недостаточно свободного места на диске. Профилю нужно %s, а свободно только %s.",
-  "fancymenu.profiles.error.reason.file_in_use": "Некоторые файлы заняты другой программой. Закрой программы, которые могут их использовать, и попробуй снова.",
+  "fancymenu.profiles.error.reason.file_in_use": "Некоторые файлы ещё используются. Возможно, это просто игра ещё что-то загружает, например звук, так что подожди пару секунд и попробуй снова. Если ошибка не пропадает, закрой программы, которые могут их использовать, например антивирус, облачную синхронизацию или окно проводника.",
   "fancymenu.profiles.error.reason.generic": "Подробности: %s",
   "fancymenu.profiles.edit.title": "Изменить профиль",
   "fancymenu.profiles.edit.profile_title": "Название",

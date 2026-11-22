@@ -4126,7 +4126,7 @@
   "fancymenu.profiles.error.busy": "ほかのプロファイル操作がまだ実行中です。終わるまでお待ちください。",
   "fancymenu.profiles.error.reason.invalid_archive": "このファイルは有効な FancyMenu プロファイルではありません。",
   "fancymenu.profiles.error.reason.no_space": "ディスクの空き容量が足りません。プロファイルには %s 必要ですが、空きは %s しかありません。",
-  "fancymenu.profiles.error.reason.file_in_use": "一部のファイルがほかのプログラムで使われています。使っていそうなプログラムを閉じて、もう一度お試しください。",
+  "fancymenu.profiles.error.reason.file_in_use": "一部のファイルがまだ使用中です。ゲーム自体が音声などをまだ読み込んでいるだけかもしれないので、数秒待ってからもう一度お試しください。それでもうまくいかないときは、ウイルス対策ソフトやクラウド同期、ファイルエクスプローラーのウィンドウなど、ファイルを使っていそうなプログラムを閉じてください。",
   "fancymenu.profiles.error.reason.generic": "詳細: %s",
   "fancymenu.profiles.edit.title": "プロファイルを編集",
   "fancymenu.profiles.edit.profile_title": "タイトル",

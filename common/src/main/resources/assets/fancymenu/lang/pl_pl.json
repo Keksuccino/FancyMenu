@@ -4126,7 +4126,7 @@
   "fancymenu.profiles.error.busy": "Inna operacja na profilu jeszcze trwa. Poczekaj, aż się skończy.",
   "fancymenu.profiles.error.reason.invalid_archive": "Ten plik nie jest prawidłowym profilem FancyMenu.",
   "fancymenu.profiles.error.reason.no_space": "Za mało wolnego miejsca na dysku. Profil potrzebuje %s, a wolne jest tylko %s.",
-  "fancymenu.profiles.error.reason.file_in_use": "Inny program używa niektórych plików. Zamknij programy, które mogą ich używać, i spróbuj ponownie.",
+  "fancymenu.profiles.error.reason.file_in_use": "Niektóre pliki są jeszcze w użyciu. Może to po prostu gra wciąż coś wczytuje, na przykład dźwięk, więc poczekaj kilka sekund i spróbuj ponownie. Jeśli problem nie znika, zamknij programy, które mogą ich używać, np. antywirusa, synchronizację z chmurą albo okno eksploratora plików.",
   "fancymenu.profiles.error.reason.generic": "Szczegóły: %s",
   "fancymenu.profiles.edit.title": "Edytuj profil",
   "fancymenu.profiles.edit.profile_title": "Tytuł",

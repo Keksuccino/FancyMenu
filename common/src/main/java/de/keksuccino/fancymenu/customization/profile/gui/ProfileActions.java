@@ -239,7 +239,7 @@ final class ProfileActions {
     }
 
     /**
-     * Windows locks files that are open in other programs, which makes moving or deleting them fail.
+     * Windows locks files that are open in any program, including the game itself (for example audio that is still loading), which makes moving or deleting them fail.
      */
     private static boolean isFileInUse(@NotNull Throwable error) {
         if (error instanceof AccessDeniedException) return true;

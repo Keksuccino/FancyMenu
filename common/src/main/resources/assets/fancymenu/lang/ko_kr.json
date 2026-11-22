@@ -4126,7 +4126,7 @@
   "fancymenu.profiles.error.busy": "다른 프로필 작업이 아직 진행 중이에요. 끝날 때까지 기다려 주세요.",
   "fancymenu.profiles.error.reason.invalid_archive": "이 파일은 올바른 FancyMenu 프로필이 아니에요.",
   "fancymenu.profiles.error.reason.no_space": "디스크 여유 공간이 부족해요. 프로필에 %s가 필요한데 남은 공간은 %s뿐이에요.",
-  "fancymenu.profiles.error.reason.file_in_use": "일부 파일을 다른 프로그램이 사용하고 있어요. 사용 중일 수 있는 프로그램을 닫고 다시 시도해 주세요.",
+  "fancymenu.profiles.error.reason.file_in_use": "일부 파일이 아직 사용 중이에요. 게임이 오디오 같은 걸 아직 불러오고 있는 것일 수도 있으니 몇 초 기다렸다가 다시 시도해 주세요. 그래도 계속 이러면 백신, 클라우드 동기화, 파일 탐색기 창처럼 파일을 쓰고 있을 만한 프로그램을 닫아 주세요.",
   "fancymenu.profiles.error.reason.generic": "자세한 내용: %s",
   "fancymenu.profiles.edit.title": "프로필 편집",
   "fancymenu.profiles.edit.profile_title": "제목",

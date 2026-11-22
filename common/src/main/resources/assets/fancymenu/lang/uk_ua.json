@@ -4126,7 +4126,7 @@
   "fancymenu.profiles.error.busy": "Ще виконується інша дія з профілем. Зачекай, поки вона завершиться.",
   "fancymenu.profiles.error.reason.invalid_archive": "Цей файл не є профілем FancyMenu.",
   "fancymenu.profiles.error.reason.no_space": "Недостатньо вільного місця на диску. Профілю потрібно %s, а вільно лише %s.",
-  "fancymenu.profiles.error.reason.file_in_use": "Деякі файли зайняті іншою програмою. Закрий програми, які можуть їх використовувати, і спробуй ще раз.",
+  "fancymenu.profiles.error.reason.file_in_use": "Деякі файли ще використовуються. Можливо, це просто гра ще щось завантажує, наприклад звук, тож зачекай кілька секунд і спробуй ще раз. Якщо помилка не зникає, закрий програми, які можуть їх використовувати, наприклад антивірус, хмарну синхронізацію чи вікно провідника.",
   "fancymenu.profiles.error.reason.generic": "Подробиці: %s",
   "fancymenu.profiles.edit.title": "Змінити профіль",
   "fancymenu.profiles.edit.profile_title": "Назва",
