@@ -19,7 +19,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
@@ -53,10 +52,11 @@ public class ChooseListenerTypeScreen extends PiPWindowBody implements InitialWi
     @Override
     protected void init() {
         boolean blur = UIBase.shouldBlur();
+        int contentTop = getLabeledContentTop();
 
         // Initialize search bar
         String oldSearchValue = (this.searchBar != null) ? this.searchBar.getValue() : "";
-        this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, 20 + 1, 50 + 15 + 1, (this.width / 2) - 40 - 2, 20 - 2, Component.empty());
+        this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, 20 + 1, contentTop + 1, (this.width / 2) - 40 - 2, 20 - 2, Component.empty());
         this.searchBar.setHintFancyMenu(consumes -> Component.translatable("fancymenu.listeners.choose_type.search"));
         this.searchBar.setValue(oldSearchValue);
         this.searchBar.setResponder(s -> this.updateListenersList());
@@ -67,16 +67,16 @@ public class ChooseListenerTypeScreen extends PiPWindowBody implements InitialWi
         // Set positions for scroll areas
         this.listenersScrollArea.setSetupForBlurInterface(blur);
         this.listenersScrollArea.setWidth((this.width / 2) - 40, true);
-        this.listenersScrollArea.setHeight(this.height - 85 - 25, true);
+        this.listenersScrollArea.setHeight(this.height - contentTop - 25 - CONTENT_MARGIN, true);
         this.listenersScrollArea.setX(20, true);
-        this.listenersScrollArea.setY(50 + 15 + 25, true);
+        this.listenersScrollArea.setY(contentTop + 25, true);
         this.addRenderableWidget(this.listenersScrollArea);
-        
+
         this.descriptionScrollArea.setSetupForBlurInterface(blur);
         this.descriptionScrollArea.setWidth((this.width / 2) - 40, true);
-        this.descriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
+        this.descriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 10 - contentTop), true);
         this.descriptionScrollArea.setX(this.width - 20 - this.descriptionScrollArea.getWidthWithBorder(), true);
-        this.descriptionScrollArea.setY(50 + 15, true);
+        this.descriptionScrollArea.setY(contentTop, true);
         this.descriptionScrollArea.horizontalScrollBar.active = false;
         this.addRenderableWidget(this.descriptionScrollArea);
         
@@ -141,12 +141,9 @@ public class ChooseListenerTypeScreen extends PiPWindowBody implements InitialWi
     @Override
     public void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         RenderSystem.enableBlend();
-        
-        Component titleComp = this.title.copy().withStyle(Style.EMPTY.withBold(true));
-        UIBase.renderText(graphics, titleComp, 20, 20, this.getGenericTextColor());
-        
+
         float labelTextHeight = UIBase.getUITextHeightNormal();
-        int listenersAreaTop = (this.searchBar != null) ? this.searchBar.getY() : (50 + 15 + 1);
+        int listenersAreaTop = (this.searchBar != null) ? this.searchBar.getY() : (getLabeledContentTop() + 1);
         float listenersLabelY = listenersAreaTop - labelTextHeight - UIBase.getAreaLabelVerticalPadding();
         UIBase.renderText(
                 graphics,
@@ -158,7 +155,7 @@ public class ChooseListenerTypeScreen extends PiPWindowBody implements InitialWi
         
         Component descLabel = Component.translatable("fancymenu.listeners.choose_type.description");
         float descLabelWidth = UIBase.getUITextWidthNormal(descLabel);
-        float descAreaTop = (this.descriptionScrollArea != null) ? this.descriptionScrollArea.getYWithBorder() : (50 + 15);
+        float descAreaTop = (this.descriptionScrollArea != null) ? this.descriptionScrollArea.getYWithBorder() : getLabeledContentTop();
         float descLabelY = descAreaTop - labelTextHeight - UIBase.getAreaLabelVerticalPadding();
         UIBase.renderText(
                 graphics,

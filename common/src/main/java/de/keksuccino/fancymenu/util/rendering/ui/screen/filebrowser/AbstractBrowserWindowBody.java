@@ -383,7 +383,8 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
 
     protected void renderFileScrollArea(GuiGraphics graphics, int mouseX, int mouseY, float partial, int currentDirFieldYEnd) {
         this.fileListScrollArea.setWidth(this.width - 260 - 20, true);
-        int listHeight = this.height - 85 - (this.font.lineHeight + 6) - 2 - 25 + this.fileScrollListHeightOffset;
+        // Leaves room for the file type area (5 gap + 20 height) and the bottom margin below the list
+        int listHeight = this.height - (int) this.getMainAreaTopY() - 45 - (this.font.lineHeight + 6) - 2 + this.fileScrollListHeightOffset;
         if (this.searchBarEnabled) listHeight -= 25;
         this.fileListScrollArea.setHeight(listHeight, true);
         this.fileListScrollArea.setX(20, true);
@@ -447,7 +448,7 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
             }
         } else {
             this.previewTextScrollArea.setWidth(200, true);
-            this.previewTextScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
+            this.previewTextScrollArea.setHeight(Math.max(40, (this.height / 2) - 10 - this.getMainAreaTopY()), true);
             this.previewTextScrollArea.setX(this.width - 20 - this.previewTextScrollArea.getWidthWithBorder(), true);
             this.previewTextScrollArea.setY((int) this.getMainAreaTopY(), true);
             this.previewTextScrollArea.render(graphics, mouseX, mouseY, partial);
@@ -1560,7 +1561,7 @@ public abstract class AbstractBrowserWindowBody extends PiPWindowBody implements
     }
 
     protected float getMainAreaLabelY() {
-        return 50.0F;
+        return CONTENT_MARGIN;
     }
 
     protected float getMainAreaTopY() {

@@ -75,6 +75,7 @@ public class ChooseActionWindowBody extends PiPWindowBody implements InitialWidg
     protected void init() {
 
         boolean blur = UIBase.shouldBlur();
+        int contentTop = getLabeledContentTop();
 
         this.actionsListScrollArea.setSetupForBlurInterface(blur);
         this.descriptionScrollArea.setSetupForBlurInterface(blur);
@@ -84,7 +85,7 @@ public class ChooseActionWindowBody extends PiPWindowBody implements InitialWidg
         }
 
         String oldSearchValue = (this.searchBar != null) ? this.searchBar.getValue() : "";
-        this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, 20 + 1, 50 + 15 + 1, (this.width / 2) - 40 - 2, 20 - 2, Component.empty());
+        this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, 20 + 1, contentTop + 1, (this.width / 2) - 40 - 2, 20 - 2, Component.empty());
         this.searchBar.setHintFancyMenu(consumes -> Component.translatable("fancymenu.actions.build_action.screen.search_action"));
         this.searchBar.setValue(oldSearchValue);
         this.searchBar.setResponder(s -> this.updateActionsList());
@@ -94,15 +95,15 @@ public class ChooseActionWindowBody extends PiPWindowBody implements InitialWidg
 
         // Set positions for scroll areas
         this.actionsListScrollArea.setWidth(((float) this.width / 2) - 40, true);
-        this.actionsListScrollArea.setHeight(this.height - 85 - 25, true);
+        this.actionsListScrollArea.setHeight(this.height - contentTop - 25 - CONTENT_MARGIN, true);
         this.actionsListScrollArea.setX(20, true);
-        this.actionsListScrollArea.setY(50 + 15 + 25, true);
+        this.actionsListScrollArea.setY(contentTop + 25, true);
         this.addRenderableWidget(this.actionsListScrollArea);
 
         this.descriptionScrollArea.setWidth(((float) this.width / 2) - 40, true);
-        this.descriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 50 - 25), true);
+        this.descriptionScrollArea.setHeight(Math.max(40, (this.height / 2) - 10 - contentTop), true);
         this.descriptionScrollArea.setX(this.width - 20 - this.descriptionScrollArea.getWidthWithBorder(), true);
-        this.descriptionScrollArea.setY(50 + 15, true);
+        this.descriptionScrollArea.setY(contentTop, true);
         this.descriptionScrollArea.horizontalScrollBar.active = false;
         this.addRenderableWidget(this.descriptionScrollArea);
 
@@ -184,7 +185,7 @@ public class ChooseActionWindowBody extends PiPWindowBody implements InitialWidg
 
         float labelPadding = UIBase.getAreaLabelVerticalPadding();
         float labelHeight = UIBase.getUITextHeightNormal();
-        int searchBarTop = (this.searchBar != null) ? this.searchBar.getY() : (50 + 15 + 1);
+        int searchBarTop = (this.searchBar != null) ? this.searchBar.getY() : (getLabeledContentTop() + 1);
         float availableActionsLabelY = searchBarTop - labelHeight - labelPadding;
         UIBase.renderText(graphics, Component.translatable("fancymenu.actions.screens.build_screen.available_actions"), 20, availableActionsLabelY, textColor);
 
