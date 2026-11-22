@@ -4119,6 +4119,7 @@
   "fancymenu.profiles.drop.rejected.desc": "Εδώ μπορούν να εισαχθούν μόνο αρχεία προφίλ του FancyMenu (.fmp).",
   "fancymenu.profiles.archive.file_type": "Προφίλ FancyMenu",
   "fancymenu.profiles.error.switch": "Δεν ήταν δυνατή η φόρτωση του προφίλ, οπότε η τωρινή διαμόρφωση μένει φορτωμένη.",
+  "fancymenu.profiles.error.switch_incomplete": "Η τελευταία αλλαγή προφίλ δεν έχει ολοκληρωθεί ακόμα, οπότε κάποια αρχεία του φορτωμένου προφίλ είναι ακόμα στον φάκελο των προφίλ. Δε χάθηκε τίποτα! Φόρτωσε ξανά ένα προφίλ ή κάνε επανεκκίνηση στο παιχνίδι για να ολοκληρωθεί.",
   "fancymenu.profiles.error.create": "Δεν ήταν δυνατή η δημιουργία του προφίλ.",
   "fancymenu.profiles.error.duplicate": "Δεν ήταν δυνατή η αντιγραφή του προφίλ.",
   "fancymenu.profiles.error.delete": "Δεν ήταν δυνατή η διαγραφή του προφίλ.",
