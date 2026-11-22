@@ -163,6 +163,11 @@ public class IsGameModeRequirement extends Requirement {
         }
 
         @Override
+        protected boolean isLateBodyHovered(int mouseX, int mouseY) {
+            return this.suggestions.isMouseOverList(mouseX, mouseY);
+        }
+
+        @Override
         public boolean keyPressed(int $$0, int $$1, int $$2) {
             if (this.suggestions.keyPressed($$0, $$1, $$2)) return true;
             return super.keyPressed($$0, $$1, $$2);

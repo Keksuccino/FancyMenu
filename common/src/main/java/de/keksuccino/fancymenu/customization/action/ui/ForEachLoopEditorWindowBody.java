@@ -152,6 +152,11 @@ public class ForEachLoopEditorWindowBody extends PiPCellStringBuilderWindowBody 
     }
 
     @Override
+    protected boolean isLateBodyHovered(int mouseX, int mouseY) {
+        return this.nameSuggestions.isMouseOverList(mouseX, mouseY);
+    }
+
+    @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (this.nameSuggestions.keyPressed(keyCode, scanCode, modifiers)) return true;
         return super.keyPressed(keyCode, scanCode, modifiers);

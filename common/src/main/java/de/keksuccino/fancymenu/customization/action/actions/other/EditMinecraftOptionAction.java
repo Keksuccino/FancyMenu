@@ -200,6 +200,11 @@ public class EditMinecraftOptionAction extends Action {
         }
 
         @Override
+        protected boolean isLateBodyHovered(int mouseX, int mouseY) {
+            return this.optionNameSuggestions.isMouseOverList(mouseX, mouseY);
+        }
+
+        @Override
         public boolean keyPressed(int $$0, int $$1, int $$2) {
             if (this.optionNameSuggestions.keyPressed($$0, $$1, $$2)) return true;
             return super.keyPressed($$0, $$1, $$2);
