@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.resource.resources.audio.ALAudio;
+import de.keksuccino.fancymenu.util.resource.resources.audio.ALAudioLoader;
 import de.keksuccino.fancymenu.util.resource.resources.audio.AudioPlayTimeTracker;
 import de.keksuccino.fancymenu.util.resource.resources.audio.AudioResourceReloadTracker;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
@@ -23,6 +24,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.openal.AL10;
+import javax.sound.sampled.AudioFormat;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
@@ -50,6 +52,11 @@ public class OggAudio implements IAudio, ALAudio {
     protected volatile boolean loadingFailed = false;
     protected volatile boolean retryWhenOpenAlReady = false;
     protected volatile boolean closed = false;
+    /**
+     * Makes the checks and the buffer hand-over of background loads exclusive with {@link #close()}: a load either attaches its buffer
+     * before the audio gets closed, and close() deletes it then, or the load sees the closed audio and its loader deletes the buffer.
+     */
+    private final Object backgroundLoadLock = new Object();
 
     @NotNull
     public static OggAudio location(@NotNull ResourceLocation location) {
@@ -172,99 +179,63 @@ public class OggAudio implements IAudio, ALAudio {
         }
 
         new Thread(() -> {
-            InputStream webIn = null;
             try {
-                webIn = WebUtils.openResourceStream(oggAudioURL, WebUtils.WebResourceType.AUDIO);
-                if (webIn == null) throw new NullPointerException("Web resource input stream was NULL!");
-                ByteArrayInputStream byteIn = new ByteArrayInputStream(webIn.readAllBytes());
-                of(byteIn, oggAudioURL, audio, clip);
+                InputStream in = WebUtils.openResourceStream(oggAudioURL, WebUtils.WebResourceType.AUDIO);
+                if (in == null) throw new NullPointerException("Web resource input stream was NULL!");
+                of(in, oggAudioURL, audio, clip);
             } catch (Exception ex) {
                 audio.loadingFailed = true;
                 LOGGER.error("[FANCYMENU] Failed to read OGG audio from URL: " + oggAudioURL, ex);
             }
-            CloseableUtils.closeQuietly(webIn);
         }).start();
 
         return audio;
 
     }
 
+    /**
+     * Closes the passed {@link InputStream}, also when loading fails or doesn't start.
+     */
     @NotNull
     public static OggAudio of(@NotNull InputStream in, @Nullable String oggAudioName, @Nullable OggAudio writeTo, @Nullable ALAudioClip clip) {
         String name = (oggAudioName != null) ? oggAudioName : "[Generic InputStream Source]";
         OggAudio audio = (writeTo != null) ? writeTo : new OggAudio();
 
-        // Clips need to get created on the main thread, so make sure we're in the correct thread
-        if (clip == null) RenderSystem.assertOnRenderThread();
+        // The loader closes the stream once it read it, so it only gets closed here when loading doesn't start
+        boolean loadingStarted = false;
+        try {
+            // Clips need to get created on the main thread, so make sure we're in the correct thread
+            if (clip == null) RenderSystem.assertOnRenderThread();
 
-        if (isOpenAlNotReadyOrReloading()) {
-            CloseableUtils.closeQuietly(clip);
-            failBecauseOpenAlNotReady(audio, name);
-            return audio;
-        }
-
-        audio.clip = (clip != null) ? clip : OpenAlAudioClipFactory.createSafe();
-
-        ALAudioClip cachedClip = audio.clip;
-        if (cachedClip == null) {
-            failBecauseOpenAlReload(audio, name, "failed to allocate OpenAL source");
-            return audio;
-        }
-        if (!audio.configureNonPositionalSource(name)) {
-            return audio;
-        }
-
-        new Thread(() -> {
-            OggAudioStream stream = null;
-            try {
-                byte[] fullData = in.readAllBytes();
-                ByteArrayInputStream byteIn = new ByteArrayInputStream(fullData);
-
-                try {
-                    stream = new OggAudioStream(byteIn);
-
-                    // Get total PCM data length by reading the full stream
-                    ByteBuffer pcmData = stream.readAll();
-
-                    // Calculate duration from PCM data:
-                    // PCM bytes / (2 bytes per sample * channels) = samples per channel
-                    // Then divide by sample rate to get seconds
-                    audio.duration = (float) (pcmData.remaining() / (2 * stream.getFormat().getChannels())) / stream.getFormat().getSampleRate();
-
-                } catch (Exception ex) {
-                    LOGGER.warn("[FANCYMENU] Failed to read OGG duration metadata, duration will be approximate: " + name, ex);
-                }
-
-                // Reset stream for actual audio loading
-                byteIn.reset();
-                CloseableUtils.closeQuietly(stream);
-                stream = new OggAudioStream(byteIn);
-
-                // Continue with normal audio loading
-                if (!audio.canContinueBackgroundLoading(cachedClip, name)) {
-                    return;
-                }
-                ByteBuffer byteBuffer = stream.readAll();
-                ALAudioBuffer audioBuffer = new ALAudioBuffer(byteBuffer, stream.getFormat());
-                audio.audioBuffer = audioBuffer;
-                if (!audio.tryAttachDecodedBuffer(cachedClip, audioBuffer, name)) {
-                    return;
-                }
-                audio.loadingFailed = false;
-                audio.retryWhenOpenAlReady = false;
-                audio.decoded = true;
-                audio.loadingCompleted = true;
-            } catch (Exception ex) {
-                audio.loadingFailed = true;
-                LOGGER.error("[FANCYMENU] Failed to read OGG audio: " + name, ex);
+            if (isOpenAlNotReadyOrReloading()) {
+                CloseableUtils.closeQuietly(clip);
+                failBecauseOpenAlNotReady(audio, name);
+                return audio;
             }
-            CloseableUtils.closeQuietly(stream);
-            CloseableUtils.closeQuietly(in);
-        }).start();
+
+            audio.clip = (clip != null) ? clip : OpenAlAudioClipFactory.createSafe();
+
+            ALAudioClip cachedClip = audio.clip;
+            if (cachedClip == null) {
+                failBecauseOpenAlReload(audio, name, "failed to allocate OpenAL source");
+                return audio;
+            }
+            if (!audio.configureNonPositionalSource(name)) {
+                return audio;
+            }
+
+            ALAudioLoader.loadInBackground(in, name, new BackgroundLoad(audio, cachedClip, name));
+            loadingStarted = true;
+        } finally {
+            if (!loadingStarted) CloseableUtils.closeQuietly(in);
+        }
 
         return audio;
     }
 
+    /**
+     * Closes the passed {@link InputStream}, also when loading fails or doesn't start.
+     */
     @NotNull
     public static OggAudio of(@NotNull InputStream in) {
         return of(in, null, null, null);
@@ -507,58 +478,74 @@ public class OggAudio implements IAudio, ALAudio {
     }
 
     private boolean canContinueBackgroundLoading(@NotNull ALAudioClip targetClip, @NotNull String sourceName) {
-        if (this.closed || (this.clip != targetClip) || targetClip.isClosed()) return false;
-        if (isOpenAlNotReadyOrReloading()) {
-            failBecauseOpenAlNotReady(this, sourceName);
-            return false;
-        }
-        if (!targetClip.isValidOpenAlSource()) {
-            failBecauseOpenAlReload(this, sourceName, "OpenAL source became invalid");
-            return false;
-        }
-        return true;
-    }
-
-    private boolean tryAttachDecodedBuffer(@NotNull ALAudioClip targetClip, @NotNull ALAudioBuffer decodedBuffer, @NotNull String sourceName) {
-        if (!this.canContinueBackgroundLoading(targetClip, sourceName)) return false;
-        Integer preparedBuffer = decodedBuffer.getSource();
-        if ((preparedBuffer == null) || !decodedBuffer.isValidOpenAlSource()) {
-            failBecauseOpenAlReload(this, sourceName, "failed to prepare OpenAL buffer");
-            return false;
-        }
-        try {
-            targetClip.setStaticBuffer(decodedBuffer);
+        synchronized (this.backgroundLoadLock) {
+            if (this.closed || (this.clip != targetClip) || targetClip.isClosed()) return false;
+            if (isOpenAlNotReadyOrReloading()) {
+                failBecauseOpenAlNotReady(this, sourceName);
+                return false;
+            }
             if (!targetClip.isValidOpenAlSource()) {
-                failBecauseOpenAlReload(this, sourceName, "OpenAL source became invalid while attaching decoded audio");
+                failBecauseOpenAlReload(this, sourceName, "OpenAL source became invalid");
                 return false;
             }
             return true;
-        } catch (Exception ex) {
-            failBecauseOpenAlReload(this, sourceName, "failed to attach decoded audio buffer");
-            LOGGER.debug("[FANCYMENU] OGG buffer attach error details: " + sourceName, ex);
         }
-        return false;
+    }
+
+    /**
+     * @return True when the clip plays the buffer and the audio owns it, false when the caller has to delete the buffer.
+     */
+    private boolean tryAttachDecodedBuffer(@NotNull ALAudioClip targetClip, @NotNull ALAudioBuffer decodedBuffer, @NotNull String sourceName) {
+        if (!this.canContinueBackgroundLoading(targetClip, sourceName)) return false;
+        // Uploads the audio data to OpenAL without holding the lock, so close() never waits for that
+        boolean prepared = (decodedBuffer.getSource() != null) && decodedBuffer.isValidOpenAlSource();
+        synchronized (this.backgroundLoadLock) {
+            if (!this.canContinueBackgroundLoading(targetClip, sourceName)) return false;
+            if (!prepared) {
+                failBecauseOpenAlReload(this, sourceName, "failed to prepare OpenAL buffer");
+                return false;
+            }
+            try {
+                targetClip.setStaticBuffer(decodedBuffer);
+                if (!targetClip.isValidOpenAlSource()) {
+                    failBecauseOpenAlReload(this, sourceName, "OpenAL source became invalid while attaching decoded audio");
+                    return false;
+                }
+                this.audioBuffer = decodedBuffer;
+                this.loadingFailed = false;
+                this.retryWhenOpenAlReady = false;
+                this.decoded = true;
+                this.loadingCompleted = true;
+                return true;
+            } catch (Exception ex) {
+                failBecauseOpenAlReload(this, sourceName, "failed to attach decoded audio buffer");
+                LOGGER.debug("[FANCYMENU] OGG buffer attach error details: " + sourceName, ex);
+            }
+            return false;
+        }
     }
 
     @Override
     public void close() {
-        this.closed = true;
-        this.retryWhenOpenAlReady = false;
-        try {
-            ALAudioClip cachedClip = this.clip;
-            if (cachedClip != null) cachedClip.close();
-        } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to close OGG audio clip!", ex);
+        synchronized (this.backgroundLoadLock) {
+            this.closed = true;
+            this.retryWhenOpenAlReady = false;
+            try {
+                ALAudioClip cachedClip = this.clip;
+                if (cachedClip != null) cachedClip.close();
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to close OGG audio clip!", ex);
+            }
+            this.clip = null;
+            try {
+                ALAudioBuffer cachedBuffer = this.audioBuffer;
+                if (cachedBuffer != null) cachedBuffer.delete();
+            } catch (Exception ex) {
+                LOGGER.error("[FANCYMENU] Failed to delete OGG audio buffer!", ex);
+            }
+            this.audioBuffer = null;
+            this.decoded = false;
         }
-        this.clip = null;
-        try {
-            ALAudioBuffer cachedBuffer = this.audioBuffer;
-            if (cachedBuffer != null) cachedBuffer.delete();
-        } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to delete OGG audio buffer!", ex);
-        }
-        this.audioBuffer = null;
-        this.decoded = false;
     }
 
     @Override
@@ -578,6 +565,55 @@ public class OggAudio implements IAudio, ALAudio {
             }
         }
         return this.closed;
+    }
+
+    /**
+     * Connects a background load to the audio and the clip it got started for.
+     */
+    private static final class BackgroundLoad implements ALAudioLoader.Target {
+
+        @NotNull
+        private final OggAudio audio;
+        @NotNull
+        private final ALAudioClip clip;
+        @NotNull
+        private final String sourceName;
+
+        private BackgroundLoad(@NotNull OggAudio audio, @NotNull ALAudioClip clip, @NotNull String sourceName) {
+            this.audio = audio;
+            this.clip = clip;
+            this.sourceName = sourceName;
+        }
+
+        @Override
+        public boolean canContinueLoading() {
+            return this.audio.canContinueBackgroundLoading(this.clip, this.sourceName);
+        }
+
+        /**
+         * Decodes the OGG file in a single pass, which also gives its exact duration.
+         */
+        @Override
+        public @NotNull ALAudioBuffer decode(@NotNull byte[] audioData) throws IOException {
+            try (OggAudioStream stream = new OggAudioStream(new ByteArrayInputStream(audioData))) {
+                ByteBuffer pcmData = stream.readAll();
+                AudioFormat format = stream.getFormat();
+                // PCM bytes / (2 bytes per sample * channels) = samples per channel, divided by the sample rate gives seconds
+                this.audio.duration = (float) (pcmData.remaining() / (2 * format.getChannels())) / format.getSampleRate();
+                return new ALAudioBuffer(pcmData, format);
+            }
+        }
+
+        @Override
+        public boolean attachDecodedBuffer(@NotNull ALAudioBuffer buffer) {
+            return this.audio.tryAttachDecodedBuffer(this.clip, buffer, this.sourceName);
+        }
+
+        @Override
+        public void onLoadingFailed() {
+            this.audio.loadingFailed = true;
+        }
+
     }
 
 }
