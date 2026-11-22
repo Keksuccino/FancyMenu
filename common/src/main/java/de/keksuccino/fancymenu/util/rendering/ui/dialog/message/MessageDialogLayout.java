@@ -7,6 +7,8 @@ import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
  * Where the parts of a {@link MessageDialogBody} go: the icon and the message at the top, the row of buttons at the bottom.
  * All positions and sizes are in the coordinates of the dialog's body.<br><br>
  *
+ * The icon and the lines of the message stand together in the horizontal middle of the body, with the lines starting right of the icon,
+ * so a dialog that is wider than its message keeps the same room on both sides of it.<br>
  * The lines of the message get the room between the top padding and the buttons, minus a margin at its top and bottom, so they never reach
  * the buttons. A message that fits this room stands in its middle. A longer one starts at the top of the room and scrolls in the message area,
  * with everything outside of the area cut off. Glyphs reach above the top of their line, so the message area also covers {@link #GLYPH_OVERHANG}
@@ -16,14 +18,15 @@ import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
  *
  * @param textX Where the lines of the message start horizontally.
  * @param textY Where the first line of the message starts when the message is not scrolled.
- * @param iconY Where the icon of the dialog starts, if it has one. It always starts at {@link #PADDING} horizontally.
+ * @param iconX Where the icon of the dialog starts horizontally, if it has one.
+ * @param iconY Where the icon of the dialog starts vertically, if it has one.
  * @param messageAreaTop The top of the area a scrolling message gets drawn in.
  * @param messageAreaHeight The height of the area a scrolling message gets drawn in, which is zero when there is no room for its lines.
  * @param maxScroll How far the message can scroll, which is zero for a message that fits its room.
  * @param scrollBarCenterX The horizontal center of the scroll bar of a message that scrolls, in the middle of the padding right of the message.
  * @param buttonY Where the row of buttons starts.
  */
-record MessageDialogLayout(int textX, int textY, int iconY, int messageAreaTop, int messageAreaHeight, int maxScroll, int scrollBarCenterX, int buttonY) {
+record MessageDialogLayout(int textX, int textY, int iconX, int iconY, int messageAreaTop, int messageAreaHeight, int maxScroll, int scrollBarCenterX, int buttonY) {
 
     static final int ICON_SIZE = 32;
     private static final int ICON_GAP = 12;
@@ -65,8 +68,10 @@ record MessageDialogLayout(int textX, int textY, int iconY, int messageAreaTop, 
 
     /**
      * Lays out a body of the given size for a message that wraps into the given number of lines.
+     *
+     * @param textWidth The width of the widest line of the message.
      */
-    static MessageDialogLayout of(int bodyWidth, int bodyHeight, int lineCount, boolean hasIcon) {
+    static MessageDialogLayout of(int bodyWidth, int bodyHeight, int lineCount, int textWidth, boolean hasIcon) {
         int buttonY = bodyHeight - BUTTON_HEIGHT - BUTTON_BOTTOM_PADDING;
         int linesTop = PADDING + MESSAGE_MARGIN;
         int linesHeight = Math.max(0, buttonY - MESSAGE_MARGIN - linesTop);
@@ -92,18 +97,31 @@ record MessageDialogLayout(int textX, int textY, int iconY, int messageAreaTop, 
         }
         int messageAreaTop = linesTop - GLYPH_OVERHANG;
         int messageAreaHeight = (linesHeight > 0) ? (linesHeight + GLYPH_OVERHANG) : 0;
-        return new MessageDialogLayout(getTextX(hasIcon), textY, iconY, messageAreaTop, messageAreaHeight, maxScroll, bodyWidth - (PADDING / 2), buttonY);
+        int iconX = getContentX(bodyWidth, textWidth, hasIcon);
+        return new MessageDialogLayout(iconX + getTextOffset(hasIcon), textY, iconX, iconY, messageAreaTop, messageAreaHeight, maxScroll, bodyWidth - (PADDING / 2), buttonY);
     }
 
-    private static int getTextX(boolean hasIcon) {
-        return hasIcon ? (PADDING + ICON_SIZE + ICON_GAP) : PADDING;
+    /**
+     * Returns how far right of the icon the lines of the message start.
+     */
+    private static int getTextOffset(boolean hasIcon) {
+        return hasIcon ? (ICON_SIZE + ICON_GAP) : 0;
+    }
+
+    /**
+     * Returns where the icon and the lines of the message start horizontally, which puts them together in the middle of the body.
+     * They never start left of the padding, so a line that is wider than the lines get wrapped at, like one long word, runs out at the right instead.
+     */
+    private static int getContentX(int bodyWidth, int textWidth, boolean hasIcon) {
+        int contentWidth = (textWidth > 0) ? (getTextOffset(hasIcon) + textWidth) : (hasIcon ? ICON_SIZE : 0);
+        return Math.max(PADDING, (bodyWidth - contentWidth) / 2);
     }
 
     /**
      * Returns the width the lines of the message get wrapped at in a body of the given width.
      */
     static int getWrapWidth(int bodyWidth, boolean hasIcon) {
-        return Math.max(MIN_WRAP_WIDTH, bodyWidth - getTextX(hasIcon) - PADDING);
+        return Math.max(MIN_WRAP_WIDTH, bodyWidth - (PADDING * 2) - getTextOffset(hasIcon));
     }
 
     /**

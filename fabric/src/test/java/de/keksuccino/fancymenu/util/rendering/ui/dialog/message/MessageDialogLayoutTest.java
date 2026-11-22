@@ -19,17 +19,22 @@ class MessageDialogLayoutTest {
     private static final int WINDOW_FRAME_AND_MENU_BAR_HEIGHT = 28 + 21 + 2;
     /** One step of the mouse wheel scrolls by three lines. */
     private static final int WHEEL_STEP = 3 * LINE;
+    private static final int PADDING = MessageDialogLayout.PADDING;
+    private static final int ICON_SIZE = MessageDialogLayout.ICON_SIZE;
+    /** How far right of the icon the lines start: the icon (32) and the gap after it (12). */
+    private static final int ICON_AND_GAP = 44;
 
     @Test
     void messageThatFitsStaysWhereTheDialogAlwaysPutIt() {
         for (int bodyHeight = 72; bodyHeight <= 400; bodyHeight++) {
             for (int lines = 0; lines <= 30; lines++) {
                 for (boolean hasIcon : new boolean[] {false, true}) {
-                    MessageDialogLayout layout = MessageDialogLayout.of(DEFAULT_BODY_WIDTH, bodyHeight, lines, hasIcon);
+                    MessageDialogLayout layout = layoutOfFullLines(DEFAULT_BODY_WIDTH, bodyHeight, lines, hasIcon);
                     if (MessageDialogLayout.getFittingBodyHeight(lines, hasIcon) > bodyHeight) continue;
                     int[] old = oldLayout(bodyHeight, lines, hasIcon);
                     String context = "body height " + bodyHeight + ", " + lines + " lines, icon " + hasIcon;
                     assertEquals(old[0], layout.textX(), context);
+                    assertEquals(PADDING, layout.iconX(), context);
                     assertEquals(old[1], layout.textY(), context);
                     assertEquals(old[2], layout.iconY(), context);
                     assertEquals(old[3], layout.buttonY(), context);
@@ -57,11 +62,11 @@ class MessageDialogLayoutTest {
         for (int bodyHeight : DEFAULT_BODY_HEIGHTS) {
             assertTrue(fittingHeight > bodyHeight, "the dialog has to grow for the message");
             // Where the screen has no room for a taller dialog, the message scrolls instead
-            MessageDialogLayout defaultSize = MessageDialogLayout.of(DEFAULT_BODY_WIDTH, bodyHeight, lines, true);
+            MessageDialogLayout defaultSize = layoutOfFullLines(DEFAULT_BODY_WIDTH, bodyHeight, lines, true);
             assertTrue(defaultSize.isScrollable());
             assertTrue(defaultSize.messageAreaTop() + defaultSize.messageAreaHeight() < defaultSize.buttonY());
         }
-        MessageDialogLayout fitted = MessageDialogLayout.of(DEFAULT_BODY_WIDTH, fittingHeight, lines, true);
+        MessageDialogLayout fitted = layoutOfFullLines(DEFAULT_BODY_WIDTH, fittingHeight, lines, true);
         assertFalse(fitted.isScrollable());
         assertTrue(fitted.textY() + (lines * LINE) < fitted.buttonY());
     }
@@ -71,7 +76,7 @@ class MessageDialogLayoutTest {
         for (int bodyHeight = 0; bodyHeight <= 600; bodyHeight++) {
             for (int lines = 0; lines <= 100; lines++) {
                 for (boolean hasIcon : new boolean[] {false, true}) {
-                    MessageDialogLayout layout = MessageDialogLayout.of(DEFAULT_BODY_WIDTH, bodyHeight, lines, hasIcon);
+                    MessageDialogLayout layout = layoutOfFullLines(DEFAULT_BODY_WIDTH, bodyHeight, lines, hasIcon);
                     String context = "body height " + bodyHeight + ", " + lines + " lines, icon " + hasIcon;
                     int areaBottom = layout.messageAreaTop() + layout.messageAreaHeight();
                     int textHeight = lines * LINE;
@@ -104,13 +109,13 @@ class MessageDialogLayoutTest {
         for (int lines = 0; lines <= 200; lines++) {
             for (boolean hasIcon : new boolean[] {false, true}) {
                 int fittingHeight = MessageDialogLayout.getFittingBodyHeight(lines, hasIcon);
-                MessageDialogLayout fitted = MessageDialogLayout.of(DEFAULT_BODY_WIDTH, fittingHeight, lines, hasIcon);
+                MessageDialogLayout fitted = layoutOfFullLines(DEFAULT_BODY_WIDTH, fittingHeight, lines, hasIcon);
                 String context = lines + " lines, icon " + hasIcon;
                 assertFalse(fitted.isScrollable(), context);
                 int messageHeight = Math.max(lines * LINE, hasIcon ? 32 : 0);
                 assertEquals((messageHeight > 0) ? (messageHeight + OVERHANG) : 0, fitted.messageAreaHeight(), context);
                 if ((lines * LINE) > (hasIcon ? 32 : 0)) {
-                    assertTrue(MessageDialogLayout.of(DEFAULT_BODY_WIDTH, fittingHeight - 1, lines, hasIcon).isScrollable(), context);
+                    assertTrue(layoutOfFullLines(DEFAULT_BODY_WIDTH, fittingHeight - 1, lines, hasIcon).isScrollable(), context);
                 }
             }
         }
@@ -127,10 +132,66 @@ class MessageDialogLayoutTest {
     @Test
     void scrollBarSitsInThePaddingRightOfTheMessage() {
         for (int bodyWidth = 100; bodyWidth <= 800; bodyWidth++) {
-            MessageDialogLayout layout = MessageDialogLayout.of(bodyWidth, 200, 40, true);
-            int textRight = layout.textX() + MessageDialogLayout.getWrapWidth(bodyWidth, true);
-            assertTrue(layout.scrollBarCenterX() > textRight);
-            assertTrue(layout.scrollBarCenterX() < bodyWidth);
+            int wrapWidth = MessageDialogLayout.getWrapWidth(bodyWidth, true);
+            for (int textWidth : new int[] {1, wrapWidth / 2, wrapWidth}) {
+                MessageDialogLayout layout = MessageDialogLayout.of(bodyWidth, 200, 40, textWidth, true);
+                int textRight = layout.textX() + textWidth;
+                String context = "body width " + bodyWidth + ", text width " + textWidth;
+                assertTrue(layout.scrollBarCenterX() > textRight, context);
+                assertTrue(layout.scrollBarCenterX() < bodyWidth, context);
+            }
+        }
+    }
+
+    @Test
+    void iconAndMessageStandTogetherInTheMiddleOfTheBody() {
+        for (int bodyWidth = 100; bodyWidth <= 900; bodyWidth++) {
+            for (boolean hasIcon : new boolean[] {false, true}) {
+                int wrapWidth = MessageDialogLayout.getWrapWidth(bodyWidth, hasIcon);
+                for (int textWidth = 1; textWidth <= wrapWidth; textWidth++) {
+                    MessageDialogLayout layout = MessageDialogLayout.of(bodyWidth, 200, 2, textWidth, hasIcon);
+                    String context = "body width " + bodyWidth + ", text width " + textWidth + ", icon " + hasIcon;
+                    // The lines start right of the icon, or where the icon would be
+                    assertEquals(layout.iconX() + (hasIcon ? ICON_AND_GAP : 0), layout.textX(), context);
+                    int roomLeft = layout.iconX();
+                    int roomRight = bodyWidth - (layout.textX() + textWidth);
+                    assertTrue(Math.abs(roomLeft - roomRight) <= 1, context + ": " + roomLeft + " left, " + roomRight + " right");
+                    assertTrue((roomLeft >= PADDING) && (roomRight >= PADDING), context);
+                }
+            }
+        }
+    }
+
+    @Test
+    void shortWarningStandsInTheMiddleOfADialogOfTheDefaultSize() {
+        // A warning of one line that is 200 units wide, next to its icon
+        for (int bodyHeight : DEFAULT_BODY_HEIGHTS) {
+            MessageDialogLayout layout = MessageDialogLayout.of(DEFAULT_BODY_WIDTH, bodyHeight, 1, 200, true);
+            assertEquals((DEFAULT_BODY_WIDTH - ICON_AND_GAP - 200) / 2, layout.iconX());
+            assertEquals(layout.iconX() + ICON_AND_GAP, layout.textX());
+        }
+    }
+
+    @Test
+    void lineWiderThanTheWrapWidthStartsAtThePadding() {
+        // Like one long word, which can't get wrapped
+        for (int bodyWidth = 0; bodyWidth <= 900; bodyWidth++) {
+            for (boolean hasIcon : new boolean[] {false, true}) {
+                int wrapWidth = MessageDialogLayout.getWrapWidth(bodyWidth, hasIcon);
+                MessageDialogLayout layout = MessageDialogLayout.of(bodyWidth, 200, 1, wrapWidth + 50, hasIcon);
+                String context = "body width " + bodyWidth + ", icon " + hasIcon;
+                assertEquals(PADDING, layout.iconX(), context);
+                assertEquals(PADDING + (hasIcon ? ICON_AND_GAP : 0), layout.textX(), context);
+            }
+        }
+    }
+
+    @Test
+    void iconOfAMessageWithoutLinesStandsInTheMiddle() {
+        for (int bodyWidth = ICON_SIZE + (PADDING * 2); bodyWidth <= 900; bodyWidth++) {
+            MessageDialogLayout layout = MessageDialogLayout.of(bodyWidth, 200, 0, 0, true);
+            int roomRight = bodyWidth - (layout.iconX() + ICON_SIZE);
+            assertTrue(Math.abs(layout.iconX() - roomRight) <= 1, "body width " + bodyWidth);
         }
     }
 
@@ -163,20 +224,20 @@ class MessageDialogLayoutTest {
 
     @Test
     void scrollOffsetCoversTheWholeMessage() {
-        MessageDialogLayout layout = MessageDialogLayout.of(DEFAULT_BODY_WIDTH, 200, 30, true);
+        MessageDialogLayout layout = layoutOfFullLines(DEFAULT_BODY_WIDTH, 200, 30, true);
         assertTrue(layout.isScrollable());
         assertEquals(0, layout.getScrollOffset(0.0F));
         assertEquals(layout.maxScroll(), layout.getScrollOffset(1.0F));
         assertEquals(0, layout.getScrollOffset(-0.5F));
         assertEquals(layout.maxScroll(), layout.getScrollOffset(1.5F));
-        MessageDialogLayout fitting = MessageDialogLayout.of(DEFAULT_BODY_WIDTH, 200, 2, true);
+        MessageDialogLayout fitting = layoutOfFullLines(DEFAULT_BODY_WIDTH, 200, 2, true);
         assertEquals(0, fitting.getScrollOffset(0.7F));
         assertEquals(0.0F, fitting.getScrollAfterWheel(0.7F, -1.0D));
     }
 
     @Test
     void wheelScrollsByWholeLinesAndStopsAtBothEnds() {
-        MessageDialogLayout layout = MessageDialogLayout.of(DEFAULT_BODY_WIDTH, 200, 30, true);
+        MessageDialogLayout layout = layoutOfFullLines(DEFAULT_BODY_WIDTH, 200, 30, true);
         float scroll = 0.0F;
         int lastOffset = 0;
         while (lastOffset < layout.maxScroll()) {
@@ -197,7 +258,7 @@ class MessageDialogLayoutTest {
     void onlyLinesInsideTheAreaGetDrawn() {
         for (int bodyHeight = 90; bodyHeight <= 300; bodyHeight += 7) {
             int lines = 60;
-            MessageDialogLayout layout = MessageDialogLayout.of(DEFAULT_BODY_WIDTH, bodyHeight, lines, true);
+            MessageDialogLayout layout = layoutOfFullLines(DEFAULT_BODY_WIDTH, bodyHeight, lines, true);
             assertTrue(layout.isScrollable());
             int areaBottom = layout.messageAreaTop() + layout.messageAreaHeight();
             for (int offset = 0; offset <= layout.maxScroll(); offset++) {
@@ -211,7 +272,7 @@ class MessageDialogLayoutTest {
                 }
             }
         }
-        MessageDialogLayout fitting = MessageDialogLayout.of(DEFAULT_BODY_WIDTH, 200, 4, true);
+        MessageDialogLayout fitting = layoutOfFullLines(DEFAULT_BODY_WIDTH, 200, 4, true);
         assertEquals(0, fitting.getFirstVisibleLine(0));
         assertEquals(4, fitting.getVisibleLineEnd(0, 4));
     }
@@ -221,7 +282,7 @@ class MessageDialogLayoutTest {
         for (int bodyHeight = 0; bodyHeight <= 600; bodyHeight++) {
             for (int lines = 1; lines <= 100; lines++) {
                 for (boolean hasIcon : new boolean[] {false, true}) {
-                    MessageDialogLayout layout = MessageDialogLayout.of(DEFAULT_BODY_WIDTH, bodyHeight, lines, hasIcon);
+                    MessageDialogLayout layout = layoutOfFullLines(DEFAULT_BODY_WIDTH, bodyHeight, lines, hasIcon);
                     if (!layout.isScrollable() || (layout.messageAreaHeight() == 0)) continue;
                     String context = "body height " + bodyHeight + ", " + lines + " lines, icon " + hasIcon;
                     int areaBottom = layout.messageAreaTop() + layout.messageAreaHeight();
@@ -241,7 +302,7 @@ class MessageDialogLayoutTest {
     @Test
     void noRoomForTheLinesDrawsNoLines() {
         // A body this small leaves no room between the top padding and the buttons
-        MessageDialogLayout layout = MessageDialogLayout.of(DEFAULT_BODY_WIDTH, 60, 10, true);
+        MessageDialogLayout layout = layoutOfFullLines(DEFAULT_BODY_WIDTH, 60, 10, true);
         assertEquals(0, layout.messageAreaHeight());
         assertEquals(0, layout.getVisibleLineEnd(0, 10));
         assertEquals(0, layout.getVisibleLineEnd(layout.maxScroll(), 10));
@@ -269,7 +330,7 @@ class MessageDialogLayoutTest {
                     String context = "screen height " + screenHeight + ", " + lines + " lines, icon " + hasIcon;
                     int fittingHeight = MessageDialogLayout.getFittingBodyHeight(lines, hasIcon);
                     int bodyHeight = MessageDialogLayout.getMinBodyHeight(lines, hasIcon, screenHeight);
-                    MessageDialogLayout layout = MessageDialogLayout.of(DEFAULT_BODY_WIDTH, bodyHeight, lines, hasIcon);
+                    MessageDialogLayout layout = layoutOfFullLines(DEFAULT_BODY_WIDTH, bodyHeight, lines, hasIcon);
                     // Its window fits below the menu bar with some gap to the bottom of the screen, or with a gap of at least 8 units
                     boolean windowFits = (fittingHeight + WINDOW_FRAME_AND_MENU_BAR_HEIGHT) < screenHeight;
                     boolean windowFitsEasily = (fittingHeight + WINDOW_FRAME_AND_MENU_BAR_HEIGHT + 8) <= screenHeight;
@@ -303,7 +364,7 @@ class MessageDialogLayoutTest {
         // 100 lines on a screen 1080 units tall, like at the Micro UI scale in a game window 1080 pixels tall
         int bodyHeight = MessageDialogLayout.getMinBodyHeight(100, true, 1080.0F);
         assertEquals(810, bodyHeight);
-        assertTrue(MessageDialogLayout.of(DEFAULT_BODY_WIDTH, bodyHeight, 100, true).maxScroll() >= 500);
+        assertTrue(layoutOfFullLines(DEFAULT_BODY_WIDTH, bodyHeight, 100, true).maxScroll() >= 500);
     }
 
     @Test
@@ -314,9 +375,17 @@ class MessageDialogLayoutTest {
         assertEquals(184, MessageDialogLayout.getFittingBodyHeight(lines, true));
         int bodyHeight = MessageDialogLayout.getMinBodyHeight(lines, true, 240.0F);
         assertEquals(184, bodyHeight);
-        assertFalse(MessageDialogLayout.of(DEFAULT_BODY_WIDTH, bodyHeight, lines, true).isScrollable());
+        assertFalse(layoutOfFullLines(DEFAULT_BODY_WIDTH, bodyHeight, lines, true).isScrollable());
         // A screen without room for the whole message keeps three quarters of its height for the dialog, like before
         assertEquals(165, MessageDialogLayout.getMinBodyHeight(lines, true, 220.0F));
+    }
+
+    /**
+     * Lays out a message whose widest line is as wide as the lines get wrapped at, like most messages that wrap into more than one line.
+     * The icon and the lines of such a message start at the padding.
+     */
+    private static MessageDialogLayout layoutOfFullLines(int bodyWidth, int bodyHeight, int lines, boolean hasIcon) {
+        return MessageDialogLayout.of(bodyWidth, bodyHeight, lines, MessageDialogLayout.getWrapWidth(bodyWidth, hasIcon), hasIcon);
     }
 
     /**

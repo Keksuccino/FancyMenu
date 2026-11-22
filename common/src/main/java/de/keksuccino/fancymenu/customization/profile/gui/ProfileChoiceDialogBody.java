@@ -47,6 +47,8 @@ final class ProfileChoiceDialogBody extends PiPWindowBody {
     private final List<ExtendedButton> buttons = new ArrayList<>();
     @NotNull
     private List<MutableComponent> lines = new ArrayList<>();
+    /** Where the icon starts horizontally, which puts the icon and the lines next to it together in the middle of the body. */
+    private int contentX = PADDING;
     private boolean answered = false;
 
     /**
@@ -86,7 +88,16 @@ final class ProfileChoiceDialogBody extends PiPWindowBody {
             this.buttons.add(this.addRenderableWidget(button));
         }
         int wrapWidth = Math.max(20, this.width - (PADDING * 2) - ICON_SIZE - ICON_GAP);
-        this.lines = UIBase.lineWrapUIComponentsNormal(UIBase.lineWrapUIComponentsNormal(this.message, 100000.0F), wrapWidth);
+        // The body gets drawn at the UI scale, where the UI font is one size bigger on small UI scales, so the lines have to get measured like that
+        UIBase.startUIScaleRendering();
+        try {
+            this.lines = UIBase.lineWrapUIComponentsNormal(UIBase.lineWrapUIComponentsNormal(this.message, 100000.0F), wrapWidth);
+            int contentWidth = ICON_SIZE + ICON_GAP + UIBase.getWidestUITextWidthNormal(this.lines);
+            // A line that is wider than the lines get wrapped at, like one long word, runs out at the right instead of starting left of the padding
+            this.contentX = Math.max(PADDING, (this.width - contentWidth) / 2);
+        } finally {
+            UIBase.stopUIScaleRendering();
+        }
     }
 
     @Override
@@ -95,8 +106,8 @@ final class ProfileChoiceDialogBody extends PiPWindowBody {
         int textHeight = this.lines.size() * LINE_SPACING;
         int blockHeight = Math.max(textHeight, ICON_SIZE);
         int contentY = PADDING + Math.max(0, (contentBottom - PADDING - blockHeight) / 2);
-        this.icon.render(graphics, PADDING, contentY + ((blockHeight - ICON_SIZE) / 2.0F), ICON_SIZE, ICON_SIZE, this.iconColor);
-        int textX = PADDING + ICON_SIZE + ICON_GAP;
+        this.icon.render(graphics, this.contentX, contentY + ((blockHeight - ICON_SIZE) / 2.0F), ICON_SIZE, ICON_SIZE, this.iconColor);
+        int textX = this.contentX + ICON_SIZE + ICON_GAP;
         int y = contentY + Math.max(0, (blockHeight - textHeight) / 2);
         for (Component line : this.lines) {
             UIBase.renderText(graphics, line, textX, y, ProfileUiRendering.getTextColor());
