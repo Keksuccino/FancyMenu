@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.lifecycle.ClientShutdownHandler;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
@@ -160,12 +161,11 @@ public abstract class AnimatedImageTexture implements ITexture, PlayableResource
         }
         FancyMenuThreads.startDaemonThread(() -> {
             try {
-                InputStream in = this.open();
-                if (in == null) throw new IOException("Web resource input stream was NULL");
-                this.populate(in, url);
+                this.populate(WebUtils.openResourceStreamOrThrow(url, WebUtils.WebResourceType.BUFFERED_ANIMATED_TEXTURE), url);
             } catch (Exception ex) {
                 this.publishFailure();
-                LOGGER.error("[FANCYMENU] Failed to read {} image from URL: {}", this.formatName, url, ex);
+                // Shutting down the client cancels web loads, which is no error
+                if (!ClientShutdownHandler.isShuttingDown()) LOGGER.error("[FANCYMENU] Failed to read {} image from URL: {}", this.formatName, url, ex);
             }
         }, this.getClass().getSimpleName() + "-WebLoader");
     }
@@ -190,7 +190,8 @@ public abstract class AnimatedImageTexture implements ITexture, PlayableResource
         } catch (Exception ex) {
             this.sourceName = name;
             this.publishFailure();
-            LOGGER.error("[FANCYMENU] Failed to read {} image: {}", this.formatName, name, ex);
+            // Shutting down the client cancels web loads, so copying their stream fails then, which is no error
+            if (!ClientShutdownHandler.isShuttingDown()) LOGGER.error("[FANCYMENU] Failed to read {} image: {}", this.formatName, name, ex);
             return;
         } finally {
             try {
@@ -518,7 +519,7 @@ public abstract class AnimatedImageTexture implements ITexture, PlayableResource
 
     @Override
     public @Nullable InputStream open() throws IOException {
-        if (this.sourceURL != null) return WebUtils.openResourceStream(this.sourceURL, WebUtils.WebResourceType.BUFFERED_ANIMATED_TEXTURE);
+        if (this.sourceURL != null) return WebUtils.openResourceStreamOrThrow(this.sourceURL, WebUtils.WebResourceType.BUFFERED_ANIMATED_TEXTURE);
         if (this.sourceFile != null) return new FileInputStream(this.sourceFile);
         if (this.sourceLocation != null) return Minecraft.getInstance().getResourceManager().open(this.sourceLocation);
         return null;

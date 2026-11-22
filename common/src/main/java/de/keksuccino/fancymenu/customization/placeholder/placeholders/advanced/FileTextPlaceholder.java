@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.util.TaskExecutor;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.file.LocalSourcePathResolver;
+import de.keksuccino.fancymenu.util.lifecycle.ClientShutdownHandler;
 import de.keksuccino.fancymenu.util.resource.ResourceSourceType;
 import de.keksuccino.fancymenu.util.threading.AsyncRefreshingValueCache;
 import net.minecraft.client.resources.language.I18n;
@@ -131,7 +132,8 @@ public class FileTextPlaceholder extends Placeholder {
     @NotNull
     private static AsyncRefreshingValueCache<String, List<String>> createContentCache(@NotNull AsyncRefreshingValueCache.TaskLauncher taskLauncher, @NotNull AsyncRefreshingValueCache.ValueLoader<String, List<String>> sourceLoader, @NotNull LongSupplier timeSource) {
         return new AsyncRefreshingValueCache<>(taskLauncher, source -> List.copyOf(sourceLoader.load(source)), (source, exception) -> {
-            LOGGER.error("[FANCYMENU] Failed to read source asynchronously: " + source, exception);
+            // Shutting down the client cancels web loads, which is no error
+            if (!ClientShutdownHandler.isShuttingDown()) LOGGER.error("[FANCYMENU] Failed to read source asynchronously: " + source, exception);
             return List.of();
         }, (source, exception) -> LOGGER.error("[FANCYMENU] Failed to start the asynchronous source read: " + source, exception), timeSource);
     }
@@ -150,13 +152,7 @@ public class FileTextPlaceholder extends Placeholder {
             return new ArrayList<>();
         }
         
-        InputStream stream = WebUtils.openResourceStream(url, WebUtils.WebResourceType.TEXT);
-        if (stream == null) {
-            LOGGER.warn("[FANCYMENU] Failed to open URL stream: " + url);
-            return new ArrayList<>();
-        }
-
-        try (stream) {
+        try (InputStream stream = WebUtils.openResourceStreamOrThrow(url, WebUtils.WebResourceType.TEXT)) {
             return FileUtils.readTextLinesFrom(stream);
         }
     }
