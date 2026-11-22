@@ -7,10 +7,12 @@ import de.keksuccino.fancymenu.customization.listener.listeners.OnVideoPlaybackS
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.lifecycle.ClientShutdownHandler;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.watermedia.PlaybackLoopTracker;
+import de.keksuccino.fancymenu.util.watermedia.WatermediaDeferredPlayerReleaseTracker;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaFrameTexture;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaReflectionBridge;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaUtil;
@@ -655,6 +657,7 @@ public class Mp4Video implements IVideo {
     public void close() {
         Object cachedPlayer;
         long closeReleaseVersion;
+        boolean releaseForShutdown;
         synchronized (this.playerInitLock) {
             if (this.closed) return;
             this.stopRequestVersion++;
@@ -669,7 +672,11 @@ public class Mp4Video implements IVideo {
             cachedPlayer = this.mediaPlayer;
             this.mediaPlayer = null;
             this.mrl = null;
-            closeReleaseVersion = this.deferredReleaseTracker.schedule(cachedPlayer);
+            // No later client tick is guaranteed once shutdown starts, so the normal future-tick release sequence could never execute.
+            // Shutdown can also begin between the global-state check and tracker registration; ownership then stays on this close call.
+            // Deciding this under the player lock keeps sound-engine reloads from claiming a player that this close call releases itself.
+            releaseForShutdown = (cachedPlayer != null) && (ClientShutdownHandler.isShuttingDown() || !WatermediaDeferredPlayerReleaseTracker.track(cachedPlayer));
+            closeReleaseVersion = this.deferredReleaseTracker.schedule(releaseForShutdown ? null : cachedPlayer);
             if (cachedPlayer != null) {
                 try {
                     WatermediaReflectionBridge.playerPause(cachedPlayer, true);
@@ -679,7 +686,11 @@ public class Mp4Video implements IVideo {
                 }
             }
         }
-        if (cachedPlayer != null) {
+        if (releaseForShutdown) {
+            WatermediaReflectionBridge.playerStop(cachedPlayer);
+            WatermediaReflectionBridge.playerReleaseForShutdown(cachedPlayer);
+            Mp4VideoSoundEngineReloadHandler.unregister(this);
+        } else if (cachedPlayer != null) {
             // FFmpeg can still enqueue render-thread upload tasks right after stop.
             // Run stop/release in a deferred sequence so queued uploads can drain first.
             this.queueDeferredHardStopAndReleaseForClose(cachedPlayer, closeReleaseVersion, HARD_STOP_DEFER_TICKS);
@@ -773,8 +784,8 @@ public class Mp4Video implements IVideo {
 
         Throwable releaseFailure = null;
         try {
-            releaseFailure = this.releasePlayerSynchronouslyForSoundEngineReload_FancyMenu(activePlayer, releaseFailure);
-            if (closeDetachedPlayer != activePlayer) releaseFailure = this.releasePlayerSynchronouslyForSoundEngineReload_FancyMenu(closeDetachedPlayer, releaseFailure);
+            releaseFailure = this.releasePlayerSynchronouslyForSoundEngineReload_FancyMenu(activePlayer, false, releaseFailure);
+            if (closeDetachedPlayer != activePlayer) releaseFailure = this.releasePlayerSynchronouslyForSoundEngineReload_FancyMenu(closeDetachedPlayer, true, releaseFailure);
         } finally {
             if (this.closed && !this.deferredReleaseTracker.hasPendingPlayer()) Mp4VideoSoundEngineReloadHandler.unregister(this);
         }
@@ -808,7 +819,7 @@ public class Mp4Video implements IVideo {
     }
 
     @Nullable
-    private Throwable releasePlayerSynchronouslyForSoundEngineReload_FancyMenu(@Nullable Object player, @Nullable Throwable previousFailure) {
+    private Throwable releasePlayerSynchronouslyForSoundEngineReload_FancyMenu(@Nullable Object player, boolean closeDetached, @Nullable Throwable previousFailure) {
         if (player == null) return previousFailure;
         Throwable failure = previousFailure;
         try {
@@ -817,7 +828,9 @@ public class Mp4Video implements IVideo {
             failure = appendPlayerReleaseFailure_FancyMenu(failure, throwable);
         }
         try {
-            WatermediaReflectionBridge.playerRelease(player);
+            // Close-detached players are also owned by the deferred release tracker, which has to forget them so client shutdown can't release them a second time.
+            if (closeDetached) WatermediaDeferredPlayerReleaseTracker.release(player);
+            else WatermediaReflectionBridge.playerRelease(player);
         } catch (Throwable throwable) {
             failure = appendPlayerReleaseFailure_FancyMenu(failure, throwable);
         }
@@ -1001,7 +1014,7 @@ public class Mp4Video implements IVideo {
     protected void runDeferredPlayerRelease(@NotNull Object player, long closeReleaseVersion, int ticksToWait) {
         Mp4VideoDeferredReleaseTracker.ClaimResult claimResult;
         try {
-            claimResult = this.deferredReleaseTracker.claimAndReleaseWhenReady(player, closeReleaseVersion, () -> ticksToWait <= 0 || this.isReadyForDeferredPlayerRelease(player), () -> WatermediaReflectionBridge.playerRelease(player));
+            claimResult = this.deferredReleaseTracker.claimAndReleaseWhenReady(player, closeReleaseVersion, () -> ticksToWait <= 0 || this.isReadyForDeferredPlayerRelease(player), () -> WatermediaDeferredPlayerReleaseTracker.release(player));
         } finally {
             if (!this.deferredReleaseTracker.hasPendingPlayer()) Mp4VideoSoundEngineReloadHandler.unregister(this);
         }

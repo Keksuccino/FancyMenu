@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.panorama.PanoramaHandler;
 import de.keksuccino.fancymenu.customization.remote.RemoteServerConnectionManager;
+import de.keksuccino.fancymenu.customization.server.ServerCache;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.rinku.ActionBridge;
@@ -16,12 +17,15 @@ import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import de.keksuccino.fancymenu.util.resource.resources.texture.TextureManagerReleaseDispatcher;
 import de.keksuccino.fancymenu.util.threading.FancyMenuExecutors;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
+import de.keksuccino.fancymenu.util.watermedia.WatermediaDeferredPlayerReleaseTracker;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
-/** Releases the asynchronous and GPU resources introduced by target-applicable lifecycle backports. */
+/**
+ * Releases FancyMenu resources before vanilla tears down the client resource and rendering infrastructure.
+ * The atomic guard keeps duplicate client-close paths from running the shutdown sequence more than once.
+ */
 public final class ClientShutdownHandler {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -40,10 +44,14 @@ public final class ClientShutdownHandler {
             // Remote callbacks can enqueue main-thread listener work, so quiesce both of their owned worker pools first.
             runCleanup("remote server connections", RemoteServerConnectionManager::shutdown);
             runCleanup("internet availability monitor", WebUtils::shutdown);
+            runCleanup("server cache", ServerCache::shutdown);
             runCleanup("screen audio playback", ScreenCustomizationLayerHandler::shutdown);
             runCleanup("layouts", LayoutHandler::shutdown);
             // Finishes the GPU read back of the screenshot of a world that just got left, so it has to run while the renderer is still alive.
             runCleanup("seamless world loading screenshots", SeamlessWorldLoadingHandler::shutdown);
+            // Stop recurring work before any resource it can touch is disposed. All managed workers are daemons as a final fallback.
+            runCleanup("FancyMenu executors", FancyMenuExecutors::shutdownAll);
+            runCleanup("deferred Watermedia players", WatermediaDeferredPlayerReleaseTracker::shutdown);
             runCleanup("user variables", VariableHandler::shutdown);
             boolean rinkuPresent = isRinkuPresentSafely();
             if (rinkuPresent) {
@@ -80,4 +88,5 @@ public final class ClientShutdownHandler {
             LOGGER.error("[FANCYMENU] Failed to clean up {} during client shutdown!", name, throwable);
         }
     }
+
 }

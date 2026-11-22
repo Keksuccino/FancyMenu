@@ -92,13 +92,12 @@ public class ResourceHandlers {
         getHandlers().forEach(ResourceHandler::releaseAll);
     }
 
-    /** Detaches every registered resource before deferred texture-manager releases are flushed on the client thread. */
     public static void shutdownAll() {
         if (!SHUTDOWN_STARTED.compareAndSet(false, true)) return;
         LOGGER.info("[FANCYMENU] Releasing all resources during client shutdown..");
         for (ResourceHandler<?, ?> handler : getHandlers()) {
             try {
-                handler.releaseAll();
+                handler.shutdown();
             } catch (Throwable throwable) {
                 LOGGER.error("[FANCYMENU] Failed to release resources from handler {} during client shutdown!", handler.getClass().getName(), throwable);
             }
