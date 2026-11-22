@@ -75,6 +75,8 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - Added a scroll start position setting (start or end) to the Text element
 - The Text element now remembers its scroll position across resizes and reopening, with a "reset on open" toggle
 - Added scroll bar settings to the Text element: visibility (always, while scrolling, never), thickness, vertical bar on the left and horizontal bar at the top
+- Added a "World Save Count" placeholder that returns the number of local world saves, so you can show it in a Text element without building a calculation from the world name list (#1874)
+- Improved the performance of the "World Save Names" and "World Save Data" placeholders, which no longer read the save files of every world on each refresh and only read a world again after it changed
 - Placeholders are now replaced much faster, especially in long texts and texts with many placeholders, so big texts no longer cause lag
 - Texts can now have up to 100,000 characters for their placeholders to get replaced (was 17,000)
 - The "text too long" error is now translated into all supported languages
@@ -190,5 +192,7 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - Fixed the loading screen showing at the old window size in the top-left corner of a black screen for about a second when the game starts in fullscreen (#1865)
 - Fixed the icon and text of message dialogs (warnings, errors, infos, confirmations and profile import/export dialogs) always sticking to the left side instead of being centered in the dialog, especially after making a dialog wider (#1841)
 - Fixed long lines in profile import/export dialogs being able to run past the right edge of the dialog at very small UI scales
+- Fixed the "World Save Names" and "World Save Data" placeholders leaving out the world that is currently open (for example in a customized pause menu), logging a warning on every refresh and unlocking that world, so a second game could open the same world at the same time
+- Fixed a single broken world (corrupted save data or a forbidden symlink) making the "World Save Names" and "World Save Data" placeholders stop working completely
 
 %changelog:end%
