@@ -3383,6 +3383,8 @@
   "fancymenu.placeholders.world.inventory_slot_food_point_restore_amount.desc": "指定したインベントリスロットのアイテムを食べたときに回復する食料ポイント数を返します。\nインベントリのスロットを指定するためにスロット番号を使います。\nワールドにいない場合、スロットが空の場合、またはアイテムが食べ物でない場合は '0.0' を返します。",
   "fancymenu.placeholders.world.item_category": "アイテムカテゴリ",
   "fancymenu.placeholders.world.item_category.desc": "指定したアイテムのクリエイティブインベントリカテゴリを返します。\n入力にはアイテムキーを使います。\n\"as_key\" を true にすると、表示名ではなくカテゴリキー（minecraft:building_blocks）を返します。\nプレイヤーがワールドにいない場合は空の値を返します。\nアイテムにカテゴリがないか無効な場合は \"UNKNOWN\" を返します。",
+  "fancymenu.placeholders.world.level_save_count": "ワールドセーブ数",
+  "fancymenu.placeholders.world.level_save_count.desc": "利用可能なローカルのワールドセーブの数を返します。\nローカルのワールドセーブがない場合は '0' を返します。",
   "fancymenu.placeholders.world.level_save_data": "ワールドセーブデータ",
   "fancymenu.placeholders.world.level_save_data.desc": "特定のワールドセーブの完全なレベルデータを、1行JSONとして返します。\n\n値:\n§elevel_name§r = データを取得したいワールドセーブの正確な名前。",
   "fancymenu.placeholders.world.level_save_names": "ワールドセーブ名",

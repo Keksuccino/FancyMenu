@@ -3383,6 +3383,8 @@
   "fancymenu.placeholders.world.inventory_slot_food_point_restore_amount.desc": "Gibt die Menge an Nahrungswerten zurück, die das Item im angegebenen Inventarslot beim Essen wiederherstellt.\nNimmt eine Slotnummer, um einen Inventarslot anzugeben.\nGibt '0.0' zurück, wenn Du nicht in einer Welt bist, der Slot leer ist oder das Item kein Essen ist.",
   "fancymenu.placeholders.world.item_category": "Item-Kategorie",
   "fancymenu.placeholders.world.item_category.desc": "Gibt die Kreativinventar-Kategorie des angegebenen Items zurück.\nNimmt einen Item-Schlüssel als Eingabe.\nSetze \"as_key\" auf true, um den Kategoriekürzel (minecraft:building_blocks) statt des Anzeigenamens zurückzugeben.\nGibt einen leeren Wert zurück, wenn der Spieler nicht in einer Welt ist.\nGibt \"UNKNOWN\" zurück, wenn das Item keine Kategorie hat oder ungültig ist.",
+  "fancymenu.placeholders.world.level_save_count": "Anzahl der Weltspeicher",
+  "fancymenu.placeholders.world.level_save_count.desc": "Gibt die Anzahl aller verfügbaren lokalen Weltspeicher zurück.\nGibt '0' zurück, wenn Du keine lokalen Weltspeicher hast.",
   "fancymenu.placeholders.world.level_save_data": "Weltspeicher-Daten",
   "fancymenu.placeholders.world.level_save_data.desc": "Gibt die kompletten Level-Daten eines bestimmten Welt-Saves als einzeiliges JSON zurück.\n\nWerte:\n§elevel_name§r = Der genaue Name des Welt-Saves, für den die Daten abgerufen werden sollen.",
   "fancymenu.placeholders.world.level_save_names": "Namen der Weltspeicher",

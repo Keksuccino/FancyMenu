@@ -3383,6 +3383,8 @@
   "fancymenu.placeholders.world.inventory_slot_food_point_restore_amount.desc": "返回给定背包槽位里的物品在食用后能恢复多少食物值。\n需要输入一个槽位编号来指定背包槽位。\n如果不在世界里，槽位为空，或者物品不是食物，则返回 '0.0'。",
   "fancymenu.placeholders.world.item_category": "物品分类",
   "fancymenu.placeholders.world.item_category.desc": "返回给定物品在创造模式物品栏中的分类。\n输入一个物品键作为参数。\n把 \"as_key\" 设为 true，可返回分类键（minecraft:building_blocks）而不是显示名。\n如果玩家不在世界里，则返回空值。\n如果物品没有分类或无效，则返回 \"UNKNOWN\"。",
+  "fancymenu.placeholders.world.level_save_count": "世界存档数量",
+  "fancymenu.placeholders.world.level_save_count.desc": "返回所有可用本地世界存档的数量。\n如果没有本地世界存档，则返回 '0'。",
   "fancymenu.placeholders.world.level_save_data": "世界存档数据",
   "fancymenu.placeholders.world.level_save_data.desc": "以单行 JSON 的形式返回某个指定世界存档的完整关卡数据。\n\n值：\n§elevel_name§r = 要获取数据的世界存档的准确名称。",
   "fancymenu.placeholders.world.level_save_names": "世界存档名称",
