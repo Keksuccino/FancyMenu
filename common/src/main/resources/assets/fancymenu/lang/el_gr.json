@@ -3372,7 +3372,7 @@
   "fancymenu.placeholders.world.effects_count": "Πλήθος ενεργών εφέ",
   "fancymenu.placeholders.world.effects_count.desc": "Επιστρέφει το πλήθος των εφέ που είναι αυτή τη στιγμή ενεργά.\nΕπιστρέφει '0' όταν δεν είσαι σε κόσμο ή όταν δεν είναι ενεργό κανένα εφέ.",
   "fancymenu.placeholders.world.gamerule_value": "Τιμή gamerule",
-  "fancymenu.placeholders.world.gamerule_value.desc": "§xΤο FancyMenu πρέπει να είναι εγκατεστημένο στον διακομιστή για να δουλέψει αυτό!\n\nΕπιστρέφει την τιμή του καθορισμένου gamerule στον τρέχοντα κόσμο/διακομιστή. Παίρνει το όνομα του gamerule (για παράδειγμα doDaylightCycle). Επιστρέφει κενή τιμή αν δεν έχει φορτωθεί κόσμος ή αν το gamerule δεν υπάρχει.",
+  "fancymenu.placeholders.world.gamerule_value.desc": "§xΤο FancyMenu πρέπει να είναι εγκατεστημένο στον διακομιστή για να δουλέψει αυτό!\n\nΕπιστρέφει την τιμή του καθορισμένου gamerule στον τρέχοντα κόσμο/διακομιστή. Παίρνει το όνομα του gamerule (για παράδειγμα advance_time). Επιστρέφει κενή τιμή αν δεν έχει φορτωθεί κόσμος ή αν το gamerule δεν υπάρχει.",
   "fancymenu.placeholders.world.highlighted_item_time_fm": "Χρόνος επισημασμένου αντικειμένου (FM)",
   "fancymenu.placeholders.world.highlighted_item_time_fm.desc": "Ο χρόνος που απομένει σε ticks για να εμφανίζεται το αρχικό vanilla όνομα του επισημασμένου αντικειμένου πάνω από το hotbar.",
   "fancymenu.placeholders.world.hovered_inventory_item": "Αντικείμενο inventory με hover",

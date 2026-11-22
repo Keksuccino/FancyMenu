@@ -3372,7 +3372,7 @@
   "fancymenu.placeholders.world.effects_count": "当前效果数量",
   "fancymenu.placeholders.world.effects_count.desc": "返回当前激活效果的数量。\n如果不在世界里，或者没有激活效果，则返回 '0'。",
   "fancymenu.placeholders.world.gamerule_value": "游戏规则值",
-  "fancymenu.placeholders.world.gamerule_value.desc": "§x这个功能需要服务器上安装 FancyMenu 才能用！\n\n返回当前世界/服务器中指定游戏规则的值。需要输入游戏规则名称（例如 doDaylightCycle）。如果没有加载世界，或者游戏规则不存在，则返回空值。",
+  "fancymenu.placeholders.world.gamerule_value.desc": "§x这个功能需要服务器上安装 FancyMenu 才能用！\n\n返回当前世界/服务器中指定游戏规则的值。需要输入游戏规则名称（例如 advance_time）。如果没有加载世界，或者游戏规则不存在，则返回空值。",
   "fancymenu.placeholders.world.highlighted_item_time_fm": "高亮物品时间（FM）",
   "fancymenu.placeholders.world.highlighted_item_time_fm.desc": "原版高亮物品名称会在快捷栏上方显示的剩余 tick 时间。",
   "fancymenu.placeholders.world.hovered_inventory_item": "悬停的背包物品",

@@ -3372,7 +3372,7 @@
   "fancymenu.placeholders.world.effects_count": "Active Effects Count",
   "fancymenu.placeholders.world.effects_count.desc": "Returns the amount of currently active effects.\nReturns '0' when not in a world or when no effect is active.",
   "fancymenu.placeholders.world.gamerule_value": "Gamerule Value",
-  "fancymenu.placeholders.world.gamerule_value.desc": "§xFancyMenu needs to be installed on the server for this to work!\n\nReturns the value of the specified gamerule in the current world/server. Takes the gamerule name (for example doDaylightCycle). Returns an empty value if no world is loaded or if the gamerule does not exist.",
+  "fancymenu.placeholders.world.gamerule_value.desc": "§xFancyMenu needs to be installed on the server for this to work!\n\nReturns the value of the specified gamerule in the current world/server. Takes the gamerule name (for example advance_time). Returns an empty value if no world is loaded or if the gamerule does not exist.",
   "fancymenu.placeholders.world.highlighted_item_time_fm": "Highlighted Item Time (FM)",
   "fancymenu.placeholders.world.highlighted_item_time_fm.desc": "The time left in ticks that the original vanilla highlighted item name gets displayed above the hotbar.",
   "fancymenu.placeholders.world.hovered_inventory_item": "Hovered Inventory Item",
