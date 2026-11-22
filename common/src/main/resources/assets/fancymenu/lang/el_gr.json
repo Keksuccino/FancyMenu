@@ -3383,6 +3383,8 @@
   "fancymenu.placeholders.world.inventory_slot_food_point_restore_amount.desc": "Επιστρέφει πόσα food points θα αποκαταστήσει το αντικείμενο στο συγκεκριμένο slot του inventory όταν το φας.\nΠαίρνει αριθμό slot για να δείξει slot inventory.\nΕπιστρέφει '0.0' όταν δεν είσαι σε κόσμο, το slot είναι άδειο ή το αντικείμενο δεν είναι φαγητό.",
   "fancymenu.placeholders.world.item_category": "Κατηγορία αντικειμένου",
   "fancymenu.placeholders.world.item_category.desc": "Επιστρέφει την κατηγορία creative inventory του δοσμένου αντικειμένου.\nΠαίρνει ως είσοδο ένα κλειδί αντικειμένου.\nΟρίστε το \"as_key\" σε true για να επιστραφεί το κλειδί κατηγορίας (minecraft:building_blocks) αντί για το εμφανιζόμενο όνομα.\nΕπιστρέφει κενή τιμή όταν ο παίκτης δεν είναι σε κόσμο.\nΕπιστρέφει \"UNKNOWN\" αν το αντικείμενο δεν έχει κατηγορία ή είναι άκυρο.",
+  "fancymenu.placeholders.world.level_save_count": "Πλήθος save κόσμων",
+  "fancymenu.placeholders.world.level_save_count.desc": "Επιστρέφει το πλήθος όλων των διαθέσιμων τοπικών save κόσμων.\nΕπιστρέφει '0' όταν δεν έχεις κανένα τοπικό save κόσμου.",
   "fancymenu.placeholders.world.level_save_data": "Δεδομένα αποθήκευσης κόσμου",
   "fancymenu.placeholders.world.level_save_data.desc": "Επιστρέφει τα πλήρη δεδομένα επιπέδου ενός συγκεκριμένου save κόσμου ως JSON μίας γραμμής.\n\nΤιμές:\n§elevel_name§r = Το ακριβές όνομα του save κόσμου για το οποίο θα ληφθούν τα δεδομένα.",
   "fancymenu.placeholders.world.level_save_names": "Ονόματα save κόσμων",
