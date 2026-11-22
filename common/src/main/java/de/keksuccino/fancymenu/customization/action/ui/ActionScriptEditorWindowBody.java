@@ -23,9 +23,7 @@ import de.keksuccino.fancymenu.customization.action.blocks.statements.IfExecutab
 import de.keksuccino.fancymenu.customization.action.blocks.statements.WhileExecutableBlock;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
-import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
 import de.keksuccino.fancymenu.customization.requirement.ui.ManageRequirementsWindowBody;
-import de.keksuccino.fancymenu.customization.requirement.internal.RequirementGroup;
 import de.keksuccino.fancymenu.util.Pair;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
@@ -55,7 +53,6 @@ import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.konkrete.input.MouseInput;
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -3133,53 +3130,6 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             if (this.executable instanceof ActionInstance i) {
                 this.displayNameComponent = i.action.getDisplayName().copy().setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
                 this.updateValueComponent();
-            } else if (this.executable instanceof IfExecutableBlock b) {
-                MutableComponent requirements = this.buildRequirementsComponent(b.condition);
-                MutableComponent display = Component.translatable("fancymenu.actions.blocks.if", requirements).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
-                if (b.isCollapsed()) {
-                    display = display.append(this.createCollapsedSuffixComponent(theme));
-                }
-                this.displayNameComponent = display;
-                this.valueComponent = Component.empty();
-            } else if (this.executable instanceof ElseIfExecutableBlock b) {
-                MutableComponent requirements = this.buildRequirementsComponent(b.condition);
-                this.displayNameComponent = Component.translatable("fancymenu.actions.blocks.else_if", requirements).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
-                this.valueComponent = Component.empty();
-            } else if (this.executable instanceof ElseExecutableBlock) {
-                this.displayNameComponent = Component.translatable("fancymenu.actions.blocks.else").setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
-                this.valueComponent = Component.empty();
-            } else if (this.executable instanceof WhileExecutableBlock b) {
-                MutableComponent requirements = this.buildRequirementsComponent(b.condition);
-                MutableComponent display = Component.translatable("fancymenu.actions.blocks.while", requirements).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
-                if (b.isCollapsed()) {
-                    display = display.append(this.createCollapsedSuffixComponent(theme));
-                }
-                this.displayNameComponent = display;
-                this.valueComponent = Component.empty();
-            } else if (this.executable instanceof ForEachExecutableBlock b) {
-                MutableComponent display = Component.translatable("fancymenu.actions.blocks.for_each", Component.literal(b.getListVariableName())).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
-                if (b.isCollapsed()) {
-                    display = display.append(this.createCollapsedSuffixComponent(theme));
-                } else {
-                    // The value placeholders the contents can use, so users don't have to remember them
-                    display = display.append(Component.literal("   " + ValuePlaceholderHolder.VALUE_PLACEHOLDER_PREFIX + ForEachExecutableBlock.LIST_ENTRY_PLACEHOLDER + "  " + ValuePlaceholderHolder.VALUE_PLACEHOLDER_PREFIX + ForEachExecutableBlock.LIST_INDEX_PLACEHOLDER).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_inactive.getColorInt())));
-                }
-                this.displayNameComponent = display;
-                this.valueComponent = Component.empty();
-            } else if (this.executable instanceof DelayExecutableBlock b) {
-                MutableComponent display = Component.translatable("fancymenu.actions.blocks.delay", Component.literal(b.getDelayMsRaw())).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
-                if (b.isCollapsed()) {
-                    display = display.append(this.createCollapsedSuffixComponent(theme));
-                }
-                this.displayNameComponent = display;
-                this.valueComponent = Component.empty();
-            } else if (this.executable instanceof ExecuteLaterExecutableBlock b) {
-                MutableComponent display = Component.translatable("fancymenu.actions.blocks.execute_later", Component.literal(b.getDelayMsRaw())).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
-                if (b.isCollapsed()) {
-                    display = display.append(this.createCollapsedSuffixComponent(theme));
-                }
-                this.displayNameComponent = display;
-                this.valueComponent = Component.empty();
             } else if (this.executable instanceof FolderExecutableBlock folder) {
                 MutableComponent labelComponent = Component.literal(I18n.get("fancymenu.actions.blocks.folder.display", "")).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
                 MutableComponent nameComponent = Component.literal(folder.getName()).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
@@ -3200,27 +3150,21 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                 this.commentTextComponent = textComponent;
                 this.displayNameComponent = labelComponent.copy().append(textComponent.copy());
                 this.valueComponent = Component.empty();
+            } else if (this.executable instanceof AbstractExecutableBlock block) {
+                MutableComponent label = ActionScriptDescriptions.buildBlockLabel(block, ActionScriptDescriptions.NO_TEXT_LIMIT);
+                MutableComponent display = (label != null) ? label.setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt())) : ActionScriptDescriptions.buildUnknownLabel().setStyle(Style.EMPTY.withColor(theme.error_color.getColorInt()));
+                if (ActionScriptEntryMover.isCollapsed(block)) {
+                    display = display.append(this.createCollapsedSuffixComponent(theme));
+                } else if (block instanceof ForEachExecutableBlock) {
+                    // The value placeholders the contents can use, so users don't have to remember them
+                    display = display.append(Component.literal("   " + ValuePlaceholderHolder.VALUE_PLACEHOLDER_PREFIX + ForEachExecutableBlock.LIST_ENTRY_PLACEHOLDER + "  " + ValuePlaceholderHolder.VALUE_PLACEHOLDER_PREFIX + ForEachExecutableBlock.LIST_INDEX_PLACEHOLDER).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_inactive.getColorInt())));
+                }
+                this.displayNameComponent = display;
+                this.valueComponent = Component.empty();
             } else {
-                this.displayNameComponent = Component.literal("[UNKNOWN EXECUTABLE]").withStyle(ChatFormatting.RED);
+                this.displayNameComponent = ActionScriptDescriptions.buildUnknownLabel().setStyle(Style.EMPTY.withColor(theme.error_color.getColorInt()));
                 this.valueComponent = Component.empty();
             }
-        }
-
-        @NotNull
-        private MutableComponent buildRequirementsComponent(@NotNull RequirementContainer condition) {
-            MutableComponent requirements = Component.empty();
-            boolean isRequirementsEmpty = true;
-            for (RequirementGroup g : condition.getGroups()) {
-                if (!isRequirementsEmpty) requirements.append(Component.literal(", "));
-                requirements.append(Component.literal(g.identifier));
-                isRequirementsEmpty = false;
-            }
-            for (RequirementInstance i : condition.getInstances()) {
-                if (!isRequirementsEmpty) requirements.append(Component.literal(", "));
-                requirements.append(i.requirement.getDisplayName());
-                isRequirementsEmpty = false;
-            }
-            return requirements;
         }
 
         @Override
