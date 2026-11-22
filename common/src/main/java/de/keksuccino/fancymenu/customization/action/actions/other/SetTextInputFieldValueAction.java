@@ -206,6 +206,7 @@ public class SetTextInputFieldValueAction extends Action {
             super(Component.translatable("fancymenu.actions.set_text_input_field_value.edit_value"));
             this.callback = callback;
             this.config = Objects.requireNonNullElse(Config.parse(value), new Config());
+            this.setInitialTextInputFocusEnabled(true);
         }
 
         @Override

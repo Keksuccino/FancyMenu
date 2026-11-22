@@ -199,6 +199,7 @@ public class WriteFileAction extends Action {
             if (this.config == null) {
                 this.config = new WriteFileConfig();
             }
+            this.setInitialTextInputFocusEnabled(true);
         }
 
         @Override
