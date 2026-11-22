@@ -342,6 +342,11 @@ public class MimicKeybindAction extends Action {
         }
 
         @Override
+        protected boolean isLateBodyHovered(int mouseX, int mouseY) {
+            return this.suggestions.isMouseOverList(mouseX, mouseY);
+        }
+
+        @Override
         public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
             if (this.suggestions.keyPressed(keyCode, scanCode, modifiers)) {
                 return true;

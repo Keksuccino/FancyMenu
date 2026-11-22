@@ -13,6 +13,9 @@ import org.jetbrains.annotations.Nullable;
 
 public abstract class PiPCellWindowBody extends CellScreen implements PipableScreen {
 
+    /** The pointer position the body gets while it's covered, far outside of everything, like {@link PiPWindow} uses for bodies the pointer can't reach. */
+    private static final int COVERED_POINTER_POSITION = -100000;
+
     @Nullable
     private PiPWindow window;
     protected boolean allowCloseOnEsc = true;
@@ -122,9 +125,21 @@ public abstract class PiPCellWindowBody extends CellScreen implements PipableScr
     public final void render(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.renderMouseX = mouseX;
         this.renderMouseY = mouseY;
-        this.renderBody(graphics, mouseX, mouseY, partial);
-        super.render(graphics, mouseX, mouseY, partial);
+        // What renderLateBody() draws, like the open suggestion list of a field, lies on top of the rest of the body. While the pointer is over it,
+        // the rest of the body gets a pointer far outside of it, so the widgets below don't show their hover state and their tooltips over it.
+        boolean lateBodyHovered = this.isLateBodyHovered(mouseX, mouseY);
+        int bodyMouseX = lateBodyHovered ? COVERED_POINTER_POSITION : mouseX;
+        int bodyMouseY = lateBodyHovered ? COVERED_POINTER_POSITION : mouseY;
+        this.renderBody(graphics, bodyMouseX, bodyMouseY, partial);
+        super.render(graphics, bodyMouseX, bodyMouseY, partial);
         this.renderLateBody(graphics, mouseX, mouseY, partial);
+    }
+
+    /**
+     * @return If something {@link #renderLateBody} draws covers the given point, so the rest of the body must not react to the pointer there.
+     */
+    protected boolean isLateBodyHovered(int mouseX, int mouseY) {
+        return false;
     }
 
     @Override
