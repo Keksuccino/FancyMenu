@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.input.InputConstants;
 import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.rendering.text.IndentedLineWrapper;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
@@ -172,17 +173,21 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
 
     }
 
+    /**
+     * Adds the line to the description area, wrapped to its width. Wrapped lines of indented lines and list items start below the text of their
+     * first line, which keeps nested lists readable, like the action script overviews of the Manage Listeners window.
+     */
     protected void addDescriptionLine(@NotNull Component line) {
         float maxWidth = this.descriptionScrollArea.getInnerWidth() - 15F;
-        List<MutableComponent> lines = UIBase.lineWrapUIComponentsNormal(line, maxWidth);
-        lines.forEach(component -> {
-            TextScrollAreaEntry e = new TextScrollAreaEntry(this.descriptionScrollArea, component, (entry) -> {});
+        for (IndentedLineWrapper.WrappedLine wrapped : IndentedLineWrapper.wrap(line, maxWidth, UIBase::getUITextWidthNormal, (text, width) -> UIBase.lineWrapUIComponentsNormal(text, width))) {
+            TextScrollAreaEntry e = new TextScrollAreaEntry(this.descriptionScrollArea, wrapped.text(), (entry) -> {});
+            e.setTextIndent(wrapped.indent());
             e.setSelectable(false);
             e.setBackgroundColorHover(e.getBackgroundColorNormal());
             e.setPlayClickSound(false);
             e.setTextBaseColor(UIBase.getUITheme().ui_interface_widget_label_color_normal.getColorInt());
             this.descriptionScrollArea.addEntry(e);
-        });
+        }
     }
 
     public boolean shouldAutoScale() {
@@ -368,17 +373,74 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
     }
 
     /**
-     * Rebuilding the screen, like when it gets resized, replaces all of its cells. This moves the focus of the text input the user is typing in,
-     * together with its cursor, to the text input that replaces it, so the rebuild doesn't take the focus away from the user.<br>
-     * Screens with a search bar move the focus to their search bar whenever they get built, so they don't need this.
+     * Rebuilding the screen, like when it gets resized or maximized, replaces all of its cells. So the rebuild doesn't take away what the user was doing,
+     * the cell that replaces the selected cell gets selected (see {@link #findCellToReselect(CellSelection, List)}), the description area keeps its
+     * scroll position, and the text input the user is typing in keeps the focus, together with its cursor.<br>
+     * Screens with a search bar move the focus to their search bar whenever they get built, so their text inputs don't need that.
      */
     @Override
     protected void rebuildWidgets() {
+        CellSelection selection = this.getCellSelection();
         TextInputFocus focus = this.searchBarEnabled ? null : this.getTextInputFocus();
+        float descriptionScroll = (this.descriptionScrollArea != null) ? this.descriptionScrollArea.verticalScrollBar.getScroll() : 0.0F;
         super.rebuildWidgets();
+        boolean reselected = (selection != null) && this.restoreCellSelection(selection);
         if (focus != null) {
             this.restoreTextInputFocus(focus);
         }
+        if (reselected && (this.descriptionScrollArea != null)) {
+            // Selecting the cell again filled the description area with its lines, wrapped to the new width, so the same scroll fraction shows about the same part of them
+            this.descriptionScrollArea.verticalScrollBar.setScroll(descriptionScroll);
+        }
+    }
+
+    @Nullable
+    private CellSelection getCellSelection() {
+        RenderCell cell = this.selectedCell;
+        if ((cell == null) || !cell.isSelected()) return null;
+        int cellIndex = this.allCells.indexOf(cell);
+        if (cellIndex < 0) return null;
+        return new CellSelection(cell.getIdentity(), cellIndex, this.allCells.size(), cell.getClass());
+    }
+
+    /**
+     * @return If a cell got selected.
+     */
+    private boolean restoreCellSelection(@NotNull CellSelection selection) {
+        // Screens that select a cell on their own while they get built keep their choice
+        for (RenderCell cell : this.allCells) {
+            if (cell.isSelected()) return false;
+        }
+        RenderCell cell = findCellToReselect(selection, this.allCells);
+        // Cells the search bar hides can't be selected
+        if ((cell == null) || (this.getCellEntry(cell) == null)) return false;
+        this.selectCell(cell, false);
+        return true;
+    }
+
+    /**
+     * Finds the cell of a rebuilt screen that takes over the selection of the cell that was selected before the rebuild.<br>
+     * A cell with an identity (see {@link RenderCell#setIdentity(Object)}) hands the selection to the cell with the same identity, wherever it is now.
+     * A cell without one hands it to the cell at its position, but only if the screen still has the same cells: as many cells as before and one of the
+     * same type at that position. So the selection doesn't jump to another cell after cells got added or removed.
+     *
+     * @return The cell, or {@code null} if no selectable cell takes over the selection.
+     */
+    @Nullable
+    static RenderCell findCellToReselect(@NotNull CellSelection selection, @NotNull List<RenderCell> cells) {
+        RenderCell found = null;
+        if (selection.identity() != null) {
+            for (RenderCell cell : cells) {
+                if (selection.identity().equals(cell.getIdentity())) {
+                    found = cell;
+                    break;
+                }
+            }
+        } else if ((cells.size() == selection.cellCount()) && (selection.cellIndex() < cells.size())) {
+            RenderCell cell = cells.get(selection.cellIndex());
+            if ((cell.getClass() == selection.cellClass()) && (cell.getIdentity() == null)) found = cell;
+        }
+        return ((found != null) && found.isSelectable()) ? found : null;
     }
 
     @Nullable
@@ -1261,6 +1323,12 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
     private record TextInputFocus(int cellIndex, boolean selected, int cursorPosition, int highlightPosition) {
     }
 
+    /**
+     * Which cell was selected before the screen got rebuilt: its identity, its index in {@link #allCells}, how many cells the screen had and the type of the cell.
+     */
+    record CellSelection(@Nullable Object identity, int cellIndex, int cellCount, @NotNull Class<?> cellClass) {
+    }
+
     protected class CellScrollEntry extends ScrollAreaEntry {
 
         public final RenderCell cell;
@@ -1597,6 +1665,8 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
         protected final List<GuiEventListener> children = new ArrayList<>();
         protected final Map<String, String> memory = new HashMap<>();
         protected boolean ignoreSearch = false;
+        @Nullable
+        protected Object identity = null;
 
         public abstract void renderCell(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial);
 
@@ -1752,6 +1822,21 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
         @Nullable
         public String getMemoryValue(@NotNull String key) {
             return this.memory.get(key);
+        }
+
+        @Nullable
+        public Object getIdentity() {
+            return this.identity;
+        }
+
+        /**
+         * Sets what the cell stands for, like the listener a cell of a list of listeners shows. Rebuilding the screen, like when it gets resized,
+         * replaces all of its cells, and the selection of a cell moves to the new cell with an equal identity, even when cells got added, removed
+         * or moved. Cells of screens whose cells can change should have one, see {@link CellScreen#findCellToReselect(CellSelection, List)}.
+         */
+        public RenderCell setIdentity(@Nullable Object identity) {
+            this.identity = identity;
+            return this;
         }
 
         @Override

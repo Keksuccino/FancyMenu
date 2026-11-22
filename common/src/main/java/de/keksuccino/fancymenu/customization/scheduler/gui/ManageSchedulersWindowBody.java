@@ -424,6 +424,8 @@ public class ManageSchedulersWindowBody extends PiPCellWindowBody {
 
         public SchedulerInstanceCell(@NotNull SchedulerInstance instance) {
             this.instance = instance;
+            // The instance stays the same when the window gets rebuilt, unlike its identifier, which can get renamed
+            this.setIdentity(instance);
             this.updateLabelComponent();
             this.setSearchStringSupplier(() -> {
                 return this.instance.getIdentifier();

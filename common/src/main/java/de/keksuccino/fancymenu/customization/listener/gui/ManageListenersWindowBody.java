@@ -398,6 +398,8 @@ public class ManageListenersWindowBody extends PiPCellWindowBody {
         
         public ListenerInstanceCell(@NotNull ListenerInstance instance) {
             this.instance = instance;
+            // The instance stays the same when the window gets rebuilt, so the selection stays on it
+            this.setIdentity(instance);
             this.updateLabelComponent();
             this.setDescriptionSupplier(this.instance.parent::getDescription);
             this.setSearchStringSupplier(() -> {
