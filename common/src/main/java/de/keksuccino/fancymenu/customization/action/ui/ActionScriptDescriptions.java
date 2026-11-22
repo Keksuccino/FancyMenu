@@ -35,7 +35,7 @@ public final class ActionScriptDescriptions {
     public static final int NO_TEXT_LIMIT = -1;
     /**
      * How many characters the overview shows of texts that can get long, like comments, action values and conditions.<br>
-     * The description areas are narrow and their wrapped lines start at the left edge, so longer texts get shortened to keep the nesting readable.
+     * The description areas are narrow, so longer texts get shortened to keep most actions and blocks on one line, which keeps long scripts compact.
      */
     static final int OVERVIEW_TEXT_LIMIT = 32;
     static final String UNKNOWN_KEY = "fancymenu.actions.blocks.unknown";
@@ -181,6 +181,10 @@ public final class ActionScriptDescriptions {
         return start.stripTrailing() + "…";
     }
 
+    /**
+     * Description areas indent the wrapped lines of a line that starts with spaces and a bullet below the text after the bullet,
+     * see {@link de.keksuccino.fancymenu.util.rendering.text.IndentedLineWrapper}, so the bullets have to stay the first characters after the spaces.
+     */
     @NotNull
     private static MutableComponent buildLine(int level, @NotNull String bullet, int bulletColor, @NotNull Component text) {
         return Component.literal(INDENT.repeat(Math.max(0, level)) + bullet).setStyle(Style.EMPTY.withColor(bulletColor)).append(text);
