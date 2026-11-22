@@ -125,6 +125,10 @@ final class MarkdownFormatMarkers {
         TILDE,
         /** Two tildes in a row, which open and close struck through text like a single one does. */
         TILDE_PAIR,
+        /** The first one of two plus signs that can open underlined text, which they can't in front of whitespace, for example. */
+        PLUS_PAIR_OPEN,
+        /** The first one of two plus signs that can close underlined text, which they can't behind whitespace, for example. */
+        PLUS_PAIR_CLOSE,
         /** The marker that closes a font. */
         FONT_SUFFIX,
         /** The marker that closes a color. */
