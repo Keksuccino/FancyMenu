@@ -6,6 +6,7 @@ import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @SuppressWarnings("all")
 public class ListSlider<T> extends AbstractExtendedSlider {
@@ -36,9 +37,13 @@ public class ListSlider<T> extends AbstractExtendedSlider {
 
     public int getSelectedIndex() {
         if (!this.listValues.isEmpty()) {
-            double minValue = 0;
             double maxValue = this.listValues.size()-1;
-            return (int) Mth.lerp(Mth.clamp(this.value, 0.0D, 1.0D), minValue, maxValue);
+            double value = Mth.clamp(this.value, 0.0D, 1.0D);
+            int index = (int) Mth.lerp(value, 0, maxValue);
+            // The value of index i is i / max, which times max can come out a tiny bit below i (like 15 / 22 * 22 = 14.999...),
+            // so the index after the truncated one wins when the value reaches its exact value
+            if ((index < maxValue) && (value >= ((index + 1) / maxValue))) index++;
+            return index;
         }
         return 0;
     }
@@ -50,6 +55,27 @@ public class ListSlider<T> extends AbstractExtendedSlider {
             this.setValue(((Mth.clamp(index, minValue, maxValue) - minValue) / (maxValue - minValue)));
         }
         return this;
+    }
+
+    /**
+     * Replaces the values without notifying the value update listener, because the user didn't move the slider. The selected value
+     * stays selected if the new values have it too, otherwise the index stays selected, as far as the new values reach.
+     */
+    public void replaceListValues(@NotNull List<T> listValues) {
+        if (listValues.size() < 2) {
+            throw new RuntimeException("Not enough list values! At least 2 list values needed!");
+        }
+        int oldIndex = this.getSelectedIndex();
+        T selected = this.getSelectedListValue();
+        this.listValues = new ArrayList<>(listValues);
+        int newIndex = oldIndex;
+        // Checking the old index first keeps the right one of equal values
+        if ((oldIndex >= this.listValues.size()) || !Objects.equals(this.listValues.get(oldIndex), selected)) {
+            int found = this.listValues.indexOf(selected);
+            newIndex = (found >= 0) ? found : Math.min(oldIndex, this.listValues.size()-1);
+        }
+        this.value = (double) newIndex / (this.listValues.size()-1);
+        this.updateMessage();
     }
 
     public void setListValueStringSupplier(@NotNull ConsumingSupplier<T, String> supplier) {

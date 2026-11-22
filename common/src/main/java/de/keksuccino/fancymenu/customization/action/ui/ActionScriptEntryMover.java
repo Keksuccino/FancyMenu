@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.customization.action.blocks.FolderExecutableBlock
 import de.keksuccino.fancymenu.customization.action.blocks.statements.DelayExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseIfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ExecuteLaterExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.statements.ForEachExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.IfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.WhileExecutableBlock;
 import org.jetbrains.annotations.NotNull;
@@ -25,7 +26,8 @@ import java.util.List;
  *     <li>Entries at the start or end of a block leave it, or move to the neighboring statement of their IF chain.</li>
  *     <li>ELSE-IF statements swap places with neighboring ELSE-IF statements, but never move above their IF or below an ELSE.</li>
  * </ul>
- * Blocks move together with their content and the rest of their IF chain.
+ * Blocks move together with their content and the rest of their IF chain. Entries that move to another block get the value placeholders
+ * of that block, like the ones of a FOR EACH loop they move into.
  */
 public final class ActionScriptEntryMover {
 
@@ -40,7 +42,7 @@ public final class ActionScriptEntryMover {
         if (!(executable instanceof AbstractExecutableBlock)) {
             return true;
         }
-        return (executable instanceof IfExecutableBlock) || (executable instanceof WhileExecutableBlock) || (executable instanceof DelayExecutableBlock) || (executable instanceof ExecuteLaterExecutableBlock) || (executable instanceof FolderExecutableBlock) || (executable instanceof CommentExecutableBlock);
+        return (executable instanceof IfExecutableBlock) || (executable instanceof WhileExecutableBlock) || (executable instanceof ForEachExecutableBlock) || (executable instanceof DelayExecutableBlock) || (executable instanceof ExecuteLaterExecutableBlock) || (executable instanceof FolderExecutableBlock) || (executable instanceof CommentExecutableBlock);
     }
 
     /**
@@ -51,6 +53,7 @@ public final class ActionScriptEntryMover {
         if (block instanceof FolderExecutableBlock folder) return folder.isCollapsed();
         if (block instanceof IfExecutableBlock ifBlock) return ifBlock.isCollapsed();
         if (block instanceof WhileExecutableBlock whileBlock) return whileBlock.isCollapsed();
+        if (block instanceof ForEachExecutableBlock forEachBlock) return forEachBlock.isCollapsed();
         if (block instanceof DelayExecutableBlock delayBlock) return delayBlock.isCollapsed();
         if (block instanceof ExecuteLaterExecutableBlock executeLaterBlock) return executeLaterBlock.isCollapsed();
         return false;
@@ -77,7 +80,7 @@ public final class ActionScriptEntryMover {
             beforeMove.run();
             siblings.remove(index);
             if (enteredStatement != null) {
-                enteredStatement.getExecutables().add(executable);
+                enteredStatement.addExecutable(executable);
             } else {
                 siblings.add(index - 1, executable);
             }
@@ -88,7 +91,7 @@ public final class ActionScriptEntryMover {
         if (previousStatement != null) {
             beforeMove.run();
             siblings.remove(0);
-            previousStatement.getExecutables().add(executable);
+            previousStatement.addExecutable(executable);
             return true;
         }
         AbstractExecutableBlock grandparent = findParentOf(script, parent);
@@ -96,7 +99,7 @@ public final class ActionScriptEntryMover {
         beforeMove.run();
         siblings.remove(0);
         List<Executable> parentSiblings = grandparent.getExecutables();
-        parentSiblings.add(parentSiblings.indexOf(parent), executable);
+        grandparent.addExecutable(parentSiblings.indexOf(parent), executable);
         return true;
     }
 
@@ -122,7 +125,7 @@ public final class ActionScriptEntryMover {
             beforeMove.run();
             siblings.remove(index);
             if ((next instanceof AbstractExecutableBlock nextBlock) && isExpandedContainer(nextBlock)) {
-                nextBlock.getExecutables().add(0, executable);
+                nextBlock.addExecutable(0, executable);
             } else {
                 siblings.add(index + 1, executable);
             }
@@ -133,7 +136,7 @@ public final class ActionScriptEntryMover {
         if (nextStatement != null) {
             beforeMove.run();
             siblings.remove(index);
-            nextStatement.getExecutables().add(0, executable);
+            nextStatement.addExecutable(0, executable);
             return true;
         }
         AbstractExecutableBlock chainStart = getChainStartOf(script, parent);
@@ -142,7 +145,7 @@ public final class ActionScriptEntryMover {
         beforeMove.run();
         siblings.remove(index);
         List<Executable> parentSiblings = grandparent.getExecutables();
-        parentSiblings.add(parentSiblings.indexOf(chainStart) + 1, executable);
+        grandparent.addExecutable(parentSiblings.indexOf(chainStart) + 1, executable);
         return true;
     }
 

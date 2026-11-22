@@ -362,7 +362,7 @@ public class GlslShaderRuntime {
     private record ChannelTextureState(int textureId, float resolutionX, float resolutionY) {
     }
 
-    private record VariableUniformValue(
+    record VariableUniformValue(
             float floatValue,
             int intValue,
             int boolValue,
@@ -1462,7 +1462,7 @@ public class GlslShaderRuntime {
             if (uniformSuffix.isEmpty()) {
                 continue;
             }
-            valuesBySuffix.put(uniformSuffix, parseVariableUniformValue(variable.value()));
+            valuesBySuffix.put(uniformSuffix, toVariableUniformValue(variable));
         }
 
         Set<String> removedSuffixes = new HashSet<>(this.lastVariableUniformSuffixes_FancyMenu);
@@ -1471,6 +1471,21 @@ public class GlslShaderRuntime {
         this.lastVariableUniformSuffixes_FancyMenu.addAll(valuesBySuffix.keySet());
 
         return new VariableUniformSnapshot(valuesBySuffix, removedSuffixes, variables.size());
+    }
+
+    /**
+     * List variables give their entry count, because their text form is a JSON array, which is no number.
+     */
+    @NotNull
+    static VariableUniformValue toVariableUniformValue(@NotNull UserVariableSnapshot variable) {
+        if (variable.isList()) return countUniformValue(variable.listEntries().size());
+        return parseVariableUniformValue(variable.value());
+    }
+
+    @NotNull
+    private static VariableUniformValue countUniformValue(int count) {
+        float floatValue = count;
+        return new VariableUniformValue(floatValue, count, (count != 0) ? 1 : 0, floatValue, floatValue, floatValue, floatValue, floatValue, floatValue, floatValue, floatValue, floatValue);
     }
 
     private void uploadVariableUniforms(@NotNull VariableUniformSnapshot snapshot) {

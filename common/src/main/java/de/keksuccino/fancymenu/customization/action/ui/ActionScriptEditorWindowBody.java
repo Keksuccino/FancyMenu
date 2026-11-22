@@ -1,11 +1,14 @@
 package de.keksuccino.fancymenu.customization.action.ui;
 
+import de.keksuccino.fancymenu.util.ScreenUtils;
+
 import com.mojang.blaze3d.systems.RenderSystem;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.action.ActionFavoritesManager;
 import de.keksuccino.fancymenu.customization.action.ActionRegistry;
 import de.keksuccino.fancymenu.customization.action.Executable;
+import de.keksuccino.fancymenu.customization.action.ValuePlaceholderHolder;
 import de.keksuccino.fancymenu.customization.aiexport.AiExportMenus;
 import de.keksuccino.fancymenu.customization.aiexport.exporters.ActionScriptAiExporter;
 import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
@@ -16,6 +19,7 @@ import de.keksuccino.fancymenu.customization.action.blocks.statements.DelayExecu
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ExecuteLaterExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseIfExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.statements.ForEachExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.IfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.WhileExecutableBlock;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
@@ -222,8 +226,17 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         parentWindow.setVisible(false);
         childWindow.addCloseCallback(() -> {
             parentWindow.setMaximized(childWindow.isMaximized());
-            parentWindow.setVisible(true);
+            showAfterChildWindow(parentWindow);
         });
+    }
+
+    /**
+     * Shows the editor window again after a window that hid it got closed, and gives it the focus back.<br>
+     * The window handler picks the next focused window while the editor is still hidden, so the editor has to take the focus itself.
+     */
+    private static void showAfterChildWindow(@NotNull PiPWindow editorWindow) {
+        editorWindow.setVisible(true);
+        PiPWindowHandler.INSTANCE.bringToFront(editorWindow);
     }
 
     @Override
@@ -462,6 +475,14 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             menu.closeMenu();
             this.onAddWhile(target);
         }).setIcon(MaterialIcons.ADD);
+
+        this.rightClickContextMenu.addClickableEntry("add_for_each", Component.translatable("fancymenu.actions.blocks.add.for_each"), (menu, entry) -> {
+            this.markContextMenuActionSelectionSuppressed();
+            ExecutableEntry target = this.getContextMenuTargetEntry();
+            menu.closeMenu();
+            this.onAddForEach(target);
+        }).setTooltipSupplier((menu, entry) -> UITooltip.of(Component.translatable("fancymenu.actions.blocks.add.for_each.desc")))
+                .setIcon(MaterialIcons.ADD);
 
         this.rightClickContextMenu.addClickableEntry("add_delay", Component.translatable("fancymenu.actions.blocks.add.delay"), (menu, entry) -> {
             this.markContextMenuActionSelectionSuppressed();
@@ -716,13 +737,13 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                             }
                         }
                         if (parentWindow != null) {
-                            parentWindow.setVisible(true);
+                            showAfterChildWindow(parentWindow);
                         }
                     },
                     instance1 -> { // onEditingCanceled
                         // do nothing on cancel
                         if (parentWindow != null) {
-                            parentWindow.setVisible(true);
+                            showAfterChildWindow(parentWindow);
                         }
                     },
                     parentWindow);
@@ -771,6 +792,21 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                 }
             });
             this.openChildWindow(parentWindow -> ManageRequirementsWindowBody.openInWindow(s, parentWindow));
+        } else if (targetExecutable instanceof ForEachExecutableBlock block) {
+            ForEachLoopEditorWindowBody s = new ForEachLoopEditorWindowBody(block.getListVariableName(), listVariableName -> {
+                if (listVariableName != null) {
+                    ExecutableEntry currentEntry = this.findEntryForExecutable(block);
+                    if ((currentEntry != null) && (currentEntry.executable instanceof ForEachExecutableBlock currentBlock)) {
+                        if (!Objects.equals(currentBlock.getListVariableName(), listVariableName)) {
+                            this.createUndoPoint();
+                            currentBlock.setListVariableName(listVariableName);
+                            this.updateActionInstanceScrollArea(true);
+                            this.focusEntryForExecutable(currentBlock, true, true);
+                        }
+                    }
+                }
+            });
+            this.setupChildWindow(this.getWindow(), ForEachLoopEditorWindowBody.openInWindow(s).getSecond());
         } else if (targetExecutable instanceof DelayExecutableBlock block) {
             TextEditorWindowBody s = new TextEditorWindowBody(Component.translatable("fancymenu.actions.blocks.delay.edit"), null, call -> {
                 if (call != null) {
@@ -907,6 +943,18 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             }
         });
         this.openChildWindow(parentWindow -> ManageRequirementsWindowBody.openInWindow(s, parentWindow));
+    }
+
+    protected void onAddForEach(@Nullable ExecutableEntry selectionReference) {
+        final Executable selectionExecutable = (selectionReference != null) ? selectionReference.executable : null;
+        ForEachLoopEditorWindowBody s = new ForEachLoopEditorWindowBody("", listVariableName -> {
+            if (listVariableName != null) {
+                ExecutableEntry resolvedReference = (selectionExecutable != null) ? this.findEntryForExecutable(selectionExecutable) : null;
+                ForEachExecutableBlock block = new ForEachExecutableBlock(listVariableName);
+                this.finalizeExecutableAddition(block, resolvedReference, true);
+            }
+        });
+        this.setupChildWindow(this.getWindow(), ForEachLoopEditorWindowBody.openInWindow(s).getSecond());
     }
 
     protected void onAddDelay(@Nullable ExecutableEntry selectionReference) {
@@ -1359,7 +1407,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             base = theme.actions_entry_background_color_else_if.getColor();
         } else if (entry.executable instanceof ElseExecutableBlock) {
             base = theme.actions_entry_background_color_else.getColor();
-        } else if (entry.executable instanceof WhileExecutableBlock) {
+        } else if (isLoopBlock(entry.executable)) {
             base = theme.actions_entry_background_color_while.getColor();
         } else if (entry.executable instanceof DelayExecutableBlock) {
             base = theme.actions_entry_background_color_delay.getColor();
@@ -1562,9 +1610,13 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                     hovered.resetNameClickTimer();
                 }
 
-                if (hovered.canInlineEditValue() && hovered.isMouseOverValue((int)mouseX, (int)mouseY)) {
+                if (hovered.canEditValue() && hovered.isMouseOverValue((int)mouseX, (int)mouseY)) {
                     if (hovered.registerValueClick((int)mouseX, (int)mouseY)) {
-                        this.startInlineValueEditing(hovered);
+                        if (hovered.canInlineEditValue()) {
+                            this.startInlineValueEditing(hovered);
+                        } else {
+                            this.onEdit(hovered);
+                        }
                         return true;
                     }
                 } else {
@@ -1754,14 +1806,18 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             if (!instance.action.hasValue()) {
                 return false;
             }
-            this.startInlineValueEditing(selected);
+            if (selected.canInlineEditValue()) {
+                this.startInlineValueEditing(selected);
+            } else {
+                this.onEdit(selected);
+            }
             return true;
         }
         if ((selected.executable instanceof FolderExecutableBlock) || (selected.executable instanceof CommentExecutableBlock)) {
             this.startInlineNameEditing(selected);
             return true;
         }
-        if ((selected.executable instanceof IfExecutableBlock) || (selected.executable instanceof ElseIfExecutableBlock) || (selected.executable instanceof WhileExecutableBlock) || (selected.executable instanceof DelayExecutableBlock) || (selected.executable instanceof ExecuteLaterExecutableBlock)) {
+        if ((selected.executable instanceof IfExecutableBlock) || (selected.executable instanceof ElseIfExecutableBlock) || isLoopBlock(selected.executable) || (selected.executable instanceof DelayExecutableBlock) || (selected.executable instanceof ExecuteLaterExecutableBlock)) {
             this.onEdit(this.getSelectedEntry());
             return true;
         }
@@ -1805,8 +1861,9 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             CursorHandler.setClientTickCursor(CursorHandler.CURSOR_WRITING);
             return;
         }
-        if ((hovered != null) && hovered.canInlineEditValue() && hovered.isMouseOverValue(mouseX, mouseY)) {
-            CursorHandler.setClientTickCursor(CursorHandler.CURSOR_WRITING);
+        if ((hovered != null) && hovered.isMouseOverValue(mouseX, mouseY)) {
+            // Summarized values open the value editor of the action instead of an inline text field
+            CursorHandler.setClientTickCursor(hovered.canInlineEditValue() ? CursorHandler.CURSOR_WRITING : CursorHandler.CURSOR_POINTING_HAND);
         }
     }
 
@@ -1877,7 +1934,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         }
     }
     protected void startInlineValueEditing(@NotNull ExecutableEntry entry) {
-        if (!(entry.executable instanceof ActionInstance instance) || !instance.action.hasValue()) {
+        if (!(entry.executable instanceof ActionInstance instance) || !entry.canInlineEditValue()) {
             return;
         }
         this.finishInlineValueEditing(true);
@@ -2200,8 +2257,8 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         entries.add(anchor);
         entries.addAll(afterEntry);
 
-        if (anchor.executable instanceof WhileExecutableBlock) {
-            this.addWhileChainEntries(anchor, entries);
+        if (isLoopBlock(anchor.executable)) {
+            this.addLoopChainEntries(anchor, entries);
         }
 
         if ((anchor != entry) && (entry.parentBlock != null) && (entries.size() > 1)) {
@@ -2259,8 +2316,16 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         return (int)(reference.getX() + (ExecutableEntry.INDENT_X_OFFSET * reference.indentLevel) + CHAIN_BAR_OFFSET);
     }
 
-    protected void addWhileChainEntries(@NotNull ExecutableEntry anchor, @NotNull List<ExecutableEntry> entries) {
-        if (!(anchor.executable instanceof WhileExecutableBlock)) {
+    /**
+     * If the executable is a WHILE or FOR EACH loop. Loops run all of their content again and again, so their statement chain covers
+     * the entries inside them too, and they share the colors of loops.
+     */
+    protected static boolean isLoopBlock(@Nullable Executable executable) {
+        return (executable instanceof WhileExecutableBlock) || (executable instanceof ForEachExecutableBlock);
+    }
+
+    protected void addLoopChainEntries(@NotNull ExecutableEntry anchor, @NotNull List<ExecutableEntry> entries) {
+        if (!isLoopBlock(anchor.executable)) {
             return;
         }
         List<ScrollAreaEntry> scrollEntries = this.scriptEntriesScrollArea.getEntries();
@@ -2279,7 +2344,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             if (candidate.executable instanceof IfExecutableBlock ||
                     candidate.executable instanceof ElseIfExecutableBlock ||
                     candidate.executable instanceof ElseExecutableBlock ||
-                    candidate.executable instanceof WhileExecutableBlock) {
+                    isLoopBlock(candidate.executable)) {
                 continue;
             }
             if (!entries.contains(candidate)) {
@@ -2423,10 +2488,21 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
 
     protected void scheduleFocusEntryForExecutable(@NotNull Executable executable, boolean keepViewAnchor) {
         MainThreadTaskExecutor.executeInMainThread(() -> {
-            if (Minecraft.getInstance().screen == this) {
+            if (this.isEditorOpen()) {
                 this.focusEntryForExecutable(executable, keepViewAnchor, false);
             }
         }, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
+    }
+
+    /**
+     * If the editor is still open, in its window, or as the current screen if it has no window.
+     */
+    private boolean isEditorOpen() {
+        PiPWindow window = this.getWindow();
+        if (window != null) {
+            return PiPWindowHandler.INSTANCE.getOpenWindows().contains(window);
+        }
+        return ScreenUtils.getScreen() == this;
     }
 
     protected void withContextMenuSelectionOverride(@NotNull Runnable action) {
@@ -2518,7 +2594,8 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         this.createUndoPoint();
 
         entry.getParentBlock().getExecutables().remove(entry.executable);
-        target.parent().getExecutables().add(target.index(), entry.executable);
+        // Adds the value placeholders of the new parent too, like the ones of a FOR EACH loop it got moved into
+        target.parent().addExecutable(target.index(), entry.executable);
 
         this.rebuildEntriesAndSelect(entry.executable);
         return true;
@@ -2980,6 +3057,8 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         private MutableComponent valueLabelComponent;
         @Nullable
         private MutableComponent valueOnlyComponent;
+        /** If the value component shows a summary of the value instead of the value itself, see {@link #hasValueSummary()}. */
+        private boolean valueSummary = false;
         private long lastValueClickTime = 0L;
         private long lastNameClickTime = 0L;
 
@@ -3024,7 +3103,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             } else if (this.executable instanceof ElseExecutableBlock) {
                 idle = theme.actions_entry_background_color_else;
                 hover = theme.actions_entry_background_color_else_hover;
-            } else if (this.executable instanceof WhileExecutableBlock) {
+            } else if (isLoopBlock(this.executable)) {
                 idle = theme.actions_entry_background_color_while;
                 hover = theme.actions_entry_background_color_while_hover;
             } else if (this.executable instanceof DelayExecutableBlock) {
@@ -3080,6 +3159,16 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                 MutableComponent display = Component.translatable("fancymenu.actions.blocks.while", requirements).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
                 if (b.isCollapsed()) {
                     display = display.append(this.createCollapsedSuffixComponent(theme));
+                }
+                this.displayNameComponent = display;
+                this.valueComponent = Component.empty();
+            } else if (this.executable instanceof ForEachExecutableBlock b) {
+                MutableComponent display = Component.translatable("fancymenu.actions.blocks.for_each", Component.literal(b.getListVariableName())).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
+                if (b.isCollapsed()) {
+                    display = display.append(this.createCollapsedSuffixComponent(theme));
+                } else {
+                    // The value placeholders the contents can use, so users don't have to remember them
+                    display = display.append(Component.literal("   " + ValuePlaceholderHolder.VALUE_PLACEHOLDER_PREFIX + ForEachExecutableBlock.LIST_ENTRY_PLACEHOLDER + "  " + ValuePlaceholderHolder.VALUE_PLACEHOLDER_PREFIX + ForEachExecutableBlock.LIST_INDEX_PLACEHOLDER).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_inactive.getColorInt())));
                 }
                 this.displayNameComponent = display;
                 this.valueComponent = Component.empty();
@@ -3241,6 +3330,13 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                 int textX = toggleX + COLLAPSE_TOGGLE_SIZE + 3;
                 float textY = centerYLine1 - textOffset;
                 UIBase.renderText(graphics, this.displayNameComponent, textX, textY, -1);
+            } else if (this.executable instanceof ForEachExecutableBlock forEachBlock) {
+                int toggleX = renderX + 5;
+                int toggleY = centerYLine1 - (COLLAPSE_TOGGLE_SIZE / 2);
+                this.renderCollapseToggle(graphics, toggleX, toggleY, forEachBlock.isCollapsed());
+                int textX = toggleX + COLLAPSE_TOGGLE_SIZE + 3;
+                float textY = centerYLine1 - textOffset;
+                UIBase.renderText(graphics, this.displayNameComponent, textX, textY, -1);
             } else if (this.executable instanceof DelayExecutableBlock delayBlock) {
                 int toggleX = renderX + 5;
                 int toggleY = centerYLine1 - (COLLAPSE_TOGGLE_SIZE / 2);
@@ -3335,7 +3431,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
 
         private int calculateWidth() {
             int w;
-            if ((this.executable instanceof FolderExecutableBlock) || (this.executable instanceof CommentExecutableBlock) || (this.executable instanceof IfExecutableBlock) || (this.executable instanceof WhileExecutableBlock) || (this.executable instanceof DelayExecutableBlock) || (this.executable instanceof ExecuteLaterExecutableBlock) || (this.executable instanceof ElseIfExecutableBlock) || (this.executable instanceof ElseExecutableBlock)) {
+            if ((this.executable instanceof FolderExecutableBlock) || (this.executable instanceof CommentExecutableBlock) || (this.executable instanceof IfExecutableBlock) || isLoopBlock(this.executable) || (this.executable instanceof DelayExecutableBlock) || (this.executable instanceof ExecuteLaterExecutableBlock) || (this.executable instanceof ElseIfExecutableBlock) || (this.executable instanceof ElseExecutableBlock)) {
                 int textWidth = this.font.width(this.displayNameComponent);
                 w = 5 + COLLAPSE_TOGGLE_SIZE + 3 + textWidth + 5;
             } else {
@@ -3348,13 +3444,29 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
             return w;
         }
 
-        protected boolean canInlineEditValue() {
+        /**
+         * If the entry shows the value of an action, which a double-click edits: inline, or in the value editor of the action if the entry
+         * shows a summary of the value, see {@link #hasValueSummary()}.
+         */
+        protected boolean canEditValue() {
             return (this.executable instanceof ActionInstance i) && i.action.hasValue();
+        }
+
+        protected boolean canInlineEditValue() {
+            return this.canEditValue() && !this.hasValueSummary();
+        }
+
+        /**
+         * If the entry shows a summary of the action's value instead of the value itself, see {@link Action#getValueSummary(String)}.
+         * Values with a summary are hard to read, so they only get edited in the value editor of the action.
+         */
+        protected boolean hasValueSummary() {
+            return this.valueSummary;
         }
 
         protected boolean isMouseOverValue(int mouseX, int mouseY) {
             if (ActionScriptEditorWindowBody.this.isUserNavigatingInRightClickContextMenu()) return false;
-            if (!this.canInlineEditValue()) {
+            if (!this.canEditValue()) {
                 return false;
             }
             int valueX = this.getValueFieldX();
@@ -3467,7 +3579,7 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         }
 
         protected boolean canToggleCollapse() {
-            return (this.executable instanceof FolderExecutableBlock) || (this.executable instanceof IfExecutableBlock) || (this.executable instanceof WhileExecutableBlock) || (this.executable instanceof DelayExecutableBlock) || (this.executable instanceof ExecuteLaterExecutableBlock);
+            return (this.executable instanceof FolderExecutableBlock) || (this.executable instanceof IfExecutableBlock) || isLoopBlock(this.executable) || (this.executable instanceof DelayExecutableBlock) || (this.executable instanceof ExecuteLaterExecutableBlock);
         }
 
         protected boolean isMouseOverCollapseToggle(int mouseX, int mouseY) {
@@ -3500,6 +3612,9 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
                 toggled = true;
             } else if (this.executable instanceof WhileExecutableBlock whileBlock) {
                 whileBlock.setCollapsed(!whileBlock.isCollapsed());
+                toggled = true;
+            } else if (this.executable instanceof ForEachExecutableBlock forEachBlock) {
+                forEachBlock.setCollapsed(!forEachBlock.isCollapsed());
                 toggled = true;
             } else if (this.executable instanceof DelayExecutableBlock delayBlock) {
                 delayBlock.setCollapsed(!delayBlock.isCollapsed());
@@ -3545,13 +3660,16 @@ public class ActionScriptEditorWindowBody extends PiPWindowBody {
         protected void updateValueComponent() {
             this.valueLabelComponent = null;
             this.valueOnlyComponent = null;
+            this.valueSummary = false;
             if (this.executable instanceof ActionInstance i) {
                 UITheme theme = UIBase.getUITheme();
                 String cachedValue = i.value;
                 boolean hasValue = i.action.hasValue();
+                Component summary = ((cachedValue != null) && hasValue) ? i.action.getValueSummary(cachedValue) : null;
+                this.valueSummary = (summary != null);
                 String valueString = ((cachedValue != null) && hasValue) ? cachedValue : I18n.get("fancymenu.actions.screens.manage_screen.info.value.none");
                 MutableComponent label = Component.literal(I18n.get("fancymenu.actions.screens.manage_screen.info.value") + " ").setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
-                MutableComponent value = Component.literal(valueString).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
+                MutableComponent value = ((summary != null) ? Component.empty().append(summary) : Component.literal(valueString)).setStyle(Style.EMPTY.withColor(theme.ui_interface_widget_label_color_normal.getColorInt()));
                 this.valueLabelComponent = label;
                 this.valueOnlyComponent = value;
                 this.valueComponent = label.copy().append(value.copy());

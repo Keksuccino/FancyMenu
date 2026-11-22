@@ -10,6 +10,8 @@ import de.keksuccino.fancymenu.customization.element.elements.WidgetSoundSetting
 import de.keksuccino.fancymenu.customization.element.elements.button.custombutton.ButtonElement;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
+import de.keksuccino.fancymenu.customization.variables.VariableHandler;
+import de.keksuccino.fancymenu.customization.variables.VariableType;
 import de.keksuccino.fancymenu.mixin.mixins.common.client.IMixinAbstractWidget;
 import de.keksuccino.fancymenu.util.enums.LocalizedCycleEnum;
 import de.keksuccino.fancymenu.util.properties.Property;
@@ -48,6 +50,14 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
     public String preSelectedValue;
     @NotNull
     public List<String> listValues = new ArrayList<>();
+    /** The name of a list variable the slider takes its values from instead of {@link #listValues}, or {@code null} to use {@link #listValues}. */
+    public final Property.StringProperty listVariable = putProperty(Property.stringProperty("list_variable", null, false, false, "fancymenu.elements.slider.v2.type.list.list_variable")
+            .setInputSuggestions(() -> VariableHandler.getVariableNames(VariableType.LIST)));
+    /** The entries of the list variable the slider values got built from. The variables hand out the same list until it changes. */
+    @Nullable
+    private List<String> syncedListVariableEntries;
+    /** The {@link VariableHandler#getRevision()} of the last check if the list variable changed. */
+    private long syncedVariableRevision = -1L;
     public final Property.DoubleProperty minRangeValue = putProperty(Property.doubleProperty("min_range_value", 0.0D, "fancymenu.elements.slider.v2.type.range.set_min"));
     public final Property.DoubleProperty maxRangeValue = putProperty(Property.doubleProperty("max_range_value", 20.0D, "fancymenu.elements.slider.v2.type.range.set_max"));
     public final Property.IntegerProperty roundingDecimalPlace = putProperty(Property.integerProperty("rounding_decimal_place", 2, "fancymenu.elements.slider.v2.type.range.decimal.round"));
@@ -94,6 +104,7 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         this.minRangeValue.addValueSetListener((oldValue, newValue) -> this.buildSlider());
         this.maxRangeValue.addValueSetListener((oldValue, newValue) -> this.buildSlider());
         this.roundingDecimalPlace.addValueSetListener((oldValue, newValue) -> this.buildSlider());
+        this.listVariable.addValueSetListener((oldValue, newValue) -> this.buildSlider());
     }
 
     /**
@@ -140,11 +151,10 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
             ((RangeSlider)this.slider).setRoundingDecimalPlace(this.roundingDecimalPlace.getInteger());
         }
         if (this.type == SliderType.LIST) {
-            if (this.listValues.isEmpty()) this.listValues.addAll(List.of("placeholder_1", "placeholder_2"));
-            if (this.listValues.size() < 2) this.listValues.add("placeholder_1");
-            int preSelectedIndex = (preSelectedString != null) ? this.listValues.indexOf(preSelectedString) : 0;
+            List<String> values = this.buildListSliderValues();
+            int preSelectedIndex = (preSelectedString != null) ? values.indexOf(preSelectedString) : 0;
             if (preSelectedIndex < 0) preSelectedIndex = 0;
-            this.slider = new ListSlider<>(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), Component.empty(), this.listValues, preSelectedIndex);
+            this.slider = new ListSlider<>(this.getAbsoluteX(), this.getAbsoluteY(), this.getAbsoluteWidth(), this.getAbsoluteHeight(), Component.empty(), values, preSelectedIndex);
         }
 
         //Set label supplier and value update listener
@@ -153,6 +163,71 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
             this.slider.setSliderValueUpdateListener((slider1, valueDisplayText, value) -> this.onChangeSliderValue());
         }
 
+    }
+
+    /**
+     * Returns the values of the list slider: the entries of the list variable, or the {@link #listValues} without one.
+     */
+    @NotNull
+    protected List<String> buildListSliderValues() {
+        String variableName = this.getListVariableName();
+        if (variableName == null) {
+            this.syncedListVariableEntries = null;
+            fillUpListValues(this.listValues);
+            return this.listValues;
+        }
+        // The revision gets read before the list, so a change while reading it still counts as change in the next frame
+        this.syncedVariableRevision = VariableHandler.getRevision();
+        this.syncedListVariableEntries = VariableHandler.getListEntries(variableName);
+        return toListSliderValues(this.syncedListVariableEntries);
+    }
+
+    /**
+     * Gives the slider the new entries of its list variable when the list changed. While no variable changes, this only reads the revision of the variables.
+     */
+    @SuppressWarnings("unchecked")
+    protected void syncListVariableValues() {
+        if ((this.type != SliderType.LIST) || !(this.slider instanceof ListSlider<?> listSlider)) return;
+        String variableName = this.getListVariableName();
+        if (variableName == null) return;
+        long revision = VariableHandler.getRevision();
+        if (revision == this.syncedVariableRevision) return;
+        this.syncedVariableRevision = revision;
+        List<String> entries = VariableHandler.getListEntries(variableName);
+        // Same instance means same entries, because the variables hand out a new list for every change
+        if (entries == this.syncedListVariableEntries) return;
+        this.syncedListVariableEntries = entries;
+        ((ListSlider<String>) listSlider).replaceListValues(toListSliderValues(entries));
+    }
+
+    /**
+     * @return The name of the list variable the slider takes its values from, or {@code null} if it uses its {@link #listValues}.
+     */
+    @Nullable
+    public String getListVariableName() {
+        String name = this.listVariable.get();
+        if (name == null) return null;
+        name = VariableHandler.normalizeVariableReferenceName(name);
+        return name.isEmpty() ? null : name;
+    }
+
+    /**
+     * @param entries The entries of the list variable, or {@code null} if it doesn't exist or is no list.
+     */
+    @NotNull
+    protected static List<String> toListSliderValues(@Nullable List<String> entries) {
+        if ((entries != null) && (entries.size() >= 2)) return entries;
+        List<String> values = (entries != null) ? new ArrayList<>(entries) : new ArrayList<>(2);
+        fillUpListValues(values);
+        return values;
+    }
+
+    /**
+     * List sliders need at least two values, so this fills too short lists up with placeholder values.
+     */
+    protected static void fillUpListValues(@NotNull List<String> values) {
+        if (values.isEmpty()) values.addAll(List.of("placeholder_1", "placeholder_2"));
+        if (values.size() < 2) values.add("placeholder_1");
     }
 
     @NotNull
@@ -181,6 +256,8 @@ public class SliderElement extends AbstractElement implements ExecutableElement 
         this.slider.setAlpha(this.getOpacity());
 
         if (!this.shouldRender()) return;
+
+        this.syncListVariableValues();
 
         this.updateWidgetBounds();
 

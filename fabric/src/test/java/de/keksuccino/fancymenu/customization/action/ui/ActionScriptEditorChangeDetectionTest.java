@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.customization.action.blocks.statements.DelayExecu
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseIfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ExecuteLaterExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.statements.ForEachExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.IfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.WhileExecutableBlock;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementGroup;
@@ -125,6 +126,16 @@ class ActionScriptEditorChangeDetectionTest {
     }
 
     @Test
+    void editedForEachListCountsAsChanged() {
+        TestScript script = TestScript.create();
+        Map<String, String> initial = ActionScriptEditorWindowBody.serializeScriptState(script.root);
+
+        script.forEachBlock.setListVariableName("other_list");
+
+        assertTrue(ActionScriptEditorWindowBody.hasScriptChanged(initial, script.root));
+    }
+
+    @Test
     void collapsingOrExpandingBlocksCountsAsUnchanged() {
         TestScript script = TestScript.create();
         Map<String, String> initial = ActionScriptEditorWindowBody.serializeScriptState(script.root);
@@ -159,6 +170,7 @@ class ActionScriptEditorChangeDetectionTest {
         private final CommentExecutableBlock comment = new CommentExecutableBlock();
         private final IfExecutableBlock ifBlock = new IfExecutableBlock();
         private final WhileExecutableBlock whileBlock = new WhileExecutableBlock();
+        private final ForEachExecutableBlock forEachBlock = new ForEachExecutableBlock("for_each_list");
         private final DelayExecutableBlock delayBlock = new DelayExecutableBlock("500");
         private final ExecuteLaterExecutableBlock executeLaterBlock = new ExecuteLaterExecutableBlock();
 
@@ -173,9 +185,10 @@ class ActionScriptEditorChangeDetectionTest {
             script.ifBlock.addExecutable(newAction("if_variable:if_value"));
             script.ifBlock.setAppendedBlock(elseIfBlock);
             script.whileBlock.addExecutable(newAction("while_variable:while_value"));
+            script.forEachBlock.addExecutable(newAction("for_each_variable:for_each_value"));
             script.delayBlock.addExecutable(newAction("delay_variable:delay_value"));
             script.executeLaterBlock.addExecutable(newAction("later_variable:later_value"));
-            script.root.addExecutable(script.firstAction).addExecutable(script.folder).addExecutable(script.ifBlock).addExecutable(script.whileBlock).addExecutable(script.delayBlock).addExecutable(script.executeLaterBlock);
+            script.root.addExecutable(script.firstAction).addExecutable(script.folder).addExecutable(script.ifBlock).addExecutable(script.whileBlock).addExecutable(script.forEachBlock).addExecutable(script.delayBlock).addExecutable(script.executeLaterBlock);
             return script;
         }
 
@@ -183,6 +196,7 @@ class ActionScriptEditorChangeDetectionTest {
             this.folder.setCollapsed(collapsed);
             this.ifBlock.setCollapsed(collapsed);
             this.whileBlock.setCollapsed(collapsed);
+            this.forEachBlock.setCollapsed(collapsed);
             this.delayBlock.setCollapsed(collapsed);
             this.executeLaterBlock.setCollapsed(collapsed);
         }
