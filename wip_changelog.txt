@@ -194,5 +194,6 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - Fixed long lines in profile import/export dialogs being able to run past the right edge of the dialog at very small UI scales
 - Fixed the "World Save Names" and "World Save Data" placeholders leaving out the world that is currently open (for example in a customized pause menu), logging a warning on every refresh and unlocking that world, so a second game could open the same world at the same time
 - Fixed a single broken world (corrupted save data or a forbidden symlink) making the "World Save Names" and "World Save Data" placeholders stop working completely
+- Fixed the "Active Effect" and "Slot Item Display Name (FM)" placeholders crashing text rendering when they got a negative index, instead of returning nothing like they already do for an index that is too high (#1847)
 
 %changelog:end%
