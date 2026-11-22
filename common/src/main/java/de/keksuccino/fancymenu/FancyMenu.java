@@ -51,8 +51,12 @@ public class FancyMenu {
 
 	public static void init() {
 
-		// Has to run before anything reads the config directory, because it completes or rolls back profile switches that got interrupted by a crash
-		if (Services.PLATFORM.isOnClient()) ProfileHandler.init();
+		if (Services.PLATFORM.isOnClient()) {
+			// Has to run before anything reads the config directory, because it completes or rolls back profile switches that got interrupted by a crash
+			ProfileHandler.init();
+			// Has to run before the active profile can change, so only the profile that is active at launch takes part in migrating legacy files into or out of the profiles
+			LegacyHandler.migrateLegacyFilesAtLaunch();
+		}
 
 		AfmaIoHelper.configureBaseTempDirectory(TEMP_DATA_DIR);
 
