@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.animated;
 
+import de.keksuccino.fancymenu.util.resource.resources.texture.LogCapture;
+import de.keksuccino.fancymenu.util.resource.resources.texture.ReadGate;
 import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
@@ -154,6 +156,60 @@ class AnimatedImageTextureSourceTest {
         assertTrue(texture.isLoadingFailed());
         assertEquals(0, TestTextures.uploads(texture));
         assertTrue(source.isClosed());
+    }
+
+    @ParameterizedTest
+    @EnumSource(TestTextures.Format.class)
+    void closingTheTextureClosesTheSourceOfItsStreamWhileATaskIsPending(TestTextures.Format format) {
+        AnimatedImageTestSupport.MemorySource source = new AnimatedImageTestSupport.MemorySource(format.fourFrames());
+        AnimatedImageTexture texture = this.load(format, source);
+        AnimatedFrameStream stream = texture.stream.get();
+        assertNotNull(stream);
+
+        texture.close();
+
+        // The pending task still owns the decoder, but the file of the image is closed already
+        assertTrue(source.isClosed());
+        this.executor.runTasks();
+        assertEquals(0L, stream.getNativeMemoryBytes());
+    }
+
+    @ParameterizedTest
+    @EnumSource(TestTextures.Format.class)
+    void closingTheTextureClosesTheSourceThatItsLoadingThreadParses(TestTextures.Format format) throws Exception {
+        AnimatedImageTestSupport.GatedSource source = new AnimatedImageTestSupport.GatedSource(format.fourFrames());
+        ReadGate gate = new ReadGate();
+        source.holdNextRead(gate);
+        AnimatedImageTexture texture = this.create(format);
+        try (LogCapture problems = LogCapture.problemsOf(AnimatedImageTexture.class, AnimatedFrameStream.class)) {
+            Thread loader = new Thread(() -> texture.populate(() -> source, "image"), "Animated image test loader");
+            loader.start();
+            gate.awaitReached();
+
+            texture.close();
+
+            assertTrue(source.isClosed());
+            gate.open();
+            ReadGate.join(loader);
+            assertNull(texture.stream.get());
+            assertNull(texture.loadingSource);
+            assertEquals(List.of(), problems.messages());
+        }
+    }
+
+    @ParameterizedTest
+    @EnumSource(TestTextures.Format.class)
+    void textureThatGetsClosedAfterParsingClosesTheSourceOfItsNewStreamBeforeItDecodes(TestTextures.Format format) throws Exception {
+        AnimatedImageTestSupport.MemorySource source = new AnimatedImageTestSupport.MemorySource(format.fourFrames());
+        AnimatedImageTexture texture = this.create(format);
+        AnimatedImage image = texture.readImage(source, "image");
+        texture.closed.set(true);
+
+        texture.applyImage(image, "image");
+
+        assertTrue(source.isClosed());
+        this.executor.runTasks();
+        assertNull(texture.stream.get());
     }
 
     @NotNull

@@ -1,9 +1,12 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.animated;
 
+import de.keksuccino.fancymenu.util.resource.resources.texture.ReadGate;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.channels.ClosedChannelException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -113,6 +116,60 @@ public final class AnimatedImageTestSupport {
 
         public boolean isClosed() {
             return this.closeCount > 0;
+        }
+
+    }
+
+    /**
+     * An image file in memory whose next read can wait at a gate, like a read of a slow disk, so another thread can close the source while it gets read.
+     * Reads and closing can happen on different threads. Reads of a closed source fail.
+     */
+    public static final class GatedSource implements AnimatedImageSource {
+
+        @NotNull
+        private final byte[] data;
+        @Nullable
+        private volatile ReadGate readGate;
+        private volatile boolean closed;
+
+        public GatedSource(@NotNull byte[] data) {
+            this.data = data;
+        }
+
+        /**
+         * Makes the next read wait at the gate.
+         */
+        public void holdNextRead(@NotNull ReadGate gate) {
+            this.readGate = gate;
+        }
+
+        @Override
+        public int read(@NotNull ByteBuffer target, long position) throws IOException {
+            ReadGate gate = this.readGate;
+            if (gate != null) {
+                this.readGate = null;
+                gate.pass();
+            }
+            if (this.closed) throw new ClosedChannelException();
+            if (position >= this.data.length) return -1;
+            int count = (int) Math.min(target.remaining(), this.data.length - position);
+            target.put(this.data, (int) position, count);
+            return count;
+        }
+
+        @Override
+        public long size() throws IOException {
+            if (this.closed) throw new ClosedChannelException();
+            return this.data.length;
+        }
+
+        @Override
+        public void close() {
+            this.closed = true;
+        }
+
+        public boolean isClosed() {
+            return this.closed;
         }
 
     }

@@ -16,6 +16,7 @@ import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
+import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -35,17 +36,30 @@ import java.util.Set;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 
+/**
+ * Reads AFMA archives straight from their file while they play: the decoder keeps the archive file open and reads the payload chunks of frames whenever they get decoded.<br><br>
+ *
+ * <b>Threading:</b> The archive file can get released from any thread with {@link #closeArchiveFile()}, also while another thread reads from it,
+ * like when a texture gets closed on the render thread while its stream thread or its loading thread reads a frame. Opening the file, every read from it and releasing it
+ * take turns through {@link #archiveFileLock}, so the file never gets closed in the middle of a read: java.io files must not get closed while another thread reads them,
+ * because the system can give the number of the closed file to the next file that gets opened, so the read could continue in that file.
+ * Reads take the lock for at most {@link #MAX_LOCKED_READ_BYTES} at a time, which keeps releasing the file fast. All other state belongs to the thread that owns the decoder.
+ */
 public class AfmaDecoder implements Closeable {
 
     protected static final int MAX_CACHED_PAYLOAD_CHUNKS = 4;
+    /** Most bytes that get read from the archive file while holding the file lock, which is the longest read that releasing the file can wait for. **/
+    protected static final int MAX_LOCKED_READ_BYTES = 64 * 1024;
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson GSON = new GsonBuilder().create();
-    private static final File TEMP_DIR = FileUtils.createDirectory(new File(FancyMenu.TEMP_DATA_DIR, "/decoded_afma_images"));
+    /** Guards the archive file fields and {@link #archiveFileReleased}, see the threading notes of the class. **/
+    protected final Object archiveFileLock = new Object();
     @Nullable
     protected ZipFile zipFile = null;
     @Nullable
     protected RandomAccessFile containerFile = null;
-    protected final Object containerFileReadLock = new Object();
+    /** Set once the archive file got released. The decoder never opens or reads its file again afterwards. Only gets written while holding the file lock. **/
+    protected volatile boolean archiveFileReleased = false;
     protected boolean legacyZipArchive = false;
     @Nullable
     protected AfmaMetadata metadata = null;
@@ -108,17 +122,29 @@ public class AfmaDecoder implements Closeable {
     }
 
     protected boolean isOpen() {
-        return (this.zipFile != null) || (this.containerFile != null);
+        synchronized (this.archiveFileLock) {
+            return (this.zipFile != null) || (this.containerFile != null);
+        }
+    }
+
+    /**
+     * Where streams get spooled to. Resolved for every spool instead of once, so the directory comes back if it got deleted, and loading this class doesn't initialize FancyMenu.
+     */
+    @NotNull
+    protected static File resolveTempDirectory() {
+        return FileUtils.createDirectory(new File(FancyMenu.TEMP_DATA_DIR, "/decoded_afma_images"));
     }
 
     @NotNull
     protected File spoolToTempArchive(@NotNull InputStream in) throws IOException {
-        File tempArchive = File.createTempFile("afma_stream_", ".afma", TEMP_DIR);
+        File tempArchive = File.createTempFile("afma_stream_", ".afma", resolveTempDirectory());
         try (BufferedInputStream bufferedIn = new BufferedInputStream(in);
              BufferedOutputStream bufferedOut = new BufferedOutputStream(new FileOutputStream(tempArchive))) {
             byte[] buffer = new byte[8192];
             int read;
             while ((read = bufferedIn.read(buffer)) >= 0) {
+                // A decoder whose file got released would never open the archive, so it stops copying
+                if (this.archiveFileReleased) throw new IOException("The AFMA archive file got released while the stream got spooled");
                 bufferedOut.write(buffer, 0, read);
             }
             bufferedOut.flush();
@@ -132,18 +158,144 @@ public class AfmaDecoder implements Closeable {
     }
 
     protected void openArchive(@NotNull File archiveFile, boolean deleteOnClose) throws IOException {
-        try (RandomAccessFile sniffFile = new RandomAccessFile(archiveFile, "r")) {
-            int magic = (sniffFile.length() >= Integer.BYTES) ? sniffFile.readInt() : 0;
-            if (AfmaContainerV2.isMagic(magic)) {
-                this.containerFile = new RandomAccessFile(archiveFile, "r");
-                this.legacyZipArchive = false;
-            } else {
+        synchronized (this.archiveFileLock) {
+            // Set first, so releasing the file deletes a spooled archive even if it never got opened
+            this.tempArchiveFile = deleteOnClose ? archiveFile : null;
+            this.deleteTempArchiveOnClose = deleteOnClose;
+            if (this.archiveFileReleased) throw new IOException("The AFMA archive file got released before it got opened");
+            RandomAccessFile file = this.openContainerFile(archiveFile);
+            try {
+                int magic = (file.length() >= Integer.BYTES) ? file.readInt() : 0;
+                if (AfmaContainerV2.isMagic(magic)) {
+                    this.containerFile = file;
+                    this.legacyZipArchive = false;
+                    file = null;
+                }
+            } finally {
+                if (file != null) file.close();
+            }
+            if (this.containerFile == null) {
                 this.zipFile = new ZipFile(archiveFile);
                 this.legacyZipArchive = true;
             }
         }
-        this.tempArchiveFile = deleteOnClose ? archiveFile : null;
-        this.deleteTempArchiveOnClose = deleteOnClose;
+    }
+
+    /**
+     * Opens the archive file for reading. Reads of v2 archives use the returned file, legacy ZIP archives only get sniffed with it.
+     */
+    @NotNull
+    protected RandomAccessFile openContainerFile(@NotNull File archiveFile) throws IOException {
+        return new RandomAccessFile(archiveFile, "r");
+    }
+
+    /**
+     * Closes the archive file right away and deletes the spooled archive of decoders that read a stream, from any thread, so the file is not open anymore once this returns.
+     * A read that another thread does right now finishes first, which is at most {@link #MAX_LOCKED_READ_BYTES}. All later reads fail.<br>
+     * Everything else stays as it is, because the thread that owns the decoder can still use it, so the owner still has to {@link #close()} it. Releasing the file more than once does nothing.
+     */
+    public void closeArchiveFile() {
+        ZipFile activeZipFile;
+        RandomAccessFile activeContainerFile;
+        File tempArchive;
+        boolean shouldDeleteTempArchive;
+        synchronized (this.archiveFileLock) {
+            this.archiveFileReleased = true;
+            activeZipFile = this.zipFile;
+            activeContainerFile = this.containerFile;
+            tempArchive = this.tempArchiveFile;
+            shouldDeleteTempArchive = this.deleteTempArchiveOnClose;
+            this.zipFile = null;
+            this.containerFile = null;
+            this.tempArchiveFile = null;
+            this.deleteTempArchiveOnClose = false;
+            // Closed while holding the lock, so no read can run on the closed file
+            if (activeZipFile != null) {
+                try {
+                    activeZipFile.close();
+                } catch (Exception ex) {
+                    LOGGER.error("[FANCYMENU] Failed to close AFMA ZipFile", ex);
+                }
+            }
+            if (activeContainerFile != null) {
+                try {
+                    activeContainerFile.close();
+                } catch (Exception ex) {
+                    LOGGER.error("[FANCYMENU] Failed to close AFMA v2 container", ex);
+                }
+            }
+        }
+        if (shouldDeleteTempArchive && (tempArchive != null) && tempArchive.exists() && !tempArchive.delete()) {
+            LOGGER.warn("[FANCYMENU] Failed to delete temporary AFMA archive: {}", tempArchive.getAbsolutePath());
+        }
+    }
+
+    /**
+     * Must only get called while holding the file lock.
+     */
+    @NotNull
+    protected RandomAccessFile requireContainerFileLocked() throws IOException {
+        RandomAccessFile file = this.containerFile;
+        if (file == null) throw new IOException(this.archiveFileReleased ? "The AFMA archive file got released" : "No AFMA v2 container is currently open");
+        return file;
+    }
+
+    /**
+     * Must only get called while holding the file lock.
+     */
+    @NotNull
+    protected ZipFile requireZipFileLocked() throws IOException {
+        ZipFile file = this.zipFile;
+        if (file == null) throw new IOException(this.archiveFileReleased ? "The AFMA archive file got released" : "No legacy AFMA archive is currently open");
+        return file;
+    }
+
+    /**
+     * Reads bytes of a v2 container, holding the file lock for one piece of at most {@link #MAX_LOCKED_READ_BYTES} at a time.
+     */
+    @NotNull
+    protected byte[] readContainerBytes(long position, int length) throws IOException {
+        if (length < 0) {
+            throw new IOException("AFMA v2 section length is invalid");
+        }
+        byte[] bytes = new byte[length];
+        int offset = 0;
+        while (offset < length) {
+            int pieceLength = Math.min(MAX_LOCKED_READ_BYTES, length - offset);
+            synchronized (this.archiveFileLock) {
+                RandomAccessFile file = this.requireContainerFileLocked();
+                file.seek(position + offset);
+                file.readFully(bytes, offset, pieceLength);
+            }
+            offset += pieceLength;
+        }
+        return bytes;
+    }
+
+    /**
+     * Reads a whole entry of a legacy ZIP archive, holding the file lock while opening the entry and for one piece of at most {@link #MAX_LOCKED_READ_BYTES} at a time.
+     */
+    @NotNull
+    protected byte[] readLegacyEntry(@NotNull ZipArchiveEntry entry) throws IOException {
+        InputStream entryIn;
+        synchronized (this.archiveFileLock) {
+            entryIn = this.requireZipFileLocked().getInputStream(entry);
+        }
+        try (InputStream in = entryIn) {
+            long size = entry.getSize();
+            ByteArrayOutputStream out = new ByteArrayOutputStream(((size > 0L) && (size <= MAX_LOCKED_READ_BYTES)) ? (int) size : MAX_LOCKED_READ_BYTES);
+            byte[] buffer = new byte[MAX_LOCKED_READ_BYTES];
+            while (true) {
+                int read;
+                synchronized (this.archiveFileLock) {
+                    this.requireZipFileLocked();
+                    read = in.read(buffer);
+                }
+                if (read < 0) break;
+                out.write(buffer, 0, read);
+            }
+            return out.toByteArray();
+        }
     }
 
     protected void initializeArchiveState() throws IOException {
@@ -159,10 +311,14 @@ public class AfmaDecoder implements Closeable {
     }
 
     protected void indexEntries() throws IOException {
-        Objects.requireNonNull(this.zipFile);
+        ZipFile activeZipFile;
+        synchronized (this.archiveFileLock) {
+            activeZipFile = this.requireZipFileLocked();
+        }
         this.entriesByNormalizedPath.clear();
 
-        var entries = this.zipFile.getEntries();
+        // The entries got read when the archive got opened, so listing them doesn't read the file
+        var entries = activeZipFile.getEntries();
         while (entries.hasMoreElements()) {
             ZipArchiveEntry entry = entries.nextElement();
             if (entry == null || entry.isDirectory()) {
@@ -174,21 +330,19 @@ public class AfmaDecoder implements Closeable {
     }
 
     protected void readMetadata() throws IOException {
-        Objects.requireNonNull(this.zipFile);
         ZipArchiveEntry metadataEntry = this.findEntry("metadata.json");
         if (metadataEntry == null) {
             throw new FileNotFoundException("No metadata.json found in AFMA file");
         }
 
-        try (InputStream metadataIn = this.zipFile.getInputStream(metadataEntry)) {
-            this.metadata = parseMetadata(metadataIn.readAllBytes());
+        try {
+            this.metadata = parseMetadata(this.readLegacyEntry(metadataEntry));
         } catch (Exception ex) {
             throw new IOException(ex);
         }
     }
 
     protected void readPayloadIndex() throws IOException {
-        Objects.requireNonNull(this.zipFile);
         this.resetPayloadChunkState();
         this.payloadChunkDescriptors = List.of();
 
@@ -197,8 +351,8 @@ public class AfmaDecoder implements Closeable {
             throw new FileNotFoundException("No " + AfmaChunkedPayloadHelper.PAYLOAD_INDEX_ENTRY_PATH + " found in AFMA file");
         }
 
-        try (InputStream payloadIndexIn = this.zipFile.getInputStream(payloadIndexEntry)) {
-            byte[] payloadIndexBytes = payloadIndexIn.readAllBytes();
+        try {
+            byte[] payloadIndexBytes = this.readLegacyEntry(payloadIndexEntry);
             if (payloadIndexBytes.length <= 0) {
                 throw new IOException("AFMA payload index is empty");
             }
@@ -211,31 +365,40 @@ public class AfmaDecoder implements Closeable {
     }
 
     protected void readFrameIndex() throws IOException {
-        Objects.requireNonNull(this.zipFile);
         ZipArchiveEntry frameIndexEntry = this.findEntry(AfmaBinaryFrameIndexHelper.FRAME_INDEX_ENTRY_PATH);
         if (frameIndexEntry == null) {
             throw new FileNotFoundException("No " + AfmaBinaryFrameIndexHelper.FRAME_INDEX_ENTRY_PATH + " found in AFMA file");
         }
 
-        try (InputStream frameIndexIn = this.zipFile.getInputStream(frameIndexEntry)) {
-            this.frameIndex = parseFrameIndex(frameIndexIn.readAllBytes());
+        try {
+            this.frameIndex = parseFrameIndex(this.readLegacyEntry(frameIndexEntry));
         } catch (Exception ex) {
             throw new IOException(ex);
         }
     }
 
     protected void readContainerState() throws IOException {
-        RandomAccessFile file = Objects.requireNonNull(this.containerFile);
         this.entriesByNormalizedPath.clear();
         this.resetPayloadChunkState();
-        file.seek(0L);
-        AfmaContainerV2.Header header = AfmaContainerV2.readHeader(file);
-        long fileLength = file.length();
+        long fileLength;
+        synchronized (this.archiveFileLock) {
+            fileLength = this.requireContainerFileLocked().length();
+        }
+        if (fileLength < AfmaContainerV2.HEADER_BYTES) {
+            throw new IOException("AFMA v2 container is shorter than its header");
+        }
+        AfmaContainerV2.Header header = AfmaContainerV2.readHeader(new DataInputStream(new ByteArrayInputStream(this.readContainerBytes(0L, AfmaContainerV2.HEADER_BYTES))));
         long chunkDataOffset = validateContainerHeaderLayout(header, fileLength);
-        byte[] metadataBytes = readFully(file, header.metadataLength());
-        byte[] frameIndexBytes = readFully(file, header.frameIndexLength());
-        byte[] payloadTableBytes = readFully(file, header.payloadTableLength());
-        List<AfmaContainerV2.ChunkDescriptor> chunkDescriptors = AfmaContainerV2.readChunkDescriptors(file, header.chunkCount());
+        long sectionOffset = AfmaContainerV2.HEADER_BYTES;
+        byte[] metadataBytes = this.readContainerBytes(sectionOffset, header.metadataLength());
+        sectionOffset += header.metadataLength();
+        byte[] frameIndexBytes = this.readContainerBytes(sectionOffset, header.frameIndexLength());
+        sectionOffset += header.frameIndexLength();
+        byte[] payloadTableBytes = this.readContainerBytes(sectionOffset, header.payloadTableLength());
+        sectionOffset += header.payloadTableLength();
+        // The header layout got validated against the file length, so the descriptor table fits the file
+        byte[] chunkDescriptorBytes = this.readContainerBytes(sectionOffset, Math.toIntExact((long) header.chunkCount() * AfmaContainerV2.CHUNK_DESCRIPTOR_BYTES));
+        List<AfmaContainerV2.ChunkDescriptor> chunkDescriptors = AfmaContainerV2.readChunkDescriptors(new DataInputStream(new ByteArrayInputStream(chunkDescriptorBytes)), header.chunkCount());
         validateChunkDescriptors(chunkDescriptors, fileLength, chunkDataOffset);
         this.metadata = parseMetadata(metadataBytes);
         this.frameIndex = parseFrameIndex(frameIndexBytes);
@@ -284,16 +447,6 @@ public class AfmaDecoder implements Closeable {
             throw new IOException("Unable to parse " + AfmaBinaryFrameIndexHelper.FRAME_INDEX_ENTRY_PATH + " of AFMA file");
         }
         return parsedFrameIndex;
-    }
-
-    @NotNull
-    protected static byte[] readFully(@NotNull RandomAccessFile file, int length) throws IOException {
-        if (length < 0) {
-            throw new IOException("AFMA v2 section length is invalid");
-        }
-        byte[] bytes = new byte[length];
-        file.readFully(bytes);
-        return bytes;
     }
 
     protected static void validateChunkDescriptors(@NotNull List<AfmaContainerV2.ChunkDescriptor> chunkDescriptors,
@@ -676,13 +829,12 @@ public class AfmaDecoder implements Closeable {
     @NotNull
     protected byte[] readWholeChunk(int chunkId) throws IOException {
         if (this.legacyZipArchive) {
-            Objects.requireNonNull(this.zipFile);
             ZipArchiveEntry chunkEntry = this.findEntry(AfmaChunkedPayloadHelper.chunkEntryPath(chunkId));
             if (chunkEntry == null) {
                 throw new FileNotFoundException("AFMA payload chunk not found: " + AfmaChunkedPayloadHelper.chunkEntryPath(chunkId));
             }
-            try (InputStream chunkInput = this.zipFile.getInputStream(chunkEntry)) {
-                byte[] chunkBytes = chunkInput.readAllBytes();
+            try {
+                byte[] chunkBytes = this.readLegacyEntry(chunkEntry);
                 int expectedLength = ((chunkId >= 0) && (chunkId < this.payloadChunkLengths.length)) ? this.payloadChunkLengths[chunkId] : -1;
                 if ((expectedLength >= 0) && (chunkBytes.length != expectedLength)) {
                     throw new IOException("AFMA payload chunk size does not match the payload index: " + chunkEntry.getName());
@@ -696,16 +848,11 @@ public class AfmaDecoder implements Closeable {
             }
         }
 
-        RandomAccessFile file = Objects.requireNonNull(this.containerFile, "AFMA v2 container file was NULL");
         if ((chunkId < 0) || (chunkId >= this.payloadChunkDescriptors.size())) {
             throw new FileNotFoundException("AFMA payload chunk not found: " + chunkId);
         }
         AfmaContainerV2.ChunkDescriptor chunkDescriptor = this.payloadChunkDescriptors.get(chunkId);
-        byte[] storedBytes;
-        synchronized (this.containerFileReadLock) {
-            file.seek(chunkDescriptor.fileOffset());
-            storedBytes = readFully(file, chunkDescriptor.compressedLength());
-        }
+        byte[] storedBytes = this.readContainerBytes(chunkDescriptor.fileOffset(), chunkDescriptor.compressedLength());
         byte[] chunkBytes = switch (chunkDescriptor.compressionMode()) {
             case AfmaContainerV2.COMPRESSION_STORED -> storedBytes;
             case AfmaContainerV2.COMPRESSION_RAW_DEFLATE -> this.inflateRawChunk(storedBytes, chunkDescriptor.uncompressedLength());
@@ -770,8 +917,12 @@ public class AfmaDecoder implements Closeable {
         return AfmaIoHelper.normalizeEntryPath(entryPath);
     }
 
+    /**
+     * Releases the archive file and everything the decoder holds. Only the thread that owns the decoder may call this, other threads can only release the file with {@link #closeArchiveFile()}.
+     */
     @Override
     public void close() throws IOException {
+        this.closeArchiveFile();
         this.metadata = null;
         this.frameIndex = null;
         this.entriesByNormalizedPath.clear();
@@ -785,33 +936,6 @@ public class AfmaDecoder implements Closeable {
             this.payloadChunkCacheMisses = 0L;
             this.payloadChunkArchiveReads = 0L;
             this.payloadChunkCacheEvictions = 0L;
-        }
-
-        if (this.zipFile != null) {
-            try {
-                this.zipFile.close();
-            } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to close AFMA ZipFile", ex);
-            }
-            this.zipFile = null;
-        }
-
-        if (this.containerFile != null) {
-            try {
-                this.containerFile.close();
-            } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to close AFMA v2 container", ex);
-            }
-            this.containerFile = null;
-        }
-
-        File tempArchive = this.tempArchiveFile;
-        boolean shouldDeleteTempArchive = this.deleteTempArchiveOnClose;
-        this.tempArchiveFile = null;
-        this.deleteTempArchiveOnClose = false;
-
-        if (shouldDeleteTempArchive && (tempArchive != null) && tempArchive.exists() && !tempArchive.delete()) {
-            LOGGER.warn("[FANCYMENU] Failed to delete temporary AFMA archive: {}", tempArchive.getAbsolutePath());
         }
     }
 
