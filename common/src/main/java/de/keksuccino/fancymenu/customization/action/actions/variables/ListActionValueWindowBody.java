@@ -135,6 +135,11 @@ public abstract class ListActionValueWindowBody extends PiPCellWindowBody {
     }
 
     @Override
+    protected boolean isLateBodyHovered(int mouseX, int mouseY) {
+        return (this.listNameSuggestions != null) && this.listNameSuggestions.isMouseOverList(mouseX, mouseY);
+    }
+
+    @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if ((this.listNameSuggestions != null) && this.listNameSuggestions.keyPressed(keyCode, scanCode, modifiers)) return true;
         return super.keyPressed(keyCode, scanCode, modifiers);
