@@ -200,6 +200,11 @@ public class EditMinecraftOptionAction extends Action {
         }
 
         @Override
+        protected boolean isLateBodyHovered(int mouseX, int mouseY) {
+            return this.optionNameSuggestions.isMouseOverList(mouseX, mouseY);
+        }
+
+        @Override
         public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
             return this.keyPressed(event.key(), event.scancode(), event.modifiers());
         }
