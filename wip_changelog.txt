@@ -208,5 +208,8 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - Fixed AFMA and FMA textures freezing when several buttons use the same texture as their background
 - Fixed the "Cut" entry in the right-click menu of the text editor showing "Ctrl + U" instead of "Ctrl + X" as its shortcut
 - Fixed the "Split Text" placeholder showing English error messages as its text when its "Split Index" pointed to a part that doesn't exist, instead of showing nothing (#1848)
+- Fixed many windows having a big empty space at the top, like "Edit HTTP Request Configuration", the action, requirement, listener and variable windows, the panorama and slideshow choosers and the file dialogs (#1836)
+- Fixed the "Choose Listener Type" window showing its title a second time inside the window (#1836)
+- Fixed the "File Types" row of file dialogs not lining up with the buttons at the bottom (#1836)
 
 %changelog:end%
