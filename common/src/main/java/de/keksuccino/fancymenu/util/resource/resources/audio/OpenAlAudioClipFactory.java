@@ -23,8 +23,10 @@ public final class OpenAlAudioClipFactory {
         try {
             int[] sourceArr = new int[1];
             AL10.alGenSources(sourceArr);
-            ALErrorHandler.checkOpenAlError();
+            // Gets read before the error check, because OpenAL errors stay pending until they get read, so the check can also fail
+            // because of an older error after the source got made, and the source has to get deleted then
             source = sourceArr[0];
+            ALErrorHandler.checkOpenAlError();
             if (source == 0) {
                 return null;
             }
@@ -55,4 +57,5 @@ public final class OpenAlAudioClipFactory {
         } catch (Exception ignored) {
         }
     }
+
 }
