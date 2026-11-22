@@ -89,6 +89,33 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - Requirement groups can now contain other groups, so you can build logic like "(A AND B) OR (C AND D)" without duplicating elements (#1873)
 - Editing a group opens a window with the group's path in its title, like "Edit Group: group_1 › group_2", so you always know which group you're in (#1873)
 - Group entries now show how many groups they contain, and the "Add Group" tooltip explains that groups can hold other groups (#1873)
+- Checkbox element states are now saved in each profile instead of the game folder, so they stay with the profile when switching, exporting or copying it, and existing states get moved into the active profile once
+- Profile switches now retry on their own when files are briefly in use, and finish their cleanup in the background (#1867)
+- The profile error for files in use now explains that the game itself can still be using them, like audio that is still loading, so you can wait a few seconds and try again (#1867)
+- Web resources that fail to load now log one clear error with the real cause instead of two errors and a misleading NullPointerException
+- Fixed profiles getting hidden or lost when a profile switch fails or gets interrupted (#1867)
+- Fixed a failed profile switch blocking all other profile actions (#1867)
+- Fixed interrupted profile imports not restoring the profile they were replacing (#1867)
+- Fixed OGG and WAV files staying locked on Windows when their audio got closed while loading, which made profile switches fail (#1867)
+- Fixed AFMA, GIF, APNG, FMA, PNG and JPEG files staying open after their texture got closed, which made profile switches fail on Windows (#1867)
+- Fixed an error getting logged when switching to a new, empty profile (#1867)
+- Fixed new, imported and switched-to profiles picking up old scroll normalizer and dragger data from the game folder
+- Fixed tasks from background threads sometimes getting lost
+- Fixed OGG and WAV audios that fail to load keeping an audio channel open
+- Fixed audios with a missing resource location loading forever
+- Fixed audio, image, video and text previews in file browsers and resource pickers never getting released, which used up memory and audio channels when browsing many files
+- Fixed file browser previews pausing, stopping or changing audios and videos that elements play from the same file
+- Fixed a broken checkbox states file causing an error every time a checkbox got read
+- Fixed the game stuttering when FMA animations get reset, unpaused or closed
+- Fixed FMA animations sometimes skipping frames, counting extra play cycles or stopping right after a reset
+- Fixed FMA textures sometimes failing with an error when they get reset or closed while playing
+- Fixed old ZIP-based AFMA files no longer playing after a reset
+- Fixed FMA textures leaving old textures behind in memory on Minecraft 1.20.1 and 1.21.1
+- Fixed FancyMenu's background loaders, timers and server pings not getting stopped properly when closing the game on Minecraft 26.1.2 and older (#1709)
+- Fixed closing the game taking up to 30 seconds while web resources were still downloading from a server that stopped responding
+- Fixed lots of errors getting logged when closing the game while web resources were still loading
+- Fixed closed textures leaking memory on Minecraft 1.19.2
+- Fixed closing a video on Minecraft 1.19.2 deleting a texture that its video player still used
 - Fixed groups with the same name in different requirement lists of the same element or action script getting merged into one group after loading, for example a button's loading requirements and active state requirements
 - Fixed Move Up and Move Down doing nothing for folders and comments in the action script editor (#1853)
 - Fixed Move Up not moving an entry past a comment in the action script editor (#1853)
