@@ -170,8 +170,11 @@ public class DualTextInputWindowBody extends PiPWindowBody implements InitialWid
 
     }
 
+    /**
+     * PiP windows never render the background of their body, so the first input gets its initial focus here.
+     */
     @Override
-    public void renderBackground(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
+    public void renderBody(@NotNull GuiGraphics graphics, int mouseX, int mouseY, float partial) {
         this.performInitialWidgetFocusActionInRender();
         com.mojang.blaze3d.opengl.GlStateManager._enableBlend();
     }
