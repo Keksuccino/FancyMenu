@@ -7,13 +7,13 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/** Starts named daemon workers for target backports that must not delay client shutdown. */
 public final class FancyMenuThreads {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final AtomicInteger THREAD_COUNTER = new AtomicInteger();
 
-    private FancyMenuThreads() {}
+    private FancyMenuThreads() {
+    }
 
     public static @NotNull Thread startDaemonThread(@NotNull Runnable runnable, @NotNull String roleName) {
         String threadName = "FancyMenu-" + Objects.requireNonNull(roleName, "roleName") + "-" + THREAD_COUNTER.incrementAndGet();
@@ -23,4 +23,5 @@ public final class FancyMenuThreads {
         thread.start();
         return thread;
     }
+
 }

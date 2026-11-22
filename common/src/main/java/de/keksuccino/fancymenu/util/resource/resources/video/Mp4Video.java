@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.watermedia.PlaybackLoopTracker;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaFrameTexture;
@@ -154,7 +155,7 @@ public class Mp4Video implements IVideo {
         Mp4Video video = (writeTo != null) ? writeTo : new Mp4Video();
         String sourceName = (videoName != null) ? videoName : "[Generic InputStream Source]";
 
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             File temp = video.writeInputStreamToTempFile(in, sourceName);
             if (temp == null) {
                 video.fail("Failed to decode MP4 video from input stream: " + sourceName, null);
@@ -163,7 +164,7 @@ public class Mp4Video implements IVideo {
             video.generatedTempFile = temp;
             video.sourceFile = temp;
             video.initializeInternal(sourceName);
-        }).start();
+        }, "Mp4Video-InputStreamLoader");
 
         return video;
 
@@ -179,7 +180,7 @@ public class Mp4Video implements IVideo {
     }
 
     protected void initializeAsync(@NotNull String sourceName) {
-        new Thread(() -> this.initializeInternal(sourceName)).start();
+        FancyMenuThreads.startDaemonThread(() -> this.initializeInternal(sourceName), "Mp4Video-Initializer");
     }
 
     protected void initializeInternal(@NotNull String sourceName) {
@@ -243,7 +244,7 @@ public class Mp4Video implements IVideo {
     }
 
     protected void watchMrlStateAsync() {
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             long waitStart = System.currentTimeMillis();
             while (!this.closed) {
                 Object cachedMrl = this.mrl;
@@ -265,7 +266,7 @@ public class Mp4Video implements IVideo {
                     Thread.sleep(25);
                 } catch (Exception ignored) {}
             }
-        }).start();
+        }, "Mp4Video-MediaResolver");
     }
 
     protected void queuePlayerInitializationTask() {
