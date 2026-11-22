@@ -36,8 +36,6 @@
   "fancymenu.actions.blocks.folder.collapsed": "(συμπτυγμένο)",
   "fancymenu.actions.blocks.folder.display": "Φάκελος: %s",
   "fancymenu.actions.blocks.if": "IF (%s)",
-  "fancymenu.actions.blocks.overview.collapsed.one": "(συμπτυγμένο, 1 ενέργεια)",
-  "fancymenu.actions.blocks.overview.collapsed.other": "(συμπτυγμένο, %s ενέργειες)",
   "fancymenu.actions.blocks.unknown": "Άγνωστη καταχώρηση",
   "fancymenu.actions.blocks.while": "WHILE (%s)",
   "fancymenu.actions.blocks.for_each": "FOR EACH ENTRY IN (%s)",
