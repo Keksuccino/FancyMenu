@@ -7,10 +7,12 @@ import de.keksuccino.fancymenu.customization.listener.listeners.OnVideoPlaybackS
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.lifecycle.ClientShutdownHandler;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.watermedia.PlaybackLoopTracker;
+import de.keksuccino.fancymenu.util.watermedia.WatermediaDeferredPlayerReleaseTracker;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaFrameTexture;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaReflectionBridge;
 import de.keksuccino.fancymenu.util.watermedia.WatermediaUtil;
@@ -655,7 +657,8 @@ public class Mp4Video implements IVideo {
     @Override
     public void close() {
         Object cachedPlayer;
-        long closeReleaseVersion;
+        boolean deferPlayerRelease = false;
+        long closeReleaseVersion = -1L;
         synchronized (this.playerInitLock) {
             if (this.closed) return;
             this.closed = true;
@@ -665,9 +668,10 @@ public class Mp4Video implements IVideo {
             this.mrl = null;
             if (cachedPlayer != null) {
                 WatermediaReflectionBridge.playerPause(cachedPlayer, true);
-                closeReleaseVersion = this.closeReleaseController.schedule(cachedPlayer);
-            } else {
-                closeReleaseVersion = -1L;
+                // No later client tick is guaranteed once shutdown starts, so the normal future-tick release sequence could never execute.
+                // The tracker refuses players once its shutdown began, which can happen between the global-state check and the registration.
+                deferPlayerRelease = !ClientShutdownHandler.isShuttingDown() && WatermediaDeferredPlayerReleaseTracker.track(cachedPlayer);
+                if (deferPlayerRelease) closeReleaseVersion = this.closeReleaseController.schedule(cachedPlayer);
             }
         }
         this.playRequested = false;
@@ -678,9 +682,15 @@ public class Mp4Video implements IVideo {
         this.looping = false;
         this.resetVideoPlaybackListenerState();
         if (cachedPlayer != null) {
-            // FFmpeg can still enqueue render-thread upload tasks right after stop.
-            // Run stop/release in a deferred sequence so queued uploads can drain first.
-            this.queueDeferredHardStopAndReleaseForClose(cachedPlayer, closeReleaseVersion, HARD_STOP_DEFER_TICKS);
+            if (deferPlayerRelease) {
+                // FFmpeg can still enqueue render-thread upload tasks right after stop.
+                // Run stop/release in a deferred sequence so queued uploads can drain first.
+                this.queueDeferredHardStopAndReleaseForClose(cachedPlayer, closeReleaseVersion, HARD_STOP_DEFER_TICKS);
+            } else {
+                // Ownership stays on this close call, because neither a deferred release nor the tracker shutdown will release this player.
+                WatermediaReflectionBridge.playerStop(cachedPlayer);
+                WatermediaReflectionBridge.playerReleaseForShutdown(cachedPlayer);
+            }
         }
         try {
             Minecraft.getInstance().getTextureManager().release(this.frameLocation);
@@ -783,7 +793,7 @@ public class Mp4Video implements IVideo {
         }
         if (pendingCloseReleasePlayer != null) {
             WatermediaReflectionBridge.playerPause(pendingCloseReleasePlayer, true);
-            WatermediaReflectionBridge.playerRelease(pendingCloseReleasePlayer);
+            WatermediaDeferredPlayerReleaseTracker.release(pendingCloseReleasePlayer);
         }
         if ((cachedPlayer != null) && (cachedPlayer != pendingCloseReleasePlayer)) {
             WatermediaReflectionBridge.playerPause(cachedPlayer, true);
@@ -963,7 +973,7 @@ public class Mp4Video implements IVideo {
             return;
         }
         if (!this.closeReleaseController.claimScheduled(player, closeReleaseVersion)) return;
-        WatermediaReflectionBridge.playerRelease(player);
+        WatermediaDeferredPlayerReleaseTracker.release(player);
     }
 
     protected boolean shouldExecuteDeferredPlayerRelease(long closeReleaseVersion) {

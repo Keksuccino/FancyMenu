@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.resource.resources.video;
 
+import de.keksuccino.fancymenu.util.watermedia.WatermediaDeferredPlayerReleaseTracker;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -81,11 +82,15 @@ public class Mp4VideoSoundEngineReloadTest {
     void pendingClosedPlayerIsClaimedBeforeContextReplacement() {
         TestMp4Video video = new TestMp4Video();
         TestPlayer player = new TestPlayer(0L);
+        // Closing only schedules a deferred release for players that the deferred release tracker accepted
+        assertTrue(WatermediaDeferredPlayerReleaseTracker.track(player));
         long releaseToken = video.closeReleaseController.schedule(player);
         video.closed = true;
 
         video.releasePlayerBeforeSoundEngineReload();
         video.runDeferredPlayerRelease(player, releaseToken, 0);
+        // The early release also takes the player away from the tracker, so the client shutdown can't release it a second time
+        WatermediaDeferredPlayerReleaseTracker.release(player);
 
         assertTrue(player.paused);
         assertEquals(1, player.releaseCount);
