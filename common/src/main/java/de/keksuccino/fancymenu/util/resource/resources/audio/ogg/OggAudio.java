@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.util.resource.resources.audio.AudioPlayTimeTracke
 import de.keksuccino.fancymenu.util.resource.resources.audio.AudioResourceReloadTracker;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.audio.OpenAlAudioClipFactory;
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.melody.resources.audio.openal.ALAudioBuffer;
 import de.keksuccino.melody.resources.audio.openal.ALAudioClip;
 import de.keksuccino.melody.resources.audio.openal.ALErrorHandler;
@@ -155,10 +156,10 @@ public class OggAudio implements IAudio, ALAudio {
             return audio;
         }
 
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             InputStream in = ALAudioLoader.openSource(() -> WebUtils.openResourceStream(oggAudioURL, WebUtils.WebResourceType.AUDIO), oggAudioURL, clip, () -> audio.loadingFailed = true);
             if (in != null) of(in, oggAudioURL, audio, clip);
-        }).start();
+        }, "OggAudio-WebLoader");
 
         return audio;
 

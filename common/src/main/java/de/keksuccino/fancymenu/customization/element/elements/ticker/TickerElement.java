@@ -11,6 +11,7 @@ import de.keksuccino.fancymenu.customization.screen.identifier.ScreenIdentifierH
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -144,7 +145,7 @@ public class TickerElement extends AbstractElement implements ExecutableElement 
                 TickerElementThreadController controller = new TickerElementThreadController();
                 this.asyncThreadController = controller;
                 TickerElementBuilder.cachedThreadControllers.add(controller);
-                new Thread(() -> {
+                FancyMenuThreads.startDaemonThread(() -> {
                     while (controller.running && this.isAsync) {
                         this.tickerElementTick();
                         try {
@@ -154,7 +155,7 @@ public class TickerElement extends AbstractElement implements ExecutableElement 
                             e.printStackTrace();
                         }
                     }
-                }).start();
+                }, "TickerElement-AsyncTicker");
             }
         }
 

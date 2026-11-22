@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.MouseButtonCaptureOwner;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.ModernAbstractWidget;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.NavigatableWidget;
+import de.keksuccino.fancymenu.util.threading.FancyMenuExecutors;
 import net.minecraft.client.Minecraft;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
@@ -30,7 +31,7 @@ import java.util.function.Consumer;
 public class WrappedRinkuBrowser extends ModernAbstractWidget implements Closeable, NavigatableWidget, FancyMenuUiComponent, MouseButtonCaptureOwner {
 
     protected static final Logger LOGGER = LogManager.getLogger();
-    protected static final ScheduledExecutorService EXECUTOR = RinkuExecutors.newSingleThreadScheduledExecutor("FancyMenu-WrappedRinkuBrowser");
+    protected static final ScheduledExecutorService EXECUTOR = FancyMenuExecutors.newSingleThreadScheduledExecutor("FancyMenu-WrappedRinkuBrowser");
 
     protected final RinkuBrowser browser;
     private final BrowserAudioMuteController audioMuteController;

@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.util.resource.resources.audio.AudioPlayTimeTracke
 import de.keksuccino.fancymenu.util.resource.resources.audio.AudioResourceReloadTracker;
 import de.keksuccino.fancymenu.util.resource.resources.audio.IAudio;
 import de.keksuccino.fancymenu.util.resource.resources.audio.OpenAlAudioClipFactory;
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.melody.resources.audio.openal.ALAudioBuffer;
 import de.keksuccino.melody.resources.audio.openal.ALAudioClip;
 import de.keksuccino.melody.resources.audio.openal.ALErrorHandler;
@@ -155,10 +156,10 @@ public class WavAudio implements IAudio, ALAudio {
             return audio;
         }
 
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             InputStream in = ALAudioLoader.openSource(() -> WebUtils.openResourceStream(wavAudioURL, WebUtils.WebResourceType.AUDIO), wavAudioURL, clip, () -> audio.loadingFailed = true);
             if (in != null) of(in, wavAudioURL, audio, clip);
-        }).start();
+        }, "WavAudio-WebLoader");
 
         return audio;
 

@@ -13,6 +13,7 @@ import de.keksuccino.fancymenu.util.rendering.text.markdown.MarkdownRenderer;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Style;
@@ -289,7 +290,7 @@ public class TooltipElement extends AbstractElement {
             return;
         }
 
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             List<String> linesRaw = new ArrayList<>();
 
             try {
@@ -331,7 +332,7 @@ public class TooltipElement extends AbstractElement {
             }
             this.text = text.toString();
 
-        }).start();
+        }, "TooltipElement-ContentLoader");
     }
 
     public void setSource(@NotNull SourceMode sourceMode, @Nullable String source) {

@@ -1,12 +1,12 @@
 package de.keksuccino.fancymenu.customization.panorama;
 
+import de.keksuccino.fancymenu.util.threading.FancyMenuExecutors;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -47,10 +47,6 @@ final class PanoramaRotationTicker implements AutoCloseable {
 
     static @NotNull Scheduler sharedScheduler() {
         return SharedSchedulerHolder.INSTANCE;
-    }
-
-    static void shutdownSharedScheduler() {
-        SharedSchedulerHolder.EXECUTOR.shutdownNow();
     }
 
     /** Records visible use and lazily starts the ticker. Repeated render calls never create duplicate tasks. */
@@ -205,12 +201,6 @@ final class PanoramaRotationTicker implements AutoCloseable {
         return TimeUnit.MILLISECONDS.toNanos(tickDelayMillis(speed));
     }
 
-    private static Thread createSchedulerThread(@NotNull Runnable runnable) {
-        Thread thread = new Thread(runnable, "FancyMenu-Panorama-Ticker");
-        thread.setDaemon(true);
-        return thread;
-    }
-
     interface Scheduler {
 
         @NotNull ScheduledTask schedule(@NotNull Runnable task, long delayNanos);
@@ -225,8 +215,7 @@ final class PanoramaRotationTicker implements AutoCloseable {
 
     private static final class SharedSchedulerHolder {
 
-        private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor(PanoramaRotationTicker::createSchedulerThread);
-        private static final Scheduler INSTANCE = new ExecutorScheduler(EXECUTOR);
+        private static final Scheduler INSTANCE = new ExecutorScheduler(FancyMenuExecutors.newSingleThreadScheduledExecutor("FancyMenu-Panorama-Ticker"));
 
     }
 

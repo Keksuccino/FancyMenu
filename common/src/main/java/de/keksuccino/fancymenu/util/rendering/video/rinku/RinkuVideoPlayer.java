@@ -8,7 +8,7 @@ import de.keksuccino.fancymenu.util.lifecycle.ClientShutdownHandler;
 import de.keksuccino.fancymenu.util.rinku.RinkuUtil;
 import de.keksuccino.fancymenu.util.rinku.WrappedRinkuBrowser;
 import de.keksuccino.fancymenu.util.rendering.gui.GuiGraphics;
-import de.keksuccino.fancymenu.util.rinku.RinkuExecutors;
+import de.keksuccino.fancymenu.util.threading.FancyMenuExecutors;
 import net.minecraft.resources.ResourceLocation;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,7 +35,7 @@ public class RinkuVideoPlayer {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final long JS_RESULT_TIMEOUT_MS = 1000; // Timeout for waiting for JS result (e.g., 1 second)
-    private static final ScheduledExecutorService PLAYBACK_LISTENER_EXECUTOR = RinkuExecutors.newSingleThreadScheduledExecutor("FancyMenu-RinkuVideoPlayer-PlaybackListener");
+    private static final ScheduledExecutorService PLAYBACK_LISTENER_EXECUTOR = FancyMenuExecutors.newSingleThreadScheduledExecutor("FancyMenu-RinkuVideoPlayer-PlaybackListener");
     private static final long PLAYBACK_LISTENER_TICK_MS = 250L;
     private static final double PLAYBACK_END_EPSILON_SECONDS = 0.12D;
     private static final double LOOP_RESTART_WINDOW_SECONDS = 0.40D;

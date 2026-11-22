@@ -1,40 +1,20 @@
 package de.keksuccino.fancymenu.util;
 
+import de.keksuccino.fancymenu.util.threading.FancyMenuExecutors;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class TaskExecutor {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final AtomicInteger THREAD_COUNTER = new AtomicInteger();
-    private static final ScheduledThreadPoolExecutor EXECUTOR = createExecutor();
-
-    private static ScheduledThreadPoolExecutor createExecutor() {
-        ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(20, TaskExecutor::createWorkerThread);
-        executor.setRemoveOnCancelPolicy(true);
-        executor.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
-        executor.setContinueExistingPeriodicTasksAfterShutdownPolicy(false);
-        return executor;
-    }
-
-    private static Thread createWorkerThread(Runnable runnable) {
-        Thread thread = new Thread(runnable, "FancyMenu-TaskExecutor-" + THREAD_COUNTER.incrementAndGet());
-        thread.setDaemon(true);
-        thread.setUncaughtExceptionHandler((failedThread, throwable) -> LOGGER.error("[FANCYMENU] Uncaught exception in task executor thread '{}'.", failedThread.getName(), throwable));
-        return thread;
-    }
-
-    public static void shutdown() {
-        EXECUTOR.shutdownNow();
-    }
+    private static final ScheduledExecutorService EXECUTOR = FancyMenuExecutors.newScheduledThreadPool(20, "FancyMenu-TaskExecutor");
 
     public static void scheduleAtFixedRate(@NotNull Task task, long initialDelay, long period, @NotNull TimeUnit unit, boolean executeInMainThread) {
         ScheduledFuture<?>[] future = new ScheduledFuture[1];

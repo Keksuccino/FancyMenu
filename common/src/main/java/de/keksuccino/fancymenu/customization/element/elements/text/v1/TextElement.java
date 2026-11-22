@@ -11,6 +11,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.ScrollArea
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v1.scrollarea.entry.TextScrollAreaEntry;
 import de.keksuccino.fancymenu.util.resource.ResourceHandlers;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import de.keksuccino.fancymenu.util.rendering.RenderingUtils;
 import de.keksuccino.konkrete.file.FileUtils;
@@ -185,7 +186,7 @@ public class TextElement extends AbstractElement {
 
         updating = true;
 
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
 
             List<String> linesRaw = new ArrayList<>();
 
@@ -280,7 +281,7 @@ public class TextElement extends AbstractElement {
 
             updating = false;
 
-        }).start();
+        }, "LegacyTextElement-ContentLoader");
 
     }
 

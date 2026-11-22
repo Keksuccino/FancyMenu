@@ -2,8 +2,9 @@ package de.keksuccino.fancymenu.util.rendering.video.rinku;
 
 import de.keksuccino.rinku.RinkuClient;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.util.rinku.RinkuExecutors;
 import de.keksuccino.fancymenu.util.rinku.RinkuUtil;
+import de.keksuccino.fancymenu.util.threading.FancyMenuExecutors;
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -34,7 +35,7 @@ public class RinkuVideoManager {
 
     protected static final Logger LOGGER = LogManager.getLogger();
     protected static final RinkuVideoManager INSTANCE = new RinkuVideoManager();
-    public static final ScheduledExecutorService EXECUTOR = RinkuExecutors.newSingleThreadScheduledExecutor("FancyMenu-RinkuVideoManager");
+    public static final ScheduledExecutorService EXECUTOR = FancyMenuExecutors.newSingleThreadScheduledExecutor("FancyMenu-RinkuVideoManager");
     
     // Map to track all active video players
     protected final Map<String, RinkuVideoPlayer> players = new ConcurrentHashMap<>();
@@ -76,7 +77,7 @@ public class RinkuVideoManager {
             LOGGER.warn("[FANCYMENU] Rinku not initialized yet! Will wait for Rinku to be ready before initializing RinkuVideoManager!");
         }
 
-        RinkuExecutors.startDaemonWorker(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             try {
                 while (!shuttingDown) {
                     if (RinkuUtil.rinku_initialized) {
@@ -124,7 +125,7 @@ public class RinkuVideoManager {
                 is_initializing = false;
                 if (!shuttingDown) LOGGER.error("[FANCYMENU] Failed to initialize RinkuVideoManager!", ex);
             }
-        }, "FancyMenu-RinkuVideoManager-Initialization");
+        }, "RinkuVideoManager-Initialization");
 
     }
     
