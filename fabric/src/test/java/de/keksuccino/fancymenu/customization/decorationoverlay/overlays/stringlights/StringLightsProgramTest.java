@@ -53,6 +53,68 @@ class StringLightsProgramTest {
     }
 
     @Test
+    void steadyProgramsKeepEveryBulbAtItsLevel() {
+        for (int frame = 0; frame < 2000; frame++) {
+            float seconds = frame * 0.037F;
+            for (int bulb = 0; bulb < 30; bulb++) {
+                int b = bulb;
+                assertAll(() -> assertEquals(BRIGHT, StringLightsProgram.ON.level(b, 2, seconds)), () -> assertEquals(BRIGHT, StringLightsProgram.FULLY_LIT.level(b, 2, seconds)), () -> assertEquals(LIT, StringLightsProgram.HALF_LIT.level(b, 2, seconds)), () -> assertEquals(DIM, StringLightsProgram.OFF.level(b, 2, seconds)), () -> assertEquals(0.0F, StringLightsProgram.FULLY_LIT.sag(b, 2, seconds)), () -> assertEquals(0.0F, StringLightsProgram.HALF_LIT.sag(b, 2, seconds)), () -> assertEquals(0.0F, StringLightsProgram.OFF.sag(b, 2, seconds)));
+            }
+        }
+    }
+
+    @Test
+    void onlyOnSags() {
+        for (StringLightsProgram program : StringLightsProgram.values()) {
+            if (program == StringLightsProgram.ON) continue;
+            for (int frame = 0; frame < 600; frame++) {
+                assertEquals(0.0F, program.sag(frame % 20, frame % 3, frame * 0.1F), program.getName());
+            }
+        }
+    }
+
+    @Test
+    void onSagsSingleBulbsSlowlyAndOnlyNowAndThen() {
+        StringLightsProgram on = StringLightsProgram.ON;
+        int strings = 3;
+        int bulbs = 20;
+        float step = 1.0F / 30.0F;
+        int frames = 18000;
+        float[] previous = new float[strings * bulbs];
+        boolean[] sagged = new boolean[strings * bulbs];
+        int saggingSamples = 0;
+        int mostSaggingAtOnce = 0;
+        float steepestStep = 0.0F;
+        for (int frame = 0; frame <= frames; frame++) {
+            float seconds = frame * step;
+            int saggingNow = 0;
+            for (int string = 0; string < strings; string++) {
+                for (int bulb = 0; bulb < bulbs; bulb++) {
+                    int i = string * bulbs + bulb;
+                    float sag = on.sag(bulb, string, seconds);
+                    assertTrue((sag >= 0.0F) && (sag <= 1.0F), "sag " + sag + " of bulb " + i + " at " + seconds + "s");
+                    if (frame > 0) steepestStep = Math.max(steepestStep, Math.abs(sag - previous[i]));
+                    previous[i] = sag;
+                    if (sag > 0.0F) {
+                        sagged[i] = true;
+                        saggingNow++;
+                    }
+                }
+            }
+            saggingSamples += saggingNow;
+            mostSaggingAtOnce = Math.max(mostSaggingAtOnce, saggingNow);
+        }
+        float saggingShare = saggingSamples / (float)((frames + 1) * strings * bulbs);
+        int mostAtOnce = mostSaggingAtOnce;
+        float steepest = steepestStep;
+        // Sags ease in and out over seconds, so they never jump between frames, not even where one slot ends and the next begins
+        assertAll(() -> assertTrue(steepest < 0.05F, "steepest step " + steepest), () -> assertTrue((saggingShare > 0.05F) && (saggingShare < 0.2F), "sagging share " + saggingShare), () -> assertTrue(mostAtOnce < strings * bulbs / 3, "most sagging at once " + mostAtOnce));
+        for (int i = 0; i < sagged.length; i++) {
+            assertTrue(sagged[i], "bulb " + i + " sags now and then");
+        }
+    }
+
+    @Test
     void twinkleUsesTheMockupHashAndIsMostlyLit() {
         StringLightsProgram twinkle = StringLightsProgram.TWINKLE;
         int[] counts = new int[3];

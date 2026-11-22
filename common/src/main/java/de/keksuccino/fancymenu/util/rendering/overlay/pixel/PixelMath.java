@@ -131,6 +131,14 @@ public final class PixelMath {
         return withAlpha(argb, Math.round(alpha(argb) * clamp(factor, 0.0F, 1.0F)));
     }
 
+    /**
+     * Multiplies the red, green and blue of an ARGB color by a factor from 0 to 1, which darkens it toward black. The alpha stays.
+     */
+    public static int scaleRgb(int argb, float factor) {
+        float f = clamp(factor, 0.0F, 1.0F);
+        return argb(alpha(argb), Math.round(red(argb) * f), Math.round(green(argb) * f), Math.round(blue(argb) * f));
+    }
+
     public static int argb(int alpha, int red, int green, int blue) {
         return (clamp(alpha, 0, 255) << 24) | (clamp(red, 0, 255) << 16) | (clamp(green, 0, 255) << 8) | clamp(blue, 0, 255);
     }
