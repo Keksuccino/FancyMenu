@@ -188,5 +188,7 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - Fixed scroll bars scrolling down when the mouse wheel only got turned sideways
 - Fixed pasting elements with the keyboard shortcut in the layout editor not being undoable
 - Fixed the loading screen showing at the old window size in the top-left corner of a black screen for about a second when the game starts in fullscreen (#1865)
+- Fixed the icon and text of message dialogs (warnings, errors, infos, confirmations and profile import/export dialogs) always sticking to the left side instead of being centered in the dialog, especially after making a dialog wider (#1841)
+- Fixed long lines in profile import/export dialogs being able to run past the right edge of the dialog at very small UI scales
 
 %changelog:end%
