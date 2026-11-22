@@ -1,21 +1,9 @@
 package de.keksuccino.fancymenu.customization.scheduler.gui;
 
-import de.keksuccino.fancymenu.customization.action.ActionInstance;
-import de.keksuccino.fancymenu.customization.action.Executable;
-import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
-import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
-import de.keksuccino.fancymenu.customization.action.blocks.statements.DelayExecutableBlock;
-import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseExecutableBlock;
-import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseIfExecutableBlock;
-import de.keksuccino.fancymenu.customization.action.blocks.statements.ExecuteLaterExecutableBlock;
-import de.keksuccino.fancymenu.customization.action.blocks.statements.ForEachExecutableBlock;
-import de.keksuccino.fancymenu.customization.action.blocks.statements.IfExecutableBlock;
-import de.keksuccino.fancymenu.customization.action.blocks.statements.WhileExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.ui.ActionScriptDescriptions;
 import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorWindowBody;
 import de.keksuccino.fancymenu.customization.aiexport.AiExportMenus;
 import de.keksuccino.fancymenu.customization.aiexport.exporters.SchedulersAiExporter;
-import de.keksuccino.fancymenu.customization.requirement.internal.RequirementGroup;
-import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
 import de.keksuccino.fancymenu.customization.scheduler.SchedulerHandler;
 import de.keksuccino.fancymenu.customization.scheduler.SchedulerInstance;
 import de.keksuccino.fancymenu.util.LocalizationUtils;
@@ -38,7 +26,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
-import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 import org.jetbrains.annotations.NotNull;
@@ -288,8 +275,7 @@ public class ManageSchedulersWindowBody extends PiPCellWindowBody {
         newDesc.add(Component.translatable("fancymenu.schedulers.manage.description.actions").withStyle(ChatFormatting.BOLD));
         newDesc.add(Component.empty());
 
-        List<Component> actionLines = this.buildActionScriptDescription(this.selectedInstance.getActionScript(), 0);
-        newDesc.addAll(actionLines);
+        newDesc.addAll(ActionScriptDescriptions.buildScriptOverview(this.selectedInstance.getActionScript(), UIBase.getUITheme(), UIBase.shouldBlur()));
 
         return newDesc;
 
@@ -464,185 +450,6 @@ public class ManageSchedulersWindowBody extends PiPCellWindowBody {
         if (this.validateInstances()) {
             SchedulerHandler.applyChanges(this.tempInstances);
         }
-    }
-
-    @NotNull
-    protected List<Component> buildActionScriptDescription(@NotNull GenericExecutableBlock block, int indentLevel) {
-        List<Component> lines = new ArrayList<>();
-
-        for (Executable executable : block.getExecutables()) {
-            lines.addAll(this.buildExecutableDescription(executable, indentLevel));
-        }
-
-        if (lines.isEmpty()) {
-            String indent = "  ".repeat(Math.max(0, indentLevel));
-            lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().bullet_list_dot_color_1.getColorInt()))
-                    .append(Component.translatable("fancymenu.actions.screens.manage_screen.info.value.none")
-                            .setStyle(Style.EMPTY.withColor(this.getLabelTextColor()))));
-        }
-
-        return lines;
-    }
-
-    @NotNull
-    protected List<Component> buildExecutableDescription(@NotNull Executable executable, int indentLevel) {
-        List<Component> lines = new ArrayList<>();
-        String indent = "  ".repeat(Math.max(0, indentLevel));
-        int labelColor = this.getLabelTextColor();
-
-        if (executable instanceof ActionInstance actionInstance) {
-            lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().bullet_list_dot_color_2.getColorInt()))
-                    .append(actionInstance.action.getDisplayName().copy()
-                            .setStyle(Style.EMPTY.withColor(labelColor))));
-
-            String cachedValue = actionInstance.value;
-            String valueString = ((cachedValue != null) && actionInstance.action.hasValue())
-                    ? cachedValue
-                    : I18n.get("fancymenu.actions.screens.manage_screen.info.value.none");
-            lines.add(Component.literal(indent + "    ◦ ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().bullet_list_dot_color_1.getColorInt()))
-                    .append(Component.literal(I18n.get("fancymenu.actions.screens.manage_screen.info.value") + " ")
-                            .setStyle(Style.EMPTY.withColor(labelColor)))
-                    .append(Component.literal(valueString)
-                            .setStyle(Style.EMPTY.withColor(labelColor))));
-
-        } else if (executable instanceof IfExecutableBlock ifBlock) {
-            String requirements = this.buildRequirementsString(ifBlock);
-            lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))
-                    .append(Component.translatable("fancymenu.actions.blocks.if", Component.literal(requirements))
-                            .setStyle(Style.EMPTY.withColor(labelColor))));
-
-            for (Executable nested : ifBlock.getExecutables()) {
-                lines.addAll(this.buildExecutableDescription(nested, indentLevel + 1));
-            }
-
-            AbstractExecutableBlock appended = ifBlock.getAppendedBlock();
-            while (appended != null) {
-                lines.addAll(this.buildAppendedBlockDescription(appended, indentLevel));
-                appended = appended.getAppendedBlock();
-            }
-
-        } else if (executable instanceof WhileExecutableBlock whileBlock) {
-            String requirements = this.buildRequirementsString(whileBlock);
-            lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))
-                    .append(Component.translatable("fancymenu.actions.blocks.while", Component.literal(requirements))
-                            .setStyle(Style.EMPTY.withColor(labelColor))));
-
-            for (Executable nested : whileBlock.getExecutables()) {
-                lines.addAll(this.buildExecutableDescription(nested, indentLevel + 1));
-            }
-        } else if (executable instanceof ForEachExecutableBlock forEachBlock) {
-            lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))
-                    .append(Component.translatable("fancymenu.actions.blocks.for_each", Component.literal(forEachBlock.getListVariableName()))
-                            .setStyle(Style.EMPTY.withColor(labelColor))));
-
-            for (Executable nested : forEachBlock.getExecutables()) {
-                lines.addAll(this.buildExecutableDescription(nested, indentLevel + 1));
-            }
-        } else if (executable instanceof DelayExecutableBlock delayBlock) {
-            lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))
-                    .append(Component.translatable("fancymenu.actions.blocks.delay", Component.literal(delayBlock.getDelayMsRaw()))
-                            .setStyle(Style.EMPTY.withColor(labelColor))));
-
-            for (Executable nested : delayBlock.getExecutables()) {
-                lines.addAll(this.buildExecutableDescription(nested, indentLevel + 1));
-            }
-        } else if (executable instanceof ExecuteLaterExecutableBlock executeLaterBlock) {
-            lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))
-                    .append(Component.translatable("fancymenu.actions.blocks.execute_later", Component.literal(executeLaterBlock.getDelayMsRaw()))
-                            .setStyle(Style.EMPTY.withColor(labelColor))));
-
-            for (Executable nested : executeLaterBlock.getExecutables()) {
-                lines.addAll(this.buildExecutableDescription(nested, indentLevel + 1));
-            }
-        } else if (executable instanceof AbstractExecutableBlock) {
-            lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))
-                    .append(Component.literal("[UNKNOWN BLOCK]")
-                            .setStyle(Style.EMPTY.withColor(ChatFormatting.RED))));
-        }
-
-        return lines;
-    }
-
-    @NotNull
-    protected List<Component> buildAppendedBlockDescription(@NotNull AbstractExecutableBlock block, int indentLevel) {
-        List<Component> lines = new ArrayList<>();
-        String indent = "  ".repeat(Math.max(0, indentLevel));
-        int labelColor = this.getLabelTextColor();
-
-        if (block instanceof ElseIfExecutableBlock elseIfBlock) {
-            String requirements = this.buildRequirementsString(elseIfBlock);
-            lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))
-                    .append(Component.translatable("fancymenu.actions.blocks.else_if", Component.literal(requirements))
-                            .setStyle(Style.EMPTY.withColor(labelColor))));
-
-            for (Executable nested : elseIfBlock.getExecutables()) {
-                lines.addAll(this.buildExecutableDescription(nested, indentLevel + 1));
-            }
-
-        } else if (block instanceof ElseExecutableBlock elseBlock) {
-            lines.add(Component.literal(indent + "• ")
-                    .setStyle(Style.EMPTY.withColor(UIBase.getUITheme().warning_color.getColorInt()))
-                    .append(Component.translatable("fancymenu.actions.blocks.else")
-                            .setStyle(Style.EMPTY.withColor(labelColor))));
-
-            for (Executable nested : elseBlock.getExecutables()) {
-                lines.addAll(this.buildExecutableDescription(nested, indentLevel + 1));
-            }
-        }
-
-        return lines;
-    }
-
-    @NotNull
-    protected String buildRequirementsString(@NotNull IfExecutableBlock block) {
-        String requirements = "";
-        for (RequirementGroup g : block.condition.getGroups()) {
-            if (!requirements.isEmpty()) requirements += ", ";
-            requirements += g.identifier;
-        }
-        for (RequirementInstance i : block.condition.getInstances()) {
-            if (!requirements.isEmpty()) requirements += ", ";
-            requirements += i.requirement.getDisplayName().getString();
-        }
-        return requirements.isEmpty() ? "none" : requirements;
-    }
-
-    @NotNull
-    protected String buildRequirementsString(@NotNull ElseIfExecutableBlock block) {
-        String requirements = "";
-        for (RequirementGroup g : block.condition.getGroups()) {
-            if (!requirements.isEmpty()) requirements += ", ";
-            requirements += g.identifier;
-        }
-        for (RequirementInstance i : block.condition.getInstances()) {
-            if (!requirements.isEmpty()) requirements += ", ";
-            requirements += i.requirement.getDisplayName().getString();
-        }
-        return requirements.isEmpty() ? "none" : requirements;
-    }
-
-    @NotNull
-    protected String buildRequirementsString(@NotNull WhileExecutableBlock block) {
-        String requirements = "";
-        for (RequirementGroup g : block.condition.getGroups()) {
-            if (!requirements.isEmpty()) requirements += ", ";
-            requirements += g.identifier;
-        }
-        for (RequirementInstance i : block.condition.getInstances()) {
-            if (!requirements.isEmpty()) requirements += ", ";
-            requirements += i.requirement.getDisplayName().getString();
-        }
-        return requirements.isEmpty() ? "none" : requirements;
     }
 
     public class SchedulerInstanceCell extends RenderCell {
