@@ -988,6 +988,15 @@ public interface ContextMenuBuilder<O> {
      * @param allowPlaceholders true to allow placeholder tokens
      */
     default ContextMenu.ClickableContextMenuEntry<?> buildInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, String> targetFieldGetter, @NotNull BiConsumer<O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback) {
+        return this.buildInputContextMenuEntry(parentMenu, entryIdentifier, selectedObjectsFilter, targetFieldGetter, targetFieldSetter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback, false);
+    }
+
+    /**
+     * Builds a text input entry like {@link #buildInputContextMenuEntry(ContextMenu, String, ConsumingSupplier, ConsumingSupplier, BiConsumer, CharacterFilter, boolean, boolean, Component, boolean, String, ConsumingSupplier, ConsumingSupplier)}.
+     *
+     * @param markdownInput true if the text is Markdown, which gives the multiline text editor the shortcuts that format Markdown text
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> buildInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, String> targetFieldGetter, @NotNull BiConsumer<O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback, boolean markdownInput) {
         ContextMenu subMenu = new ContextMenu();
         ContextMenu.ClickableContextMenuEntry<?> inputEntry = subMenu.addClickableEntry("input_value", Component.translatable("fancymenu.common_components.set"), (menu, entry) ->
                 {
@@ -1029,6 +1038,7 @@ public interface ContextMenuBuilder<O> {
                             }
                         }).setText(defaultText)
                                 .setMultilineMode(multiLineInput)
+                                .setMarkdownShortcutsEnabled(markdownInput)
                                 .setPlaceholdersAllowed(allowPlaceholders);
                         if (textValidator != null) {
                             s.setTextValidator(consumes -> {
@@ -1155,6 +1165,14 @@ public interface ContextMenuBuilder<O> {
      */
     default ContextMenu.ClickableContextMenuEntry<?> addStringInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<? extends O> objectType, @NotNull ConsumingSupplier <O, String> targetFieldGetter, @NotNull BiConsumer <O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback) {
         return addTo.addEntry(buildStringInputContextMenuEntry(addTo, entryIdentifier, objectType, targetFieldGetter, targetFieldSetter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback));
+    }
+
+    /**
+     * Adds a text input entry for a specific object type whose text is Markdown, like the text of a Text element.<br>
+     * It opens a multiline text editor that allows placeholders and has the shortcuts that format Markdown text.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> addMarkdownInputContextMenuEntryTo(@NotNull ContextMenu addTo, @NotNull String entryIdentifier, @NotNull Class<? extends O> objectType, @NotNull ConsumingSupplier <O, String> targetFieldGetter, @NotNull BiConsumer <O, String> targetFieldSetter, @NotNull Component label) {
+        return addTo.addEntry(buildInputContextMenuEntry(addTo, entryIdentifier, consumes -> objectType.isAssignableFrom(consumes.getClass()), targetFieldGetter, targetFieldSetter, null, true, true, label, false, null, null, null, true));
     }
 
     /**

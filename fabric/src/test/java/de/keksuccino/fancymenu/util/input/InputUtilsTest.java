@@ -45,6 +45,17 @@ class InputUtilsTest {
     }
 
     @Test
+    void onlyTheShortcutModifierWithoutShiftAndAltCountsAsIt() {
+        int otherModifier = (SHORTCUT == SDLKeycode.SDL_KMOD_GUI) ? SDLKeycode.SDL_KMOD_CTRL : SDLKeycode.SDL_KMOD_GUI;
+        assertTrue(InputUtils.isOnlyGuiShortcutModifierDown(SHORTCUT));
+        assertFalse(InputUtils.isOnlyGuiShortcutModifierDown(0));
+        assertFalse(InputUtils.isOnlyGuiShortcutModifierDown(otherModifier));
+        assertFalse(InputUtils.isOnlyGuiShortcutModifierDown(SHORTCUT | SDLKeycode.SDL_KMOD_LSHIFT));
+        // Windows reports AltGr as Control and Alt together, which types characters like "€" on many keyboard layouts
+        assertFalse(InputUtils.isOnlyGuiShortcutModifierDown(SHORTCUT | SDLKeycode.SDL_KMOD_RALT));
+    }
+
+    @Test
     void editShortcutsFollowTheKeyboardLayoutLikeMinecraft() {
         // The key in the A position of a QWERTY keyboard types Q on an AZERTY keyboard, and the other way around
         assertTrue(InputUtils.isSelectAll(InputConstants.KEY_Q, SDLKeycode.SDLK_A, SHORTCUT));

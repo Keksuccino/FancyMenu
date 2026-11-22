@@ -2,6 +2,7 @@ package de.keksuccino.fancymenu.util.input;
 
 import de.keksuccino.fancymenu.util.VanillaEvents;
 import net.minecraft.client.input.InputQuirks;
+import net.minecraft.client.input.KeyEvent;
 import org.lwjgl.sdl.SDLKeyboard;
 import org.lwjgl.sdl.SDLKeycode;
 import org.lwjgl.sdl.SDLMouse;
@@ -53,6 +54,15 @@ public class InputUtils {
 
     public static boolean isGuiShortcutModifierDown(@InputWithModifiers.Modifiers int modifiers) {
         return (modifiers & InputQuirks.EDIT_SHORTCUT_KEY_MODIFIER) != 0;
+    }
+
+    /**
+     * Returns whether the GUI shortcut modifier is active without Shift and Alt, which is how edit shortcuts like copy and paste get pressed.<br>
+     * Windows reports AltGr as Control and Alt together, so a shortcut that ignores Alt would also fire while typing a character like "€" (AltGr + E).
+     */
+    public static boolean isOnlyGuiShortcutModifierDown(@InputWithModifiers.Modifiers int modifiers) {
+        KeyEvent event = VanillaEvents.keyEvent(0, 0, modifiers);
+        return isGuiShortcutModifierDown(modifiers) && !event.hasShiftDown() && !event.hasAltDown();
     }
 
     /**
