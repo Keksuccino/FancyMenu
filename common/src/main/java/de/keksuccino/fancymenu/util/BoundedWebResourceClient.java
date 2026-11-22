@@ -14,15 +14,21 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.LongSupplier;
 
 /**
  * Owns every HTTP connection used by the shared URL helpers. A request remains registered until its response body
  * reaches EOF or is explicitly closed, which lets both the overall-deadline watchdog and client shutdown release an
- * abandoned stream even when its original caller no longer has a reference to the connection.
+ * abandoned stream even when its original caller no longer has a reference to the connection.<br><br>
+ *
+ * Ending a request never waits for a read of its body that runs on another thread. {@link HttpURLConnection#disconnect()}
+ * and closing the body stream wait for such a read to return, which takes until the read timeout when the server stalls in
+ * the middle of the body, so requests that get ended during a read get released by the release executor instead.
  */
 final class BoundedWebResourceClient {
 
@@ -32,12 +38,18 @@ final class BoundedWebResourceClient {
     private final Set<ActiveRequest> activeRequests = new HashSet<>();
     private final ConnectionFactory connectionFactory;
     private final DeadlineScheduler deadlineScheduler;
+    private final Executor releaseExecutor;
     private final LongSupplier nanoTimeSource;
     private boolean closed;
 
-    BoundedWebResourceClient(@NotNull ConnectionFactory connectionFactory, @NotNull DeadlineScheduler deadlineScheduler, @NotNull LongSupplier nanoTimeSource) {
+    /**
+     * @param releaseExecutor Releases requests that got ended while another thread reads their body. Every release can wait until that read
+     *                        returns, so the executor has to run each release on a daemon thread of its own, which never keeps the game open.
+     */
+    BoundedWebResourceClient(@NotNull ConnectionFactory connectionFactory, @NotNull DeadlineScheduler deadlineScheduler, @NotNull Executor releaseExecutor, @NotNull LongSupplier nanoTimeSource) {
         this.connectionFactory = Objects.requireNonNull(connectionFactory, "connectionFactory");
         this.deadlineScheduler = Objects.requireNonNull(deadlineScheduler, "deadlineScheduler");
+        this.releaseExecutor = Objects.requireNonNull(releaseExecutor, "releaseExecutor");
         this.nanoTimeSource = Objects.requireNonNull(nanoTimeSource, "nanoTimeSource");
     }
 
@@ -91,10 +103,15 @@ final class BoundedWebResourceClient {
         return this.getFallbackValidity(resourceUri, limits, deadline, null);
     }
 
-    void shutdown() {
+    /**
+     * Ends all active requests and rejects new ones. Never waits for reads that run on other threads, see {@link BoundedWebResourceClient}.
+     *
+     * @return How many active requests got ended.
+     */
+    int shutdown() {
         List<ActiveRequest> requestsToClose;
         synchronized (this.lifecycleLock) {
-            if (this.closed) return;
+            if (this.closed) return 0;
             this.closed = true;
             requestsToClose = new ArrayList<>(this.activeRequests);
         }
@@ -102,6 +119,7 @@ final class BoundedWebResourceClient {
         // remove the only remaining release path for a response body abandoned by its original loader.
         for (ActiveRequest request : requestsToClose) request.terminate(Termination.CLIENT_SHUTDOWN);
         this.deadlineScheduler.shutdownNow();
+        return requestsToClose.size();
     }
 
     int activeRequestCount() {
@@ -261,6 +279,7 @@ final class BoundedWebResourceClient {
         private final AtomicReference<DeadlineScheduler.ScheduledTask> deadlineTask = new AtomicReference<>();
         private final AtomicBoolean responseStreamClosed = new AtomicBoolean();
         private final AtomicBoolean disconnected = new AtomicBoolean();
+        private final AtomicInteger activeReads = new AtomicInteger();
 
         private ActiveRequest(@NotNull HttpURLConnection connection) {
             this.connection = Objects.requireNonNull(connection, "connection");
@@ -291,6 +310,24 @@ final class BoundedWebResourceClient {
             if (this.termination.get() != Termination.OPEN) throw this.terminationException();
         }
 
+        /**
+         * Has to get called right before every read of the body, and {@link #endRead()} right after it.<br>
+         * {@link #terminate(Termination)} looks for active reads only after it ended the request, so either it sees this read and
+         * releases the request on the release executor, or the check here sees the ended request and the read never starts.
+         * A read that starts after a release began could make the release wait for it.
+         */
+        private void beginRead() throws IOException {
+            this.activeReads.incrementAndGet();
+            if (this.termination.get() != Termination.OPEN) {
+                this.activeReads.decrementAndGet();
+                throw this.terminationException();
+            }
+        }
+
+        private void endRead() {
+            this.activeReads.decrementAndGet();
+        }
+
         private @NotNull IOException mapIOException(@NotNull IOException exception) {
             Termination reason = this.termination.get();
             if (reason == Termination.DEADLINE_EXCEEDED) {
@@ -311,19 +348,44 @@ final class BoundedWebResourceClient {
             return new IOException("Web resource request is closed");
         }
 
+        /**
+         * Ends the request and releases its connection. Never waits for a read of the body that runs on another thread,
+         * because a request that gets ended during a read gets released on the release executor.
+         *
+         * @return Why releasing the connection failed, or null if it worked or got handed to the release executor.
+         */
         private @Nullable IOException terminate(@NotNull Termination reason) {
             if (reason == Termination.OPEN) throw new IllegalArgumentException("Cannot terminate a request with OPEN state");
             if (!this.termination.compareAndSet(Termination.OPEN, reason)) return null;
-            IOException failure = null;
             try {
                 this.cancelDeadlineTask();
-                failure = this.disconnect();
-                IOException streamCloseFailure = this.closeResponseStream();
-                if (failure == null) failure = streamCloseFailure;
-                else if (streamCloseFailure != null) failure.addSuppressed(streamCloseFailure);
+                // Has to get checked after the request got ended, see beginRead()
+                if (this.activeReads.get() > 0) return this.releaseOnReleaseExecutor();
+                return this.release();
             } finally {
                 BoundedWebResourceClient.this.unregister(this);
             }
+        }
+
+        /**
+         * Releasing waits until the active read returns, except where the JDK can end the read right away, like for bodies
+         * without a declared length. Starting the release right away ends the read as early as possible without making the
+         * caller wait. Its failures get dropped, because nobody waits for it.
+         */
+        private @Nullable IOException releaseOnReleaseExecutor() {
+            try {
+                BoundedWebResourceClient.this.releaseExecutor.execute(this::release);
+                return null;
+            } catch (RuntimeException exception) {
+                return new IOException("Failed to start the release of an HTTP response that is being read", exception);
+            }
+        }
+
+        private @Nullable IOException release() {
+            IOException failure = this.disconnect();
+            IOException streamCloseFailure = this.closeResponseStream();
+            if (failure == null) return streamCloseFailure;
+            if (streamCloseFailure != null) failure.addSuppressed(streamCloseFailure);
             return failure;
         }
 
@@ -420,7 +482,7 @@ final class BoundedWebResourceClient {
             if (this.endOfStream) return -1;
             try {
                 this.prepareRead();
-                int value = this.delegate.read();
+                int value = this.readDelegate();
                 this.verifyAfterRead();
                 if (value == -1) return this.finishEndOfStream();
                 if (this.bytesRead >= this.limits.maximumBytes()) throw this.sizeLimitExceeded(this.bytesRead + 1L);
@@ -447,13 +509,13 @@ final class BoundedWebResourceClient {
                 this.prepareRead();
                 long remainingBytes = this.limits.maximumBytes() - this.bytesRead;
                 if (remainingBytes <= 0L) {
-                    int probe = this.delegate.read();
+                    int probe = this.readDelegate();
                     this.verifyAfterRead();
                     if (probe == -1) return this.finishEndOfStream();
                     throw this.sizeLimitExceeded(this.bytesRead + 1L);
                 }
                 int boundedLength = (int)Math.min(length, remainingBytes);
-                int count = this.delegate.read(buffer, offset, boundedLength);
+                int count = this.readDelegate(buffer, offset, boundedLength);
                 this.verifyAfterRead();
                 if (count == -1) return this.finishEndOfStream();
                 this.bytesRead += count;
@@ -476,7 +538,7 @@ final class BoundedWebResourceClient {
             try {
                 this.prepareRead();
                 long remainingBytes = this.limits.maximumBytes() - this.bytesRead;
-                int available = (int)Math.min(Math.max(0L, remainingBytes), this.delegate.available());
+                int available = (int)Math.min(Math.max(0L, remainingBytes), this.availableFromDelegate());
                 this.verifyAfterRead();
                 return available;
             } catch (IOException exception) {
@@ -504,6 +566,34 @@ final class BoundedWebResourceClient {
             } catch (IllegalStateException | UnsupportedOperationException ignored) {
                 // Some URLConnection implementations do not accept timeout changes after connect. The independently
                 // scheduled watchdog remains authoritative and will disconnect a read at the absolute deadline.
+            }
+        }
+
+        // Every call of the body stream has to run between beginRead() and endRead(), so ending the request never waits for it
+        private int readDelegate() throws IOException {
+            this.request.beginRead();
+            try {
+                return this.delegate.read();
+            } finally {
+                this.request.endRead();
+            }
+        }
+
+        private int readDelegate(byte @NotNull [] buffer, int offset, int length) throws IOException {
+            this.request.beginRead();
+            try {
+                return this.delegate.read(buffer, offset, length);
+            } finally {
+                this.request.endRead();
+            }
+        }
+
+        private int availableFromDelegate() throws IOException {
+            this.request.beginRead();
+            try {
+                return this.delegate.available();
+            } finally {
+                this.request.endRead();
             }
         }
 
