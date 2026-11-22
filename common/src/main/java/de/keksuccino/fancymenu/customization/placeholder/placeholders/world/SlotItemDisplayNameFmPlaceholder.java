@@ -10,6 +10,7 @@ import net.minecraft.client.gui.spectator.SpectatorMenu;
 import net.minecraft.client.gui.spectator.SpectatorMenuItem;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -29,7 +30,6 @@ public class SlotItemDisplayNameFmPlaceholder extends AbstractWorldPlaceholder {
         boolean ignoreSpectator = SerializationHelper.INSTANCE.deserializeBoolean(false, dps.values.get("ignore_spectator"));
         if ((slot != null) && MathUtils.isInteger(slot) && (Minecraft.getInstance().player != null)) {
             int slotInt = Integer.parseInt(slot);
-            ItemStack stack = Minecraft.getInstance().player.getInventory().getItem(slotInt);
             if (Minecraft.getInstance().player.isSpectator() && (slotInt >= 0) && (slotInt <= 8) && !ignoreSpectator) {
                 IMixinSpectatorGui accessor = (IMixinSpectatorGui) Minecraft.getInstance().gui.getSpectatorGui();
                 SpectatorMenu menu = accessor.get_menu_FancyMenu();
@@ -38,12 +38,24 @@ public class SlotItemDisplayNameFmPlaceholder extends AbstractWorldPlaceholder {
                     MutableComponent mutableComponent = (MutableComponent) ((spectatorMenuItem == SpectatorMenu.EMPTY_SLOT) ? menu.getSelectedCategory().getPrompt() : spectatorMenuItem.getName());
                     return ComponentParser.toJson(mutableComponent);
                 }
-            } else if (!stack.isEmpty()) {
-                MutableComponent mutableComponent = Component.empty().append(stack.getHoverName()).withStyle(stack.getRarity().color);
-                return ComponentParser.toJson(mutableComponent);
+            } else {
+                return getSlotItemDisplayName(Minecraft.getInstance().player.getInventory(), slotInt);
             }
         }
         return "";
+    }
+
+    /**
+     * @return The display name of the item in the given inventory slot as JSON component, or an empty string if the slot is empty or doesn't exist.
+     */
+    @NotNull
+    static String getSlotItemDisplayName(@NotNull Inventory inventory, int slot) {
+        // Inventory#getItem returns an empty stack for too high slots, but throws for negative ones
+        if (slot < 0) return "";
+        ItemStack stack = inventory.getItem(slot);
+        if (stack.isEmpty()) return "";
+        MutableComponent mutableComponent = Component.empty().append(stack.getHoverName()).withStyle(stack.getRarity().color);
+        return ComponentParser.toJson(mutableComponent);
     }
 
     @Override
