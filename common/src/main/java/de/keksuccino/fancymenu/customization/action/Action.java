@@ -82,6 +82,18 @@ public abstract class Action {
     @Nullable
     public abstract String getValuePreset();
 
+    /**
+     * Returns a short summary of the value that the action script editor shows instead of the value, for values that are hard to read,
+     * like settings joined with separators. The script editor never edits the value of an action with a summary inline, so such values only
+     * get edited in {@link #editValue(ActionInstance, ActionEditingCompletedFeedback, ActionEditingCanceledFeedback)}.
+     *
+     * @return The summary, or {@code null} to show the value as it is.
+     */
+    @Nullable
+    public Component getValueSummary(@NotNull String value) {
+        return null;
+    }
+
     @NotNull
     public String getIdentifier() {
         return this.identifier;

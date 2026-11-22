@@ -8,6 +8,7 @@ import de.keksuccino.fancymenu.customization.element.elements.WidgetTooltipText;
 import de.keksuccino.fancymenu.customization.element.elements.WidgetSoundSettings;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
+import de.keksuccino.fancymenu.customization.variables.VariableType;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.properties.Property;
 import de.keksuccino.fancymenu.util.rendering.ui.tooltip.UITooltip;
@@ -44,6 +45,7 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
     public final Property<ResourceSupplier<ITexture>> backgroundTextureInactive = putProperty(Property.resourceSupplierProperty(ITexture.class, "background_texture_inactive", null, "fancymenu.elements.checkbox.background_texture_inactive", true, true, true, null));
     public final Property<Boolean> variableMode = putProperty(Property.booleanProperty("variable_mode", false, "fancymenu.elements.checkbox.variable_mode"));
     public final Property<String> linkedVariable = putProperty(Property.stringProperty("linked_variable", null, false, false, "fancymenu.elements.checkbox.editor.set_variable")
+            .setInputSuggestions(() -> VariableHandler.getVariableNames(VariableType.TEXT))
             .setUserInputTextValidator(TextValidators.NO_EMPTY_STRING_TEXT_VALIDATOR));
     public final Property<ResourceSupplier<IAudio>> hoverSound = putProperty(Property.resourceSupplierProperty(IAudio.class, "hoversound", null, "fancymenu.elements.button.hoversound", true, true, true, null));
     public final WidgetSoundSettings hoverSoundSettings = new WidgetSoundSettings(this, "hover_sound");
@@ -122,7 +124,7 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
         if (this.variableMode.tryGetNonNull()) {
             String variable = this.linkedVariable.get();
             if (variable != null) {
-                String value = VariableHandler.getVariableValue(variable);
+                String value = VariableHandler.getSingleValueText(variable);
                 if (value != null) {
                     state = this.parseBooleanVariableValue(value);
                 } else if (!isEditor()) {
@@ -138,7 +140,7 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
         if (!this.variableMode.tryGetNonNull()) return;
         String variable = this.linkedVariable.get();
         if (variable == null) return;
-        String value = VariableHandler.getVariableValue(variable);
+        String value = VariableHandler.getSingleValueText(variable);
         if (value == null) return;
         boolean state = this.parseBooleanVariableValue(value);
         if (this.checkbox.getCheckboxState() != state) {
@@ -150,7 +152,7 @@ public class CheckboxElement extends AbstractElement implements ExecutableElemen
         if (this.variableMode.tryGetNonNull()) {
             String variable = this.linkedVariable.get();
             if (variable != null) {
-                String value = VariableHandler.getVariableValue(variable);
+                String value = VariableHandler.getSingleValueText(variable);
                 if (value == null) return CheckboxStatesHandler.getForCheckboxElement(this);
                 return this.parseBooleanVariableValue(value);
             }

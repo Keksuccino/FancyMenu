@@ -53,6 +53,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 /**
  * A typed, serializable property identified by a unique {@link #getKey() key}.
@@ -158,7 +159,7 @@ public class Property<T> {
     public static StringProperty stringProperty(@NotNull String key, @Nullable String defaultValue, @Nullable String currentValue, boolean multiLine, boolean placeholders, @NotNull String contextMenuEntryLocalizationKeyBase) {
         StringProperty p = new StringProperty(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
         p.deserializationCodec = consumes -> consumes;
-        p.contextMenuEntrySupplier = (property, builder, menu) -> builder.buildGenericStringInputContextMenuEntry(menu, "menu_entry_" + key,
+        p.contextMenuEntrySupplier = (property, builder, menu) -> builder.buildInputContextMenuEntry(menu, "menu_entry_" + key,
                 consumes -> consumes.getProperty(key) != null,
                 consumes -> {
                     StringProperty resolved = (StringProperty) consumes.getProperty(key);
@@ -169,7 +170,7 @@ public class Property<T> {
                     StringProperty resolved = (StringProperty) b.getProperty(key);
                     if (resolved != null) resolved.set(s);
                 },
-                null, multiLine, placeholders, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, property.getDefault(), property.userInputTextValidator, null)
+                null, multiLine, placeholders, Component.translatable(property.getContextMenuEntryLocalizationKeyBase()), true, property.getDefault(), property.userInputTextValidator, null, (property instanceof StringProperty stringProperty) ? stringProperty.inputSuggestions : null)
                 .setIcon(MaterialIcons.TEXT_FIELDS);
         return p;
     }
@@ -2666,6 +2667,9 @@ public class Property<T> {
         if ((cloned instanceof ManualInputProperty<?> clonedManual) && (this instanceof ManualInputProperty<?> sourceManual)) {
             clonedManual.manualInput = sourceManual.manualInput;
         }
+        if ((cloned instanceof StringProperty clonedString) && (this instanceof StringProperty sourceString)) {
+            clonedString.inputSuggestions = sourceString.inputSuggestions;
+        }
         return cloned;
     }
 
@@ -2888,6 +2892,8 @@ public class Property<T> {
 
         @Nullable
         private String lastParsed = null;
+        @Nullable
+        private Supplier<List<String>> inputSuggestions = null;
 
         protected StringProperty(@NotNull String key, @Nullable String defaultValue, @Nullable String currentValue, @NotNull String contextMenuEntryLocalizationKeyBase) {
             super(key, defaultValue, currentValue, contextMenuEntryLocalizationKeyBase);
@@ -2906,6 +2912,18 @@ public class Property<T> {
                 this.lastParsed = parsed;
             }
             return parsed;
+        }
+
+        /**
+         * Sets texts the input of the context menu entry suggests while typing, like the names of existing variables. Only single-line
+         * properties without placeholders show them.
+         *
+         * @param inputSuggestions gets asked for the suggestions every time the input opens.
+         * @return this property for chaining
+         */
+        public StringProperty setInputSuggestions(@Nullable Supplier<List<String>> inputSuggestions) {
+            this.inputSuggestions = inputSuggestions;
+            return this;
         }
 
     }
