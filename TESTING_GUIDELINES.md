@@ -115,3 +115,43 @@ sh offscreen_client.sh fabric
   the new screen doesn't get the old pointer position.
 - Overlays get their real frame times (at most 0.1 seconds per update), so they move at the same speed at any frame rate.
   Below 10 fps they slow down, so check the `fps` of the frame checks when motion looks off.
+
+## Window preview
+
+A dev-only harness in `util/window/preview/` opens one FancyMenu window on the title screen of an off-screen test client, simulates mouse
+and keyboard input, takes screenshots and stops the game. Use it to look at windows, value editors of actions and requirements, and
+anything else that opens in a PiP window. It only runs in off-screen test clients and is controlled by environment variables:
+
+| Variable | Meaning |
+| --- | --- |
+| `FANCYMENU_WINDOW_PREVIEW` | **Required.** What to open: `manage_variables` (the Manage Variables window), `action:<identifier>` (the value editor of an action, for example `action:set_variable`), `requirement:<identifier>` (the value editor of a requirement) or `opener:<fully.qualified.Class>#<method>` (calls a public static method without parameters that opens a window, for anything else). |
+| `FANCYMENU_WINDOW_PREVIEW_OUT` | **Required.** Absolute folder for the screenshots, outside of the game directory. |
+| `FANCYMENU_WINDOW_PREVIEW_VALUE` | Value of the action or requirement instance whose editor gets opened. Default: the preset of the action or requirement. |
+| `FANCYMENU_WINDOW_PREVIEW_VARIABLES` | JSON object that replaces **all** variables of the game directory before the window opens. Arrays become list variables, everything else text variables, for example `{"fruits":["apple","banana"],"name":"Steve"}`. Default: the variables stay as they are. |
+| `FANCYMENU_WINDOW_PREVIEW_SHOTS` | Comma-separated seconds after the window opened, for example `1,3.5`. Default: `2`. |
+| `FANCYMENU_WINDOW_PREVIEW_INPUT` | Simulated input, entries `<seconds>:<action>[:<arguments>]` separated by `;`: `move:x,y`, `click:x,y`, `right_click:x,y`, `double_click:x,y`, `drag:x1,y1,x2,y2` (left button), `scroll:x,y,amount` (positive scrolls up), `key:<key>` (letters, digits, `enter`, `escape`, `tab`, `backspace`, `delete`, `space`, `up`, `down`, `left`, `right`, `home`, `end`, `page_up`, `page_down`, `f1` to `f12`, with `shortcut+` (Cmd on macOS, Ctrl elsewhere), `ctrl+`, `shift+`, `alt+` or `cmd+` in front, like `shortcut+z`; letters and digits press the key that types them in the system's keyboard layout, like UIs match shortcuts) and `type:<text>` (types into whatever has the focus, write a `;` in the text as `\;`). Positions are GUI pixels. An input starts once the one before it is done. |
+| `FANCYMENU_WINDOW_PREVIEW_SIZE` | Screen size in GUI pixels. Default: `960x540`. |
+| `FANCYMENU_WINDOW_PREVIEW_GUI_SCALE` | GUI scale. Default: `2`. The hidden window gets sized to size times scale (1920x1080 by default). |
+| `FANCYMENU_WINDOW_PREVIEW_NAME` | Start of the screenshot file names. Default: the target. |
+
+```bash
+export JAVA_HOME=$(/usr/libexec/java_home -v 25)
+FANCYMENU_TEST_RUN_DIR=run_client_test \
+FANCYMENU_WINDOW_PREVIEW=manage_variables \
+FANCYMENU_WINDOW_PREVIEW_OUT="$TMPDIR/window-preview" \
+FANCYMENU_WINDOW_PREVIEW_VARIABLES='{"fruits":["apple","banana","cherry"],"player_name":"Steve"}' \
+FANCYMENU_WINDOW_PREVIEW_SHOTS=1,3 \
+FANCYMENU_WINDOW_PREVIEW_INPUT="2:right_click:300,200" \
+sh offscreen_client.sh fabric
+```
+
+- Screenshots land in the output folder at framebuffer size as `<name>_<seconds>s.png`, for example `manage_variables_002.00s.png`.
+- The log gets `[CHECK]` lines: the setup, the variables, the opened window (its title, GUI size and scale), every input (the open windows
+  afterward, front to back, with a `*` at the focused one), every screenshot, the result of an action or requirement editor when it gets
+  closed with Done or canceled (`editor result`), and `window preview finished: PASS` or `FAIL <n> failed checks` at the end. Then the game
+  stops on its own. `grep "\[CHECK\]"` the run's output, it's all there.
+- Variables you replace stay in the game directory, so use a separate game instance (`FANCYMENU_TEST_RUN_DIR`) for previews.
+- Input goes through the game's own input handlers, so it reaches windows like real input. Checks that read the real key state from GLFW
+  (`Minecraft#hasShiftDown()`, `#hasControlDown()`, `#hasAltDown()`) don't see simulated modifiers. Only the modifiers of the key events
+  carry them, so code that should be testable reads modifiers from its events.
+- Opener methods are for temporary test code: remove them when you are done.

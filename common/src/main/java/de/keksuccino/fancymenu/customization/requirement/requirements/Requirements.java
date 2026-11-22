@@ -56,6 +56,7 @@ public class Requirements {
     public static final IsResourcePackEnabledRequirement IS_RESOURCE_PACK_ENABLED = new IsResourcePackEnabledRequirement();
     public static final HasPlayerPermissionLevelRequirement HAS_PLAYER_PERMISSION_LEVEL = new HasPlayerPermissionLevelRequirement();
     public static final IsVariableValueRequirement IS_VARIABLE_VALUE = new IsVariableValueRequirement();
+    public static final ListContainsEntryRequirement LIST_CONTAINS_ENTRY = new ListContainsEntryRequirement();
     public static final IsPlayerRunningRequirement IS_PLAYER_RUNNING = new IsPlayerRunningRequirement();
     public static final IsPlayerSneakingRequirement IS_PLAYER_SNEAKING = new IsPlayerSneakingRequirement();
     public static final IsPlayerSwimmingRequirement IS_PLAYER_SWIMMING = new IsPlayerSwimmingRequirement();
@@ -199,6 +200,7 @@ public class Requirements {
         RequirementRegistry.register(IS_SERVER_ONLINE);
         RequirementRegistry.register(IS_RESOURCE_PACK_ENABLED);
         RequirementRegistry.register(IS_VARIABLE_VALUE);
+        RequirementRegistry.register(LIST_CONTAINS_ENTRY);
         RequirementRegistry.register(ONLY_ONCE_PER_SESSION);
         RequirementRegistry.register(MOUSE_CLICKED);
         RequirementRegistry.register(IS_RINKU_LOADED);

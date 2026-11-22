@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.customization.action;
 import de.keksuccino.fancymenu.customization.FreshValuesScope;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.DelayExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ExecuteLaterExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.statements.ForEachExecutableBlock;
 import de.keksuccino.fancymenu.customization.placeholder.DeserializedPlaceholderString;
 import de.keksuccino.fancymenu.customization.placeholder.Placeholder;
 import de.keksuccino.fancymenu.customization.placeholder.PlaceholderParser;
@@ -111,6 +112,12 @@ class ScriptValueFreshValuesScopeTest {
         assertEquals(1L, new DelayExecutableBlock(PROBE).resolveDelayMs());
         assertFalse(FreshValuesScope.isActive());
         assertEquals(1L, new ExecuteLaterExecutableBlock(PROBE).resolveDelayMsOrFallback());
+        assertFalse(FreshValuesScope.isActive());
+    }
+
+    @Test
+    void listNamesOfForEachBlocksReadFreshValues() {
+        assertEquals("1", new ForEachExecutableBlock(PROBE).resolveListVariableName());
         assertFalse(FreshValuesScope.isActive());
     }
 

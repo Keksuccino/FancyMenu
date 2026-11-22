@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.glsl;
 
+import de.keksuccino.fancymenu.customization.variables.UserVariableSnapshot;
 import org.junit.jupiter.api.Test;
 
 import java.nio.ByteBuffer;
@@ -7,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class GlslFrameUniformStateTest {
@@ -62,6 +64,17 @@ class GlslFrameUniformStateTest {
         frameSnapshot(Map.of("score", value), 9).write(layout, buffer, bufferContext(), channels());
 
         assertAll(() -> assertFloatVector(layout, buffer, "fmVarFloat_score", 1.5F), () -> assertIntVector(layout, buffer, "fmVarInt_score", 2), () -> assertIntVector(layout, buffer, "fmVarBool_score", 1), () -> assertFloatVector(layout, buffer, "fmVarVec2_score", 3.0F, 4.0F), () -> assertFloatVector(layout, buffer, "fmVarVec3_score", 3.0F, 4.0F, 5.0F), () -> assertFloatVector(layout, buffer, "fmVarVec4_score", 3.0F, 4.0F, 5.0F, 6.0F), () -> assertIntVector(layout, buffer, "fmVarExists_score", 1), () -> assertIntVector(layout, buffer, "fmVariableCount", 9));
+    }
+
+    @Test
+    void listVariablesGiveTheirEntryCountInsteadOfParsingTheirText() {
+        GlslFrameUniformState.VariableValue three = GlslFrameUniformState.toVariableValue(UserVariableSnapshot.ofList("fruits", List.of("4", "5", "6"), false));
+        GlslFrameUniformState.VariableValue empty = GlslFrameUniformState.toVariableValue(UserVariableSnapshot.ofList("empty", List.of(), false));
+        GlslFrameUniformState.VariableValue text = GlslFrameUniformState.toVariableValue(new UserVariableSnapshot("text", "2.5", false));
+
+        assertAll(() -> assertEquals(3.0F, three.floatValue()), () -> assertEquals(3, three.intValue()), () -> assertEquals(1, three.boolValue()), () -> assertArrayEquals(new float[]{3.0F, 3.0F, 3.0F, 3.0F}, three.vector()),
+                () -> assertEquals(0.0F, empty.floatValue()), () -> assertEquals(0, empty.intValue()), () -> assertEquals(0, empty.boolValue()), () -> assertArrayEquals(new float[]{0.0F, 0.0F, 0.0F, 0.0F}, empty.vector()),
+                () -> assertEquals(2.5F, text.floatValue()), () -> assertEquals(2, text.intValue()));
     }
 
     @Test

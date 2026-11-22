@@ -988,7 +988,17 @@ public interface ContextMenuBuilder<O> {
      * @param allowPlaceholders true to allow placeholder tokens
      */
     default ContextMenu.ClickableContextMenuEntry<?> buildInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, String> targetFieldGetter, @NotNull BiConsumer<O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback) {
-        return this.buildInputContextMenuEntry(parentMenu, entryIdentifier, selectedObjectsFilter, targetFieldGetter, targetFieldSetter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback, false);
+        return this.buildInputContextMenuEntry(parentMenu, entryIdentifier, selectedObjectsFilter, targetFieldGetter, targetFieldSetter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback, null);
+    }
+
+    /**
+     * Builds a text input entry like {@link #buildInputContextMenuEntry(ContextMenu, String, ConsumingSupplier, ConsumingSupplier, BiConsumer, CharacterFilter, boolean, boolean, Component, boolean, String, ConsumingSupplier, ConsumingSupplier)},
+     * with texts the input suggests while typing, like the names of existing variables.
+     *
+     * @param inputSuggestions gets asked for the suggestions every time the input opens. Only single-line inputs without placeholders show them.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> buildInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, String> targetFieldGetter, @NotNull BiConsumer<O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback, @Nullable Supplier<List<String>> inputSuggestions) {
+        return this.buildInputContextMenuEntry(parentMenu, entryIdentifier, selectedObjectsFilter, targetFieldGetter, targetFieldSetter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback, inputSuggestions, false);
     }
 
     /**
@@ -997,6 +1007,14 @@ public interface ContextMenuBuilder<O> {
      * @param markdownInput true if the text is Markdown, which gives the multiline text editor the shortcuts that format Markdown text
      */
     default ContextMenu.ClickableContextMenuEntry<?> buildInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, String> targetFieldGetter, @NotNull BiConsumer<O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback, boolean markdownInput) {
+        return this.buildInputContextMenuEntry(parentMenu, entryIdentifier, selectedObjectsFilter, targetFieldGetter, targetFieldSetter, inputCharacterFilter, multiLineInput, allowPlaceholders, label, addResetOption, defaultValue, textValidator, textValidatorUserFeedback, null, markdownInput);
+    }
+
+    /**
+     * Builds a text input entry with both the input suggestions of {@link #buildInputContextMenuEntry(ContextMenu, String, ConsumingSupplier, ConsumingSupplier, BiConsumer, CharacterFilter, boolean, boolean, Component, boolean, String, ConsumingSupplier, ConsumingSupplier, Supplier)}
+     * and the Markdown shortcuts of {@link #buildInputContextMenuEntry(ContextMenu, String, ConsumingSupplier, ConsumingSupplier, BiConsumer, CharacterFilter, boolean, boolean, Component, boolean, String, ConsumingSupplier, ConsumingSupplier, boolean)}.
+     */
+    default ContextMenu.ClickableContextMenuEntry<?> buildInputContextMenuEntry(@NotNull ContextMenu parentMenu, @NotNull String entryIdentifier, @Nullable ConsumingSupplier<O, Boolean> selectedObjectsFilter, @NotNull ConsumingSupplier<O, String> targetFieldGetter, @NotNull BiConsumer<O, String> targetFieldSetter, @Nullable CharacterFilter inputCharacterFilter, boolean multiLineInput, boolean allowPlaceholders, @NotNull Component label, boolean addResetOption, String defaultValue, @Nullable ConsumingSupplier<String, Boolean> textValidator, @Nullable ConsumingSupplier<String, UITooltip> textValidatorUserFeedback, @Nullable Supplier<List<String>> inputSuggestions, boolean markdownInput) {
         ContextMenu subMenu = new ContextMenu();
         ContextMenu.ClickableContextMenuEntry<?> inputEntry = subMenu.addClickableEntry("input_value", Component.translatable("fancymenu.common_components.set"), (menu, entry) ->
                 {
@@ -1027,7 +1045,8 @@ public interface ContextMenuBuilder<O> {
                                 return textValidator.get(consumes.getText());
                             });
                         }
-                        Dialogs.openGeneric(s, label, null, TextInputWindowBody.PIP_WINDOW_WIDTH, TextInputWindowBody.PIP_WINDOW_HEIGHT)
+                        if (inputSuggestions != null) s.setInputSuggestions(inputSuggestions.get());
+                        Dialogs.openGeneric(s, label, null, TextInputWindowBody.PIP_WINDOW_WIDTH, s.getPipWindowHeight())
                                 .getSecond().setIcon(MaterialIcons.TEXT_FIELDS);
                     } else {
                         menu.closeMenuChain();

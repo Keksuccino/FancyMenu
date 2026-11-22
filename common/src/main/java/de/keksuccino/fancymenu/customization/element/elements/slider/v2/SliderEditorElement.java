@@ -64,8 +64,14 @@ public class SliderEditorElement extends AbstractEditorElement<SliderEditorEleme
                             }
                             return false;
                         }, null)
-                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.type.list.set_list_values.desc")))
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines((this.element.getListVariableName() != null) ? "fancymenu.elements.slider.v2.type.list.set_list_values.replaced_by_list_variable" : "fancymenu.elements.slider.v2.type.list.set_list_values.desc")))
                 .setIcon(MaterialIcons.FORMAT_LIST_BULLETED)
+                .addIsVisibleSupplier((menu, entry) -> (this.element).type == SliderElement.SliderType.LIST)
+                .addIsActiveSupplier((menu, entry) -> this.element.getListVariableName() == null);
+
+        this.element.listVariable.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
+                .setTooltipSupplier((menu, entry) -> UITooltip.of(LocalizationUtils.splitLocalizedLines("fancymenu.elements.slider.v2.type.list.list_variable.desc")))
+                .setIcon(MaterialIcons.VARIABLES)
                 .addIsVisibleSupplier((menu, entry) -> (this.element).type == SliderElement.SliderType.LIST);
 
         this.element.minRangeValue.buildContextMenuEntryAndAddTo(this.rightClickMenu, this)
