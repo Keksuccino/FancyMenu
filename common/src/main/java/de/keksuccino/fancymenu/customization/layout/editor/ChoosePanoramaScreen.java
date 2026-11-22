@@ -98,14 +98,14 @@ public class ChoosePanoramaScreen extends PiPWindowBody {
         }
 
         float listAreaX = 20.0F;
-        float listLabelY = 50.0F;
+        float listLabelY = CONTENT_MARGIN;
         float labelHeight = UIBase.getUITextHeightNormal();
         float labelPadding = UIBase.getAreaLabelVerticalPadding();
         float listAreaY = listLabelY + labelHeight + labelPadding;
         UIBase.renderText(graphics, Component.translatable("fancymenu.panorama.choose.available_panoramas"), listAreaX, listLabelY, getGenericTextColor());
 
         this.panoramaListScrollArea.setWidth(((float) this.width / 2) - 40, true);
-        this.panoramaListScrollArea.setHeight(this.height - 85, true);
+        this.panoramaListScrollArea.setHeight(this.height - listAreaY - CONTENT_MARGIN, true);
         this.panoramaListScrollArea.setX(listAreaX, true);
         this.panoramaListScrollArea.setY(listAreaY, true);
 

@@ -275,10 +275,11 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
         this.selectedCell = null;
 
         // Calculate scroll area dimensions based on enabled features
+        int contentTop = this.getContentTop();
         int scrollAreaX = 20;
-        int scrollAreaY = 50 + 15;
+        int scrollAreaY = contentTop;
         int scrollAreaWidth = this.width - 40 - this.getRightSideWidgetWidth() - 20;
-        int scrollAreaHeight = this.height - 85;
+        int scrollAreaHeight = this.height - contentTop - 20;
 
         // Adjust for description area if enabled
         if (this.descriptionAreaEnabled) {
@@ -287,9 +288,9 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
             // Initialize description area
             this.descriptionScrollArea = new ScrollArea(0, 0, 0, 0);
             this.descriptionScrollArea.setWidth((this.width / 2) - 40, true);
-            this.descriptionScrollArea.setHeight(Math.max(DESCRIPTION_AREA_MIN_HEIGHT, (this.height / 2) - 50 - 25), true);
+            this.descriptionScrollArea.setHeight(Math.max(DESCRIPTION_AREA_MIN_HEIGHT, (this.height / 2) - 10 - contentTop), true);
             this.descriptionScrollArea.setX(this.width - 20 - this.descriptionScrollArea.getWidthWithBorder(), true);
-            this.descriptionScrollArea.setY(50 + 15, true);
+            this.descriptionScrollArea.setY(contentTop, true);
             this.descriptionScrollArea.horizontalScrollBar.active = false;
             this.addRenderableWidget(this.descriptionScrollArea);
         }
@@ -301,7 +302,7 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
 
             // Initialize search bar
             String oldSearchValue = (this.searchBar != null) ? this.searchBar.getValue() : "";
-            this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, scrollAreaX + 1, 50 + 15 + 1, scrollAreaWidth - 2, 20 - 2, Component.empty());
+            this.searchBar = new ExtendedEditBox(Minecraft.getInstance().font, scrollAreaX + 1, contentTop + 1, scrollAreaWidth - 2, 20 - 2, Component.empty());
             if (CellScreen.this.searchBarPlaceholder != null) {
                 this.searchBar.setHintFancyMenu(consumes -> CellScreen.this.searchBarPlaceholder);
             }
@@ -351,6 +352,13 @@ public abstract class CellScreen extends Screen implements InitialWidgetFocusScr
 
         this.autoScaleScreen(topRightSideWidget);
 
+    }
+
+    /**
+     * The top of the cell area, the search bar and the description area, which leaves room for the title rendered above them.
+     */
+    protected int getContentTop() {
+        return 65;
     }
 
     /**
