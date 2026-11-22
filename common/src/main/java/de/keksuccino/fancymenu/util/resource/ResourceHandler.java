@@ -25,6 +25,11 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
 
     protected final Map<String, R> resources = new ConcurrentHashMap<>();
     protected final Set<String> failedSources = ConcurrentHashMap.newKeySet();
+    /**
+     * The resources of {@link #createOwned(ResourceSource)}, held weakly and guarded by the lifecycle lock, so their owners never have to
+     * unregister them, while the shutdown still closes the ones whose owners are open then.
+     */
+    private final Set<R> ownedResources = Collections.newSetFromMap(new WeakHashMap<>());
     private final Object lifecycleLock = new Object();
     private volatile boolean shuttingDown = false;
 
@@ -64,71 +69,113 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
             if (registered != null) return registered;
             //Check if handler failed to register resource in the past
             if (this.getFailedSourcesSet().contains(resourceSource.getSourceWithPrefix())) return null;
-            //Search file type of resource
-            F fileType = null;
+            R resource = this.readResource(resourceSource);
+            if (resource != null) return this.putAndReturn(resource, resourceSource);
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to register resource: " + resourceSource + " (RESOURCE HANDLER: " + this.getClass() + ")", ex);
+        }
+        this.addToFailedSources(resourceSource);
+        return null;
+    }
+
+    /**
+     * Creates a new instance of a {@link Resource} that never gets registered, so nothing that gets resources from this handler
+     * ever gets it, even when it uses the same source.<br>
+     * The caller owns the resource: it can play, pause, seek and close it without affecting anyone else that uses the same source,
+     * and has to close it once it no longer needs it. Owned resources that are still open when the handler shuts down get closed then.<br><br>
+     *
+     * Failed sources don't get remembered, so callers that would otherwise ask again every frame have to remember failures themselves.
+     *
+     * @param resourceSource The source of the resource.
+     * @return The new {@link Resource} or NULL if the handler can't create a resource for the source.
+     */
+    @Nullable
+    public R createOwned(@NotNull ResourceSource resourceSource) {
+        Objects.requireNonNull(resourceSource);
+        if (this.shuttingDown) return null;
+        R resource = null;
+        try {
+            resource = this.readResource(resourceSource);
+        } catch (Exception ex) {
+            LOGGER.error("[FANCYMENU] Failed to create owned resource: " + resourceSource + " (RESOURCE HANDLER: " + this.getClass() + ")", ex);
+        }
+        if (resource == null) return null;
+        boolean rejectResource;
+        synchronized (this.lifecycleLock) {
+            rejectResource = this.shuttingDown;
+            if (!rejectResource) this.ownedResources.add(resource);
+        }
+        if (rejectResource) {
+            CloseableUtils.closeQuietly(resource);
+            return null;
+        }
+        return resource;
+    }
+
+    /**
+     * Reads a new instance of a {@link Resource} from its source, without registering it.
+     *
+     * @return The new {@link Resource} or NULL if the file type of the source is not supported or the source can't get read.
+     */
+    @Nullable
+    private R readResource(@NotNull ResourceSource resourceSource) {
+        //Search file type of resource
+        F fileType = null;
+        for (F type : this.getAllowedFileTypes()) {
+            if (type.isFileType(resourceSource, false)) {
+                fileType = type;
+                break;
+            }
+        }
+        //Do advanced web checks if basic checks were not enough
+        if ((fileType == null) && (resourceSource.getSourceType() == ResourceSourceType.WEB)) {
             for (F type : this.getAllowedFileTypes()) {
-                if (type.isFileType(resourceSource, false)) {
+                if (type.isFileTypeWebAdvanced(resourceSource.getSourceWithoutPrefix())) {
                     fileType = type;
                     break;
                 }
             }
-            //Do advanced web checks if basic checks were not enough
-            if ((fileType == null) && (resourceSource.getSourceType() == ResourceSourceType.WEB)) {
-                for (F type : this.getAllowedFileTypes()) {
-                    if (type.isFileTypeWebAdvanced(resourceSource.getSourceWithoutPrefix())) {
-                        fileType = type;
-                        break;
-                    }
-                }
-            }
-            //In case file type is still NULL, use fallback type (if a fallback type is defined)
-            if (fileType == null) fileType = this.getFallbackFileType();
-            //If file type is still NULL at this point, see resource loading as failed and add source to failed sources list
-            if (fileType == null) {
-                LOGGER.error("[FANCYMENU] Failed to register resource! Unsupported file type or failed to identify file type: " + resourceSource + " (RESOURCE HANDLER: " + this.getClass() + ")");
-                this.addToFailedSources(resourceSource);
+        }
+        //In case file type is still NULL, use fallback type (if a fallback type is defined)
+        if (fileType == null) fileType = this.getFallbackFileType();
+        //If file type is still NULL at this point, see resource loading as failed
+        if (fileType == null) {
+            LOGGER.error("[FANCYMENU] Failed to load resource! Unsupported file type or failed to identify file type: " + resourceSource + " (RESOURCE HANDLER: " + this.getClass() + ")");
+            return null;
+        }
+        R resource;
+        if (resourceSource.getSourceType() == ResourceSourceType.WEB) {
+            if (!fileType.isWebAllowed()) {
+                LOGGER.error("[FANCYMENU] Failed to load web resource! File type does not support web sources: " + fileType + " (Source: " + resourceSource + ")" + " (RESOURCE HANDLER: " + this.getClass() + ")");
                 return null;
             }
-            if (resourceSource.getSourceType() == ResourceSourceType.WEB) {
-                if (!fileType.isWebAllowed()) {
-                    LOGGER.error("[FANCYMENU] Failed to register web resource! File type does not support web sources: " + fileType + " (Source: " + resourceSource + ")" + " (RESOURCE HANDLER: " + this.getClass() + ")");
-                    this.addToFailedSources(resourceSource);
-                    return null;
-                }
-                return this.putAndReturn(fileType.getCodec().readWeb(resourceSource.getSourceWithoutPrefix()), resourceSource);
-            } else if (resourceSource.getSourceType() == ResourceSourceType.LOCATION) {
-                if (!fileType.isLocationAllowed()) {
-                    LOGGER.error("[FANCYMENU] Failed to register location resource! File type does not support location sources: " + fileType + " (Source: " + resourceSource + ")" + " (RESOURCE HANDLER: " + this.getClass() + ")");
-                    this.addToFailedSources(resourceSource);
-                    return null;
-                }
-                ResourceLocation loc = ResourceLocation.tryParse(resourceSource.getSourceWithoutPrefix());
-                if (loc == null) {
-                    LOGGER.error("[FANCYMENU] Failed to register location resource! Unable to parse ResourceLocation: " + resourceSource + " (RESOURCE HANDLER: " + this.getClass() + ")");
-                    this.addToFailedSources(resourceSource);
-                    return null;
-                }
-                return this.putAndReturn(fileType.getCodec().readLocation(loc), resourceSource);
-            } else {
-                if (!fileType.isLocalAllowed()) {
-                    LOGGER.error("[FANCYMENU] Failed to register local resource! File type does not support local sources: " + fileType + " (Source: " + resourceSource + ")" + " (RESOURCE HANDLER: " + this.getClass() + ")");
-                    this.addToFailedSources(resourceSource);
-                    return null;
-                }
-                File localFile = resourceSource.getValidatedLocalFile();
-                if (localFile == null) {
-                    this.addToFailedSources(resourceSource);
-                    return null;
-                }
-                // This is the last shared handoff before a codec opens the file. Some native decoders retain the File
-                // for asynchronous use; portable Java cannot make validation and that later third-party open atomic.
-                return this.putAndReturn(fileType.getCodec().readLocal(localFile), resourceSource);
+            resource = fileType.getCodec().readWeb(resourceSource.getSourceWithoutPrefix());
+        } else if (resourceSource.getSourceType() == ResourceSourceType.LOCATION) {
+            if (!fileType.isLocationAllowed()) {
+                LOGGER.error("[FANCYMENU] Failed to load location resource! File type does not support location sources: " + fileType + " (Source: " + resourceSource + ")" + " (RESOURCE HANDLER: " + this.getClass() + ")");
+                return null;
             }
-        } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to register resource: " + resourceSource + " (RESOURCE HANDLER: " + this.getClass() + ")", ex);
-            this.addToFailedSources(resourceSource);
+            ResourceLocation loc = ResourceLocation.tryParse(resourceSource.getSourceWithoutPrefix());
+            if (loc == null) {
+                LOGGER.error("[FANCYMENU] Failed to load location resource! Unable to parse ResourceLocation: " + resourceSource + " (RESOURCE HANDLER: " + this.getClass() + ")");
+                return null;
+            }
+            resource = fileType.getCodec().readLocation(loc);
+        } else {
+            if (!fileType.isLocalAllowed()) {
+                LOGGER.error("[FANCYMENU] Failed to load local resource! File type does not support local sources: " + fileType + " (Source: " + resourceSource + ")" + " (RESOURCE HANDLER: " + this.getClass() + ")");
+                return null;
+            }
+            File localFile = resourceSource.getValidatedLocalFile();
+            if (localFile == null) return null;
+            // This is the last shared handoff before a codec opens the file. Some native decoders retain the File
+            // for asynchronous use; portable Java cannot make validation and that later third-party open atomic.
+            resource = fileType.getCodec().readLocal(localFile);
         }
-        return null;
+        if (resource == null) {
+            LOGGER.error("[FANCYMENU] Failed to load resource! Resource was NULL: " + resourceSource + " (RESOURCE HANDLER: " + this.getClass() + ")");
+        }
+        return resource;
     }
 
     /**
@@ -184,32 +231,31 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
         return null;
     }
 
+    /**
+     * Registers the resource, or closes it and returns the resource registered for the same source in the meantime.
+     *
+     * @return The registered {@link Resource} or NULL if the handler shuts down, in which case the resource gets closed.
+     */
     @Nullable
-    protected R putAndReturn(@Nullable R resource, @NotNull ResourceSource resourceSource) {
+    protected R putAndReturn(@NotNull R resource, @NotNull ResourceSource resourceSource) {
+        Objects.requireNonNull(resource);
         Objects.requireNonNull(resourceSource);
-        if (resource != null) {
-            R registeredResource = resource;
-            boolean rejectResource;
-            synchronized (this.lifecycleLock) {
-                rejectResource = this.shuttingDown;
-                if (!rejectResource) {
-                    R existingResource = this.getResourceMap().putIfAbsent(resourceSource.getSourceWithPrefix(), resource);
-                    if (existingResource != null) registeredResource = existingResource;
-                    else LOGGER.debug("[FANCYMENU] Registering resource with source: " + resourceSource + " (RESOURCE HANDLER: " + this.getClass() + ")");
-                }
-            }
-            if (rejectResource) {
-                CloseableUtils.closeQuietly(resource);
-                return null;
-            }
-            if (registeredResource != resource) CloseableUtils.closeQuietly(resource);
-            return registeredResource;
-        } else {
-            if (this.addToFailedSources(resourceSource)) {
-                LOGGER.error("[FANCYMENU] Failed to register resource! Resource was NULL: " + resourceSource + " (RESOURCE HANDLER: " + this.getClass() + ")");
+        R registeredResource = resource;
+        boolean rejectResource;
+        synchronized (this.lifecycleLock) {
+            rejectResource = this.shuttingDown;
+            if (!rejectResource) {
+                R existingResource = this.getResourceMap().putIfAbsent(resourceSource.getSourceWithPrefix(), resource);
+                if (existingResource != null) registeredResource = existingResource;
+                else LOGGER.debug("[FANCYMENU] Registering resource with source: " + resourceSource + " (RESOURCE HANDLER: " + this.getClass() + ")");
             }
         }
-        return null;
+        if (rejectResource) {
+            CloseableUtils.closeQuietly(resource);
+            return null;
+        }
+        if (registeredResource != resource) CloseableUtils.closeQuietly(resource);
+        return registeredResource;
     }
 
     protected boolean addToFailedSources(@NotNull ResourceSource resourceSource) {
@@ -293,8 +339,9 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
     }
 
     /**
-     * Permanently closes this handler for client shutdown. The lifecycle lock is intentionally held only while detaching
-     * registrations; individual resources can perform slow native cleanup without blocking a late registration from being rejected.
+     * Permanently closes this handler for client shutdown, together with the owned resources of {@link #createOwned(ResourceSource)}
+     * that are still open. The lifecycle lock is intentionally held only while detaching registrations; individual resources can
+     * perform slow native cleanup without blocking a late registration from being rejected.
      */
     public void shutdown() {
         this.releaseRegisteredResources(true);
@@ -302,16 +349,23 @@ public abstract class ResourceHandler<R extends Resource, F extends FileType<R>>
 
     private void releaseRegisteredResources(boolean shutdown) {
         List<R> resourcesToRelease;
+        List<R> ownedResourcesToRelease = List.of();
         synchronized (this.lifecycleLock) {
             if (shutdown) {
                 if (this.shuttingDown) return;
                 this.shuttingDown = true;
+                ownedResourcesToRelease = new ArrayList<>(this.ownedResources);
+                this.ownedResources.clear();
             }
             resourcesToRelease = new ArrayList<>(this.getResourceMap().values());
             this.getResourceMap().clear();
             this.getFailedSourcesSet().clear();
         }
         resourcesToRelease.forEach(CloseableUtils::closeQuietly);
+        // Most owned resources got closed by their owners already and only wait for garbage collection
+        for (R ownedResource : ownedResourcesToRelease) {
+            if (!ownedResource.isClosed()) CloseableUtils.closeQuietly(ownedResource);
+        }
     }
 
 }
