@@ -37,7 +37,7 @@ final class MarkdownStructure {
      */
     private static final boolean[] INSIDE_LINE_EVENT_CHARACTERS = new boolean[ChatFormatting.PREFIX_CODE + 1];
     static {
-        for (char character : new char[] {NEWLINE_CHAR, ChatFormatting.PREFIX_CODE, AMPERSAND_CHAR, BACKSLASH_CHAR, OPEN_SQUARE_BRACKETS_CHAR, CLOSE_SQUARE_BRACKETS_CHAR, GRAVE_ACCENT_CHAR, SEMICOLON_CHAR, ASTERISK_CHAR, UNDERSCORE_CHAR, TILDE_CHAR, PERCENTAGE_CHAR}) {
+        for (char character : new char[] {NEWLINE_CHAR, ChatFormatting.PREFIX_CODE, AMPERSAND_CHAR, BACKSLASH_CHAR, OPEN_SQUARE_BRACKETS_CHAR, CLOSE_SQUARE_BRACKETS_CHAR, GRAVE_ACCENT_CHAR, SEMICOLON_CHAR, ASTERISK_CHAR, UNDERSCORE_CHAR, TILDE_CHAR, PLUS_CHAR, PERCENTAGE_CHAR}) {
             INSIDE_LINE_EVENT_CHARACTERS[character] = true;
         }
     }
@@ -206,6 +206,14 @@ final class MarkdownStructure {
                         case TILDE_CHAR:
                             formatMarkers.addPaired(FormatMarker.TILDE, FormatMarker.TILDE_PAIR, index);
                             continue;
+                        case PLUS_CHAR: {
+                            // Like with underscores, all plus signs of a row get read the same way this one does
+                            int rowEnd = index + 1;
+                            while ((rowEnd < length) && (text.charAt(rowEnd) == PLUS_CHAR)) rowEnd++;
+                            this.addPlusMarkers(text, index, rowEnd);
+                            index = rowEnd - 1;
+                            continue;
+                        }
                         case PERCENTAGE_CHAR:
                             if (text.startsWith(FORMATTING_CODE_FONT_SUFFIX, index)) {
                                 formatMarkers.add(FormatMarker.FONT_SUFFIX, index);
@@ -451,11 +459,8 @@ final class MarkdownStructure {
     private void addUnderscoreMarkers(@NotNull String text, int rowStart, int rowEnd) {
         int rowLength = rowEnd - rowStart;
         if (rowLength > 3) return;
-        // What stands next to the row counts without the formatting codes in between, which are not shown
-        int before = rowStart - 1;
-        while ((before > 0) && isFormattingCodeCharacter(text, before)) before -= 2;
-        int behind = rowEnd;
-        while (((behind + 1) < text.length()) && isFormattingCode(text, behind)) behind += 2;
+        int before = getShownCharacterBefore(text, rowStart);
+        int behind = getShownCharacterBehind(text, rowEnd);
         boolean whitespaceBefore = (before < 0) || isWhitespace(text.charAt(before));
         boolean whitespaceBehind = (behind >= text.length()) || isWhitespace(text.charAt(behind));
         boolean canOpen = !whitespaceBehind && (whitespaceBefore || !Character.isLetterOrDigit(text.charAt(before)));
@@ -468,6 +473,56 @@ final class MarkdownStructure {
             if (canOpen) this.formatMarkers.add(FormatMarker.UNDERSCORE_OPEN, rowEnd - 1);
             if (canClose) this.formatMarkers.add(FormatMarker.UNDERSCORE_CLOSE, rowEnd - 1);
         }
+    }
+
+    /**
+     * Adds the format markers of a row of plus signs that the parser reads as text or markers.
+     *
+     * <p>Two plus signs open and close underlined text, which can start and end inside of a word, like with asterisks. They open in front of something
+     * that is no whitespace and close behind something that is no whitespace. In front of a punctuation mark, they only open if whitespace or a punctuation
+     * mark stands in front of them, and behind one, they only close if whitespace or a punctuation mark follows them. Every other row is text.</p>
+     *
+     * <p>That keeps the plus signs of names like "C++" and of code like "i++" as text wherever whitespace or a punctuation mark follows them,
+     * also if a text has more than one of them. Plus signs with a letter or digit behind them, like in "C++11", open underlined text if a later pair closes it.</p>
+     *
+     * @param rowStart The index of the first plus sign of the row.
+     * @param rowEnd The index behind the last plus sign of the row.
+     */
+    private void addPlusMarkers(@NotNull String text, int rowStart, int rowEnd) {
+        if ((rowEnd - rowStart) != FORMATTING_CODE_UNDERLINE_PREFIX_SUFFIX.length()) return;
+        int before = getShownCharacterBefore(text, rowStart);
+        int behind = getShownCharacterBehind(text, rowEnd);
+        boolean whitespaceBefore = (before < 0) || isWhitespace(text.charAt(before));
+        boolean whitespaceBehind = (behind >= text.length()) || isWhitespace(text.charAt(behind));
+        boolean punctuationBefore = !whitespaceBefore && isPunctuation(text.charAt(before));
+        boolean punctuationBehind = !whitespaceBehind && isPunctuation(text.charAt(behind));
+        if (!whitespaceBehind && (!punctuationBehind || whitespaceBefore || punctuationBefore)) this.formatMarkers.add(FormatMarker.PLUS_PAIR_OPEN, rowStart);
+        if (!whitespaceBefore && (!punctuationBefore || whitespaceBehind || punctuationBehind)) this.formatMarkers.add(FormatMarker.PLUS_PAIR_CLOSE, rowStart);
+    }
+
+    /**
+     * Returns the index of the character in front of a row of marker characters, without the formatting codes in between, which are not shown. -1 if there is none.
+     */
+    private static int getShownCharacterBefore(@NotNull String text, int rowStart) {
+        int before = rowStart - 1;
+        while ((before > 0) && isFormattingCodeCharacter(text, before)) before -= 2;
+        return before;
+    }
+
+    /**
+     * Returns the index of the character behind a row of marker characters, without the formatting codes in between, which are not shown. The text length if there is none.
+     */
+    private static int getShownCharacterBehind(@NotNull String text, int rowEnd) {
+        int behind = rowEnd;
+        while (((behind + 1) < text.length()) && isFormattingCode(text, behind)) behind += 2;
+        return behind;
+    }
+
+    /**
+     * Returns if the character is a punctuation mark or a symbol, which is every character that is no letter, digit or whitespace.
+     */
+    private static boolean isPunctuation(char character) {
+        return !Character.isLetterOrDigit(character) && !isWhitespace(character);
     }
 
     private static boolean isWhitespace(char character) {
