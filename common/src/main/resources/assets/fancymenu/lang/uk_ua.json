@@ -36,8 +36,6 @@
   "fancymenu.actions.blocks.folder.collapsed": "(згорнуто)",
   "fancymenu.actions.blocks.folder.display": "Тека: %s",
   "fancymenu.actions.blocks.if": "ЯКЩО (%s)",
-  "fancymenu.actions.blocks.overview.collapsed.one": "(згорнуто, 1 дія)",
-  "fancymenu.actions.blocks.overview.collapsed.other": "(згорнуто, дій: %s)",
   "fancymenu.actions.blocks.unknown": "Невідомий запис",
   "fancymenu.actions.blocks.while": "ПОКИ (%s)",
   "fancymenu.actions.blocks.for_each": "ДЛЯ КОЖНОГО ЗАПИСУ В (%s)",
