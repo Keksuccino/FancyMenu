@@ -10,6 +10,7 @@ import de.keksuccino.fancymenu.customization.action.blocks.statements.DelayExecu
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseIfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ExecuteLaterExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.statements.ForEachExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.IfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.WhileExecutableBlock;
 import de.keksuccino.fancymenu.customization.aiexport.AiExportDocument;
@@ -90,6 +91,12 @@ public final class ActionScriptAiExporter {
             writer.nested(() -> {
                 RequirementAiExporter.writeContainer(writer, "Condition", whileBlock.condition, references, true);
                 writeBlockContent(writer, "Repeats", whileBlock, references);
+            });
+        } else if (executable instanceof ForEachExecutableBlock forEachBlock) {
+            writer.bullet("**FOR EACH ENTRY** of the list variable " + AiExportWriter.inlineCode(forEachBlock.getListVariableName()));
+            writer.nested(() -> {
+                writer.bullet("Inside, " + AiExportWriter.inlineCode("$$" + ForEachExecutableBlock.LIST_ENTRY_PLACEHOLDER) + " is the current entry and " + AiExportWriter.inlineCode("$$" + ForEachExecutableBlock.LIST_INDEX_PLACEHOLDER) + " its index (the first entry has index 0).");
+                writeBlockContent(writer, "Repeats for every entry", forEachBlock, references);
             });
         } else if (executable instanceof DelayExecutableBlock delayBlock) {
             writer.bullet("**DELAY GATE** of " + AiExportWriter.inlineCode(delayBlock.getDelayMsRaw()) + " milliseconds");

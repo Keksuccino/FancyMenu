@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.customization.action.blocks.statements.DelayExecu
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseIfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ExecuteLaterExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.statements.ForEachExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.IfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.WhileExecutableBlock;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
@@ -279,6 +280,7 @@ class ActionScriptEntryMoverTest {
         assertTrue(ActionScriptEntryMover.canMoveFreely(new FolderExecutableBlock()));
         assertTrue(ActionScriptEntryMover.canMoveFreely(new IfExecutableBlock()));
         assertTrue(ActionScriptEntryMover.canMoveFreely(new WhileExecutableBlock()));
+        assertTrue(ActionScriptEntryMover.canMoveFreely(new ForEachExecutableBlock()));
         assertTrue(ActionScriptEntryMover.canMoveFreely(new DelayExecutableBlock()));
         assertTrue(ActionScriptEntryMover.canMoveFreely(new ExecuteLaterExecutableBlock()));
         assertFalse(ActionScriptEntryMover.canMoveFreely(new ElseIfExecutableBlock()));
@@ -290,14 +292,16 @@ class ActionScriptEntryMoverTest {
         FolderExecutableBlock folder = new FolderExecutableBlock();
         IfExecutableBlock ifBlock = new IfExecutableBlock();
         WhileExecutableBlock whileBlock = new WhileExecutableBlock();
+        ForEachExecutableBlock forEachBlock = new ForEachExecutableBlock();
         DelayExecutableBlock delayBlock = new DelayExecutableBlock();
         ExecuteLaterExecutableBlock executeLaterBlock = new ExecuteLaterExecutableBlock();
-        List<AbstractExecutableBlock> collapsible = List.of(folder, ifBlock, whileBlock, delayBlock, executeLaterBlock);
+        List<AbstractExecutableBlock> collapsible = List.of(folder, ifBlock, whileBlock, forEachBlock, delayBlock, executeLaterBlock);
 
         collapsible.forEach(block -> assertFalse(ActionScriptEntryMover.isCollapsed(block)));
         folder.setCollapsed(true);
         ifBlock.setCollapsed(true);
         whileBlock.setCollapsed(true);
+        forEachBlock.setCollapsed(true);
         delayBlock.setCollapsed(true);
         executeLaterBlock.setCollapsed(true);
         collapsible.forEach(block -> assertTrue(ActionScriptEntryMover.isCollapsed(block)));

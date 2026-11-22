@@ -75,6 +75,10 @@ public class Placeholders {
     public static final Base64DecodePlaceholder BASE64_DECODE = new Base64DecodePlaceholder();
     public static final JsonPlaceholder JSON = new JsonPlaceholder();
     public static final GetVariablePlaceholder GET_VARIABLE = new GetVariablePlaceholder();
+    public static final ListGetPlaceholder LIST_GET = new ListGetPlaceholder();
+    public static final ListSizePlaceholder LIST_SIZE = new ListSizePlaceholder();
+    public static final ListIndexOfPlaceholder LIST_INDEX_OF = new ListIndexOfPlaceholder();
+    public static final ListJoinPlaceholder LIST_JOIN = new ListJoinPlaceholder();
     public static final LocalizationPlaceholder LOCALIZATION = new LocalizationPlaceholder();
     public static final CalculatorPlaceholder CALCULATOR = new CalculatorPlaceholder();
     public static final RandomNumberPlaceholder RANDOM_NUMBER = new RandomNumberPlaceholder();
@@ -359,6 +363,10 @@ public class Placeholders {
         PlaceholderRegistry.register(BASE64_DECODE);
         PlaceholderRegistry.register(JSON);
         PlaceholderRegistry.register(GET_VARIABLE);
+        PlaceholderRegistry.register(LIST_GET);
+        PlaceholderRegistry.register(LIST_SIZE);
+        PlaceholderRegistry.register(LIST_INDEX_OF);
+        PlaceholderRegistry.register(LIST_JOIN);
         PlaceholderRegistry.register(LOCALIZATION);
         PlaceholderRegistry.register(CALCULATOR);
         PlaceholderRegistry.register(RANDOM_NUMBER);

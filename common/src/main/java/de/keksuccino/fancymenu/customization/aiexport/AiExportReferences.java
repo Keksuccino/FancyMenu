@@ -94,11 +94,12 @@ public class AiExportReferences {
         writer.heading(3, "Action Script Blocks");
         writer.bullet("**IF / ELSE-IF / ELSE:** Runs the actions in a block only when its requirements are met. ELSE-IF and ELSE blocks only get checked when the blocks before them in the same chain did not run.");
         writer.bullet("**WHILE:** Runs the actions in it again and again for as long as its requirements are met. FancyMenu stops loops that run for too long, so they can't freeze the game.");
+        writer.bullet("**FOR EACH ENTRY:** Runs the actions in it once for every entry of a list variable, from the first entry to the last. Inside the loop, `$$list_entry` is the current entry and `$$list_index` its index (starting at 0); in nested loops they belong to the innermost loop. It reads the list once when it starts, so editing the list inside the loop doesn't change which entries it goes through. A missing variable or a text variable makes it run zero times. Like WHILE, it stops when it runs for too long.");
         writer.bullet("**DELAY GATE:** " + AiExportText.localized("fancymenu.actions.blocks.add.delay.desc"));
         writer.bullet("**EXECUTE LATER:** " + AiExportText.localized("fancymenu.actions.blocks.add.execute_later.desc"));
         writer.bullet("**FOLDER:** Only groups actions to keep the script tidy. Runs everything in it as if it was not in a folder.");
         writer.bullet("**COMMENT:** A note of the user. Does nothing.");
-        writer.bullet("**$$name:** Value placeholders. Listeners and some elements give their action scripts values like `$$key`, which get replaced in action values and requirement values when the script runs. In normal texts, `$$name` gets replaced with the value of the FancyMenu variable with that name.");
+        writer.bullet("**$$name:** Value placeholders. Listeners and some elements give their action scripts values like `$$key`, which get replaced in action values and requirement values when the script runs. In normal texts, `$$name` gets replaced with the value of the FancyMenu variable with that name, which is a JSON array of strings for list variables.");
     }
 
 }

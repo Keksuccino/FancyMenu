@@ -14,4 +14,7 @@ public interface AccessorMixinMouseHandler {
     @Invoker("onButton")
     void invoke_onButton_FancyMenu(long window, MouseButtonInfo buttonInfo, int action);
 
+    @Invoker("onScroll")
+    void invoke_onScroll_FancyMenu(long window, double xOffset, double yOffset);
+
 }

@@ -27,8 +27,8 @@ import org.jetbrains.annotations.NotNull;
  * </ul>
  *
  * <p>Where the scope gets opened: {@link de.keksuccino.fancymenu.customization.action.ActionInstance#execute()} (its value
- * and everything the action reads while it executes), the condition checks of IF, ELSE IF and WHILE blocks, and the delay
- * values of Delay and Execute Later blocks. These are the only places where action scripts read values, so script entry
+ * and everything the action reads while it executes), the condition checks of IF, ELSE IF and WHILE blocks, the list names of
+ * FOR EACH blocks, and the delay values of Delay and Execute Later blocks. These are the only places where action scripts read values, so script entry
  * points (buttons, tickers in both modes, listeners, schedulers, menu open and close scripts, browser actions, the
  * scheduled runs of Execute Later blocks) don't need to open it themselves. Script code that reads values somewhere else
  * has to open it itself.</p>

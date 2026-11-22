@@ -13,6 +13,7 @@ import de.keksuccino.fancymenu.customization.listener.ListenerHandler;
 import de.keksuccino.fancymenu.customization.scheduler.SchedulerHandler;
 import de.keksuccino.fancymenu.customization.scheduler.SchedulerInstance;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
+import de.keksuccino.fancymenu.customization.variables.VariableType;
 import de.keksuccino.fancymenu.platform.Services;
 import de.keksuccino.fancymenu.util.SystemSpecsUtils;
 import de.keksuccino.fancymenu.util.ffmpeg.downloader.FFMPEGDownloader;
@@ -69,7 +70,7 @@ public final class SystemAiExporter {
         long universalLayouts = layouts.stream().filter(Layout::isUniversalLayout).count();
         writer.fieldText("Layouts", layouts.size() + " (" + enabledLayouts + " enabled, " + universalLayouts + " universal)");
         writer.fieldText("Custom GUIs", CustomGuiHandler.getGuis().size() + " (" + CustomGuiHandler.getOverriddenScreens().size() + " screens get replaced by custom GUIs)");
-        writer.fieldText("Variables", String.valueOf(VariableHandler.getVariables().size()));
+        writer.fieldText("Variables", VariableHandler.getVariableNames().size() + " (" + VariableHandler.getVariableNames(VariableType.LIST).size() + " of them lists)");
         writer.fieldText("Listeners", String.valueOf(ListenerHandler.getInstances().size()));
         List<SchedulerInstance> schedulers = SchedulerHandler.getInstances();
         writer.fieldText("Schedulers", schedulers.size() + " (" + schedulers.stream().filter(SchedulerHandler::isRunning).count() + " running right now)");
