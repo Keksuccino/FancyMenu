@@ -21,17 +21,28 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.system.MemoryUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.LockSupport;
 
+/**
+ * Plays an FMA archive. Its stream thread decodes the PNG frames ahead of playback and publishes them when they are due, the render thread uploads them.<br><br>
+ *
+ * <b>Threading:</b> The stream thread decodes frames without holding the {@link #streamStateLock}, so the render thread never waits for a decode when it resets, pauses or closes the texture.
+ * Every reset or close starts a new {@link #streamGeneration}, and streams of older generations change nothing anymore. Closing releases the archive file right away, see {@link FmaDecoder}.<br>
+ * The stream thread never gets interrupted, because an interrupt while it reads a frame would close the file channel of the archive for good, see {@link #sleepQuietly(long)}.
+ */
 public class FmaTexture implements ITexture, PlayableResource {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -76,6 +87,9 @@ public class FmaTexture implements ITexture, PlayableResource {
 
     @Nullable
     protected volatile FmaDecoder decoder = null;
+    /** The decoder that reads the archive while the texture loads, so closing the texture can release its file right away, also while the loading thread still reads it. **/
+    @Nullable
+    protected volatile FmaDecoder loadingDecoder = null;
 
     protected final String uniqueId = ScreenCustomization.generateUniqueIdentifier();
 
@@ -222,36 +236,60 @@ public class FmaTexture implements ITexture, PlayableResource {
         return of(in, null, null);
     }
 
+    /**
+     * Closes the passed {@link InputStream}.
+     */
     protected static void populateTexture(@NotNull FmaTexture texture, @NotNull InputStream in, @NotNull String fmaTextureName) {
-        if (!texture.closed.get()) {
-            DecodedFmaImage decodedImage;
-            try {
-                decodedImage = decodeFma(in, fmaTextureName);
-            } catch (Exception ex) {
-                texture.decoded.set(true);
-                texture.markLoadingFailed();
-                // Closing the texture closes the stream of its file right away, so copying it fails then, which is no error
-                if (!texture.closed.get()) LOGGER.error("[FANCYMENU] Failed to decode FMA image: " + fmaTextureName, ex);
-                CloseableUtils.closeQuietly(in);
-                texture.loadingFileStream = null;
-                return;
-            }
-
-            try {
-                texture.configureStreamingState(decodedImage);
-            } catch (Exception ex) {
-                texture.markLoadingFailed();
-                LOGGER.error("[FANCYMENU] Failed to initialize streaming state for FMA image: " + fmaTextureName, ex);
-            }
-
-            texture.decoded.set(true);
-        }
-
+        texture.populate(in, fmaTextureName);
         CloseableUtils.closeQuietly(in);
         texture.loadingFileStream = null;
     }
 
     protected FmaTexture() {
+    }
+
+    /**
+     * Reads the archive with a new decoder and prepares streaming it. Closed textures don't read it.<br>
+     * The decoder is the {@link #loadingDecoder} while it reads, so closing the texture releases its file right away. Its reads fail then, which is no error.
+     */
+    protected void populate(@NotNull InputStream in, @NotNull String fmaTextureName) {
+        if (this.closed.get()) return;
+        FmaDecoder decoder = this.createDecoder();
+        this.loadingDecoder = decoder;
+        try {
+            // close() first marks the texture as closed and then releases the loading decoder, so checking again after tracking the decoder never misses a close
+            if (this.closed.get()) return;
+            DecodedFmaImage decodedImage;
+            try {
+                decodedImage = decodeFma(decoder, in, fmaTextureName);
+            } catch (Exception ex) {
+                this.decoded.set(true);
+                this.markLoadingFailed();
+                // Closing the texture closes the stream of its file and the archive of its decoder right away, so reading them fails then, which is no error
+                if (!this.closed.get()) LOGGER.error("[FANCYMENU] Failed to decode FMA image: " + fmaTextureName, ex);
+                return;
+            }
+
+            try {
+                this.configureStreamingState(decodedImage);
+                // The texture owns the decoder now
+                decoder = null;
+            } catch (Exception ex) {
+                this.markLoadingFailed();
+                this.decoder = null;
+                LOGGER.error("[FANCYMENU] Failed to initialize streaming state for FMA image: " + fmaTextureName, ex);
+            }
+
+            this.decoded.set(true);
+        } finally {
+            this.loadingDecoder = null;
+            CloseableUtils.closeQuietly(decoder);
+        }
+    }
+
+    @NotNull
+    protected FmaDecoder createDecoder() {
+        return new FmaDecoder();
     }
 
     protected void configureStreamingState(@NotNull DecodedFmaImage decodedImage) {
@@ -338,6 +376,7 @@ public class FmaTexture implements ITexture, PlayableResource {
             synchronized (this.streamStateLock) {
                 this.clearPrefetchedFramesLocked();
             }
+            this.clearPendingUploadFrame();
             return 100L;
         }
 
@@ -346,6 +385,16 @@ public class FmaTexture implements ITexture, PlayableResource {
                 return this.initializeFirstFrame(generation) ? 0L : IDLE_SLEEP_MS;
             }
 
+            if (this.shouldIdleOnSingleInfiniteMainFrame()) {
+                synchronized (this.streamStateLock) {
+                    this.clearPrefetchedFramesLocked();
+                }
+                this.completeHeldMainFrameCycle(now);
+                return 100L;
+            }
+
+            if (this.pendingUploadFrame.get() != null) return IDLE_SLEEP_MS;
+
             this.fillPrefetchQueue(generation);
 
             long elapsed = now - this.playbackFrameStartMs;
@@ -353,9 +402,8 @@ public class FmaTexture implements ITexture, PlayableResource {
             if (elapsed < delay) return Math.min(IDLE_SLEEP_MS, delay - elapsed);
 
             if (this.isAtNormalCycleBoundary()) {
-                CycleBoundaryResult cycleBoundaryResult = this.handleCycleBoundary(generation);
                 // Stale streams end their loop, stopped ones idle from the next iteration on
-                if (cycleBoundaryResult != CycleBoundaryResult.RESTART) return 0L;
+                if (this.handleCycleBoundary(generation) != CycleBoundaryResult.RESTART) return 0L;
             }
 
             DecodedFrame next = this.pollPrefetchedFrame(generation);
@@ -382,38 +430,47 @@ public class FmaTexture implements ITexture, PlayableResource {
         return true;
     }
 
+    /**
+     * Decodes frames ahead of playback until the queue is full. The frames get decoded without holding the stream state lock, so the render thread never waits for a decode,
+     * and only get queued if no reset or close started a new generation in the meantime.
+     */
     protected void fillPrefetchQueue(int generation) {
-        synchronized (this.streamStateLock) {
-            while (!this.closed.get() && (generation == this.streamGeneration.get()) && (this.prefetchedFrames.size() < PREFETCH_QUEUE_SIZE)) {
-                DecodedFrame decodedFrame = this.decodeNextFrame();
-                if (decodedFrame == null) {
-                    break;
-                }
-                if (generation != this.streamGeneration.get()) {
-                    decodedFrame.close();
-                    break;
-                }
-                this.prefetchedFrames.addLast(decodedFrame);
+        while (!this.closed.get()) {
+            boolean intro;
+            int index;
+            synchronized (this.streamStateLock) {
+                if ((generation != this.streamGeneration.get()) || (this.prefetchedFrames.size() >= PREFETCH_QUEUE_SIZE)) return;
+                intro = this.decodeIntro;
+                index = this.decodeIndex;
             }
+
+            DecodedFrame decodedFrame = this.decodeFrame(intro, index);
+            if (decodedFrame == null) return;
+
+            synchronized (this.streamStateLock) {
+                // close() marks the texture as closed before it clears the queue while holding the lock, so frames that come after it never get queued
+                if ((generation == this.streamGeneration.get()) && !this.closed.get()) {
+                    this.prefetchedFrames.addLast(decodedFrame);
+                    this.advanceDecodeCursor();
+                    continue;
+                }
+            }
+            decodedFrame.close();
+            return;
         }
     }
 
     @Nullable
-    protected DecodedFrame decodeNextFrame() {
-        boolean intro = this.decodeIntro;
-        int index = this.decodeIndex;
-
-        long delay = this.resolveFrameDelay(intro, index);
+    protected DecodedFrame decodeFrame(boolean intro, int index) {
         NativeImage frameImage = this.decodeFrameImage(intro, index);
         if (frameImage == null) {
-            if (this.loadingCompleted.get()) {
+            // Closing the texture releases the archive file right away, so reads that come after it fail, which is no error
+            if (this.loadingCompleted.get() && !this.closed.get()) {
                 this.markLoadingFailed();
             }
             return null;
         }
-
-        this.advanceDecodeCursor();
-        return new DecodedFrame(intro, index, delay, frameImage);
+        return new DecodedFrame(intro, index, this.resolveFrameDelay(intro, index), frameImage);
     }
 
     protected long resolveFrameDelay(boolean intro, int index) {
@@ -437,18 +494,35 @@ public class FmaTexture implements ITexture, PlayableResource {
         if (activeDecoder == null) return null;
 
         try {
-            InputStream frameInput = intro ? activeDecoder.getIntroFrame(index) : activeDecoder.getFrame(index);
-            if (frameInput == null) return null;
-
-            try (InputStream closeableInput = frameInput) {
-                return NativeImage.read(closeableInput);
-            }
+            byte[] framePng = intro ? activeDecoder.readIntroFrame(index) : activeDecoder.readFrame(index);
+            if (framePng == null) return null;
+            return readFrameImage(framePng);
         } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to decode {} frame {} of FMA stream", intro ? "intro" : "normal", index, ex);
+            // Closing the texture releases the archive file right away, so reads that come after it fail, which is no error
+            if (!this.closed.get()) LOGGER.error("[FANCYMENU] Failed to decode {} frame {} of FMA stream", intro ? "intro" : "normal", index, ex);
             return null;
         }
     }
 
+    /**
+     * Decodes the PNG of a frame through a direct buffer of its exact size.<br>
+     * <b>Don't use {@link NativeImage#read(byte[])} instead:</b> it copies the bytes onto the {@link org.lwjgl.system.MemoryStack} of the thread, which only has 64 KB,
+     * so frames bigger than that throw an {@link OutOfMemoryError}.
+     */
+    @NotNull
+    protected static NativeImage readFrameImage(@NotNull byte[] framePng) throws IOException {
+        ByteBuffer buffer = MemoryUtil.memAlloc(framePng.length);
+        try {
+            buffer.put(framePng).flip();
+            return NativeImage.read(buffer);
+        } finally {
+            MemoryUtil.memFree(buffer);
+        }
+    }
+
+    /**
+     * Moves the decode cursor to the frame after the one that got decoded last. Must only get called while holding the stream state lock.
+     */
     protected void advanceDecodeCursor() {
         if (this.decodeIntro) {
             if ((this.decodeIndex + 1) < this.introFrameCount) {
@@ -473,6 +547,9 @@ public class FmaTexture implements ITexture, PlayableResource {
         }
     }
 
+    /**
+     * Takes the next decoded frame. Streams of older generations get none, because the queue belongs to the stream of the current generation.
+     */
     @Nullable
     protected DecodedFrame pollPrefetchedFrame(int generation) {
         synchronized (this.streamStateLock) {
@@ -527,6 +604,12 @@ public class FmaTexture implements ITexture, PlayableResource {
         return this.playbackInitialized && !this.playbackIntro && (this.frameCount > 0) && (this.playbackIndex == (this.frameCount - 1));
     }
 
+    /**
+     * Counts the finished play cycle and returns if the sequence restarts from its first frame or stops.<br>
+     * Streams of older generations change nothing, because a reset that replaced them can happen while they finish a cycle. The check and the changes happen while holding the stream state lock,
+     * which resets hold too, so a reset never loses its fresh playback state to a stream it replaced.
+     */
+    @NotNull
     protected CycleBoundaryResult handleCycleBoundary(int generation) {
         boolean willRestart;
         synchronized (this.streamStateLock) {
@@ -546,6 +629,9 @@ public class FmaTexture implements ITexture, PlayableResource {
         return willRestart ? CycleBoundaryResult.RESTART : CycleBoundaryResult.STOP;
     }
 
+    /**
+     * Emits the start event when the frame is the first one of a play cycle. Streams of older generations emit nothing, so they never take the pending start event of a reset.
+     */
     protected void maybeEmitStartEvent(boolean isIntroFrame, int frameIndex, int generation) {
         boolean willRestart;
         synchronized (this.streamStateLock) {
@@ -572,6 +658,23 @@ public class FmaTexture implements ITexture, PlayableResource {
         int plays = this.numPlays.get();
         if (plays <= 0) return true;
         return (this.cycles.get() + 1) < plays;
+    }
+
+    protected boolean shouldIdleOnSingleInfiniteMainFrame() {
+        return this.playbackInitialized
+                && !this.playbackIntro
+                && (this.playbackIndex == 0)
+                && (this.frameCount == 1)
+                && (this.numPlays.get() <= 0);
+    }
+
+    /**
+     * A single infinitely looping main frame gets held instead of replayed, so it never reaches the normal cycle boundary.
+     * Its first full display still counts as a completed play cycle.
+     */
+    protected void completeHeldMainFrameCycle(long now) {
+        if ((now - this.playbackFrameStartMs) < Math.max(MIN_FRAME_DELAY_MS, this.playbackFrameDelayMs)) return;
+        this.cycles.compareAndSet(0, 1);
     }
 
     /**
@@ -605,6 +708,7 @@ public class FmaTexture implements ITexture, PlayableResource {
     }
 
     protected void requestPlaybackReset() {
+        Thread running;
         synchronized (this.streamStateLock) {
             this.streamGeneration.incrementAndGet();
             this.cycles.set(0);
@@ -621,13 +725,12 @@ public class FmaTexture implements ITexture, PlayableResource {
             this.decodeIndex = 0;
             this.clearPrefetchedFramesLocked();
             this.clearPendingUploadFrame();
+            running = this.streamThread;
+            this.streamThread = null;
         }
 
-        Thread running = this.streamThread;
-        if (running != null) {
-            running.interrupt();
-        }
-        this.streamThread = null;
+        // Ends the replaced stream right away if it sleeps, a decode it runs right now finishes first and gets dropped
+        LockSupport.unpark(running);
     }
 
     protected void uploadPendingFrameToTexture() {
@@ -671,14 +774,21 @@ public class FmaTexture implements ITexture, PlayableResource {
     protected void replaceStreamingTexture(@NotNull DecodedFrame frame) {
         NativeImage frameImage = Objects.requireNonNull(frame.nativeImage, "FMA frame NativeImage was NULL");
         DynamicTexture previousTexture = this.streamingTexture;
-        ResourceLocation previousLocation = this.streamingResourceLocation;
-        this.streamingTexture = null;
-        this.streamingResourceLocation = null;
-        this.releaseStreamingTexture(previousLocation, previousTexture);
+        ResourceLocation resourceLocation = this.streamingResourceLocation;
+        boolean hadResourceLocation = resourceLocation != null;
+        if (resourceLocation == null) {
+            resourceLocation = new ResourceLocation("fancymenu", "dynamic/fma_stream_" + this.uniqueId);
+            this.streamingResourceLocation = resourceLocation;
+        } else {
+            Minecraft.getInstance().getTextureManager().release(resourceLocation);
+        }
+        if ((previousTexture != null) && !hadResourceLocation) {
+            previousTexture.close();
+        }
 
         this.streamingTexture = new DynamicTexture(frameImage);
         frame.nativeImage = null;
-        this.streamingResourceLocation = Minecraft.getInstance().getTextureManager().register("fancymenu_fma_stream_" + this.uniqueId, this.streamingTexture);
+        Minecraft.getInstance().getTextureManager().register(resourceLocation, this.streamingTexture);
     }
 
     @Nullable
@@ -751,9 +861,10 @@ public class FmaTexture implements ITexture, PlayableResource {
     public void reset() {
         if (this.closed.get()) return;
 
+        this.requestPlaybackReset();
+        // Set after the reset, because a stream it replaced can still stop the playback when it finishes the last cycle right before the reset
         this.playRequested = true;
         this.pausedRequested = false;
-        this.requestPlaybackReset();
         this.resetFrame.requestRestore();
         this.startTickerIfNeeded();
     }
@@ -837,10 +948,9 @@ public class FmaTexture implements ITexture, PlayableResource {
         this.streamGeneration.incrementAndGet();
 
         Thread running = this.streamThread;
-        if (running != null) {
-            running.interrupt();
-        }
         this.streamThread = null;
+        // Ends the stream right away if it sleeps, a decode it runs right now fails or gets dropped
+        LockSupport.unpark(running);
 
         synchronized (this.streamStateLock) {
             this.clearPrefetchedFramesLocked();
@@ -850,10 +960,16 @@ public class FmaTexture implements ITexture, PlayableResource {
         this.releaseStreamingTextureNow();
         this.resetFrame.close();
 
+        // Released before the streaming decoder, because a loading thread that finishes right now first makes its decoder the streaming decoder and then stops tracking it
+        FmaDecoder activeLoadingDecoder = this.loadingDecoder;
+        if (activeLoadingDecoder != null) {
+            activeLoadingDecoder.closeArchiveFile();
+        }
         FmaDecoder activeDecoder = this.decoder;
         this.decoder = null;
+        // Only the file gets released, because the stream thread can still be using the decoder. The rest of it holds no system resources.
         if (activeDecoder != null) {
-            CloseableUtils.closeQuietly(activeDecoder);
+            activeDecoder.closeArchiveFile();
         }
 
         this.sourceLocation = null;
@@ -892,7 +1008,8 @@ public class FmaTexture implements ITexture, PlayableResource {
     protected void releaseStreamingTexture(@Nullable ResourceLocation resourceLocation, @Nullable DynamicTexture texture) {
         if (resourceLocation != null) {
             Minecraft.getInstance().getTextureManager().release(resourceLocation);
-        } else if (texture != null) {
+        }
+        if (texture != null) {
             try {
                 texture.close();
             } catch (Exception ex) {
@@ -902,26 +1019,25 @@ public class FmaTexture implements ITexture, PlayableResource {
     }
 
     /**
-     * Reads an FMA image from the stream into a new decoder. Closes the stream.
+     * Reads an FMA image from the stream with the decoder. Closes the stream, and the decoder if reading fails.
      *
      * @throws IOException If the stream holds no valid FMA image or reading it failed.
      */
     @NotNull
-    public static DecodedFmaImage decodeFma(@NotNull InputStream in, @NotNull String fmaName) throws IOException {
-        FmaDecoder decoder = new FmaDecoder();
+    public static DecodedFmaImage decodeFma(@NotNull FmaDecoder decoder, @NotNull InputStream in, @NotNull String fmaName) throws IOException {
         try {
             decoder.read(in);
             warnAboutExpensiveFmaFrames(decoder, fmaName);
 
             FmaDecoder.FmaMetadata metadata = Objects.requireNonNull(decoder.getMetadata(), "FmaDecoder returned NULL for metadata!");
-            InputStream firstFrameStream = decoder.hasIntroFrames() ? decoder.getIntroFrame(0) : decoder.getFirstFrame();
-            if (firstFrameStream == null) {
+            byte[] firstFramePng = decoder.hasIntroFrames() ? decoder.readIntroFrame(0) : decoder.readFirstFrame();
+            if (firstFramePng == null) {
                 throw new NullPointerException("Failed to get first frame of FMA image!");
             }
 
             int imageWidth;
             int imageHeight;
-            try (InputStream closeableFirstFrame = firstFrameStream; NativeImage firstFrameImage = NativeImage.read(closeableFirstFrame)) {
+            try (NativeImage firstFrameImage = readFrameImage(firstFramePng)) {
                 imageWidth = firstFrameImage.getWidth();
                 imageHeight = firstFrameImage.getHeight();
             }
@@ -950,7 +1066,8 @@ public class FmaTexture implements ITexture, PlayableResource {
             String displayName = resolveFmaDisplayName(fmaName);
             MainThreadTaskExecutor.executeInMainThread(() -> Dialogs.openExpensiveFmaWarning(displayName), MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
         } catch (Exception ex) {
-            LOGGER.warn("[FANCYMENU] Failed to scan FMA for expensive sampled frames before loading: {}", fmaName, ex);
+            // Closing the texture releases the archive file right away, so reads that come after it fail, which is no problem
+            if (!decoder.archiveFileReleased) LOGGER.warn("[FANCYMENU] Failed to scan FMA for expensive sampled frames before loading: {}", fmaName, ex);
         }
     }
 
@@ -964,13 +1081,13 @@ public class FmaTexture implements ITexture, PlayableResource {
         return normalized;
     }
 
+    /**
+     * Lets the stream thread wait until the time passed or until a reset or close wakes it up with {@link LockSupport#unpark(Thread)}.<br>
+     * <b>Never interrupt the stream thread instead:</b> it reads the frames from a {@link java.nio.channels.FileChannel}, which an interrupt during a read closes for good,
+     * so every later frame would fail and the texture would stop playing.
+     */
     protected static void sleepQuietly(long millis) {
-        try {
-            Thread.sleep(Math.max(1L, millis));
-        } catch (InterruptedException ignored) {
-            Thread.currentThread().interrupt();
-        } catch (Exception ignored) {
-        }
+        LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(Math.max(1L, millis)));
     }
 
     protected static class DecodedFrame implements AutoCloseable {
@@ -999,13 +1116,17 @@ public class FmaTexture implements ITexture, PlayableResource {
         }
     }
 
+    public record DecodedFmaImage(@NotNull FmaDecoder decoder, int imageWidth, int imageHeight, int numPlays) {
+    }
+
+    /**
+     * What happens at the end of a play cycle, see {@link #handleCycleBoundary(int)}.
+     */
     protected enum CycleBoundaryResult {
+        /** A reset replaced the stream, so it ends without changing anything. **/
         STALE,
         RESTART,
         STOP
-    }
-
-    public record DecodedFmaImage(@NotNull FmaDecoder decoder, int imageWidth, int imageHeight, int numPlays) {
     }
 
 }

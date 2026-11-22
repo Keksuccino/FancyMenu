@@ -25,8 +25,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayDeque;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.LockSupport;
 
 public class AfmaTexture implements ITexture, PlayableResource {
 
@@ -615,7 +617,7 @@ public class AfmaTexture implements ITexture, PlayableResource {
             if (first == null) return;
 
             try {
-                boolean useRestoredFrame = shouldUseRestoredFrame(this.playbackResetFrameRestored, first.index, first.intro, this.introFrameCount);
+                boolean useRestoredFrame = this.isRestoredResetFrame(first);
                 this.playbackResetFrameRestorePending = false;
                 this.playbackResetFrameRestored = false;
                 if (!useRestoredFrame) {
@@ -913,6 +915,9 @@ public class AfmaTexture implements ITexture, PlayableResource {
     }
 
     protected void uploadDirtyRect(@NotNull DynamicTexture texture, @NotNull NativeImage canvas, @NotNull AfmaRect dirtyRect) {
+        if ((dirtyRect.width() <= 0) || (dirtyRect.height() <= 0)) {
+            return;
+        }
         if ((dirtyRect.width() >= canvas.getWidth()) && (dirtyRect.height() >= canvas.getHeight())) {
             texture.upload();
             return;
@@ -1025,6 +1030,14 @@ public class AfmaTexture implements ITexture, PlayableResource {
         throw new IllegalStateException(message);
     }
 
+    /**
+     * If the frame is the first frame after a reset that already shows, because the texture got the reset frame snapshot back. The frame must not get applied again then:
+     * the snapshot is a fully composed frame, and applying delta, copy, residual or block-inter operations onto it again would break the picture.
+     */
+    protected boolean isRestoredResetFrame(@NotNull PreparedFrame frame) {
+        return this.playbackResetFrameRestored && (frame.index == 0) && (frame.intro || (this.introFrameCount <= 0));
+    }
+
     protected boolean isAtNormalCycleBoundary() {
         return this.playbackInitialized && !this.playbackIntro && (this.frameCount > 0) && (this.playbackIndex == (this.frameCount - 1));
     }
@@ -1084,10 +1097,6 @@ public class AfmaTexture implements ITexture, PlayableResource {
         this.cycles.compareAndSet(0, 1);
     }
 
-    protected static boolean shouldUseRestoredFrame(boolean restored, int frameIndex, boolean intro, int introFrameCount) {
-        return restored && (frameIndex == 0) && (intro || (introFrameCount <= 0));
-    }
-
     /**
      * If the texture holds its visible frame, because it got rendered while paused and didn't get rendered playing since. The stream thread doesn't decode ahead then.
      * Pauses while nobody renders the texture paused don't hold it, so pauses of other users of a shared texture don't stall it.
@@ -1118,10 +1127,8 @@ public class AfmaTexture implements ITexture, PlayableResource {
             this.clearPrefetchedFramesLocked();
         }
 
-        Thread running = this.streamThread;
-        if (running != null) {
-            running.interrupt();
-        }
+        // Ends the replaced stream right away if it sleeps, a read it runs right now finishes first and gets dropped
+        LockSupport.unpark(this.streamThread);
 
         synchronized (this.streamStateLock) {
             if (nextGeneration == this.streamGeneration.get()) {
@@ -1286,10 +1293,8 @@ public class AfmaTexture implements ITexture, PlayableResource {
 
         this.streamGeneration.incrementAndGet();
 
-        Thread running = this.streamThread;
-        if (running != null) {
-            running.interrupt();
-        }
+        // Ends the stream right away if it sleeps, a read it runs right now finishes first
+        LockSupport.unpark(this.streamThread);
 
         synchronized (this.streamStateLock) {
             this.clearPrefetchedFramesLocked();
@@ -1311,13 +1316,13 @@ public class AfmaTexture implements ITexture, PlayableResource {
         this.sourceURL = null;
     }
 
+    /**
+     * Lets the stream thread wait until the time passed or until a reset, close or failure wakes it up with {@link LockSupport#unpark(Thread)}.<br>
+     * <b>Never interrupt the stream thread instead:</b> legacy ZIP archives get read through a {@link java.nio.channels.FileChannel}, which an interrupt during a read closes for good,
+     * so every later frame would fail and the texture would stop playing.
+     */
     protected static void sleepQuietly(long millis) {
-        try {
-            Thread.sleep(Math.max(1L, millis));
-        } catch (InterruptedException ignored) {
-            Thread.currentThread().interrupt();
-        } catch (Exception ignored) {
-        }
+        LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(Math.max(1L, millis)));
     }
 
     protected void failStreaming(@NotNull String message, @Nullable Throwable throwable) {
@@ -1331,8 +1336,9 @@ public class AfmaTexture implements ITexture, PlayableResource {
             this.clearPrefetchedFramesLocked();
         }
         Thread running = this.streamThread;
-        if ((running != null) && (running != Thread.currentThread())) {
-            running.interrupt();
+        if (running != Thread.currentThread()) {
+            // Ends the stream right away if it sleeps
+            LockSupport.unpark(running);
         }
         this.requestDecoderRelease();
         this.playbackResetFrameRestorePending = false;
