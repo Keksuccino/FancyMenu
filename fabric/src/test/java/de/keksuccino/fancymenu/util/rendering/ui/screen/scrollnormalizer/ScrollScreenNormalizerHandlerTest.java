@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.rendering.ui.screen.scrollnormalizer;
 
+import de.keksuccino.fancymenu.LegacyHandler;
 import de.keksuccino.fancymenu.customization.profile.ProfileMetadata;
 import de.keksuccino.fancymenu.customization.profile.ProfileStorage;
 import de.keksuccino.fancymenu.customization.profile.ProfileSwitcher;
@@ -135,7 +136,7 @@ class ScrollScreenNormalizerHandlerTest {
      * Does what FancyMenu does with the file at launch, which happens with the profile that is active at that time.
      */
     private void launch() {
-        ScrollScreenNormalizerHandler.migrateLegacyFile(this.legacyFile, this.activeProfileFile);
+        LegacyHandler.moveLegacyFileIntoActiveProfile(this.legacyFile, this.activeProfileFile);
     }
 
     /**
