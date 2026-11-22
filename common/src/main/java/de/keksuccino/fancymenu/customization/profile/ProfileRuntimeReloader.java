@@ -12,6 +12,7 @@ import de.keksuccino.fancymenu.customization.element.elements.animationcontrolle
 import de.keksuccino.fancymenu.customization.element.elements.animationcontroller.AnimationControllerStateController;
 import de.keksuccino.fancymenu.customization.element.elements.audio.AudioElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.audio.AudioElementController;
+import de.keksuccino.fancymenu.customization.element.elements.checkbox.CheckboxStatesHandler;
 import de.keksuccino.fancymenu.customization.element.elements.video.VideoElementController;
 import de.keksuccino.fancymenu.customization.fmdata.FmDataServerListenerHandler;
 import de.keksuccino.fancymenu.customization.fmdata.FmDataWelcomeDataHandler;
@@ -116,6 +117,7 @@ public final class ProfileRuntimeReloader {
         AudioElementController.reload();
         AnimationControllerStateController.reload();
         ScrollScreenNormalizerHandler.reload();
+        CheckboxStatesHandler.reload();
         FmDataServerListenerHandler.reload();
         FmDataWelcomeDataHandler.reload();
         OncePerSessionRequirement.clearSeenInstances();
