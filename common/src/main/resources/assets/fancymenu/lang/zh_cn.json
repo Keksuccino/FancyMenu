@@ -4125,7 +4125,7 @@
   "fancymenu.profiles.error.busy": "另一个配置档操作还在进行中，请等它完成。",
   "fancymenu.profiles.error.reason.invalid_archive": "这个文件不是有效的 FancyMenu 配置档。",
   "fancymenu.profiles.error.reason.no_space": "磁盘空间不足。配置档需要 %s，但只有 %s 可用。",
-  "fancymenu.profiles.error.reason.file_in_use": "部分文件正被其他程序占用。请关闭可能在使用它们的程序后再试一次。",
+  "fancymenu.profiles.error.reason.file_in_use": "部分文件还在使用中。可能只是游戏本身还在加载音频之类的内容，等几秒再试一次就好。如果一直这样，请关闭可能在使用它们的程序，比如杀毒软件、云同步或文件资源管理器窗口。",
   "fancymenu.profiles.error.reason.generic": "详情：%s",
   "fancymenu.profiles.edit.title": "编辑配置档",
   "fancymenu.profiles.edit.profile_title": "标题",

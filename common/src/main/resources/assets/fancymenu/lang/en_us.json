@@ -4125,7 +4125,7 @@
   "fancymenu.profiles.error.busy": "Another profile operation is still running. Please wait until it's done.",
   "fancymenu.profiles.error.reason.invalid_archive": "This file isn't a valid FancyMenu profile.",
   "fancymenu.profiles.error.reason.no_space": "There's not enough free disk space. The profile needs %s, but only %s are free.",
-  "fancymenu.profiles.error.reason.file_in_use": "Some of its files are in use by another program. Close programs that might use them and try again.",
+  "fancymenu.profiles.error.reason.file_in_use": "Some of its files are still in use. It might just be the game itself still loading stuff like audio, so wait a few seconds and try again. If it keeps happening, close programs that could be using them, like your antivirus, cloud sync or a file explorer window.",
   "fancymenu.profiles.error.reason.generic": "Details: %s",
   "fancymenu.profiles.edit.title": "Edit Profile",
   "fancymenu.profiles.edit.profile_title": "Title",
