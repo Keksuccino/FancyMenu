@@ -157,7 +157,7 @@ public class OggAudio implements IAudio, ALAudio {
         }
 
         FancyMenuThreads.startDaemonThread(() -> {
-            InputStream in = ALAudioLoader.openSource(() -> WebUtils.openResourceStream(oggAudioURL, WebUtils.WebResourceType.AUDIO), oggAudioURL, clip, () -> audio.loadingFailed = true);
+            InputStream in = ALAudioLoader.openSource(() -> WebUtils.openResourceStreamOrThrow(oggAudioURL, WebUtils.WebResourceType.AUDIO), oggAudioURL, clip, () -> audio.loadingFailed = true);
             if (in != null) of(in, oggAudioURL, audio, clip);
         }, "OggAudio-WebLoader");
 
@@ -374,7 +374,7 @@ public class OggAudio implements IAudio, ALAudio {
 
     @Override
     public @Nullable InputStream open() throws IOException {
-        if (this.sourceURL != null) return WebUtils.openResourceStream(this.sourceURL, WebUtils.WebResourceType.AUDIO);
+        if (this.sourceURL != null) return WebUtils.openResourceStreamOrThrow(this.sourceURL, WebUtils.WebResourceType.AUDIO);
         if (this.sourceFile != null) return new FileInputStream(this.sourceFile);
         if (this.sourceLocation != null) return Minecraft.getInstance().getResourceManager().open(this.sourceLocation);
         return null;
