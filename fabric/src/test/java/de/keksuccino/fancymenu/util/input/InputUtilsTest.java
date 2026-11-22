@@ -82,4 +82,15 @@ class InputUtilsTest {
         assertFalse(InputUtils.isCut(GLFW.GLFW_KEY_X, 0, SHORTCUT | GLFW.GLFW_MOD_ALT));
     }
 
+    @Test
+    void onlyTheShortcutModifierWithoutShiftAndAltCountsAsIt() {
+        int otherModifier = (SHORTCUT == GLFW.GLFW_MOD_SUPER) ? GLFW.GLFW_MOD_CONTROL : GLFW.GLFW_MOD_SUPER;
+        assertTrue(InputUtils.isOnlyGuiShortcutModifierDown(SHORTCUT));
+        assertFalse(InputUtils.isOnlyGuiShortcutModifierDown(0));
+        assertFalse(InputUtils.isOnlyGuiShortcutModifierDown(otherModifier));
+        assertFalse(InputUtils.isOnlyGuiShortcutModifierDown(SHORTCUT | GLFW.GLFW_MOD_SHIFT));
+        // Windows reports AltGr as Control and Alt together, which types characters like "€" on many keyboard layouts
+        assertFalse(InputUtils.isOnlyGuiShortcutModifierDown(SHORTCUT | GLFW.GLFW_MOD_ALT));
+    }
+
 }

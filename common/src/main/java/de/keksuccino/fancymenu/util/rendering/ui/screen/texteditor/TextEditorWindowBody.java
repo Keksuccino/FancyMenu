@@ -9,6 +9,7 @@ import de.keksuccino.fancymenu.util.input.InputUtils;
 import de.keksuccino.fancymenu.util.rendering.DrawableColor;
 import de.keksuccino.fancymenu.util.rendering.SmoothRectangleRenderer;
 import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
+import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcon;
 import de.keksuccino.fancymenu.util.rendering.ui.icon.MaterialIcons;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuHandler;
@@ -147,6 +148,7 @@ public class TextEditorWindowBody extends PiPWindowBody {
     protected int placeholderMenuEntryHeight = 16;
     protected List<PlaceholderMenuEntry> placeholderMenuEntries = new ArrayList<>();
     protected boolean multilineMode = true;
+    protected boolean markdownShortcutsEnabled = false;
     protected boolean allowPlaceholders = true;
     protected boolean boldTitle = true;
     protected ConsumingSupplier<TextEditorWindowBody, Boolean> textValidator = null;
@@ -357,10 +359,148 @@ public class TextEditorWindowBody extends PiPWindowBody {
                 }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts.redo"))
                 .setIcon(MaterialIcons.REDO);
 
+        ContextMenu formattingMenu = new ContextMenu();
+        for (TextEditorMarkdownFormatting.Shortcut shortcut : TextEditorMarkdownFormatting.Shortcut.values()) {
+            if (shortcut == TextEditorMarkdownFormatting.Shortcut.ALIGN_LEFT) formattingMenu.addSeparatorEntry("separator_before_alignment");
+            formattingMenu.addClickableEntry(shortcut.getName(), Component.translatable("fancymenu.ui.text_editor.formatting." + shortcut.getName()), (menu, entry) -> {
+                        menu.closeMenuChain();
+                        this.applyMarkdownShortcut(shortcut);
+                    }).setShortcutTextSupplier((menu, entry) -> Component.translatable("fancymenu.editor.shortcuts." + shortcut.getName()))
+                    .setIcon(getMarkdownShortcutIcon(shortcut));
+        }
+        this.rightClickContextMenu.addSeparatorEntry("separator_before_formatting")
+                .addIsVisibleSupplier((menu, entry) -> this.markdownShortcutsEnabled);
+        this.rightClickContextMenu.addSubMenuEntry("formatting", Component.translatable("fancymenu.ui.text_editor.formatting"), formattingMenu)
+                .addIsVisibleSupplier((menu, entry) -> this.markdownShortcutsEnabled)
+                .setIcon(MaterialIcons.TEXT_FORMAT);
+
         this.rightClickContextMenu.addSeparatorEntry("separator_before_ai_export");
 
         AiExportMenus.addExportSubMenu(this.rightClickContextMenu, "export_text_for_ai", Component.translatable("fancymenu.ai_export.text"), () -> TextAiExporter.export(this.getText()));
 
+    }
+
+    @NotNull
+    protected static MaterialIcon getMarkdownShortcutIcon(@NotNull TextEditorMarkdownFormatting.Shortcut shortcut) {
+        return switch (shortcut) {
+            case BOLD -> MaterialIcons.FORMAT_BOLD;
+            case ITALIC -> MaterialIcons.FORMAT_ITALIC;
+            case UNDERLINE -> MaterialIcons.FORMAT_UNDERLINED;
+            case ALIGN_LEFT -> MaterialIcons.FORMAT_ALIGN_LEFT;
+            case ALIGN_CENTER -> MaterialIcons.FORMAT_ALIGN_CENTER;
+            case ALIGN_RIGHT -> MaterialIcons.FORMAT_ALIGN_RIGHT;
+        };
+    }
+
+    /**
+     * Applies a Markdown formatting shortcut to the selected text, or to the text at the cursor if nothing is selected.
+     */
+    public void applyMarkdownShortcut(@NotNull TextEditorMarkdownFormatting.Shortcut shortcut) {
+        if (this.isInMouseHighlightingMode() || !this.isLineFocused()) return;
+        int[] selection = this.getSelectionOffsets();
+        TextEditorMarkdownFormatting.Edit edit = TextEditorMarkdownFormatting.apply(shortcut, this.getLinesText(), selection[0], selection[1]);
+        if (edit == null) return;
+        this.history.saveSnapshot();
+        int oldLineCount = this.getLineCount();
+        this.setLineValues(edit.text().split("\n", -1));
+        this.selectBetweenOffsets(edit.selectionStart(), edit.selectionEnd());
+        this.correctYScroll(this.getLineCount() - oldLineCount);
+        if (this.indentGuideRenderer != null) {
+            this.indentGuideRenderer.markDirty();
+        }
+    }
+
+    /**
+     * Returns the values of all lines, separated by line feeds.<br>
+     * Other than {@link #getText()}, this never replaces the line feeds with codes, so its offsets are the ones of the lines.
+     */
+    @NotNull
+    protected String getLinesText() {
+        StringBuilder text = new StringBuilder();
+        for (int i = 0; i < this.textFieldLines.size(); i++) {
+            if (i > 0) text.append('\n');
+            text.append(this.textFieldLines.get(i).getValue());
+        }
+        return text.toString();
+    }
+
+    /**
+     * Returns the start and end of the selection as offsets into {@link #getLinesText()}, which both are the offset of the cursor if nothing is selected.
+     * Only works while a line is focused.
+     */
+    @NotNull
+    protected int[] getSelectionOffsets() {
+        if (this.isTextHighlighted()) {
+            TextEditorLine startLine = Objects.requireNonNull(this.getLine(this.startHighlightLineIndex));
+            TextEditorLine endLine = Objects.requireNonNull(this.getLine(this.endHighlightLineIndex));
+            int startColumn = Math.min(startLine.getCursorPosition(), startLine.getAsAccessor().getHighlightPosFancyMenu());
+            int endColumn = Math.max(endLine.getCursorPosition(), endLine.getAsAccessor().getHighlightPosFancyMenu());
+            return new int[] {this.getOffset(this.startHighlightLineIndex, startColumn), this.getOffset(this.endHighlightLineIndex, endColumn)};
+        }
+        int cursorOffset = this.getOffset(this.getFocusedLineIndex(), Objects.requireNonNull(this.getFocusedLine()).getCursorPosition());
+        return new int[] {cursorOffset, cursorOffset};
+    }
+
+    /**
+     * Returns the offset into {@link #getLinesText()} of the given column of the given line.
+     */
+    protected int getOffset(int lineIndex, int column) {
+        int offset = column;
+        for (int i = 0; i < lineIndex; i++) {
+            offset += this.textFieldLines.get(i).getValue().length() + 1;
+        }
+        return offset;
+    }
+
+    /**
+     * Gives the lines the given values, and adds or removes lines at the end until there is one line for every value.<br>
+     * Other than {@link #setText(String)}, this keeps the lines that stay the same untouched and keeps the scroll position.
+     */
+    protected void setLineValues(@NotNull String[] values) {
+        for (int i = 0; i < values.length; i++) {
+            TextEditorLine line = Objects.requireNonNull((i < this.getLineCount()) ? this.getLine(i) : this.addLineAtIndex(i));
+            if (!line.getValue().equals(values[i])) line.setValue(values[i]);
+        }
+        while (this.getLineCount() > values.length) {
+            this.removeLastLine();
+        }
+    }
+
+    /**
+     * Selects the text between the two offsets into {@link #getLinesText()} and puts the cursor at the end offset, or only puts the cursor there if both are the same.
+     */
+    protected void selectBetweenOffsets(int startOffset, int endOffset) {
+        this.resetHighlighting();
+        int startLineIndex = 0;
+        int startColumn = startOffset;
+        while ((startLineIndex < (this.getLineCount() - 1)) && (startColumn > this.textFieldLines.get(startLineIndex).getValue().length())) {
+            startColumn -= this.textFieldLines.get(startLineIndex).getValue().length() + 1;
+            startLineIndex++;
+        }
+        int endLineIndex = startLineIndex;
+        int endColumn = startColumn + (endOffset - startOffset);
+        while ((endLineIndex < (this.getLineCount() - 1)) && (endColumn > this.textFieldLines.get(endLineIndex).getValue().length())) {
+            endColumn -= this.textFieldLines.get(endLineIndex).getValue().length() + 1;
+            endLineIndex++;
+        }
+        this.setFocusedLine(endLineIndex);
+        TextEditorLine endLine = Objects.requireNonNull(this.getLine(endLineIndex));
+        endLine.moveCursorTo(endColumn, false);
+        if (startOffset == endOffset) return;
+        if (startLineIndex == endLineIndex) {
+            endLine.setHighlightPos(startColumn);
+        } else {
+            for (int i = startLineIndex; i < endLineIndex; i++) {
+                TextEditorLine line = Objects.requireNonNull(this.getLine(i));
+                line.setHighlightPos((i == startLineIndex) ? startColumn : 0);
+                line.setCursorPosition(line.getValue().length());
+            }
+            endLine.setHighlightPos(0);
+        }
+        this.startHighlightLineIndex = startLineIndex;
+        this.endHighlightLineIndex = endLineIndex;
+        this.keyboardHighlightAnchorLineIndex = startLineIndex;
+        this.keyboardHighlightAnchorCursorPos = startColumn;
     }
 
     @Override
@@ -1502,6 +1642,19 @@ public class TextEditorWindowBody extends PiPWindowBody {
         return this;
     }
 
+    public boolean isMarkdownShortcutsEnabled() {
+        return this.markdownShortcutsEnabled;
+    }
+
+    /**
+     * Enables the shortcuts that format Markdown text, like bold text and the alignment of lines, for editors whose text is Markdown.
+     * The right-click menu of the editor shows them as well then.
+     */
+    public TextEditorWindowBody setMarkdownShortcutsEnabled(boolean enabled) {
+        this.markdownShortcutsEnabled = enabled;
+        return this;
+    }
+
     public boolean isBoldTitle() {
         return this.boldTitle;
     }
@@ -1648,6 +1801,15 @@ public class TextEditorWindowBody extends PiPWindowBody {
 
         if (this.placeholdersAllowed() && extendedPlaceholderMenu && (this.searchBar != null) && this.searchBar.isFocused()) {
             return this.searchBar.keyPressed(keycode, scancode, modifiers);
+        }
+
+        //GUI shortcut modifier + B, I, U, L, E or R | MARKDOWN FORMATTING
+        if (this.markdownShortcutsEnabled && InputUtils.isOnlyGuiShortcutModifierDown(modifiers)) {
+            TextEditorMarkdownFormatting.Shortcut shortcut = TextEditorMarkdownFormatting.Shortcut.byKeyName(InputUtils.getKeyName(keycode, scancode));
+            if (shortcut != null) {
+                this.applyMarkdownShortcut(shortcut);
+                return true;
+            }
         }
 
         boolean isHorizontalArrow = (keycode == InputConstants.KEY_RIGHT) || (keycode == InputConstants.KEY_LEFT);

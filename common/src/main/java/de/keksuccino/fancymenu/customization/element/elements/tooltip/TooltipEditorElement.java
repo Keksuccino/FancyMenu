@@ -70,6 +70,7 @@ public class TooltipEditorElement extends AbstractEditorElement<TooltipEditorEle
                                 });
                                 s.setText(defaultText);
                                 s.setMultilineMode(true);
+                                s.setMarkdownShortcutsEnabled(true);
                                 s.setPlaceholdersAllowed(true);
                                 menu.closeMenuChain();
                                 Dialogs.openGeneric(s, Component.translatable("fancymenu.elements.text.v2.source.input"), null, TextEditorWindowBody.PIP_WINDOW_WIDTH, TextEditorWindowBody.PIP_WINDOW_HEIGHT)
