@@ -129,32 +129,29 @@ class ActionScriptDescriptionsTest {
     }
 
     @Test
-    void collapsedBlocksHideTheirContentAndCountTheActionsInside() {
+    void blocksThatAreCollapsedInTheScriptEditorStillShowTheirContents() {
         GenericExecutableBlock script = new GenericExecutableBlock();
         FolderExecutableBlock folder = new FolderExecutableBlock();
-        folder.addExecutable(new ActionInstance(this.valueAction, "a"));
-        folder.addExecutable(comment("not an action"));
-        FolderExecutableBlock nested = new FolderExecutableBlock();
-        nested.addExecutable(new ActionInstance(this.valueAction, "b"));
-        nested.addExecutable(new ActionInstance(this.valueAction, "c"));
-        folder.addExecutable(nested);
+        folder.addExecutable(new ActionInstance(this.noValueAction, null));
         folder.setCollapsed(true);
         script.addExecutable(folder);
         IfExecutableBlock ifBlock = new IfExecutableBlock(conditionWithGroup("if_group"));
+        ifBlock.addExecutable(new ActionInstance(this.noValueAction, null));
         ElseExecutableBlock elseBlock = new ElseExecutableBlock();
         elseBlock.addExecutable(new ActionInstance(this.noValueAction, null));
         ifBlock.setAppendedBlock(elseBlock);
         ifBlock.setCollapsed(true);
         script.addExecutable(ifBlock);
-        script.addExecutable(new ActionInstance(this.noValueAction, null));
 
         List<Component> lines = overview(script);
 
-        assertEquals(3, lines.size(), "a collapsed IF hides the rest of its chain too, like in the editor");
-        assertEquals(List.of(3), argsOf(lines.get(0), ActionScriptDescriptions.COLLAPSED_OTHER_KEY));
-        assertTrue(keysOf(lines.get(1)).contains(ActionScriptDescriptions.COLLAPSED_ONE_KEY), "the action of the hidden ELSE counts");
-        assertEquals(TestAction.NAME_KEY, firstKeyOf(lines.get(2)));
-        assertEquals(0, levelOf(lines.get(2)));
+        List<String> expectedKeys = List.of(FOLDER_KEY, TestAction.NAME_KEY, IF_KEY, TestAction.NAME_KEY, ELSE_KEY, TestAction.NAME_KEY);
+        List<Integer> expectedLevels = List.of(0, 1, 0, 1, 0, 1);
+        assertEquals(expectedKeys.size(), lines.size(), "collapsing blocks is only for the action script editor");
+        for (int i = 0; i < lines.size(); i++) {
+            assertEquals(expectedKeys.get(i), firstKeyOf(lines.get(i)), "line " + i);
+            assertEquals(expectedLevels.get(i), levelOf(lines.get(i)), "level of line " + i);
+        }
     }
 
     @Test
@@ -225,8 +222,7 @@ class ActionScriptDescriptionsTest {
 
     @Test
     void newTextsAreLocalizedInEveryLanguage() throws IOException, URISyntaxException {
-        TestLocalizations.assertLocalizedEverywhere(List.of(ActionScriptDescriptions.UNKNOWN_KEY, ActionScriptDescriptions.COLLAPSED_ONE_KEY, ActionScriptDescriptions.COLLAPSED_OTHER_KEY));
-        TestLocalizations.readAllLanguages().forEach((language, translations) -> assertTrue(translations.get(ActionScriptDescriptions.COLLAPSED_OTHER_KEY).getAsString().contains("%s"), language));
+        TestLocalizations.assertLocalizedEverywhere(List.of(ActionScriptDescriptions.UNKNOWN_KEY));
     }
 
     @NotNull
@@ -266,7 +262,7 @@ class ActionScriptDescriptionsTest {
     }
 
     /**
-     * The key of the label of a line, which can be wrapped in an empty component when the line has a suffix.
+     * The key of the label of a line, which is the first translatable part of the line.
      */
     @Nullable
     private static String firstKeyOf(@NotNull Component line) {

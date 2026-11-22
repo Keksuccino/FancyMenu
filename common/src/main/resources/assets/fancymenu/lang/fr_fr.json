@@ -36,8 +36,6 @@
   "fancymenu.actions.blocks.folder.collapsed": "(replié)",
   "fancymenu.actions.blocks.folder.display": "Dossier : %s",
   "fancymenu.actions.blocks.if": "IF (%s)",
-  "fancymenu.actions.blocks.overview.collapsed.one": "(replié, 1 action)",
-  "fancymenu.actions.blocks.overview.collapsed.other": "(replié, %s actions)",
   "fancymenu.actions.blocks.unknown": "Entrée inconnue",
   "fancymenu.actions.blocks.while": "WHILE (%s)",
   "fancymenu.actions.blocks.for_each": "FOR EACH ENTRY IN (%s)",

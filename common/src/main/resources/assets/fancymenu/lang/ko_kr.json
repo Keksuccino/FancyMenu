@@ -36,8 +36,6 @@
   "fancymenu.actions.blocks.folder.collapsed": "(접힘)",
   "fancymenu.actions.blocks.folder.display": "폴더: %s",
   "fancymenu.actions.blocks.if": "IF (%s)",
-  "fancymenu.actions.blocks.overview.collapsed.one": "(접힘, 액션 1개)",
-  "fancymenu.actions.blocks.overview.collapsed.other": "(접힘, 액션 %s개)",
   "fancymenu.actions.blocks.unknown": "알 수 없는 항목",
   "fancymenu.actions.blocks.while": "WHILE (%s)",
   "fancymenu.actions.blocks.for_each": "FOR EACH ENTRY IN (%s)",
