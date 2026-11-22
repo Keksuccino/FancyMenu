@@ -5,7 +5,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
 /**
- * The input callbacks of the window, for simulated pointer input of the dev-only decoration overlay preview (see TESTING_GUIDELINES.md).
+ * The input callbacks of the window, for simulated pointer input of the dev-only decoration overlay and window previews (see TESTING_GUIDELINES.md).
  */
 @Mixin(MouseHandler.class)
 public interface AccessorMixinMouseHandler {
@@ -15,5 +15,8 @@ public interface AccessorMixinMouseHandler {
 
     @Invoker("onPress")
     void invoke_onPress_FancyMenu(long windowPointer, int button, int action, int modifiers);
+
+    @Invoker("onScroll")
+    void invoke_onScroll_FancyMenu(long window, double xOffset, double yOffset);
 
 }

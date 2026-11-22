@@ -154,7 +154,8 @@ public class EditBoxSuggestions extends CommandSuggestions {
             String editBoxSubValue = editBoxValue.substring(0, editBoxCursorPos);
             int lastWordIndex = getLastWordIndex(editBoxSubValue);
             Collection<String> suggestionStringList = new ArrayList<>(this.customSuggestionsList);
-            if (suggestionStringList.isEmpty() && (this.minecraft.player != null)) {
+            // Fields that only suggest their own values (like variable names) suggest nothing when they have none, not the server's chat suggestions
+            if (suggestionStringList.isEmpty() && !this.onlyCustomSuggestions && (this.minecraft.player != null)) {
                 suggestionStringList = this.minecraft.player.connection.getSuggestionsProvider().getCustomTabSugggestions();
             }
             this.setPendingSuggestions(SharedSuggestionProvider.suggest(suggestionStringList, new SuggestionsBuilder(editBoxSubValue, lastWordIndex)));

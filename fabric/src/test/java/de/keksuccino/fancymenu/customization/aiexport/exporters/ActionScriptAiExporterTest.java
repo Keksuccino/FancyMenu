@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.action.blocks.FolderExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.statements.ForEachExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.IfExecutableBlock;
 import de.keksuccino.fancymenu.customization.aiexport.AiExportReferences;
 import de.keksuccino.fancymenu.customization.aiexport.AiExportWriter;
@@ -46,6 +47,22 @@ class ActionScriptAiExporterTest {
         assertEquals(indentationOf(lines[thenBranch]), indentationOf(lines[elseBranch]));
         assertEquals(indentationOf(lines[topLevel]), indentationOf(lines[folderName]));
         assertTrue(indentationOf(lines[folderContent]) > indentationOf(lines[folderName]));
+    }
+
+    @Test
+    void forEachLoopsGetWrittenWithTheirListAndTheirContentsOneLevelDeeper() {
+        TestAction action = new TestAction(true);
+        GenericExecutableBlock script = new GenericExecutableBlock();
+        ForEachExecutableBlock loop = new ForEachExecutableBlock("my_fruit_list");
+        loop.addExecutable(new ActionInstance(action, "loop_content_value"));
+        script.addExecutable(loop);
+
+        String[] lines = write(script, new AiExportReferences());
+
+        int listName = indexOfLineContaining(lines, "my_fruit_list");
+        int loopContent = indexOfLineContaining(lines, "loop_content_value");
+        assertTrue(listName < loopContent);
+        assertTrue(indentationOf(lines[loopContent]) > indentationOf(lines[listName]));
     }
 
     @Test
