@@ -4119,6 +4119,7 @@
   "fancymenu.profiles.drop.rejected.desc": "여기서는 FancyMenu 프로필 파일(.fmp)만 가져올 수 있어요.",
   "fancymenu.profiles.archive.file_type": "FancyMenu 프로필",
   "fancymenu.profiles.error.switch": "프로필을 불러오지 못해서 현재 설정이 그대로 유지돼요.",
+  "fancymenu.profiles.error.switch_incomplete": "마지막 프로필 전환이 아직 끝나지 않아서, 불러온 프로필의 파일 일부가 아직 프로필 폴더에 있어요. 아무것도 사라지지 않았어요! 프로필을 다시 불러오거나 게임을 다시 시작하면 전환이 마무리돼요.",
   "fancymenu.profiles.error.create": "프로필을 만들지 못했어요.",
   "fancymenu.profiles.error.duplicate": "프로필을 복제하지 못했어요.",
   "fancymenu.profiles.error.delete": "프로필을 삭제하지 못했어요.",
