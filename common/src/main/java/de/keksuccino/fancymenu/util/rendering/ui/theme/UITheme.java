@@ -39,7 +39,7 @@ public class UITheme {
     public DrawableColor ui_blur_interface_widget_label_color_inactive = DrawableColor.of(new Color(113, 117, 119));
     public DrawableColor ui_blur_interface_input_field_background_color = DrawableColor.of(new Color(43, 43, 43, 102));
     public DrawableColor ui_blur_interface_input_field_border_color_normal = DrawableColor.of(new Color(93, 97, 100, 102));
-    public DrawableColor ui_blur_interface_input_field_border_color_focused = DrawableColor.of(new Color(93, 97, 100, 102));
+    public DrawableColor ui_blur_interface_input_field_border_color_focused = DrawableColor.of(new Color(100, 165, 236, 200));
     public DrawableColor ui_blur_interface_input_field_text_color_normal = DrawableColor.of(new Color(206, 221, 237));
     public DrawableColor ui_blur_interface_input_field_text_color_uneditable = DrawableColor.of(new Color(113, 117, 119));
     public DrawableColor ui_blur_interface_input_field_suggestion_text_color = DrawableColor.of(new Color(128, 128, 128));
@@ -65,7 +65,7 @@ public class UITheme {
     public DrawableColor ui_interface_widget_label_color_inactive = DrawableColor.of(new Color(113, 117, 119));
     public DrawableColor ui_interface_input_field_background_color = DrawableColor.of(new Color(43, 43, 43));
     public DrawableColor ui_interface_input_field_border_color_normal = DrawableColor.of(new Color(59, 59, 59));
-    public DrawableColor ui_interface_input_field_border_color_focused = DrawableColor.of(new Color(59, 59, 59));
+    public DrawableColor ui_interface_input_field_border_color_focused = DrawableColor.of(new Color(100, 165, 236));
     public DrawableColor ui_interface_input_field_text_color_normal = DrawableColor.of(new Color(206, 221, 237));
     public DrawableColor ui_interface_input_field_text_color_uneditable = DrawableColor.of(new Color(113, 117, 119));
     public DrawableColor ui_interface_input_field_suggestion_text_color = DrawableColor.of(new Color(-8355712));
