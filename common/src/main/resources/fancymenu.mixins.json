@@ -50,6 +50,7 @@
     "client.MixinCreativeModeInventoryScreen",
     "client.MixinCycleButton",
     "client.MixinDeathScreen",
+    "client.MixinDirectoryLock",
     "client.MixinGameNarrator",
     "client.MixinFilePackResources",
     "client.MixinFolderPackResources",
