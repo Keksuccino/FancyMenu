@@ -20,11 +20,14 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -37,11 +40,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BoundedWebResourceClientTest {
 
     private static final URI ENDPOINT = URI.create("https://example.invalid/resource");
+    private static final byte[] STALLED_BODY_START = new byte[]{1, 2, 3, 4};
+    private static final int STALLED_BODY_LENGTH = 64;
 
     @Test
     void endOfStreamClosesBodyCancelsDeadlineAndDisconnectsExactlyOnce() throws Exception {
@@ -171,12 +177,13 @@ class BoundedWebResourceClientTest {
     }
 
     @Test
-    void watchdogUnblocksAndTerminatesAnActiveBodyRead() throws Exception {
+    void watchdogHandsTheReleaseOfAnActiveBodyReadToTheReleaseExecutorAndTerminatesTheRead() throws Exception {
         BlockingInputStream body = new BlockingInputStream(false);
         FakeHttpURLConnection connection = new FakeHttpURLConnection(200, body);
         connection.onDisconnect = body::release;
         ManualDeadlineScheduler scheduler = new ManualDeadlineScheduler();
-        BoundedWebResourceClient client = client(uri -> connection, scheduler, System::nanoTime);
+        ManualReleaseExecutor releaseExecutor = new ManualReleaseExecutor();
+        BoundedWebResourceClient client = client(uri -> connection, scheduler, releaseExecutor, System::nanoTime);
         InputStream stream = client.openResourceStream(ENDPOINT, limits(32L));
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -184,6 +191,10 @@ class BoundedWebResourceClientTest {
             Future<Integer> read = executor.submit(() -> stream.read());
             assertTrue(body.operationStarted.await(5L, TimeUnit.SECONDS));
             scheduler.runTask(0);
+            // The watchdog thread never releases a request whose body gets read, because a real release would wait for that read
+            assertEquals(0, connection.disconnectCalls.get());
+            assertEquals(0, client.activeRequestCount());
+            releaseExecutor.runAll();
             ExecutionException failure = assertThrows(ExecutionException.class, () -> read.get(5L, TimeUnit.SECONDS));
             assertInstanceOf(SocketTimeoutException.class, failure.getCause());
         } finally {
@@ -193,6 +204,7 @@ class BoundedWebResourceClientTest {
 
         assertEquals(1, body.closeCalls.get());
         assertEquals(1, connection.disconnectCalls.get());
+        assertEquals(0, releaseExecutor.pendingCount());
         assertEquals(0, client.activeRequestCount());
     }
 
@@ -202,7 +214,8 @@ class BoundedWebResourceClientTest {
         FakeHttpURLConnection connection = new FakeHttpURLConnection(200, body);
         connection.onDisconnect = body::release;
         ManualDeadlineScheduler scheduler = new ManualDeadlineScheduler();
-        BoundedWebResourceClient client = client(uri -> connection, scheduler, System::nanoTime);
+        ManualReleaseExecutor releaseExecutor = new ManualReleaseExecutor();
+        BoundedWebResourceClient client = client(uri -> connection, scheduler, releaseExecutor, System::nanoTime);
         InputStream stream = client.openResourceStream(ENDPOINT, limits(32L));
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -210,6 +223,8 @@ class BoundedWebResourceClientTest {
             Future<Integer> available = executor.submit(stream::available);
             assertTrue(body.operationStarted.await(5L, TimeUnit.SECONDS));
             scheduler.runTask(0);
+            assertEquals(0, connection.disconnectCalls.get());
+            releaseExecutor.runAll();
             ExecutionException failure = assertThrows(ExecutionException.class, () -> available.get(5L, TimeUnit.SECONDS));
             assertInstanceOf(SocketTimeoutException.class, failure.getCause());
         } finally {
@@ -219,6 +234,87 @@ class BoundedWebResourceClientTest {
 
         assertEquals(1, connection.disconnectCalls.get());
         assertEquals(0, client.activeRequestCount());
+    }
+
+    @Test
+    void endingARequestWhileNoReadIsActiveReleasesItRightAwayWithoutTheReleaseExecutor() throws Exception {
+        TrackingInputStream body = new TrackingInputStream(new byte[]{1, 2});
+        FakeHttpURLConnection connection = new FakeHttpURLConnection(200, body);
+        ManualDeadlineScheduler scheduler = new ManualDeadlineScheduler();
+        ManualReleaseExecutor releaseExecutor = new ManualReleaseExecutor();
+        BoundedWebResourceClient client = client(uri -> connection, scheduler, releaseExecutor, System::nanoTime);
+        InputStream stream = client.openResourceStream(ENDPOINT, limits(32L));
+        assertEquals(1, stream.read());
+
+        assertEquals(1, client.shutdown());
+
+        assertEquals(0, releaseExecutor.pendingCount());
+        assertEquals(1, connection.disconnectCalls.get());
+        assertEquals(1, body.closeCalls.get());
+        assertThrows(IOException.class, stream::read);
+        assertEquals(0, client.shutdown());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void shutdownReturnsRightAwayWhileAReadOfAStalledBodyIsBlocked(boolean declaredBodyLength) throws Exception {
+        this.assertEndingABlockedReadOfAStalledBodyReturnsRightAway(declaredBodyLength, BoundedWebResourceClient::shutdown);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void closingTheStreamOnAnotherThreadReturnsRightAwayWhileAReadOfAStalledBodyIsBlocked(boolean declaredBodyLength) throws Exception {
+        this.assertEndingABlockedReadOfAStalledBodyReturnsRightAway(declaredBodyLength, null);
+    }
+
+    /**
+     * The JDK body streams hold a lock while they read, and disconnecting or closing them waits for that lock,
+     * so ending the request on another thread would wait until the read timeout of the stalled read.
+     *
+     * @param ending Ends the request on the test thread, or null to close the stream there.
+     */
+    private void assertEndingABlockedReadOfAStalledBodyReturnsRightAway(boolean declaredBodyLength, ClientAction ending) throws Exception {
+        CountDownLatch bodyStarted = new CountDownLatch(1);
+        CountDownLatch releaseBody = new CountDownLatch(1);
+        HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext("/stall", exchange -> stallInTheMiddleOfTheBody(exchange, declaredBodyLength, bodyStarted, releaseBody));
+        server.start();
+        ReleaseThreads releaseThreads = new ReleaseThreads();
+        Thread reader = null;
+
+        try {
+            URI endpoint = URI.create("http://127.0.0.1:" + server.getAddress().getPort() + "/stall");
+            // The read timeout is far longer than the allowed time, so ending the request fails the test if it waits for the read
+            BoundedWebResourceClient.RequestLimits limits = new BoundedWebResourceClient.RequestLimits(Duration.ofSeconds(5L), Duration.ofSeconds(10L), Duration.ofSeconds(20L), 1024L);
+            BoundedWebResourceClient client = client(uri -> (HttpURLConnection)uri.toURL().openConnection(), new ManualDeadlineScheduler(), releaseThreads, System::nanoTime);
+            InputStream stream = client.openResourceStream(endpoint, limits);
+            assertTrue(bodyStarted.await(5L, TimeUnit.SECONDS));
+            assertEquals(STALLED_BODY_START.length, stream.readNBytes(STALLED_BODY_START.length).length);
+
+            FutureTask<Integer> read = new FutureTask<>(() -> stream.read());
+            reader = new Thread(read, "BoundedWebResourceClientTest-StalledReader");
+            reader.setDaemon(true);
+            reader.start();
+            awaitBlockedInBodyRead(reader);
+
+            assertTimeoutPreemptively(Duration.ofSeconds(1L), () -> {
+                if (ending != null) ending.run(client);
+                else stream.close();
+            });
+            assertEquals(0, client.activeRequestCount());
+            assertEquals(1, releaseThreads.startedCount());
+
+            // The read only returns once the server sends more, and then has to fail because the request got ended
+            releaseBody.countDown();
+            ExecutionException failure = assertThrows(ExecutionException.class, () -> read.get(5L, TimeUnit.SECONDS));
+            assertInstanceOf(IOException.class, failure.getCause());
+            releaseThreads.awaitAll();
+            assertThrows(IOException.class, stream::read);
+        } finally {
+            releaseBody.countDown();
+            if (reader != null) reader.join(TimeUnit.SECONDS.toMillis(15L));
+            server.stop(0);
+        }
     }
 
     @Test
@@ -495,8 +591,48 @@ class BoundedWebResourceClientTest {
         }
     }
 
+    private static void stallInTheMiddleOfTheBody(HttpExchange exchange, boolean declaredBodyLength, CountDownLatch bodyStarted, CountDownLatch releaseBody) throws IOException {
+        try {
+            // A length of 0 makes the server send the body in chunks
+            exchange.sendResponseHeaders(200, declaredBodyLength ? STALLED_BODY_LENGTH : 0L);
+            exchange.getResponseBody().write(STALLED_BODY_START);
+            exchange.getResponseBody().flush();
+            bodyStarted.countDown();
+            if (!releaseBody.await(15L, TimeUnit.SECONDS)) throw new IOException("Timed out waiting to release loopback response");
+            exchange.getResponseBody().write(new byte[STALLED_BODY_LENGTH - STALLED_BODY_START.length]);
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Interrupted while holding loopback response", exception);
+        } finally {
+            exchange.close();
+        }
+    }
+
+    /**
+     * Waits until the thread is blocked in a socket read of a JDK body stream, which holds the lock of that stream.
+     */
+    private static void awaitBlockedInBodyRead(Thread reader) throws InterruptedException {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5L);
+        while (System.nanoTime() < deadline) {
+            boolean inBodyStream = false;
+            boolean inSocketRead = false;
+            for (StackTraceElement frame : reader.getStackTrace()) {
+                if (frame.getClassName().startsWith("sun.net.www.") && frame.getMethodName().equals("read")) inBodyStream = true;
+                if (frame.getClassName().equals("sun.nio.ch.NioSocketImpl")) inSocketRead = true;
+            }
+            if (inBodyStream && inSocketRead) return;
+            Thread.sleep(10L);
+        }
+        throw new AssertionError("The reader never blocked in the body read");
+    }
+
     private static BoundedWebResourceClient client(BoundedWebResourceClient.ConnectionFactory connectionFactory, DeadlineScheduler scheduler, LongSupplier nanoTimeSource) {
-        return new BoundedWebResourceClient(connectionFactory, scheduler, nanoTimeSource);
+        // Never runs its releases, so a release that unexpectedly got handed to it shows up as missing disconnect
+        return client(connectionFactory, scheduler, new ManualReleaseExecutor(), nanoTimeSource);
+    }
+
+    private static BoundedWebResourceClient client(BoundedWebResourceClient.ConnectionFactory connectionFactory, DeadlineScheduler scheduler, Executor releaseExecutor, LongSupplier nanoTimeSource) {
+        return new BoundedWebResourceClient(connectionFactory, scheduler, releaseExecutor, nanoTimeSource);
     }
 
     private static BoundedWebResourceClient queuedClient(DeadlineScheduler scheduler, FakeHttpURLConnection... connections) {
@@ -544,6 +680,62 @@ class BoundedWebResourceClientTest {
         private void runTask(int index) {
             this.tasks.get(index).run();
         }
+    }
+
+    private static final class ManualReleaseExecutor implements Executor {
+
+        private final List<Runnable> releases = new ArrayList<>();
+
+        @Override
+        public synchronized void execute(Runnable release) {
+            this.releases.add(release);
+        }
+
+        private void runAll() {
+            List<Runnable> pending;
+            synchronized (this) {
+                pending = new ArrayList<>(this.releases);
+                this.releases.clear();
+            }
+            pending.forEach(Runnable::run);
+        }
+
+        private synchronized int pendingCount() {
+            return this.releases.size();
+        }
+    }
+
+    /**
+     * Runs every release on a daemon thread of its own, like the release executor of {@link WebUtils}.
+     */
+    private static final class ReleaseThreads implements Executor {
+
+        private final List<Thread> threads = new CopyOnWriteArrayList<>();
+
+        @Override
+        public void execute(Runnable release) {
+            Thread thread = new Thread(release, "BoundedWebResourceClientTest-Release-" + this.threads.size());
+            thread.setDaemon(true);
+            this.threads.add(thread);
+            thread.start();
+        }
+
+        private int startedCount() {
+            return this.threads.size();
+        }
+
+        private void awaitAll() throws InterruptedException {
+            for (Thread thread : this.threads) {
+                thread.join(TimeUnit.SECONDS.toMillis(5L));
+                assertFalse(thread.isAlive(), "A release never finished");
+            }
+        }
+    }
+
+    @FunctionalInterface
+    private interface ClientAction {
+
+        void run(BoundedWebResourceClient client) throws Exception;
     }
 
     private static final class ManualScheduledTask implements DeadlineScheduler.ScheduledTask {
