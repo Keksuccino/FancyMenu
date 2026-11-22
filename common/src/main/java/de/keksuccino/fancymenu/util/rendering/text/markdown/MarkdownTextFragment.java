@@ -67,8 +67,11 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     public boolean bold;
     public boolean italic;
     public boolean strikethrough;
-    /** If the struck through text of this fragment is the last of its struck through text. {@link MarkdownStrikethroughPainter#markEnds(List)} looks it up. */
+    /** If the struck through text of this fragment is the last of its struck through text. {@link #markLinedTextEnds(List)} looks it up. */
     protected boolean strikethroughEnd;
+    public boolean underlined;
+    /** If the underlined text of this fragment is the last of its underlined text. {@link #markLinedTextEnds(List)} looks it up. */
+    protected boolean underlineEnd;
     @NotNull
     MinecraftFormattingState minecraftFormatting = MinecraftFormattingState.EMPTY;
     public boolean bulletListItemStart = false;
@@ -248,8 +251,8 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     }
 
     private int getRenderComponentState() {
-        // Only link-like and struck through fragments get built differently at the end of a line, and only link-like ones when they are hovered
-        if (!this.isLinkLike() && !this.strikethrough) return 0;
+        // Only fragments with lined text get built differently at the end of a line, and only link-like ones when they are hovered
+        if (!this.hasLinedText()) return 0;
         int state = (this.naturalLineBreakAfter || this.autoLineBreakAfter) ? COMPONENT_STATE_LINE_END : 0;
         if ((this.hyperlink != null) && this.hyperlink.isHovered()) state |= COMPONENT_STATE_HYPERLINK_HOVERED;
         if ((this.clickEvent != null) && this.clickEvent.isHovered()) state |= COMPONENT_STATE_CLICK_EVENT_HOVERED;
@@ -286,6 +289,9 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         }
         if (this.strikethrough && !forWidthCalculation && !MarkdownStrikethroughPainter.drawsLine(this)) {
             style = style.withStrikethrough(true);
+        }
+        if (this.underlined && !forWidthCalculation) {
+            style = style.withUnderlined(true);
         }
         if (this.quoteContext != null) {
             // The text of a callout can have a color of its own
@@ -356,18 +362,59 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
     }
 
     /**
-     * The space at the end of link-like or struck through text would look ugly with a line below or through it, so it gets removed
+     * The space at the end of lined text would look ugly with a line below or through it, so it gets removed
      * at the end of a line and drawn without the style of that text behind its last word.
      */
     protected int getTrailingSpaceMode() {
-        boolean linkLike = this.isLinkLike();
-        if ((!linkLike && !this.strikethrough) || !this.text.endsWith(" ")) return TRAILING_SPACE_KEEP;
+        if (!this.hasLinedText() || !this.text.endsWith(" ")) return TRAILING_SPACE_KEEP;
         if (this.naturalLineBreakAfter || this.autoLineBreakAfter) return TRAILING_SPACE_REMOVE;
-        return (linkLike ? this.isLastLinkLikeFragment() : this.strikethroughEnd) ? TRAILING_SPACE_SEPARATE : TRAILING_SPACE_KEEP;
+        return (this.isLinkLike() ? this.isLastLinkLikeFragment() : (this.strikethroughEnd || this.underlineEnd)) ? TRAILING_SPACE_SEPARATE : TRAILING_SPACE_KEEP;
     }
 
     /**
-     * Returns the unscaled width of the text without the space at its end, if that space is no part of the link-like or struck through text of the fragment.
+     * Returns if the text of the fragment is lined text, which can have a line below or through it: the text of links and text events, and struck through and underlined text.
+     */
+    protected boolean hasLinedText() {
+        return this.isLinkLike() || this.strikethrough || this.underlined;
+    }
+
+    /**
+     * Marks the fragments that struck through and underlined text end with, in the given fragments and in the cells of their tables. Has to run after every parse.<br>
+     * A fragment holds a word and the space behind it, and the line through or below the last word of such text must not reach into that space.
+     */
+    static void markLinedTextEnds(@NotNull List<MarkdownTextFragment> fragments) {
+        MarkdownTextFragment previous = null;
+        for (MarkdownTextFragment fragment : fragments) {
+            if (fragment.isTable()) {
+                for (TableRow row : fragment.tableContext.rows) {
+                    for (TableCell cell : row.cells) {
+                        markLinedTextEnds(cell.fragments);
+                    }
+                }
+            }
+            if (previous != null) previous.markLinedTextEnd(fragment);
+            previous = fragment;
+        }
+        if (previous != null) previous.markLinedTextEnd(null);
+    }
+
+    /**
+     * Marks this fragment as the end of its struck through and of its underlined text, if the next fragment does not continue them.
+     *
+     * @param next The fragment behind this one, or NULL if this is the last one.
+     */
+    private void markLinedTextEnd(@Nullable MarkdownTextFragment next) {
+        boolean strikethroughEnd = this.strikethrough && ((next == null) || !next.strikethrough);
+        boolean underlineEnd = this.underlined && ((next == null) || !next.underlined);
+        if (!strikethroughEnd && !underlineEnd) return;
+        this.strikethroughEnd = strikethroughEnd;
+        this.underlineEnd = underlineEnd;
+        // The space behind the fragment gets drawn on its own now, which is a different text to measure
+        if (this.text.endsWith(" ")) this.updateWidth();
+    }
+
+    /**
+     * Returns the unscaled width of the text without the space at its end, if that space is no part of the lined text of the fragment.
      */
     protected float getUnscaledStyledTextWidth() {
         return (this.getTrailingSpaceMode() != TRAILING_SPACE_KEEP) ? (this.unscaledTextWidth - this.unscaledTrailingSpaceWidth) : this.unscaledTextWidth;
@@ -429,7 +476,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         Style style = this.buildRenderStyle(true);
         this.unscaledTextWidth = this.parent.textWidthCache.getWidth(style, renderText, trailingSpaceMode == TRAILING_SPACE_SEPARATE);
         if (trailingSpaceMode == TRAILING_SPACE_KEEP) {
-            if ((this.isLinkLike() || this.strikethrough) && renderText.endsWith(" ")) this.unscaledTrailingSpaceWidth = this.unscaledTextWidth - this.parent.textWidthCache.getWidth(style, renderText.substring(0, renderText.length() - 1), false);
+            if (this.hasLinedText() && renderText.endsWith(" ")) this.unscaledTrailingSpaceWidth = this.unscaledTextWidth - this.parent.textWidthCache.getWidth(style, renderText.substring(0, renderText.length() - 1), false);
         } else if (trailingSpaceMode == TRAILING_SPACE_SEPARATE) {
             this.unscaledTrailingSpaceWidth = this.unscaledTextWidth - this.parent.textWidthCache.getWidth(style, renderText, false);
         }
@@ -487,6 +534,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         piece.bold = this.bold;
         piece.italic = this.italic;
         piece.strikethrough = this.strikethrough;
+        piece.underlined = this.underlined;
         piece.minecraftFormatting = this.minecraftFormatting;
         piece.bulletListLevel = this.bulletListLevel;
         piece.listItemMarker = this.listItemMarker;
@@ -522,6 +570,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         piece.naturalLineBreakAfter = endOfFragment && pieces.naturalLineBreakAfter;
         piece.endOfWord = endOfFragment && pieces.endOfWord;
         piece.strikethroughEnd = endOfFragment && pieces.strikethroughEnd;
+        piece.underlineEnd = endOfFragment && pieces.underlineEnd;
         if (endOfFragment || Float.isNaN(unscaledWidth)) {
             // The end of the text can be a space that gets measured in a way of its own
             piece.updateWidth();
@@ -545,6 +594,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         this.naturalLineBreakAfter = pieces.naturalLineBreakAfter;
         this.endOfWord = pieces.endOfWord;
         this.strikethroughEnd = pieces.strikethroughEnd;
+        this.underlineEnd = pieces.underlineEnd;
         this.renderComponent = null;
         this.fixedWidthText = null;
     }
@@ -800,6 +850,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
         private final boolean naturalLineBreakAfter;
         private final boolean endOfWord;
         private final boolean strikethroughEnd;
+        private final boolean underlineEnd;
         /** The pieces behind the fragment, which is its own first piece, in the order of the text. */
         private final List<MarkdownTextFragment> later = new ArrayList<>();
 
@@ -810,6 +861,7 @@ public class MarkdownTextFragment implements Renderable, GuiEventListener {
             this.naturalLineBreakAfter = fragment.naturalLineBreakAfter;
             this.endOfWord = fragment.endOfWord;
             this.strikethroughEnd = fragment.strikethroughEnd;
+            this.underlineEnd = fragment.underlineEnd;
         }
 
     }
