@@ -17,7 +17,6 @@ import de.keksuccino.melody.resources.audio.openal.ALUtils;
 import net.minecraft.client.Minecraft;
 import com.mojang.blaze3d.audio.OggAudioStream;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.sounds.SoundSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,7 +28,6 @@ import java.io.*;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Consumer;
 
 @SuppressWarnings("unused")
@@ -53,8 +51,9 @@ public class OggAudio implements IAudio, ALAudio {
     protected volatile boolean retryWhenOpenAlReady = false;
     protected volatile boolean closed = false;
     /**
-     * Makes the checks and the buffer hand-over of background loads exclusive with {@link #close()}: a load either attaches its buffer
-     * before the audio gets closed, and close() deletes it then, or the load sees the closed audio and its loader deletes the buffer.
+     * Makes the clip and buffer hand-overs and the checks of background loads exclusive with {@link #close()}: a clip or buffer either
+     * gets handed to the audio before it gets closed, and close() closes or deletes it then, or the hand-over sees the closed audio,
+     * and the load closes or deletes it itself.
      */
     private final Object backgroundLoadLock = new Object();
 
@@ -79,22 +78,9 @@ public class OggAudio implements IAudio, ALAudio {
             return audio;
         }
 
-        ALAudioClip clip = OpenAlAudioClipFactory.createSafe();
-        if (clip == null) {
-            failBecauseOpenAlReload(audio, location.toString(), "failed to allocate OpenAL source");
-            return audio;
-        }
-
-        try {
-            Optional<Resource> resource = Minecraft.getInstance().getResourceManager().getResource(location);
-            if (resource.isPresent()) {
-                InputStream in = resource.get().open();
-                of(in, location.toString(), audio, clip);
-            }
-        } catch (Exception ex) {
-            audio.loadingFailed = true;
-            LOGGER.error("[FANCYMENU] Failed to read OGG audio from ResourceLocation: " + location, ex);
-        }
+        // Opens the resource before its clip gets created, so a missing resource never leaves an unused OpenAL source behind
+        InputStream in = ALAudioLoader.openSource(() -> Minecraft.getInstance().getResourceManager().open(location), location.toString(), null, () -> audio.loadingFailed = true);
+        if (in != null) of(in, location.toString(), audio, null);
 
         return audio;
 
@@ -127,19 +113,9 @@ public class OggAudio implements IAudio, ALAudio {
             return audio;
         }
 
-        ALAudioClip clip = OpenAlAudioClipFactory.createSafe();
-        if (clip == null) {
-            failBecauseOpenAlReload(audio, oggAudioFile.getPath(), "failed to allocate OpenAL source");
-            return audio;
-        }
-
-        try {
-            InputStream in = new FileInputStream(oggAudioFile);
-            of(in, oggAudioFile.getPath(), audio, clip);
-        } catch (Exception ex) {
-            audio.loadingFailed = true;
-            LOGGER.error("[FANCYMENU] Failed to read OGG audio from file: " + oggAudioFile.getPath(), ex);
-        }
+        // Opens the file before its clip gets created, so a file that can't get opened never leaves an unused OpenAL source behind
+        InputStream in = ALAudioLoader.openSource(() -> new FileInputStream(oggAudioFile), oggAudioFile.getPath(), null, () -> audio.loadingFailed = true);
+        if (in != null) of(in, oggAudioFile.getPath(), audio, null);
 
         return audio;
 
@@ -172,6 +148,7 @@ public class OggAudio implements IAudio, ALAudio {
             return audio;
         }
 
+        // Gets created here, before the web stream gets opened in the background, so the web load owns it until the audio takes it
         ALAudioClip clip = OpenAlAudioClipFactory.createSafe();
         if (clip == null) {
             failBecauseOpenAlReload(audio, oggAudioURL, "failed to allocate OpenAL source");
@@ -179,14 +156,8 @@ public class OggAudio implements IAudio, ALAudio {
         }
 
         new Thread(() -> {
-            try {
-                InputStream in = WebUtils.openResourceStream(oggAudioURL, WebUtils.WebResourceType.AUDIO);
-                if (in == null) throw new NullPointerException("Web resource input stream was NULL!");
-                of(in, oggAudioURL, audio, clip);
-            } catch (Exception ex) {
-                audio.loadingFailed = true;
-                LOGGER.error("[FANCYMENU] Failed to read OGG audio from URL: " + oggAudioURL, ex);
-            }
+            InputStream in = ALAudioLoader.openSource(() -> WebUtils.openResourceStream(oggAudioURL, WebUtils.WebResourceType.AUDIO), oggAudioURL, clip, () -> audio.loadingFailed = true);
+            if (in != null) of(in, oggAudioURL, audio, clip);
         }).start();
 
         return audio;
@@ -194,47 +165,50 @@ public class OggAudio implements IAudio, ALAudio {
     }
 
     /**
-     * Closes the passed {@link InputStream}, also when loading fails or doesn't start.
+     * Takes ownership of the passed {@link InputStream} and {@link ALAudioClip}, so it closes them when loading fails or doesn't start.
      */
     @NotNull
     public static OggAudio of(@NotNull InputStream in, @Nullable String oggAudioName, @Nullable OggAudio writeTo, @Nullable ALAudioClip clip) {
         String name = (oggAudioName != null) ? oggAudioName : "[Generic InputStream Source]";
         OggAudio audio = (writeTo != null) ? writeTo : new OggAudio();
 
-        // The loader closes the stream once it read it, so it only gets closed here when loading doesn't start
+        // The loader closes the stream once it read it and the audio closes the clip once it took it, so they only get closed here when that doesn't happen
         boolean loadingStarted = false;
+        ALAudioClip unclaimedClip = clip;
         try {
             // Clips need to get created on the main thread, so make sure we're in the correct thread
             if (clip == null) RenderSystem.assertOnRenderThread();
 
             if (isOpenAlNotReadyOrReloading()) {
-                CloseableUtils.closeQuietly(clip);
                 failBecauseOpenAlNotReady(audio, name);
                 return audio;
             }
 
-            audio.clip = (clip != null) ? clip : OpenAlAudioClipFactory.createSafe();
-
-            ALAudioClip cachedClip = audio.clip;
-            if (cachedClip == null) {
+            ALAudioClip audioClip = (clip != null) ? clip : OpenAlAudioClipFactory.createSafe();
+            unclaimedClip = audioClip;
+            if (audioClip == null) {
                 failBecauseOpenAlReload(audio, name, "failed to allocate OpenAL source");
                 return audio;
             }
+            // Fails when the audio got closed while its source got opened
+            if (!audio.takeClip(audioClip)) return audio;
+            unclaimedClip = null;
             if (!audio.configureNonPositionalSource(name)) {
                 return audio;
             }
 
-            ALAudioLoader.loadInBackground(in, name, new BackgroundLoad(audio, cachedClip, name));
+            ALAudioLoader.loadInBackground(in, name, new BackgroundLoad(audio, audioClip, name));
             loadingStarted = true;
         } finally {
             if (!loadingStarted) CloseableUtils.closeQuietly(in);
+            CloseableUtils.closeQuietly(unclaimedClip);
         }
 
         return audio;
     }
 
     /**
-     * Closes the passed {@link InputStream}, also when loading fails or doesn't start.
+     * Takes ownership of the passed {@link InputStream}, so it closes it when loading fails or doesn't start.
      */
     @NotNull
     public static OggAudio of(@NotNull InputStream in) {
@@ -446,6 +420,19 @@ public class OggAudio implements IAudio, ALAudio {
             LOGGER.error("[FANCYMENU] Failed to get AL source in OggAudio!", ex);
         }
         return 0;
+    }
+
+    /**
+     * Makes the clip the clip of this audio, which then closes it when it gets closed.
+     *
+     * @return False when the audio got closed already, so the caller still owns the clip and has to close it.
+     */
+    private boolean takeClip(@NotNull ALAudioClip newClip) {
+        synchronized (this.backgroundLoadLock) {
+            if (this.closed) return false;
+            this.clip = newClip;
+            return true;
+        }
     }
 
     private boolean configureNonPositionalSource(@NotNull String sourceName) {
