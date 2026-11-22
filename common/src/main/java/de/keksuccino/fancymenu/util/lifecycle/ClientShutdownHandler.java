@@ -15,6 +15,7 @@ import de.keksuccino.fancymenu.util.rinku.RinkuUtil;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.video.rinku.RinkuVideoManager;
 import de.keksuccino.fancymenu.util.resource.resources.texture.TextureManagerReleaseDispatcher;
+import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -55,6 +56,7 @@ public final class ClientShutdownHandler {
         // GLFW cursor destruction must finish on the render thread while the window and GLFW are still alive.
         runCleanup("GLFW cursors", CursorHandler::shutdown);
         runCleanup("pending texture-manager releases", TextureManagerReleaseDispatcher::flushPendingReleases);
+        runCleanup("main-thread task queue", MainThreadTaskExecutor::shutdown);
         if (rinkuPresent) {
             runCleanup("Rinku action bridge", ActionBridge::dispose);
         }
