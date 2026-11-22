@@ -1,39 +1,38 @@
 package de.keksuccino.fancymenu.util.threading;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class MainThreadTaskExecutor {
 
-    private static final TaskQueue QUEUED_TASKS_PRE_CLIENT_TICK = new TaskQueue();
-    private static final TaskQueue QUEUED_TASKS_POST_CLIENT_TICK = new TaskQueue();
+    private static final List<Runnable> QUEUED_TASKS_PRE_CLIENT_TICK = Collections.synchronizedList(new ArrayList<>());
+    private static final List<Runnable> QUEUED_TASKS_POST_CLIENT_TICK = Collections.synchronizedList(new ArrayList<>());
+    private static volatile boolean shuttingDown;
 
     public static void executeInMainThread(Runnable task, ExecuteTiming when) {
-        if (when == ExecuteTiming.PRE_CLIENT_TICK) {
-            QUEUED_TASKS_PRE_CLIENT_TICK.add(task);
-        } else {
-            QUEUED_TASKS_POST_CLIENT_TICK.add(task);
+        List<Runnable> queue = when == ExecuteTiming.PRE_CLIENT_TICK ? QUEUED_TASKS_PRE_CLIENT_TICK : QUEUED_TASKS_POST_CLIENT_TICK;
+        synchronized (queue) {
+            if (!shuttingDown) queue.add(task);
         }
     }
 
     public static List<Runnable> getAndClearQueue(ExecuteTiming executeTiming) {
-        return ((executeTiming == ExecuteTiming.PRE_CLIENT_TICK) ? QUEUED_TASKS_PRE_CLIENT_TICK : QUEUED_TASKS_POST_CLIENT_TICK).drain();
+        List<Runnable> queue = executeTiming == ExecuteTiming.PRE_CLIENT_TICK ? QUEUED_TASKS_PRE_CLIENT_TICK : QUEUED_TASKS_POST_CLIENT_TICK;
+        synchronized (queue) {
+            List<Runnable> tasks = new ArrayList<>(queue);
+            queue.clear();
+            return tasks;
+        }
     }
 
-    static final class TaskQueue {
-
-        private final List<Runnable> tasks = new ArrayList<>();
-
-        synchronized void add(Runnable task) {
-            this.tasks.add(task);
+    public static void shutdown() {
+        shuttingDown = true;
+        synchronized (QUEUED_TASKS_PRE_CLIENT_TICK) {
+            QUEUED_TASKS_PRE_CLIENT_TICK.clear();
         }
-
-        synchronized List<Runnable> drain() {
-            // Snapshot and clear must share one monitor. A producer inserted between separate operations would be
-            // cleared without ever reaching Minecraft's tick loop, potentially stranding lifecycle recovery forever.
-            List<Runnable> drainedTasks = new ArrayList<>(this.tasks);
-            this.tasks.clear();
-            return drainedTasks;
+        synchronized (QUEUED_TASKS_POST_CLIENT_TICK) {
+            QUEUED_TASKS_POST_CLIENT_TICK.clear();
         }
     }
 
