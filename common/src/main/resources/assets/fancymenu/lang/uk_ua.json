@@ -3383,6 +3383,8 @@
   "fancymenu.placeholders.world.inventory_slot_food_point_restore_amount.desc": "Повертає, скільки одиниць ситости відновить предмет у вказаному слоті інвентаря, якщо його з’їсти.\nПриймає номер слота інвентаря.\nПовертає '0.0', якщо гравець не у світі, слот порожній або предмет — не їжа.",
   "fancymenu.placeholders.world.item_category": "Категорія предмета",
   "fancymenu.placeholders.world.item_category.desc": "Повертає категорію вказаного предмета в інвентарі режиму творчости.\nПриймає ключ предмета.\nВкажи для \"as_key\" true, щоб отримати ключ категорії (minecraft:building_blocks) замість відображуваної назви.\nПовертає порожнє значення, якщо гравець не у світі.\nПовертає \"UNKNOWN\", якщо предмет не має категорії або недійсний.",
+  "fancymenu.placeholders.world.level_save_count": "Кількість збережень світів",
+  "fancymenu.placeholders.world.level_save_count.desc": "Повертає кількість усіх доступних локальних збережень світів.\nПовертає '0', якщо в тебе немає локальних збережень світів.",
   "fancymenu.placeholders.world.level_save_data": "Дані збереження світу",
   "fancymenu.placeholders.world.level_save_data.desc": "Повертає всі дані світу з певного збереження як однорядковий JSON.\n\nЗначення:\n§elevel_name§r = точна назва збереження світу, дані якого треба отримати.",
   "fancymenu.placeholders.world.level_save_names": "Назви збережень світів",
