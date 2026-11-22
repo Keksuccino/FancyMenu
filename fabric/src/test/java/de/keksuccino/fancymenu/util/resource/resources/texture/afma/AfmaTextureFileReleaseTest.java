@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.afma;
 
+import de.keksuccino.fancymenu.util.resource.resources.texture.GatedZipChannel;
 import de.keksuccino.fancymenu.util.resource.resources.texture.LogCapture;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ReadGate;
 import org.jetbrains.annotations.NotNull;
@@ -91,6 +92,39 @@ class AfmaTextureFileReleaseTest {
     }
 
     @Test
+    void resetWhileTheStreamThreadReadsALegacyArchiveKeepsTheArchiveReadable() throws Exception {
+        try (LogCapture problems = LogCapture.problemsOf(AfmaTexture.class, AfmaDecoder.class)) {
+            Path file = AfmaTestFiles.writeLegacyZip(this.directory.resolve("legacy.afma"), FRAMES);
+            AfmaTexture.populateTexture(this.texture, file.toFile(), file.toString());
+            assertTrue(this.texture.isLoadingCompleted());
+            GatedAfmaDecoder decoder = this.texture.requireDecoder();
+            GatedZipChannel archive = decoder.requireOpenedZipChannel();
+            // Loading cached the chunk of the first frame, so the stream thread has to read it from the archive again
+            decoder.clearPayloadCache();
+            ReadGate gate = new ReadGate();
+            archive.readGate = gate;
+            this.texture.startTickerIfNeeded();
+            Thread stream = this.texture.streamThread;
+            assertNotNull(stream);
+            gate.awaitReached();
+
+            try {
+                this.texture.reset();
+            } finally {
+                gate.open();
+            }
+            ReadGate.join(stream);
+            // The next render starts the stream of the reset
+            this.texture.startTickerIfNeeded();
+            this.awaitPrefetchedFrames();
+
+            assertTrue(archive.isOpen());
+            assertFalse(this.texture.isLoadingFailed());
+            assertEquals(List.of(), problems.messages());
+        }
+    }
+
+    @Test
     void closeReleasesTheFileOfATextureThatIsStillLoading() throws Exception {
         try (LogCapture problems = LogCapture.problemsOf(AfmaTexture.class, AfmaDecoder.class)) {
             Path file = AfmaTestFiles.writeContainer(this.directory.resolve("noise.afma"), FRAMES);
@@ -143,6 +177,7 @@ class AfmaTextureFileReleaseTest {
             synchronized (this.texture.streamStateLock) {
                 if (this.texture.prefetchedFrames.size() >= 2) return;
             }
+            if (this.texture.isLoadingFailed()) fail("The texture failed instead of decoding frames");
             if (System.nanoTime() > deadline) fail("The stream thread didn't decode any frames");
             Thread.sleep(1L);
         }
