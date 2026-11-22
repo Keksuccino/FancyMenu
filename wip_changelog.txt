@@ -102,6 +102,8 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - Profile switches now retry on their own when files are briefly in use, and finish their cleanup in the background (#1867)
 - The profile error for files in use now explains that the game itself can still be using them, like audio that is still loading, so you can wait a few seconds and try again (#1867)
 - Web resources that fail to load now log one clear error with the real cause instead of two errors and a misleading NullPointerException
+- The "Gamerule Value" placeholder now also accepts game rule IDs with the `minecraft:` prefix, like `minecraft:keep_inventory` (#1846)
+- Fixed the "Gamerule Value" placeholder returning nothing on Minecraft 1.21.11 and newer, both for its default `doDaylightCycle` and for old game rule names like `keepInventory` in older layouts, which now get mapped to their new names (#1846)
 - Fixed profiles getting hidden or lost when a profile switch fails or gets interrupted (#1867)
 - Fixed a failed profile switch blocking all other profile actions (#1867)
 - Fixed interrupted profile imports not restoring the profile they were replacing (#1867)
