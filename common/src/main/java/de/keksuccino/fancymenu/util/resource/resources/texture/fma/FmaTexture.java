@@ -496,11 +496,27 @@ public class FmaTexture implements ITexture, PlayableResource {
         try {
             byte[] framePng = intro ? activeDecoder.readIntroFrame(index) : activeDecoder.readFrame(index);
             if (framePng == null) return null;
-            return readPngImage(framePng);
+            return readFrameImage(framePng);
         } catch (Exception ex) {
             // Closing the texture releases the archive file right away, so reads that come after it fail, which is no error
             if (!this.closed.get()) LOGGER.error("[FANCYMENU] Failed to decode {} frame {} of FMA stream", intro ? "intro" : "normal", index, ex);
             return null;
+        }
+    }
+
+    /**
+     * Decodes the PNG of a frame through a direct buffer of its exact size.<br>
+     * 1.19.2's {@link NativeImage} can't read byte arrays, and its buffer read hands the address of the buffer to STB, so it needs a direct buffer.
+     * The buffer gets freed right after the decode.
+     */
+    @NotNull
+    protected static NativeImage readFrameImage(@NotNull byte[] framePng) throws IOException {
+        ByteBuffer buffer = MemoryUtil.memAlloc(framePng.length);
+        try {
+            buffer.put(framePng).flip();
+            return NativeImage.read(buffer);
+        } finally {
+            MemoryUtil.memFree(buffer);
         }
     }
 
@@ -1014,7 +1030,7 @@ public class FmaTexture implements ITexture, PlayableResource {
 
             int imageWidth;
             int imageHeight;
-            try (NativeImage firstFrameImage = readPngImage(firstFramePng)) {
+            try (NativeImage firstFrameImage = readFrameImage(firstFramePng)) {
                 imageWidth = firstFrameImage.getWidth();
                 imageHeight = firstFrameImage.getHeight();
             }
@@ -1023,21 +1039,6 @@ public class FmaTexture implements ITexture, PlayableResource {
         } catch (Exception ex) {
             CloseableUtils.closeQuietly(decoder);
             throw (ex instanceof IOException ioException) ? ioException : new IOException(ex);
-        }
-    }
-
-    /**
-     * Decodes a PNG frame. 1.19.2's {@link NativeImage} can't read byte arrays, and its buffer read hands the address of the buffer to STB, so it needs a direct buffer.
-     * The PNG gets copied into a native buffer that gets freed right after the decode.
-     */
-    @NotNull
-    protected static NativeImage readPngImage(@NotNull byte[] png) throws IOException {
-        ByteBuffer buffer = MemoryUtil.memAlloc(png.length);
-        try {
-            buffer.put(png).flip();
-            return NativeImage.read(buffer);
-        } finally {
-            MemoryUtil.memFree(buffer);
         }
     }
 
