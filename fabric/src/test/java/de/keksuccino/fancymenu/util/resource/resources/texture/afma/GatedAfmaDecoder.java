@@ -1,6 +1,8 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.afma;
 
+import de.keksuccino.fancymenu.util.resource.resources.texture.GatedZipChannel;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ReadGate;
+import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.File;
@@ -14,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * The real decoder, which can hold its reads and its loading at gates, and remembers the file it opened and every read from it.
+ * Legacy ZIP archives get read through a {@link GatedZipChannel}.
  */
 final class GatedAfmaDecoder extends AfmaDecoder {
 
@@ -22,6 +25,8 @@ final class GatedAfmaDecoder extends AfmaDecoder {
     private final ReadGate loadingGate;
     @Nullable
     private volatile GatedFile file;
+    @Nullable
+    private volatile GatedZipChannel zipChannel;
 
     GatedAfmaDecoder(@Nullable ReadGate loadingGate) {
         this.loadingGate = loadingGate;
@@ -47,6 +52,16 @@ final class GatedAfmaDecoder extends AfmaDecoder {
     }
 
     /**
+     * The channel of the legacy ZIP archive the decoder opened.
+     */
+    @NotNull
+    GatedZipChannel requireOpenedZipChannel() {
+        GatedZipChannel opened = this.zipChannel;
+        assertNotNull(opened, "The decoder didn't open a legacy ZIP archive");
+        return opened;
+    }
+
+    /**
      * Forgets the cached payload chunks, so the next payload reads come from the file again.
      */
     void clearPayloadCache() {
@@ -60,6 +75,13 @@ final class GatedAfmaDecoder extends AfmaDecoder {
         GatedFile opened = new GatedFile(archiveFile);
         this.file = opened;
         return opened;
+    }
+
+    @Override
+    protected @NotNull ZipFile openZipFile(@NotNull File archiveFile) throws IOException {
+        GatedZipChannel opened = new GatedZipChannel(archiveFile.toPath());
+        this.zipChannel = opened;
+        return opened.openZipFile();
     }
 
     @Override
