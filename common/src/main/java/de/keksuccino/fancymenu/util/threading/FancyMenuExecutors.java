@@ -79,4 +79,5 @@ public final class FancyMenuExecutors {
             LOGGER.error("[FANCYMENU] Failed to shut down managed executor.", ex);
         }
     }
+
 }
