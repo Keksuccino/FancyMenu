@@ -3383,6 +3383,8 @@
   "fancymenu.placeholders.world.inventory_slot_food_point_restore_amount.desc": "Zwraca liczbę punktów jedzenia, jaką przywróci przedmiot w podanym slocie ekwipunku po zjedzeniu.\nPrzyjmuje numer slotu wskazujący na slot ekwipunku.\nZwraca „0.0”, gdy nie jesteś w świecie, slot jest pusty albo przedmiot nie jest jedzeniem.",
   "fancymenu.placeholders.world.item_category": "Kategoria przedmiotu",
   "fancymenu.placeholders.world.item_category.desc": "Zwraca kategorię przedmiotu w kreatywnym ekwipunku dla podanego przedmiotu.\nPrzyjmuje klucz przedmiotu jako dane wejściowe.\nUstaw „as_key” na true, aby zwrócić klucz kategorii (minecraft:building_blocks) zamiast nazwy wyświetlanej.\nZwraca pustą wartość, gdy gracz nie jest w świecie.\nZwraca „UNKNOWN”, jeśli przedmiot nie ma kategorii albo jest nieprawidłowy.",
+  "fancymenu.placeholders.world.level_save_count": "Liczba zapisów świata",
+  "fancymenu.placeholders.world.level_save_count.desc": "Zwraca liczbę wszystkich dostępnych lokalnych zapisów świata.\nZwraca „0”, gdy nie masz żadnych lokalnych zapisów świata.",
   "fancymenu.placeholders.world.level_save_data": "Dane zapisu świata",
   "fancymenu.placeholders.world.level_save_data.desc": "Zwraca komplet danych poziomu dla konkretnego zapisu świata jako jednolinijkowy JSON.\n\nWartości:\n§elevel_name§r = Dokładna nazwa zapisu świata, z którego mają zostać pobrane dane.",
   "fancymenu.placeholders.world.level_save_names": "Nazwy zapisów świata",
