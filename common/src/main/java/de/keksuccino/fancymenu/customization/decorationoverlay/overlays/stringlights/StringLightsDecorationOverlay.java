@@ -47,10 +47,15 @@ public class StringLightsDecorationOverlay extends PixelDecorationOverlay<String
     private static final float MAX_FLICKER_SPEED = 2.0F;
     /** Reading the options parses placeholders, so they get read a few times per second instead of every frame */
     private static final float SETTINGS_REFRESH_SECONDS = 0.1F;
+    private static final StringLightsProgram DEFAULT_PROGRAM = StringLightsProgram.ON;
+    /** How much darker a bulb gets at the deepest {@link StringLightsProgram#sag sag} */
+    private static final float SAG_DARKENING = 0.16F;
+    /** How much of its halo a bulb loses at the deepest {@link StringLightsProgram#sag sag} */
+    private static final float SAG_HALO_FADE = 0.5F;
 
-    public final DecorationOverlayOptions.Look look = new DecorationOverlayOptions.Look(this, DecorationOverlayLook.DETAILED);
+    public final DecorationOverlayOptions.Look look = new DecorationOverlayOptions.Look(this, DecorationOverlayLook.SIMPLE);
     public final Property.BooleanProperty pineGarland = putProperty(Property.booleanProperty("string_lights_pine_garland", false, "fancymenu.decoration_overlays.string_lights.pine_garland"));
-    public final Property<StringLightsProgram> program = putProperty(Property.enumProperty("string_lights_program", StringLightsProgram.CYCLE, "fancymenu.decoration_overlays.string_lights.program", StringLightsProgram::getLocalizationKey));
+    public final Property<StringLightsProgram> program = putProperty(Property.enumProperty("string_lights_program", DEFAULT_PROGRAM, "fancymenu.decoration_overlays.string_lights.program", StringLightsProgram::getLocalizationKey));
     public final Property.FloatProperty stringLightsScale = putProperty(Property.floatProperty("string_lights_scale", 1.0F, "fancymenu.decoration_overlays.string_lights.scale"));
     public final Property.FloatProperty stringLightsWindStrength = putProperty(Property.floatProperty("string_lights_wind_strength", 1.0F, "fancymenu.decoration_overlays.string_lights.wind_strength"));
     public final Property.FloatProperty stringLightsFlickerSpeed = putProperty(Property.floatProperty("string_lights_flicker_speed", 1.0F, "fancymenu.decoration_overlays.string_lights.flicker_speed"));
@@ -69,7 +74,7 @@ public class StringLightsDecorationOverlay extends PixelDecorationOverlay<String
     private boolean simple = false;
     private boolean garland = false;
     @NotNull
-    private StringLightsProgram lightProgram = StringLightsProgram.CYCLE;
+    private StringLightsProgram lightProgram = DEFAULT_PROGRAM;
     private float scale = 1.0F;
     private int spriteScale = 1;
     private float windStrength = 1.0F;
@@ -208,19 +213,22 @@ public class StringLightsDecorationOverlay extends PixelDecorationOverlay<String
             if (s <= 0) continue;
             StringLightsArt.BulbRamp ramp = string.bulbRamp[i];
             int level = running.level(i, string.index, this.lightSeconds);
+            float sag = running.sag(i, string.index, this.lightSeconds);
+            int bulbTint = (sag > 0.0F) ? PixelMath.scaleRgb(ramp.tint, 1.0F - sag * SAG_DARKENING) : ramp.tint;
+            int haloTint = (sag > 0.0F) ? PixelMath.scaleAlpha(ramp.tint, 1.0F - sag * SAG_HALO_FADE) : ramp.tint;
             int point = string.bulbPoint[i];
             int px = string.rasterX[point];
             int py = string.rasterY[point];
             int center = (s - 1) >> 1;
             if (this.simple) {
-                if (level > 0) drawCentered(graphics, StringLightsArt.SIMPLE_HALOS[level], ramp.simpleHalo[level], px, py, s, ramp.tint);
-                graphics.sprite(StringLightsArt.SIMPLE_BULB, ramp.simpleBulb[level], px - 2 * s - center, py - 2 * s - center, false, false, s, ramp.tint);
+                if (level > 0) drawCentered(graphics, StringLightsArt.SIMPLE_HALOS[level], ramp.simpleHalo[level], px, py, s, haloTint);
+                graphics.sprite(StringLightsArt.SIMPLE_BULB, ramp.simpleBulb[level], px - 2 * s - center, py - 2 * s - center, false, false, s, bulbTint);
             } else {
                 int sway = Math.round((float)Math.sin(string.windTime * 2.2F + i * 0.9F) * 0.9F * this.windStrength);
                 int x = px + sway - 2 * s - center;
                 int y = py + 1 + drop;
-                if (level > 0) drawCentered(graphics, StringLightsArt.HALOS[level], ramp.halo[level], px + sway, y + 4 * s + center, s, ramp.tint);
-                graphics.sprite(StringLightsArt.BULB, ramp.bulb[level], x, y, false, false, s, ramp.tint);
+                if (level > 0) drawCentered(graphics, StringLightsArt.HALOS[level], ramp.halo[level], px + sway, y + 4 * s + center, s, haloTint);
+                graphics.sprite(StringLightsArt.BULB, ramp.bulb[level], x, y, false, false, s, bulbTint);
             }
         }
     }
@@ -265,7 +273,7 @@ public class StringLightsDecorationOverlay extends PixelDecorationOverlay<String
         if ((simple != this.simple) || (garland != this.garland)) this.repaintRequested = true;
         this.simple = simple;
         this.garland = garland;
-        this.lightProgram = this.program.tryGetNonNullElse(StringLightsProgram.CYCLE);
+        this.lightProgram = this.program.tryGetNonNullElse(DEFAULT_PROGRAM);
         float scale = PixelMath.clamp(finiteOr(this.stringLightsScale.getFloat(), 1.0F), MIN_SCALE, MAX_SCALE);
         this.windStrength = PixelMath.clamp(finiteOr(this.stringLightsWindStrength.getFloat(), 1.0F), 0.0F, MAX_WIND_STRENGTH);
         this.flickerSpeed = PixelMath.clamp(finiteOr(this.stringLightsFlickerSpeed.getFloat(), 1.0F), 0.0F, MAX_FLICKER_SPEED);
