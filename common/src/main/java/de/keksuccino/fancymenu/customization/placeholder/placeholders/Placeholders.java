@@ -217,6 +217,7 @@ public class Placeholders {
     public static final WorldPlayersListPlaceholder WORLD_PLAYERS_LIST = new WorldPlayersListPlaceholder();
     public static final FileTextPlaceholder FILE_TEXT = new FileTextPlaceholder();
     public static final WorldSaveNamesPlaceholder LEVEL_SAVE_NAMES = new WorldSaveNamesPlaceholder();
+    public static final WorldSaveCountPlaceholder LEVEL_SAVE_COUNT = new WorldSaveCountPlaceholder();
     public static final WorldSaveDataPlaceholder LEVEL_SAVE_DATA = new WorldSaveDataPlaceholder();
     public static final FileSizePlaceholder FILE_SIZE = new FileSizePlaceholder();
     public static final FileMd5Placeholder FILE_MD5 = new FileMd5Placeholder();
@@ -333,6 +334,7 @@ public class Placeholders {
         PlaceholderRegistry.register(CURRENT_PLAYER_OXYGEN_PERCENTAGE);
         PlaceholderRegistry.register(WORLD_PLAYERS_LIST);
         PlaceholderRegistry.register(LEVEL_SAVE_NAMES);
+        PlaceholderRegistry.register(LEVEL_SAVE_COUNT);
         PlaceholderRegistry.register(LEVEL_SAVE_DATA);
 
         //Server

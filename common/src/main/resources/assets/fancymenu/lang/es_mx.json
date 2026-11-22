@@ -3383,6 +3383,8 @@
   "fancymenu.placeholders.world.inventory_slot_food_point_restore_amount.desc": "Devuelve la cantidad de puntos de comida que el objeto en la ranura del inventario dada restaurará al comérselo.\nToma un número de ranura para señalar una ranura del inventario.\nDevuelve '0.0' cuando no estás en un mundo, la ranura está vacía o el objeto no es comida.",
   "fancymenu.placeholders.world.item_category": "Categoría del objeto",
   "fancymenu.placeholders.world.item_category.desc": "Devuelve la categoría del inventario creativo del objeto dado.\nToma como entrada la clave de un objeto.\nPon \"as_key\" en true para devolver la clave de la categoría (minecraft:building_blocks) en lugar del nombre visible.\nDevuelve un valor vacío cuando el jugador no está en un mundo.\nDevuelve \"UNKNOWN\" si el objeto no tiene categoría o es inválido.",
+  "fancymenu.placeholders.world.level_save_count": "Cantidad de mundos guardados",
+  "fancymenu.placeholders.world.level_save_count.desc": "Devuelve la cantidad de todos los mundos guardados localmente.\nDevuelve '0' cuando no tienes ningún mundo guardado localmente.",
   "fancymenu.placeholders.world.level_save_data": "Datos guardados del mundo",
   "fancymenu.placeholders.world.level_save_data.desc": "Devuelve los datos completos de nivel de una partida guardada específica como JSON de una sola línea.\n\nValores:\n§elevel_name§r = El nombre exacto de la partida guardada de la que se obtendrán los datos.",
   "fancymenu.placeholders.world.level_save_names": "Nombres de partidas guardadas del mundo",
