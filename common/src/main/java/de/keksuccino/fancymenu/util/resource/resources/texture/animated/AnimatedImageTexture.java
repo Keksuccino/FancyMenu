@@ -37,7 +37,8 @@ import java.util.concurrent.atomic.AtomicReference;
  *
  * Frames read their compressed data from a file whenever they get decoded: local images read their own file, images that only come as stream
  * (resources, web images and other streams) get copied to a temporary file first, which gets deleted once the image is not needed anymore.
- * If the file changes while the animation plays, the animation stops at the frame it shows.
+ * If the file changes while the animation plays, the animation stops at the frame it shows. Closing the texture closes the file right away,
+ * so files can get moved right after closing textures, like when switching profiles.
  */
 public abstract class AnimatedImageTexture implements ITexture, PlayableResource {
 
@@ -81,6 +82,11 @@ public abstract class AnimatedImageTexture implements ITexture, PlayableResource
     protected volatile boolean restartRequested = false;
     /** The stream of the current image, replaced when the image gets loaded again and cleared once a static image is on its texture. **/
     protected final AtomicReference<AnimatedFrameStream> stream = new AtomicReference<>();
+    /** Guards {@link #loadingSource}. Local files get opened while holding it, so closing the texture never misses a file that is just getting opened. **/
+    protected final Object loadingSourceLock = new Object();
+    /** The source a loading thread parses right now, which closing the texture closes right away. Guarded by {@link #loadingSourceLock}. **/
+    @Nullable
+    protected AnimatedImageSource loadingSource;
 
     // Only used on the render thread
     @Nullable
@@ -173,14 +179,28 @@ public abstract class AnimatedImageTexture implements ITexture, PlayableResource
     }
 
     /**
-     * Copies the stream to a temporary file, parses the image from there and starts decoding its frames. Closes the stream.
+     * Copies the stream to a temporary file, parses the image from there and starts decoding its frames. Closes the stream. Closed textures don't copy the stream.<br>
+     * The copy gets made before the copy gets tracked as loading source, so closing the texture never waits for a slow stream, like a download.
      */
     protected void populate(@NotNull InputStream in, @NotNull String name) {
-        try (InputStream input = in) {
-            this.populate(() -> AnimatedImageFileSource.copyToTempFile(input, resolveTempDirectory(), this.formatId), name);
-        } catch (IOException ex) {
-            LOGGER.warn("[FANCYMENU] Failed to close the stream of {} image: {}", this.formatName, name, ex);
+        AnimatedImageSource copy;
+        try {
+            if (this.closed.get()) return;
+            copy = AnimatedImageFileSource.copyToTempFile(in, resolveTempDirectory(), this.formatId);
+        } catch (Exception ex) {
+            this.sourceName = name;
+            this.publishFailure();
+            LOGGER.error("[FANCYMENU] Failed to read {} image: {}", this.formatName, name, ex);
+            return;
+        } finally {
+            try {
+                in.close();
+            } catch (IOException ex) {
+                LOGGER.warn("[FANCYMENU] Failed to close the stream of {} image: {}", this.formatName, name, ex);
+            }
         }
+        // A texture that got closed while the stream got copied doesn't take the copy, which deletes it
+        if (!this.populate(() -> copy, name)) copy.close();
     }
 
     /**
@@ -192,17 +212,36 @@ public abstract class AnimatedImageTexture implements ITexture, PlayableResource
     }
 
     /**
-     * Opens the source, parses the image from it and starts decoding its frames. Closed textures don't open the source.
+     * Opens the source, parses the image from it and starts decoding its frames. Closed textures don't open the source.<br>
+     * The source is the {@link #loadingSource} while it gets parsed, so closing the texture closes it right away, which makes parsing fail without an error.
+     *
+     * @return If the source got opened. The texture owns it then.
      */
-    protected void populate(@NotNull SourceOpener sourceOpener, @NotNull String name) {
+    protected boolean populate(@NotNull SourceOpener sourceOpener, @NotNull String name) {
         this.sourceName = name;
+        AnimatedImageSource source;
         try {
-            if (this.closed.get()) return;
-            this.applyImage(this.readImage(sourceOpener.open(), name), name);
+            synchronized (this.loadingSourceLock) {
+                if (this.closed.get()) return false;
+                source = sourceOpener.open();
+                this.loadingSource = source;
+            }
         } catch (Exception ex) {
             this.publishFailure();
             LOGGER.error("[FANCYMENU] Failed to read {} image: {}", this.formatName, name, ex);
+            return false;
         }
+        try {
+            this.applyImage(this.readImage(source, name), name);
+        } catch (Exception ex) {
+            this.publishFailure();
+            if (!this.closed.get()) LOGGER.error("[FANCYMENU] Failed to read {} image: {}", this.formatName, name, ex);
+        } finally {
+            synchronized (this.loadingSourceLock) {
+                this.loadingSource = null;
+            }
+        }
+        return true;
     }
 
     /**
@@ -222,12 +261,17 @@ public abstract class AnimatedImageTexture implements ITexture, PlayableResource
         this.numPlays.set(image.getNumPlays());
         this.animated = image.isAnimated();
         AnimatedFrameStream previous = this.stream.getAndSet(newStream);
+        // A close() that ran before this stream became current didn't see it, so its source gets closed here, before the stream decodes anything
+        if (this.closed.get()) newStream.closeSource();
         newStream.start();
         this.loadingFailed.set(false);
         this.decoded.set(true);
-        // Streams belong to the render thread, which then also notices the new stream and switches to it
-        if (previous != null) TextureManagerReleaseDispatcher.dispatch(previous::close);
-        if (this.closed.get()) TextureManagerReleaseDispatcher.dispatch(this::releaseRenderResources);
+        if (previous != null) {
+            // The file of the replaced image gets closed right away, its stream belongs to the render thread, which then also notices the new stream and switches to it
+            previous.closeSource();
+            TextureManagerReleaseDispatcher.dispatch(previous::close);
+        }
+        if (this.closed.get()) this.releaseRenderResourcesOnRenderThread();
     }
 
     protected void publishFailure() {
@@ -440,6 +484,13 @@ public abstract class AnimatedImageTexture implements ITexture, PlayableResource
         }
     }
 
+    /**
+     * Releases the streams and the texture on the render thread, which they belong to: right away when called on the render thread, otherwise before its next tick.
+     */
+    protected void releaseRenderResourcesOnRenderThread() {
+        TextureManagerReleaseDispatcher.dispatch(this::releaseRenderResources);
+    }
+
     protected void releaseRenderResources() {
         AnimatedFrameStream active = this.stream.getAndSet(null);
         if (active != null) active.close();
@@ -605,12 +656,23 @@ public abstract class AnimatedImageTexture implements ITexture, PlayableResource
         return this.closed.get();
     }
 
+    /**
+     * Closes the file of the image right away on any thread, so it is never open anymore once this returns, also while the loading thread still parses it
+     * or a decoding task reads a frame from it. Streams and the texture get released on the render thread.
+     */
     @Override
     public void close() {
         if (!this.closed.compareAndSet(false, true)) return;
         this.sourceLocation = null;
-        // Streams and the texture belong to the render thread
-        TextureManagerReleaseDispatcher.dispatch(this::releaseRenderResources);
+        // The source of the current stream gets closed before the loading source, because a loading thread first makes its stream current and then stops tracking its source
+        AnimatedFrameStream activeStream = this.stream.get();
+        if (activeStream != null) activeStream.closeSource();
+        AnimatedImageSource parsingSource;
+        synchronized (this.loadingSourceLock) {
+            parsingSource = this.loadingSource;
+        }
+        if (parsingSource != null) parsingSource.close();
+        this.releaseRenderResourcesOnRenderThread();
     }
 
     /**

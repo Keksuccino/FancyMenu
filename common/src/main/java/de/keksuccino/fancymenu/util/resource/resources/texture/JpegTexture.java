@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.resource.resources.texture;
 import com.mojang.blaze3d.platform.NativeImage;
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
+import de.keksuccino.fancymenu.util.file.ReleasableFileInputStream;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
@@ -36,6 +37,9 @@ public class JpegTexture implements ITexture {
     protected volatile boolean loadingCompleted = false;
     protected volatile boolean loadingFailed = false;
     protected volatile boolean closed = false;
+    /** The stream of the local file while it loads, so closing the texture can release the file right away. **/
+    @Nullable
+    protected volatile ReleasableFileInputStream loadingFileStream;
 
     /**
      * Supports JPEG and PNG textures.
@@ -95,7 +99,8 @@ public class JpegTexture implements ITexture {
         }
 
         try {
-            InputStream in = new FileInputStream(textureFile);
+            ReleasableFileInputStream in = new ReleasableFileInputStream(textureFile);
+            texture.loadingFileStream = in;
             of(in, textureFile.getPath(), texture);
         } catch (Exception ex) {
             texture.loadingFailed = true;
@@ -199,50 +204,39 @@ public class JpegTexture implements ITexture {
         if (!texture.closed) {
             try {
                 SizedNativeImage image = convertJpegToPng(in);
-                if (image != null) {
-                    texture.width = image.width;
-                    texture.height = image.height;
-                    texture.aspectRatio = new AspectRatio(texture.width, texture.height);
-                    if (texture.textureEntry.adopt(image.image)) texture.loadingCompleted = true;
-                } else {
-                    texture.loadingFailed = true;
-                    LOGGER.error("[FANCYMENU] Failed to read texture, NativeImage was NULL: " + textureName);
-                }
+                texture.width = image.width;
+                texture.height = image.height;
+                texture.aspectRatio = new AspectRatio(texture.width, texture.height);
+                if (texture.textureEntry.adopt(image.image)) texture.loadingCompleted = true;
             } catch (Exception ex) {
                 texture.loadingFailed = true;
-                LOGGER.error("[FANCYMENU] Failed to load texture: " + textureName, ex);
+                // Closing the texture closes the stream of its file right away, so reading it fails then, which is no error
+                if (!texture.closed) LOGGER.error("[FANCYMENU] Failed to load texture: " + textureName, ex);
             }
         }
         texture.decoded = true;
         CloseableUtils.closeQuietly(in);
+        texture.loadingFileStream = null;
     }
 
     /**
      * Converts JPEG images to PNG, because Minecraft dropped support for JPEGs. Closes the passed {@link InputStream}.
+     *
+     * @throws IOException If the stream holds no readable image or reading it failed.
      */
-    @Nullable
-    protected static SizedNativeImage convertJpegToPng(@NotNull InputStream in) {
-        int w = 1;
-        int h = 1;
-        NativeImage nativeImage = null;
-        ByteArrayOutputStream byteArrayOut = null;
-        try {
-            BufferedImage bufferedImage;
-            // Closes the stream right after reading the JPEG, so its file isn't open while the image gets converted
-            try (InputStream input = in) {
-                bufferedImage = ImageIO.read(input);
-            }
-            w = bufferedImage.getWidth();
-            h = bufferedImage.getHeight();
-            byteArrayOut = new ByteArrayOutputStream();
-            ImageIO.write(bufferedImage, "png", byteArrayOut);
-            //ByteArrayInputStream is important, because using NativeImage#read(byte[]) causes OutOfMemoryExceptions
-            nativeImage = NativeImage.read(new ByteArrayInputStream(byteArrayOut.toByteArray()));
-        } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to convert JPEG image to PNG!", ex);
+    @NotNull
+    protected static SizedNativeImage convertJpegToPng(@NotNull InputStream in) throws IOException {
+        BufferedImage bufferedImage;
+        // Closes the stream right after reading the JPEG, so its file isn't open while the image gets converted
+        try (InputStream input = in) {
+            bufferedImage = ImageIO.read(input);
         }
-        CloseableUtils.closeQuietly(byteArrayOut);
-        return (nativeImage != null) ? new SizedNativeImage(nativeImage, w, h) : null;
+        if (bufferedImage == null) throw new IOException("No image reader can read the JPEG image");
+        ByteArrayOutputStream byteArrayOut = new ByteArrayOutputStream();
+        ImageIO.write(bufferedImage, "png", byteArrayOut);
+        //ByteArrayInputStream is important, because using NativeImage#read(byte[]) causes OutOfMemoryExceptions
+        NativeImage nativeImage = NativeImage.read(new ByteArrayInputStream(byteArrayOut.toByteArray()));
+        return new SizedNativeImage(nativeImage, bufferedImage.getWidth(), bufferedImage.getHeight());
     }
 
     @Nullable
@@ -310,6 +304,8 @@ public class JpegTexture implements ITexture {
     @Override
     public void close() {
         this.closed = true;
+        // Releases the file of a texture that still loads right away, a read of the loading thread that runs right now finishes first
+        CloseableUtils.closeQuietly(this.loadingFileStream);
         this.textureEntry.close();
         this.decoded = false;
     }

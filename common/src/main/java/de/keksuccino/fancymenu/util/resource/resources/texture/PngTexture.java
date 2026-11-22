@@ -6,6 +6,7 @@ import java.util.Objects;
 import java.util.Optional;
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
+import de.keksuccino.fancymenu.util.file.ReleasableFileInputStream;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
@@ -42,6 +43,9 @@ public class PngTexture implements ITexture {
     protected volatile boolean loadingCompleted = false;
     protected volatile boolean loadingFailed = false;
     protected volatile boolean closed = false;
+    /** The stream of the local file while it loads, so closing the texture can release the file right away. **/
+    @Nullable
+    protected volatile ReleasableFileInputStream loadingFileStream;
 
     /**
      * Supports JPEG and PNG textures.
@@ -114,7 +118,8 @@ public class PngTexture implements ITexture {
         }
 
         try {
-            InputStream in = new FileInputStream(textureFile);
+            ReleasableFileInputStream in = new ReleasableFileInputStream(textureFile);
+            texture.loadingFileStream = in;
             of(in, textureFile.getPath(), texture);
         } catch (Exception ex) {
             texture.loadingFailed = true;
@@ -229,11 +234,13 @@ public class PngTexture implements ITexture {
                 }
             } catch (Exception ex) {
                 texture.loadingFailed = true;
-                LOGGER.error("[FANCYMENU] Failed to load texture: " + textureName, ex);
+                // Closing the texture closes the stream of its file right away, so reading it fails then, which is no error
+                if (!texture.closed) LOGGER.error("[FANCYMENU] Failed to load texture: " + textureName, ex);
             }
         }
         texture.decoded = true;
         CloseableUtils.closeQuietly(in);
+        texture.loadingFileStream = null;
     }
 
     @Nullable
@@ -307,6 +314,8 @@ public class PngTexture implements ITexture {
     @Override
     public void close() {
         this.closed = true;
+        // Releases the file of a texture that still loads right away, a read of the loading thread that runs right now finishes first
+        CloseableUtils.closeQuietly(this.loadingFileStream);
         this.textureEntry.close();
         this.resourceLocation = null;
         this.decoded = false;

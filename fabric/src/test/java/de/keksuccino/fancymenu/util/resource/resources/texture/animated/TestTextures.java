@@ -227,6 +227,12 @@ final class TestTextures {
         }
 
         @Override
+        protected void releaseRenderResourcesOnRenderThread() {
+            // Tests play the texture on their own thread, which is the render thread of the texture
+            this.releaseRenderResources();
+        }
+
+        @Override
         protected void notifyAnimatedTextureFinished(boolean willRestart) {
             super.notifyAnimatedTextureFinished(willRestart);
             if (this.recorder.onFinishedPlaying != null) this.recorder.onFinishedPlaying.run();
@@ -280,6 +286,12 @@ final class TestTextures {
         @Override
         protected void releaseGpuTexture() {
             this.textureLocation = null;
+        }
+
+        @Override
+        protected void releaseRenderResourcesOnRenderThread() {
+            // Tests play the texture on their own thread, which is the render thread of the texture
+            this.releaseRenderResources();
         }
 
         @Override

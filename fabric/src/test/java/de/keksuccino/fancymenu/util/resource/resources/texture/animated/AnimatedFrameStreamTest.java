@@ -1,5 +1,7 @@
 package de.keksuccino.fancymenu.util.resource.resources.texture.animated;
 
+import de.keksuccino.fancymenu.util.resource.resources.texture.LogCapture;
+import de.keksuccino.fancymenu.util.resource.resources.texture.ReadGate;
 import de.keksuccino.fancymenu.util.resource.resources.texture.apng.ApngTestFiles;
 import de.keksuccino.fancymenu.util.resource.resources.texture.apng.ApngImage;
 import de.keksuccino.fancymenu.util.resource.resources.texture.apng.ApngReader;
@@ -12,6 +14,8 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -401,18 +405,64 @@ class AnimatedFrameStreamTest {
     }
 
     @Test
-    void closingBeforeThePendingTaskRunsLetsTheTaskCleanUp() throws IOException {
+    void closingBeforeThePendingTaskRunsClosesTheSourceRightAwayAndLetsTheTaskCleanUp() throws IOException {
         AnimatedImageTestSupport.MemorySource source = new AnimatedImageTestSupport.MemorySource(ApngTestFiles.randomAnimation(new Random(14), WIDTH, HEIGHT, 8));
         AnimatedFrameStream stream = this.stream(source);
 
         stream.close();
-        // The pending task owns the source until it noticed the close
-        assertFalse(source.isClosed());
+        // The file of the image is never open anymore once the stream got closed, even though the pending task still owns the decoder
+        assertTrue(source.isClosed());
         this.executor.runTasks();
 
-        assertTrue(source.isClosed());
         assertEquals(0L, stream.getNativeMemoryBytes());
         assertNull(stream.poll());
+    }
+
+    @Test
+    void closingWhileATaskReadsTheSourceClosesItRightAwayAndTheTaskStopsWithoutAnError() throws Exception {
+        byte[] file = ApngTestFiles.randomAnimation(new Random(15), WIDTH, HEIGHT, 8);
+        AnimatedImageTestSupport.GatedSource source = new AnimatedImageTestSupport.GatedSource(file);
+        ApngImage image = ApngReader.read(source, "test.png");
+        ReadGate gate = new ReadGate();
+        source.holdNextRead(gate);
+        ScheduledThreadPoolExecutor decodingThread = new ScheduledThreadPoolExecutor(1);
+        try (LogCapture problems = LogCapture.problemsOf(AnimatedFrameStream.class)) {
+            AnimatedFrameStream stream = new AnimatedFrameStream(image, "test.png", decodingThread, () -> this.now);
+            stream.start();
+            gate.awaitReached();
+
+            stream.close();
+
+            assertTrue(source.isClosed());
+            gate.open();
+            decodingThread.shutdown();
+            assertTrue(decodingThread.awaitTermination(ReadGate.TIMEOUT_SECONDS, TimeUnit.SECONDS));
+            assertEquals(0L, stream.getNativeMemoryBytes());
+            assertEquals(List.of(), problems.messages());
+        } finally {
+            decodingThread.shutdownNow();
+        }
+    }
+
+    @Test
+    void closingTheSourceFromAnotherThreadStopsDecodingWithoutAnError() throws Exception {
+        AnimatedImageTestSupport.MemorySource source = new AnimatedImageTestSupport.MemorySource(ApngTestFiles.randomAnimation(new Random(16), WIDTH, HEIGHT, 8));
+        AnimatedFrameStream stream = this.stream(source);
+        stream.recycle(this.next(stream));
+
+        try (LogCapture problems = LogCapture.problemsOf(AnimatedFrameStream.class)) {
+            Thread closer = new Thread(stream::closeSource, "Animated image test closer");
+            closer.start();
+            ReadGate.join(closer);
+            assertTrue(source.isClosed());
+            // Polling makes the stream decode again, which fails on the closed source
+            AnimatedFrameUpdate update = stream.poll();
+            if (update != null) stream.recycle(update);
+            this.executor.runTasks();
+
+            assertTrue(stream.hasFailed());
+            assertEquals(List.of(), problems.messages());
+        }
     }
 
     @Test

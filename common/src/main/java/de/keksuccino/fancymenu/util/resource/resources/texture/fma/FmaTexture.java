@@ -5,6 +5,7 @@ import de.keksuccino.fancymenu.customization.ScreenCustomization;
 import de.keksuccino.fancymenu.customization.listener.listeners.Listeners;
 import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
+import de.keksuccino.fancymenu.util.file.ReleasableFileInputStream;
 import de.keksuccino.fancymenu.util.input.TextValidators;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
@@ -52,6 +53,9 @@ public class FmaTexture implements ITexture, PlayableResource {
     protected final AtomicBoolean loadingCompleted = new AtomicBoolean(false);
     protected final AtomicBoolean loadingFailed = new AtomicBoolean(false);
     protected final AtomicBoolean closed = new AtomicBoolean(false);
+    /** The stream of the local file while it gets copied to a temporary archive, so closing the texture can release the file right away. **/
+    @Nullable
+    protected volatile ReleasableFileInputStream loadingFileStream;
 
     /** How many full play cycles got completed since the last reset, loop restarts included. **/
     protected final AtomicInteger cycles = new AtomicInteger(0);
@@ -144,15 +148,15 @@ public class FmaTexture implements ITexture, PlayableResource {
             return texture;
         }
 
-        new Thread(() -> {
-            try {
-                InputStream in = new FileInputStream(fmaFile);
-                of(in, fmaFile.getPath(), texture);
-            } catch (Exception ex) {
-                texture.markLoadingFailed();
-                LOGGER.error("[FANCYMENU] Failed to read FMA image from file: " + fmaFile.getPath(), ex);
-            }
-        }).start();
+        try {
+            // Opened before the texture gets returned, so closing the texture can always close the stream
+            ReleasableFileInputStream in = new ReleasableFileInputStream(fmaFile);
+            texture.loadingFileStream = in;
+            of(in, fmaFile.getPath(), texture);
+        } catch (Exception ex) {
+            texture.markLoadingFailed();
+            LOGGER.error("[FANCYMENU] Failed to read FMA image from file: " + fmaFile.getPath(), ex);
+        }
 
         return texture;
     }
@@ -218,14 +222,17 @@ public class FmaTexture implements ITexture, PlayableResource {
     }
 
     protected static void populateTexture(@NotNull FmaTexture texture, @NotNull InputStream in, @NotNull String fmaTextureName) {
-        DecodedFmaImage decodedImage = null;
         if (!texture.closed.get()) {
-            decodedImage = decodeFma(in, fmaTextureName);
-            if (decodedImage == null) {
+            DecodedFmaImage decodedImage;
+            try {
+                decodedImage = decodeFma(in, fmaTextureName);
+            } catch (Exception ex) {
                 texture.decoded.set(true);
                 texture.markLoadingFailed();
-                LOGGER.error("[FANCYMENU] Failed to read FMA image, because DecodedFmaImage was NULL: {}", fmaTextureName);
+                // Closing the texture closes the stream of its file right away, so copying it fails then, which is no error
+                if (!texture.closed.get()) LOGGER.error("[FANCYMENU] Failed to decode FMA image: " + fmaTextureName, ex);
                 CloseableUtils.closeQuietly(in);
+                texture.loadingFileStream = null;
                 return;
             }
 
@@ -240,6 +247,7 @@ public class FmaTexture implements ITexture, PlayableResource {
         }
 
         CloseableUtils.closeQuietly(in);
+        texture.loadingFileStream = null;
     }
 
     protected FmaTexture() {
@@ -813,6 +821,8 @@ public class FmaTexture implements ITexture, PlayableResource {
         this.closed.set(true);
         this.playRequested = false;
         this.pausedRequested = false;
+        // Releases the file of a texture that still gets copied right away, a read of the loading thread that runs right now finishes first
+        CloseableUtils.closeQuietly(this.loadingFileStream);
 
         this.streamGeneration.incrementAndGet();
 
@@ -895,11 +905,15 @@ public class FmaTexture implements ITexture, PlayableResource {
         this.resetFrame.clear();
     }
 
-    @Nullable
-    public static DecodedFmaImage decodeFma(@NotNull InputStream in, @NotNull String fmaName) {
-        FmaDecoder decoder = null;
+    /**
+     * Reads an FMA image from the stream into a new decoder. Closes the stream.
+     *
+     * @throws IOException If the stream holds no valid FMA image or reading it failed.
+     */
+    @NotNull
+    public static DecodedFmaImage decodeFma(@NotNull InputStream in, @NotNull String fmaName) throws IOException {
+        FmaDecoder decoder = new FmaDecoder();
         try {
-            decoder = new FmaDecoder();
             decoder.read(in);
             warnAboutExpensiveFmaFrames(decoder, fmaName);
 
@@ -918,9 +932,8 @@ public class FmaTexture implements ITexture, PlayableResource {
 
             return new DecodedFmaImage(decoder, imageWidth, imageHeight, metadata.getLoopCount());
         } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to decode FMA image: " + fmaName, ex);
             CloseableUtils.closeQuietly(decoder);
-            return null;
+            throw (ex instanceof IOException ioException) ? ioException : new IOException(ex);
         }
     }
 
