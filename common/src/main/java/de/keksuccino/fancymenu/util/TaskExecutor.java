@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -17,45 +18,35 @@ public class TaskExecutor {
     private static final ScheduledExecutorService EXECUTOR = FancyMenuExecutors.newScheduledThreadPool(20, "FancyMenu-TaskExecutor");
 
     public static void scheduleAtFixedRate(@NotNull Task task, long initialDelay, long period, @NotNull TimeUnit unit, boolean executeInMainThread) {
-        ScheduledFuture<?>[] future = new ScheduledFuture[1];
-        future[0] = EXECUTOR.scheduleAtFixedRate(() -> {
-            final Runnable r = () -> {
-                try {
-                    ScheduledFuture<?> f = future[0];
-                    if (f != null) {
-                        task.run(f);
-                    }
-                } catch (Exception ex) {
-                    LOGGER.error("[FANCYMENU] Error while trying to execute scheduled (fixed rate) task!", ex);
-                }
-            };
-            if (executeInMainThread) {
-                MainThreadTaskExecutor.executeInMainThread(r, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
-            } else {
-                r.run();
-            }
-        }, initialDelay, period, unit);
+        CompletableFuture<ScheduledFuture<?>> future = new CompletableFuture<>();
+        future.complete(EXECUTOR.scheduleAtFixedRate(() -> runScheduled(task, future, executeInMainThread, "[FANCYMENU] Error while trying to execute scheduled (fixed rate) task!"), initialDelay, period, unit));
     }
 
     public static void schedule(@NotNull Task task, long delay, @NotNull TimeUnit unit, boolean executeInMainThread) {
-        ScheduledFuture<?>[] future = new ScheduledFuture[1];
-        future[0] = EXECUTOR.schedule(() -> {
-            final Runnable r = () -> {
-                try {
-                    ScheduledFuture<?> f = future[0];
-                    if (f != null) {
-                        task.run(f);
-                    }
-                } catch (Exception ex) {
-                    LOGGER.error("[FANCYMENU] Error while trying to execute scheduled task!", ex);
-                }
-            };
-            if (executeInMainThread) {
-                MainThreadTaskExecutor.executeInMainThread(r, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
-            } else {
-                r.run();
+        CompletableFuture<ScheduledFuture<?>> future = new CompletableFuture<>();
+        future.complete(EXECUTOR.schedule(() -> runScheduled(task, future, executeInMainThread, "[FANCYMENU] Error while trying to execute scheduled task!"), delay, unit));
+    }
+
+    /**
+     * Runs a task of {@link #schedule} or {@link #scheduleAtFixedRate} with the future of its schedule.<br>
+     * The executor can start a task before scheduling it returned its future, like a task without delay while the thread that scheduled it
+     * got paused right after scheduling it. So the executor thread waits for the future, which that thread hands over right after scheduling,
+     * before the task runs. That wait is short, and it happens before the task gets queued, so the main thread never waits.
+     */
+    private static void runScheduled(@NotNull Task task, @NotNull CompletableFuture<ScheduledFuture<?>> future, boolean executeInMainThread, @NotNull String errorMessage) {
+        ScheduledFuture<?> scheduledFuture = future.join();
+        final Runnable r = () -> {
+            try {
+                task.run(scheduledFuture);
+            } catch (Exception ex) {
+                LOGGER.error(errorMessage, ex);
             }
-        }, delay, unit);
+        };
+        if (executeInMainThread) {
+            MainThreadTaskExecutor.executeInMainThread(r, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK);
+        } else {
+            r.run();
+        }
     }
 
     /**
