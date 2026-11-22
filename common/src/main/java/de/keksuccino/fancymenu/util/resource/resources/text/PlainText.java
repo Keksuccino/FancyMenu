@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.resource.resources.text;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.lifecycle.ClientShutdownHandler;
 import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
@@ -123,16 +124,11 @@ public class PlainText implements IText {
         String url = textFileUrl;
         FancyMenuThreads.startDaemonThread(() -> {
             try {
-                InputStream in = WebUtils.openResourceStream(url, WebUtils.WebResourceType.TEXT);
-                if (in != null) {
-                    of(in, url, text);
-                } else {
-                    text.loadingFailed = true;
-                    LOGGER.error("[FANCYMENU] Failed to read text content from URL! InputStream was NULL: " + url);
-                }
+                of(WebUtils.openResourceStreamOrThrow(url, WebUtils.WebResourceType.TEXT), url, text);
             } catch (Exception ex) {
                 text.loadingFailed = true;
-                LOGGER.error("[FANCYMENU] Failed to read text content from URL: " + url, ex);
+                // Shutting down the client cancels web loads, which is no error
+                if (!ClientShutdownHandler.isShuttingDown()) LOGGER.error("[FANCYMENU] Failed to read text content from URL: " + url, ex);
             }
         }, "PlainText-WebLoader");
 
@@ -168,7 +164,8 @@ public class PlainText implements IText {
                 if (text.closed) MainThreadTaskExecutor.executeInMainThread(text::close, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
             } catch (Exception ex) {
                 text.loadingFailed = true;
-                LOGGER.error("[FANCYMENU] Failed to read text context via InputStream: " + name, ex);
+                // Shutting down the client cancels web loads, so reading fails then, which is no error
+                if (!ClientShutdownHandler.isShuttingDown()) LOGGER.error("[FANCYMENU] Failed to read text context via InputStream: " + name, ex);
             }
         }, "PlainText-Decoder");
 
@@ -186,7 +183,7 @@ public class PlainText implements IText {
 
     @Override
     public @Nullable InputStream open() throws IOException {
-        if (this.sourceURL != null) return WebUtils.openResourceStream(this.sourceURL, WebUtils.WebResourceType.TEXT);
+        if (this.sourceURL != null) return WebUtils.openResourceStreamOrThrow(this.sourceURL, WebUtils.WebResourceType.TEXT);
         if (this.sourceFile != null) return new FileInputStream(this.sourceFile);
         if (this.sourceLocation != null) return Minecraft.getInstance().getResourceManager().open(this.sourceLocation);
         return null;
