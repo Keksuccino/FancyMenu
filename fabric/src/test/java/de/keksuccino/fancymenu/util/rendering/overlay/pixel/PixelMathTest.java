@@ -67,6 +67,9 @@ class PixelMathTest {
         assertEquals(0xFF112233, PixelMath.opaque(0x00112233));
         assertEquals(0x40112233, PixelMath.withAlpha(0xFF112233, 0x40));
         assertEquals(0x80112233, PixelMath.scaleAlpha(0xFF112233, 0.5F));
+        assertEquals(0x80081018, PixelMath.scaleRgb(0x80102030, 0.5F));
+        assertEquals(0xFF112233, PixelMath.scaleRgb(0xFF112233, 2.0F));
+        assertEquals(0x40000000, PixelMath.scaleRgb(0x40FFFFFF, -1.0F));
         assertEquals(-3, PixelMath.floor(-2.5F));
         assertEquals(2, PixelMath.floor(2.9F));
         assertEquals(0, PixelMath.bayer4(0, 0));

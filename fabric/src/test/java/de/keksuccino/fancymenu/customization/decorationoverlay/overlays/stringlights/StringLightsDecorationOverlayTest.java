@@ -52,10 +52,10 @@ class StringLightsDecorationOverlayTest {
     }
 
     @Test
-    void newOverlaysStartDetailedWithoutGarlandAndCycleThePrograms() {
+    void newOverlaysStartSimpleWithoutGarlandAndOn() {
         StringLightsDecorationOverlay overlay = new StringLightsDecorationOverlay();
 
-        assertAll(() -> assertEquals(DecorationOverlayLook.DETAILED, overlay.look.get()), () -> assertFalse(overlay.pineGarland.getBoolean()), () -> assertEquals(StringLightsProgram.CYCLE, overlay.program.get()), () -> assertEquals("look", overlay.look.property.getKey()), () -> assertEquals("string_lights_pine_garland", overlay.pineGarland.getKey()), () -> assertEquals("string_lights_program", overlay.program.getKey()));
+        assertAll(() -> assertEquals(DecorationOverlayLook.SIMPLE, overlay.look.get()), () -> assertFalse(overlay.pineGarland.getBoolean()), () -> assertEquals(StringLightsProgram.ON, overlay.program.get()), () -> assertEquals("look", overlay.look.property.getKey()), () -> assertEquals("string_lights_pine_garland", overlay.pineGarland.getKey()), () -> assertEquals("string_lights_program", overlay.program.getKey()));
     }
 
     @Test
@@ -77,7 +77,7 @@ class StringLightsDecorationOverlayTest {
         StringLightsDecorationOverlay hiddenOverlay = deserialize(hidden);
         StringLightsDecorationOverlay overlayWithoutShowKey = deserialize(withoutShowKey);
 
-        assertAll(() -> assertEquals(DecorationOverlayLook.DETAILED, hiddenOverlay.look.get()), () -> assertEquals(StringLightsProgram.CYCLE, hiddenOverlay.program.get()), () -> assertEquals(DecorationOverlayLook.DETAILED, overlayWithoutShowKey.look.get()));
+        assertAll(() -> assertEquals(DecorationOverlayLook.SIMPLE, hiddenOverlay.look.get()), () -> assertEquals(StringLightsProgram.ON, hiddenOverlay.program.get()), () -> assertEquals(DecorationOverlayLook.SIMPLE, overlayWithoutShowKey.look.get()), () -> assertEquals(StringLightsProgram.ON, overlayWithoutShowKey.program.get()));
     }
 
     @Test
@@ -85,22 +85,39 @@ class StringLightsDecorationOverlayTest {
         PropertyContainer serialized = legacyContainer();
         serialized.putProperty("show_decoration_overlay", "true");
         serialized.putProperty("look", "detailed");
-        serialized.putProperty("string_lights_program", "chase");
+        serialized.putProperty("string_lights_program", "cycle");
 
         StringLightsDecorationOverlay overlay = deserialize(serialized);
 
-        assertAll(() -> assertEquals(DecorationOverlayLook.DETAILED, overlay.look.get()), () -> assertEquals(StringLightsProgram.CHASE, overlay.program.get()));
+        assertAll(() -> assertEquals(DecorationOverlayLook.DETAILED, overlay.look.get()), () -> assertEquals(StringLightsProgram.CYCLE, overlay.program.get()));
     }
 
     @Test
-    void switchedOnNewOverlaysStayDetailedAfterSaving() {
+    void switchedOnNewOverlaysKeepTheirSettingsAfterSaving() {
         StringLightsDecorationOverlay original = new StringLightsDecorationOverlay();
         original.showOverlay.set(true);
         original.pineGarland.set(true);
+        StringLightsDecorationOverlay detailed = new StringLightsDecorationOverlay();
+        detailed.showOverlay.set(true);
+        detailed.look.property.set(DecorationOverlayLook.DETAILED);
 
         StringLightsDecorationOverlay loaded = deserialize(new StringLightsDecorationOverlayBuilder()._serialize(original));
+        StringLightsDecorationOverlay loadedDetailed = deserialize(new StringLightsDecorationOverlayBuilder()._serialize(detailed));
 
-        assertAll(() -> assertTrue(loaded.showOverlay.tryGetNonNull()), () -> assertEquals(DecorationOverlayLook.DETAILED, loaded.look.get()), () -> assertEquals(StringLightsProgram.CYCLE, loaded.program.get()), () -> assertTrue(loaded.pineGarland.getBoolean()));
+        assertAll(() -> assertTrue(loaded.showOverlay.tryGetNonNull()), () -> assertEquals(DecorationOverlayLook.SIMPLE, loaded.look.get()), () -> assertEquals(StringLightsProgram.ON, loaded.program.get()), () -> assertTrue(loaded.pineGarland.getBoolean()), () -> assertEquals(DecorationOverlayLook.DETAILED, loadedDetailed.look.get()), () -> assertEquals(StringLightsProgram.ON, loadedDetailed.program.get()));
+    }
+
+    @Test
+    void steadyProgramsSurviveSerializationRoundTrip() {
+        for (StringLightsProgram program : List.of(StringLightsProgram.ON, StringLightsProgram.FULLY_LIT, StringLightsProgram.HALF_LIT, StringLightsProgram.OFF)) {
+            StringLightsDecorationOverlay original = new StringLightsDecorationOverlay();
+            original.program.set(program);
+
+            PropertyContainer serialized = new StringLightsDecorationOverlayBuilder()._serialize(original);
+            StringLightsDecorationOverlay loaded = deserialize(serialized);
+
+            assertAll(program.getName(), () -> assertEquals(program.getName(), serialized.getValue("string_lights_program")), () -> assertEquals(program, loaded.program.get()));
+        }
     }
 
     @Test
@@ -127,12 +144,12 @@ class StringLightsDecorationOverlayTest {
         topString.lightSizes.set("1.0, 2.0");
         topString.lightColors.set("#00FF00, , #0000FF");
         original.program.set(StringLightsProgram.BREATHE);
-        original.look.property.set(DecorationOverlayLook.SIMPLE);
+        original.look.property.set(DecorationOverlayLook.DETAILED);
 
         StringLightsDecorationOverlay loaded = deserialize(new StringLightsDecorationOverlayBuilder()._serialize(original));
         StringLightsDecorationOverlay.StringLightProperties loadedTopString = loaded.stringLights.get(StringLightsPosition.TOP_LEFT_TO_TOP_RIGHT);
 
-        assertAll(() -> assertEquals(12, loadedTopString.lightCount.getInteger()), () -> assertEquals("#FF000080", loadedTopString.stringColor.get()), () -> assertEquals("1.0, 2.0", loadedTopString.lightSizes.get()), () -> assertEquals("#00FF00, , #0000FF", loadedTopString.lightColors.get()), () -> assertEquals(0, loaded.stringLights.get(StringLightsPosition.LOOSE_LEFT_TOP).lightCount.getInteger()), () -> assertEquals(StringLightsProgram.BREATHE, loaded.program.get()), () -> assertEquals(DecorationOverlayLook.SIMPLE, loaded.look.get()));
+        assertAll(() -> assertEquals(12, loadedTopString.lightCount.getInteger()), () -> assertEquals("#FF000080", loadedTopString.stringColor.get()), () -> assertEquals("1.0, 2.0", loadedTopString.lightSizes.get()), () -> assertEquals("#00FF00, , #0000FF", loadedTopString.lightColors.get()), () -> assertEquals(0, loaded.stringLights.get(StringLightsPosition.LOOSE_LEFT_TOP).lightCount.getInteger()), () -> assertEquals(StringLightsProgram.BREATHE, loaded.program.get()), () -> assertEquals(DecorationOverlayLook.DETAILED, loaded.look.get()));
     }
 
     @Test
