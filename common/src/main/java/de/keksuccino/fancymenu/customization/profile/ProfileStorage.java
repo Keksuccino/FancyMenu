@@ -37,6 +37,8 @@ public class ProfileStorage {
     /** Directories in the store that start with this prefix are internal working directories and never profiles. */
     public static final String INTERNAL_PREFIX = ".";
     public static final int MAX_ID_LENGTH = 48;
+    /** Files that operating systems create on their own. They never belong to a profile. */
+    private static final Set<String> JUNK_FILE_NAMES = Set.of(".ds_store", "thumbs.db", "desktop.ini");
 
     private static final Pattern PROFILE_ID_PATTERN = Pattern.compile("[a-z0-9][a-z0-9_-]{0," + (MAX_ID_LENGTH - 1) + "}");
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -187,10 +189,17 @@ public class ProfileStorage {
      */
     public static void moveReplacing(@NotNull Path source, @NotNull Path target) throws IOException {
         try {
-            Files.move(source, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            ProfileFiles.move(source, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
         } catch (AtomicMoveNotSupportedException ex) {
-            Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
+            ProfileFiles.move(source, target, StandardCopyOption.REPLACE_EXISTING);
         }
+    }
+
+    /**
+     * Whether a file is one that operating systems create on their own, like Thumbs.db on Windows.
+     */
+    public static boolean isJunkFile(@NotNull Path path) {
+        return JUNK_FILE_NAMES.contains(path.getFileName().toString().toLowerCase(Locale.ROOT));
     }
 
     public static boolean isValidProfileId(@Nullable String id) {

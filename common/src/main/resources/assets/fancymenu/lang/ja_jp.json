@@ -4119,6 +4119,7 @@
   "fancymenu.profiles.drop.rejected.desc": "ここでインポートできるのは FancyMenu のプロファイルファイル（.fmp）だけです。",
   "fancymenu.profiles.archive.file_type": "FancyMenu プロファイル",
   "fancymenu.profiles.error.switch": "プロファイルを読み込めなかったので、今の設定がそのまま使われます。",
+  "fancymenu.profiles.error.switch_incomplete": "前回のプロファイルの切り替えがまだ終わっていないため、読み込み中のプロファイルの一部のファイルがまだプロファイルフォルダーにあります。何も失われていません！もう一度プロファイルを読み込むか、ゲームを再起動すると切り替えが完了します。",
   "fancymenu.profiles.error.create": "プロファイルを作成できませんでした。",
   "fancymenu.profiles.error.duplicate": "プロファイルを複製できませんでした。",
   "fancymenu.profiles.error.delete": "プロファイルを削除できませんでした。",
