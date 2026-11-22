@@ -39,15 +39,21 @@ public class LevelData {
         data.locked = summary.isLocked();
         data.experimental = summary.isExperimental();
         data.icon_path = summary.getIcon().toAbsolutePath().toString();
-        data.game_type = summary.getGameMode().getSerializedName();
-        data.difficulty = summary.getSettings().difficultySettings().difficulty().getSerializedName();
-        data.allow_commands = summary.getSettings().allowCommands();
-        String settingsLevelName = summary.getSettings().levelName();
+        // Summaries of broken worlds, like worlds with corrupted level data or forbidden symlinks, have neither settings nor a level version.
+        String settingsLevelName = null;
+        if (summary.getSettings() != null) {
+            data.game_type = summary.getGameMode().getSerializedName();
+            data.difficulty = summary.getSettings().difficultySettings().difficulty().getSerializedName();
+            data.allow_commands = summary.getSettings().allowCommands();
+            settingsLevelName = summary.getSettings().levelName();
+        }
         data.settings_level_name = (settingsLevelName == null || settingsLevelName.isEmpty()) ? summary.getLevelName() : settingsLevelName;
         data.last_played = summary.getLastPlayed();
-        data.level_data_version = summary.levelVersion().levelDataVersion();
-        data.minecraft_version_name = summary.levelVersion().minecraftVersionName();
-        data.snapshot = summary.levelVersion().snapshot();
+        if (summary.levelVersion() != null) {
+            data.level_data_version = summary.levelVersion().levelDataVersion();
+            data.minecraft_version_name = summary.levelVersion().minecraftVersionName();
+            data.snapshot = summary.levelVersion().snapshot();
+        }
         data.can_edit = summary.canEdit();
         data.can_recreate = summary.canRecreate();
         data.can_delete = summary.canDelete();
