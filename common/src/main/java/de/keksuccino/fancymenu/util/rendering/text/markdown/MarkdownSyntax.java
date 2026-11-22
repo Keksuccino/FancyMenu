@@ -51,7 +51,8 @@ final class MarkdownSyntax {
     static final String SPACE = " ";
     static final char SPACE_CHAR = ' ';
     static final char MINUS_CHAR = '-';
-    private static final char PLUS_CHAR = '+';
+    static final char PLUS_CHAR = '+';
+    static final String FORMATTING_CODE_UNDERLINE_PREFIX_SUFFIX = "++";
     private static final char DOT_CHAR = '.';
     private static final String DOT = ".";
     private static final String CLOSE_ROUND_BRACKETS = ")";
