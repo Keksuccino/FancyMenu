@@ -58,8 +58,15 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
   - Pausing and resuming GIFs (like button backgrounds that only play while hovered) continues right where they stopped
   - GIFs that play a limited number of times now stop on their last frame
   - Broken or partly downloaded GIFs play all intact frames instead of failing completely
-- Fixed paused AFMA and FMA textures starting their current frame over when they play again, instead of continuing where they left off
-- Fixed AFMA and FMA textures freezing when several buttons use the same texture as their background
+- Added formatting shortcuts to the text editor of Text and Tooltip element content (#1644)
+  - Ctrl + B, Ctrl + I and Ctrl + U make the selected text bold, italic or underlined, and pressing them again removes the format
+  - Without a selection, they add the format markers and put the cursor between them, so you can just keep typing
+  - Ctrl + L, Ctrl + E and Ctrl + R align the selected lines (or the line of the cursor) left, centered or right
+  - Pressing Ctrl + E or Ctrl + R on lines that already have that alignment aligns them left again
+  - Uses Cmd instead of Ctrl on macOS
+  - Doesn't get in the way when typing characters with AltGr, like € or ł
+  - New "Formatting" menu in the right-click menu of the editor that shows all formatting actions and their shortcuts
+- Added underlined text to the Markdown of Text and Tooltip elements, written as ++text++ (#1644)
 - Added a Label Alignment option (Left, Centered or Right) to custom buttons and sliders, and to vanilla buttons and sliders (#1866)
 - Added label alignment settings for buttons and sliders to Global Customizations (#1866)
 - Added a background to the Text element, with a built-in pixel art panel, custom texture support, nine-slice settings, padding and an option to render behind the scroll bars
@@ -195,5 +202,8 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - Fixed the "World Save Names" and "World Save Data" placeholders leaving out the world that is currently open (for example in a customized pause menu), logging a warning on every refresh and unlocking that world, so a second game could open the same world at the same time
 - Fixed a single broken world (corrupted save data or a forbidden symlink) making the "World Save Names" and "World Save Data" placeholders stop working completely
 - Fixed the "Active Effect" and "Slot Item Display Name (FM)" placeholders crashing text rendering when they got a negative index, instead of returning nothing like they already do for an index that is too high (#1847)
+- Fixed paused AFMA and FMA textures starting their current frame over when they play again, instead of continuing where they left off
+- Fixed AFMA and FMA textures freezing when several buttons use the same texture as their background
+- Fixed the "Cut" entry in the right-click menu of the text editor showing "Ctrl + U" instead of "Ctrl + X" as its shortcut
 
 %changelog:end%
