@@ -13,8 +13,8 @@ class FmaTexturePlayCycleTest {
         FmaTexture texture = new FmaTexture();
         texture.numPlays.set(0);
 
-        assertTrue(texture.handleCycleBoundary());
-        assertTrue(texture.handleCycleBoundary());
+        assertEquals(FmaTexture.CycleBoundaryResult.RESTART, texture.handleCycleBoundary(texture.streamGeneration.get()));
+        assertEquals(FmaTexture.CycleBoundaryResult.RESTART, texture.handleCycleBoundary(texture.streamGeneration.get()));
 
         assertEquals(2, texture.getCompletedPlayCycles());
         assertTrue(texture.pendingStartEvent);
@@ -25,9 +25,10 @@ class FmaTexturePlayCycleTest {
         FmaTexture texture = new FmaTexture();
         texture.numPlays.set(1);
 
-        assertFalse(texture.handleCycleBoundary());
+        assertEquals(FmaTexture.CycleBoundaryResult.STOP, texture.handleCycleBoundary(texture.streamGeneration.get()));
 
         assertEquals(1, texture.getCompletedPlayCycles());
+        assertFalse(texture.isPlaying());
     }
 
     @Test
