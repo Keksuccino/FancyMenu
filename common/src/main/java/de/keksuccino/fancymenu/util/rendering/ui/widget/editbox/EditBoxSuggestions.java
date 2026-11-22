@@ -50,6 +50,15 @@ public class EditBoxSuggestions extends CommandSuggestions {
     protected static final Style UNPARSED_STYLE = Style.EMPTY.withColor(ChatFormatting.RED);
     protected static final Style LITERAL_STYLE = Style.EMPTY.withColor(ChatFormatting.GRAY);
     protected static final List<Style> ARGUMENT_STYLES = Stream.of(ChatFormatting.AQUA, ChatFormatting.YELLOW, ChatFormatting.GREEN, ChatFormatting.LIGHT_PURPLE, ChatFormatting.GOLD).map(Style.EMPTY::withColor).collect(ImmutableList.toImmutableList());
+    /** The height of one suggestion in the list, see {@link CommandSuggestions.SuggestionsList}. */
+    protected static final int LIST_LINE_HEIGHT = 12;
+    /** The space between the edit box and a list that shows up above or below it. */
+    protected static final int LIST_SPACING = 2;
+    /**
+     * The space a list can take beyond its suggestions at its top and bottom: lists of bordered edit boxes start 1 pixel higher, and lists
+     * with more suggestions than lines draw a line above and below them, see {@link CommandSuggestions.SuggestionsList}.
+     */
+    protected static final int LIST_EDGE_SPACE = 2;
 
     protected final Minecraft minecraft;
     protected final Screen screen;
@@ -196,12 +205,9 @@ public class EditBoxSuggestions extends CommandSuggestions {
 
                 int listX = Mth.clamp(this.input.getScreenX(suggestions.getRange().getStart()), 0, this.input.getScreenX(0) + this.input.getInnerWidth() - totalSuggestionsWidth);
                 int listY = this.anchorToBottom ? this.screen.height - 12 : 72;
-                int listHeight = Math.min(sortedSuggestions.size(), this.suggestionLineLimit) * 12;
-                if (this.renderPosition == SuggestionsRenderPosition.ABOVE_EDIT_BOX) {
-                    listY = this.input.y - listHeight - 2;
-                }
-                if (this.renderPosition == SuggestionsRenderPosition.BELOW_EDIT_BOX) {
-                    listY = this.input.y + this.input.getHeight() + 2;
+                if (this.renderPosition != SuggestionsRenderPosition.VANILLA) {
+                    int listHeight = Math.min(sortedSuggestions.size(), this.suggestionLineLimit) * LIST_LINE_HEIGHT;
+                    listY = getListYNextToEditBox(this.renderPosition == SuggestionsRenderPosition.ABOVE_EDIT_BOX, this.input.y, this.input.getHeight(), listHeight, this.screen.height);
                 }
                 this.setSuggestions(new EditBoxSuggestionsList(listX, listY, totalSuggestionsWidth, sortedSuggestions, someNarratingRelatedBoolean));
 
@@ -233,6 +239,15 @@ public class EditBoxSuggestions extends CommandSuggestions {
     public boolean mouseScrolled(double $$0) {
         if (!this.input.isFocused()) return false;
         return super.mouseScrolled($$0);
+    }
+
+    /**
+     * @return If the list of suggestions is open and covers the given point, in the coordinates of the screen of the edit box.
+     */
+    public boolean isMouseOverList(double mouseX, double mouseY) {
+        if (!this.input.isFocused()) return false;
+        CommandSuggestions.SuggestionsList list = this.getSuggestions();
+        return (list != null) && ((IMixinSuggestionsList) list).getRectFancyMenu().contains(Mth.floor(mouseX), Mth.floor(mouseY));
     }
 
     protected void updateUsageInfo() {
@@ -356,6 +371,33 @@ public class EditBoxSuggestions extends CommandSuggestions {
         return this.getAccessor().getCommandUsageFancyMenu();
     }
 
+    /**
+     * Places a list of suggestions above or below its edit box. Screens and windows cut off everything outside of them, so the list goes to
+     * the other side of the edit box when it only fits there, like for the first field of a window, which has no room above it. When it fits
+     * on neither side, it goes to the side with more room.
+     *
+     * @param above If the list should go above the edit box when it fits on both sides.
+     * @param listHeight The height of the suggestions the list shows at once.
+     * @param screenHeight The height of the screen the list gets rendered in.
+     * @return The Y position of the list.
+     */
+    protected static int getListYNextToEditBox(boolean above, int editBoxY, int editBoxHeight, int listHeight, int screenHeight) {
+        int belowY = editBoxY + editBoxHeight + LIST_SPACING;
+        int spaceAbove = editBoxY - LIST_SPACING - LIST_EDGE_SPACE;
+        int spaceBelow = screenHeight - belowY - LIST_EDGE_SPACE;
+        boolean fitsAbove = listHeight <= spaceAbove;
+        boolean fitsBelow = listHeight <= spaceBelow;
+        boolean useAbove;
+        if (fitsAbove != fitsBelow) {
+            useAbove = fitsAbove;
+        } else if (fitsAbove || (spaceAbove == spaceBelow)) {
+            useAbove = above;
+        } else {
+            useAbove = spaceAbove > spaceBelow;
+        }
+        return useAbove ? (editBoxY - LIST_SPACING - listHeight) : belowY;
+    }
+
     @SuppressWarnings("all")
     protected static int getLastWordIndex(String editBoxValue) {
         if (Strings.isNullOrEmpty(editBoxValue)) {
@@ -429,6 +471,20 @@ public class EditBoxSuggestions extends CommandSuggestions {
         @Override
         public void render(@NotNull PoseStack pose, int mouseX, int mouseY) {
             this.render(GuiGraphics.currentGraphics(), mouseX, mouseY);
+        }
+
+        /**
+         * Vanilla checks if the pointer is over the list with the position of the pointer on the game window, which is not where the pointer is
+         * in screens that render somewhere else, like the bodies of PiP windows. The position the list got rendered with is in the coordinates
+         * of the screen of the edit box, like the list itself, so it gets checked instead.
+         */
+        @Override
+        public boolean mouseScrolled(double scroll) {
+            Vec2 mouse = this.getLastMouse();
+            if (!this.getRect().contains(Mth.floor(mouse.x), Mth.floor(mouse.y))) return false;
+            int maxOffset = Math.max(this.suggestionList.size() - EditBoxSuggestions.this.suggestionLineLimit, 0);
+            this.getAccessor().setOffsetFancyMenu(Mth.clamp((int) (this.getOffset() - scroll), 0, maxOffset));
+            return true;
         }
 
         public Rect2i getRect() {
