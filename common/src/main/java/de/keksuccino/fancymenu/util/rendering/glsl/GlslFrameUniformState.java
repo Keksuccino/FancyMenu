@@ -193,10 +193,25 @@ final class GlslFrameUniformState {
         for (UserVariableSnapshot variable : variables) {
             String suffix = toVariableUniformSuffix(variable.name());
             if (!suffix.isEmpty()) {
-                values.put(suffix, parseVariableValue(variable.value()));
+                values.put(suffix, toVariableValue(variable));
             }
         }
         return new VariableSnapshot(Map.copyOf(values), variables.size());
+    }
+
+    /**
+     * List variables give their entry count, because their text form is a JSON array, which is no number.
+     */
+    @NotNull
+    static VariableValue toVariableValue(@NotNull UserVariableSnapshot variable) {
+        if (variable.isList()) return countValue(variable.listEntries().size());
+        return parseVariableValue(variable.value());
+    }
+
+    @NotNull
+    private static VariableValue countValue(int count) {
+        float floatValue = count;
+        return new VariableValue(floatValue, count, (count != 0) ? 1 : 0, new float[]{floatValue, floatValue, floatValue, floatValue});
     }
 
     @NotNull

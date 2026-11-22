@@ -20,6 +20,7 @@ import de.keksuccino.fancymenu.util.resource.resources.audio.AudioEngineReloadHa
 import de.keksuccino.fancymenu.util.resource.resources.texture.afma.AfmaIoHelper;
 import de.keksuccino.fancymenu.util.window.WindowHandler;
 import de.keksuccino.fancymenu.customization.decorationoverlay.preview.DecorationOverlayPreview;
+import de.keksuccino.fancymenu.util.window.preview.WindowPreview;
 import de.keksuccino.fancymenu.customization.customlocals.CustomLocalsHandler;
 import de.keksuccino.fancymenu.customization.profile.ProfileHandler;
 import de.keksuccino.fancymenu.customization.server.ServerCache;
@@ -113,6 +114,8 @@ public class FancyMenu {
 		ServerCache.init();
 
 		DecorationOverlayPreview.startIfRequested();
+
+		WindowPreview.startIfRequested();
 
 	}
 

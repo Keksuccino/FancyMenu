@@ -37,12 +37,17 @@ public class ExecuteLaterExecutableBlock extends AbstractExecutableBlock {
         return "execute-later";
     }
 
+    /**
+     * Schedules a copy of the contents. When this block is inside a FOR EACH loop, the loop is already at a later entry (or done)
+     * when the contents run, so they get the entry and index of the moment they got scheduled.
+     */
     @Override
     public void execute() {
         long delay = this.resolveDelayMsOrFallback();
         ExecuteLaterExecutableBlock scheduledCopy = this.copy(true);
+        ForEachExecutableBlock.LoopValues loopValues = ForEachExecutableBlock.captureLoopValues();
         TaskExecutor.schedule(future ->
-                MainThreadTaskExecutor.executeInMainThread(scheduledCopy::executeScheduled, MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK),
+                MainThreadTaskExecutor.executeInMainThread(() -> ForEachExecutableBlock.runWithLoopValues(loopValues, scheduledCopy::executeScheduled), MainThreadTaskExecutor.ExecuteTiming.POST_CLIENT_TICK),
                 delay, TimeUnit.MILLISECONDS, false);
     }
 

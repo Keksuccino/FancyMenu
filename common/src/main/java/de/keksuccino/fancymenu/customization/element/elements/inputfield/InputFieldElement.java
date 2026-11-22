@@ -66,7 +66,7 @@ public class InputFieldElement extends AbstractElement {
                 this.editBox.active = false;
                 this.editBox.setEditable(false);
                 if (this.linkedVariable != null) {
-                    String var = VariableHandler.getVariableValue(this.linkedVariable);
+                    String var = VariableHandler.getSingleValueText(this.linkedVariable);
                     if (var != null) {
                         this.editBox.setValue(var);
                     }
@@ -97,7 +97,8 @@ public class InputFieldElement extends AbstractElement {
                 if (!this.lastValue.equals(this.editBox.getValue())) {
                     VariableHandler.setVariable(linkedVariable, this.editBox.getValue());
                 }
-                String val = VariableHandler.getVariableValue(this.linkedVariable);
+                // Lists give what got written into them, so the text in the field stays as it got typed
+                String val = VariableHandler.getSingleValueText(this.linkedVariable);
                 if (val != null) {
                     if (!this.editBox.getValue().equals(val)) {
                         this.editBox.setValue(val);

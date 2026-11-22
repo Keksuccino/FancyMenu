@@ -6,6 +6,7 @@ import de.keksuccino.fancymenu.customization.action.blocks.statements.DelayExecu
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ExecuteLaterExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseIfExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.statements.ForEachExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.IfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.statements.WhileExecutableBlock;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
@@ -108,6 +109,7 @@ public class ExecutableBlockDeserializer {
         if (type.equals("else-if")) return ElseIfExecutableBlock.deserializeEmptyWithIdentifier(serialized, identifier);
         if (type.equals("else")) return ElseExecutableBlock.deserializeEmptyWithIdentifier(serialized, identifier);
         if (type.equals("while")) return WhileExecutableBlock.deserializeEmptyWithIdentifier(serialized, identifier);
+        if (type.equals("for-each")) return ForEachExecutableBlock.deserializeEmptyWithIdentifier(serialized, identifier);
         if (type.equals("delay")) return DelayExecutableBlock.deserializeEmptyWithIdentifier(serialized, identifier);
         if (type.equals("execute-later")) return ExecuteLaterExecutableBlock.deserializeEmptyWithIdentifier(serialized, identifier);
         if (type.equals("folder")) return FolderExecutableBlock.deserializeEmptyWithIdentifier(serialized, identifier);
