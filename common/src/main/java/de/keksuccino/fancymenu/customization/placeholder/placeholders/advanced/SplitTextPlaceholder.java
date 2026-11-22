@@ -31,7 +31,7 @@ public class SplitTextPlaceholder extends Placeholder {
 
             if ((maxParts > 0) && (maxParts-1 < splitIndex)) {
                 LOGGER.error("[FANCYMENU] Failed to parse 'Split Text' placeholder! Max_parts is smaller than split_index!");
-                return "Failed to parse! Max_parts is smaller than split_index!";
+                return "";
             }
 
             if ((input != null) && (regex != null)) {
@@ -43,7 +43,7 @@ public class SplitTextPlaceholder extends Placeholder {
                 }
                 if (inSplit.length-1 < splitIndex) {
                     LOGGER.error("[FANCYMENU] Failed to parse 'Split Text' placeholder! There is no part with index " + splitIndex + "! Only " + inSplit.length + " parts found! Keep in mind first part index is 0!");
-                    return "Failed to parse! There is no part with index " + splitIndex + "! Only " + inSplit.length + " parts found! Keep in mind first part index is 0!";
+                    return "";
                 }
                 return inSplit[splitIndex];
             }
