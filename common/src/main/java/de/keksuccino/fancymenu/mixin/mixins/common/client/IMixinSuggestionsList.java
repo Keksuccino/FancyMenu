@@ -10,6 +10,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface IMixinSuggestionsList {
 
     @Accessor("offset") int getOffsetFancyMenu();
+    @Accessor("offset") void setOffsetFancyMenu(int offset);
 
     @Accessor("lastMouse") Vec2 getLastMouseFancyMenu();
     @Accessor("lastMouse") void setLastMouseFancyMenu(Vec2 lastMouse);
