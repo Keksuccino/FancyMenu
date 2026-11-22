@@ -151,6 +151,7 @@ public class EditMinecraftOptionAction extends Action {
                 this.name = value.split(":", 2)[0];
                 this.setTo = value.split(":", 2)[1];
             }
+            this.setInitialTextInputFocusEnabled(true);
         }
 
         @Override

@@ -366,6 +366,7 @@ public class SendHttpRequestAction extends Action {
             if (this.config == null) {
                 this.config = new HttpRequestConfig();
             }
+            this.setInitialTextInputFocusEnabled(true);
         }
 
         @Override

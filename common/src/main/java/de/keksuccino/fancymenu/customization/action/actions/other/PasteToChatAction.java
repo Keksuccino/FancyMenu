@@ -145,6 +145,7 @@ public class PasteToChatAction extends Action {
                 String appendString = value.split(":", 2)[0];
                 if (appendString.equalsIgnoreCase("true")) this.append = true;
             }
+            this.setInitialTextInputFocusEnabled(true);
         }
 
         @Override
