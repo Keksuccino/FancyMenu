@@ -55,7 +55,7 @@ final class ProfileActions {
         ProfileHandler.switchTo(profile, this.manager.getWindow(), error -> {
             this.manager.clearCaches();
             this.manager.refreshProfiles(profile.getId());
-            if (error != null) this.showError("fancymenu.profiles.error.switch", error);
+            if (error != null) this.showError(ProfileHandler.isActiveProfileIncomplete() ? "fancymenu.profiles.error.switch_incomplete" : "fancymenu.profiles.error.switch", error);
         });
     }
 
@@ -209,6 +209,10 @@ final class ProfileActions {
 
     private void runTask(@NotNull TaskStarter starter) {
         if (ProfileHandler.isBusy()) return;
+        if (ProfileHandler.isActiveProfileIncomplete()) {
+            Dialogs.openMessage(Component.translatable("fancymenu.profiles.error.switch_incomplete"), MessageDialogStyle.ERROR);
+            return;
+        }
         try {
             starter.start();
         } catch (Exception ex) {
