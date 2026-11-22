@@ -7,6 +7,7 @@ import de.keksuccino.fancymenu.util.CloseableUtils;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.file.ReleasableFileInputStream;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.lifecycle.ClientShutdownHandler;
 import de.keksuccino.fancymenu.util.rendering.AspectRatio;
 import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
@@ -198,12 +199,12 @@ public class FmaTexture implements ITexture, PlayableResource {
         FancyMenuThreads.startDaemonThread(() -> {
             InputStream in = null;
             try {
-                in = WebUtils.openResourceStream(fmaUrl, WebUtils.WebResourceType.STREAMED_ANIMATED_ARCHIVE);
-                if (in == null) throw new NullPointerException("Web resource input stream was NULL!");
+                in = WebUtils.openResourceStreamOrThrow(fmaUrl, WebUtils.WebResourceType.STREAMED_ANIMATED_ARCHIVE);
                 of(in, fmaUrl, texture);
             } catch (Exception ex) {
                 texture.markLoadingFailed();
-                LOGGER.error("[FANCYMENU] Failed to read FMA image from URL: " + fmaUrl, ex);
+                // Shutting down the client cancels web loads, which is no error
+                if (!ClientShutdownHandler.isShuttingDown()) LOGGER.error("[FANCYMENU] Failed to read FMA image from URL: " + fmaUrl, ex);
                 CloseableUtils.closeQuietly(in);
             }
         }, "FmaTexture-WebLoader");
@@ -266,8 +267,8 @@ public class FmaTexture implements ITexture, PlayableResource {
             } catch (Exception ex) {
                 this.decoded.set(true);
                 this.markLoadingFailed();
-                // Closing the texture closes the stream of its file and the archive of its decoder right away, so reading them fails then, which is no error
-                if (!this.closed.get()) LOGGER.error("[FANCYMENU] Failed to decode FMA image: " + fmaTextureName, ex);
+                // Closing the texture closes the stream of its file and the archive of its decoder right away and shutting down the client cancels web loads, so reading them fails then, which is no error
+                if (!this.closed.get() && !ClientShutdownHandler.isShuttingDown()) LOGGER.error("[FANCYMENU] Failed to decode FMA image: " + fmaTextureName, ex);
                 return;
             }
 
@@ -836,7 +837,7 @@ public class FmaTexture implements ITexture, PlayableResource {
 
     @Override
     public @Nullable InputStream open() throws IOException {
-        if (this.sourceURL != null) return WebUtils.openResourceStream(this.sourceURL, WebUtils.WebResourceType.STREAMED_ANIMATED_ARCHIVE);
+        if (this.sourceURL != null) return WebUtils.openResourceStreamOrThrow(this.sourceURL, WebUtils.WebResourceType.STREAMED_ANIMATED_ARCHIVE);
         if (this.sourceFile != null) return new FileInputStream(this.sourceFile);
         if (this.sourceLocation != null) return Minecraft.getInstance().getResourceManager().open(this.sourceLocation);
         return null;
