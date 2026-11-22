@@ -186,6 +186,17 @@ public class UIBase extends RenderingUtils {
         return SmoothTextRenderer.getTextWidth(getUIFont(), text, textSize);
     }
 
+    /**
+     * Returns the width of the widest of the given lines at the normal UI font size, rounded up to whole units.
+     */
+    public static int getWidestUITextWidthNormal(@NotNull List<? extends Component> lines) {
+        float widest = 0.0F;
+        for (Component line : lines) {
+            widest = Math.max(widest, getUITextWidthNormal(line));
+        }
+        return (int) Math.ceil(widest);
+    }
+
     public static float getAreaLabelVerticalPadding() {
         return 10.0F;
     }
