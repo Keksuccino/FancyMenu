@@ -205,5 +205,6 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - Fixed paused AFMA and FMA textures starting their current frame over when they play again, instead of continuing where they left off
 - Fixed AFMA and FMA textures freezing when several buttons use the same texture as their background
 - Fixed the "Cut" entry in the right-click menu of the text editor showing "Ctrl + U" instead of "Ctrl + X" as its shortcut
+- Fixed the "Split Text" placeholder showing English error messages as its text when its "Split Index" pointed to a part that doesn't exist, instead of showing nothing (#1848)
 
 %changelog:end%
