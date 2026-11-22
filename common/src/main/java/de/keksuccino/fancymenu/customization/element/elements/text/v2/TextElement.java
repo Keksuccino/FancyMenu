@@ -29,6 +29,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollbar.ScrollBar;
 import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.util.resource.resources.text.IText;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.konkrete.input.StringUtils;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -457,7 +458,7 @@ public class TextElement extends AbstractElement implements ScrollableElement {
             return;
         }
 
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
 
             List<String> linesRaw = new ArrayList<>();
 
@@ -500,7 +501,7 @@ public class TextElement extends AbstractElement implements ScrollableElement {
             }
             this.text = text.toString();
 
-        }).start();
+        }, "TextElement-ContentLoader");
 
     }
 

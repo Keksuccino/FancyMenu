@@ -23,4 +23,5 @@ public final class FancyMenuThreads {
         thread.start();
         return thread;
     }
+
 }

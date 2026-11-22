@@ -24,7 +24,7 @@ import de.keksuccino.fancymenu.util.rendering.video.rinku.RinkuVideoPlayer;
 import de.keksuccino.fancymenu.util.resource.ResourceSource;
 import de.keksuccino.fancymenu.util.resource.Resource;
 import de.keksuccino.fancymenu.util.file.type.FileMediaType;
-import de.keksuccino.fancymenu.util.rinku.RinkuExecutors;
+import de.keksuccino.fancymenu.util.threading.FancyMenuExecutors;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -45,7 +45,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class RinkuVideoMenuBackground extends MenuBackground<RinkuVideoMenuBackground> implements IVideoMenuBackground {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final ScheduledExecutorService EXECUTOR = RinkuExecutors.newSingleThreadScheduledExecutor("FancyMenu-RinkuVideoMenuBackground");
+    private static final ScheduledExecutorService EXECUTOR = FancyMenuExecutors.newSingleThreadScheduledExecutor("FancyMenu-RinkuVideoMenuBackground");
     private static final DrawableColor MISSING_RINKU_COLOR = DrawableColor.of(Color.RED);
 
     @SuppressWarnings("unchecked")

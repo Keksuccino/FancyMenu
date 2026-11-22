@@ -13,6 +13,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.dialog.Dialogs;
 import de.keksuccino.fancymenu.util.resource.PlayableResource;
 import de.keksuccino.fancymenu.util.resource.resources.texture.AnimatedTextureResetFrame;
 import de.keksuccino.fancymenu.util.resource.resources.texture.ITexture;
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
@@ -180,7 +181,7 @@ public class FmaTexture implements ITexture, PlayableResource {
         }
 
         // Stream directly into the decoder (decoder spools to a temp archive file internally).
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             InputStream in = null;
             try {
                 in = WebUtils.openResourceStream(fmaUrl, WebUtils.WebResourceType.STREAMED_ANIMATED_ARCHIVE);
@@ -191,7 +192,7 @@ public class FmaTexture implements ITexture, PlayableResource {
                 LOGGER.error("[FANCYMENU] Failed to read FMA image from URL: " + fmaUrl, ex);
                 CloseableUtils.closeQuietly(in);
             }
-        }).start();
+        }, "FmaTexture-WebLoader");
 
         return texture;
     }
@@ -204,12 +205,12 @@ public class FmaTexture implements ITexture, PlayableResource {
         Objects.requireNonNull(in);
         FmaTexture texture = (writeTo != null) ? writeTo : new FmaTexture();
 
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             populateTexture(texture, in, (fmaTextureName != null) ? fmaTextureName : "[Generic InputStream Source]");
             if (texture.closed.get()) {
                 MainThreadTaskExecutor.executeInMainThread(texture::close, MainThreadTaskExecutor.ExecuteTiming.PRE_CLIENT_TICK);
             }
-        }).start();
+        }, "FmaTexture-Decoder");
 
         return texture;
     }

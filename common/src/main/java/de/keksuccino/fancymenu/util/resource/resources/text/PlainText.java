@@ -3,6 +3,7 @@ package de.keksuccino.fancymenu.util.resource.resources.text;
 import de.keksuccino.fancymenu.util.WebUtils;
 import de.keksuccino.fancymenu.util.file.FileUtils;
 import de.keksuccino.fancymenu.util.input.TextValidators;
+import de.keksuccino.fancymenu.util.threading.FancyMenuThreads;
 import de.keksuccino.fancymenu.util.threading.MainThreadTaskExecutor;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.Identifier;
@@ -120,7 +121,7 @@ public class PlainText implements IText {
         }
 
         String url = textFileUrl;
-        new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             try {
                 InputStream in = WebUtils.openResourceStream(url, WebUtils.WebResourceType.TEXT);
                 if (in != null) {
@@ -133,7 +134,7 @@ public class PlainText implements IText {
                 text.loadingFailed = true;
                 LOGGER.error("[FANCYMENU] Failed to read text content from URL: " + url, ex);
             }
-        }).start();
+        }, "PlainText-WebLoader");
 
         return text;
 
@@ -159,7 +160,7 @@ public class PlainText implements IText {
         if (textSourceName == null) textSourceName = "[Generic InputStream source]";
 
         String name = textSourceName;
-        Thread decoderThread = new Thread(() -> {
+        FancyMenuThreads.startDaemonThread(() -> {
             try (in) {
                 text.lines = FileUtils.readTextLinesFrom(in);
                 text.decoded = true;
@@ -170,8 +171,6 @@ public class PlainText implements IText {
                 LOGGER.error("[FANCYMENU] Failed to read text context via InputStream: " + name, ex);
             }
         }, "PlainText-Decoder");
-        decoderThread.setDaemon(true);
-        decoderThread.start();
 
         return text;
 
