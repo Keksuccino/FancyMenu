@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.rendering.ui.pipwindow;
 
 import de.keksuccino.fancymenu.util.input.InputConstants;
+import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
@@ -11,6 +12,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class PiPWindowBody extends Screen implements PipableScreen {
+
+    /**
+     * Space between the edges of a window body and its content.<br>
+     * Window bodies render no title, because their {@link PiPWindow} shows it in its title bar, so their content starts at this margin.
+     */
+    public static final int CONTENT_MARGIN = 20;
 
     @Nullable
     private PiPWindow window;
@@ -24,6 +31,14 @@ public abstract class PiPWindowBody extends Screen implements PipableScreen {
 
     public PiPWindowBody() {
         super(Component.empty());
+    }
+
+    /**
+     * The top of the content of window bodies that render area labels above their content, like "Available Actions:".<br>
+     * Area labels sit {@link UIBase#getAreaLabelVerticalPadding()} above their area, so this puts them at the {@link #CONTENT_MARGIN}.
+     */
+    public static int getLabeledContentTop() {
+        return CONTENT_MARGIN + (int) Math.ceil(UIBase.getUITextHeightNormal() + UIBase.getAreaLabelVerticalPadding());
     }
 
     public void closeWindow() {
