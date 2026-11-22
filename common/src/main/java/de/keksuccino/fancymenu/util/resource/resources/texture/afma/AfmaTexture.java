@@ -92,7 +92,8 @@ public class AfmaTexture implements ITexture, PlayableResource {
     @NotNull
     protected final AfmaDecodeScratch payloadDecodeScratch = new AfmaDecodeScratch();
     protected final AtomicInteger streamGeneration = new AtomicInteger(0);
-    protected final AtomicBoolean deferredDecoderRelease = new AtomicBoolean(false);
+    /** If the registered stream thread releases the decoder once it stops, see {@link #requestDecoderRelease()}. Guarded by the {@link #streamStateLock}. **/
+    protected boolean deferredDecoderRelease = false;
 
     @Nullable
     protected volatile Thread streamThread = null;
@@ -392,14 +393,20 @@ public class AfmaTexture implements ITexture, PlayableResource {
                 sleepQuietly(this.streamIteration(generation, this.currentTimeMillis()));
             }
         } finally {
+            boolean releaseDecoder = false;
             synchronized (this.streamStateLock) {
+                // A deferred release belongs to the registered stream thread. It gets taken in the same locked step that unregisters the thread, see requestDecoderRelease()
+                if (this.streamThread == Thread.currentThread()) {
+                    releaseDecoder = this.deferredDecoderRelease;
+                    this.deferredDecoderRelease = false;
+                }
                 if (generation == this.streamGeneration.get()) {
                     this.streamThread = null;
                 } else if (this.streamThread == Thread.currentThread()) {
                     this.streamThread = null;
                 }
             }
-            this.releaseDeferredDecoderIfNeeded();
+            if (releaseDecoder) this.releaseDecoder();
         }
     }
 
@@ -1356,26 +1363,24 @@ public class AfmaTexture implements ITexture, PlayableResource {
 
     /**
      * Releases the archive file of the decoder right away, so it is never open anymore once the texture got closed or failed. A read of the stream thread that runs right now finishes first.
-     * The rest of the decoder gets released by the stream thread once it stops, if it still runs, because it can still be using it.
+     * The rest of the decoder gets released by the stream thread once it stops, if it still runs, because it can still be using it.<br>
+     * Deciding that holds the {@link #streamStateLock}, which the stream thread also holds when it stops, while it takes a deferred release and unregisters itself.
+     * So a stream thread that stops right now either still gets the release, or the decision sees that it stopped and releases the decoder here, but the release never gets left to a thread that already stopped.
      */
     protected void requestDecoderRelease() {
         AfmaDecoder activeDecoder = this.decoder;
         if (activeDecoder != null) {
             activeDecoder.closeArchiveFile();
         }
-        Thread running = this.streamThread;
-        if ((running != null) && running.isAlive() && (running != Thread.currentThread())) {
-            this.deferredDecoderRelease.set(true);
-            return;
+        synchronized (this.streamStateLock) {
+            Thread running = this.streamThread;
+            if ((running != null) && running.isAlive() && (running != Thread.currentThread())) {
+                this.deferredDecoderRelease = true;
+                return;
+            }
+            this.deferredDecoderRelease = false;
         }
-        this.deferredDecoderRelease.set(false);
         this.releaseDecoder();
-    }
-
-    protected void releaseDeferredDecoderIfNeeded() {
-        if (this.deferredDecoderRelease.compareAndSet(true, false)) {
-            this.releaseDecoder();
-        }
     }
 
     protected void releaseDecoder() {
