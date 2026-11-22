@@ -1,15 +1,18 @@
 package de.keksuccino.fancymenu.util.resource.resources.audio;
 
 import de.keksuccino.melody.resources.audio.openal.ALAudioBuffer;
+import de.keksuccino.melody.resources.audio.openal.ALAudioClip;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import javax.sound.sampled.AudioFormat;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -103,6 +106,74 @@ class ALAudioLoaderTest {
     }
 
     @Test
+    void deletesBufferWhenAttachingItFails() {
+        TrackingInputStream source = new TrackingInputStream(AUDIO_DATA);
+        FakeAudio audio = new FakeAudio(source);
+        audio.attachFailure = new IllegalStateException("expected attach failure");
+
+        ALAudioLoader.load(source, "test.ogg", audio);
+
+        assertNotNull(audio.decodedBuffer);
+        assertNull(audio.attachedBuffer);
+        assertEquals(1, audio.decodedBuffer.deleteCalls);
+        assertEquals(1, source.closeCalls);
+        assertEquals(1, audio.failures);
+    }
+
+    @Test
+    void givesOpenedSourceAndKeepsPendingClip() {
+        TrackingInputStream source = new TrackingInputStream(AUDIO_DATA);
+        TrackingClip pendingClip = new TrackingClip();
+        AtomicInteger failures = new AtomicInteger();
+
+        InputStream opened = ALAudioLoader.openSource(() -> source, "https://example.com/test.ogg", pendingClip, failures::incrementAndGet);
+
+        assertSame(source, opened);
+        assertEquals(0, source.closeCalls);
+        assertEquals(0, pendingClip.closeCalls);
+        assertEquals(0, failures.get());
+    }
+
+    @Test
+    void closesPendingClipAndFailsWhenSourceStreamIsMissing() {
+        TrackingClip pendingClip = new TrackingClip();
+        AtomicInteger failures = new AtomicInteger();
+
+        InputStream opened = ALAudioLoader.openSource(() -> null, "https://example.com/test.ogg", pendingClip, failures::incrementAndGet);
+
+        assertNull(opened);
+        assertEquals(1, pendingClip.closeCalls);
+        assertEquals(1, failures.get());
+    }
+
+    @Test
+    void closesPendingClipAndFailsWhenOpeningSourceFails() {
+        TrackingClip pendingClip = new TrackingClip();
+        AtomicInteger failures = new AtomicInteger();
+
+        InputStream opened = ALAudioLoader.openSource(() -> {
+            throw new IOException("expected open failure");
+        }, "https://example.com/test.ogg", pendingClip, failures::incrementAndGet);
+
+        assertNull(opened);
+        assertEquals(1, pendingClip.closeCalls);
+        assertEquals(1, failures.get());
+    }
+
+    @Test
+    void failsWithoutPendingClipWhenSourceIsMissing() {
+        AtomicInteger failures = new AtomicInteger();
+
+        // Like the resource manager, which throws a FileNotFoundException when a resource doesn't exist
+        InputStream opened = ALAudioLoader.openSource(() -> {
+            throw new FileNotFoundException("fancymenu:missing.ogg");
+        }, "fancymenu:missing.ogg", null, failures::incrementAndGet);
+
+        assertNull(opened);
+        assertEquals(1, failures.get());
+    }
+
+    @Test
     void loadsInBackgroundAndClosesSource() throws InterruptedException {
         TrackingInputStream source = new TrackingInputStream(AUDIO_DATA);
         FakeAudio audio = new FakeAudio(source);
@@ -126,6 +197,8 @@ class ALAudioLoaderTest {
         private volatile boolean closeWhileDecoding;
         @Nullable
         private volatile Exception decodeFailure;
+        @Nullable
+        private volatile RuntimeException attachFailure;
         private volatile boolean sourceClosedWhenDecoding;
         @Nullable
         private volatile byte[] decodedData;
@@ -163,6 +236,8 @@ class ALAudioLoaderTest {
         @Override
         public boolean attachDecodedBuffer(@NotNull ALAudioBuffer buffer) {
             try {
+                RuntimeException failure = this.attachFailure;
+                if (failure != null) throw failure;
                 if (this.closed) return false;
                 this.attachedBuffer = buffer;
                 return true;
@@ -197,6 +272,37 @@ class ALAudioLoaderTest {
         @Override
         public void deleteQuietly() {
             this.deleteCalls++;
+        }
+
+    }
+
+    /**
+     * A clip without an OpenAL source, so it works without OpenAL, and counts how often it got closed.
+     */
+    private static final class TrackingClip extends ALAudioClip {
+
+        private int closeCalls;
+
+        private TrackingClip() {
+            super(0);
+        }
+
+        /**
+         * Gets called by the constructor of the clip and would set the volume of its OpenAL source.
+         */
+        @Override
+        public void tryUpdateVolume() {
+        }
+
+        @Override
+        public boolean isValidOpenAlSource() {
+            return false;
+        }
+
+        @Override
+        public void close() {
+            this.closeCalls++;
+            super.close();
         }
 
     }
