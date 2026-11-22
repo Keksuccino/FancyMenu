@@ -39,8 +39,6 @@ public final class ActionScriptDescriptions {
      */
     static final int OVERVIEW_TEXT_LIMIT = 32;
     static final String UNKNOWN_KEY = "fancymenu.actions.blocks.unknown";
-    static final String COLLAPSED_ONE_KEY = "fancymenu.actions.blocks.overview.collapsed.one";
-    static final String COLLAPSED_OTHER_KEY = "fancymenu.actions.blocks.overview.collapsed.other";
     private static final String NONE_KEY = "fancymenu.actions.screens.manage_screen.info.value.none";
     private static final String VALUE_KEY = "fancymenu.actions.screens.manage_screen.info.value";
     /** Spaces of the UI font are narrow, so every level needs a few of them to make the nesting visible. */
@@ -108,8 +106,9 @@ public final class ActionScriptDescriptions {
     /**
      * Builds a compact overview of a whole script for description areas: one line per action or block, with the contents of a block
      * one level deeper than the block and the ELSE-IF and ELSE statements of an IF on the same level as the IF.<br>
-     * To keep long scripts readable, actions without a value get no value line, texts that can get long get shortened to one short line
-     * (see {@link #OVERVIEW_TEXT_LIMIT}), and blocks that are collapsed in the action script editor only tell how many actions they hide.
+     * To keep long scripts readable, actions without a value get no value line, and texts that can get long get shortened to one short line
+     * (see {@link #OVERVIEW_TEXT_LIMIT}). Blocks always show their contents, also the ones that are collapsed in the action script editor,
+     * because collapsing blocks is only for the editor.
      *
      * @param blur If the overview gets shown in a window with a blurred background, which uses other label colors.
      */
@@ -136,15 +135,7 @@ public final class ActionScriptDescriptions {
             boolean comment = (block instanceof CommentExecutableBlock);
             MutableComponent blockLabel = buildBlockLabel(block, OVERVIEW_TEXT_LIMIT);
             MutableComponent label = (blockLabel != null) ? blockLabel.setStyle(comment ? colors.note() : colors.text()) : buildUnknownLabel().setStyle(colors.error());
-            boolean collapsed = ActionScriptEntryMover.isCollapsed(block);
-            if (collapsed) {
-                int actions = countActions(block);
-                MutableComponent suffix = (actions == 1) ? Component.translatable(COLLAPSED_ONE_KEY) : Component.translatable(COLLAPSED_OTHER_KEY, actions);
-                label = Component.empty().append(label).append(Component.literal(" ").append(suffix).setStyle(colors.collapsed()));
-            }
             lines.add(buildLine(level, BULLET, comment ? colors.detailBullet() : colors.blockBullet(), label));
-            // Collapsing an IF also hides the rest of its chain in the editor, see ActionScriptEntryMover#isCollapsed
-            if (collapsed) return;
             for (Executable child : block.getExecutables()) {
                 addOverviewLines(lines, child, level + 1, colors);
             }
@@ -167,25 +158,6 @@ public final class ActionScriptDescriptions {
         if (value == null) return Component.translatable(NONE_KEY);
         Component summary = instance.action.getValueSummary(value);
         return buildUserText((summary != null) ? summary.getString() : value, OVERVIEW_TEXT_LIMIT);
-    }
-
-    /**
-     * Counts the actions inside the block, also the ones in nested blocks and in the rest of the block's IF chain.
-     */
-    static int countActions(@NotNull AbstractExecutableBlock block) {
-        int count = 0;
-        for (Executable executable : block.getExecutables()) {
-            if (executable instanceof ActionInstance) {
-                count++;
-            } else if (executable instanceof AbstractExecutableBlock child) {
-                count += countActions(child);
-            }
-        }
-        AbstractExecutableBlock appended = block.getAppendedBlock();
-        if (appended != null) {
-            count += countActions(appended);
-        }
-        return count;
     }
 
     @NotNull
@@ -214,13 +186,13 @@ public final class ActionScriptDescriptions {
         return Component.literal(INDENT.repeat(Math.max(0, level)) + bullet).setStyle(Style.EMPTY.withColor(bulletColor)).append(text);
     }
 
-    private record OverviewColors(@NotNull Style text, @NotNull Style note, @NotNull Style collapsed, @NotNull Style error, int actionBullet, int blockBullet, int detailBullet) {
+    private record OverviewColors(@NotNull Style text, @NotNull Style note, @NotNull Style error, int actionBullet, int blockBullet, int detailBullet) {
 
         @NotNull
         private static OverviewColors of(@NotNull UITheme theme, boolean blur) {
             int text = (blur ? theme.ui_blur_interface_widget_label_color_normal : theme.ui_interface_widget_label_color_normal).getColorInt();
             int note = (blur ? theme.ui_blur_interface_widget_label_color_inactive : theme.ui_interface_widget_label_color_inactive).getColorInt();
-            return new OverviewColors(Style.EMPTY.withColor(text), Style.EMPTY.withColor(note), Style.EMPTY.withColor(theme.warning_color.getColorInt()), Style.EMPTY.withColor(theme.error_color.getColorInt()),
+            return new OverviewColors(Style.EMPTY.withColor(text), Style.EMPTY.withColor(note), Style.EMPTY.withColor(theme.error_color.getColorInt()),
                     theme.bullet_list_dot_color_2.getColorInt(), theme.warning_color.getColorInt(), theme.bullet_list_dot_color_1.getColorInt());
         }
 
