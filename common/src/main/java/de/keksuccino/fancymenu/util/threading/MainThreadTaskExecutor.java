@@ -18,14 +18,7 @@ public class MainThreadTaskExecutor {
     }
 
     public static List<Runnable> getAndClearQueue(ExecuteTiming executeTiming) {
-        List<Runnable> queue = (executeTiming == ExecuteTiming.PRE_CLIENT_TICK) ? QUEUED_TASKS_PRE_CLIENT_TICK : QUEUED_TASKS_POST_CLIENT_TICK;
-        return drainQueue(queue);
-    }
-
-    /**
-     * Snapshot and clear must share the queue monitor so a task enqueued between those operations is never erased without being returned for execution.
-     */
-    static List<Runnable> drainQueue(List<Runnable> queue) {
+        List<Runnable> queue = executeTiming == ExecuteTiming.PRE_CLIENT_TICK ? QUEUED_TASKS_PRE_CLIENT_TICK : QUEUED_TASKS_POST_CLIENT_TICK;
         synchronized (queue) {
             List<Runnable> tasks = new ArrayList<>(queue);
             queue.clear();
