@@ -128,6 +128,12 @@ public abstract class PiPCellWindowBody extends CellScreen implements PipableScr
     }
 
     @Override
+    protected int getContentTop() {
+        // PiP screens render no title, so they need no room for it
+        return PiPWindowBody.CONTENT_MARGIN;
+    }
+
+    @Override
     protected void autoScaleScreen(AbstractWidget topRightSideWidget) {
         // PiP screens should not scale itself
     }
