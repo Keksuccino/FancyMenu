@@ -81,6 +81,8 @@ public class ManageProfilesWindowBody extends PiPWindowBody {
     private List<Profile> profiles = new ArrayList<>();
     @Nullable
     private String selectedId;
+    /** The {@link ProfileHandler#getRevision()} the listed profiles are from. */
+    private long listedRevision;
     private ScrollArea listArea;
     /** Gets its real area with the first description it shows. */
     private final ScrollableMarkdownRenderer descriptionRenderer = new ScrollableMarkdownRenderer(0, 0, 0, 0);
@@ -246,9 +248,17 @@ public class ManageProfilesWindowBody extends PiPWindowBody {
             return;
         }
 
-        if (this.statsRequested.add(selected.getId())) {
+        // Walks keep profile directories open, which makes operations fail on Windows, so stats only get measured while no operation runs
+        if (!ProfileHandler.isBusy() && this.statsRequested.add(selected.getId())) {
             String id = selected.getId();
-            ProfileTasks.computeStats(selected, result -> this.stats.put(id, result));
+            ProfileTasks.computeStats(selected, result -> {
+                if (result != null) {
+                    this.stats.put(id, result);
+                } else {
+                    // The walk got stopped by an operation, so it gets measured again once the operation is done
+                    this.statsRequested.remove(id);
+                }
+            });
         }
 
         float headerBottom = this.detailsPanel.render(graphics, selected, this.stats.get(selected.getId()), panelX, MARGIN, panelWidth, mouseX, mouseY);
@@ -284,6 +294,13 @@ public class ManageProfilesWindowBody extends PiPWindowBody {
             x += button.getWidth() + ICON_BUTTON_GAP;
         }
         return x;
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        // Profiles can change in the background, like when the cleanup of a profile switch got finished later
+        if (!ProfileHandler.isBusy() && (ProfileHandler.getRevision() != this.listedRevision)) this.refreshProfiles(null);
     }
 
     @Override
@@ -354,6 +371,7 @@ public class ManageProfilesWindowBody extends PiPWindowBody {
      */
     void refreshProfiles(@Nullable String selectId) {
         this.profiles = ProfileHandler.getProfiles();
+        this.listedRevision = ProfileHandler.getRevision();
         // Profiles can change on disk at any time, so their stats get measured again, while the old values stay visible until then
         this.statsRequested.clear();
         String targetId = (selectId != null) ? selectId : this.selectedId;

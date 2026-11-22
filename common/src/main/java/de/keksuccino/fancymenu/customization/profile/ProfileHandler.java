@@ -6,42 +6,33 @@ import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import net.minecraft.client.resources.language.I18n;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Comparator;
+import java.nio.file.NoSuchFileException;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.Consumer;
 
 /**
  * Entry point for everything profiles. Lists profiles, edits their metadata and switches the active profile.
- * Long-running operations like exports live in {@link ProfileTasks}.
+ * Long-running operations like exports live in {@link ProfileTasks}.<br>
+ * A profile switch that is still pending, like after its last step failed, gets completed before every other profile operation and whenever
+ * the profiles get listed, if that's possible without reloading FancyMenu.
  */
 public final class ProfileHandler {
 
-    private static final Logger LOGGER = LogManager.getLogger();
-    /** Switches fail while another program has a profile file open, so they get retried a few times before giving up. */
-    private static final int MAX_SWITCH_ATTEMPTS = 4;
-    private static final int SWITCH_RETRY_DELAY_TICKS = 10;
-
     private static ProfileStorage storage;
     private static ProfileSwitcher switcher;
-    @Nullable
-    private static PendingSwitch pendingSwitch;
-    private static long clientTicks = 0L;
+    private static ProfileCatalog catalog;
+    private static ProfileSwitchController switchController;
     private static boolean initialized = false;
 
     private ProfileHandler() {
     }
 
     /**
-     * Recovers interrupted profile switches and cleans up leftovers of failed operations.
+     * Completes or rolls back interrupted profile switches and cleans up leftovers of failed operations.
      * Has to get called before anything reads the FancyMenu config directory.
      */
     public static void init() {
@@ -49,7 +40,9 @@ public final class ProfileHandler {
         initialized = true;
         storage = new ProfileStorage(FancyMenu.MOD_DIR.toPath());
         switcher = new ProfileSwitcher(storage);
-        switcher.recoverInterruptedSwitch();
+        catalog = new ProfileCatalog(storage, switcher);
+        switchController = new ProfileSwitchController(switcher, ProfileStatsWalks::stopAll, ProfileTasks::isTaskRunning, () -> getActiveProfile().getId());
+        switchController.completePendingSwitchAtLaunch();
         ProfileTasks.cleanUpLeftovers(storage);
         EventHandler.INSTANCE.registerListenersOf(ProfileHandler.class);
     }
@@ -61,32 +54,12 @@ public final class ProfileHandler {
 
     /**
      * Lists all profiles. The active profile comes first, all others are sorted by their title.<br>
-     * Fixes broken stored profiles on the way, like directories without metadata or metadata with a wrong ID.
+     * Fixes broken stored profiles on the way, like directories without metadata or metadata with a wrong ID, but never while a switch is pending.
      */
     @NotNull
     public static List<Profile> getProfiles() {
-        List<Profile> profiles = new ArrayList<>();
-        profiles.add(getActiveProfile());
-        adoptForeignDirectories();
-        List<Profile> stored = new ArrayList<>();
-        for (Path directory : getStorage().listStoredProfileDirectories()) {
-            String id = directory.getFileName().toString();
-            ProfileMetadata metadata = getStorage().readMetadata(directory, id);
-            boolean changed = false;
-            if (metadata == null) {
-                metadata = new ProfileMetadata(id);
-                metadata.setTitle(id);
-                changed = true;
-            } else if (!metadata.getId().equals(id)) {
-                metadata.setId(id);
-                changed = true;
-            }
-            if (changed) writeMetadataQuietly(directory, metadata);
-            stored.add(new Profile(metadata, directory, false));
-        }
-        stored.sort(Comparator.comparing((Profile profile) -> profile.metadata().getTitle(), String.CASE_INSENSITIVE_ORDER).thenComparing(Profile::getId));
-        profiles.addAll(stored);
-        return profiles;
+        boolean writable = getSwitchController().tryCompletePendingSwitch();
+        return catalog.listProfiles(writable, getDefaultTitle());
     }
 
     /**
@@ -94,21 +67,8 @@ public final class ProfileHandler {
      */
     @NotNull
     public static Profile getActiveProfile() {
-        Path root = getStorage().getRootDirectory();
-        ProfileMetadata metadata = getStorage().readMetadata(root, "");
-        boolean changed = false;
-        if (metadata == null) {
-            metadata = new ProfileMetadata("");
-            metadata.setTitle(I18n.get("fancymenu.profiles.default_profile_title"));
-            changed = true;
-        }
-        Set<String> storedIds = getStorage().getStoredProfileIds();
-        if (!ProfileStorage.isValidProfileId(metadata.getId()) || storedIds.contains(metadata.getId())) {
-            metadata.setId(ProfileStorage.generateProfileId(metadata.getTitle(), storedIds));
-            changed = true;
-        }
-        if (changed) writeMetadataQuietly(root, metadata);
-        return new Profile(metadata, root, true);
+        boolean writable = getSwitchController().tryCompletePendingSwitch();
+        return catalog.readActiveProfile(writable, getDefaultTitle());
     }
 
     @Nullable
@@ -120,23 +80,62 @@ public final class ProfileHandler {
     }
 
     /**
+     * The current state of a listed profile. Listed profiles can be outdated, like when completing a pending switch moved the previously active profile
+     * from its stash into the profile store.
+     *
+     * @return the profile, or NULL if it doesn't exist anymore.
+     */
+    @Nullable
+    static Profile findCurrentProfile(@NotNull Profile profile) {
+        return getProfile(profile.getId());
+    }
+
+    /**
      * Saves new metadata for a profile. The ID of a profile never changes.
      */
     public static void saveMetadata(@NotNull Profile profile, @NotNull ProfileMetadata metadata) throws IOException {
+        prepareOperation();
+        if (isActiveProfileIncomplete()) throw new IOException("The last profile switch is not complete yet!");
+        Profile current = findCurrentProfile(profile);
+        if (current == null) throw new NoSuchFileException(profile.directory().toString(), null, "The profile does not exist anymore");
         ProfileMetadata toSave = metadata.copy();
-        toSave.setId(profile.getId());
-        getStorage().writeMetadata(profile.directory(), toSave);
+        toSave.setId(current.getId());
+        getStorage().writeMetadata(current.directory(), toSave);
+    }
+
+    /**
+     * Has to get called before a profile operation reads or changes profile files: stops the background walks of the profile manager,
+     * which keep directories open, and completes a pending profile switch if possible.
+     */
+    static void prepareOperation() {
+        ProfileStatsWalks.stopAll();
+        getSwitchController().tryCompletePendingSwitch();
     }
 
     /**
      * Whether a profile switch or a profile task is in progress, which blocks all other profile operations.
      */
     public static boolean isBusy() {
-        return (pendingSwitch != null) || ProfileTasks.isTaskRunning();
+        return getSwitchController().isSwitching() || ProfileTasks.isTaskRunning();
     }
 
     public static boolean isSwitching() {
-        return pendingSwitch != null;
+        return getSwitchController().isSwitching();
+    }
+
+    /**
+     * Whether the last profile switch could neither get completed nor rolled back yet, so a part of the active profile is still in the profile store.
+     * Loading a profile completes it, and so does the next launch. Until then, all other profile operations get refused.
+     */
+    public static boolean isActiveProfileIncomplete() {
+        return (switcher != null) && switcher.isActiveProfileIncomplete();
+    }
+
+    /**
+     * Changes whenever profiles changed on disk outside of the operations of the profile manager, like when a pending switch got completed in the background.
+     */
+    public static long getRevision() {
+        return getSwitchController().getRevision();
     }
 
     /**
@@ -158,101 +157,31 @@ public final class ProfileHandler {
             callback.accept(new IllegalStateException("Another profile operation is still in progress!"));
             return;
         }
-        String activeProfileId = getActiveProfile().getId();
-        LOGGER.info("[FANCYMENU] Switching profile from '" + activeProfileId + "' to '" + targetProfileId + "'..");
-        if (!ProfileRuntimeReloader.suspend(keepOpenWindow)) {
-            ProfileRuntimeReloader.resume(false);
-            callback.accept(new IOException("Failed to save pending variable changes!"));
-            return;
-        }
-        pendingSwitch = new PendingSwitch(activeProfileId, targetProfileId, keepActiveProfile, callback);
-        attemptPendingSwitch();
-    }
-
-    private static void attemptPendingSwitch() {
-        PendingSwitch pending = Objects.requireNonNull(pendingSwitch);
-        pending.attempts++;
-        pending.retryAtTick = -1L;
-        try {
-            switcher.switchTo(pending.fromId, pending.toId, pending.keepActiveProfile);
-        } catch (Exception ex) {
-            if ((ex instanceof IOException) && (pending.attempts < MAX_SWITCH_ATTEMPTS)) {
-                LOGGER.warn("[FANCYMENU] Profile switch failed (attempt " + pending.attempts + "), retrying soon..", ex);
-                pending.retryAtTick = clientTicks + SWITCH_RETRY_DELAY_TICKS;
-                return;
+        getSwitchController().startSwitch(targetProfileId, keepActiveProfile, new ProfileSwitchController.SwitchRuntime() {
+            @Override
+            public boolean suspend() {
+                return ProfileRuntimeReloader.suspend(keepOpenWindow);
             }
-            LOGGER.error("[FANCYMENU] Failed to switch profile!", ex);
-            pendingSwitch = null;
-            ProfileRuntimeReloader.resume(false);
-            pending.callback.accept(ex);
-            return;
-        }
-        LOGGER.info("[FANCYMENU] Switched profile to '" + pending.toId + "'!");
-        pendingSwitch = null;
-        ProfileRuntimeReloader.resume(true);
-        pending.callback.accept(null);
+            @Override
+            public void resume(boolean activeProfileChanged) {
+                ProfileRuntimeReloader.resume(activeProfileChanged);
+            }
+        }, callback);
     }
 
     @EventListener
     public static void onClientTickPost(ClientTickEvent.Post e) {
-        clientTicks++;
-        PendingSwitch pending = pendingSwitch;
-        if ((pending != null) && (pending.retryAtTick >= 0L) && (clientTicks >= pending.retryAtTick)) {
-            attemptPendingSwitch();
-        }
+        getSwitchController().tick();
     }
 
-    /**
-     * Turns directories that users put into the profile store by hand, like copies of a config directory, into proper profiles.
-     */
-    private static void adoptForeignDirectories() {
-        for (Path foreign : getStorage().listForeignStoreDirectories()) {
-            String title = foreign.getFileName().toString();
-            String id = ProfileStorage.generateProfileId(title, getStorage().getStoredProfileIds());
-            try {
-                Path target = getStorage().getStoredProfileDirectory(id);
-                ProfileFiles.renameDirectory(foreign, target);
-                ProfileMetadata metadata = getStorage().readMetadata(target, id);
-                if (metadata == null) {
-                    metadata = new ProfileMetadata(id);
-                    metadata.setTitle(title);
-                }
-                metadata.setId(id);
-                getStorage().writeMetadata(target, metadata);
-                LOGGER.info("[FANCYMENU] Added directory '" + title + "' of the profile store as profile '" + id + "'.");
-            } catch (Exception ex) {
-                LOGGER.error("[FANCYMENU] Failed to add directory of the profile store as profile: " + foreign, ex);
-            }
-        }
+    @NotNull
+    private static ProfileSwitchController getSwitchController() {
+        return Objects.requireNonNull(switchController, "ProfileHandler not initialized yet!");
     }
 
-    private static void writeMetadataQuietly(@NotNull Path directory, @NotNull ProfileMetadata metadata) {
-        try {
-            getStorage().writeMetadata(directory, metadata);
-        } catch (Exception ex) {
-            LOGGER.error("[FANCYMENU] Failed to write profile metadata: " + directory, ex);
-        }
-    }
-
-    private static final class PendingSwitch {
-
-        @NotNull
-        private final String fromId;
-        @NotNull
-        private final String toId;
-        private final boolean keepActiveProfile;
-        @NotNull
-        private final Consumer<Throwable> callback;
-        private int attempts = 0;
-        private long retryAtTick = -1L;
-
-        private PendingSwitch(@NotNull String fromId, @NotNull String toId, boolean keepActiveProfile, @NotNull Consumer<Throwable> callback) {
-            this.fromId = fromId;
-            this.toId = toId;
-            this.keepActiveProfile = keepActiveProfile;
-            this.callback = callback;
-        }
-
+    @NotNull
+    private static String getDefaultTitle() {
+        return I18n.get("fancymenu.profiles.default_profile_title");
     }
 
 }

@@ -1,5 +1,6 @@
 package de.keksuccino.fancymenu.customization.profile;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import java.io.IOException;
@@ -15,6 +16,11 @@ class ProfileFilesTest {
 
     @TempDir
     Path tempDir;
+
+    @AfterEach
+    void tearDown() {
+        ProfileFileFaults.uninstall();
+    }
 
     @Test
     void failedMoveMovesEverythingBack() throws Exception {
@@ -49,6 +55,79 @@ class ProfileFilesTest {
     }
 
     @Test
+    void bestEffortMoveMovesEverythingItCanAndReportsTheFailure() throws Exception {
+        Path source = Files.createDirectories(this.tempDir.resolve("source"));
+        Path target = Files.createDirectories(this.tempDir.resolve("target"));
+        Path first = Files.writeString(source.resolve("a.txt"), "a");
+        Path stuck = Files.writeString(source.resolve("b.txt"), "b");
+        Path third = Files.writeString(source.resolve("c.txt"), "c");
+        ProfileFileFaults.install().failMoves((from, to) -> from.equals(stuck), -1);
+
+        assertThrows(IOException.class, () -> ProfileFiles.moveEntriesBestEffort(List.of(first, stuck, third), target, null));
+
+        assertEquals("a", Files.readString(target.resolve("a.txt")));
+        assertEquals("c", Files.readString(target.resolve("c.txt")));
+        assertEquals("b", Files.readString(stuck));
+        assertFalse(Files.exists(first));
+    }
+
+    @Test
+    void movingDirectoryContentNeverDeletesASourceWithEntriesLeft() throws Exception {
+        Path source = Files.createDirectories(this.tempDir.resolve("source"));
+        Path target = Files.createDirectories(this.tempDir.resolve("target"));
+        Files.writeString(source.resolve("a.txt"), "a");
+        Path stuck = Files.writeString(source.resolve("b.txt"), "b");
+        ProfileFileFaults.install().failMoves((from, to) -> from.equals(stuck), -1);
+
+        assertThrows(IOException.class, () -> ProfileFiles.moveDirectoryContent(source, target, null));
+
+        assertEquals("b", Files.readString(stuck));
+        assertEquals("a", Files.readString(target.resolve("a.txt")));
+    }
+
+    @Test
+    void mergingKeepsEverythingThatExistsOnOnlyOneSide() throws Exception {
+        Path source = Files.createDirectories(this.tempDir.resolve("source").resolve("sub"));
+        Path target = Files.createDirectories(this.tempDir.resolve("target").resolve("sub"));
+        Files.writeString(source.resolve("only_source.txt"), "source");
+        Files.writeString(source.resolve("both.txt"), "source version");
+        Files.writeString(target.resolve("only_target.txt"), "target");
+        Files.writeString(target.resolve("both.txt"), "target version");
+
+        ProfileFiles.moveMerging(source.getParent(), target.getParent(), false);
+
+        assertFalse(Files.exists(source.getParent()));
+        assertEquals("source", Files.readString(target.resolve("only_source.txt")));
+        assertEquals("target", Files.readString(target.resolve("only_target.txt")));
+        assertEquals("target version", Files.readString(target.resolve("both.txt")));
+    }
+
+    @Test
+    void mergingCanLetTheSourceWin() throws Exception {
+        Path source = Files.createDirectories(this.tempDir.resolve("source"));
+        Path target = Files.createDirectories(this.tempDir.resolve("target"));
+        Files.writeString(source.resolve("both.txt"), "source version");
+        Files.writeString(target.resolve("both.txt"), "target version");
+        Files.writeString(target.resolve("only_target.txt"), "target");
+
+        ProfileFiles.moveMerging(source, target, true);
+
+        assertFalse(Files.exists(source));
+        assertEquals("source version", Files.readString(target.resolve("both.txt")));
+        assertEquals("target", Files.readString(target.resolve("only_target.txt")));
+    }
+
+    @Test
+    void measuringStopsOnceCancelled() throws Exception {
+        Path source = Files.createDirectories(this.tempDir.resolve("source"));
+        Files.write(source.resolve("data.bin"), new byte[100]);
+        ProfileTaskProgress cancellation = new ProfileTaskProgress();
+        cancellation.requestCancel();
+
+        assertThrows(CancellationException.class, () -> ProfileFiles.measureSize(source, path -> true, cancellation));
+    }
+
+    @Test
     void copyReportsProgressAndHonorsTheFilter() throws Exception {
         Path source = Files.createDirectories(this.tempDir.resolve("source"));
         Files.createDirectories(source.resolve("keep"));
@@ -59,7 +138,7 @@ class ProfileFilesTest {
         ProfileTaskProgress progress = new ProfileTaskProgress();
         Path skipped = source.resolve("skip");
 
-        progress.setTotalBytes(ProfileFiles.measureSize(source, path -> !path.startsWith(skipped)));
+        progress.setTotalBytes(ProfileFiles.measureSize(source, path -> !path.startsWith(skipped), progress));
         ProfileFiles.copyDirectoryContent(source, target, path -> !path.startsWith(skipped), progress);
 
         assertEquals(300_000, progress.getTotalBytes());
