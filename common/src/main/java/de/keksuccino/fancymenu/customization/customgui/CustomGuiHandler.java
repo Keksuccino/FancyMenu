@@ -51,7 +51,7 @@ public class CustomGuiHandler {
 	 */
 	public static void reload() {
 		if (initialized || !CUSTOM_GUIS_FILE.isFile()) saveChanges();
-		readFromFile();
+		readFromFile(CUSTOM_GUIS_FILE);
 	}
 
 	/**
@@ -59,7 +59,7 @@ public class CustomGuiHandler {
 	 * Used when the file got replaced on disk, like after switching profiles, because {@link #reload()} would overwrite the new file with the old GUIs.
 	 */
 	public static void reloadFromFile() {
-		readFromFile();
+		readFromFile(CUSTOM_GUIS_FILE);
 		importLegacyGuisIfNeeded();
 	}
 
@@ -73,13 +73,20 @@ public class CustomGuiHandler {
 		}
 	}
 
-	private static void readFromFile() {
+	/**
+	 * Replaces all custom GUIs in memory with the ones in the given file.<br>
+	 * A missing file only means that there are no custom GUIs yet, like in a new profile, so it is no error. {@link #saveChanges()} creates the file.
+	 */
+	static void readFromFile(@NotNull File file) {
+
+		OVERRIDDEN_SCREENS.clear();
+		CUSTOM_GUI_SCREENS.clear();
+
+		if (!file.isFile()) return;
+
 		try {
 
-			OVERRIDDEN_SCREENS.clear();
-			CUSTOM_GUI_SCREENS.clear();
-
-			PropertyContainerSet set = PropertiesParser.deserializeSetFromFile(CUSTOM_GUIS_FILE.getAbsolutePath());
+			PropertyContainerSet set = PropertiesParser.deserializeSetFromFile(file.getAbsolutePath());
 			if (set != null) {
 				PropertyContainer overridden = set.getFirstContainerOfType("overridden_screens");
 				if (overridden != null) {
