@@ -1,11 +1,6 @@
 
 CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 
-
-
-
-
-
 - Added the "Scrollable Area" element, a container that holds other elements, scrolls them vertically, horizontally or both, and cuts them to its size
   - Place elements freely with anchors, or let the area arrange them automatically (Stack, Grid, Flow)
   - Scrolling options: scroll speed, smooth scrolling, drag-to-scroll, snapping to elements or pages, auto-scrolling, start position, keyboard scrolling and following the focused element
