@@ -1,6 +1,11 @@
 
 CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 
+
+
+
+
+
 - Added the "Scrollable Area" element, a container that holds other elements, scrolls them vertically, horizontally or both, and cuts them to its size
   - Place elements freely with anchors, or let the area arrange them automatically (Stack, Grid, Flow)
   - Scrolling options: scroll speed, smooth scrolling, drag-to-scroll, snapping to elements or pages, auto-scrolling, start position, keyboard scrolling and following the focused element
@@ -66,6 +71,21 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
   - Uses Cmd instead of Ctrl on macOS
   - Doesn't get in the way when typing characters with AltGr, like € or ł
   - New "Formatting" menu in the right-click menu of the editor that shows all formatting actions and their shortcuts
+- Added list variables, so variables can hold a list of entries instead of just one text value (#1870)
+  - Variables can be text or list variables, and Manage Variables can create both
+  - Lists work everywhere text variables work, like `$$name`, the Get Variable placeholder, the Is Variable Value requirement and listeners
+  - Existing variables load unchanged, and text variables never turn into lists on their own
+  - New actions to work with lists: Add to List, Set List Entry, Remove from List, Clear List, Set List and Arrange List (sort, sort numbers, reverse, shuffle, remove duplicates)
+  - Readable summaries of list action values in the action script editor
+  - New placeholders: List Get, List Size, List Index Of and List Join
+  - New List Contains Entry requirement
+  - New FOR EACH loop block for action scripts that runs its contents once for every list entry, with `$$list_entry` and `$$list_index`, also in nested loops
+  - Indexes start at 0, and negative indexes count from the end
+  - Edit List window with inline editing, drag and drop, undo/redo, search and "Edit as Text"
+  - List previews in Manage Variables and converting variables between text and list
+  - Slider elements can take their values from a list variable and follow its changes live
+  - Input fields and checkboxes linked to a list variable keep working
+  - Lists in the AI export, and GLSL variable uniforms of lists give their entry count
 - Added underlined text to the Markdown of Text and Tooltip elements, written as ++text++ (#1644)
 - Added a Label Alignment option (Left, Centered or Right) to custom buttons and sliders, and to vanilla buttons and sliders (#1866)
 - Added label alignment settings for buttons and sliders to Global Customizations (#1866)
@@ -103,6 +123,9 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - The profile error for files in use now explains that the game itself can still be using them, like audio that is still loading, so you can wait a few seconds and try again (#1867)
 - Web resources that fail to load now log one clear error with the real cause instead of two errors and a misleading NullPointerException
 - The "Gamerule Value" placeholder now also accepts game rule IDs with the `minecraft:` prefix, like `minecraft:keep_inventory` (#1846)
+- The value editors of actions and requirements now focus their first text field when they open, with its text selected, so you can type right away
+- Focused text fields now get a blue border in the default Dark theme, also with blur, so you can see which field you're typing in
+- Improved the action script overview of the Manage Listeners and Manage Schedulers windows: folders show their name and contents, comments are greyed out, actions show their value summaries, long texts get shortened and actions without a value no longer get an empty value line
 - Fixed the "Gamerule Value" placeholder returning nothing on Minecraft 1.21.11 and newer, both for its default `doDaylightCycle` and for old game rule names like `keepInventory` in older layouts, which now get mapped to their new names (#1846)
 - Fixed profiles getting hidden or lost when a profile switch fails or gets interrupted (#1867)
 - Fixed a failed profile switch blocking all other profile actions (#1867)
@@ -213,5 +236,24 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - Fixed the "File Types" row of file dialogs not lining up with the buttons at the bottom (#1836)
 - Fixed the right-click menu of the layout editor staying open after adding a new element through it
 - Fixed the Element tab of the editor's menu bar staying open after adding a new element through it
+- Fixed Folder and Comment blocks showing as "[UNKNOWN BLOCK]" in the Manage Listeners and Manage Schedulers windows
+- Fixed windows losing their selected entry when they get resized or maximized
+- Fixed wrapped lines in description areas jumping back to the left edge, which broke the indentation of nested lists
+- Fixed text input windows, the Number Picker and the window with two text inputs not focusing their input when they open
+- Fixed windows never really focusing their first text field when they open (1.19.2)
+- Fixed clicking a text field sometimes leaving two fields focused at once (1.19.2)
+- Fixed selected text having no visible highlight in FancyMenu's windows and the text editor (1.19.2)
+- Fixed suggestion lists of value editor fields getting cut off at the top of their window
+- Fixed tooltips and hover highlights of fields showing on top of an open suggestion list
+- Fixed the mouse wheel not scrolling suggestion lists inside windows
+- Fixed name fields with nothing to suggest showing the server's chat suggestions, like player names
+- Fixed the action script editor losing keyboard focus after its dialogs closed and not selecting newly added entries
+- Fixed actions moved into a block not getting the value placeholders of that block
+- Fixed Execute Later blocks with a delay of 0 sometimes never running
+- Fixed `$$old_value` of the On Variable Updated listener containing an internal line-break marker instead of real line breaks
+- Fixed list sliders with 23 or more values sometimes using the wrong value
+- Fixed a doubled empty space in the editor of the Is Variable Value requirement
+- Fixed closed AFMA animations sometimes keeping part of their data in memory
+- Fixed AFMA animations possibly crashing the game when they fail to load a frame or get closed
 
 %changelog:end%
