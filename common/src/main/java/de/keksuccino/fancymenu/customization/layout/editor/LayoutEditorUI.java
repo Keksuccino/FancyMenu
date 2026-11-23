@@ -1012,7 +1012,8 @@ public class LayoutEditorUI implements ContextMenuBuilder<LayoutEditorUI> {
                     for (AbstractLayoutEditorWidget w : editor.layoutEditorWidgets) {
                         w.editorElementAdded(editorElement);
                     }
-                    menu.closeMenu();
+                    //Close the parent menus too, because the right-click menu or menu bar tab this sub-menu is attached to would stay open otherwise
+                    menu1.closeMenuChain();
                 }
             });
             Component[] desc = builder.getDescription(null);
