@@ -211,5 +211,7 @@ CHANGELOG | FANCYMENU v3.11.0 [ W I P !! Not public yet !! ]
 - Fixed many windows having a big empty space at the top, like "Edit HTTP Request Configuration", the action, requirement, listener and variable windows, the panorama and slideshow choosers and the file dialogs (#1836)
 - Fixed the "Choose Listener Type" window showing its title a second time inside the window (#1836)
 - Fixed the "File Types" row of file dialogs not lining up with the buttons at the bottom (#1836)
+- Fixed the right-click menu of the layout editor staying open after adding a new element through it
+- Fixed the Element tab of the editor's menu bar staying open after adding a new element through it
 
 %changelog:end%
