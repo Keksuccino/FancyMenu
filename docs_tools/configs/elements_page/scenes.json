@@ -400,7 +400,10 @@
      "w": 100,
      "h": 100,
      "props": {
-      "model_source": "[source:location]minecraft:models/block/crafting_table.json"
+      "model_source": "[source:location]minecraft:models/block/crafting_table.json",
+      "model_rotation_x": "39.23",
+      "model_rotation_y": "14.48",
+      "model_rotation_z": "-140.77"
      }
     }
    ]

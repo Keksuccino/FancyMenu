@@ -84,9 +84,12 @@ scenes = [
         {"type": "item", "x": 480, "y": 254, "w": 32, "h": 32, "props": {"item_key": "minecraft:golden_apple"}},
         {"type": "item", "x": 530, "y": 254, "w": 32, "h": 32, "props": {"item_key": "minecraft:totem_of_undying"}},
     ]),
+    # JSON models draw mirrored upside down in 26.1.2 and newer: their GUI projection flips Y, but their pose doesn't flip it back like
+    # vanilla items do (scale -1 on Y). This rotation turns the mirrored model into the look of the vanilla item, mirrored left to right.
     scene("elements_json_model", [
         {"type": "json_model", "x": 430, "y": 220, "w": 100, "h": 100,
-         "props": {"model_source": "[source:location]minecraft:models/block/crafting_table.json"}},
+         "props": {"model_source": "[source:location]minecraft:models/block/crafting_table.json",
+                   "model_rotation_x": "39.23", "model_rotation_y": "14.48", "model_rotation_z": "-140.77"}},
     ]),
     scene("elements_progress_bar", [
         text(380, 244, 200, 20, "^^^\nLoading world... 65%\n^^^"),
