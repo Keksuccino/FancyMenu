@@ -1,0 +1,41 @@
+{
+ "script": "manage_schedulers",
+ "part": "add",
+ "start": "screen",
+ "menu_bar": true,
+ "background_image": "/config/fancymenu/assets/docs_bg.png",
+ "variables": {
+  "tips": [
+   "Craft a bed before your first night.",
+   "Torches keep most mobs away.",
+   "Sneak to stop falling off edges."
+  ]
+ },
+ "elements": [
+  {
+   "id": "tip_text",
+   "x": 110,
+   "y": 140,
+   "w": 420,
+   "h": 58,
+   "look": "pixel",
+   "background": true,
+   "scale": 1.5,
+   "content": "^^^\n### Survival Tip\n{\"placeholder\":\"list_get\",\"values\":{\"name\":\"tips\",\"index\":\"0\"}}\n^^^"
+  }
+ ],
+ "schedulers": [],
+ "search": "arrange",
+ "action": "arrange_list",
+ "fields": [
+  {
+   "label": "fancymenu.actions.variables.list.edit.list_name",
+   "text": "tips"
+  },
+  {
+   "cycle": "fancymenu.actions.variables.arrange_list.edit.arrangement",
+   "clicks": 5
+  }
+ ],
+ "hold_ticks": 40
+}

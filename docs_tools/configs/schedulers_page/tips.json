@@ -1,0 +1,46 @@
+{
+ "script": "press_keys",
+ "start": "screen",
+ "background_image": "/config/fancymenu/assets/docs_bg.png",
+ "variables": {
+  "tips": [
+   "Craft a bed before your first night.",
+   "Torches keep most mobs away.",
+   "Sneak to stop falling off edges."
+  ]
+ },
+ "shuffle_seed": 112,
+ "elements": [
+  {
+   "id": "tip_text",
+   "x": 110,
+   "y": 140,
+   "w": 420,
+   "h": 58,
+   "look": "pixel",
+   "background": true,
+   "scale": 1.5,
+   "content": "^^^\n### Survival Tip\n{\"placeholder\":\"list_get\",\"values\":{\"name\":\"tips\",\"index\":\"0\"}}\n^^^"
+  }
+ ],
+ "schedulers": [
+  {
+   "id": "random_tip",
+   "tick_delay": 4000,
+   "start_on_launch": true,
+   "script": [
+    {
+     "action": "arrange_list",
+     "value": "tips|||shuffle"
+    }
+   ],
+   "running": true
+  }
+ ],
+ "pointer": [
+  -40,
+  -40
+ ],
+ "keys": [],
+ "hold_ticks": 270
+}

@@ -34,6 +34,10 @@ import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
+import de.keksuccino.fancymenu.customization.scheduler.SchedulerHandler;
+import de.keksuccino.fancymenu.customization.scheduler.SchedulerInstance;
+import de.keksuccino.fancymenu.customization.scheduler.gui.ManageSchedulerSettingsScreen;
+import de.keksuccino.fancymenu.customization.scheduler.gui.ManageSchedulersWindowBody;
 import de.keksuccino.fancymenu.customization.variables.ListVariableEditorWindowBody;
 import de.keksuccino.fancymenu.customization.variables.ManageVariablesWindowBody;
 import de.keksuccino.fancymenu.customization.variables.VariableHandler;
@@ -142,6 +146,11 @@ public final class DocsShowcaseEditorGif {
      */
     @Nullable
     private List<ListenerInstance> savedListeners;
+    /**
+     * The schedulers of the instance before the config's {@code schedulers} replaced them. They come back when the showcase ends.
+     */
+    @Nullable
+    private List<SchedulerInstance> savedSchedulers;
 
     DocsShowcaseEditorGif(@NotNull Path framesDirectory, @NotNull JsonObject config) {
         this.framesDirectory = framesDirectory;
@@ -171,7 +180,9 @@ public final class DocsShowcaseEditorGif {
                 boolean loading = (minecraft.gui.overlay() != null) || (ScreenUtils.getScreen() == null);
                 if (loading && (this.phaseTicks < 180 * TICKS_PER_SECOND)) return;
                 Window window = minecraft.getWindow();
-                window.setWindowed(1280, 720);
+                // Config window_height: a taller window for stills of windows whose parts are too small at 720, like the description of
+                // Manage Schedulers. Only for stills: compose.py and encode.sh expect 1280x720 frames.
+                window.setWindowed(1280, this.config.has("window_height") ? this.config.get("window_height").getAsInt() : 720);
                 minecraft.options.guiScale().set(Math.round(2 * window.getPixelDensity()));
                 minecraft.resizeGui();
                 // The dense editor grid would cover the whole showcase (only the separate docs instance keeps this option)
@@ -251,6 +262,8 @@ public final class DocsShowcaseEditorGif {
         if (this.config.has("variables")) setUpVariables(this.config.getAsJsonObject("variables"));
         if (this.config.has("shuffle_seed")) seedListShuffle(this.config.get("shuffle_seed").getAsLong());
         if (this.config.has("listeners")) this.setUpListeners(this.config.getAsJsonArray("listeners"));
+        // After the variables and the shuffle seed, because running schedulers can change variables right away
+        if (this.config.has("schedulers")) this.setUpSchedulers(this.config.getAsJsonArray("schedulers"));
         Layout layout = Layout.buildForScreen(screen);
         if (this.config.has("elements")) {
             DocsShowcaseElements.addTo(layout, this.config.getAsJsonArray("elements"));
@@ -294,6 +307,8 @@ public final class DocsShowcaseEditorGif {
             case "manage_variables" -> this.buildManageVariablesScript(minecraft);
             case "manage_listeners" -> this.buildManageListenersScript(minecraft);
             case "listeners_still" -> this.buildListenersStillScript(minecraft);
+            case "manage_schedulers" -> this.buildManageSchedulersScript(minecraft);
+            case "schedulers_still" -> this.buildSchedulersStillScript(minecraft);
             case "press_keys" -> this.buildPressKeysScript(minecraft);
             case "add_element" -> this.buildAddElementScript(minecraft);
             case "add_placeholder" -> this.buildAddPlaceholderScript(minecraft);
@@ -434,6 +449,158 @@ public final class DocsShowcaseEditorGif {
         this.moveTo(() -> listenerChooserFreeSpot(), 8);
         this.waitTicks(24);
         this.mark("choose");
+        this.waitTicks(4);
+    }
+
+    /**
+     * Replaces the schedulers of the instance with the config's {@code schedulers} until the showcase ends. An empty array leaves no schedulers.<br>
+     * Keys of a scheduler: {@code id}, {@code start_delay}, {@code tick_delay}, {@code ticks_to_run} (all optional, in ms and runs),
+     * {@code start_on_launch} (optional), {@code script} (actions and IF statements, like the {@code script} of {@link #setUpListeners}) and
+     * {@code running} (true starts it right away).
+     */
+    private void setUpSchedulers(@NotNull Iterable<JsonElement> schedulers) {
+        if (this.savedSchedulers == null) this.savedSchedulers = SchedulerHandler.getInstances();
+        SchedulerHandler.stopAllSchedulers();
+        List<SchedulerInstance> instances = new ArrayList<>();
+        List<String> running = new ArrayList<>();
+        for (JsonElement entry : schedulers) {
+            JsonObject data = entry.getAsJsonObject();
+            SchedulerInstance instance = new SchedulerInstance(data.get("id").getAsString());
+            if (data.has("start_delay")) instance.setStartDelayMs(data.get("start_delay").getAsLong());
+            if (data.has("tick_delay")) instance.setTickDelayMs(data.get("tick_delay").getAsLong());
+            if (data.has("ticks_to_run")) instance.setTicksToRun(data.get("ticks_to_run").getAsLong());
+            if (data.has("start_on_launch")) instance.setStartOnLaunch(data.get("start_on_launch").getAsBoolean());
+            GenericExecutableBlock script = new GenericExecutableBlock();
+            if (data.has("script")) DocsShowcaseElements.addScriptEntries(script, data.getAsJsonArray("script"));
+            instance.setActionScript(script);
+            instances.add(instance);
+            if (data.has("running") && data.get("running").getAsBoolean()) running.add(instance.getIdentifier());
+        }
+        SchedulerHandler.applyChanges(instances);
+        running.forEach(SchedulerHandler::startScheduler);
+    }
+
+    /**
+     * Outside the editor: makes a scheduler in Manage Schedulers, in two parts (config {@code part}), so each GIF stays short.<br>
+     * {@code add} (with the menu bar: config {@code start: "screen"}, {@code menu_bar: true}, {@code schedulers: []}): opens
+     * Customization -> Manage Schedulers, clicks Add Scheduler, gives the new scheduler an action like {@link #buildActionScriptScript} does
+     * (config {@code search}, {@code action}, {@code fields}), clicks Done and selects the new scheduler.<br>
+     * {@code settings} (config {@code schedulers} with the scheduler, {@code select}: its ID): opens Manage Schedulers, selects the scheduler,
+     * fills in its Edit Settings window (config {@code settings_fields}, same format as {@code fields}), clicks Start Now and Done, then rests
+     * the pointer at {@code rest_point} ([x, y]) to watch the scheduler work.<br>
+     * Both end with {@code hold_ticks} (default 100).
+     */
+    private void buildManageSchedulersScript(@NotNull Minecraft minecraft) {
+        boolean addPart = this.config.get("part").getAsString().equals("add");
+        if (addPart) {
+            this.waitTicks(12);
+            // Customization -> Manage Schedulers
+            this.moveTo(() -> menuBarEntry("screen"), 14);
+            this.waitTicks(4);
+            this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+            this.waitUntil("Customization menu", () -> (ContextMenuHandler.INSTANCE.getCurrent() != null) && ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 40);
+            this.waitTicks(10);
+            this.moveTo(() -> new float[] {contextMenuEntry("manage_schedulers")[0] + 20, 200}, 12);
+            this.waitTicks(4);
+            this.scrollMenuUntilVisible(minecraft, "manage_schedulers", 230);
+            this.waitTicks(8);
+            this.clickMenuEntry(minecraft, "manage_schedulers");
+            this.waitUntil("Manage Schedulers", () -> findWindow(ManageSchedulersWindowBody.class) != null, 60);
+            this.waitTicks(14);
+            // Add Scheduler opens the action script editor of the new scheduler right away
+            this.moveTo(() -> windowButtonCenter(requireWindow(ManageSchedulersWindowBody.class), "fancymenu.schedulers.manage.add"), 14);
+            this.waitTicks(4);
+            this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+            this.openActionChooserAndAdd(minecraft, this.config.get("action").getAsString());
+            this.waitTicks(12);
+            this.moveTo(() -> windowWidgetCenter(requireWindow(ActionScriptEditorWindowBody.class), "doneButton"), 18);
+            this.waitTicks(5);
+            this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+            this.waitUntil("action script editor closed", () -> findWindow(ActionScriptEditorWindowBody.class) == null, 60);
+            this.waitUntil("Manage Schedulers shown again", () -> requireWindow(ManageSchedulersWindowBody.class).isVisible(), 60);
+            this.waitTicks(10);
+            // Select the new scheduler, which got a random ID
+            this.moveTo(() -> schedulerCell(null), 14);
+            this.waitTicks(4);
+            this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+            this.waitTicks(6);
+            // Rest the pointer on an empty spot, so the random ID shows without a hover
+            this.moveTo(DocsShowcaseEditorGif::schedulerListFreeSpot, 10);
+        } else {
+            String select = this.config.get("select").getAsString();
+            this.waitTicks(10);
+            this.steps.addLast(() -> {
+                ManageSchedulersWindowBody.openInWindow(new ManageSchedulersWindowBody(accepted -> {}));
+                return true;
+            });
+            this.waitUntil("Manage Schedulers", () -> findWindow(ManageSchedulersWindowBody.class) != null, 60);
+            this.waitTicks(14);
+            this.moveTo(() -> schedulerCell(select), 12);
+            this.waitTicks(4);
+            this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+            this.waitTicks(10);
+            // Edit Settings
+            this.moveTo(() -> windowButtonCenter(requireWindow(ManageSchedulersWindowBody.class), "fancymenu.schedulers.manage.settings"), 14);
+            this.waitTicks(4);
+            this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+            this.waitUntil("Scheduler Settings", () -> findWindow(ManageSchedulerSettingsScreen.class) != null, 60);
+            this.waitTicks(14);
+            this.fillValueFields(minecraft, this.config.getAsJsonArray("settings_fields"));
+            this.waitTicks(6);
+            this.moveTo(() -> windowWidgetCenter(requireWindow(ManageSchedulerSettingsScreen.class), "doneButton"), 16);
+            this.waitTicks(5);
+            this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+            this.waitUntil("Scheduler Settings closed", () -> findWindow(ManageSchedulerSettingsScreen.class) == null, 60);
+            this.waitUntil("Manage Schedulers shown again", () -> requireWindow(ManageSchedulersWindowBody.class).isVisible(), 60);
+            this.waitTicks(16);
+            // Start Now turns into Stop Now while the scheduler runs
+            this.moveTo(() -> windowButtonCenter(requireWindow(ManageSchedulersWindowBody.class), "fancymenu.schedulers.manage.start_now"), 14);
+            this.waitTicks(5);
+            this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+            this.waitTicks(24);
+            this.moveTo(() -> windowWidgetCenter(requireWindow(ManageSchedulersWindowBody.class), "doneButton"), 16);
+            this.waitTicks(5);
+            this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+            this.waitUntil("Manage Schedulers closed", () -> findWindow(ManageSchedulersWindowBody.class) == null, 60);
+            this.waitTicks(4);
+            if (this.config.has("rest_point")) {
+                float x = this.config.getAsJsonArray("rest_point").get(0).getAsFloat();
+                float y = this.config.getAsJsonArray("rest_point").get(1).getAsFloat();
+                this.moveTo(() -> new float[] {x, y}, 16);
+            }
+        }
+        this.waitTicks(this.config.has("hold_ticks") ? this.config.get("hold_ticks").getAsInt() : 100);
+    }
+
+    /**
+     * Still of Manage Schedulers (config {@code start: "screen"}, {@code schedulers}): opens Manage Schedulers and selects a scheduler
+     * (config {@code select}: its ID). Marks the frame of the still with a {@code mark} event ({@code manage}).
+     */
+    private void buildSchedulersStillScript(@NotNull Minecraft minecraft) {
+        String select = this.config.get("select").getAsString();
+        this.waitTicks(10);
+        this.steps.addLast(() -> {
+            ManageSchedulersWindowBody.openInWindow(new ManageSchedulersWindowBody(accepted -> {}));
+            return true;
+        });
+        this.waitUntil("Manage Schedulers", () -> findWindow(ManageSchedulersWindowBody.class) != null, 60);
+        this.waitTicks(14);
+        this.moveTo(() -> schedulerCell(select), 10);
+        this.waitTicks(3);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(6);
+        // The description area is small at big UI scales, so scroll it down to the action script (config description_wheel_turns)
+        if (this.config.has("description_wheel_turns")) {
+            this.moveTo(() -> descriptionAreaCenter(requireWindow(ManageSchedulersWindowBody.class)), 8);
+            for (int i = 0; i < this.config.get("description_wheel_turns").getAsInt(); i++) {
+                this.wheel(minecraft, -1.0);
+                this.waitTicks(2);
+            }
+        }
+        // Rest the pointer on an empty spot, so no row shows a hover
+        this.moveTo(() -> schedulerListFreeSpot(), 8);
+        this.waitTicks(24);
+        this.mark("manage");
         this.waitTicks(4);
     }
 
@@ -1820,6 +1987,36 @@ public final class DocsShowcaseEditorGif {
     }
 
     /**
+     * The GUI position of the ID of a scheduler in the Manage Schedulers window. {@code null} finds the scheduler that got added in the
+     * window, by the random ID new schedulers get ({@code scheduler_<UUID>}).
+     */
+    @NotNull
+    private static float[] schedulerCell(@Nullable String identifier) {
+        PiPWindow window = requireWindow(ManageSchedulersWindowBody.class);
+        @SuppressWarnings("unchecked")
+        List<Object> cells = (List<Object>) readField(window.getScreen(), "allCells");
+        for (Object cell : cells) {
+            if (cell instanceof ManageSchedulersWindowBody.SchedulerInstanceCell schedulerCell) {
+                String id = ((SchedulerInstance) readField(schedulerCell, "instance")).getIdentifier();
+                if ((identifier == null) ? id.startsWith("scheduler_") : id.equals(identifier)) {
+                    return bodyToGui(window, schedulerCell.getX() + Math.min(40.0F, schedulerCell.getWidth() / 2.0F), schedulerCell.getY() + schedulerCell.getHeight() / 2.0F);
+                }
+            }
+        }
+        throw new IllegalStateException("Manage Schedulers lists no " + ((identifier == null) ? "new scheduler" : identifier));
+    }
+
+    /**
+     * The GUI position of an empty spot of the list of the Manage Schedulers window, below its rows.
+     */
+    @NotNull
+    private static float[] schedulerListFreeSpot() {
+        PiPWindow window = requireWindow(ManageSchedulersWindowBody.class);
+        ScrollArea list = (ScrollArea) readField(window.getScreen(), "scrollArea");
+        return bodyToGui(window, list.getXWithBorder() + list.getWidthWithBorder() * 0.5F, list.getYWithBorder() + list.getHeightWithBorder() * 0.8F);
+    }
+
+    /**
      * The GUI position of a free spot of the list of the Manage Variables window, below its rows.
      */
     @NotNull
@@ -2087,6 +2284,11 @@ public final class DocsShowcaseEditorGif {
         if (this.menuBarControllerId != null) CustomizationOverlay.unregisterOverlayVisibilityController(this.menuBarControllerId);
         // Listeners of the showcase would run in later recordings of the instance, like a toast on every key press
         if (this.savedListeners != null) ListenerHandler.replaceInstances(this.savedListeners);
+        // Schedulers of the showcase would keep running and get saved for later recordings, like one that shuffles a list
+        if (this.savedSchedulers != null) {
+            SchedulerHandler.stopAllSchedulers();
+            SchedulerHandler.applyChanges(this.savedSchedulers);
+        }
         this.writers.shutdown();
         EventHandler.INSTANCE.unregisterListenersOf(this);
         LOGGER.info("[CHECK] docs gif finished: {} frames={}", (this.failures.get() == 0) ? "PASS" : ("FAIL " + this.failures.get()), this.frameIndex);

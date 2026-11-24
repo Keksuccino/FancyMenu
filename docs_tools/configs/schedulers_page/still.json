@@ -1,0 +1,53 @@
+{
+ "script": "schedulers_still",
+ "start": "screen",
+ "background_image": "/config/fancymenu/assets/docs_bg.png",
+ "variables": {
+  "tips": [
+   "Craft a bed before your first night.",
+   "Torches keep most mobs away.",
+   "Sneak to stop falling off edges."
+  ]
+ },
+ "elements": [],
+ "schedulers": [
+  {
+   "id": "random_tip",
+   "tick_delay": 4000,
+   "start_on_launch": true,
+   "script": [
+    {
+     "action": "arrange_list",
+     "value": "tips|||shuffle"
+    }
+   ],
+   "running": true
+  },
+  {
+   "id": "break_reminder",
+   "start_delay": 1800000,
+   "tick_delay": 1800000,
+   "start_on_launch": true,
+   "running": true,
+   "script": [
+    {
+     "action": "show_toast",
+     "value": "{\"width\": 160, \"durationMs\": 5000, \"title\": \"Time for a Break\", \"message\": \"Stand up, stretch and drink some water.\", \"iconSource\": \"\", \"backgroundSource\": \"\"}"
+    }
+   ]
+  },
+  {
+   "id": "event_countdown",
+   "tick_delay": 1000,
+   "ticks_to_run": 10,
+   "script": [
+    {
+     "action": "set_variable",
+     "value": "seconds_left:{\"placeholder\":\"calc\",\"values\":{\"decimal\":\"false\",\"expression\":\"{\"placeholder\":\"getvariable\",\"values\":{\"name\":\"seconds_left\"}} - 1\"}}"
+    }
+   ]
+  }
+ ],
+ "select": "random_tip",
+ "window_height": 1080
+}

@@ -1,0 +1,58 @@
+{
+ "script": "manage_schedulers",
+ "part": "settings",
+ "start": "screen",
+ "background_image": "/config/fancymenu/assets/docs_bg.png",
+ "variables": {
+  "tips": [
+   "Craft a bed before your first night.",
+   "Torches keep most mobs away.",
+   "Sneak to stop falling off edges."
+  ]
+ },
+ "shuffle_seed": 112,
+ "elements": [
+  {
+   "id": "tip_text",
+   "x": 110,
+   "y": 140,
+   "w": 420,
+   "h": 58,
+   "look": "pixel",
+   "background": true,
+   "scale": 1.5,
+   "content": "^^^\n### Survival Tip\n{\"placeholder\":\"list_get\",\"values\":{\"name\":\"tips\",\"index\":\"0\"}}\n^^^"
+  }
+ ],
+ "schedulers": [
+  {
+   "id": "scheduler_5f3d71f5-3bd7-4718-8e67-8055b676e9fa",
+   "script": [
+    {
+     "action": "arrange_list",
+     "value": "tips|||shuffle"
+    }
+   ]
+  }
+ ],
+ "select": "scheduler_5f3d71f5-3bd7-4718-8e67-8055b676e9fa",
+ "settings_fields": [
+  {
+   "label": "fancymenu.schedulers.settings.id",
+   "text": "random_tip"
+  },
+  {
+   "label": "fancymenu.schedulers.settings.tick_delay",
+   "text": "4000"
+  },
+  {
+   "cycle": "fancymenu.schedulers.settings.start_on_launch",
+   "clicks": 1
+  }
+ ],
+ "rest_point": [
+  560,
+  300
+ ],
+ "hold_ticks": 130
+}
