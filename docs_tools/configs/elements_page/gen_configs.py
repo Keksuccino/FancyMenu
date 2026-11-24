@@ -1,7 +1,7 @@
 """Writes the configs of the Elements page images: one screenshot scene per visible element type (scenes.json), and the GIF of
 adding a Button through New Element, moving it, widening it and giving it a label (add_element.json).
 
-The Player Entity has no scene: it needs the Fancy Entity Renderer mod, which the test client doesn't have. Slideshow, Video and
+The Player Entity image comes from configs/player_entities_page, which needs the Fancy Entity Renderer mod. Slideshow, Video and
 Browser have none either, because they need a slideshow folder, Watermedia or Rinku. The Scrollable Area uses the image of its own page.
 
 Usage: python3 gen_configs.py [output folder, default: this folder]

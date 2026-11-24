@@ -317,6 +317,7 @@ public final class DocsShowcaseEditorGif {
             case "manage_requirements" -> this.buildManageRequirementsScript(minecraft);
             case "hover_elements" -> this.buildHoverElementsScript(minecraft);
             case "editor_basics" -> this.buildEditorBasicsScript(minecraft);
+            case "context_entry_still" -> this.buildContextEntryStillScript(minecraft);
             default -> throw new IllegalArgumentException("Unknown script " + script);
         }
     }
@@ -1182,6 +1183,39 @@ public final class DocsShowcaseEditorGif {
      * (how long the pointer rests, default 40) and {@code move_ticks} (default 16). Optional {@code pointer} ([x, y], the start) and
      * {@code hold_ticks} (after the last hover, default 20).
      */
+    /**
+     * In the editor: right-clicks the {@code target} element, scrolls its right-click menu to the {@code entry} (an entry identifier, like
+     * {@code entity_pose} of Player Entities) and clicks it, waits for what it opens, rests the pointer at {@code rest_point} ([x, y]) and marks
+     * the frame of the still with a {@code mark} event ({@code still}).
+     */
+    private void buildContextEntryStillScript(@NotNull Minecraft minecraft) {
+        String target = this.config.get("target").getAsString();
+        String entry = this.config.get("entry").getAsString();
+        this.waitTicks(16);
+        this.moveTo(() -> center(editorBox(target)), 14);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_RIGHT);
+        this.waitUntil("context menu", () -> (ContextMenuHandler.INSTANCE.getCurrent() != null) && ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 60);
+        this.waitTicks(8);
+        this.moveTo(() -> new float[] {contextMenuEntry(entry)[0] + 20, Math.min(this.pointerY + 70, MENU_SCROLL_TARGET_Y)}, 10);
+        this.waitTicks(4);
+        this.scrollMenuUntilVisible(minecraft, entry);
+        this.waitTicks(6);
+        this.moveTo(() -> contextMenuEntry(entry), 8);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        // Windows fade in
+        this.waitTicks(30);
+        if (this.config.has("rest_point")) {
+            float x = this.config.getAsJsonArray("rest_point").get(0).getAsFloat();
+            float y = this.config.getAsJsonArray("rest_point").get(1).getAsFloat();
+            this.moveTo(() -> new float[] {x, y}, 10);
+        }
+        this.waitTicks(16);
+        this.mark("still");
+        this.waitTicks(4);
+    }
+
     private void buildHoverElementsScript(@NotNull Minecraft minecraft) {
         if (this.config.has("pointer")) {
             float x = this.config.getAsJsonArray("pointer").get(0).getAsFloat();

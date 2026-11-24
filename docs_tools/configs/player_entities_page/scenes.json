@@ -1,0 +1,177 @@
+{
+ "gui_width": 960,
+ "gui_height": 540,
+ "gui_scale": 2,
+ "scenes": [
+  {
+   "name": "player_entities_showcase",
+   "wait": 8,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "background_image": "/config/fancymenu/assets/docs_bg.png",
+   "elements": [
+    {
+     "type": "player_entity_v2",
+     "id": "player_auto",
+     "x": 60,
+     "y": 70,
+     "w": 120,
+     "h": 230,
+     "props": {
+      "playername": "jeb_",
+      "auto_skin": "true",
+      "auto_cape": "true",
+      "bodyrotationy": "150",
+      "headrotationy": "-70",
+      "head_follows_mouse": "false",
+      "body_follows_mouse": "false",
+      "showname": "false"
+     }
+    },
+    {
+     "x": 35,
+     "y": 310,
+     "w": 170,
+     "h": 22,
+     "look": "pixel",
+     "background": false,
+     "content": "^^^\n**Auto Skin and Cape**\n^^^"
+    },
+    {
+     "type": "player_entity_v2",
+     "id": "player_armor",
+     "x": 230,
+     "y": 70,
+     "w": 120,
+     "h": 230,
+     "props": {
+      "playername": "Steve",
+      "skin_source": "[source:location]minecraft:textures/entity/player/wide/steve.png",
+      "slim": "false",
+      "head_follows_mouse": "false",
+      "body_follows_mouse": "false",
+      "showname": "false",
+      "bodyrotationy": "25",
+      "head_wearable": "minecraft:diamond_helmet:::true",
+      "chest_wearable": "minecraft:diamond_chestplate:::true",
+      "legs_wearable": "minecraft:diamond_leggings:::true",
+      "feet_wearable": "minecraft:diamond_boots:::true",
+      "right_hand_wearable": "minecraft:diamond_sword:::true",
+      "left_hand_wearable": "minecraft:shield:::false"
+     }
+    },
+    {
+     "x": 205,
+     "y": 310,
+     "w": 170,
+     "h": 22,
+     "look": "pixel",
+     "background": false,
+     "content": "^^^\n**Armor and Tools**\n^^^"
+    },
+    {
+     "type": "player_entity_v2",
+     "id": "player_crouch",
+     "x": 400,
+     "y": 70,
+     "w": 120,
+     "h": 230,
+     "props": {
+      "playername": "Alex",
+      "skin_source": "[source:location]minecraft:textures/entity/player/slim/alex.png",
+      "slim": "true",
+      "head_follows_mouse": "false",
+      "body_follows_mouse": "false",
+      "showname": "false",
+      "player_pose": "crouching",
+      "bodyrotationy": "35"
+     }
+    },
+    {
+     "x": 375,
+     "y": 310,
+     "w": 170,
+     "h": 22,
+     "look": "pixel",
+     "background": false,
+     "content": "^^^\n**Crouching**\n^^^"
+    },
+    {
+     "type": "player_entity_v2",
+     "id": "player_pose",
+     "x": 570,
+     "y": 70,
+     "w": 120,
+     "h": 230,
+     "props": {
+      "playername": "Sunny",
+      "skin_source": "[source:location]minecraft:textures/entity/player/wide/sunny.png",
+      "slim": "false",
+      "head_follows_mouse": "false",
+      "body_follows_mouse": "false",
+      "showname": "false",
+      "right_arm_z_rot": "140",
+      "right_arm_x_rot": "-10",
+      "head_z_rot": "-8",
+      "headrotationy": "15"
+     }
+    },
+    {
+     "x": 545,
+     "y": 310,
+     "w": 170,
+     "h": 22,
+     "look": "pixel",
+     "background": false,
+     "content": "^^^\n**Entity Pose**\n^^^"
+    },
+    {
+     "type": "player_entity_v2",
+     "id": "player_baby",
+     "x": 740,
+     "y": 70,
+     "w": 120,
+     "h": 230,
+     "props": {
+      "playername": "Kai",
+      "skin_source": "[source:location]minecraft:textures/entity/player/wide/kai.png",
+      "slim": "false",
+      "head_follows_mouse": "false",
+      "body_follows_mouse": "false",
+      "showname": "false",
+      "is_baby": "true"
+     }
+    },
+    {
+     "x": 715,
+     "y": 310,
+     "w": 170,
+     "h": 22,
+     "look": "pixel",
+     "background": false,
+     "content": "^^^\n**Is Baby**\n^^^"
+    }
+   ]
+  },
+  {
+   "name": "elements_player_entity",
+   "wait": 5,
+   "pointer": [
+    260,
+    110
+   ],
+   "elements": [
+    {
+     "type": "player_entity_v2",
+     "id": "new_player",
+     "x": 60,
+     "y": 30,
+     "w": 100,
+     "h": 300
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,104 @@
+{
+ "script": "hover_elements",
+ "start": "screen",
+ "background_image": "/config/fancymenu/assets/docs_bg.png",
+ "elements": [
+  {
+   "type": "player_entity_v2",
+   "id": "head_only",
+   "x": 150,
+   "y": 60,
+   "w": 120,
+   "h": 210,
+   "props": {
+    "playername": "Steve",
+    "skin_source": "[source:location]minecraft:textures/entity/player/wide/steve.png",
+    "slim": "false",
+    "head_follows_mouse": "true",
+    "body_follows_mouse": "false",
+    "showname": "false"
+   }
+  },
+  {
+   "x": 110,
+   "y": 282,
+   "w": 200,
+   "h": 22,
+   "look": "pixel",
+   "background": false,
+   "content": "^^^\n**Head Follows Mouse**\n^^^"
+  },
+  {
+   "type": "player_entity_v2",
+   "id": "head_and_body",
+   "x": 370,
+   "y": 60,
+   "w": 120,
+   "h": 210,
+   "props": {
+    "playername": "Alex",
+    "skin_source": "[source:location]minecraft:textures/entity/player/slim/alex.png",
+    "slim": "true",
+    "head_follows_mouse": "true",
+    "body_follows_mouse": "true",
+    "showname": "false"
+   }
+  },
+  {
+   "x": 330,
+   "y": 282,
+   "w": 200,
+   "h": 22,
+   "look": "pixel",
+   "background": false,
+   "content": "^^^\n**Body Follows Mouse**\n^^^"
+  }
+ ],
+ "pointer": [
+  320,
+  330
+ ],
+ "hovers": [
+  {
+   "point": [
+    60,
+    40
+   ],
+   "move_ticks": 22,
+   "ticks": 8
+  },
+  {
+   "point": [
+    580,
+    40
+   ],
+   "move_ticks": 30,
+   "ticks": 8
+  },
+  {
+   "point": [
+    600,
+    320
+   ],
+   "move_ticks": 22,
+   "ticks": 8
+  },
+  {
+   "point": [
+    40,
+    320
+   ],
+   "move_ticks": 30,
+   "ticks": 8
+  },
+  {
+   "point": [
+    320,
+    170
+   ],
+   "move_ticks": 20,
+   "ticks": 20
+  }
+ ],
+ "hold_ticks": 20
+}

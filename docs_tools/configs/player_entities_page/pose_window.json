@@ -1,0 +1,32 @@
+{
+ "script": "context_entry_still",
+ "background_image": "/config/fancymenu/assets/docs_bg.png",
+ "elements": [
+  {
+   "type": "player_entity_v2",
+   "id": "waving",
+   "x": 250,
+   "y": 50,
+   "w": 140,
+   "h": 260,
+   "props": {
+    "playername": "Sunny",
+    "skin_source": "[source:location]minecraft:textures/entity/player/wide/sunny.png",
+    "slim": "false",
+    "head_follows_mouse": "false",
+    "body_follows_mouse": "false",
+    "showname": "false",
+    "right_arm_z_rot": "140",
+    "right_arm_x_rot": "-10",
+    "head_z_rot": "-8",
+    "headrotationy": "15"
+   }
+  }
+ ],
+ "target": "waving",
+ "entry": "entity_pose",
+ "rest_point": [
+  600,
+  340
+ ]
+}
