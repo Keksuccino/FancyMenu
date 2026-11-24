@@ -1,0 +1,30 @@
+{
+ "script": "manage_listeners",
+ "start": "screen",
+ "screen": "title",
+ "menu_bar": true,
+ "background_image": "/config/fancymenu/assets/docs_bg.png",
+ "elements": [],
+ "listeners": [],
+ "listener": "keyboard_key_pressed",
+ "listener_search": "key pressed",
+ "search": "toast",
+ "action": "show_toast",
+ "fields": [
+  {
+   "label": "fancymenu.actions.show_toast.edit.title_text",
+   "text": "Key Pressed"
+  },
+  {
+   "label": "fancymenu.actions.show_toast.edit.message",
+   "text": "You pressed $$key_name!"
+  }
+ ],
+ "keys": [
+  {
+   "key": "h",
+   "badge": "H"
+  }
+ ],
+ "hold_ticks": 60
+}

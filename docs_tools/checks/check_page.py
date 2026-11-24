@@ -19,6 +19,8 @@ for value in lang.values():
     labels.add(re.sub(r":? ?%s.*$", "", value).strip())
     # Labels with a value that is part of the text, like "Case Mode: Normal"
     labels.add(value.split(": ")[0].strip())
+    # Labels of text fields end with a colon, like "Compare to Text:"
+    labels.add(value.rstrip(":").strip())
 # Menu paths start with the menu bar, like "menu bar -> Customization -> Profiles"
 labels.add("menu bar")
 

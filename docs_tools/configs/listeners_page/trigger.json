@@ -1,0 +1,39 @@
+{
+ "script": "press_keys",
+ "start": "screen",
+ "screen": "title",
+ "background_image": "/config/fancymenu/assets/docs_bg.png",
+ "elements": [],
+ "listeners": [
+  {
+   "type": "keyboard_key_pressed",
+   "name": "Key Toast",
+   "script": [
+    {
+     "action": "show_toast",
+     "value": "{\"width\": 160, \"durationMs\": 4000, \"title\": \"Key Pressed\", \"message\": \"You pressed $$key_name!\", \"iconSource\": \"\", \"backgroundSource\": \"\"}"
+    }
+   ]
+  }
+ ],
+ "pointer": [
+  -40,
+  -40
+ ],
+ "keys": [
+  {
+   "key": "h",
+   "badge": "H"
+  },
+  {
+   "key": "f",
+   "badge": "F"
+  },
+  {
+   "key": "m",
+   "badge": "M"
+  }
+ ],
+ "key_gap_ticks": 30,
+ "hold_ticks": 70
+}

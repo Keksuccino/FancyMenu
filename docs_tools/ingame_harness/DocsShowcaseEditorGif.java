@@ -7,7 +7,23 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.Window;
 import com.google.gson.JsonElement;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.action.Action;
+import de.keksuccino.fancymenu.customization.action.ActionInstance;
+import de.keksuccino.fancymenu.customization.action.ActionRegistry;
+import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.statements.IfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorWindowBody;
+import de.keksuccino.fancymenu.customization.listener.AbstractListener;
+import de.keksuccino.fancymenu.customization.listener.ListenerHandler;
+import de.keksuccino.fancymenu.customization.listener.ListenerInstance;
+import de.keksuccino.fancymenu.customization.listener.ListenerRegistry;
+import de.keksuccino.fancymenu.customization.listener.gui.ChooseListenerTypeScreen;
+import de.keksuccino.fancymenu.customization.listener.gui.ManageListenersWindowBody;
+import de.keksuccino.fancymenu.customization.requirement.Requirement;
+import de.keksuccino.fancymenu.customization.requirement.RequirementRegistry;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
 import de.keksuccino.fancymenu.customization.action.ui.ChooseActionWindowBody;
 import de.keksuccino.fancymenu.customization.customgui.CustomGui;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
@@ -125,6 +141,11 @@ public final class DocsShowcaseEditorGif {
     private Screen startScreen;
     @Nullable
     private String menuBarControllerId;
+    /**
+     * The listeners of the instance before the config's {@code listeners} replaced them. They come back when the showcase ends.
+     */
+    @Nullable
+    private List<ListenerInstance> savedListeners;
 
     DocsShowcaseEditorGif(@NotNull Path framesDirectory, @NotNull JsonObject config) {
         this.framesDirectory = framesDirectory;
@@ -233,6 +254,7 @@ public final class DocsShowcaseEditorGif {
         }
         if (this.config.has("variables")) setUpVariables(this.config.getAsJsonObject("variables"));
         if (this.config.has("shuffle_seed")) seedListShuffle(this.config.get("shuffle_seed").getAsLong());
+        if (this.config.has("listeners")) this.setUpListeners(this.config.getAsJsonArray("listeners"));
         Layout layout = Layout.buildForScreen(screen);
         if (this.config.has("elements")) {
             DocsShowcaseElements.addTo(layout, this.config.getAsJsonArray("elements"));
@@ -274,8 +296,213 @@ public final class DocsShowcaseEditorGif {
             case "action_script" -> this.buildActionScriptScript(minecraft);
             case "click_element" -> this.buildClickElementScript(minecraft);
             case "manage_variables" -> this.buildManageVariablesScript(minecraft);
+            case "manage_listeners" -> this.buildManageListenersScript(minecraft);
+            case "listeners_still" -> this.buildListenersStillScript(minecraft);
+            case "press_keys" -> this.buildPressKeysScript(minecraft);
             default -> throw new IllegalArgumentException("Unknown script " + script);
         }
+    }
+
+    /**
+     * Replaces the listeners of the instance with the config's {@code listeners} until the showcase ends. An empty array leaves no listeners.<br>
+     * Keys of a listener: {@code type} (the listener identifier, like {@code keyboard_key_pressed}), {@code name} (its display name, optional)
+     * and {@code script}: actions ({@code action} identifier and {@code value}) and IF statements ({@code if}: requirements with
+     * {@code requirement} identifier and {@code value}, {@code actions}: the script inside the IF, with the same keys).
+     */
+    private void setUpListeners(@NotNull Iterable<JsonElement> listeners) {
+        if (this.savedListeners == null) this.savedListeners = ListenerHandler.getInstances();
+        List<ListenerInstance> instances = new ArrayList<>();
+        for (JsonElement entry : listeners) {
+            JsonObject data = entry.getAsJsonObject();
+            AbstractListener type = ListenerRegistry.getListener(data.get("type").getAsString());
+            if (type == null) throw new IllegalStateException("No listener " + data.get("type").getAsString());
+            ListenerInstance instance = type.createFreshInstance();
+            if (data.has("name")) instance.setDisplayName(data.get("name").getAsString());
+            GenericExecutableBlock script = new GenericExecutableBlock();
+            if (data.has("script")) addScriptEntries(script, data.getAsJsonArray("script"));
+            // Setting the script gives every part of it the $$ values of the listener
+            instance.setActionScript(script);
+            instances.add(instance);
+        }
+        ListenerHandler.replaceInstances(instances);
+    }
+
+    private static void addScriptEntries(@NotNull AbstractExecutableBlock block, @NotNull Iterable<JsonElement> entries) {
+        for (JsonElement entry : entries) {
+            JsonObject data = entry.getAsJsonObject();
+            if (data.has("if")) {
+                RequirementContainer condition = new RequirementContainer();
+                for (JsonElement requirementEntry : data.getAsJsonArray("if")) {
+                    JsonObject requirementData = requirementEntry.getAsJsonObject();
+                    Requirement requirement = RequirementRegistry.getRequirement(requirementData.get("requirement").getAsString());
+                    if (requirement == null) throw new IllegalStateException("No requirement " + requirementData.get("requirement").getAsString());
+                    String value = requirementData.has("value") ? requirementData.get("value").getAsString() : null;
+                    condition.addInstance(new RequirementInstance(requirement, value, RequirementInstance.RequirementMode.IF, condition));
+                }
+                IfExecutableBlock ifBlock = new IfExecutableBlock(condition);
+                addScriptEntries(ifBlock, data.getAsJsonArray("actions"));
+                block.addExecutable(ifBlock);
+            } else {
+                Action action = ActionRegistry.getAction(data.get("action").getAsString());
+                if (action == null) throw new IllegalStateException("No action " + data.get("action").getAsString());
+                block.addExecutable(new ActionInstance(action, data.has("value") ? data.get("value").getAsString() : null));
+            }
+        }
+    }
+
+    /**
+     * Outside the editor, with the menu bar (config {@code start: "screen"}, {@code menu_bar: true}, {@code listeners: []}): open
+     * Customization -> Manage Listeners, click Add Listener, search and pick a listener, give it an action like
+     * {@link #buildActionScriptScript} does, select the new listener so its description shows, and click Done. Then press keys to try it.<br>
+     * Config: {@code listener} (the identifier to pick), {@code listener_search} (typed into the search bar of the listener chooser),
+     * {@code search}, {@code action} and {@code fields} (see {@link #buildActionScriptScript}), {@code keys} (see {@link #buildPressKeysScript}).
+     */
+    private void buildManageListenersScript(@NotNull Minecraft minecraft) {
+        String listener = this.config.get("listener").getAsString();
+        this.waitTicks(12);
+        // Customization -> Manage Listeners
+        this.moveTo(() -> menuBarEntry("screen"), 14);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("Customization menu", () -> (ContextMenuHandler.INSTANCE.getCurrent() != null) && ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 40);
+        this.waitTicks(10);
+        this.moveTo(() -> new float[] {contextMenuEntry("manage_listeners")[0] + 20, 200}, 12);
+        this.waitTicks(4);
+        this.scrollMenuUntilVisible(minecraft, "manage_listeners", 230);
+        this.waitTicks(8);
+        this.clickMenuEntry(minecraft, "manage_listeners");
+        this.waitUntil("Manage Listeners", () -> findWindow(ManageListenersWindowBody.class) != null, 60);
+        this.waitTicks(14);
+        // Add Listener, then search and pick the listener
+        this.moveTo(() -> windowButtonCenter(requireWindow(ManageListenersWindowBody.class), "fancymenu.listeners.manage.add"), 14);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("listener chooser", () -> findWindow(ChooseListenerTypeScreen.class) != null, 60);
+        this.waitTicks(12);
+        this.type(minecraft, this.config.get("listener_search").getAsString());
+        this.waitTicks(12);
+        this.moveTo(() -> listenerChooserEntry(listener), 16);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        // Time to read the description with the $$ values
+        this.waitTicks(32);
+        this.moveTo(() -> windowButtonCenter(requireWindow(ChooseListenerTypeScreen.class), "fancymenu.common_components.done"), 14);
+        this.waitTicks(5);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        // The action script editor of the new listener opens
+        this.openActionChooserAndAdd(minecraft, this.config.get("action").getAsString());
+        this.waitTicks(12);
+        this.moveTo(() -> windowWidgetCenter(requireWindow(ActionScriptEditorWindowBody.class), "doneButton"), 18);
+        this.waitTicks(5);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("action script editor closed", () -> findWindow(ActionScriptEditorWindowBody.class) == null, 60);
+        this.waitUntil("Manage Listeners shown again", () -> requireWindow(ManageListenersWindowBody.class).isVisible(), 60);
+        this.waitTicks(10);
+        // Select the new listener, so its type and action script show on the right
+        this.moveTo(() -> listenerCell(listener), 14);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(26);
+        this.moveTo(() -> windowWidgetCenter(requireWindow(ManageListenersWindowBody.class), "doneButton"), 16);
+        this.waitTicks(5);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("Manage Listeners closed", () -> findWindow(ManageListenersWindowBody.class) == null, 60);
+        this.waitTicks(10);
+        this.addKeyPresses(minecraft);
+    }
+
+    /**
+     * Stills of the listener windows (config {@code start: "screen"}, {@code listeners}): opens Manage Listeners, selects a listener
+     * (config {@code select}: its display name or type identifier), then opens Add Listener, searches and selects a listener type (config
+     * {@code listener_search}, {@code listener}). Marks the frame of each still with a {@code mark} event ({@code manage}, {@code choose}).
+     */
+    private void buildListenersStillScript(@NotNull Minecraft minecraft) {
+        String select = this.config.get("select").getAsString();
+        String listener = this.config.get("listener").getAsString();
+        this.waitTicks(10);
+        this.steps.addLast(() -> {
+            ManageListenersWindowBody.openInWindow(new ManageListenersWindowBody(accepted -> {}));
+            return true;
+        });
+        this.waitUntil("Manage Listeners", () -> findWindow(ManageListenersWindowBody.class) != null, 60);
+        this.waitTicks(14);
+        this.moveTo(() -> listenerCell(select), 10);
+        this.waitTicks(3);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(6);
+        // The description area is small at big UI scales, so scroll it down to the action script of the listener (config description_wheel_turns)
+        if (this.config.has("description_wheel_turns")) {
+            this.moveTo(() -> descriptionAreaCenter(requireWindow(ManageListenersWindowBody.class)), 8);
+            for (int i = 0; i < this.config.get("description_wheel_turns").getAsInt(); i++) {
+                this.wheel(minecraft, -1.0);
+                this.waitTicks(2);
+            }
+        }
+        // Rest the pointer on an empty spot, so no row shows a hover
+        this.moveTo(() -> listenerListFreeSpot(), 8);
+        this.waitTicks(24);
+        this.mark("manage");
+        this.waitTicks(4);
+        this.moveTo(() -> windowButtonCenter(requireWindow(ManageListenersWindowBody.class), "fancymenu.listeners.manage.add"), 10);
+        this.waitTicks(3);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("listener chooser", () -> findWindow(ChooseListenerTypeScreen.class) != null, 60);
+        this.waitTicks(12);
+        this.typeQuickly(minecraft, this.config.get("listener_search").getAsString());
+        this.waitTicks(8);
+        this.moveTo(() -> listenerChooserEntry(listener), 10);
+        this.waitTicks(3);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(4);
+        this.moveTo(() -> listenerChooserFreeSpot(), 8);
+        this.waitTicks(24);
+        this.mark("choose");
+        this.waitTicks(4);
+    }
+
+    /**
+     * Outside the editor: presses keys one after another and waits, like a player trying a listener (config {@code start: "screen"},
+     * {@code listeners}). Config: {@code keys} (each with {@code key}, like {@code h}, and {@code badge}, like {@code H}),
+     * {@code key_gap_ticks} (between keys, default 40) and {@code hold_ticks} (after the last key, default 100). Optional {@code pointer}: [x, y].
+     */
+    private void buildPressKeysScript(@NotNull Minecraft minecraft) {
+        if (this.config.has("pointer")) {
+            float x = this.config.getAsJsonArray("pointer").get(0).getAsFloat();
+            float y = this.config.getAsJsonArray("pointer").get(1).getAsFloat();
+            this.steps.addLast(() -> {
+                this.movePointer(minecraft, x, y);
+                return true;
+            });
+        }
+        this.waitTicks(20);
+        this.addKeyPresses(minecraft);
+    }
+
+    /**
+     * Presses the config's {@code keys}, see {@link #buildPressKeysScript}. Does nothing without them.
+     */
+    private void addKeyPresses(@NotNull Minecraft minecraft) {
+        if (!this.config.has("keys")) return;
+        int gap = this.config.has("key_gap_ticks") ? this.config.get("key_gap_ticks").getAsInt() : 40;
+        int hold = this.config.has("hold_ticks") ? this.config.get("hold_ticks").getAsInt() : 100;
+        boolean first = true;
+        for (JsonElement entry : this.config.getAsJsonArray("keys")) {
+            if (!first) this.waitTicks(gap);
+            first = false;
+            JsonObject key = entry.getAsJsonObject();
+            this.key(minecraft, key.get("key").getAsString(), key.get("badge").getAsString());
+        }
+        this.waitTicks(hold);
+    }
+
+    /**
+     * Marks the next frame with a {@code mark} event, to find the frame of a still in frames.jsonl.
+     */
+    private void mark(@NotNull String name) {
+        this.steps.addLast(() -> {
+            this.pendingEvents.add("{\"type\":\"mark\",\"name\":\"" + name + "\"}");
+            return true;
+        });
     }
 
     /**
@@ -458,7 +685,7 @@ public final class DocsShowcaseEditorGif {
         this.moveTo(() -> windowButtonCenter(requireWindow(ChooseActionWindowBody.class), "fancymenu.ui.generic.next_step"), 14);
         this.waitTicks(5);
         this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
-        this.waitUntil("value window", () -> findWindow(PiPCellWindowBody.class) != null, 60);
+        this.waitUntil("value window", () -> findValueWindow() != null, 60);
         this.waitTicks(14);
         if (this.config.has("fields")) {
             for (JsonElement entry : this.config.getAsJsonArray("fields")) {
@@ -487,10 +714,10 @@ public final class DocsShowcaseEditorGif {
                 this.waitTicks(10);
             }
         }
-        this.moveTo(() -> windowWidgetCenter(requireWindow(PiPCellWindowBody.class), "doneButton"), 16);
+        this.moveTo(() -> windowWidgetCenter(requireValueWindow(), "doneButton"), 16);
         this.waitTicks(5);
         this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
-        this.waitUntil("value window closed", () -> findWindow(PiPCellWindowBody.class) == null, 60);
+        this.waitUntil("value window closed", () -> findValueWindow() == null, 60);
         this.waitUntil("action script editor shown again", () -> requireWindow(ActionScriptEditorWindowBody.class).isVisible(), 60);
     }
 
@@ -1032,6 +1259,25 @@ public final class DocsShowcaseEditorGif {
     }
 
     /**
+     * The visible cell window, like the value window of an action. Windows that opened it are cell windows too sometimes, like Manage Listeners,
+     * but they hide while it's open.
+     */
+    @Nullable
+    private static PiPWindow findValueWindow() {
+        for (PiPWindow window : PiPWindowHandler.INSTANCE.getOpenWindows()) {
+            if ((window.getScreen() instanceof PiPCellWindowBody) && window.isVisible()) return window;
+        }
+        return null;
+    }
+
+    @NotNull
+    private static PiPWindow requireValueWindow() {
+        PiPWindow window = findValueWindow();
+        if (window == null) throw new IllegalStateException("No visible cell window");
+        return window;
+    }
+
+    /**
      * The GUI position of the center of a widget the window body keeps in a field, like {@code doneButton}.
      */
     @NotNull
@@ -1074,7 +1320,7 @@ public final class DocsShowcaseEditorGif {
      */
     @NotNull
     private static float[] cellInputAfterLabel(@NotNull String labelKey) {
-        PiPWindow window = requireWindow(PiPCellWindowBody.class);
+        PiPWindow window = requireValueWindow();
         String label = Component.translatable(labelKey).getString();
         @SuppressWarnings("unchecked")
         List<Object> cells = (List<Object>) readField(window.getScreen(), "allCells");
@@ -1096,7 +1342,7 @@ public final class DocsShowcaseEditorGif {
      */
     @NotNull
     private static float[] cellWidgetWithLabel(@NotNull String labelKey) {
-        PiPWindow window = requireWindow(PiPCellWindowBody.class);
+        PiPWindow window = requireValueWindow();
         String prefix = Component.translatable(labelKey, "").getString();
         @SuppressWarnings("unchecked")
         List<Object> cells = (List<Object>) readField(window.getScreen(), "allCells");
@@ -1137,6 +1383,69 @@ public final class DocsShowcaseEditorGif {
             }
         }
         throw new IllegalStateException("Manage Variables lists no " + name);
+    }
+
+    /**
+     * The GUI position of the entry of a listener type in the list of the listener chooser, a bit right of the start of its name.
+     */
+    @NotNull
+    private static float[] listenerChooserEntry(@NotNull String listenerIdentifier) {
+        PiPWindow window = requireWindow(ChooseListenerTypeScreen.class);
+        ScrollArea list = (ScrollArea) readField(window.getScreen(), "listenersScrollArea");
+        for (ScrollAreaEntry entry : list.getEntries()) {
+            if ((entry instanceof ChooseListenerTypeScreen.ListenerScrollEntry listenerEntry) && (listenerEntry.listener != null) && listenerEntry.listener.getIdentifier().equals(listenerIdentifier)) {
+                return bodyToGui(window, entry.getX() + Math.min(60.0F, entry.getWidth() / 2.0F), entry.getY() + entry.getHeight() / 2.0F);
+            }
+        }
+        throw new IllegalStateException("The listener chooser lists no " + listenerIdentifier);
+    }
+
+    /**
+     * The GUI position of an empty spot of the list of the listener chooser, below its entries.
+     */
+    @NotNull
+    private static float[] listenerChooserFreeSpot() {
+        PiPWindow window = requireWindow(ChooseListenerTypeScreen.class);
+        ScrollArea list = (ScrollArea) readField(window.getScreen(), "listenersScrollArea");
+        return bodyToGui(window, list.getXWithBorder() + list.getWidthWithBorder() * 0.5F, list.getYWithBorder() + list.getHeightWithBorder() * 0.85F);
+    }
+
+    /**
+     * The GUI position of the name of a listener in the Manage Listeners window, found by its display name or its type identifier.
+     */
+    @NotNull
+    private static float[] listenerCell(@NotNull String nameOrType) {
+        PiPWindow window = requireWindow(ManageListenersWindowBody.class);
+        @SuppressWarnings("unchecked")
+        List<Object> cells = (List<Object>) readField(window.getScreen(), "allCells");
+        for (Object cell : cells) {
+            if (cell instanceof ManageListenersWindowBody.ListenerInstanceCell listenerCell) {
+                ListenerInstance instance = (ListenerInstance) readField(listenerCell, "instance");
+                if (nameOrType.equals(instance.getDisplayName()) || ((instance.getDisplayName() == null) && instance.parent.getIdentifier().equals(nameOrType))) {
+                    return bodyToGui(window, listenerCell.getX() + Math.min(40.0F, listenerCell.getWidth() / 2.0F), listenerCell.getY() + listenerCell.getHeight() / 2.0F);
+                }
+            }
+        }
+        throw new IllegalStateException("Manage Listeners lists no " + nameOrType);
+    }
+
+    /**
+     * The GUI position of the middle of the description area of a cell window, like Manage Listeners.
+     */
+    @NotNull
+    private static float[] descriptionAreaCenter(@NotNull PiPWindow window) {
+        ScrollArea area = (ScrollArea) readField(window.getScreen(), "descriptionScrollArea");
+        return bodyToGui(window, area.getXWithBorder() + area.getWidthWithBorder() / 2.0F, area.getYWithBorder() + area.getHeightWithBorder() / 2.0F);
+    }
+
+    /**
+     * The GUI position of an empty spot of the list of the Manage Listeners window, below its rows.
+     */
+    @NotNull
+    private static float[] listenerListFreeSpot() {
+        PiPWindow window = requireWindow(ManageListenersWindowBody.class);
+        ScrollArea list = (ScrollArea) readField(window.getScreen(), "scrollArea");
+        return bodyToGui(window, list.getXWithBorder() + list.getWidthWithBorder() * 0.5F, list.getYWithBorder() + list.getHeightWithBorder() * 0.8F);
     }
 
     /**
@@ -1311,6 +1620,8 @@ public final class DocsShowcaseEditorGif {
         this.phase = Phase.DONE;
         LayoutHandler.setPreviewLayout(null);
         if (this.menuBarControllerId != null) CustomizationOverlay.unregisterOverlayVisibilityController(this.menuBarControllerId);
+        // Listeners of the showcase would run in later recordings of the instance, like a toast on every key press
+        if (this.savedListeners != null) ListenerHandler.replaceInstances(this.savedListeners);
         this.writers.shutdown();
         EventHandler.INSTANCE.unregisterListenersOf(this);
         LOGGER.info("[CHECK] docs gif finished: {} frames={}", (this.failures.get() == 0) ? "PASS" : ("FAIL " + this.failures.get()), this.frameIndex);

@@ -1,0 +1,72 @@
+{
+ "script": "listeners_still",
+ "start": "screen",
+ "screen": "title",
+ "background_image": "/config/fancymenu/assets/docs_bg.png",
+ "elements": [],
+ "listeners": [
+  {
+   "type": "keyboard_key_pressed",
+   "name": "Help Key",
+   "script": [
+    {
+     "if": [
+      {
+       "requirement": "fancymenu_visibility_requirement_is_text",
+       "value": "[\"mode\":\"equals\",\"text\":\"$$key_name\",\"compare_with\":\"H\"]$"
+      }
+     ],
+     "actions": [
+      {
+       "action": "opengui",
+       "value": "help_screen"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "world_entered",
+   "name": "Welcome Back",
+   "script": [
+    {
+     "action": "show_toast",
+     "value": "{\"width\": 160, \"durationMs\": 5000, \"title\": \"Welcome back!\", \"message\": \"Have fun in $$world_name!\", \"iconSource\": \"\", \"backgroundSource\": \"\"}"
+    }
+   ]
+  },
+  {
+   "type": "start_joining_server",
+   "name": "Remember Last Server",
+   "script": [
+    {
+     "action": "set_variable",
+     "value": "last_server:$$server_ip"
+    }
+   ]
+  },
+  {
+   "type": "player_death",
+   "name": "Log Deaths",
+   "script": [
+    {
+     "action": "print_to_log",
+     "value": "Died on day $$days_survived: $$death_reason_string"
+    }
+   ]
+  },
+  {
+   "type": "screenshot_taken",
+   "script": [
+    {
+     "action": "show_toast",
+     "value": "{\"width\": 160, \"durationMs\": 5000, \"title\": \"Screenshot saved\", \"message\": \"$$screenshot_path\", \"iconSource\": \"\", \"backgroundSource\": \"\"}"
+    }
+   ]
+  }
+ ],
+ "select": "Help Key",
+ "description_wheel_turns": 8,
+ "listener_search": "achievement",
+ "listener": "achievement_unlocked"
+}
