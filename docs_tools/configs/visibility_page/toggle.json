@@ -1,0 +1,97 @@
+{
+ "script": "click_element",
+ "start": "screen",
+ "background_image": "/config/fancymenu/assets/docs_bg.png",
+ "variables": {
+  "show_rules": "false"
+ },
+ "elements": [
+  {
+   "x": 120,
+   "y": 26,
+   "w": 400,
+   "h": 44,
+   "look": "pixel",
+   "background": false,
+   "scale": 2,
+   "content": "^^^\n## Skyblock Odyssey\n^^^"
+  },
+  {
+   "x": 150,
+   "y": 68,
+   "w": 340,
+   "h": 32,
+   "look": "pixel",
+   "background": false,
+   "scale": 1.5,
+   "content": "^^^\nWelcome back, have fun!\n^^^",
+   "props": {
+    "appearance_delay": "every_time",
+    "appearance_delay_seconds": "3",
+    "fade_in_v2": "every_time",
+    "fade_in_speed": "1.5"
+   }
+  },
+  {
+   "id": "rules_panel",
+   "x": 190,
+   "y": 108,
+   "w": 260,
+   "h": 92,
+   "look": "pixel",
+   "background": true,
+   "scale": 1.5,
+   "content": "### Server Rules\n1. Be kind to others\n2. No griefing\n3. Have fun!",
+   "requirements": [
+    {
+     "requirement": "fancymenu_visibility_requirement_is_variable_value",
+     "value": "show_rules:true"
+    }
+   ],
+   "props": {
+    "fade_in_v2": "every_time",
+    "fade_out": "every_time",
+    "fade_in_speed": "2",
+    "fade_out_speed": "2"
+   }
+  },
+  {
+   "type": "custom_button",
+   "id": "rules_button",
+   "x": 245,
+   "y": 300,
+   "w": 150,
+   "h": 20,
+   "props": {
+    "label": "Server Rules"
+   },
+   "actions": [
+    {
+     "if": [
+      {
+       "requirement": "fancymenu_visibility_requirement_is_variable_value",
+       "value": "show_rules:true"
+      }
+     ],
+     "actions": [
+      {
+       "action": "set_variable",
+       "value": "show_rules:false"
+      }
+     ],
+     "else": [
+      {
+       "action": "set_variable",
+       "value": "show_rules:true"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "target": "rules_button",
+ "start_wait_ticks": 70,
+ "clicks": 2,
+ "click_gap_ticks": 80,
+ "hold_ticks": 60
+}

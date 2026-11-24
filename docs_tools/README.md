@@ -18,6 +18,7 @@ Tools for screenshots, showcase GIFs and checks of the FancyMenu docs. Images ge
 | `configs/decoration_overlays_page/` | Configs of the Decoration Overlays images: overlays on the title screen, vanilla elements moved and hidden. |
 | `configs/action_scripts_page/` | Configs of the Action Scripts GIFs: making a button's action script in the editor, and clicking the button on the title screen. |
 | `configs/elements_page/` | Configs of the Elements images: one screenshot per visible element type, and the GIF of adding a Button through New Element. |
+| `configs/visibility_page/` | Config of the Element Visibility GIF: a welcome text with Delay Appearance and fade-in, and a button that toggles a rules panel through a variable. |
 | `configs/variables_page/` | Configs of the Variables GIFs: making variables in Manage Variables, a list action on a button, and the button in use. |
 | `configs/listeners_page/` | Configs of the Listeners images: making a listener in Manage Listeners, the listener running on the title screen, and stills of Manage Listeners and the listener chooser. |
 | `configs/requirements_page/` | Configs of the Requirements GIFs: giving an info box an Is Element Hovered requirement in the editor, hovering the Multiplayer button on the title screen, and an Or group with two requirements. |
@@ -75,7 +76,7 @@ When done, `git restore` `FancyMenu.java` and remove the copied files. If the ha
 ```
 
    - One screenshot per scene (`<name>.png`). Elements are anchored top-left, in GUI pixels, with the defaults of new elements.
-   - Element keys: `type` (element type identifier, default `text_v2`), `id`, `parent` (the `id` of a Scrollable Area: `x`/`y` are then relative to its content), `props` (saved properties as strings, like `{"layout_mode": "stack"}` or `{"label": "Survival"}`), `actions` (the action script of elements that have one, like buttons: `[{"action": "show_toast", "value": "..."}]`), `requirements` (Loading Requirements: `[{"requirement": "<identifier>", "value": "...", "mode": "opposite"}]`, `mode` is optional).
+   - Element keys: `type` (element type identifier, default `text_v2`), `id`, `parent` (the `id` of a Scrollable Area: `x`/`y` are then relative to its content), `props` (saved properties as strings, like `{"layout_mode": "stack"}` or `{"label": "Survival"}`), `actions` (the action script of elements that have one, like buttons: `[{"action": "show_toast", "value": "..."}]`, and IF statements with `if`, `actions` and an optional `else`, like in `listeners`), `requirements` (Loading Requirements: `[{"requirement": "<identifier>", "value": "...", "mode": "opposite"}]`, `mode` is optional).
    - Text elements also take `content`, `look` (`pixel`, `classic`, `neutral`), `background` (`true`/`false`) and `scale`.
    - A scene without elements renders the clean background.
    - More scene keys (template: `configs/decoration_overlays_page/gen_scenes.py`):
@@ -117,7 +118,7 @@ oxipng -o 4 --strip safe <cropped dir>/*.png
    - `scroll_area`: drags buttons into a Scrollable Area, switches it to Stack, scrolls and reorders (`configs/scroll_area_page/gen_editor.py`).
    - `select_and_scroll`: selects an element and scrolls it, for editor stills. The last frame is the still: crop it with Pillow (`configs/scroll_area_page/gen_content_handle.py`).
    - `action_script`: opens a button's action script editor, presses A, searches and picks an action, fills in its value window and clicks Done (`configs/action_scripts_page/gen_configs.py`).
-   - `click_element`: clicks an element outside the editor and holds the result, like a toast (needs `start: screen`). `clicks` and `click_gap_ticks` click it several times.
+   - `click_element`: clicks an element outside the editor and holds the result, like a toast (needs `start: screen`). `clicks` and `click_gap_ticks` click it several times, `start_wait_ticks` waits longer before the pointer moves.
    - `manage_variables`: opens **Customization -> Manage Variables** from the menu bar, adds a text variable and sets its value, then adds a list and types its entries in the list editor (`configs/variables_page/gen_configs.py`, needs `start: screen` and `menu_bar: true`).
    - `manage_listeners`: opens **Customization -> Manage Listeners** from the menu bar, clicks **Add Listener**, searches and picks a listener (`listener`, `listener_search`), gives it an action like `action_script`, selects it, clicks **Done** and presses `keys` (`configs/listeners_page/gen_configs.py`, needs `start: screen`, `menu_bar: true` and `listeners: []`).
    - `listeners_still`: opens Manage Listeners, selects a listener (`select`) and scrolls its description down (`description_wheel_turns`), then picks a type in the listener chooser. The frames of both stills have a `mark` event (`manage`, `choose`) in frames.jsonl: `configs/listeners_page/make_stills.py` picks and optimizes them.

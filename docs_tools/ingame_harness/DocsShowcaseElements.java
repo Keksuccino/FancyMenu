@@ -5,6 +5,9 @@ import com.google.gson.JsonObject;
 import de.keksuccino.fancymenu.customization.action.Action;
 import de.keksuccino.fancymenu.customization.action.ActionInstance;
 import de.keksuccino.fancymenu.customization.action.ActionRegistry;
+import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.statements.ElseExecutableBlock;
+import de.keksuccino.fancymenu.customization.action.blocks.statements.IfExecutableBlock;
 import de.keksuccino.fancymenu.customization.background.backgrounds.MenuBackgrounds;
 import de.keksuccino.fancymenu.customization.background.backgrounds.color.ColorMenuBackground;
 import de.keksuccino.fancymenu.customization.background.backgrounds.image.ImageMenuBackground;
@@ -152,12 +155,7 @@ final class DocsShowcaseElements {
         if (data.has("requirements")) element.requirementContainer = buildRequirements(data.getAsJsonArray("requirements"));
         if (data.has("actions")) {
             if (!(element instanceof ExecutableElement executable)) throw new IllegalStateException("Element type " + type + " has no action script");
-            for (JsonElement entry : data.getAsJsonArray("actions")) {
-                JsonObject actionData = entry.getAsJsonObject();
-                Action action = ActionRegistry.getAction(actionData.get("action").getAsString());
-                if (action == null) throw new IllegalStateException("No action " + actionData.get("action").getAsString());
-                executable.getExecutableBlock().addExecutable(new ActionInstance(action, actionData.has("value") ? actionData.get("value").getAsString() : null));
-            }
+            addScriptEntries(executable.getExecutableBlock(), data.getAsJsonArray("actions"));
         }
         SerializedElement serialized = builder.serializeElementInternal(element);
         if (data.has("props")) {
@@ -169,11 +167,36 @@ final class DocsShowcaseElements {
     }
 
     /**
+     * Adds the entries of an action script to the block: actions ({@code action} identifier and {@code value}) and IF statements ({@code if}:
+     * requirements like {@link #buildRequirements}, {@code actions}: the script inside the IF, {@code else}: the script of an ELSE
+     * appended to it, optional). Element action scripts (key {@code actions}) and listener scripts use them.
+     */
+    static void addScriptEntries(@NotNull AbstractExecutableBlock block, @NotNull Iterable<JsonElement> entries) {
+        for (JsonElement entry : entries) {
+            JsonObject data = entry.getAsJsonObject();
+            if (data.has("if")) {
+                IfExecutableBlock ifBlock = new IfExecutableBlock(buildRequirements(data.getAsJsonArray("if")));
+                addScriptEntries(ifBlock, data.getAsJsonArray("actions"));
+                if (data.has("else")) {
+                    ElseExecutableBlock elseBlock = new ElseExecutableBlock();
+                    addScriptEntries(elseBlock, data.getAsJsonArray("else"));
+                    ifBlock.setAppendedBlock(elseBlock);
+                }
+                block.addExecutable(ifBlock);
+            } else {
+                Action action = ActionRegistry.getAction(data.get("action").getAsString());
+                if (action == null) throw new IllegalStateException("No action " + data.get("action").getAsString());
+                block.addExecutable(new ActionInstance(action, data.has("value") ? data.get("value").getAsString() : null));
+            }
+        }
+    }
+
+    /**
      * The Loading Requirements of an element (key {@code requirements}): each with {@code requirement} (its identifier), {@code value}
      * (if it has one) and {@code mode} ({@code normal}, the default, or {@code opposite}).
      */
     @NotNull
-    private static RequirementContainer buildRequirements(@NotNull Iterable<JsonElement> requirements) {
+    static RequirementContainer buildRequirements(@NotNull Iterable<JsonElement> requirements) {
         RequirementContainer container = new RequirementContainer();
         for (JsonElement entry : requirements) {
             JsonObject data = entry.getAsJsonObject();

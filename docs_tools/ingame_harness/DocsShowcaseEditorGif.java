@@ -7,12 +7,7 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.Window;
 import com.google.gson.JsonElement;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.customization.action.Action;
-import de.keksuccino.fancymenu.customization.action.ActionInstance;
-import de.keksuccino.fancymenu.customization.action.ActionRegistry;
-import de.keksuccino.fancymenu.customization.action.blocks.AbstractExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
-import de.keksuccino.fancymenu.customization.action.blocks.statements.IfExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorWindowBody;
 import de.keksuccino.fancymenu.customization.listener.AbstractListener;
 import de.keksuccino.fancymenu.customization.listener.ListenerHandler;
@@ -22,8 +17,6 @@ import de.keksuccino.fancymenu.customization.listener.gui.ChooseListenerTypeScre
 import de.keksuccino.fancymenu.customization.listener.gui.ManageListenersWindowBody;
 import de.keksuccino.fancymenu.customization.requirement.Requirement;
 import de.keksuccino.fancymenu.customization.requirement.RequirementRegistry;
-import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
-import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
 import de.keksuccino.fancymenu.customization.requirement.ui.BuildRequirementWindowBody;
 import de.keksuccino.fancymenu.customization.requirement.ui.ManageRequirementsWindowBody;
 import de.keksuccino.fancymenu.customization.action.ui.ChooseActionWindowBody;
@@ -326,35 +319,12 @@ public final class DocsShowcaseEditorGif {
             ListenerInstance instance = type.createFreshInstance();
             if (data.has("name")) instance.setDisplayName(data.get("name").getAsString());
             GenericExecutableBlock script = new GenericExecutableBlock();
-            if (data.has("script")) addScriptEntries(script, data.getAsJsonArray("script"));
+            if (data.has("script")) DocsShowcaseElements.addScriptEntries(script, data.getAsJsonArray("script"));
             // Setting the script gives every part of it the $$ values of the listener
             instance.setActionScript(script);
             instances.add(instance);
         }
         ListenerHandler.replaceInstances(instances);
-    }
-
-    private static void addScriptEntries(@NotNull AbstractExecutableBlock block, @NotNull Iterable<JsonElement> entries) {
-        for (JsonElement entry : entries) {
-            JsonObject data = entry.getAsJsonObject();
-            if (data.has("if")) {
-                RequirementContainer condition = new RequirementContainer();
-                for (JsonElement requirementEntry : data.getAsJsonArray("if")) {
-                    JsonObject requirementData = requirementEntry.getAsJsonObject();
-                    Requirement requirement = RequirementRegistry.getRequirement(requirementData.get("requirement").getAsString());
-                    if (requirement == null) throw new IllegalStateException("No requirement " + requirementData.get("requirement").getAsString());
-                    String value = requirementData.has("value") ? requirementData.get("value").getAsString() : null;
-                    condition.addInstance(new RequirementInstance(requirement, value, RequirementInstance.RequirementMode.IF, condition));
-                }
-                IfExecutableBlock ifBlock = new IfExecutableBlock(condition);
-                addScriptEntries(ifBlock, data.getAsJsonArray("actions"));
-                block.addExecutable(ifBlock);
-            } else {
-                Action action = ActionRegistry.getAction(data.get("action").getAsString());
-                if (action == null) throw new IllegalStateException("No action " + data.get("action").getAsString());
-                block.addExecutable(new ActionInstance(action, data.has("value") ? data.get("value").getAsString() : null));
-            }
-        }
     }
 
     /**
@@ -1070,14 +1040,15 @@ public final class DocsShowcaseEditorGif {
 
     /**
      * Outside the editor: hover an element, click it and wait, like a player clicking a button. Config: {@code target} (the element's id),
-     * {@code hold_ticks} (how long the result stays, default 100), {@code clicks} (default 1) and {@code click_gap_ticks} (between clicks, default 40).
+     * {@code hold_ticks} (how long the result stays, default 100), {@code clicks} (default 1), {@code click_gap_ticks} (between clicks, default 40)
+     * and {@code start_wait_ticks} (before the pointer moves, default 16, longer for things that show up after the screen opened).
      */
     private void buildClickElementScript(@NotNull Minecraft minecraft) {
         String target = this.config.get("target").getAsString();
         int hold = this.config.has("hold_ticks") ? this.config.get("hold_ticks").getAsInt() : 100;
         int clicks = this.config.has("clicks") ? this.config.get("clicks").getAsInt() : 1;
         int gap = this.config.has("click_gap_ticks") ? this.config.get("click_gap_ticks").getAsInt() : 40;
-        this.waitTicks(16);
+        this.waitTicks(this.config.has("start_wait_ticks") ? this.config.get("start_wait_ticks").getAsInt() : 16);
         this.moveTo(() -> center(screenBox(target)), 20);
         this.waitTicks(10);
         for (int i = 0; i < clicks; i++) {
