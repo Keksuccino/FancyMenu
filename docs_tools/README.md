@@ -16,6 +16,7 @@ Tools for screenshots, showcase GIFs and checks of the FancyMenu docs. Images ge
 | `configs/text_pages/` | Configs of the Text Formatting and Text in Menus images. |
 | `configs/scroll_area_page/` | Configs of the Scrollable Areas images: elements of any type, elements in areas, editor stills. |
 | `configs/decoration_overlays_page/` | Configs of the Decoration Overlays images: overlays on the title screen, vanilla elements moved and hidden. |
+| `configs/export_for_ai_page/` | The chat GIF of the Export for AI page, a mockup of a support chat with Alice drawn with Pillow. The only image that isn't an in-game render, because it shows something outside of the game. Its avatar and emotes come from the user's Alice emotes folder. |
 | `checks/check_page.py` | Checks a page's UI labels, link format, links, anchors and images. |
 | `assets/` | Cursor sprites, `docs_bg.png` (a blurred panorama background) and `docs_bg_night.png` (the same at night). |
 

@@ -19,6 +19,8 @@ for value in lang.values():
     labels.add(re.sub(r":? ?%s.*$", "", value).strip())
     # Labels with a value that is part of the text, like "Case Mode: Normal"
     labels.add(value.split(": ")[0].strip())
+# Menu paths start with the menu bar, like "menu bar -> Customization -> Profiles"
+labels.add("menu bar")
 
 
 def strip_code_blocks(text):
