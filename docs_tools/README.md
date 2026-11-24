@@ -17,6 +17,7 @@ Tools for screenshots, showcase GIFs and checks of the FancyMenu docs. Images ge
 | `configs/scroll_area_page/` | Configs of the Scrollable Areas images: elements of any type, elements in areas, editor stills. |
 | `configs/decoration_overlays_page/` | Configs of the Decoration Overlays images: overlays on the title screen, vanilla elements moved and hidden. |
 | `configs/action_scripts_page/` | Configs of the Action Scripts GIFs: making a button's action script in the editor, and clicking the button on the title screen. |
+| `configs/variables_page/` | Configs of the Variables GIFs: making variables in Manage Variables, a list action on a button, and the button in use. |
 | `configs/export_for_ai_page/` | The chat GIF of the Export for AI page, a mockup of a support chat with Alice drawn with Pillow. The only image that isn't an in-game render, because it shows something outside of the game. Its avatar and emotes come from the user's Alice emotes folder. |
 | `checks/check_page.py` | Checks a page's UI labels, link format, links, anchors and images. |
 | `assets/` | Cursor sprites, `docs_bg.png` (a blurred panorama background) and `docs_bg_night.png` (the same at night). |
@@ -111,11 +112,14 @@ oxipng -o 4 --strip safe <cropped dir>/*.png
    - `scroll_area`: drags buttons into a Scrollable Area, switches it to Stack, scrolls and reorders (`configs/scroll_area_page/gen_editor.py`).
    - `select_and_scroll`: selects an element and scrolls it, for editor stills. The last frame is the still: crop it with Pillow (`configs/scroll_area_page/gen_content_handle.py`).
    - `action_script`: opens a button's action script editor, presses A, searches and picks an action, fills in its value window and clicks Done (`configs/action_scripts_page/gen_configs.py`).
-   - `click_element`: clicks an element outside the editor and holds the result, like a toast (needs `start: screen`).
+   - `click_element`: clicks an element outside the editor and holds the result, like a toast (needs `start: screen`). `clicks` and `click_gap_ticks` click it several times.
+   - `manage_variables`: opens **Customization -> Manage Variables** from the menu bar, adds a text variable and sets its value, then adds a list and types its entries in the list editor (`configs/variables_page/gen_configs.py`, needs `start: screen` and `menu_bar: true`).
+   - Fields of `action_script` value windows: `{"label", "text"}` types into a text field, `{"cycle", "clicks"}` clicks a cycle button (by the localization key of its label, like `fancymenu.actions.variables.arrange_list.edit.arrangement`).
    - The config's `elements`, `vanilla` and `background_image`/`background_color` (same keys as in scene configs) are the layout the editor opens with. `screen: title` opens it for the title screen instead of an empty Custom GUI.
    - `start: screen` opens the screen itself with that layout instead of the editor, like a player sees it. The menu bar stays hidden, unless `menu_bar: true`.
-   - Steps: `waitTicks`, `waitUntil`, `moveTo`, `click`, `press` (optionally with modifiers), `release`, `key` (with badge label), `badge`, `type`, `wheel`, `clickMenuEntry` (also in sub-menus), `scrollMenuUntilVisible`, `dragSelectWord`.
-   - Resolve targets from the real widgets, never from fixed positions: `menuEntry`, `editorBox`, `screenBox` (outside the editor), `wordEdge`, `lineEnd`, `doneButton`, and for windows `findWindow`/`requireWindow` (by body class), `windowWidgetCenter` (a widget field like `doneButton`), `windowButtonCenter` (a button by its label key), `chooserEntry` (an action in the action chooser), `cellInputAfterLabel` (a text field of a value window by its label key).
+   - `variables` sets up FancyMenu's variables first: all others get deleted, a text value makes a text variable, an array a list. `shuffle_seed` makes the Shuffle of Arrange List the same every run.
+   - Steps: `waitTicks`, `waitUntil`, `moveTo`, `click`, `press` (optionally with modifiers), `release`, `key` (with badge label), `badge`, `type`, `typeQuickly` (for long texts), `wheel`, `clickMenuEntry` (also in sub-menus), `scrollMenuUntilVisible` (optionally to a given Y), `dragSelectWord`.
+   - Resolve targets from the real widgets, never from fixed positions: `menuEntry`, `editorBox`, `screenBox` (outside the editor), `wordEdge`, `lineEnd`, `doneButton`, and for windows `findWindow`/`requireWindow` (by body class), `windowWidgetCenter` (a widget field like `doneButton`), `windowButtonCenter` (a button by its label key), `chooserEntry` (an action in the action chooser), `cellInputAfterLabel` (a text field of a value window by its label key), `cellWidgetWithLabel` (a button of a value window by its label key), `menuBarEntry` (an entry of the menu bar outside the editor, like `screen` for Customization), `variableRow`, `variablesListFreeSpot` and `addEntryRow` (Manage Variables and its list editor).
 2. Record:
 
 ```bash
@@ -141,6 +145,7 @@ sh postprocess/encode.sh run_client_docs/gif_composed <path>/showcase.gif
 - Title screen widget identifiers: `mc_titlescreen_singleplayer_button`, `..._multiplayer_button`, `..._realms_button`, `..._options_button`, `..._quit_button`, `..._language_button`, `..._accessibility_button`, `titlescreen_mods_button`, `454370` (the skin icon), `minecraft_logo_widget`, `minecraft_splash_widget`, `minecraft_branding_widget`, `title_screen_copyright_button`, `minecraft_realms_notification_icons_widget`.
 - Overlay screenshots: keep at least 13 pixels between buttons, and turn off **Should Be Affected By Decoration Overlays** (`should_be_affected_by_decoration_overlays`) for the logo, splash, branding, copyright and Realms icons.
 - Element-specific entries of an element's right-click menu are below its visible part. Scroll first (`scrollMenuUntilVisible`).
+- **Manage Variables** sits below the visible part of the Customization menu too. That menu ends above the usual scroll target, so scroll it to Y 230. Moving over Custom GUIs on the way opens its sub-menu for a moment, which is real.
 - The text editor reads the real SDL state for drag and Shift+Arrow selection, which simulated input can't set. Use `dragSelectWord`.
 - PiP windows fade in, so what's behind them shows through for a few frames. That's real.
 - Don't raise `FREEZE` / `FREEZE_DRIFT` in `compose.py`, or faded-out content stays as a ghost.

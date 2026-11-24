@@ -1,0 +1,21 @@
+{
+ "script": "manage_variables",
+ "start": "screen",
+ "screen": "title",
+ "menu_bar": true,
+ "background_image": "/config/fancymenu/assets/docs_bg.png",
+ "elements": [],
+ "variables": {},
+ "text_variable": {
+  "name": "menu_theme",
+  "value": "dark"
+ },
+ "list_variable": {
+  "name": "tips",
+  "entries": [
+   "Craft a bed before your first night.",
+   "Torches keep most mobs away.",
+   "Sneak to stop falling off edges."
+  ]
+ }
+}

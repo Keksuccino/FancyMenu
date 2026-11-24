@@ -23,6 +23,9 @@ import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
+import de.keksuccino.fancymenu.customization.variables.ListVariableEditorWindowBody;
+import de.keksuccino.fancymenu.customization.variables.ManageVariablesWindowBody;
+import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
@@ -35,7 +38,9 @@ import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPCellWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorLine;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
@@ -66,6 +71,7 @@ import java.util.Arrays;
 import java.util.Deque;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -225,6 +231,8 @@ public final class DocsShowcaseEditorGif {
             if (gui == null) throw new IllegalStateException("The showcase GUI is missing");
             screen = CustomGuiHandler.constructInstance(gui, null, null);
         }
+        if (this.config.has("variables")) setUpVariables(this.config.getAsJsonObject("variables"));
+        if (this.config.has("shuffle_seed")) seedListShuffle(this.config.get("shuffle_seed").getAsLong());
         Layout layout = Layout.buildForScreen(screen);
         if (this.config.has("elements")) {
             DocsShowcaseElements.addTo(layout, this.config.getAsJsonArray("elements"));
@@ -265,8 +273,131 @@ public final class DocsShowcaseEditorGif {
             case "select_and_scroll" -> this.buildSelectAndScrollScript(minecraft);
             case "action_script" -> this.buildActionScriptScript(minecraft);
             case "click_element" -> this.buildClickElementScript(minecraft);
+            case "manage_variables" -> this.buildManageVariablesScript(minecraft);
             default -> throw new IllegalArgumentException("Unknown script " + script);
         }
+    }
+
+    /**
+     * Sets up FancyMenu's variables before the showcase starts, from the config's {@code variables}: every other variable gets deleted,
+     * then a text value creates a text variable and an array of texts a list variable. An empty object leaves no variables.
+     */
+    private static void setUpVariables(@NotNull JsonObject variables) {
+        VariableHandler.clearVariables();
+        for (Map.Entry<String, JsonElement> variable : variables.entrySet()) {
+            if (variable.getValue().isJsonArray()) {
+                List<String> entries = new ArrayList<>();
+                variable.getValue().getAsJsonArray().forEach(entry -> entries.add(entry.getAsString()));
+                VariableHandler.setListIfAbsent(variable.getKey(), entries);
+            } else {
+                VariableHandler.setVariable(variable.getKey(), variable.getValue().getAsString());
+            }
+        }
+    }
+
+    /**
+     * Seeds the randomness of the Shuffle of Arrange List, so a GIF that shuffles a list gets the same order every run
+     * (config {@code shuffle_seed}). Pick a seed that shows a change on every click.
+     */
+    private static void seedListShuffle(long seed) {
+        try {
+            Field field = VariableHandler.class.getDeclaredField("LIST_SHUFFLE_RANDOM");
+            field.setAccessible(true);
+            ((java.util.Random) field.get(null)).setSeed(seed);
+        } catch (Exception ex) {
+            throw new IllegalStateException("Can't seed the list shuffle", ex);
+        }
+    }
+
+    /**
+     * Outside the editor, with the menu bar (config {@code start: "screen"}, {@code menu_bar: true}, {@code variables: {}}): open
+     * Customization -> Manage Variables, add a text variable and set its value, then add a list variable and type its entries in the list editor.<br>
+     * Config: {@code text_variable} ({@code name}, {@code value}) and {@code list_variable} ({@code name}, {@code entries}).
+     */
+    private void buildManageVariablesScript(@NotNull Minecraft minecraft) {
+        JsonObject textVariable = this.config.getAsJsonObject("text_variable");
+        JsonObject listVariable = this.config.getAsJsonObject("list_variable");
+        String textName = textVariable.get("name").getAsString();
+        String listName = listVariable.get("name").getAsString();
+        this.waitTicks(12);
+        // Customization -> Manage Variables
+        this.moveTo(() -> menuBarEntry("screen"), 14);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("Customization menu", () -> (ContextMenuHandler.INSTANCE.getCurrent() != null) && ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 40);
+        this.waitTicks(10);
+        // Manage Variables sits below the visible part of the long menu, so scroll the menu like a player would
+        this.moveTo(() -> new float[] {contextMenuEntry("variables")[0] + 20, 200}, 12);
+        this.waitTicks(4);
+        this.scrollMenuUntilVisible(minecraft, "variables", 230);
+        this.waitTicks(8);
+        this.clickMenuEntry(minecraft, "variables");
+        this.waitUntil("Manage Variables", () -> findWindow(ManageVariablesWindowBody.class) != null, 60);
+        this.waitTicks(12);
+        // Add a text variable
+        this.rightClickAndPick(minecraft, () -> variablesListFreeSpot(), "add_text_variable");
+        this.typeIntoTextDialog(minecraft, textName);
+        this.waitUntil("text variable added", () -> VariableHandler.variableExists(textName), 40);
+        this.waitTicks(6);
+        // Set its value
+        this.rightClickAndPick(minecraft, () -> variableRow(textName), "set_value");
+        this.typeIntoTextDialog(minecraft, textVariable.get("value").getAsString());
+        this.waitTicks(10);
+        // Add a list variable
+        this.rightClickAndPick(minecraft, () -> variablesListFreeSpot(), "add_list_variable");
+        this.typeIntoTextDialog(minecraft, listName);
+        this.waitUntil("list variable added", () -> VariableHandler.variableExists(listName), 40);
+        this.waitTicks(6);
+        // Type its entries in the list editor. Enter saves an entry and starts the next one, Enter on the empty one stops.
+        this.rightClickAndPick(minecraft, () -> variableRow(listName), "edit_list");
+        this.waitUntil("list editor", () -> findWindow(ListVariableEditorWindowBody.class) != null, 60);
+        this.waitTicks(12);
+        this.moveTo(DocsShowcaseEditorGif::addEntryRow, 12);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(6);
+        for (JsonElement entry : listVariable.getAsJsonArray("entries")) {
+            this.typeQuickly(minecraft, entry.getAsString());
+            this.waitTicks(5);
+            this.key(minecraft, "enter", null);
+            this.waitTicks(6);
+        }
+        this.key(minecraft, "enter", null);
+        this.waitTicks(12);
+        this.moveTo(() -> windowWidgetCenter(requireWindow(ListVariableEditorWindowBody.class), "doneButton"), 14);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("list editor closed", () -> findWindow(ListVariableEditorWindowBody.class) == null, 60);
+        this.waitTicks(8);
+        // Rest the pointer on the free space of the list, so no row shows a hover
+        this.moveTo(() -> variablesListFreeSpot(), 12);
+        this.waitTicks(56);
+    }
+
+    /**
+     * Right-clicks the target in the Manage Variables window and clicks the entry of its right-click menu.
+     */
+    private void rightClickAndPick(@NotNull Minecraft minecraft, @NotNull Supplier<float[]> target, @NotNull String entry) {
+        this.moveTo(target, 12);
+        this.waitTicks(3);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_RIGHT);
+        this.waitUntil("right-click menu", () -> (ContextMenuHandler.INSTANCE.getCurrent() != null) && ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 40);
+        this.waitTicks(6);
+        this.clickMenuEntry(minecraft, entry);
+    }
+
+    /**
+     * Types into the text dialog that just opened (name and value dialogs) and clicks its Done button.
+     */
+    private void typeIntoTextDialog(@NotNull Minecraft minecraft, @NotNull String text) {
+        this.waitUntil("text dialog", () -> findWindow(TextInputWindowBody.class) != null, 60);
+        this.waitTicks(8);
+        this.type(minecraft, text);
+        this.waitTicks(6);
+        this.moveTo(() -> windowButtonCenter(requireWindow(TextInputWindowBody.class), "fancymenu.common_components.done"), 12);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("text dialog closed", () -> findWindow(TextInputWindowBody.class) == null, 60);
     }
 
     /**
@@ -331,6 +462,19 @@ public final class DocsShowcaseEditorGif {
         this.waitTicks(14);
         if (this.config.has("fields")) {
             for (JsonElement entry : this.config.getAsJsonArray("fields")) {
+                if (entry.getAsJsonObject().has("cycle")) {
+                    // A cycle button, like the Arrangement of Arrange List: click it until it shows the wanted value
+                    String cycle = entry.getAsJsonObject().get("cycle").getAsString();
+                    int clicks = entry.getAsJsonObject().get("clicks").getAsInt();
+                    this.moveTo(() -> cellWidgetWithLabel(cycle), 14);
+                    this.waitTicks(6);
+                    for (int i = 0; i < clicks; i++) {
+                        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+                        this.waitTicks(9);
+                    }
+                    this.waitTicks(10);
+                    continue;
+                }
                 String label = entry.getAsJsonObject().get("label").getAsString();
                 String text = entry.getAsJsonObject().get("text").getAsString();
                 this.moveTo(() -> cellInputAfterLabel(label), 14);
@@ -352,15 +496,20 @@ public final class DocsShowcaseEditorGif {
 
     /**
      * Outside the editor: hover an element, click it and wait, like a player clicking a button. Config: {@code target} (the element's id),
-     * {@code hold_ticks} (how long the result stays, default 100).
+     * {@code hold_ticks} (how long the result stays, default 100), {@code clicks} (default 1) and {@code click_gap_ticks} (between clicks, default 40).
      */
     private void buildClickElementScript(@NotNull Minecraft minecraft) {
         String target = this.config.get("target").getAsString();
         int hold = this.config.has("hold_ticks") ? this.config.get("hold_ticks").getAsInt() : 100;
+        int clicks = this.config.has("clicks") ? this.config.get("clicks").getAsInt() : 1;
+        int gap = this.config.has("click_gap_ticks") ? this.config.get("click_gap_ticks").getAsInt() : 40;
         this.waitTicks(16);
         this.moveTo(() -> center(screenBox(target)), 20);
         this.waitTicks(10);
-        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        for (int i = 0; i < clicks; i++) {
+            if (i > 0) this.waitTicks(gap);
+            this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        }
         this.waitTicks(hold);
     }
 
@@ -687,11 +836,19 @@ public final class DocsShowcaseEditorGif {
      * Turns the mouse wheel over the open context menu every second tick (once per frame) until the entry is above {@link #MENU_SCROLL_TARGET_Y}.
      */
     private void scrollMenuUntilVisible(@NotNull Minecraft minecraft, @NotNull String identifier) {
+        this.scrollMenuUntilVisible(minecraft, identifier, MENU_SCROLL_TARGET_Y);
+    }
+
+    /**
+     * Like {@link #scrollMenuUntilVisible(Minecraft, String)}, until the entry is above the given GUI Y. Menus that end above
+     * {@link #MENU_SCROLL_TARGET_Y}, like the dropdowns of the menu bar, need a smaller one.
+     */
+    private void scrollMenuUntilVisible(@NotNull Minecraft minecraft, @NotNull String identifier, float targetY) {
         int[] cooldown = {0};
         int[] turns = {0};
         this.steps.addLast(() -> {
             if (cooldown[0]-- > 0) return false;
-            if (contextMenuEntry(identifier)[1] <= MENU_SCROLL_TARGET_Y) {
+            if (contextMenuEntry(identifier)[1] <= targetY) {
                 this.pass("scroll menu to " + identifier, turns[0] + " wheel turns");
                 return true;
             }
@@ -749,6 +906,20 @@ public final class DocsShowcaseEditorGif {
             });
             // A wait of one tick ends the tick, so every character gets its own tick
             this.waitTicks((i % 3 == 2) ? 2 : 1);
+        }
+    }
+
+    /**
+     * Types three characters per two ticks, for longer texts where {@link #type(Minecraft, String)} would take too long.
+     */
+    private void typeQuickly(@NotNull Minecraft minecraft, @NotNull String text) {
+        for (int i = 0; i < text.length(); i++) {
+            String character = String.valueOf(text.charAt(i));
+            this.steps.addLast(() -> {
+                minecraft.keyboardHandler.textInput(minecraft.getWindow().handle(), character);
+                return true;
+            });
+            if ((i % 3) != 1) this.waitTicks(1);
         }
     }
 
@@ -917,6 +1088,80 @@ public final class DocsShowcaseEditorGif {
             }
         }
         throw new IllegalStateException("No text field after the label " + label);
+    }
+
+    /**
+     * The GUI position of the widget of the open cell window whose label starts with the text of the localization key, like the cycle
+     * button "Arrangement: %s" (the part before its value counts).
+     */
+    @NotNull
+    private static float[] cellWidgetWithLabel(@NotNull String labelKey) {
+        PiPWindow window = requireWindow(PiPCellWindowBody.class);
+        String prefix = Component.translatable(labelKey, "").getString();
+        @SuppressWarnings("unchecked")
+        List<Object> cells = (List<Object>) readField(window.getScreen(), "allCells");
+        for (Object cell : cells) {
+            if ((cell instanceof CellScreen.WidgetCell widgetCell) && widgetCell.widget.getMessage().getString().startsWith(prefix)) {
+                AbstractWidget widget = widgetCell.widget;
+                return bodyToGui(window, widget.getX() + widget.getWidth() / 2.0F, widget.getY() + widget.getHeight() / 2.0F);
+            }
+        }
+        throw new IllegalStateException("No widget with the label " + prefix);
+    }
+
+    /**
+     * The GUI position of the middle of an entry of FancyMenu's menu bar (outside the editor), like {@code screen} for Customization.
+     */
+    @NotNull
+    private static float[] menuBarEntry(@NotNull String identifier) {
+        MenuBar bar = CustomizationOverlay.getCurrentMenuBarInstance();
+        if (bar == null) throw new IllegalStateException("There is no menu bar");
+        MenuBar.MenuBarEntry entry = bar.getEntry(identifier);
+        if (entry == null) throw new IllegalStateException("No menu bar entry " + identifier);
+        float scale = MenuBar.getRenderScale();
+        float x = readFloat(entry, "x");
+        int width = (int) invoke(entry, "getWidth");
+        return new float[] {(x + width / 2.0F) * scale, (MenuBar.PIXEL_SIZE / 2.0F) * scale};
+    }
+
+    /**
+     * The GUI position of the row of a variable in the Manage Variables window.
+     */
+    @NotNull
+    private static float[] variableRow(@NotNull String name) {
+        PiPWindow window = requireWindow(ManageVariablesWindowBody.class);
+        ScrollArea list = (ScrollArea) readField(window.getScreen(), "variableListScrollArea");
+        for (ScrollAreaEntry entry : list.getEntries()) {
+            if ((entry instanceof ManageVariablesWindowBody.VariableScrollEntry row) && row.getVariableName().equals(name)) {
+                return bodyToGui(window, entry.getX() + Math.min(70.0F, entry.getWidth() / 3.0F), entry.getY() + entry.getHeight() / 2.0F);
+            }
+        }
+        throw new IllegalStateException("Manage Variables lists no " + name);
+    }
+
+    /**
+     * The GUI position of a free spot of the list of the Manage Variables window, below its rows.
+     */
+    @NotNull
+    private static float[] variablesListFreeSpot() {
+        PiPWindow window = requireWindow(ManageVariablesWindowBody.class);
+        ScrollArea list = (ScrollArea) readField(window.getScreen(), "variableListScrollArea");
+        return bodyToGui(window, list.getXWithBorder() + list.getWidthWithBorder() * 0.45F, list.getYWithBorder() + list.getHeightWithBorder() * 0.62F);
+    }
+
+    /**
+     * The GUI position of the Add Entry row at the end of the list editor.
+     */
+    @NotNull
+    private static float[] addEntryRow() {
+        PiPWindow window = requireWindow(ListVariableEditorWindowBody.class);
+        ScrollArea list = (ScrollArea) readField(window.getScreen(), "entriesScrollArea");
+        for (ScrollAreaEntry entry : list.getEntries()) {
+            if (entry.getClass().getSimpleName().equals("AddEntryRow")) {
+                return bodyToGui(window, entry.getX() + Math.min(60.0F, entry.getWidth() / 3.0F), entry.getY() + entry.getHeight() / 2.0F);
+            }
+        }
+        throw new IllegalStateException("The list editor has no Add Entry row");
     }
 
     @NotNull

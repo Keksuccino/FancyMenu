@@ -1,0 +1,48 @@
+{
+ "script": "action_script",
+ "background_image": "/config/fancymenu/assets/docs_bg.png",
+ "variables": {
+  "tips": [
+   "Craft a bed before your first night.",
+   "Torches keep most mobs away.",
+   "Sneak to stop falling off edges."
+  ]
+ },
+ "elements": [
+  {
+   "id": "tip_text",
+   "x": 110,
+   "y": 112,
+   "w": 420,
+   "h": 58,
+   "look": "pixel",
+   "background": true,
+   "scale": 1.5,
+   "content": "^^^\n### Tip of the Day\n{\"placeholder\":\"list_get\",\"values\":{\"name\":\"tips\",\"index\":\"0\"}}\n^^^"
+  },
+  {
+   "type": "custom_button",
+   "id": "next_tip_button",
+   "x": 245,
+   "y": 186,
+   "w": 150,
+   "h": 20,
+   "props": {
+    "label": "Next Tip"
+   }
+  }
+ ],
+ "target": "next_tip_button",
+ "search": "arrange",
+ "action": "arrange_list",
+ "fields": [
+  {
+   "label": "fancymenu.actions.variables.list.edit.list_name",
+   "text": "tips"
+  },
+  {
+   "cycle": "fancymenu.actions.variables.arrange_list.edit.arrangement",
+   "clicks": 5
+  }
+ ]
+}
