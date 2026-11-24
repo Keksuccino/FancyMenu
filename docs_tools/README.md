@@ -16,6 +16,7 @@ Tools for screenshots, showcase GIFs and checks of the FancyMenu docs. Images ge
 | `configs/text_pages/` | Configs of the Text Formatting and Text in Menus images. |
 | `configs/scroll_area_page/` | Configs of the Scrollable Areas images: elements of any type, elements in areas, editor stills. |
 | `configs/decoration_overlays_page/` | Configs of the Decoration Overlays images: overlays on the title screen, vanilla elements moved and hidden. |
+| `configs/action_scripts_page/` | Configs of the Action Scripts GIFs: making a button's action script in the editor, and clicking the button on the title screen. |
 | `configs/export_for_ai_page/` | The chat GIF of the Export for AI page, a mockup of a support chat with Alice drawn with Pillow. The only image that isn't an in-game render, because it shows something outside of the game. Its avatar and emotes come from the user's Alice emotes folder. |
 | `checks/check_page.py` | Checks a page's UI labels, link format, links, anchors and images. |
 | `assets/` | Cursor sprites, `docs_bg.png` (a blurred panorama background) and `docs_bg_night.png` (the same at night). |
@@ -69,7 +70,7 @@ When done, `git restore` `FancyMenu.java` and remove the copied files. If the ha
 ```
 
    - One screenshot per scene (`<name>.png`). Elements are anchored top-left, in GUI pixels, with the defaults of new elements.
-   - Element keys: `type` (element type identifier, default `text_v2`), `id`, `parent` (the `id` of a Scrollable Area: `x`/`y` are then relative to its content), `props` (saved properties as strings, like `{"layout_mode": "stack"}` or `{"label": "Survival"}`).
+   - Element keys: `type` (element type identifier, default `text_v2`), `id`, `parent` (the `id` of a Scrollable Area: `x`/`y` are then relative to its content), `props` (saved properties as strings, like `{"layout_mode": "stack"}` or `{"label": "Survival"}`), `actions` (the action script of elements that have one, like buttons: `[{"action": "show_toast", "value": "..."}]`).
    - Text elements also take `content`, `look` (`pixel`, `classic`, `neutral`), `background` (`true`/`false`) and `scale`.
    - A scene without elements renders the clean background.
    - More scene keys (template: `configs/decoration_overlays_page/gen_scenes.py`):
@@ -109,9 +110,12 @@ oxipng -o 4 --strip safe <cropped dir>/*.png
    - `text_editor` (default): edits a Text element (`configs/text_pages/editor.json`).
    - `scroll_area`: drags buttons into a Scrollable Area, switches it to Stack, scrolls and reorders (`configs/scroll_area_page/gen_editor.py`).
    - `select_and_scroll`: selects an element and scrolls it, for editor stills. The last frame is the still: crop it with Pillow (`configs/scroll_area_page/gen_content_handle.py`).
-   - The config's `elements` (same keys as in scene configs) are the layout the editor opens with.
+   - `action_script`: opens a button's action script editor, presses A, searches and picks an action, fills in its value window and clicks Done (`configs/action_scripts_page/gen_configs.py`).
+   - `click_element`: clicks an element outside the editor and holds the result, like a toast (needs `start: screen`).
+   - The config's `elements`, `vanilla` and `background_image`/`background_color` (same keys as in scene configs) are the layout the editor opens with. `screen: title` opens it for the title screen instead of an empty Custom GUI.
+   - `start: screen` opens the screen itself with that layout instead of the editor, like a player sees it. The menu bar stays hidden, unless `menu_bar: true`.
    - Steps: `waitTicks`, `waitUntil`, `moveTo`, `click`, `press` (optionally with modifiers), `release`, `key` (with badge label), `badge`, `type`, `wheel`, `clickMenuEntry` (also in sub-menus), `scrollMenuUntilVisible`, `dragSelectWord`.
-   - Resolve targets from the real widgets (`menuEntry`, `editorBox`, `wordEdge`, `lineEnd`, `doneButton`), never from fixed positions.
+   - Resolve targets from the real widgets, never from fixed positions: `menuEntry`, `editorBox`, `screenBox` (outside the editor), `wordEdge`, `lineEnd`, `doneButton`, and for windows `findWindow`/`requireWindow` (by body class), `windowWidgetCenter` (a widget field like `doneButton`), `windowButtonCenter` (a button by its label key), `chooserEntry` (an action in the action chooser), `cellInputAfterLabel` (a text field of a value window by its label key).
 2. Record:
 
 ```bash
@@ -125,6 +129,8 @@ FANCYMENU_TEST_RUN_DIR=run_client_docs FANCYMENU_DOCS_SHOWCASE=editor FANCYMENU_
 python3 postprocess/compose.py run_client_docs/gif_frames run_client_docs/gif_composed
 sh postprocess/encode.sh run_client_docs/gif_composed <path>/showcase.gif
 ```
+
+   Over a background image, add `none` as third argument: no dithering makes the GIF about 10% smaller without visible banding.
 
 5. Check frames of the GIF itself: `ffmpeg -ss <seconds> -i showcase.gif -frames:v 1 check.png`.
 
@@ -143,7 +149,8 @@ sh postprocess/encode.sh run_client_docs/gif_composed <path>/showcase.gif
 - An empty Scrollable Area shows its guide as a big tooltip while hovered at the colossal UI scale. Give it a child, like a title.
 - A Text element that's too small for its text shows its own scroll bar.
 - Selected elements show their position labels in the editor. They can't be turned off.
-- Anchor overlays while dragging and long menu scrolls change big parts of the frame. The Scrollable Areas GIF is 1.4 MB for 25 seconds.
+- Anchor overlays while dragging and long menu scrolls change big parts of the frame. The Scrollable Areas GIF is 1.4 MB for 25 seconds, the Action Scripts making GIF too (a button's right-click menu needs 21 wheel turns to reach **Edit Action Script**).
+- Value windows of actions focus their first text field with its text selected. Click a field and press `Ctrl + A` before typing, so the GIF shows what gets replaced.
 - The recorder class has to be public, or its listener never runs and the game never stops.
 - A stuck test client never stops on its own. Stop its Java process (`ps`, look for the run folder).
 

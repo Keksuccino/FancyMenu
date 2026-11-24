@@ -5,20 +5,24 @@ import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.Window;
+import com.google.gson.JsonElement;
 import de.keksuccino.fancymenu.FancyMenu;
-import de.keksuccino.fancymenu.customization.background.backgrounds.MenuBackgrounds;
-import de.keksuccino.fancymenu.customization.background.backgrounds.image.ImageMenuBackground;
+import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorWindowBody;
+import de.keksuccino.fancymenu.customization.action.ui.ChooseActionWindowBody;
 import de.keksuccino.fancymenu.customization.customgui.CustomGui;
-import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
+import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ElementRegistry;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.element.elements.text.v2.TextElement;
+import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
+import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
@@ -28,13 +32,21 @@ import de.keksuccino.fancymenu.util.rendering.ui.UIBase;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenu;
 import de.keksuccino.fancymenu.util.rendering.ui.contextmenu.v2.ContextMenuHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.cursor.CursorHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPCellWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorLine;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
+import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.input.InputQuirks;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonInfo;
@@ -103,6 +115,10 @@ public final class DocsShowcaseEditorGif {
     private float pointerY = 300;
     private boolean leftDown = false;
     private boolean rightDown = false;
+    @Nullable
+    private Screen startScreen;
+    @Nullable
+    private String menuBarControllerId;
 
     DocsShowcaseEditorGif(@NotNull Path framesDirectory, @NotNull JsonObject config) {
         this.framesDirectory = framesDirectory;
@@ -149,16 +165,23 @@ public final class DocsShowcaseEditorGif {
                 if (this.phaseTicks < 20) return;
                 Window window = minecraft.getWindow();
                 this.pass("window", window.getWidth() + "x" + window.getHeight() + " gui=" + window.getGuiScaledWidth() + "x" + window.getGuiScaledHeight());
-                this.openEditor();
+                this.openStart();
                 this.setPhase(Phase.WAIT_FOR_EDITOR);
             }
             case WAIT_FOR_EDITOR -> {
-                if (!(ScreenUtils.getScreen() instanceof LayoutEditorScreen) || (this.phaseTicks < 30)) {
-                    if (this.phaseTicks > 200) throw new IllegalStateException("The layout editor never opened");
-                    return;
+                if (this.startsOnScreen()) {
+                    if ((ScreenUtils.getScreen() != this.startScreen) || (this.phaseTicks < 30)) {
+                        if (this.phaseTicks > 200) throw new IllegalStateException("The screen never opened");
+                        return;
+                    }
+                } else {
+                    if (!(ScreenUtils.getScreen() instanceof LayoutEditorScreen) || (this.phaseTicks < 30)) {
+                        if (this.phaseTicks > 200) throw new IllegalStateException("The layout editor never opened");
+                        return;
+                    }
+                    // The Layers widget grows over the element at big UI scales and isn't part of what the showcase is about
+                    ((LayoutEditorScreen) ScreenUtils.getScreen()).layoutEditorWidgets.forEach(widget -> widget.setVisible(false));
                 }
-                // The Layers widget grows over the element at big UI scales and isn't part of what the showcase is about
-                ((LayoutEditorScreen) ScreenUtils.getScreen()).layoutEditorWidgets.forEach(widget -> widget.setVisible(false));
                 this.movePointer(minecraft, this.pointerX, this.pointerY);
                 this.buildScript(minecraft);
                 this.setPhase(Phase.RUN);
@@ -180,10 +203,28 @@ public final class DocsShowcaseEditorGif {
         }
     }
 
-    private void openEditor() {
-        CustomGui gui = CustomGuiHandler.getGui(CUSTOM_GUI_IDENTIFIER);
-        if (gui == null) throw new IllegalStateException("The showcase GUI is missing");
-        var screen = CustomGuiHandler.constructInstance(gui, null, null);
+    /**
+     * Config {@code start}: {@code editor} (default) opens the layout editor, {@code screen} opens the screen itself with the layout, like a
+     * player sees it. Only {@code screen} shows the menu bar of FancyMenu, and only with {@code menu_bar: true}.
+     */
+    private boolean startsOnScreen() {
+        return this.config.has("start") && this.config.get("start").getAsString().equals("screen");
+    }
+
+    /**
+     * Opens the layout editor or the screen (see {@link #startsOnScreen()}). Config {@code screen}: {@code title} for the title screen, otherwise
+     * an empty Custom GUI. The layout gets the config's {@code elements}, {@code vanilla} and {@code background_image}/{@code background_color}
+     * (see {@link DocsShowcaseElements}).
+     */
+    private void openStart() {
+        Screen screen;
+        if (this.config.has("screen") && this.config.get("screen").getAsString().equals("title")) {
+            screen = new TitleScreen();
+        } else {
+            CustomGui gui = CustomGuiHandler.getGui(CUSTOM_GUI_IDENTIFIER);
+            if (gui == null) throw new IllegalStateException("The showcase GUI is missing");
+            screen = CustomGuiHandler.constructInstance(gui, null, null);
+        }
         Layout layout = Layout.buildForScreen(screen);
         if (this.config.has("elements")) {
             DocsShowcaseElements.addTo(layout, this.config.getAsJsonArray("elements"));
@@ -200,13 +241,17 @@ public final class DocsShowcaseEditorGif {
             element.baseHeight = ELEMENT_H;
             layout.serializedElements.add(builder.serializeElementInternal(element));
         }
-        if (this.config.has("background_image")) {
-            ImageMenuBackground background = MenuBackgrounds.IMAGE.buildDefaultInstance();
-            background.textureSupplier.set(ResourceSupplier.image(this.config.get("background_image").getAsString()));
-            background.showBackground.set(true);
-            layout.menuBackgrounds.add(background);
+        if (this.config.has("vanilla")) DocsShowcaseElements.addVanillaTo(layout, this.config.getAsJsonArray("vanilla"));
+        DocsShowcaseElements.addBackgroundTo(layout, this.config);
+        if (this.startsOnScreen()) {
+            boolean menuBar = this.config.has("menu_bar") && this.config.get("menu_bar").getAsBoolean();
+            if (!menuBar) this.menuBarControllerId = CustomizationOverlay.registerOverlayVisibilityController(s -> false);
+            this.startScreen = screen;
+            LayoutHandler.setPreviewLayout(layout);
+            ScreenUtils.setScreen(screen);
+        } else {
+            LayoutHandler.openLayoutEditor(layout, screen);
         }
-        LayoutHandler.openLayoutEditor(layout, screen);
     }
 
     /**
@@ -218,8 +263,105 @@ public final class DocsShowcaseEditorGif {
             case "text_editor" -> this.buildTextEditorScript(minecraft);
             case "scroll_area" -> this.buildScrollAreaScript(minecraft);
             case "select_and_scroll" -> this.buildSelectAndScrollScript(minecraft);
+            case "action_script" -> this.buildActionScriptScript(minecraft);
+            case "click_element" -> this.buildClickElementScript(minecraft);
             default -> throw new IllegalArgumentException("Unknown script " + script);
         }
+    }
+
+    /**
+     * Right-click an element with an action script (like a button), open its action script editor, press A, search an action in the action
+     * chooser, pick it, fill in the text fields of its value window and click Done in both windows.<br>
+     * Config: {@code target} (the element's id), {@code search} (typed into the chooser's search bar), {@code action} (the identifier of the action to pick),
+     * {@code fields} (text fields of the value window: {@code label} is the localization key of the label above the field, {@code text} what gets typed in).
+     */
+    private void buildActionScriptScript(@NotNull Minecraft minecraft) {
+        String target = this.config.get("target").getAsString();
+        String action = this.config.get("action").getAsString();
+        this.waitTicks(16);
+        this.moveTo(() -> center(editorBox(target)), 18);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_RIGHT);
+        this.waitUntil("context menu", () -> (ContextMenuHandler.INSTANCE.getCurrent() != null) && ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 60);
+        this.waitTicks(10);
+        this.moveTo(() -> new float[] {contextMenuEntry("manage_actions")[0] + 20, Math.min(this.pointerY + 70, MENU_SCROLL_TARGET_Y)}, 12);
+        this.waitTicks(4);
+        this.scrollMenuUntilVisible(minecraft, "manage_actions");
+        this.waitTicks(6);
+        this.moveTo(() -> contextMenuEntry("manage_actions"), 10);
+        this.waitTicks(5);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.openActionChooserAndAdd(minecraft, action);
+        this.waitTicks(30);
+        this.moveTo(() -> windowWidgetCenter(requireWindow(ActionScriptEditorWindowBody.class), "doneButton"), 18);
+        this.waitTicks(5);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("action script editor closed", () -> findWindow(ActionScriptEditorWindowBody.class) == null, 60);
+        this.waitTicks(6);
+        // Click the empty background, so the element shows without its selection frame
+        this.moveTo(() -> {
+            float[] box = editorBox(target);
+            return new float[] {box[0] + box[2] + 60, box[1] + box[3] + 50};
+        }, 16);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(50);
+    }
+
+    /**
+     * In an open action script editor: press A, search the action, pick it, click Next Step and fill in the fields of the value window
+     * (config {@code search} and {@code fields}, see {@link #buildActionScriptScript}), then click its Done button.
+     */
+    private void openActionChooserAndAdd(@NotNull Minecraft minecraft, @NotNull String action) {
+        this.waitUntil("action script editor", () -> findWindow(ActionScriptEditorWindowBody.class) != null, 60);
+        this.waitTicks(20);
+        this.key(minecraft, "a", "A");
+        this.waitUntil("action chooser", () -> findWindow(ChooseActionWindowBody.class) != null, 60);
+        this.waitTicks(12);
+        this.type(minecraft, this.config.get("search").getAsString());
+        this.waitTicks(12);
+        this.moveTo(() -> chooserEntry(action), 16);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(20);
+        this.moveTo(() -> windowButtonCenter(requireWindow(ChooseActionWindowBody.class), "fancymenu.ui.generic.next_step"), 14);
+        this.waitTicks(5);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("value window", () -> findWindow(PiPCellWindowBody.class) != null, 60);
+        this.waitTicks(14);
+        if (this.config.has("fields")) {
+            for (JsonElement entry : this.config.getAsJsonArray("fields")) {
+                String label = entry.getAsJsonObject().get("label").getAsString();
+                String text = entry.getAsJsonObject().get("text").getAsString();
+                this.moveTo(() -> cellInputAfterLabel(label), 14);
+                this.waitTicks(4);
+                this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+                this.waitTicks(6);
+                this.key(minecraft, "shortcut+a", "Ctrl + A");
+                this.waitTicks(6);
+                this.type(minecraft, text);
+                this.waitTicks(10);
+            }
+        }
+        this.moveTo(() -> windowWidgetCenter(requireWindow(PiPCellWindowBody.class), "doneButton"), 16);
+        this.waitTicks(5);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("value window closed", () -> findWindow(PiPCellWindowBody.class) == null, 60);
+        this.waitUntil("action script editor shown again", () -> requireWindow(ActionScriptEditorWindowBody.class).isVisible(), 60);
+    }
+
+    /**
+     * Outside the editor: hover an element, click it and wait, like a player clicking a button. Config: {@code target} (the element's id),
+     * {@code hold_ticks} (how long the result stays, default 100).
+     */
+    private void buildClickElementScript(@NotNull Minecraft minecraft) {
+        String target = this.config.get("target").getAsString();
+        int hold = this.config.has("hold_ticks") ? this.config.get("hold_ticks").getAsInt() : 100;
+        this.waitTicks(16);
+        this.moveTo(() -> center(screenBox(target)), 20);
+        this.waitTicks(10);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(hold);
     }
 
     /**
@@ -682,12 +824,99 @@ public final class DocsShowcaseEditorGif {
         return new float[] {box[0] + box[2] / 2.0F, box[1] + box[3] / 2.0F};
     }
 
+    /**
+     * X, Y, width and height of the element on the open screen outside the editor, in GUI pixels.
+     */
+    @NotNull
+    private static float[] screenBox(@NotNull String instanceIdentifier) {
+        ScreenCustomizationLayer layer = ScreenCustomizationLayerHandler.getActiveLayer();
+        if (layer == null) throw new IllegalStateException("The screen has no customization layer");
+        AbstractElement element = layer.getElementByInstanceIdentifier(instanceIdentifier);
+        if (element == null) throw new IllegalStateException("No element " + instanceIdentifier + " on the screen");
+        return new float[] {element.getAbsoluteX(), element.getAbsoluteY(), element.getAbsoluteWidth(), element.getAbsoluteHeight()};
+    }
+
     @Nullable
     private static PiPWindow findEditor() {
+        return findWindow(TextEditorWindowBody.class);
+    }
+
+    /**
+     * The open window whose body is of the type, like {@code ActionScriptEditorWindowBody.class}. Hidden windows count too: windows hide
+     * while a window they opened is on top of them.
+     */
+    @Nullable
+    private static PiPWindow findWindow(@NotNull Class<?> bodyType) {
         for (PiPWindow window : PiPWindowHandler.INSTANCE.getOpenWindows()) {
-            if (window.getScreen() instanceof TextEditorWindowBody) return window;
+            if (bodyType.isInstance(window.getScreen())) return window;
         }
         return null;
+    }
+
+    @NotNull
+    private static PiPWindow requireWindow(@NotNull Class<?> bodyType) {
+        PiPWindow window = findWindow(bodyType);
+        if (window == null) throw new IllegalStateException("No open window with a " + bodyType.getSimpleName());
+        return window;
+    }
+
+    /**
+     * The GUI position of the center of a widget the window body keeps in a field, like {@code doneButton}.
+     */
+    @NotNull
+    private static float[] windowWidgetCenter(@NotNull PiPWindow window, @NotNull String fieldName) {
+        AbstractWidget widget = (AbstractWidget) readField(window.getScreen(), fieldName);
+        return bodyToGui(window, widget.getX() + widget.getWidth() / 2.0F, widget.getY() + widget.getHeight() / 2.0F);
+    }
+
+    /**
+     * The GUI position of the center of the window body's button with the label of the localization key, for buttons the body keeps in no field.
+     */
+    @NotNull
+    private static float[] windowButtonCenter(@NotNull PiPWindow window, @NotNull String labelKey) {
+        String label = Component.translatable(labelKey).getString();
+        for (GuiEventListener child : window.getScreen().children()) {
+            if ((child instanceof AbstractWidget widget) && widget.getMessage().getString().equals(label)) {
+                return bodyToGui(window, widget.getX() + widget.getWidth() / 2.0F, widget.getY() + widget.getHeight() / 2.0F);
+            }
+        }
+        throw new IllegalStateException("No button " + label + " in " + window.getScreen().getClass().getSimpleName());
+    }
+
+    /**
+     * The GUI position of the entry of an action in the list of the action chooser, a bit right of the start of its name.
+     */
+    @NotNull
+    private static float[] chooserEntry(@NotNull String actionIdentifier) {
+        PiPWindow window = requireWindow(ChooseActionWindowBody.class);
+        ScrollArea list = (ScrollArea) readField(window.getScreen(), "actionsListScrollArea");
+        for (ScrollAreaEntry entry : list.getEntries()) {
+            if ((entry instanceof ChooseActionWindowBody.ActionScrollEntry actionEntry) && actionEntry.action.getIdentifier().equals(actionIdentifier)) {
+                return bodyToGui(window, entry.getX() + Math.min(60.0F, entry.getWidth() / 2.0F), entry.getY() + entry.getHeight() / 2.0F);
+            }
+        }
+        throw new IllegalStateException("The action chooser lists no " + actionIdentifier);
+    }
+
+    /**
+     * The GUI position of the text field that follows the label of the localization key in the open cell window, like the value window of an action.
+     */
+    @NotNull
+    private static float[] cellInputAfterLabel(@NotNull String labelKey) {
+        PiPWindow window = requireWindow(PiPCellWindowBody.class);
+        String label = Component.translatable(labelKey).getString();
+        @SuppressWarnings("unchecked")
+        List<Object> cells = (List<Object>) readField(window.getScreen(), "allCells");
+        boolean labelFound = false;
+        for (Object cell : cells) {
+            if ((cell instanceof CellScreen.LabelCell labelCell) && ((Component) readField(labelCell, "text")).getString().equals(label)) {
+                labelFound = true;
+            } else if (labelFound && (cell instanceof CellScreen.TextInputCell inputCell)) {
+                ExtendedEditBox box = inputCell.editBox;
+                return bodyToGui(window, box.getX() + Math.min(40.0F, box.getWidth() / 2.0F), box.getY() + box.getHeight() / 2.0F);
+            }
+        }
+        throw new IllegalStateException("No text field after the label " + label);
     }
 
     @NotNull
@@ -835,6 +1064,8 @@ public final class DocsShowcaseEditorGif {
     private void finish() {
         if (this.phase == Phase.DONE) return;
         this.phase = Phase.DONE;
+        LayoutHandler.setPreviewLayout(null);
+        if (this.menuBarControllerId != null) CustomizationOverlay.unregisterOverlayVisibilityController(this.menuBarControllerId);
         this.writers.shutdown();
         EventHandler.INSTANCE.unregisterListenersOf(this);
         LOGGER.info("[CHECK] docs gif finished: {} frames={}", (this.failures.get() == 0) ? "PASS" : ("FAIL " + this.failures.get()), this.frameIndex);

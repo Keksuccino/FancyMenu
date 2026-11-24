@@ -1,0 +1,31 @@
+{
+ "script": "action_script",
+ "screen": "title",
+ "background_image": "/config/fancymenu/assets/docs_bg.png",
+ "elements": [
+  {
+   "type": "custom_button",
+   "id": "whats_new_button",
+   "x": 220,
+   "y": 254,
+   "w": 200,
+   "h": 20,
+   "props": {
+    "label": "What's New?"
+   }
+  }
+ ],
+ "target": "whats_new_button",
+ "search": "toast",
+ "action": "show_toast",
+ "fields": [
+  {
+   "label": "fancymenu.actions.show_toast.edit.title_text",
+   "text": "What's New in 1.2"
+  },
+  {
+   "label": "fancymenu.actions.show_toast.edit.message",
+   "text": "New quests and a boss!"
+  }
+ ]
+}

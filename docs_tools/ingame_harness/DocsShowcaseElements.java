@@ -2,6 +2,9 @@ package de.keksuccino.fancymenu.util.window.preview;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import de.keksuccino.fancymenu.customization.action.Action;
+import de.keksuccino.fancymenu.customization.action.ActionInstance;
+import de.keksuccino.fancymenu.customization.action.ActionRegistry;
 import de.keksuccino.fancymenu.customization.background.backgrounds.MenuBackgrounds;
 import de.keksuccino.fancymenu.customization.background.backgrounds.color.ColorMenuBackground;
 import de.keksuccino.fancymenu.customization.background.backgrounds.image.ImageMenuBackground;
@@ -11,6 +14,7 @@ import de.keksuccino.fancymenu.customization.decorationoverlay.DecorationOverlay
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ElementRegistry;
+import de.keksuccino.fancymenu.customization.element.ExecutableElement;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
@@ -30,7 +34,8 @@ import java.util.Map;
  * Dev-only docs tool (see docs_tools/README.md). Builds the elements of a docs scene or editor showcase from JSON, with the defaults of new elements.<br>
  * Keys of an element: {@code type} (element type identifier, default {@code text_v2}), {@code x}, {@code y}, {@code w}, {@code h}
  * (GUI pixels, anchored top-left), {@code id} (instance identifier), {@code parent} (the {@code id} of the Scrollable Area it is in,
- * then {@code x}/{@code y} are relative to the area's content), {@code props} (saved properties of the element, as strings, applied last).<br>
+ * then {@code x}/{@code y} are relative to the area's content), {@code props} (saved properties of the element, as strings, applied last),
+ * {@code actions} (the action script of elements that have one, like buttons: a list of {@code action} identifiers with their {@code value}).<br>
  * Text elements also take {@code content}, {@code look} ({@code pixel}, {@code classic}, {@code neutral}), {@code background} and {@code scale}.
  */
 final class DocsShowcaseElements {
@@ -139,6 +144,15 @@ final class DocsShowcaseElements {
         element.baseHeight = data.get("h").getAsInt();
         if (data.has("id")) element.setInstanceIdentifier(data.get("id").getAsString());
         if (data.has("parent")) element.setParentContainerIdentifier(data.get("parent").getAsString());
+        if (data.has("actions")) {
+            if (!(element instanceof ExecutableElement executable)) throw new IllegalStateException("Element type " + type + " has no action script");
+            for (JsonElement entry : data.getAsJsonArray("actions")) {
+                JsonObject actionData = entry.getAsJsonObject();
+                Action action = ActionRegistry.getAction(actionData.get("action").getAsString());
+                if (action == null) throw new IllegalStateException("No action " + actionData.get("action").getAsString());
+                executable.getExecutableBlock().addExecutable(new ActionInstance(action, actionData.has("value") ? actionData.get("value").getAsString() : null));
+            }
+        }
         SerializedElement serialized = builder.serializeElementInternal(element);
         if (data.has("props")) {
             for (Map.Entry<String, JsonElement> property : data.getAsJsonObject("props").entrySet()) {
