@@ -1951,7 +1951,8 @@ public final class DocsShowcaseEditorGif {
      * In the editor: removes vanilla elements (config {@code remove}: their ids, each clicked and deleted with the Delete key), adds an
      * Image element through New Element at {@code right_click}, picks its image through Image Source (see {@link #chooseLocalFile}),
      * clicks Restore Aspect Ratio and drags it so its center is at {@code drag_to}. Config also: {@code folder}, {@code file},
-     * {@code free_spot} and {@code hold_ticks} (default 70).
+     * {@code free_spot}, {@code hold_ticks} (default 70) and {@code menu_target_y} (default 345, the GUI Y New Element gets scrolled
+     * above, smaller for right-clicks near the top of the screen, whose menu ends higher up).
      */
     private void buildAddImageScript(@NotNull Minecraft minecraft) {
         float clickX = this.config.getAsJsonArray("right_click").get(0).getAsFloat();
@@ -1983,7 +1984,8 @@ public final class DocsShowcaseEditorGif {
         this.waitTicks(10);
         this.moveTo(() -> new float[] {contextMenuEntry("add_element")[0] + 20, Math.min(this.pointerY + 40, MENU_SCROLL_TARGET_Y)}, 12);
         this.waitTicks(4);
-        this.scrollMenuUntilVisible(minecraft, "add_element", 345);
+        // A menu opened near the top of the screen ends higher up, so its last entries need a smaller scroll target (menu_target_y)
+        this.scrollMenuUntilVisible(minecraft, "add_element", this.config.has("menu_target_y") ? this.config.get("menu_target_y").getAsFloat() : 345);
         this.waitTicks(6);
         this.clickMenuEntry(minecraft, "add_element");
         this.waitUntil("New Element menu", () -> subMenu("add_element").isOpen(), 40);
@@ -2080,7 +2082,8 @@ public final class DocsShowcaseEditorGif {
         this.waitTicks(5);
         this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
         this.waitUntil("file chooser", () -> findWindow(ChooseFileWindowBody.class) != null, 60);
-        this.waitTicks(16);
+        // The X of the editor's menu bar is where the screen's menu bar has its door icon, so leave before its tooltip shows
+        this.waitTicks(3);
         if (folder != null) {
             this.moveTo(() -> fileEntry(folder), 14);
             this.waitTicks(5);

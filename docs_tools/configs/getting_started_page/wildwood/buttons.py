@@ -41,8 +41,8 @@ def make_button(hover=False):
                 if y == 6 and not (9 <= x <= 10) and not (BW - 6 <= x <= BW - 5):
                     c = face_dark
             img[y, x] = c
-    # Nails near both ends
-    for nx in (3, BW - 4):
+    # Nails near both ends, inside the 6 pixel (3 art pixel) nine-slice borders, so they never get stretched
+    for nx in (2, BW - 3):
         img[4, nx] = nail
         img[5, nx] = nail_shadow
     if hover:
