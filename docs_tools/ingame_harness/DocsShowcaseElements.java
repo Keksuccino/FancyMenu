@@ -21,6 +21,10 @@ import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidg
 import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.text.v2.TextElement;
 import de.keksuccino.fancymenu.customization.layout.Layout;
+import de.keksuccino.fancymenu.customization.requirement.Requirement;
+import de.keksuccino.fancymenu.customization.requirement.RequirementRegistry;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
+import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
 import de.keksuccino.fancymenu.util.Pair;
 import de.keksuccino.fancymenu.util.properties.PropertyContainer;
 import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
@@ -35,7 +39,8 @@ import java.util.Map;
  * Keys of an element: {@code type} (element type identifier, default {@code text_v2}), {@code x}, {@code y}, {@code w}, {@code h}
  * (GUI pixels, anchored top-left), {@code id} (instance identifier), {@code parent} (the {@code id} of the Scrollable Area it is in,
  * then {@code x}/{@code y} are relative to the area's content), {@code props} (saved properties of the element, as strings, applied last),
- * {@code actions} (the action script of elements that have one, like buttons: a list of {@code action} identifiers with their {@code value}).<br>
+ * {@code actions} (the action script of elements that have one, like buttons: a list of {@code action} identifiers with their {@code value}),
+ * {@code requirements} (the Loading Requirements, see {@link #buildRequirements}).<br>
  * Text elements also take {@code content}, {@code look} ({@code pixel}, {@code classic}, {@code neutral}), {@code background} and {@code scale}.
  */
 final class DocsShowcaseElements {
@@ -144,6 +149,7 @@ final class DocsShowcaseElements {
         element.baseHeight = data.get("h").getAsInt();
         if (data.has("id")) element.setInstanceIdentifier(data.get("id").getAsString());
         if (data.has("parent")) element.setParentContainerIdentifier(data.get("parent").getAsString());
+        if (data.has("requirements")) element.requirementContainer = buildRequirements(data.getAsJsonArray("requirements"));
         if (data.has("actions")) {
             if (!(element instanceof ExecutableElement executable)) throw new IllegalStateException("Element type " + type + " has no action script");
             for (JsonElement entry : data.getAsJsonArray("actions")) {
@@ -160,6 +166,25 @@ final class DocsShowcaseElements {
             }
         }
         return serialized;
+    }
+
+    /**
+     * The Loading Requirements of an element (key {@code requirements}): each with {@code requirement} (its identifier), {@code value}
+     * (if it has one) and {@code mode} ({@code normal}, the default, or {@code opposite}).
+     */
+    @NotNull
+    private static RequirementContainer buildRequirements(@NotNull Iterable<JsonElement> requirements) {
+        RequirementContainer container = new RequirementContainer();
+        for (JsonElement entry : requirements) {
+            JsonObject data = entry.getAsJsonObject();
+            Requirement requirement = RequirementRegistry.getRequirement(data.get("requirement").getAsString());
+            if (requirement == null) throw new IllegalStateException("No requirement " + data.get("requirement").getAsString());
+            RequirementInstance.RequirementMode mode = (data.has("mode") && data.get("mode").getAsString().equals("opposite"))
+                    ? RequirementInstance.RequirementMode.IF_NOT
+                    : RequirementInstance.RequirementMode.IF;
+            container.addInstance(new RequirementInstance(requirement, data.has("value") ? data.get("value").getAsString() : null, mode, container));
+        }
+        return container;
     }
 
 }

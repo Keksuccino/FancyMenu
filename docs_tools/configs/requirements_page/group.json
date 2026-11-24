@@ -1,0 +1,64 @@
+{
+ "script": "manage_requirements",
+ "screen": "title",
+ "background_image": "/config/fancymenu/assets/docs_bg.png",
+ "elements": [
+  {
+   "id": "xmas_greeting",
+   "x": 220,
+   "y": 104,
+   "w": 200,
+   "h": 26,
+   "look": "pixel",
+   "background": true,
+   "content": "^^^\n**Merry Christmas!**\n^^^"
+  }
+ ],
+ "variables": {},
+ "target": "xmas_greeting",
+ "open_directly": true,
+ "close": false,
+ "requirement_steps": [
+  {
+   "add_group": "key"
+  },
+  {
+   "group_mode": "group_1"
+  },
+  {
+   "open_group": "group_1",
+   "from_open_menu": true
+  },
+  {
+   "add": "fancymenu_visibility_requirement_is_realtime_month",
+   "search": "month",
+   "value": "12",
+   "read_ticks": 8
+  },
+  {
+   "add": "fancymenu_visibility_requirement_is_variable_value",
+   "search": "variable value",
+   "read_ticks": 8,
+   "fields": [
+    {
+     "label": "fancymenu.requirements.is_variable_value.var_name",
+     "text": "xmas_lights"
+    },
+    {
+     "label": "fancymenu.requirements.is_variable_value.var_value",
+     "text": "on"
+    }
+   ]
+  },
+  {
+   "rest": 6
+  },
+  {
+   "done": true
+  },
+  {
+   "rest": 4
+  }
+ ],
+ "hold_ticks": 36
+}

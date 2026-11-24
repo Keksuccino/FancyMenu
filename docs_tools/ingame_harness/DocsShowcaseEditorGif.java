@@ -24,6 +24,8 @@ import de.keksuccino.fancymenu.customization.requirement.Requirement;
 import de.keksuccino.fancymenu.customization.requirement.RequirementRegistry;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementContainer;
 import de.keksuccino.fancymenu.customization.requirement.internal.RequirementInstance;
+import de.keksuccino.fancymenu.customization.requirement.ui.BuildRequirementWindowBody;
+import de.keksuccino.fancymenu.customization.requirement.ui.ManageRequirementsWindowBody;
 import de.keksuccino.fancymenu.customization.action.ui.ChooseActionWindowBody;
 import de.keksuccino.fancymenu.customization.customgui.CustomGui;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
@@ -302,6 +304,8 @@ public final class DocsShowcaseEditorGif {
             case "press_keys" -> this.buildPressKeysScript(minecraft);
             case "add_element" -> this.buildAddElementScript(minecraft);
             case "add_placeholder" -> this.buildAddPlaceholderScript(minecraft);
+            case "manage_requirements" -> this.buildManageRequirementsScript(minecraft);
+            case "hover_elements" -> this.buildHoverElementsScript(minecraft);
             default -> throw new IllegalArgumentException("Unknown script " + script);
         }
     }
@@ -819,38 +823,249 @@ public final class DocsShowcaseEditorGif {
         this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
         this.waitUntil("value window", () -> findValueWindow() != null, 60);
         this.waitTicks(14);
-        if (this.config.has("fields")) {
-            for (JsonElement entry : this.config.getAsJsonArray("fields")) {
-                if (entry.getAsJsonObject().has("cycle")) {
-                    // A cycle button, like the Arrangement of Arrange List: click it until it shows the wanted value
-                    String cycle = entry.getAsJsonObject().get("cycle").getAsString();
-                    int clicks = entry.getAsJsonObject().get("clicks").getAsInt();
-                    this.moveTo(() -> cellWidgetWithLabel(cycle), 14);
-                    this.waitTicks(6);
-                    for (int i = 0; i < clicks; i++) {
-                        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
-                        this.waitTicks(9);
-                    }
-                    this.waitTicks(10);
-                    continue;
-                }
-                String label = entry.getAsJsonObject().get("label").getAsString();
-                String text = entry.getAsJsonObject().get("text").getAsString();
-                this.moveTo(() -> cellInputAfterLabel(label), 14);
-                this.waitTicks(4);
-                this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
-                this.waitTicks(6);
-                this.key(minecraft, "shortcut+a", "Ctrl + A");
-                this.waitTicks(6);
-                this.type(minecraft, text);
-                this.waitTicks(10);
-            }
-        }
+        if (this.config.has("fields")) this.fillValueFields(minecraft, this.config.getAsJsonArray("fields"));
         this.moveTo(() -> windowWidgetCenter(requireValueWindow(), "doneButton"), 16);
         this.waitTicks(5);
         this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
         this.waitUntil("value window closed", () -> findValueWindow() == null, 60);
         this.waitUntil("action script editor shown again", () -> requireWindow(ActionScriptEditorWindowBody.class).isVisible(), 60);
+    }
+
+    /**
+     * Fills in the fields of the open value window: {@code {"label", "text"}} clicks the text field after the label (by its localization
+     * key), selects its text and types, {@code {"cycle", "clicks"}} clicks a cycle button (by the localization key of its label) that often.
+     */
+    private void fillValueFields(@NotNull Minecraft minecraft, @NotNull Iterable<JsonElement> fields) {
+        for (JsonElement entry : fields) {
+            if (entry.getAsJsonObject().has("cycle")) {
+                // A cycle button, like the Arrangement of Arrange List: click it until it shows the wanted value
+                String cycle = entry.getAsJsonObject().get("cycle").getAsString();
+                int clicks = entry.getAsJsonObject().get("clicks").getAsInt();
+                this.moveTo(() -> cellWidgetWithLabel(cycle), 14);
+                this.waitTicks(6);
+                for (int i = 0; i < clicks; i++) {
+                    this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+                    this.waitTicks(9);
+                }
+                this.waitTicks(10);
+                continue;
+            }
+            String label = entry.getAsJsonObject().get("label").getAsString();
+            String text = entry.getAsJsonObject().get("text").getAsString();
+            this.moveTo(() -> cellInputAfterLabel(label), 14);
+            this.waitTicks(4);
+            this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+            this.waitTicks(6);
+            this.key(minecraft, "shortcut+a", "Ctrl + A");
+            this.waitTicks(6);
+            this.type(minecraft, text);
+            this.waitTicks(10);
+        }
+    }
+
+    /**
+     * In the editor: optionally copy the ID of an element through its right-click menu (config {@code copy_id}: its id), open the Loading
+     * Requirements of the {@code target} element, run the config's {@code requirement_steps} in Manage Requirements, click Done and click the
+     * empty background at {@code free_spot} ([x, y]). Then wait {@code hold_ticks} (default 60). {@code open_directly: true} opens Manage
+     * Requirements of the target without its right-click menu, for GIFs that are about the window itself. {@code close: false} keeps it open at
+     * the end, so the GIF ends on its list. Steps:
+     * <ul>
+     *     <li>{@code {"add": <requirement identifier>, "search": <typed into the chooser>}}: adds a requirement. {@code "via": "menu"} right-clicks
+     *     the list and clicks Add Requirement, otherwise it presses A. Its value: {@code "value"} gets typed into the one-line text editor,
+     *     {@code "paste": true} pastes the clipboard there, {@code "fields"} fills a value window with own fields (see {@link #fillValueFields}).</li>
+     *     <li>{@code {"add_group": "menu"}} or {@code {"add_group": "key"}}: adds a group through the right-click menu or with G.</li>
+     *     <li>{@code {"group_mode": <group identifier>}}: right-clicks the group and clicks Group Mode, which switches it between And and Or.</li>
+     *     <li>{@code {"open_group": <group identifier>}}: right-clicks the group and clicks Edit Group Requirements. With {@code "from_open_menu": true}, it
+     *     clicks it in the right-click menu that is still open, like after {@code group_mode}.</li>
+     *     <li>{@code {"done": true}}: clicks Done in the window of the open group.</li>
+     *     <li>{@code {"rest": <ticks>}}: rests the pointer on the free space of the list.</li>
+     * </ul>
+     */
+    private void buildManageRequirementsScript(@NotNull Minecraft minecraft) {
+        String target = this.config.get("target").getAsString();
+        boolean close = !this.config.has("close") || this.config.get("close").getAsBoolean();
+        int hold = this.config.has("hold_ticks") ? this.config.get("hold_ticks").getAsInt() : 60;
+        this.waitTicks(16);
+        if (this.config.has("open_directly") && this.config.get("open_directly").getAsBoolean()) {
+            this.steps.addLast(() -> {
+                AbstractElement element = requireEditorElement(target).element;
+                ManageRequirementsWindowBody.openInWindow(new ManageRequirementsWindowBody(element.requirementContainer.copy(false), call -> {
+                    if (call != null) element.requirementContainer = call;
+                }));
+                return true;
+            });
+        } else {
+            this.openLoadingRequirements(minecraft, target);
+        }
+        this.waitUntil("Manage Requirements", () -> findRequirementsWindow() != null, 60);
+        this.waitTicks(14);
+        for (JsonElement entry : this.config.getAsJsonArray("requirement_steps")) {
+            JsonObject step = entry.getAsJsonObject();
+            if (step.has("add")) {
+                this.addRequirement(minecraft, step);
+            } else if (step.has("add_group")) {
+                if (step.get("add_group").getAsString().equals("menu")) {
+                    this.rightClickAndPick(minecraft, DocsShowcaseEditorGif::requirementsListFreeSpot, "add_group");
+                } else {
+                    this.key(minecraft, "g", "G");
+                }
+                this.waitTicks(16);
+            } else if (step.has("group_mode")) {
+                String group = step.get("group_mode").getAsString();
+                this.rightClickAndPick(minecraft, () -> requirementRow(group), "cycle_group_mode");
+                // The right-click menu opens again and shows the new mode
+                this.waitTicks(18);
+            } else if (step.has("open_group")) {
+                String group = step.get("open_group").getAsString();
+                // The script gets built before it runs, so the config says if the right-click menu of the group is still open by then
+                if (step.has("from_open_menu") && step.get("from_open_menu").getAsBoolean()) {
+                    this.clickMenuEntry(minecraft, "edit_group_requirements");
+                } else {
+                    this.rightClickAndPick(minecraft, () -> requirementRow(group), "edit_group_requirements");
+                }
+                this.waitUntil("group window", () -> isGroupWindow(findRequirementsWindow()), 60);
+                this.waitTicks(14);
+            } else if (step.has("done")) {
+                this.moveTo(() -> windowWidgetCenter(requireRequirementsWindow(), "doneButton"), 14);
+                this.waitTicks(5);
+                this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+                this.waitUntil("main Manage Requirements shown again", () -> (findRequirementsWindow() != null) && !isGroupWindow(findRequirementsWindow()), 60);
+                this.waitTicks(12);
+            } else if (step.has("rest")) {
+                this.moveTo(DocsShowcaseEditorGif::requirementsListFreeSpot, 12);
+                this.waitTicks(step.get("rest").getAsInt());
+            }
+        }
+        if (close) {
+            float freeX = this.config.getAsJsonArray("free_spot").get(0).getAsFloat();
+            float freeY = this.config.getAsJsonArray("free_spot").get(1).getAsFloat();
+            this.moveTo(() -> windowWidgetCenter(requireRequirementsWindow(), "doneButton"), 16);
+            this.waitTicks(5);
+            this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+            this.waitUntil("Manage Requirements closed", () -> findWindow(ManageRequirementsWindowBody.class) == null, 60);
+            this.waitTicks(8);
+            // Click the empty background, so the element shows without its selection frame
+            this.moveTo(() -> new float[] {freeX, freeY}, 16);
+            this.waitTicks(4);
+            this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        }
+        this.waitTicks(hold);
+    }
+
+    /**
+     * Copies the ID of the config's {@code copy_id} element through its right-click menu, if the config has one, then opens Loading
+     * Requirements through the right-click menu of the target element.
+     */
+    private void openLoadingRequirements(@NotNull Minecraft minecraft, @NotNull String target) {
+        if (this.config.has("copy_id")) {
+            String source = this.config.get("copy_id").getAsString();
+            this.moveTo(() -> center(editorBox(source)), 18);
+            this.waitTicks(4);
+            this.click(minecraft, InputConstants.MOUSE_BUTTON_RIGHT);
+            this.waitUntil("context menu", () -> (ContextMenuHandler.INSTANCE.getCurrent() != null) && ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 60);
+            this.waitTicks(10);
+            this.clickMenuEntry(minecraft, "copy_id");
+            this.waitTicks(12);
+        }
+        this.moveTo(() -> center(editorBox(target)), 18);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_RIGHT);
+        this.waitUntil("context menu", () -> (ContextMenuHandler.INSTANCE.getCurrent() != null) && ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 60);
+        this.waitTicks(10);
+        this.moveTo(() -> new float[] {contextMenuEntry("loading_requirements")[0] + 20, Math.min(this.pointerY + 70, MENU_SCROLL_TARGET_Y)}, 12);
+        this.waitTicks(4);
+        this.scrollMenuUntilVisible(minecraft, "loading_requirements");
+        this.waitTicks(6);
+        this.clickMenuEntry(minecraft, "loading_requirements");
+    }
+
+    /**
+     * Adds a requirement in the visible Manage Requirements window, see {@link #buildManageRequirementsScript}.
+     */
+    private void addRequirement(@NotNull Minecraft minecraft, @NotNull JsonObject step) {
+        String requirement = step.get("add").getAsString();
+        if (step.has("via") && step.get("via").getAsString().equals("menu")) {
+            this.rightClickAndPick(minecraft, DocsShowcaseEditorGif::requirementsListFreeSpot, "add_requirement");
+        } else {
+            this.key(minecraft, "a", "A");
+        }
+        this.waitUntil("requirement chooser", () -> findWindow(BuildRequirementWindowBody.class) != null, 60);
+        this.waitTicks(12);
+        this.type(minecraft, step.get("search").getAsString());
+        this.waitTicks(10);
+        this.moveTo(() -> requirementChooserEntry(requirement), 14);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        // Time to read the description
+        this.waitTicks(step.has("read_ticks") ? step.get("read_ticks").getAsInt() : 16);
+        Requirement type = RequirementRegistry.getRequirement(requirement);
+        if (type == null) throw new IllegalStateException("No requirement " + requirement);
+        // Requirements without a value have Done instead of Next Step
+        String buttonKey = type.hasValue() ? "fancymenu.ui.generic.next_step" : "fancymenu.common_components.done";
+        this.moveTo(() -> windowButtonCenter(requireWindow(BuildRequirementWindowBody.class), buttonKey), 14);
+        this.waitTicks(5);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        if (step.has("fields")) {
+            this.waitUntil("value window", () -> findValueWindow() != null, 60);
+            this.waitTicks(12);
+            this.fillValueFields(minecraft, step.getAsJsonArray("fields"));
+            this.moveTo(() -> windowWidgetCenter(requireValueWindow(), "doneButton"), 14);
+            this.waitTicks(5);
+            this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+            this.waitUntil("value window closed", () -> findValueWindow() == null, 60);
+        } else if (type.hasValue()) {
+            // Requirements with a simple value edit it in the one-line text editor, which starts with an example value
+            this.waitUntil("text editor", () -> findEditor() != null, 60);
+            this.waitTicks(12);
+            this.key(minecraft, "shortcut+a", "Ctrl + A");
+            this.waitTicks(6);
+            if (step.has("paste") && step.get("paste").getAsBoolean()) {
+                this.key(minecraft, "shortcut+v", "Ctrl + V");
+            } else {
+                this.type(minecraft, step.get("value").getAsString());
+            }
+            this.waitTicks(12);
+            this.moveTo(DocsShowcaseEditorGif::doneButton, 14);
+            this.waitTicks(5);
+            this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+            this.waitUntil("text editor closed", () -> findEditor() == null, 60);
+        }
+        // With its value set, or without a value, the requirement chooser closes on its own
+        this.waitUntil("requirement chooser closed", () -> findWindow(BuildRequirementWindowBody.class) == null, 60);
+        this.waitUntil("Manage Requirements shown again", () -> findRequirementsWindow() != null, 60);
+        this.waitTicks(12);
+    }
+
+    /**
+     * Outside the editor: moves the pointer over elements and rests on each, like a player trying hover effects (config {@code start: "screen"}).
+     * Config: {@code hovers}, each with {@code target} (an element id, also of Vanilla elements) or {@code point} ([x, y]), {@code ticks}
+     * (how long the pointer rests, default 40) and {@code move_ticks} (default 16). Optional {@code pointer} ([x, y], the start) and
+     * {@code hold_ticks} (after the last hover, default 20).
+     */
+    private void buildHoverElementsScript(@NotNull Minecraft minecraft) {
+        if (this.config.has("pointer")) {
+            float x = this.config.getAsJsonArray("pointer").get(0).getAsFloat();
+            float y = this.config.getAsJsonArray("pointer").get(1).getAsFloat();
+            this.steps.addLast(() -> {
+                this.movePointer(minecraft, x, y);
+                return true;
+            });
+        }
+        this.waitTicks(16);
+        for (JsonElement entry : this.config.getAsJsonArray("hovers")) {
+            JsonObject hover = entry.getAsJsonObject();
+            int moveTicks = hover.has("move_ticks") ? hover.get("move_ticks").getAsInt() : 16;
+            if (hover.has("target")) {
+                String target = hover.get("target").getAsString();
+                this.moveTo(() -> center(screenBox(target)), moveTicks);
+            } else {
+                float x = hover.getAsJsonArray("point").get(0).getAsFloat();
+                float y = hover.getAsJsonArray("point").get(1).getAsFloat();
+                this.moveTo(() -> new float[] {x, y}, moveTicks);
+            }
+            this.waitTicks(hover.has("ticks") ? hover.get("ticks").getAsInt() : 40);
+        }
+        this.waitTicks(this.config.has("hold_ticks") ? this.config.get("hold_ticks").getAsInt() : 20);
     }
 
     /**
@@ -1656,6 +1871,73 @@ public final class DocsShowcaseEditorGif {
             }
         }
         throw new IllegalStateException("The list editor has no Add Entry row");
+    }
+
+    /**
+     * The visible Manage Requirements window. The window of an open group is one too, and the window that opened it hides meanwhile.
+     */
+    @Nullable
+    private static PiPWindow findRequirementsWindow() {
+        for (PiPWindow window : PiPWindowHandler.INSTANCE.getOpenWindows()) {
+            if ((window.getScreen() instanceof ManageRequirementsWindowBody) && window.isVisible()) return window;
+        }
+        return null;
+    }
+
+    @NotNull
+    private static PiPWindow requireRequirementsWindow() {
+        PiPWindow window = findRequirementsWindow();
+        if (window == null) throw new IllegalStateException("No visible Manage Requirements window");
+        return window;
+    }
+
+    /**
+     * If the Manage Requirements window shows the content of a group, which it does when it has a group path.
+     */
+    private static boolean isGroupWindow(@Nullable PiPWindow window) {
+        return (window != null) && (readField(window.getScreen(), "groupPath") != null);
+    }
+
+    /**
+     * The GUI position of a free spot of the list of the visible Manage Requirements window, below its rows.
+     */
+    @NotNull
+    private static float[] requirementsListFreeSpot() {
+        PiPWindow window = requireRequirementsWindow();
+        ScrollArea list = (ScrollArea) readField(window.getScreen(), "requirementsScrollArea");
+        return bodyToGui(window, list.getXWithBorder() + list.getWidthWithBorder() * 0.45F, list.getYWithBorder() + list.getHeightWithBorder() * 0.72F);
+    }
+
+    /**
+     * The GUI position of the row of a group (by its identifier) or a requirement (by its type identifier) in the visible Manage Requirements window.
+     */
+    @NotNull
+    private static float[] requirementRow(@NotNull String groupOrRequirement) {
+        PiPWindow window = requireRequirementsWindow();
+        ScrollArea list = (ScrollArea) readField(window.getScreen(), "requirementsScrollArea");
+        for (ScrollAreaEntry entry : list.getEntries()) {
+            boolean group = (entry instanceof ManageRequirementsWindowBody.RequirementGroupEntry groupEntry) && groupEntry.group.identifier.equals(groupOrRequirement);
+            boolean requirement = (entry instanceof ManageRequirementsWindowBody.RequirementInstanceEntry instanceEntry) && instanceEntry.instance.requirement.getIdentifier().equals(groupOrRequirement);
+            if (group || requirement) {
+                return bodyToGui(window, entry.getX() + Math.min(60.0F, entry.getWidth() / 3.0F), entry.getY() + Math.min(entry.getHeight() / 2.0F, 9.0F));
+            }
+        }
+        throw new IllegalStateException("Manage Requirements lists no " + groupOrRequirement);
+    }
+
+    /**
+     * The GUI position of the entry of a requirement in the list of the requirement chooser, a bit right of the start of its name.
+     */
+    @NotNull
+    private static float[] requirementChooserEntry(@NotNull String requirementIdentifier) {
+        PiPWindow window = requireWindow(BuildRequirementWindowBody.class);
+        ScrollArea list = (ScrollArea) readField(window.getScreen(), "requirementsListScrollArea");
+        for (ScrollAreaEntry entry : list.getEntries()) {
+            if ((entry instanceof BuildRequirementWindowBody.RequirementScrollEntry requirementEntry) && (requirementEntry.requirement != null) && requirementEntry.requirement.getIdentifier().equals(requirementIdentifier)) {
+                return bodyToGui(window, entry.getX() + Math.min(60.0F, entry.getWidth() / 2.0F), entry.getY() + entry.getHeight() / 2.0F);
+            }
+        }
+        throw new IllegalStateException("The requirement chooser lists no " + requirementIdentifier);
     }
 
     @NotNull

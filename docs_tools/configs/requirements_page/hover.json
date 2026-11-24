@@ -1,0 +1,50 @@
+{
+ "script": "hover_elements",
+ "start": "screen",
+ "screen": "title",
+ "background_image": "/config/fancymenu/assets/docs_bg.png",
+ "elements": [
+  {
+   "id": "server_info",
+   "x": 432,
+   "y": 157,
+   "w": 180,
+   "h": 30,
+   "look": "pixel",
+   "background": true,
+   "content": "**play.example.net**\nSurvival with friends, open 24/7",
+   "requirements": [
+    {
+     "requirement": "fancymenu_visibility_requirement_is_element_hovered",
+     "value": "mc_titlescreen_multiplayer_button"
+    }
+   ]
+  }
+ ],
+ "pointer": [
+  110,
+  250
+ ],
+ "hovers": [
+  {
+   "target": "mc_titlescreen_singleplayer_button",
+   "ticks": 26
+  },
+  {
+   "target": "mc_titlescreen_multiplayer_button",
+   "ticks": 50
+  },
+  {
+   "point": [
+    110,
+    250
+   ],
+   "ticks": 30
+  },
+  {
+   "target": "mc_titlescreen_multiplayer_button",
+   "ticks": 50
+  }
+ ],
+ "hold_ticks": 10
+}
