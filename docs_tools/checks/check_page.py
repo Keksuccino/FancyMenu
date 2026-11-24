@@ -13,7 +13,8 @@ docs, workspace, pages = sys.argv[1], sys.argv[2], sys.argv[3:]
 lang = json.load(open(os.path.join(workspace, "common/src/main/resources/assets/fancymenu/lang/en_us.json")))
 labels = set()
 for value in lang.values():
-    value = re.sub(r"§.", "", value).strip()
+    # The game shows "%%" of format strings as "%", like "Amount (%%)"
+    value = re.sub(r"§.", "", value).replace("%%", "%").strip()
     labels.add(value)
     labels.add(re.sub(r":? ?%s.*$", "", value).strip())
     # Labels with a value that is part of the text, like "Case Mode: Normal"

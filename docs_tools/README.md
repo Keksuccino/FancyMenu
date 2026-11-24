@@ -15,13 +15,14 @@ Tools for screenshots, showcase GIFs and checks of the FancyMenu docs. Images ge
 | `postprocess/encode.sh` | Encodes composed frames into an optimized GIF. |
 | `configs/text_pages/` | Configs of the Text Formatting and Text in Menus images. |
 | `configs/scroll_area_page/` | Configs of the Scrollable Areas images: elements of any type, elements in areas, editor stills. |
+| `configs/decoration_overlays_page/` | Configs of the Decoration Overlays images: overlays on the title screen, vanilla elements moved and hidden. |
 | `checks/check_page.py` | Checks a page's UI labels, link format, links, anchors and images. |
-| `assets/` | Cursor sprites and `docs_bg.png`, a blurred panorama background for editor GIFs. |
+| `assets/` | Cursor sprites, `docs_bg.png` (a blurred panorama background) and `docs_bg_night.png` (the same at night). |
 
 # Requirements
 
 - A FancyMenu workspace. The tools were made in `fancymenu-26.3.0` (Java 25).
-- Python 3 with Pillow and numpy, `ffmpeg`, `gifsicle`, `oxipng`.
+- Python 3 with Pillow and numpy, `ffmpeg`, `gifsicle`, `oxipng`, `pngquant`.
 - macOS for the key badge font (`HelveticaNeue.ttc`).
 
 # Setup
@@ -40,7 +41,7 @@ printf 'onboardAccessibility:false\npanoramaScrollSpeed:0.0\n' > run_client_docs
 For editor GIFs, after the first launch:
 
 - Set `S:ui_scale_v2 = 'colossal';` in `run_client_docs/config/fancymenu/options.txt`, so the UI is readable at 800 px.
-- Copy `assets/docs_bg.png` to `run_client_docs/config/fancymenu/assets/`.
+- Copy `assets/docs_bg.png` and `assets/docs_bg_night.png` to `run_client_docs/config/fancymenu/assets/`.
 
 `run_client_docs` isn't git-ignored. Never commit it, and remove it when you're done.
 
@@ -70,6 +71,14 @@ When done, `git restore` `FancyMenu.java` and remove the copied files. If the ha
    - Element keys: `type` (element type identifier, default `text_v2`), `id`, `parent` (the `id` of a Scrollable Area: `x`/`y` are then relative to its content), `props` (saved properties as strings, like `{"layout_mode": "stack"}` or `{"label": "Survival"}`).
    - Text elements also take `content`, `look` (`pixel`, `classic`, `neutral`), `background` (`true`/`false`) and `scale`.
    - A scene without elements renders the clean background.
+   - More scene keys (template: `configs/decoration_overlays_page/gen_scenes.py`):
+     - `screen`: `title` for the title screen, instead of an empty screen.
+     - `vanilla`: changes vanilla elements, by widget identifier (`id`): `hidden`, `x`/`y`/`w`/`h` (moves it, anchored top-left) and `props`.
+     - `background_image` (like `/config/fancymenu/assets/docs_bg.png`) or `background_color` (`#RRGGBB`): the menu background.
+     - `overlays`: decoration overlays, each with `type` (like `snowfall`), optional `layers` and `props`.
+     - `seed`: makes overlays build the same random setup every run.
+     - `pointer`: `[x, y]` in GUI pixels. `[-40, -40]` keeps it off the screen.
+     - `shots`: seconds for several screenshots of a scene that changes over time, named `<name>_<seconds>s.png`.
 
 2. Render (from the workspace root, about a minute):
 
@@ -88,6 +97,8 @@ oxipng -o 4 --strip safe <cropped dir>/*.png
 ```
 
    `crop.py` skips elements with a `parent`. Scroll bars and backgrounds reach beyond their element, so give them a margin of about 22.
+
+   Full-screen shots with a background image are about 650 KB. `pngquant --quality 80-95` before `oxipng` makes them about 150 KB without a visible change (template: `configs/decoration_overlays_page/make_assets.py`).
 
 4. Look at every image. Tune element sizes (empty space, scroll bars) and render again if needed.
 
@@ -119,6 +130,9 @@ sh postprocess/encode.sh run_client_docs/gif_composed <path>/showcase.gif
 # Gotchas
 
 - Text elements replace placeholders everywhere, even in code blocks.
+- Overlays only react to elements outside of the editor, so record them in scenes, not in the editor.
+- Title screen widget identifiers: `mc_titlescreen_singleplayer_button`, `..._multiplayer_button`, `..._realms_button`, `..._options_button`, `..._quit_button`, `..._language_button`, `..._accessibility_button`, `titlescreen_mods_button`, `454370` (the skin icon), `minecraft_logo_widget`, `minecraft_splash_widget`, `minecraft_branding_widget`, `title_screen_copyright_button`, `minecraft_realms_notification_icons_widget`.
+- Overlay screenshots: keep at least 13 pixels between buttons, and turn off **Should Be Affected By Decoration Overlays** (`should_be_affected_by_decoration_overlays`) for the logo, splash, branding, copyright and Realms icons.
 - Element-specific entries of an element's right-click menu are below its visible part. Scroll first (`scrollMenuUntilVisible`).
 - The text editor reads the real SDL state for drag and Shift+Arrow selection, which simulated input can't set. Use `dragSelectWord`.
 - PiP windows fade in, so what's behind them shows through for a few frames. That's real.

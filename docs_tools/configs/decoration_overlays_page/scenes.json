@@ -1,0 +1,2993 @@
+{
+ "gui_width": 480,
+ "gui_height": 270,
+ "gui_scale": 2,
+ "scenes": [
+  {
+   "name": "snowfall",
+   "screen": "title",
+   "background_image": "/config/fancymenu/assets/docs_bg.png",
+   "seed": 7,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "shots": [
+    5,
+    20,
+    45
+   ],
+   "elements": [],
+   "vanilla": [
+    {
+     "id": "mc_titlescreen_singleplayer_button",
+     "x": 140,
+     "y": 110,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_multiplayer_button",
+     "x": 140,
+     "y": 144,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_options_button",
+     "x": 140,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_quit_button",
+     "x": 247,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_realms_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_language_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_accessibility_button",
+     "hidden": true
+    },
+    {
+     "id": "titlescreen_mods_button",
+     "hidden": true
+    },
+    {
+     "id": "454370",
+     "hidden": true
+    },
+    {
+     "id": "minecraft_logo_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_splash_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_branding_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "title_screen_copyright_button",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_realms_notification_icons_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "snowfall",
+     "props": {}
+    }
+   ]
+  },
+  {
+   "name": "rainfall",
+   "screen": "title",
+   "background_image": "/config/fancymenu/assets/docs_bg.png",
+   "seed": 7,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "shots": [
+    5,
+    15,
+    30
+   ],
+   "elements": [],
+   "vanilla": [
+    {
+     "id": "mc_titlescreen_singleplayer_button",
+     "x": 140,
+     "y": 110,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_multiplayer_button",
+     "x": 140,
+     "y": 144,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_options_button",
+     "x": 140,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_quit_button",
+     "x": 247,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_realms_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_language_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_accessibility_button",
+     "hidden": true
+    },
+    {
+     "id": "titlescreen_mods_button",
+     "hidden": true
+    },
+    {
+     "id": "454370",
+     "hidden": true
+    },
+    {
+     "id": "minecraft_logo_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_splash_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_branding_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "title_screen_copyright_button",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_realms_notification_icons_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "rainfall",
+     "props": {}
+    }
+   ]
+  },
+  {
+   "name": "leaves",
+   "screen": "title",
+   "background_image": "/config/fancymenu/assets/docs_bg.png",
+   "seed": 7,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "shots": [
+    5,
+    15,
+    30
+   ],
+   "elements": [],
+   "vanilla": [
+    {
+     "id": "mc_titlescreen_singleplayer_button",
+     "x": 140,
+     "y": 110,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_multiplayer_button",
+     "x": 140,
+     "y": 144,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_options_button",
+     "x": 140,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_quit_button",
+     "x": 247,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_realms_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_language_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_accessibility_button",
+     "hidden": true
+    },
+    {
+     "id": "titlescreen_mods_button",
+     "hidden": true
+    },
+    {
+     "id": "454370",
+     "hidden": true
+    },
+    {
+     "id": "minecraft_logo_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_splash_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_branding_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "title_screen_copyright_button",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_realms_notification_icons_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "leaves",
+     "props": {}
+    }
+   ]
+  },
+  {
+   "name": "cherry_blossoms",
+   "screen": "title",
+   "background_image": "/config/fancymenu/assets/docs_bg.png",
+   "seed": 7,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "shots": [
+    5,
+    15,
+    30
+   ],
+   "elements": [],
+   "vanilla": [
+    {
+     "id": "mc_titlescreen_singleplayer_button",
+     "x": 140,
+     "y": 110,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_multiplayer_button",
+     "x": 140,
+     "y": 144,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_options_button",
+     "x": 140,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_quit_button",
+     "x": 247,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_realms_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_language_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_accessibility_button",
+     "hidden": true
+    },
+    {
+     "id": "titlescreen_mods_button",
+     "hidden": true
+    },
+    {
+     "id": "454370",
+     "hidden": true
+    },
+    {
+     "id": "minecraft_logo_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_splash_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_branding_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "title_screen_copyright_button",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_realms_notification_icons_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "cherry_blossoms",
+     "props": {}
+    }
+   ]
+  },
+  {
+   "name": "fog",
+   "screen": "title",
+   "background_image": "/config/fancymenu/assets/docs_bg.png",
+   "seed": 7,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "shots": [
+    5,
+    15,
+    30
+   ],
+   "elements": [],
+   "vanilla": [
+    {
+     "id": "mc_titlescreen_singleplayer_button",
+     "x": 140,
+     "y": 110,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_multiplayer_button",
+     "x": 140,
+     "y": 144,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_options_button",
+     "x": 140,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_quit_button",
+     "x": 247,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_realms_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_language_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_accessibility_button",
+     "hidden": true
+    },
+    {
+     "id": "titlescreen_mods_button",
+     "hidden": true
+    },
+    {
+     "id": "454370",
+     "hidden": true
+    },
+    {
+     "id": "minecraft_logo_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_splash_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_branding_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "title_screen_copyright_button",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_realms_notification_icons_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "fog",
+     "props": {}
+    }
+   ]
+  },
+  {
+   "name": "frost",
+   "screen": "title",
+   "background_image": "/config/fancymenu/assets/docs_bg.png",
+   "seed": 7,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "shots": [
+    5,
+    20,
+    45
+   ],
+   "elements": [],
+   "vanilla": [
+    {
+     "id": "mc_titlescreen_singleplayer_button",
+     "x": 140,
+     "y": 110,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_multiplayer_button",
+     "x": 140,
+     "y": 144,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_options_button",
+     "x": 140,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_quit_button",
+     "x": 247,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_realms_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_language_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_accessibility_button",
+     "hidden": true
+    },
+    {
+     "id": "titlescreen_mods_button",
+     "hidden": true
+    },
+    {
+     "id": "454370",
+     "hidden": true
+    },
+    {
+     "id": "minecraft_logo_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_splash_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_branding_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "title_screen_copyright_button",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_realms_notification_icons_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "frost",
+     "props": {}
+    }
+   ]
+  },
+  {
+   "name": "clouds",
+   "screen": "title",
+   "background_image": "/config/fancymenu/assets/docs_bg.png",
+   "seed": 7,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "shots": [
+    5,
+    15,
+    30
+   ],
+   "elements": [],
+   "vanilla": [
+    {
+     "id": "mc_titlescreen_singleplayer_button",
+     "x": 140,
+     "y": 110,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_multiplayer_button",
+     "x": 140,
+     "y": 144,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_options_button",
+     "x": 140,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_quit_button",
+     "x": 247,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_realms_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_language_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_accessibility_button",
+     "hidden": true
+    },
+    {
+     "id": "titlescreen_mods_button",
+     "hidden": true
+    },
+    {
+     "id": "454370",
+     "hidden": true
+    },
+    {
+     "id": "minecraft_logo_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_splash_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_branding_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "title_screen_copyright_button",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_realms_notification_icons_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "clouds",
+     "props": {}
+    }
+   ]
+  },
+  {
+   "name": "sunbeams",
+   "screen": "title",
+   "background_image": "/config/fancymenu/assets/docs_bg.png",
+   "seed": 7,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "shots": [
+    5,
+    15,
+    30
+   ],
+   "elements": [],
+   "vanilla": [
+    {
+     "id": "mc_titlescreen_singleplayer_button",
+     "x": 140,
+     "y": 110,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_multiplayer_button",
+     "x": 140,
+     "y": 144,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_options_button",
+     "x": 140,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_quit_button",
+     "x": 247,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_realms_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_language_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_accessibility_button",
+     "hidden": true
+    },
+    {
+     "id": "titlescreen_mods_button",
+     "hidden": true
+    },
+    {
+     "id": "454370",
+     "hidden": true
+    },
+    {
+     "id": "minecraft_logo_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_splash_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_branding_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "title_screen_copyright_button",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_realms_notification_icons_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "sunbeams",
+     "props": {}
+    }
+   ]
+  },
+  {
+   "name": "birds",
+   "screen": "title",
+   "background_image": "/config/fancymenu/assets/docs_bg.png",
+   "seed": 7,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "shots": [
+    5,
+    15,
+    30
+   ],
+   "elements": [],
+   "vanilla": [
+    {
+     "id": "mc_titlescreen_singleplayer_button",
+     "x": 140,
+     "y": 110,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_multiplayer_button",
+     "x": 140,
+     "y": 144,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_options_button",
+     "x": 140,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_quit_button",
+     "x": 247,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_realms_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_language_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_accessibility_button",
+     "hidden": true
+    },
+    {
+     "id": "titlescreen_mods_button",
+     "hidden": true
+    },
+    {
+     "id": "454370",
+     "hidden": true
+    },
+    {
+     "id": "minecraft_logo_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_splash_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_branding_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "title_screen_copyright_button",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_realms_notification_icons_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "birds",
+     "props": {}
+    }
+   ]
+  },
+  {
+   "name": "butterflies",
+   "screen": "title",
+   "background_image": "/config/fancymenu/assets/docs_bg.png",
+   "seed": 7,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "shots": [
+    5,
+    15,
+    30
+   ],
+   "elements": [],
+   "vanilla": [
+    {
+     "id": "mc_titlescreen_singleplayer_button",
+     "x": 140,
+     "y": 110,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_multiplayer_button",
+     "x": 140,
+     "y": 144,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_options_button",
+     "x": 140,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_quit_button",
+     "x": 247,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_realms_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_language_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_accessibility_button",
+     "hidden": true
+    },
+    {
+     "id": "titlescreen_mods_button",
+     "hidden": true
+    },
+    {
+     "id": "454370",
+     "hidden": true
+    },
+    {
+     "id": "minecraft_logo_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_splash_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_branding_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "title_screen_copyright_button",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_realms_notification_icons_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "butterflies",
+     "props": {}
+    }
+   ]
+  },
+  {
+   "name": "bubbles",
+   "screen": "title",
+   "background_image": "/config/fancymenu/assets/docs_bg.png",
+   "seed": 7,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "shots": [
+    5,
+    15,
+    30
+   ],
+   "elements": [],
+   "vanilla": [
+    {
+     "id": "mc_titlescreen_singleplayer_button",
+     "x": 140,
+     "y": 110,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_multiplayer_button",
+     "x": 140,
+     "y": 144,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_options_button",
+     "x": 140,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_quit_button",
+     "x": 247,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_realms_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_language_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_accessibility_button",
+     "hidden": true
+    },
+    {
+     "id": "titlescreen_mods_button",
+     "hidden": true
+    },
+    {
+     "id": "454370",
+     "hidden": true
+    },
+    {
+     "id": "minecraft_logo_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_splash_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_branding_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "title_screen_copyright_button",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_realms_notification_icons_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "bubbles",
+     "props": {}
+    }
+   ]
+  },
+  {
+   "name": "overgrowth",
+   "screen": "title",
+   "background_image": "/config/fancymenu/assets/docs_bg.png",
+   "seed": 7,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "shots": [
+    5,
+    20,
+    45
+   ],
+   "elements": [],
+   "vanilla": [
+    {
+     "id": "mc_titlescreen_singleplayer_button",
+     "x": 140,
+     "y": 110,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_multiplayer_button",
+     "x": 140,
+     "y": 144,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_options_button",
+     "x": 140,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_quit_button",
+     "x": 247,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_realms_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_language_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_accessibility_button",
+     "hidden": true
+    },
+    {
+     "id": "titlescreen_mods_button",
+     "hidden": true
+    },
+    {
+     "id": "454370",
+     "hidden": true
+    },
+    {
+     "id": "minecraft_logo_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_splash_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_branding_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "title_screen_copyright_button",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_realms_notification_icons_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "overgrowth",
+     "props": {}
+    }
+   ]
+  },
+  {
+   "name": "cobwebs",
+   "screen": "title",
+   "background_image": "/config/fancymenu/assets/docs_bg.png",
+   "seed": 7,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "shots": [
+    5,
+    20,
+    45
+   ],
+   "elements": [],
+   "vanilla": [
+    {
+     "id": "mc_titlescreen_singleplayer_button",
+     "x": 140,
+     "y": 110,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_multiplayer_button",
+     "x": 140,
+     "y": 144,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_options_button",
+     "x": 140,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_quit_button",
+     "x": 247,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_realms_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_language_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_accessibility_button",
+     "hidden": true
+    },
+    {
+     "id": "titlescreen_mods_button",
+     "hidden": true
+    },
+    {
+     "id": "454370",
+     "hidden": true
+    },
+    {
+     "id": "minecraft_logo_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_splash_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_branding_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "title_screen_copyright_button",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_realms_notification_icons_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "cobwebs",
+     "props": {}
+    }
+   ]
+  },
+  {
+   "name": "confetti",
+   "screen": "title",
+   "background_image": "/config/fancymenu/assets/docs_bg.png",
+   "seed": 7,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "shots": [
+    4,
+    7,
+    10,
+    13,
+    16,
+    19
+   ],
+   "elements": [],
+   "vanilla": [
+    {
+     "id": "mc_titlescreen_singleplayer_button",
+     "x": 140,
+     "y": 110,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_multiplayer_button",
+     "x": 140,
+     "y": 144,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_options_button",
+     "x": 140,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_quit_button",
+     "x": 247,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_realms_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_language_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_accessibility_button",
+     "hidden": true
+    },
+    {
+     "id": "titlescreen_mods_button",
+     "hidden": true
+    },
+    {
+     "id": "454370",
+     "hidden": true
+    },
+    {
+     "id": "minecraft_logo_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_splash_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_branding_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "title_screen_copyright_button",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_realms_notification_icons_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "confetti",
+     "props": {}
+    }
+   ]
+  },
+  {
+   "name": "buddy",
+   "screen": "title",
+   "background_image": "/config/fancymenu/assets/docs_bg.png",
+   "seed": 7,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "shots": [
+    5,
+    15,
+    30
+   ],
+   "elements": [],
+   "vanilla": [
+    {
+     "id": "mc_titlescreen_singleplayer_button",
+     "x": 140,
+     "y": 110,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_multiplayer_button",
+     "x": 140,
+     "y": 144,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_options_button",
+     "x": 140,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_quit_button",
+     "x": 247,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_realms_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_language_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_accessibility_button",
+     "hidden": true
+    },
+    {
+     "id": "titlescreen_mods_button",
+     "hidden": true
+    },
+    {
+     "id": "454370",
+     "hidden": true
+    },
+    {
+     "id": "minecraft_logo_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_splash_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_branding_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "title_screen_copyright_button",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_realms_notification_icons_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "buddy",
+     "props": {}
+    }
+   ]
+  },
+  {
+   "name": "string_lights",
+   "screen": "title",
+   "background_image": "/config/fancymenu/assets/docs_bg_night.png",
+   "seed": 7,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "shots": [
+    5,
+    15,
+    30
+   ],
+   "elements": [],
+   "vanilla": [
+    {
+     "id": "mc_titlescreen_singleplayer_button",
+     "x": 140,
+     "y": 110,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_multiplayer_button",
+     "x": 140,
+     "y": 144,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_options_button",
+     "x": 140,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_quit_button",
+     "x": 247,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_realms_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_language_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_accessibility_button",
+     "hidden": true
+    },
+    {
+     "id": "titlescreen_mods_button",
+     "hidden": true
+    },
+    {
+     "id": "454370",
+     "hidden": true
+    },
+    {
+     "id": "minecraft_logo_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_splash_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_branding_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "title_screen_copyright_button",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_realms_notification_icons_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "string_lights",
+     "props": {}
+    }
+   ]
+  },
+  {
+   "name": "fireflies",
+   "screen": "title",
+   "background_image": "/config/fancymenu/assets/docs_bg_night.png",
+   "seed": 7,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "shots": [
+    5,
+    15,
+    30
+   ],
+   "elements": [],
+   "vanilla": [
+    {
+     "id": "mc_titlescreen_singleplayer_button",
+     "x": 140,
+     "y": 110,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_multiplayer_button",
+     "x": 140,
+     "y": 144,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_options_button",
+     "x": 140,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_quit_button",
+     "x": 247,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_realms_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_language_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_accessibility_button",
+     "hidden": true
+    },
+    {
+     "id": "titlescreen_mods_button",
+     "hidden": true
+    },
+    {
+     "id": "454370",
+     "hidden": true
+    },
+    {
+     "id": "minecraft_logo_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_splash_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_branding_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "title_screen_copyright_button",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_realms_notification_icons_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "fireflies",
+     "props": {}
+    }
+   ]
+  },
+  {
+   "name": "fireworks",
+   "screen": "title",
+   "background_image": "/config/fancymenu/assets/docs_bg_night.png",
+   "seed": 7,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "shots": [
+    4,
+    7,
+    10,
+    13,
+    16,
+    19
+   ],
+   "elements": [],
+   "vanilla": [
+    {
+     "id": "mc_titlescreen_singleplayer_button",
+     "x": 140,
+     "y": 110,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_multiplayer_button",
+     "x": 140,
+     "y": 144,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_options_button",
+     "x": 140,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_quit_button",
+     "x": 247,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_realms_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_language_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_accessibility_button",
+     "hidden": true
+    },
+    {
+     "id": "titlescreen_mods_button",
+     "hidden": true
+    },
+    {
+     "id": "454370",
+     "hidden": true
+    },
+    {
+     "id": "minecraft_logo_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_splash_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_branding_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "title_screen_copyright_button",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_realms_notification_icons_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "fireworks",
+     "props": {}
+    }
+   ]
+  },
+  {
+   "name": "sky_lanterns",
+   "screen": "title",
+   "background_image": "/config/fancymenu/assets/docs_bg_night.png",
+   "seed": 7,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "shots": [
+    5,
+    15,
+    30
+   ],
+   "elements": [],
+   "vanilla": [
+    {
+     "id": "mc_titlescreen_singleplayer_button",
+     "x": 140,
+     "y": 110,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_multiplayer_button",
+     "x": 140,
+     "y": 144,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_options_button",
+     "x": 140,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_quit_button",
+     "x": 247,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_realms_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_language_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_accessibility_button",
+     "hidden": true
+    },
+    {
+     "id": "titlescreen_mods_button",
+     "hidden": true
+    },
+    {
+     "id": "454370",
+     "hidden": true
+    },
+    {
+     "id": "minecraft_logo_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_splash_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_branding_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "title_screen_copyright_button",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_realms_notification_icons_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "sky_lanterns",
+     "props": {}
+    }
+   ]
+  },
+  {
+   "name": "aurora",
+   "screen": "title",
+   "background_image": "/config/fancymenu/assets/docs_bg_night.png",
+   "seed": 7,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "shots": [
+    5,
+    15,
+    30
+   ],
+   "elements": [],
+   "vanilla": [
+    {
+     "id": "mc_titlescreen_singleplayer_button",
+     "x": 140,
+     "y": 110,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_multiplayer_button",
+     "x": 140,
+     "y": 144,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_options_button",
+     "x": 140,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_quit_button",
+     "x": 247,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_realms_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_language_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_accessibility_button",
+     "hidden": true
+    },
+    {
+     "id": "titlescreen_mods_button",
+     "hidden": true
+    },
+    {
+     "id": "454370",
+     "hidden": true
+    },
+    {
+     "id": "minecraft_logo_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_splash_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_branding_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "title_screen_copyright_button",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_realms_notification_icons_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "aurora",
+     "props": {}
+    }
+   ]
+  },
+  {
+   "name": "shooting_stars",
+   "screen": "title",
+   "background_image": "/config/fancymenu/assets/docs_bg_night.png",
+   "seed": 7,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "shots": [
+    4,
+    7,
+    10,
+    13,
+    16,
+    19
+   ],
+   "elements": [],
+   "vanilla": [
+    {
+     "id": "mc_titlescreen_singleplayer_button",
+     "x": 140,
+     "y": 110,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_multiplayer_button",
+     "x": 140,
+     "y": 144,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_options_button",
+     "x": 140,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_quit_button",
+     "x": 247,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_realms_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_language_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_accessibility_button",
+     "hidden": true
+    },
+    {
+     "id": "titlescreen_mods_button",
+     "hidden": true
+    },
+    {
+     "id": "454370",
+     "hidden": true
+    },
+    {
+     "id": "minecraft_logo_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_splash_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_branding_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "title_screen_copyright_button",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_realms_notification_icons_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "shooting_stars",
+     "props": {}
+    }
+   ]
+  },
+  {
+   "name": "bats",
+   "screen": "title",
+   "background_image": "/config/fancymenu/assets/docs_bg_night.png",
+   "seed": 7,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "shots": [
+    5,
+    15,
+    30
+   ],
+   "elements": [],
+   "vanilla": [
+    {
+     "id": "mc_titlescreen_singleplayer_button",
+     "x": 140,
+     "y": 110,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_multiplayer_button",
+     "x": 140,
+     "y": 144,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_options_button",
+     "x": 140,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_quit_button",
+     "x": 247,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_realms_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_language_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_accessibility_button",
+     "hidden": true
+    },
+    {
+     "id": "titlescreen_mods_button",
+     "hidden": true
+    },
+    {
+     "id": "454370",
+     "hidden": true
+    },
+    {
+     "id": "minecraft_logo_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_splash_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_branding_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "title_screen_copyright_button",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_realms_notification_icons_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "bats",
+     "props": {}
+    }
+   ]
+  },
+  {
+   "name": "embers",
+   "screen": "title",
+   "background_image": "/config/fancymenu/assets/docs_bg_night.png",
+   "seed": 7,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "shots": [
+    5,
+    20,
+    45
+   ],
+   "elements": [],
+   "vanilla": [
+    {
+     "id": "mc_titlescreen_singleplayer_button",
+     "x": 140,
+     "y": 110,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_multiplayer_button",
+     "x": 140,
+     "y": 144,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_options_button",
+     "x": 140,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_quit_button",
+     "x": 247,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_realms_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_language_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_accessibility_button",
+     "hidden": true
+    },
+    {
+     "id": "titlescreen_mods_button",
+     "hidden": true
+    },
+    {
+     "id": "454370",
+     "hidden": true
+    },
+    {
+     "id": "minecraft_logo_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_splash_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_branding_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "title_screen_copyright_button",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_realms_notification_icons_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "embers",
+     "props": {}
+    }
+   ]
+  },
+  {
+   "name": "hero_winter",
+   "screen": "title",
+   "background_image": "/config/fancymenu/assets/docs_bg_night.png",
+   "seed": 7,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "shots": [
+    5,
+    20,
+    45
+   ],
+   "elements": [],
+   "vanilla": [
+    {
+     "id": "mc_titlescreen_singleplayer_button",
+     "x": 140,
+     "y": 110,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_multiplayer_button",
+     "x": 140,
+     "y": 144,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_options_button",
+     "x": 140,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_quit_button",
+     "x": 247,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_realms_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_language_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_accessibility_button",
+     "hidden": true
+    },
+    {
+     "id": "titlescreen_mods_button",
+     "hidden": true
+    },
+    {
+     "id": "454370",
+     "hidden": true
+    },
+    {
+     "id": "minecraft_logo_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_splash_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_branding_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "title_screen_copyright_button",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_realms_notification_icons_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "snowfall",
+     "props": {}
+    },
+    {
+     "type": "string_lights",
+     "props": {
+      "look": "detailed",
+      "string_lights_pine_garland": "true",
+      "string_lights_left_center_to_top_center": "false",
+      "string_lights_right_center_to_top_center": "false",
+      "string_lights_top_left_to_top_right": "false",
+      "string_lights_loose_left_top": "true",
+      "string_lights_loose_left_top_christmas_mode": "true",
+      "string_lights_loose_right_top": "true",
+      "string_lights_loose_right_top_christmas_mode": "true"
+     }
+    }
+   ]
+  },
+  {
+   "name": "snowfall_night",
+   "screen": "title",
+   "background_image": "/config/fancymenu/assets/docs_bg_night.png",
+   "seed": 7,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "shots": [
+    5,
+    20,
+    45
+   ],
+   "elements": [],
+   "vanilla": [
+    {
+     "id": "mc_titlescreen_singleplayer_button",
+     "x": 140,
+     "y": 110,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_multiplayer_button",
+     "x": 140,
+     "y": 144,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_options_button",
+     "x": 140,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_quit_button",
+     "x": 247,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_realms_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_language_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_accessibility_button",
+     "hidden": true
+    },
+    {
+     "id": "titlescreen_mods_button",
+     "hidden": true
+    },
+    {
+     "id": "454370",
+     "hidden": true
+    },
+    {
+     "id": "minecraft_logo_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_splash_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_branding_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "title_screen_copyright_button",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_realms_notification_icons_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "snowfall",
+     "props": {}
+    }
+   ]
+  },
+  {
+   "name": "rainfall_night",
+   "screen": "title",
+   "background_image": "/config/fancymenu/assets/docs_bg_night.png",
+   "seed": 7,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "shots": [
+    5,
+    15,
+    30
+   ],
+   "elements": [],
+   "vanilla": [
+    {
+     "id": "mc_titlescreen_singleplayer_button",
+     "x": 140,
+     "y": 110,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_multiplayer_button",
+     "x": 140,
+     "y": 144,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_options_button",
+     "x": 140,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_quit_button",
+     "x": 247,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_realms_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_language_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_accessibility_button",
+     "hidden": true
+    },
+    {
+     "id": "titlescreen_mods_button",
+     "hidden": true
+    },
+    {
+     "id": "454370",
+     "hidden": true
+    },
+    {
+     "id": "minecraft_logo_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_splash_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_branding_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "title_screen_copyright_button",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_realms_notification_icons_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "rainfall",
+     "props": {}
+    }
+   ]
+  },
+  {
+   "name": "bats_day",
+   "screen": "title",
+   "background_image": "/config/fancymenu/assets/docs_bg.png",
+   "seed": 7,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "shots": [
+    5,
+    15,
+    30
+   ],
+   "elements": [],
+   "vanilla": [
+    {
+     "id": "mc_titlescreen_singleplayer_button",
+     "x": 140,
+     "y": 110,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_multiplayer_button",
+     "x": 140,
+     "y": 144,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_options_button",
+     "x": 140,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_quit_button",
+     "x": 247,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_realms_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_language_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_accessibility_button",
+     "hidden": true
+    },
+    {
+     "id": "titlescreen_mods_button",
+     "hidden": true
+    },
+    {
+     "id": "454370",
+     "hidden": true
+    },
+    {
+     "id": "minecraft_logo_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_splash_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_branding_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "title_screen_copyright_button",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_realms_notification_icons_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "bats",
+     "props": {}
+    }
+   ]
+  },
+  {
+   "name": "bats_day_2x",
+   "screen": "title",
+   "background_image": "/config/fancymenu/assets/docs_bg.png",
+   "seed": 7,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "shots": [
+    5,
+    15,
+    30
+   ],
+   "elements": [],
+   "vanilla": [
+    {
+     "id": "mc_titlescreen_singleplayer_button",
+     "x": 140,
+     "y": 110,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_multiplayer_button",
+     "x": 140,
+     "y": 144,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_options_button",
+     "x": 140,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_quit_button",
+     "x": 247,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_realms_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_language_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_accessibility_button",
+     "hidden": true
+    },
+    {
+     "id": "titlescreen_mods_button",
+     "hidden": true
+    },
+    {
+     "id": "454370",
+     "hidden": true
+    },
+    {
+     "id": "minecraft_logo_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_splash_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_branding_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "title_screen_copyright_button",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_realms_notification_icons_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "bats",
+     "props": {
+      "size": "2"
+     }
+    }
+   ]
+  },
+  {
+   "name": "fireflies_detailed",
+   "screen": "title",
+   "background_image": "/config/fancymenu/assets/docs_bg_night.png",
+   "seed": 7,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "shots": [
+    5,
+    15,
+    30
+   ],
+   "elements": [],
+   "vanilla": [
+    {
+     "id": "mc_titlescreen_singleplayer_button",
+     "x": 140,
+     "y": 110,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_multiplayer_button",
+     "x": 140,
+     "y": 144,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_options_button",
+     "x": 140,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_quit_button",
+     "x": 247,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_realms_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_language_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_accessibility_button",
+     "hidden": true
+    },
+    {
+     "id": "titlescreen_mods_button",
+     "hidden": true
+    },
+    {
+     "id": "454370",
+     "hidden": true
+    },
+    {
+     "id": "minecraft_logo_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_splash_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_branding_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "title_screen_copyright_button",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_realms_notification_icons_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "fireflies",
+     "props": {
+      "look": "detailed",
+      "firefly_scale": "2.0"
+     }
+    }
+   ]
+  }
+ ]
+}

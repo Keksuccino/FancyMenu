@@ -15,9 +15,12 @@ import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
+import de.keksuccino.fancymenu.util.rendering.overlay.pixel.PixelRandom;
 import de.keksuccino.fancymenu.util.window.OffscreenTestClient;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.TitleScreen;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -55,6 +58,7 @@ public final class DocsShowcase {
     private Phase phase = Phase.WAIT_FOR_GAME;
     private int phaseTicks = 0;
     private int sceneIndex = 0;
+    private int shotIndex = 0;
     @Nullable
     private String menuBarControllerId;
 
@@ -132,9 +136,26 @@ public final class DocsShowcase {
             }
             case SCENE_WAIT -> {
                 JsonObject scene = this.config.getAsJsonArray("scenes").get(this.sceneIndex).getAsJsonObject();
-                float wait = scene.has("wait") ? scene.get("wait").getAsFloat() : 3.0F;
-                if (this.phaseTicks < wait * TICKS_PER_SECOND) return;
-                this.takeScreenshot(minecraft, scene.get("name").getAsString());
+                String name = scene.get("name").getAsString();
+                // A new screen doesn't get the old pointer position, so the pointer moves once the screen is up
+                if ((this.phaseTicks == 2) && scene.has("pointer")) {
+                    JsonArray pointer = scene.getAsJsonArray("pointer");
+                    this.movePointer(minecraft, pointer.get(0).getAsFloat(), pointer.get(1).getAsFloat());
+                }
+                if (scene.has("shots")) {
+                    // One screenshot per entry, named <name>_<seconds>s, for scenes that change over time (like decoration overlays)
+                    JsonArray shots = scene.getAsJsonArray("shots");
+                    float seconds = shots.get(this.shotIndex).getAsFloat();
+                    if (this.phaseTicks < seconds * TICKS_PER_SECOND) return;
+                    this.takeScreenshot(minecraft, name + "_" + shots.get(this.shotIndex).getAsString() + "s");
+                    this.shotIndex++;
+                    if (this.shotIndex < shots.size()) return;
+                } else {
+                    float wait = scene.has("wait") ? scene.get("wait").getAsFloat() : 3.0F;
+                    if (this.phaseTicks < wait * TICKS_PER_SECOND) return;
+                    this.takeScreenshot(minecraft, name);
+                }
+                this.shotIndex = 0;
                 this.sceneIndex++;
                 this.setPhase(Phase.SCENE_OPEN);
             }
@@ -148,15 +169,32 @@ public final class DocsShowcase {
     }
 
     private void openScene(@NotNull JsonObject scene) {
-        CustomGui gui = CustomGuiHandler.getGui(CUSTOM_GUI_IDENTIFIER);
-        if (gui == null) throw new IllegalStateException("The showcase GUI is missing");
-        var screen = CustomGuiHandler.constructInstance(gui, null, null);
+        Screen screen;
+        if (scene.has("screen") && scene.get("screen").getAsString().equals("title")) {
+            screen = new TitleScreen();
+        } else {
+            CustomGui gui = CustomGuiHandler.getGui(CUSTOM_GUI_IDENTIFIER);
+            if (gui == null) throw new IllegalStateException("The showcase GUI is missing");
+            screen = CustomGuiHandler.constructInstance(gui, null, null);
+        }
         Layout layout = Layout.buildForScreen(screen);
         layout.forcedScale = this.guiScale();
         DocsShowcaseElements.addTo(layout, scene.getAsJsonArray("elements"));
+        if (scene.has("vanilla")) DocsShowcaseElements.addVanillaTo(layout, scene.getAsJsonArray("vanilla"));
+        DocsShowcaseElements.addBackgroundTo(layout, scene);
+        // A seed makes overlays build the same random setup every run, so screenshots can be made again
+        PixelRandom.setSeedOverride(scene.has("seed") ? scene.get("seed").getAsInt() : null);
+        if (scene.has("overlays")) DocsShowcaseElements.addOverlaysTo(layout, scene.getAsJsonArray("overlays"));
         LayoutHandler.setPreviewLayout(layout);
         ScreenUtils.setScreen(screen);
-        this.pass("scene " + scene.get("name").getAsString(), "elements=" + scene.getAsJsonArray("elements").size());
+        this.pass("scene " + scene.get("name").getAsString(), "elements=" + scene.getAsJsonArray("elements").size() + " overlays=" + (scene.has("overlays") ? scene.getAsJsonArray("overlays").size() : 0));
+    }
+
+    private void movePointer(@NotNull Minecraft minecraft, float guiX, float guiY) {
+        Window window = minecraft.getWindow();
+        double x = guiX * window.getScreenWidth() / window.getGuiScaledWidth();
+        double y = guiY * window.getScreenHeight() / window.getGuiScaledHeight();
+        minecraft.mouseHandler.onMove(window.handle(), x, y, 0.0, 0.0);
     }
 
     private void takeScreenshot(@NotNull Minecraft minecraft, @NotNull String name) {
@@ -195,6 +233,7 @@ public final class DocsShowcase {
         if (this.phase == Phase.DONE) return;
         this.phase = Phase.DONE;
         LayoutHandler.setPreviewLayout(null);
+        PixelRandom.setSeedOverride(null);
         if (this.menuBarControllerId != null) CustomizationOverlay.unregisterOverlayVisibilityController(this.menuBarControllerId);
         this.writer.shutdown();
         EventHandler.INSTANCE.unregisterListenersOf(this);

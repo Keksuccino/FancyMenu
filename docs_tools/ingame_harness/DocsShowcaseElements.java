@@ -2,14 +2,26 @@ package de.keksuccino.fancymenu.util.window.preview;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import de.keksuccino.fancymenu.customization.background.backgrounds.MenuBackgrounds;
+import de.keksuccino.fancymenu.customization.background.backgrounds.color.ColorMenuBackground;
+import de.keksuccino.fancymenu.customization.background.backgrounds.image.ImageMenuBackground;
+import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlay;
+import de.keksuccino.fancymenu.customization.decorationoverlay.AbstractDecorationOverlayBuilder;
+import de.keksuccino.fancymenu.customization.decorationoverlay.DecorationOverlayRegistry;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ElementRegistry;
 import de.keksuccino.fancymenu.customization.element.SerializedElement;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
+import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElement;
+import de.keksuccino.fancymenu.customization.element.elements.button.vanillawidget.VanillaWidgetElementBuilder;
 import de.keksuccino.fancymenu.customization.element.elements.text.v2.TextElement;
 import de.keksuccino.fancymenu.customization.layout.Layout;
+import de.keksuccino.fancymenu.util.Pair;
+import de.keksuccino.fancymenu.util.properties.PropertyContainer;
+import de.keksuccino.fancymenu.util.properties.PropertyContainerSet;
 import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownLook;
+import de.keksuccino.fancymenu.util.resource.ResourceSupplier;
 import org.jetbrains.annotations.NotNull;
 import java.util.Locale;
 import java.util.Map;
@@ -29,6 +41,82 @@ final class DocsShowcaseElements {
     static void addTo(@NotNull Layout layout, @NotNull Iterable<JsonElement> elements) {
         for (JsonElement entry : elements) {
             layout.serializedElements.add(build(entry.getAsJsonObject()));
+        }
+    }
+
+    /**
+     * Changes vanilla elements of the screen, like the buttons and the logo of the title screen. Keys of an entry: {@code id} (the widget
+     * identifier, like {@code mc_titlescreen_singleplayer_button} or {@code minecraft_logo_widget}), {@code hidden}, {@code x}, {@code y},
+     * {@code w}, {@code h} (GUI pixels, anchored top-left; without them the element stays where the screen puts it) and {@code props}
+     * (saved properties as strings, like {@code {"should_be_affected_by_decoration_overlays": "false"}}).
+     */
+    static void addVanillaTo(@NotNull Layout layout, @NotNull Iterable<JsonElement> vanillaElements) {
+        for (JsonElement entry : vanillaElements) {
+            JsonObject data = entry.getAsJsonObject();
+            VanillaWidgetElement element = VanillaWidgetElementBuilder.INSTANCE.buildDefaultInstance();
+            element.setInstanceIdentifier(data.get("id").getAsString());
+            if (data.has("hidden")) element.vanillaButtonHidden = data.get("hidden").getAsBoolean();
+            if (data.has("x")) {
+                element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
+                element.posOffsetX = data.get("x").getAsInt();
+                element.posOffsetY = data.get("y").getAsInt();
+                element.baseWidth = data.get("w").getAsInt();
+                element.baseHeight = data.get("h").getAsInt();
+            }
+            SerializedElement serialized = VanillaWidgetElementBuilder.INSTANCE.serializeElementInternal(element);
+            if (serialized == null) throw new IllegalStateException("Can't serialize the vanilla element " + data.get("id").getAsString());
+            if (data.has("props")) {
+                for (Map.Entry<String, JsonElement> property : data.getAsJsonObject("props").entrySet()) {
+                    serialized.putProperty(property.getKey(), property.getValue().getAsString());
+                }
+            }
+            layout.serializedVanillaButtonElements.add(serialized);
+        }
+    }
+
+    /**
+     * Adds the menu background of a scene or config: {@code background_image} (a resource source, like
+     * {@code /config/fancymenu/assets/docs_bg.png}) or {@code background_color} ({@code #RRGGBB}).
+     */
+    static void addBackgroundTo(@NotNull Layout layout, @NotNull JsonObject data) {
+        if (data.has("background_image")) {
+            ImageMenuBackground background = MenuBackgrounds.IMAGE.buildDefaultInstance();
+            background.textureSupplier.set(ResourceSupplier.image(data.get("background_image").getAsString()));
+            background.showBackground.set(true);
+            layout.menuBackgrounds.add(background);
+        } else if (data.has("background_color")) {
+            ColorMenuBackground background = MenuBackgrounds.COLOR.buildDefaultInstance();
+            background.color.set(data.get("background_color").getAsString());
+            background.showBackground.set(true);
+            layout.menuBackgrounds.add(background);
+        }
+    }
+
+    /**
+     * Turns on decoration overlays. Keys of an overlay: {@code type} (overlay identifier, like {@code snowfall}), {@code layers}
+     * ({@code background_and_foreground}, {@code only_background}, {@code only_foreground}) and {@code props} (saved properties as strings).
+     * The overlays get built the way a layout file loads them, so the properties go through their real deserialization.
+     */
+    static void addOverlaysTo(@NotNull Layout layout, @NotNull Iterable<JsonElement> overlays) {
+        for (JsonElement entry : overlays) {
+            JsonObject data = entry.getAsJsonObject();
+            String type = data.get("type").getAsString();
+            AbstractDecorationOverlayBuilder<?> builder = DecorationOverlayRegistry.getByIdentifier(type);
+            if (builder == null) throw new IllegalStateException("No decoration overlay " + type);
+            PropertyContainer serialized = builder._serialize(builder.buildDefaultInstance());
+            // Serialized overlays refuse to overwrite their values, but the scene has to replace the defaults
+            serialized.setInvulnerableProperties(false);
+            serialized.putProperty("show_decoration_overlay", "true");
+            if (data.has("layers")) serialized.putProperty("decoration_overlay_layers", data.get("layers").getAsString());
+            if (data.has("props")) {
+                for (Map.Entry<String, JsonElement> property : data.getAsJsonObject("props").entrySet()) {
+                    serialized.putProperty(property.getKey(), property.getValue().getAsString());
+                }
+            }
+            PropertyContainerSet set = new PropertyContainerSet("fancymenu_layout");
+            set.putContainer(serialized);
+            AbstractDecorationOverlay<?> overlay = builder._deserializeAll(set).getFirst();
+            layout.decorationOverlays.add(Pair.of(builder, overlay));
         }
     }
 
