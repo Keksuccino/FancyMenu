@@ -33,6 +33,8 @@ import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandl
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.layout.editor.LayoutEditorScreen;
+import de.keksuccino.fancymenu.customization.layout.editor.widget.AbstractLayoutEditorWidget;
+import de.keksuccino.fancymenu.customization.layout.editor.widget.widgets.layer.LayerLayoutEditorWidget;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
 import de.keksuccino.fancymenu.customization.scheduler.SchedulerHandler;
 import de.keksuccino.fancymenu.customization.scheduler.SchedulerInstance;
@@ -60,6 +62,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorLin
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.ScrollArea;
 import de.keksuccino.fancymenu.util.rendering.ui.scroll.v2.scrollarea.entry.ScrollAreaEntry;
+import de.keksuccino.fancymenu.util.rendering.ui.widget.button.UIIconButton;
 import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
@@ -327,6 +330,7 @@ public final class DocsShowcaseEditorGif {
             case "manage_requirements" -> this.buildManageRequirementsScript(minecraft);
             case "hover_elements" -> this.buildHoverElementsScript(minecraft);
             case "editor_basics" -> this.buildEditorBasicsScript(minecraft);
+            case "layers_widget" -> this.buildLayersWidgetScript(minecraft);
             case "context_entry_still" -> this.buildContextEntryStillScript(minecraft);
             case "screen_tour" -> this.buildScreenTourScript(minecraft);
             default -> throw new IllegalArgumentException("Unknown script " + script);
@@ -1505,6 +1509,90 @@ public final class DocsShowcaseEditorGif {
     }
 
     /**
+     * Works in the Layers widget (needs {@code show_widgets: true}): drags the layer of {@code cover} (an element that hides {@code covered})
+     * below the layer of {@code covered} and clicks {@code free_spot} to unselect it, adds a group through the right-click menu of Layers,
+     * selects both elements with a selection rectangle in the editor, drags them onto the group, then hides and shows the group with its
+     * eye and folds it up with its arrow.
+     */
+    private void buildLayersWidgetScript(@NotNull Minecraft minecraft) {
+        String cover = this.config.get("cover").getAsString();
+        String covered = this.config.get("covered").getAsString();
+        float freeX = this.config.getAsJsonArray("free_spot").get(0).getAsFloat();
+        float freeY = this.config.getAsJsonArray("free_spot").get(1).getAsFloat();
+        this.waitTicks(24);
+        // Select the cover by its layer, then drag the layer onto the lower half of the covered one, which puts it right below it
+        this.moveTo(() -> layerRow(cover, 0.5F), 16);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(10);
+        this.press(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.moveTo(() -> layerRow(covered, 0.8F), 18);
+        this.waitTicks(10);
+        this.release(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("cover below covered", () -> {
+            List<AbstractEditorElement<?, ?>> order = requireLayoutEditor().normalEditorElements;
+            return order.indexOf(requireEditorElement(cover)) < order.indexOf(requireEditorElement(covered));
+        }, 40);
+        // Selected elements always show on top in the editor, so the cover still hides the text until it gets unselected
+        this.waitTicks(16);
+        this.moveTo(() -> new float[] {freeX, freeY}, 16);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(30);
+        // Add a group through the right-click menu of an empty spot of Layers
+        this.moveTo(DocsShowcaseEditorGif::layersFreeSpot, 16);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_RIGHT);
+        this.waitUntil("Layers menu", () -> (ContextMenuHandler.INSTANCE.getCurrent() != null) && ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 60);
+        this.waitTicks(10);
+        this.clickMenuEntry(minecraft, "add_group");
+        this.waitUntil("group added", () -> !requireLayoutEditor().layout.layerGroups.isEmpty(), 40);
+        this.waitTicks(16);
+        // Select both elements with a selection rectangle in the editor
+        this.moveTo(() -> {
+            float[] box = editorBox(cover);
+            return new float[] {box[0] - 12, box[1] - 10};
+        }, 18);
+        this.waitTicks(4);
+        this.press(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.moveTo(() -> {
+            float[] box = editorBox(cover);
+            return new float[] {box[0] + box[2] + 12, box[1] + box[3] + 10};
+        }, 16);
+        this.waitTicks(4);
+        this.release(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(12);
+        // Drag one of the selected layers onto the group, which takes the other one along
+        this.moveTo(() -> layerRow(covered, 0.5F), 16);
+        this.waitTicks(4);
+        this.press(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.moveTo(() -> layerGroupRow(0.5F), 18);
+        this.waitTicks(10);
+        this.release(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("layers in the group", () -> requireLayoutEditor().getLayerGroupForElement(requireEditorElement(cover)) != null
+                && requireLayoutEditor().getLayerGroupForElement(requireEditorElement(covered)) != null, 40);
+        this.waitTicks(10);
+        this.moveTo(() -> new float[] {freeX, freeY}, 16);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(20);
+        // Hide the group with its eye and show it again
+        this.moveTo(() -> layerGroupButton("eyeButton"), 16);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(30);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(20);
+        // Fold the group up with its arrow
+        this.moveTo(() -> layerGroupButton("collapseButton"), 10);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(14);
+        this.moveTo(() -> new float[] {freeX, freeY}, 16);
+        this.waitTicks(60);
+    }
+
+    /**
      * For stills of the editor: select an element by clicking it, then turn the mouse wheel over it. The last frame is the still.
      * Config: {@code target} (its id), {@code click} (X and Y relative to the element, on a free spot of it), {@code wheel_turns} (negative scrolls down).
      */
@@ -2037,6 +2125,83 @@ public final class DocsShowcaseEditorGif {
     @NotNull
     private static float[] center(@NotNull float[] box) {
         return new float[] {box[0] + box[2] / 2.0F, box[1] + box[3] / 2.0F};
+    }
+
+    @NotNull
+    private static LayerLayoutEditorWidget requireLayersWidget() {
+        for (AbstractLayoutEditorWidget widget : requireLayoutEditor().layoutEditorWidgets) {
+            if (widget instanceof LayerLayoutEditorWidget layers) return layers;
+        }
+        throw new IllegalStateException("The layout editor has no Layers widget");
+    }
+
+    /**
+     * The GUI position of a point in the body of the Layers widget, which renders at the UI scale and has its own coordinates.
+     */
+    @NotNull
+    private static float[] layersBodyToGui(@NotNull LayerLayoutEditorWidget widget, float bodyX, float bodyY) {
+        float scale = UIBase.calculateFixedRenderScale(UIBase.getUIScale());
+        return new float[] {(widget.getTranslatedX() + widget.getRealBodyX() + bodyX) * scale, (widget.getTranslatedY() + widget.getRealBodyY() + bodyY) * scale};
+    }
+
+    @NotNull
+    private static List<ScrollAreaEntry> layersEntries(@NotNull LayerLayoutEditorWidget widget) {
+        return ((ScrollArea) readField(widget, "scrollArea")).getEntries();
+    }
+
+    /**
+     * The GUI position of the layer of an element in the Layers widget, a bit right of the start of its name. {@code relY} is where
+     * in the height of the row, like {@code 0.8} for its lower part.
+     */
+    @NotNull
+    private static float[] layerRow(@NotNull String instanceIdentifier, float relY) {
+        LayerLayoutEditorWidget widget = requireLayersWidget();
+        for (ScrollAreaEntry entry : layersEntries(widget)) {
+            if (entry.getClass().getSimpleName().equals("LayerElementEntry")
+                    && ((AbstractEditorElement<?, ?>) readField(entry, "element")).element.getInstanceIdentifier().equals(instanceIdentifier)) {
+                return layersBodyToGui(widget, entry.getX() + Math.min(80.0F, entry.getWidth() / 3.0F), entry.getY() + entry.getHeight() * relY);
+            }
+        }
+        throw new IllegalStateException("Layers shows no layer of " + instanceIdentifier);
+    }
+
+    /**
+     * The GUI position of the first layer group in the Layers widget, a bit right of the start of its name.
+     */
+    @NotNull
+    private static float[] layerGroupRow(float relY) {
+        LayerLayoutEditorWidget widget = requireLayersWidget();
+        ScrollAreaEntry entry = firstLayerGroupEntry(widget);
+        return layersBodyToGui(widget, entry.getX() + Math.min(80.0F, entry.getWidth() / 3.0F), entry.getY() + entry.getHeight() * relY);
+    }
+
+    /**
+     * The GUI position of a button of the first layer group in the Layers widget: {@code eyeButton} or {@code collapseButton}.
+     */
+    @NotNull
+    private static float[] layerGroupButton(@NotNull String buttonField) {
+        LayerLayoutEditorWidget widget = requireLayersWidget();
+        UIIconButton button = (UIIconButton) readField(firstLayerGroupEntry(widget), buttonField);
+        return layersBodyToGui(widget, button.getX() + button.getWidth() / 2.0F, button.getY() + button.getHeight() / 2.0F);
+    }
+
+    @NotNull
+    private static ScrollAreaEntry firstLayerGroupEntry(@NotNull LayerLayoutEditorWidget widget) {
+        for (ScrollAreaEntry entry : layersEntries(widget)) {
+            if (entry.getClass().getSimpleName().equals("LayerGroupEntry")) return entry;
+        }
+        throw new IllegalStateException("Layers shows no group");
+    }
+
+    /**
+     * The GUI position of an empty spot of the Layers widget, below its rows.
+     */
+    @NotNull
+    private static float[] layersFreeSpot() {
+        LayerLayoutEditorWidget widget = requireLayersWidget();
+        List<ScrollAreaEntry> entries = layersEntries(widget);
+        ScrollAreaEntry last = entries.get(entries.size() - 1);
+        return layersBodyToGui(widget, widget.getBodyWidth() * 0.4F, Math.min(last.getY() + last.getHeight() + 40.0F, widget.getBodyHeight() - 12.0F));
     }
 
     /**

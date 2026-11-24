@@ -1,0 +1,67 @@
+{
+ "script": "layers_widget",
+ "background_image": "/config/fancymenu/assets/docs_bg.png",
+ "elements": [
+  {
+   "id": "pack_title",
+   "x": 40,
+   "y": 30,
+   "w": 320,
+   "h": 44,
+   "look": "pixel",
+   "background": false,
+   "scale": 2,
+   "content": "^^^\n**Skyblock Adventures**\n^^^",
+   "props": {
+    "custom_element_layer_name": "Title"
+   }
+  },
+  {
+   "type": "custom_button",
+   "id": "play_button",
+   "x": 115,
+   "y": 246,
+   "w": 150,
+   "h": 20,
+   "props": {
+    "label": "Play"
+   }
+  },
+  {
+   "id": "news_text",
+   "x": 52,
+   "y": 100,
+   "w": 276,
+   "h": 116,
+   "look": "pixel",
+   "background": false,
+   "content": "### Patch Notes\n- Bigger starter islands\n- 12 new quests\n- Faster minions",
+   "props": {
+    "custom_element_layer_name": "News Text"
+   }
+  },
+  {
+   "type": "shape",
+   "id": "news_background",
+   "x": 40,
+   "y": 90,
+   "w": 300,
+   "h": 136,
+   "props": {
+    "color": "#22303F",
+    "corner_radius_top_left": "6",
+    "corner_radius_top_right": "6",
+    "corner_radius_bottom_right": "6",
+    "corner_radius_bottom_left": "6",
+    "custom_element_layer_name": "News Background"
+   }
+  }
+ ],
+ "show_widgets": true,
+ "cover": "news_background",
+ "covered": "news_text",
+ "free_spot": [
+  190,
+  318
+ ]
+}
