@@ -89,13 +89,19 @@ final class DocsShowcaseElements {
 
     /**
      * Adds the menu background of a scene or config: {@code background_image} (a resource source, like
-     * {@code /config/fancymenu/assets/docs_bg.png}) or {@code background_color} ({@code #RRGGBB}).
+     * {@code /config/fancymenu/assets/docs_bg.png}, optionally with {@code background_parallax}) or {@code background_color} ({@code #RRGGBB}).
      */
     static void addBackgroundTo(@NotNull Layout layout, @NotNull JsonObject data) {
         if (data.has("background_image")) {
             ImageMenuBackground background = MenuBackgrounds.IMAGE.buildDefaultInstance();
             background.textureSupplier.set(ResourceSupplier.image(data.get("background_image").getAsString()));
             background.showBackground.set(true);
+            // background_parallax: [x, y] intensities of the background's Parallax Effect
+            if (data.has("background_parallax")) {
+                background.parallaxEnabled.set(true);
+                background.parallaxIntensityXString.set(data.getAsJsonArray("background_parallax").get(0).getAsFloat());
+                background.parallaxIntensityYString.set(data.getAsJsonArray("background_parallax").get(1).getAsFloat());
+            }
             layout.menuBackgrounds.add(background);
         } else if (data.has("background_color")) {
             ColorMenuBackground background = MenuBackgrounds.COLOR.buildDefaultInstance();

@@ -7,6 +7,13 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.Window;
 import com.google.gson.JsonElement;
 import de.keksuccino.fancymenu.FancyMenu;
+import de.keksuccino.fancymenu.customization.ScreenCustomization;
+import de.keksuccino.fancymenu.util.rendering.overlay.pixel.PixelRandom;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.AbstractFileBrowserWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.ChooseFileWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.filebrowser.SaveFileWindowBody;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.resource.ResourceChooserWindowBody;
+import java.io.File;
 import de.keksuccino.fancymenu.customization.action.blocks.GenericExecutableBlock;
 import de.keksuccino.fancymenu.customization.action.ui.ActionScriptEditorWindowBody;
 import de.keksuccino.fancymenu.customization.listener.AbstractListener;
@@ -295,6 +302,20 @@ public final class DocsShowcaseEditorGif {
         }
         if (this.config.has("vanilla")) DocsShowcaseElements.addVanillaTo(layout, this.config.getAsJsonArray("vanilla"));
         DocsShowcaseElements.addBackgroundTo(layout, this.config);
+        // elements_behind_vanilla: the layout's Render Custom Elements Behind Vanilla, like for full-screen image layers
+        if (this.config.has("elements_behind_vanilla")) layout.renderElementsBehindVanilla = this.config.get("elements_behind_vanilla").getAsBoolean();
+        // A seed makes overlays build the same random setup every run, like in scenes
+        if (this.config.has("seed")) {
+            PixelRandom.setSeedOverride(this.config.get("seed").getAsInt());
+            this.optionRestorers.add(() -> PixelRandom.setSeedOverride(null));
+        }
+        if (this.config.has("overlays")) DocsShowcaseElements.addOverlaysTo(layout, this.config.getAsJsonArray("overlays"));
+        // customization: turns Current Screen Customization of the screen on or off until the showcase ends, like for making a first layout
+        if (this.config.has("customization")) {
+            boolean old = ScreenCustomization.isCustomizationEnabledForScreen(screen);
+            ScreenCustomization.setCustomizationForScreenEnabled(screen, this.config.get("customization").getAsBoolean());
+            this.optionRestorers.add(() -> ScreenCustomization.setCustomizationForScreenEnabled(screen, old));
+        }
         if (this.startsOnScreen()) {
             boolean menuBar = this.config.has("menu_bar") && this.config.get("menu_bar").getAsBoolean();
             if (!menuBar) this.menuBarControllerId = CustomizationOverlay.registerOverlayVisibilityController(s -> false);
@@ -333,6 +354,10 @@ public final class DocsShowcaseEditorGif {
             case "layers_widget" -> this.buildLayersWidgetScript(minecraft);
             case "context_entry_still" -> this.buildContextEntryStillScript(minecraft);
             case "screen_tour" -> this.buildScreenTourScript(minecraft);
+            case "first_layout" -> this.buildFirstLayoutScript(minecraft);
+            case "menu_background" -> this.buildMenuBackgroundScript(minecraft);
+            case "add_image" -> this.buildAddImageScript(minecraft);
+            case "save_layout" -> this.buildSaveLayoutScript(minecraft);
             default -> throw new IllegalArgumentException("Unknown script " + script);
         }
     }
@@ -1841,6 +1866,281 @@ public final class DocsShowcaseEditorGif {
 
 
     // ---- Steps ----
+
+    // ---- Getting Started page ----
+
+    /**
+     * Outside the editor, with the menu bar (config {@code start: "screen"}, {@code screen: "title"}, {@code menu_bar: true},
+     * {@code no_layout: true}, {@code customization: false}): opens Customization, turns on Current Screen Customization and makes a layout
+     * through Layouts -> New -> For Current Screen, which opens the layout editor. The frame with the open Customization menu has a
+     * {@code mark} event ({@code menu}), for a still of the menu bar. Config {@code hold_ticks} (in the editor at the end, default 60).
+     */
+    private void buildFirstLayoutScript(@NotNull Minecraft minecraft) {
+        this.waitTicks(24);
+        this.moveTo(() -> menuBarEntry("screen"), 18);
+        this.waitTicks(6);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("Customization menu", () -> (ContextMenuHandler.INSTANCE.getCurrent() != null) && ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 40);
+        this.waitTicks(12);
+        this.mark("menu");
+        this.waitTicks(6);
+        this.clickMenuEntry(minecraft, "toggle_current_customization");
+        this.waitUntil("customization turned on", () -> ScreenCustomization.isCustomizationEnabledForScreen(ScreenUtils.getScreen()), 40);
+        // Turning it on rebuilds the screen and its menu bar, which closes the menu, so open it again like a player would
+        this.waitTicks(14);
+        this.moveTo(() -> menuBarEntry("screen"), 12);
+        this.waitTicks(5);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("Customization menu again", () -> (ContextMenuHandler.INSTANCE.getCurrent() != null) && ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 40);
+        this.waitTicks(16);
+        // Layouts -> New -> For Current Screen, going into each sub-menu sideways
+        this.clickMenuEntry(minecraft, "layouts");
+        this.waitUntil("Layouts menu", () -> subMenu("layouts").isOpen(), 40);
+        this.waitTicks(8);
+        this.moveTo(() -> new float[] {menuEntry("layouts", "new_layout")[0], this.pointerY}, 10);
+        this.clickMenuEntry(minecraft, "layouts", "new_layout");
+        this.waitUntil("New menu", () -> subMenu("layouts", "new_layout").isOpen(), 40);
+        this.waitTicks(8);
+        this.moveTo(() -> new float[] {menuEntry("layouts", "new_layout", "new_layout_for_current")[0], this.pointerY}, 10);
+        this.waitTicks(4);
+        this.clickMenuEntry(minecraft, "layouts", "new_layout", "new_layout_for_current");
+        this.waitUntil("layout editor", () -> ScreenUtils.getScreen() instanceof LayoutEditorScreen, 60);
+        this.steps.addLast(() -> {
+            // Like at the start of editor showcases: the editor widgets would cover the right part of the screen
+            if (!(this.config.has("show_widgets") && this.config.get("show_widgets").getAsBoolean())) {
+                requireLayoutEditor().layoutEditorWidgets.forEach(widget -> widget.setVisible(false));
+            }
+            return true;
+        });
+        this.waitTicks(10);
+        this.moveTo(() -> new float[] {GUI_WIDTH * 0.5F, GUI_HEIGHT * 0.86F}, 20);
+        this.waitTicks(this.config.has("hold_ticks") ? this.config.get("hold_ticks").getAsInt() : 60);
+    }
+
+    /**
+     * In the editor: right-clicks the background, opens Menu Backgrounds -> Image, turns on Show Background, clicks Choose Image and picks a
+     * file of the assets folder (see {@link #chooseLocalFile}). Config: {@code right_click} ([x, y] of the free spot), {@code folder} (optional
+     * sub-folder of the assets folder), {@code file}, {@code free_spot} ([x, y], clicked at the end) and {@code hold_ticks} (default 70).
+     */
+    private void buildMenuBackgroundScript(@NotNull Minecraft minecraft) {
+        float clickX = this.config.getAsJsonArray("right_click").get(0).getAsFloat();
+        float clickY = this.config.getAsJsonArray("right_click").get(1).getAsFloat();
+        this.waitTicks(16);
+        this.moveTo(() -> new float[] {clickX, clickY}, 18);
+        this.waitTicks(6);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_RIGHT);
+        this.waitUntil("context menu", () -> (ContextMenuHandler.INSTANCE.getCurrent() != null) && ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 60);
+        this.waitTicks(10);
+        this.clickMenuEntry(minecraft, "menu_backgrounds");
+        this.waitUntil("Menu Backgrounds menu", () -> subMenu("menu_backgrounds").isOpen(), 40);
+        this.waitTicks(8);
+        this.moveTo(() -> new float[] {menuEntry("menu_backgrounds", "menu_background_image")[0], this.pointerY}, 10);
+        this.clickMenuEntry(minecraft, "menu_backgrounds", "menu_background_image");
+        this.waitUntil("Image background menu", () -> subMenu("menu_backgrounds", "menu_background_image").isOpen(), 40);
+        this.waitTicks(8);
+        this.moveTo(() -> new float[] {menuEntry("menu_backgrounds", "menu_background_image", "menu_entry_show_background")[0], this.pointerY}, 10);
+        this.clickMenuEntry(minecraft, "menu_backgrounds", "menu_background_image", "menu_entry_show_background");
+        this.waitTicks(16);
+        this.clickMenuEntry(minecraft, "menu_backgrounds", "menu_background_image", "menu_entry_image_path");
+        this.chooseLocalFile(minecraft, this.config.has("folder") ? this.config.get("folder").getAsString() : null, this.config.get("file").getAsString());
+        this.waitTicks(16);
+        this.clickFreeSpotAndHold(minecraft, 70);
+    }
+
+    /**
+     * In the editor: removes vanilla elements (config {@code remove}: their ids, each clicked and deleted with the Delete key), adds an
+     * Image element through New Element at {@code right_click}, picks its image through Image Source (see {@link #chooseLocalFile}),
+     * clicks Restore Aspect Ratio and drags it so its center is at {@code drag_to}. Config also: {@code folder}, {@code file},
+     * {@code free_spot} and {@code hold_ticks} (default 70).
+     */
+    private void buildAddImageScript(@NotNull Minecraft minecraft) {
+        float clickX = this.config.getAsJsonArray("right_click").get(0).getAsFloat();
+        float clickY = this.config.getAsJsonArray("right_click").get(1).getAsFloat();
+        float dragX = this.config.getAsJsonArray("drag_to").get(0).getAsFloat();
+        float dragY = this.config.getAsJsonArray("drag_to").get(1).getAsFloat();
+        String entry = newElementEntry("image");
+        this.waitTicks(16);
+        if (this.config.has("remove")) {
+            for (JsonElement id : this.config.getAsJsonArray("remove")) {
+                String target = id.getAsString();
+                this.moveTo(() -> center(editorBox(target)), 14);
+                this.waitTicks(5);
+                this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+                this.waitTicks(10);
+                this.key(minecraft, "delete", "Delete");
+                this.waitTicks(14);
+            }
+        }
+        int[] elementsBefore = {0};
+        this.moveTo(() -> new float[] {clickX, clickY}, 16);
+        this.waitTicks(6);
+        this.steps.addLast(() -> {
+            elementsBefore[0] = requireLayoutEditor().normalEditorElements.size();
+            return true;
+        });
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_RIGHT);
+        this.waitUntil("context menu", () -> (ContextMenuHandler.INSTANCE.getCurrent() != null) && ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 60);
+        this.waitTicks(10);
+        this.moveTo(() -> new float[] {contextMenuEntry("add_element")[0] + 20, Math.min(this.pointerY + 40, MENU_SCROLL_TARGET_Y)}, 12);
+        this.waitTicks(4);
+        this.scrollMenuUntilVisible(minecraft, "add_element", 345);
+        this.waitTicks(6);
+        this.clickMenuEntry(minecraft, "add_element");
+        this.waitUntil("New Element menu", () -> subMenu("add_element").isOpen(), 40);
+        this.waitTicks(10);
+        this.moveTo(() -> new float[] {menuEntry("add_element", entry)[0], this.pointerY}, 10);
+        this.waitTicks(4);
+        this.clickMenuEntry(minecraft, "add_element", entry);
+        this.waitUntil("new element", () -> requireLayoutEditor().normalEditorElements.size() > elementsBefore[0], 40);
+        this.waitTicks(14);
+        // Image Source
+        this.rightClickNewestAndPick(minecraft, "menu_entry_source");
+        this.chooseLocalFile(minecraft, this.config.has("folder") ? this.config.get("folder").getAsString() : null, this.config.get("file").getAsString());
+        this.waitTicks(20);
+        // Restore Aspect Ratio
+        this.rightClickNewestAndPick(minecraft, "restore_aspect_ratio");
+        this.waitTicks(20);
+        // Drag it to its place
+        this.moveTo(() -> center(newestElementBox()), 14);
+        this.waitTicks(4);
+        this.press(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.moveTo(() -> new float[] {dragX, dragY}, 24);
+        this.waitTicks(4);
+        this.release(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(12);
+        this.clickFreeSpotAndHold(minecraft, 70);
+    }
+
+    /**
+     * In the editor: saves the layout with Ctrl + S (the Save File window opens the first time, its file name stays), closes the editor with
+     * the X of the menu bar and rests the pointer on the screen with the layout. Config {@code hovers} (like {@link #buildHoverElementsScript},
+     * optional) and {@code hold_ticks} (default 60). The saved layout stays in the instance: remove it after recording.
+     */
+    private void buildSaveLayoutScript(@NotNull Minecraft minecraft) {
+        this.waitTicks(20);
+        this.key(minecraft, "shortcut+s", "Ctrl + S");
+        this.waitUntil("Save File", () -> findWindow(SaveFileWindowBody.class) != null, 60);
+        this.waitTicks(24);
+        this.moveTo(() -> windowWidgetCenter(requireWindow(SaveFileWindowBody.class), "confirmButton"), 16);
+        this.waitTicks(6);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("Save File closed", () -> findWindow(SaveFileWindowBody.class) == null, 60);
+        this.waitTicks(16);
+        this.moveTo(() -> editorMenuBarEntry("close_editor"), 18);
+        this.waitTicks(6);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("editor closed", () -> !(ScreenUtils.getScreen() instanceof LayoutEditorScreen), 60);
+        this.waitTicks(16);
+        if (this.config.has("hovers")) {
+            for (JsonElement entry : this.config.getAsJsonArray("hovers")) {
+                JsonObject hover = entry.getAsJsonObject();
+                int moveTicks = hover.has("move_ticks") ? hover.get("move_ticks").getAsInt() : 18;
+                if (hover.has("label")) {
+                    String label = hover.get("label").getAsString();
+                    this.moveTo(() -> center(vanillaWidgetBox(label)), moveTicks);
+                } else {
+                    float x = hover.getAsJsonArray("point").get(0).getAsFloat();
+                    float y = hover.getAsJsonArray("point").get(1).getAsFloat();
+                    this.moveTo(() -> new float[] {x, y}, moveTicks);
+                }
+                this.waitTicks(hover.has("ticks") ? hover.get("ticks").getAsInt() : 30);
+            }
+        }
+        this.waitTicks(this.config.has("hold_ticks") ? this.config.get("hold_ticks").getAsInt() : 60);
+    }
+
+    /**
+     * Right-clicks the element that got added last and clicks the entry of its right-click menu, scrolling the menu first if needed.
+     */
+    private void rightClickNewestAndPick(@NotNull Minecraft minecraft, @NotNull String entry) {
+        this.moveTo(() -> center(newestElementBox()), 14);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_RIGHT);
+        this.waitUntil("element menu", () -> (ContextMenuHandler.INSTANCE.getCurrent() != null) && ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 60);
+        this.waitTicks(10);
+        this.moveTo(() -> new float[] {contextMenuEntry(entry)[0] + 20, Math.min(this.pointerY + 70, MENU_SCROLL_TARGET_Y)}, 12);
+        this.waitTicks(4);
+        this.scrollMenuUntilVisible(minecraft, entry);
+        this.waitTicks(6);
+        this.clickMenuEntry(minecraft, entry);
+    }
+
+    /**
+     * In the resource chooser that is opening: switches Source Type to Local, clicks Choose Local Resource File, opens the folder with a
+     * double-click in the file chooser, clicks the file (its preview shows) and clicks OK, which closes both windows and sets the resource.
+     */
+    private void chooseLocalFile(@NotNull Minecraft minecraft, @Nullable String folder, @NotNull String fileName) {
+        this.waitUntil("resource chooser", () -> findWindow(ResourceChooserWindowBody.class) != null, 60);
+        this.waitTicks(16);
+        this.moveTo(() -> cellWidgetWithLabel("fancymenu.resources.source_type"), 14);
+        this.waitTicks(5);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(14);
+        this.moveTo(() -> cellWidgetWithLabel("fancymenu.resources.chooser_screen.choose_local"), 14);
+        this.waitTicks(5);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("file chooser", () -> findWindow(ChooseFileWindowBody.class) != null, 60);
+        this.waitTicks(16);
+        if (folder != null) {
+            this.moveTo(() -> fileEntry(folder), 14);
+            this.waitTicks(5);
+            this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+            this.waitTicks(2);
+            this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+            this.waitUntil("folder " + folder, () -> folder.equals(((File) readField(requireWindow(ChooseFileWindowBody.class).getScreen(), "currentDir")).getName()), 40);
+            this.waitTicks(12);
+        }
+        this.moveTo(() -> fileEntry(fileName), 14);
+        this.waitTicks(5);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        // The preview of the image loads
+        this.waitTicks(26);
+        this.moveTo(() -> windowWidgetCenter(requireWindow(ChooseFileWindowBody.class), "confirmButton"), 16);
+        this.waitTicks(5);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("choosers closed", () -> (findWindow(ResourceChooserWindowBody.class) == null) && (findWindow(ChooseFileWindowBody.class) == null), 60);
+    }
+
+    private void clickFreeSpotAndHold(@NotNull Minecraft minecraft, int defaultHold) {
+        if (this.config.has("free_spot")) {
+            float freeX = this.config.getAsJsonArray("free_spot").get(0).getAsFloat();
+            float freeY = this.config.getAsJsonArray("free_spot").get(1).getAsFloat();
+            this.moveTo(() -> new float[] {freeX, freeY}, 16);
+            this.waitTicks(4);
+            this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        }
+        this.waitTicks(this.config.has("hold_ticks") ? this.config.get("hold_ticks").getAsInt() : defaultHold);
+    }
+
+    /**
+     * The GUI position of a file or folder of the open file chooser, a bit right of the start of its name.
+     */
+    @NotNull
+    private static float[] fileEntry(@NotNull String name) {
+        PiPWindow window = requireWindow(ChooseFileWindowBody.class);
+        ScrollArea list = (ScrollArea) readField(window.getScreen(), "fileListScrollArea");
+        for (ScrollAreaEntry entry : list.getEntries()) {
+            if ((entry instanceof AbstractFileBrowserWindowBody.AbstractFileScrollAreaEntry fileEntry) && fileEntry.file.getName().equals(name)) {
+                return bodyToGui(window, entry.getX() + Math.min(60.0F, entry.getWidth() / 2.0F), entry.getY() + entry.getHeight() / 2.0F);
+            }
+        }
+        throw new IllegalStateException("The file chooser lists no " + name);
+    }
+
+    /**
+     * The GUI position of the middle of an entry of the layout editor's menu bar, like {@code close_editor} (the X at its right).
+     */
+    @NotNull
+    private static float[] editorMenuBarEntry(@NotNull String identifier) {
+        MenuBar bar = requireLayoutEditor().getCurrentMenuBar();
+        if (bar == null) throw new IllegalStateException("The editor has no menu bar");
+        MenuBar.MenuBarEntry entry = bar.getEntry(identifier);
+        if (entry == null) throw new IllegalStateException("No editor menu bar entry " + identifier);
+        float scale = MenuBar.getRenderScale();
+        float x = readFloat(entry, "x");
+        int width = (int) invoke(entry, "getWidth");
+        return new float[] {(x + width / 2.0F) * scale, (MenuBar.PIXEL_SIZE / 2.0F) * scale};
+    }
 
     private void runSteps() {
         while (!this.steps.isEmpty()) {
