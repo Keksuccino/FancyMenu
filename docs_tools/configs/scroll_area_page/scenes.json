@@ -1,0 +1,546 @@
+{
+ "gui_width": 960,
+ "gui_height": 540,
+ "gui_scale": 2,
+ "scenes": [
+  {
+   "name": "scroll_area_modes",
+   "wait": 4,
+   "elements": [
+    {
+     "x": 24,
+     "y": 10,
+     "w": 140,
+     "h": 20,
+     "background": false,
+     "content": "^^^\n**Stack**\n^^^"
+    },
+    {
+     "type": "scroll_area",
+     "id": "docs_stack",
+     "x": 24,
+     "y": 36,
+     "w": 140,
+     "h": 130,
+     "props": {
+      "layout_mode": "stack",
+      "child_alignment": "fill"
+     }
+    },
+    {
+     "type": "custom_button",
+     "parent": "docs_stack",
+     "x": 0,
+     "y": 0,
+     "w": 100,
+     "h": 20,
+     "props": {
+      "label": "Survival"
+     }
+    },
+    {
+     "type": "custom_button",
+     "parent": "docs_stack",
+     "x": 0,
+     "y": 0,
+     "w": 100,
+     "h": 20,
+     "props": {
+      "label": "Creative"
+     }
+    },
+    {
+     "type": "custom_button",
+     "parent": "docs_stack",
+     "x": 0,
+     "y": 0,
+     "w": 100,
+     "h": 20,
+     "props": {
+      "label": "Skyblock"
+     }
+    },
+    {
+     "type": "custom_button",
+     "parent": "docs_stack",
+     "x": 0,
+     "y": 0,
+     "w": 100,
+     "h": 20,
+     "props": {
+      "label": "Minigames"
+     }
+    },
+    {
+     "type": "custom_button",
+     "parent": "docs_stack",
+     "x": 0,
+     "y": 0,
+     "w": 100,
+     "h": 20,
+     "props": {
+      "label": "Parkour"
+     }
+    },
+    {
+     "type": "custom_button",
+     "parent": "docs_stack",
+     "x": 0,
+     "y": 0,
+     "w": 100,
+     "h": 20,
+     "props": {
+      "label": "Hardcore"
+     }
+    },
+    {
+     "type": "custom_button",
+     "parent": "docs_stack",
+     "x": 0,
+     "y": 0,
+     "w": 100,
+     "h": 20,
+     "props": {
+      "label": "Factions"
+     }
+    },
+    {
+     "x": 208,
+     "y": 10,
+     "w": 140,
+     "h": 20,
+     "background": false,
+     "content": "^^^\n**Grid**\n^^^"
+    },
+    {
+     "type": "scroll_area",
+     "id": "docs_grid",
+     "x": 208,
+     "y": 36,
+     "w": 140,
+     "h": 130,
+     "props": {
+      "layout_mode": "grid",
+      "grid_lines": "4",
+      "child_alignment": "center"
+     }
+    },
+    {
+     "type": "item",
+     "parent": "docs_grid",
+     "x": 0,
+     "y": 0,
+     "w": 24,
+     "h": 24,
+     "props": {
+      "item_key": "minecraft:diamond"
+     }
+    },
+    {
+     "type": "item",
+     "parent": "docs_grid",
+     "x": 0,
+     "y": 0,
+     "w": 24,
+     "h": 24,
+     "props": {
+      "item_key": "minecraft:emerald"
+     }
+    },
+    {
+     "type": "item",
+     "parent": "docs_grid",
+     "x": 0,
+     "y": 0,
+     "w": 24,
+     "h": 24,
+     "props": {
+      "item_key": "minecraft:gold_ingot"
+     }
+    },
+    {
+     "type": "item",
+     "parent": "docs_grid",
+     "x": 0,
+     "y": 0,
+     "w": 24,
+     "h": 24,
+     "props": {
+      "item_key": "minecraft:iron_ingot"
+     }
+    },
+    {
+     "type": "item",
+     "parent": "docs_grid",
+     "x": 0,
+     "y": 0,
+     "w": 24,
+     "h": 24,
+     "props": {
+      "item_key": "minecraft:redstone"
+     }
+    },
+    {
+     "type": "item",
+     "parent": "docs_grid",
+     "x": 0,
+     "y": 0,
+     "w": 24,
+     "h": 24,
+     "props": {
+      "item_key": "minecraft:lapis_lazuli"
+     }
+    },
+    {
+     "type": "item",
+     "parent": "docs_grid",
+     "x": 0,
+     "y": 0,
+     "w": 24,
+     "h": 24,
+     "props": {
+      "item_key": "minecraft:amethyst_shard"
+     }
+    },
+    {
+     "type": "item",
+     "parent": "docs_grid",
+     "x": 0,
+     "y": 0,
+     "w": 24,
+     "h": 24,
+     "props": {
+      "item_key": "minecraft:netherite_ingot"
+     }
+    },
+    {
+     "type": "item",
+     "parent": "docs_grid",
+     "x": 0,
+     "y": 0,
+     "w": 24,
+     "h": 24,
+     "props": {
+      "item_key": "minecraft:apple"
+     }
+    },
+    {
+     "type": "item",
+     "parent": "docs_grid",
+     "x": 0,
+     "y": 0,
+     "w": 24,
+     "h": 24,
+     "props": {
+      "item_key": "minecraft:golden_apple"
+     }
+    },
+    {
+     "type": "item",
+     "parent": "docs_grid",
+     "x": 0,
+     "y": 0,
+     "w": 24,
+     "h": 24,
+     "props": {
+      "item_key": "minecraft:bread"
+     }
+    },
+    {
+     "type": "item",
+     "parent": "docs_grid",
+     "x": 0,
+     "y": 0,
+     "w": 24,
+     "h": 24,
+     "props": {
+      "item_key": "minecraft:cake"
+     }
+    },
+    {
+     "type": "item",
+     "parent": "docs_grid",
+     "x": 0,
+     "y": 0,
+     "w": 24,
+     "h": 24,
+     "props": {
+      "item_key": "minecraft:diamond_sword"
+     }
+    },
+    {
+     "type": "item",
+     "parent": "docs_grid",
+     "x": 0,
+     "y": 0,
+     "w": 24,
+     "h": 24,
+     "props": {
+      "item_key": "minecraft:diamond_pickaxe"
+     }
+    },
+    {
+     "type": "item",
+     "parent": "docs_grid",
+     "x": 0,
+     "y": 0,
+     "w": 24,
+     "h": 24,
+     "props": {
+      "item_key": "minecraft:bow"
+     }
+    },
+    {
+     "type": "item",
+     "parent": "docs_grid",
+     "x": 0,
+     "y": 0,
+     "w": 24,
+     "h": 24,
+     "props": {
+      "item_key": "minecraft:golden_carrot"
+     }
+    },
+    {
+     "type": "item",
+     "parent": "docs_grid",
+     "x": 0,
+     "y": 0,
+     "w": 24,
+     "h": 24,
+     "props": {
+      "item_key": "minecraft:ender_pearl"
+     }
+    },
+    {
+     "type": "item",
+     "parent": "docs_grid",
+     "x": 0,
+     "y": 0,
+     "w": 24,
+     "h": 24,
+     "props": {
+      "item_key": "minecraft:blaze_rod"
+     }
+    },
+    {
+     "type": "item",
+     "parent": "docs_grid",
+     "x": 0,
+     "y": 0,
+     "w": 24,
+     "h": 24,
+     "props": {
+      "item_key": "minecraft:totem_of_undying"
+     }
+    },
+    {
+     "type": "item",
+     "parent": "docs_grid",
+     "x": 0,
+     "y": 0,
+     "w": 24,
+     "h": 24,
+     "props": {
+      "item_key": "minecraft:experience_bottle"
+     }
+    },
+    {
+     "type": "item",
+     "parent": "docs_grid",
+     "x": 0,
+     "y": 0,
+     "w": 24,
+     "h": 24,
+     "props": {
+      "item_key": "minecraft:elytra"
+     }
+    },
+    {
+     "type": "item",
+     "parent": "docs_grid",
+     "x": 0,
+     "y": 0,
+     "w": 24,
+     "h": 24,
+     "props": {
+      "item_key": "minecraft:compass"
+     }
+    },
+    {
+     "type": "item",
+     "parent": "docs_grid",
+     "x": 0,
+     "y": 0,
+     "w": 24,
+     "h": 24,
+     "props": {
+      "item_key": "minecraft:clock"
+     }
+    },
+    {
+     "type": "item",
+     "parent": "docs_grid",
+     "x": 0,
+     "y": 0,
+     "w": 24,
+     "h": 24,
+     "props": {
+      "item_key": "minecraft:name_tag"
+     }
+    },
+    {
+     "x": 392,
+     "y": 10,
+     "w": 140,
+     "h": 20,
+     "background": false,
+     "content": "^^^\n**Flow**\n^^^"
+    },
+    {
+     "type": "scroll_area",
+     "id": "docs_flow",
+     "x": 392,
+     "y": 36,
+     "w": 140,
+     "h": 130,
+     "props": {
+      "layout_mode": "flow"
+     }
+    },
+    {
+     "type": "custom_button",
+     "parent": "docs_flow",
+     "x": 0,
+     "y": 0,
+     "w": 64,
+     "h": 20,
+     "props": {
+      "label": "Adventure"
+     }
+    },
+    {
+     "type": "custom_button",
+     "parent": "docs_flow",
+     "x": 0,
+     "y": 0,
+     "w": 40,
+     "h": 20,
+     "props": {
+      "label": "Magic"
+     }
+    },
+    {
+     "type": "custom_button",
+     "parent": "docs_flow",
+     "x": 0,
+     "y": 0,
+     "w": 34,
+     "h": 20,
+     "props": {
+      "label": "Tech"
+     }
+    },
+    {
+     "type": "custom_button",
+     "parent": "docs_flow",
+     "x": 0,
+     "y": 0,
+     "w": 58,
+     "h": 20,
+     "props": {
+      "label": "Building"
+     }
+    },
+    {
+     "type": "custom_button",
+     "parent": "docs_flow",
+     "x": 0,
+     "y": 0,
+     "w": 28,
+     "h": 20,
+     "props": {
+      "label": "PvP"
+     }
+    },
+    {
+     "type": "custom_button",
+     "parent": "docs_flow",
+     "x": 0,
+     "y": 0,
+     "w": 76,
+     "h": 20,
+     "props": {
+      "label": "Exploration"
+     }
+    },
+    {
+     "type": "custom_button",
+     "parent": "docs_flow",
+     "x": 0,
+     "y": 0,
+     "w": 52,
+     "h": 20,
+     "props": {
+      "label": "Farming"
+     }
+    },
+    {
+     "type": "custom_button",
+     "parent": "docs_flow",
+     "x": 0,
+     "y": 0,
+     "w": 58,
+     "h": 20,
+     "props": {
+      "label": "Redstone"
+     }
+    },
+    {
+     "type": "custom_button",
+     "parent": "docs_flow",
+     "x": 0,
+     "y": 0,
+     "w": 46,
+     "h": 20,
+     "props": {
+      "label": "Quests"
+     }
+    },
+    {
+     "type": "custom_button",
+     "parent": "docs_flow",
+     "x": 0,
+     "y": 0,
+     "w": 76,
+     "h": 20,
+     "props": {
+      "label": "Multiplayer"
+     }
+    },
+    {
+     "type": "custom_button",
+     "parent": "docs_flow",
+     "x": 0,
+     "y": 0,
+     "w": 70,
+     "h": 20,
+     "props": {
+      "label": "Mini Games"
+     }
+    },
+    {
+     "type": "custom_button",
+     "parent": "docs_flow",
+     "x": 0,
+     "y": 0,
+     "w": 34,
+     "h": 20,
+     "props": {
+      "label": "Cozy"
+     }
+    }
+   ]
+  }
+ ]
+}

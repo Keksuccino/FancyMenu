@@ -14,6 +14,7 @@ import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ElementRegistry;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
+import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.element.elements.text.v2.TextElement;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
@@ -34,6 +35,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWin
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.input.InputQuirks;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonInfo;
 import net.minecraft.network.chat.Component;
@@ -48,6 +50,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.List;
 import java.util.Locale;
@@ -60,7 +63,8 @@ import java.util.function.Supplier;
 /**
  * Dev-only docs tool that records a showcase GIF of the layout editor in an off-screen test client. Not part of the mod: it lives in the
  * docs_tools folder of the agent root and only gets copied into a workspace while recording (see docs_tools/README.md). Never commit it.<br>
- * {@link #buildScript} is the showcase itself (here: editing a Text element), everything else is reusable.<br>
+ * {@link #buildScript} picks the showcase (editing a Text element, or filling a Scrollable Area), everything else is reusable.<br>
+ * The config's {@code elements} (see {@link DocsShowcaseElements}) are the layout the editor opens with.<br>
  * Records every second tick as a PNG plus one JSON line per frame with the pointer state, see TESTING_GUIDELINES.md (Recording showcase GIFs).
  */
 public final class DocsShowcaseEditorGif {
@@ -181,17 +185,21 @@ public final class DocsShowcaseEditorGif {
         if (gui == null) throw new IllegalStateException("The showcase GUI is missing");
         var screen = CustomGuiHandler.constructInstance(gui, null, null);
         Layout layout = Layout.buildForScreen(screen);
-        ElementBuilder<?, ?> builder = ElementRegistry.getBuilder("text_v2");
-        if (builder == null) throw new IllegalStateException("No Text element builder");
-        TextElement element = (TextElement) builder.buildDefaultInstance();
-        element.setSource(TextElement.SourceMode.DIRECT, this.config.get("initial_text").getAsString());
-        element.markdownSettings.applyLook(MarkdownLook.PIXEL);
-        element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
-        element.posOffsetX = ELEMENT_X;
-        element.posOffsetY = ELEMENT_Y;
-        element.baseWidth = ELEMENT_W;
-        element.baseHeight = ELEMENT_H;
-        layout.serializedElements.add(builder.serializeElementInternal(element));
+        if (this.config.has("elements")) {
+            DocsShowcaseElements.addTo(layout, this.config.getAsJsonArray("elements"));
+        } else {
+            ElementBuilder<?, ?> builder = ElementRegistry.getBuilder("text_v2");
+            if (builder == null) throw new IllegalStateException("No Text element builder");
+            TextElement element = (TextElement) builder.buildDefaultInstance();
+            element.setSource(TextElement.SourceMode.DIRECT, this.config.get("initial_text").getAsString());
+            element.markdownSettings.applyLook(MarkdownLook.PIXEL);
+            element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
+            element.posOffsetX = ELEMENT_X;
+            element.posOffsetY = ELEMENT_Y;
+            element.baseWidth = ELEMENT_W;
+            element.baseHeight = ELEMENT_H;
+            layout.serializedElements.add(builder.serializeElementInternal(element));
+        }
         if (this.config.has("background_image")) {
             ImageMenuBackground background = MenuBackgrounds.IMAGE.buildDefaultInstance();
             background.textureSupplier.set(ResourceSupplier.image(this.config.get("background_image").getAsString()));
@@ -202,9 +210,146 @@ public final class DocsShowcaseEditorGif {
     }
 
     /**
-     * Right-click the element, open its text, bold a word, center the headline, type a patch notes list and click Done.
+     * Picks the showcase by the {@code script} of the config: {@code text_editor} (default) or {@code scroll_area}.
      */
     private void buildScript(@NotNull Minecraft minecraft) {
+        String script = this.config.has("script") ? this.config.get("script").getAsString() : "text_editor";
+        switch (script) {
+            case "text_editor" -> this.buildTextEditorScript(minecraft);
+            case "scroll_area" -> this.buildScrollAreaScript(minecraft);
+            case "select_and_scroll" -> this.buildSelectAndScrollScript(minecraft);
+            default -> throw new IllegalArgumentException("Unknown script " + script);
+        }
+    }
+
+    /**
+     * For stills of the editor: select an element by clicking it, then turn the mouse wheel over it. The last frame is the still.
+     * Config: {@code target} (its id), {@code click} (X and Y relative to the element, on a free spot of it), {@code wheel_turns} (negative scrolls down).
+     */
+    private void buildSelectAndScrollScript(@NotNull Minecraft minecraft) {
+        String target = this.config.get("target").getAsString();
+        float clickX = this.config.getAsJsonArray("click").get(0).getAsFloat();
+        float clickY = this.config.getAsJsonArray("click").get(1).getAsFloat();
+        int turns = this.config.get("wheel_turns").getAsInt();
+        this.waitTicks(20);
+        this.moveTo(() -> {
+            float[] box = editorBox(target);
+            return new float[] {box[0] + clickX, box[1] + clickY};
+        }, 10);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(10);
+        for (int i = 0; i < Math.abs(turns); i++) {
+            this.wheel(minecraft, Math.signum(turns));
+            this.waitTicks(4);
+        }
+        // Elements under the pointer get a hover frame, which doesn't belong in the still
+        this.moveTo(() -> {
+            float[] box = editorBox(target);
+            return new float[] {box[0] - 80, box[1] + box[3] + 80};
+        }, 8);
+        this.waitTicks(30);
+    }
+
+    /**
+     * Select the buttons next to a Scrollable Area that only holds a title, drag them in, switch the area to Stack, scroll it with
+     * the mouse wheel and drag the last button in front of the first one. Config: {@code area} (its id), {@code buttons} (their ids, in screen order).
+     */
+    private void buildScrollAreaScript(@NotNull Minecraft minecraft) {
+        String area = this.config.get("area").getAsString();
+        List<String> buttons = new ArrayList<>();
+        this.config.getAsJsonArray("buttons").forEach(id -> buttons.add(id.getAsString()));
+        String first = buttons.get(0);
+        String last = buttons.get(buttons.size() - 1);
+        this.waitTicks(24);
+        // Select all buttons with a selection rectangle
+        this.moveTo(() -> {
+            float[] box = editorBox(first);
+            return new float[] {box[0] - 12, box[1] - 14};
+        }, 16);
+        this.waitTicks(4);
+        this.press(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.moveTo(() -> {
+            float[] box = editorBox(last);
+            return new float[] {box[0] + box[2] + 12, box[1] + box[3] + 12};
+        }, 16);
+        this.waitTicks(4);
+        this.release(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(8);
+        // Drag them into the area, below its title: Ctrl keeps all of them selected, so the others come along with the first one
+        this.moveTo(() -> center(editorBox(first)), 14);
+        this.waitTicks(4);
+        this.badge("Ctrl + Drag");
+        this.press(minecraft, InputConstants.MOUSE_BUTTON_LEFT, InputQuirks.EDIT_SHORTCUT_KEY_MODIFIER);
+        this.moveTo(() -> {
+            float[] target = editorBox(area);
+            float[] grabbed = editorBox(first);
+            return new float[] {target[0] + 10 + grabbed[2] / 2.0F, target[1] + 26 + grabbed[3] / 2.0F};
+        }, 22);
+        this.waitTicks(10);
+        this.release(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("buttons in the area", () -> requireEditorElement(last).element.getParentContainer() != null, 40);
+        this.waitTicks(14);
+        // Right-click a free spot of the area and switch it to Stack
+        this.moveTo(() -> {
+            float[] box = editorBox(area);
+            return new float[] {box[0] + box[2] * 0.5F, box[1] + box[3] - 7};
+        }, 14);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_RIGHT);
+        this.waitUntil("context menu", () -> (ContextMenuHandler.INSTANCE.getCurrent() != null) && ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 60);
+        this.waitTicks(10);
+        this.moveTo(() -> new float[] {contextMenuEntry("arrangement")[0] + 20, Math.min(this.pointerY + 70, MENU_SCROLL_TARGET_Y)}, 12);
+        this.waitTicks(4);
+        this.scrollMenuUntilVisible(minecraft, "arrangement");
+        this.waitTicks(6);
+        this.clickMenuEntry(minecraft, "arrangement");
+        this.waitUntil("Arrangement menu", () -> subMenu("arrangement").isOpen(), 40);
+        this.waitTicks(8);
+        this.clickMenuEntry(minecraft, "arrangement", "layout_mode");
+        this.waitUntil("Mode menu", () -> subMenu("arrangement", "layout_mode").isOpen(), 40);
+        this.waitTicks(8);
+        this.clickMenuEntry(minecraft, "arrangement", "layout_mode", "layout_mode_stack");
+        this.waitUntil("context menu closed", () -> (ContextMenuHandler.INSTANCE.getCurrent() == null) || !ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 40);
+        this.waitTicks(20);
+        // Scroll down with the mouse wheel
+        this.moveTo(() -> center(editorBox(area)), 14);
+        this.waitTicks(6);
+        for (int i = 0; i < 3; i++) {
+            this.wheel(minecraft, -1.0);
+            this.waitTicks(6);
+        }
+        this.waitTicks(10);
+        // Drag the last button in front of the first one. The area scrolls back up while the button is close to its top edge.
+        this.moveTo(() -> center(editorBox(last)), 14);
+        this.waitTicks(4);
+        this.press(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.moveTo(() -> {
+            float[] box = editorBox(area);
+            return new float[] {box[0] + box[2] / 2.0F, box[1] + 6};
+        }, 20);
+        this.waitTicks(14);
+        this.moveTo(() -> {
+            float[] box = editorBox(first);
+            return new float[] {box[0] + box[2] / 2.0F, box[1] + 4};
+        }, 8);
+        this.waitTicks(12);
+        this.release(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(10);
+        // Click the empty background, so the area shows without its selection frame
+        this.moveTo(() -> {
+            float[] box = editorBox(area);
+            return new float[] {box[0] + box[2] + 90, box[1] + box[3] + 40};
+        }, 16);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(60);
+    }
+
+    /**
+     * Right-click the element, open its text, bold a word, center the headline, type a patch notes list and click Done.
+     */
+    private void buildTextEditorScript(@NotNull Minecraft minecraft) {
         this.waitTicks(16);
         this.moveTo(() -> new float[] {ELEMENT_X + 120, ELEMENT_Y + 34}, 18);
         this.waitTicks(4);
@@ -329,8 +474,16 @@ public final class DocsShowcaseEditorGif {
     }
 
     private void press(@NotNull Minecraft minecraft, int button) {
+        this.press(minecraft, button, 0);
+    }
+
+    /**
+     * Presses the button with modifier keys held, like {@link InputQuirks#EDIT_SHORTCUT_KEY_MODIFIER} for Ctrl (Cmd on macOS).
+     * Only the press carries them, so this is for what the editor decides when the button goes down, like dragging several elements.
+     */
+    private void press(@NotNull Minecraft minecraft, int button, int modifiers) {
         this.steps.addLast(() -> {
-            minecraft.mouseHandler.onButton(minecraft.getWindow().handle(), new MouseButtonInfo(button, 0), InputConstants.PRESS);
+            minecraft.mouseHandler.onButton(minecraft.getWindow().handle(), new MouseButtonInfo(button, modifiers), InputConstants.PRESS);
             if (button == InputConstants.MOUSE_BUTTON_LEFT) this.leftDown = true; else this.rightDown = true;
             this.pendingEvents.add(String.format(Locale.ROOT, "{\"type\":\"press\",\"button\":\"%s\",\"x\":%.2f,\"y\":%.2f}", (button == InputConstants.MOUSE_BUTTON_LEFT) ? "left" : "right", this.outX(this.pointerX), this.outY(this.pointerY)));
             return true;
@@ -389,7 +542,7 @@ public final class DocsShowcaseEditorGif {
     }
 
     /**
-     * Turns the mouse wheel over the open context menu every few ticks until the entry is above {@link #MENU_SCROLL_TARGET_Y}.
+     * Turns the mouse wheel over the open context menu every second tick (once per frame) until the entry is above {@link #MENU_SCROLL_TARGET_Y}.
      */
     private void scrollMenuUntilVisible(@NotNull Minecraft minecraft, @NotNull String identifier) {
         int[] cooldown = {0};
@@ -402,8 +555,28 @@ public final class DocsShowcaseEditorGif {
             }
             if (++turns[0] > 40) throw new IllegalStateException("Scrolling never reached " + identifier);
             minecraft.mouseHandler.onScroll(minecraft.getWindow().handle(), 0.0, -1.0);
-            cooldown[0] = 2;
+            cooldown[0] = 1;
             return false;
+        });
+    }
+
+    /**
+     * Turns the mouse wheel once at the pointer. Negative turns scroll down.
+     */
+    private void wheel(@NotNull Minecraft minecraft, double turns) {
+        this.steps.addLast(() -> {
+            minecraft.mouseHandler.onScroll(minecraft.getWindow().handle(), 0.0, turns);
+            return true;
+        });
+    }
+
+    /**
+     * Shows a key badge from the next frame on, for input that is no key press of its own, like a modifier held during a drag.
+     */
+    private void badge(@NotNull String text) {
+        this.steps.addLast(() -> {
+            this.pendingEvents.add("{\"type\":\"badge\",\"text\":\"" + text + "\"}");
+            return true;
         });
     }
 
@@ -450,6 +623,63 @@ public final class DocsShowcaseEditorGif {
         float y = readFloat(entry, "y");
         float width = readFloat(entry, "width");
         return new float[] {(x + width * 0.3F) * scale, (y + entry.getHeight() / 2.0F) * scale};
+    }
+
+    /**
+     * The GUI position of an entry of the open context menu or one of its sub-menus. The path holds the identifiers of the
+     * sub-menu entries that lead to the entry, then the entry itself.
+     */
+    @NotNull
+    private static float[] menuEntry(@NotNull String... path) {
+        ContextMenu menu = (path.length > 1) ? subMenu(Arrays.copyOf(path, path.length - 1)) : ContextMenuHandler.INSTANCE.getCurrent();
+        if (menu == null) throw new IllegalStateException("No open context menu");
+        ContextMenu.ContextMenuEntry<?> entry = menu.getEntry(path[path.length - 1]);
+        if (entry == null) throw new IllegalStateException("No context menu entry " + String.join(" -> ", path));
+        float scale = UIBase.calculateFixedRenderScale(menu.getScale());
+        return new float[] {(readFloat(entry, "x") + readFloat(entry, "width") * 0.3F) * scale, (readFloat(entry, "y") + entry.getHeight() / 2.0F) * scale};
+    }
+
+    /**
+     * The sub-menu the given path of sub-menu entries of the open context menu leads to.
+     */
+    @NotNull
+    private static ContextMenu subMenu(@NotNull String... path) {
+        ContextMenu menu = ContextMenuHandler.INSTANCE.getCurrent();
+        if (menu == null) throw new IllegalStateException("No open context menu");
+        for (String identifier : path) {
+            if (!(menu.getEntry(identifier) instanceof ContextMenu.SubMenuContextMenuEntry entry)) throw new IllegalStateException("No sub-menu entry " + identifier);
+            menu = entry.getSubContextMenu();
+        }
+        return menu;
+    }
+
+    private void clickMenuEntry(@NotNull Minecraft minecraft, @NotNull String... path) {
+        this.moveTo(() -> menuEntry(path), 12);
+        this.waitTicks(5);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+    }
+
+    @NotNull
+    private static AbstractEditorElement<?, ?> requireEditorElement(@NotNull String instanceIdentifier) {
+        LayoutEditorScreen editor = LayoutEditorScreen.getCurrentInstance();
+        if (editor == null) throw new IllegalStateException("The layout editor is not open");
+        AbstractEditorElement<?, ?> element = editor.getElementByInstanceIdentifier(instanceIdentifier);
+        if (element == null) throw new IllegalStateException("No element " + instanceIdentifier);
+        return element;
+    }
+
+    /**
+     * X, Y, width and height of the element in the layout editor, in GUI pixels.
+     */
+    @NotNull
+    private static float[] editorBox(@NotNull String instanceIdentifier) {
+        AbstractEditorElement<?, ?> element = requireEditorElement(instanceIdentifier);
+        return new float[] {element.getX(), element.getY(), element.getWidth(), element.getHeight()};
+    }
+
+    @NotNull
+    private static float[] center(@NotNull float[] box) {
+        return new float[] {box[0] + box[2] / 2.0F, box[1] + box[3] / 2.0F};
     }
 
     @Nullable

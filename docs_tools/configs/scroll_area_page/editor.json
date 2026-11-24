@@ -1,0 +1,101 @@
+{
+ "script": "scroll_area",
+ "background_image": "/config/fancymenu/assets/docs_bg.png",
+ "area": "docs_area",
+ "buttons": [
+  "docs_b1",
+  "docs_b2",
+  "docs_b3",
+  "docs_b4",
+  "docs_b5",
+  "docs_b6"
+ ],
+ "elements": [
+  {
+   "type": "scroll_area",
+   "id": "docs_area",
+   "x": 110,
+   "y": 90,
+   "w": 200,
+   "h": 110,
+   "props": {
+    "child_alignment": "center"
+   }
+  },
+  {
+   "parent": "docs_area",
+   "x": 10,
+   "y": 4,
+   "w": 180,
+   "h": 20,
+   "background": false,
+   "content": "^^^\n**Choose a World**\n^^^"
+  },
+  {
+   "type": "custom_button",
+   "id": "docs_b1",
+   "x": 400,
+   "y": 110,
+   "w": 90,
+   "h": 20,
+   "props": {
+    "label": "Survival"
+   }
+  },
+  {
+   "type": "custom_button",
+   "id": "docs_b2",
+   "x": 496,
+   "y": 110,
+   "w": 90,
+   "h": 20,
+   "props": {
+    "label": "Creative"
+   }
+  },
+  {
+   "type": "custom_button",
+   "id": "docs_b3",
+   "x": 400,
+   "y": 136,
+   "w": 90,
+   "h": 20,
+   "props": {
+    "label": "Skyblock"
+   }
+  },
+  {
+   "type": "custom_button",
+   "id": "docs_b4",
+   "x": 496,
+   "y": 136,
+   "w": 90,
+   "h": 20,
+   "props": {
+    "label": "Minigames"
+   }
+  },
+  {
+   "type": "custom_button",
+   "id": "docs_b5",
+   "x": 400,
+   "y": 162,
+   "w": 90,
+   "h": 20,
+   "props": {
+    "label": "Parkour"
+   }
+  },
+  {
+   "type": "custom_button",
+   "id": "docs_b6",
+   "x": 496,
+   "y": 162,
+   "w": 90,
+   "h": 20,
+   "props": {
+    "label": "Hardcore"
+   }
+  }
+ ]
+}

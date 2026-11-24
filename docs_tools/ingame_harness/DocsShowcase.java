@@ -1,7 +1,6 @@
 package de.keksuccino.fancymenu.util.window.preview;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.blaze3d.pipeline.RenderTarget;
@@ -9,10 +8,6 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.Window;
 import de.keksuccino.fancymenu.customization.customgui.CustomGui;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
-import de.keksuccino.fancymenu.customization.element.ElementBuilder;
-import de.keksuccino.fancymenu.customization.element.ElementRegistry;
-import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
-import de.keksuccino.fancymenu.customization.element.elements.text.v2.TextElement;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
@@ -20,7 +15,6 @@ import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
 import de.keksuccino.fancymenu.util.event.acara.EventListener;
-import de.keksuccino.fancymenu.util.rendering.text.markdown.style.MarkdownLook;
 import de.keksuccino.fancymenu.util.window.OffscreenTestClient;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
@@ -30,7 +24,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -160,22 +153,7 @@ public final class DocsShowcase {
         var screen = CustomGuiHandler.constructInstance(gui, null, null);
         Layout layout = Layout.buildForScreen(screen);
         layout.forcedScale = this.guiScale();
-        ElementBuilder<?, ?> builder = ElementRegistry.getBuilder("text_v2");
-        if (builder == null) throw new IllegalStateException("No Text element builder");
-        for (JsonElement entry : scene.getAsJsonArray("elements")) {
-            JsonObject data = entry.getAsJsonObject();
-            TextElement element = (TextElement) builder.buildDefaultInstance();
-            element.setSource(TextElement.SourceMode.DIRECT, data.get("content").getAsString());
-            element.markdownSettings.applyLook(MarkdownLook.valueOf(data.has("look") ? data.get("look").getAsString().toUpperCase(Locale.ROOT) : "PIXEL"));
-            if (data.has("background")) element.background.enabled.set(data.get("background").getAsBoolean());
-            if (data.has("scale")) element.markdownSettings.textScale.set(data.get("scale").getAsFloat());
-            element.anchorPoint = ElementAnchorPoints.TOP_LEFT;
-            element.posOffsetX = data.get("x").getAsInt();
-            element.posOffsetY = data.get("y").getAsInt();
-            element.baseWidth = data.get("w").getAsInt();
-            element.baseHeight = data.get("h").getAsInt();
-            layout.serializedElements.add(builder.serializeElementInternal(element));
-        }
+        DocsShowcaseElements.addTo(layout, scene.getAsJsonArray("elements"));
         LayoutHandler.setPreviewLayout(layout);
         ScreenUtils.setScreen(screen);
         this.pass("scene " + scene.get("name").getAsString(), "elements=" + scene.getAsJsonArray("elements").size());

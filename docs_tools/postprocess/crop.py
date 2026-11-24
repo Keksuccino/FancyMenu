@@ -2,7 +2,7 @@
 
 Usage: python3 crop.py <scenes.json> <screenshots dir> <out dir> [margin in GUI pixels, default 10]
 
-Reads the element boxes and the GUI scale from the same scene config the in-game harness rendered,
+Reads the element boxes and the GUI scale from the same scene config the in-game harness rendered (elements with a "parent" are skipped),
 so <screenshots dir>/<scene name>.png becomes <out dir>/<scene name>.png.
 """
 import json
@@ -17,7 +17,8 @@ scale = config.get("gui_scale", 2)
 os.makedirs(out, exist_ok=True)
 
 for scene in config["scenes"]:
-    elements = scene["elements"]
+    # Elements in a Scrollable Area have positions relative to its content, and the area holds them anyway
+    elements = [e for e in scene["elements"] if "parent" not in e]
     if not elements:
         continue
     left = min(e["x"] for e in elements) - margin
