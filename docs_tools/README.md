@@ -138,5 +138,10 @@ sh postprocess/encode.sh run_client_docs/gif_composed <path>/showcase.gif
 python3 checks/check_page.py <docs repo> <workspace> <page name> [more pages]
 ```
 
-Lists bold text that isn't a UI label in `en_us.json`, links the docs site turns into `#` (anything not starting with `/`, `#`, `http(s):` or `mailto:`, like `./page`), links to missing pages and anchors, and missing images.
-To check all pages: `ls <docs repo>/docs/*.md | sed 's|.*/||; s/\.md$//' | xargs python3 checks/check_page.py <docs repo> <workspace>`. Bold text that's no UI label (like "Strikethrough") shows up too, so read the list.
+Lists bold text that isn't a UI label in `en_us.json`, links the docs site turns into `#` (anything not starting with `/`, `#`, `http(s):` or `mailto:`, like `./page`), links to missing pages and anchors, and missing images. Bold text that's no UI label (like "Strikethrough") shows up too, so read the list.
+
+To check all pages:
+
+```bash
+ls <docs repo>/docs/*.md | sed 's|.*/||; s/\.md$//' | xargs python3 checks/check_page.py <docs repo> <workspace>
+```
