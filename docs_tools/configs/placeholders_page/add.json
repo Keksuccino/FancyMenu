@@ -1,0 +1,8 @@
+{
+ "script": "add_placeholder",
+ "initial_text": "### Welcome back\nHave fun, ",
+ "category": "Player",
+ "placeholder": "Player Name",
+ "typed_after": "!",
+ "background_image": "/config/fancymenu/assets/docs_bg.png"
+}

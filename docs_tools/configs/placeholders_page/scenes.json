@@ -1,0 +1,49 @@
+{
+ "gui_width": 960,
+ "gui_height": 540,
+ "gui_scale": 2,
+ "scenes": [
+  {
+   "name": "welcome",
+   "wait": 3,
+   "background_image": "/config/fancymenu/assets/docs_bg.png",
+   "pointer": [
+    -40,
+    -40
+   ],
+   "elements": [
+    {
+     "id": "welcome_text",
+     "x": 12,
+     "y": 12,
+     "w": 172,
+     "h": 44,
+     "look": "pixel",
+     "background": true,
+     "content": "### Welcome back, {\"placeholder\":\"playername\"}!\nMinecraft {\"placeholder\":\"mcversion\"} with {\"placeholder\":\"loadedmods\"} mods\nIt's {\"placeholder\":\"realtimehour\"}:{\"placeholder\":\"realtimeminute\"}"
+    }
+   ]
+  },
+  {
+   "name": "check",
+   "wait": 4,
+   "background_color": "#202020",
+   "pointer": [
+    300,
+    200
+   ],
+   "elements": [
+    {
+     "id": "check_text",
+     "x": 8,
+     "y": 6,
+     "w": 944,
+     "h": 528,
+     "look": "pixel",
+     "background": false,
+     "content": "guiscale: {\"placeholder\":\"guiscale\"}\nguiwidth x guiheight: {\"placeholder\":\"guiwidth\"} x {\"placeholder\":\"guiheight\"}\nmouse (pointer 300, 200): {\"placeholder\":\"mouseposx\"}, {\"placeholder\":\"mouseposy\"}\nplayername: {\"placeholder\":\"playername\"}\nmcversion / loader: {\"placeholder\":\"mcversion\"} / {\"placeholder\":\"loadername\"} {\"placeholder\":\"loaderver\"}\nmods loaded / total: {\"placeholder\":\"loadedmods\"} / {\"placeholder\":\"totalmods\"}\nmodversion fancymenu / missing: {\"placeholder\":\"modversion\",\"values\":{\"modid\":\"fancymenu\"}} / {\"placeholder\":\"modversion\",\"values\":{\"modid\":\"no_such_mod\"}}\noption renderDistance / lang: {\"placeholder\":\"minecraft_option_value\",\"values\":{\"name\":\"renderDistance\"}} / {\"placeholder\":\"minecraft_option_value\",\"values\":{\"name\":\"lang\"}}\nkeybind jump / inventory / missing: {\"placeholder\":\"keybind_key\",\"values\":{\"keybind\":\"key.jump\"}} / {\"placeholder\":\"keybind_key\",\"values\":{\"keybind\":\"key.inventory\"}} / [{\"placeholder\":\"keybind_key\",\"values\":{\"keybind\":\"key.nothing\"}}]\nscreenid: {\"placeholder\":\"screenid\"}\ncalc 2+3*4 decimal / whole: {\"placeholder\":\"calc\",\"values\":{\"decimal\":\"true\",\"expression\":\"2 + 3 * 4\"}} / {\"placeholder\":\"calc\",\"values\":{\"decimal\":\"false\",\"expression\":\"7 / 2\"}}\ncalc 7 % 3, log(e), pow(2,3): {\"placeholder\":\"calc\",\"values\":{\"decimal\":\"true\",\"expression\":\"7 % 3\"}}, {\"placeholder\":\"calc\",\"values\":{\"decimal\":\"true\",\"expression\":\"log(e)\"}}, {\"placeholder\":\"calc\",\"values\":{\"decimal\":\"true\",\"expression\":\"pow(2, 3)\"}}\nnegnum 10 / 10.5, absnum -10: {\"placeholder\":\"negnum\",\"values\":{\"num\":\"10\"}} / {\"placeholder\":\"negnum\",\"values\":{\"num\":\"10.5\"}}, {\"placeholder\":\"absnum\",\"values\":{\"num\":\"-10\"}}\nround 2.5 / 3.14159@2 / 3.10@2: {\"placeholder\":\"math_round\",\"values\":{\"num\":\"2.5\"}} / {\"placeholder\":\"math_round\",\"values\":{\"num\":\"3.14159\",\"decimals\":\"2\"}} / {\"placeholder\":\"math_round\",\"values\":{\"num\":\"3.10\",\"decimals\":\"2\"}}\nfloor 3.7 / -3.2, ceil 3.2 / -3.7: {\"placeholder\":\"math_floor\",\"values\":{\"num\":\"3.7\"}} / {\"placeholder\":\"math_floor\",\"values\":{\"num\":\"-3.2\"}}, {\"placeholder\":\"math_ceil\",\"values\":{\"num\":\"3.2\"}} / {\"placeholder\":\"math_ceil\",\"values\":{\"num\":\"-3.7\"}}\nbase 255->16, 67->2: {\"placeholder\":\"number_base_convert\",\"values\":{\"input\":\"255\",\"from_base\":\"10\",\"to_base\":\"16\"}}, {\"placeholder\":\"number_base_convert\",\"values\":{\"input\":\"67\",\"from_base\":\"10\",\"to_base\":\"2\"}}\nmaxnum 10 15 / random 1-6: {\"placeholder\":\"maxnum\",\"values\":{\"first\":\"10\",\"second\":\"15\"}} / {\"placeholder\":\"random_number\",\"values\":{\"min\":\"1\",\"max\":\"6\"}}\nsplit Steve,Alex,Notch @1: {\"placeholder\":\"split_text\",\"values\":{\"input\":\"Steve,Alex,Notch\",\"regex\":\",\",\"split_index\":\"1\"}}\nswitch 2 / no match no default: {\"placeholder\":\"switch_case\",\"values\":{\"value\":\"2\",\"cases\":\"1:Easy Mode,2:Hard Mode\",\"default\":\"Normal Mode\"}} / [{\"placeholder\":\"switch_case\",\"values\":{\"value\":\"9\",\"cases\":\"1:Easy Mode,2:Hard Mode\"}}]\ncrop / trim: {\"placeholder\":\"crop_text\",\"values\":{\"text\":\"hello world\",\"remove_from_start\":\"1\",\"remove_from_end\":\"1\"}} / [{\"placeholder\":\"trim_text\",\"values\":{\"text\":\"  Welcome!  \"}}]\ncases: {\"placeholder\":\"title_case_text\",\"values\":{\"text\":\"hello world\"}}, {\"placeholder\":\"sentence_case_text\",\"values\":{\"text\":\"hello world. this is fancymenu!\"}}, {\"placeholder\":\"kebab_case_text\",\"values\":{\"text\":\"Hello World\"}}\ntext width / height: {\"placeholder\":\"text_width\",\"values\":{\"text\":\"Hello World!\"}} / {\"placeholder\":\"text_height\",\"values\":{\"text\":\"First line\\nSecond line\"}}\nlocal menu.singleplayer: {\"placeholder\":\"local\",\"values\":{\"key\":\"menu.singleplayer\"}}\nbase64: {\"placeholder\":\"base64_encode\",\"values\":{\"text\":\"Hello World\"}} / {\"placeholder\":\"base64_decode\",\"values\":{\"text\":\"SGVsbG8gV29ybGQ=\"}}\njson direct: {\"placeholder\":\"json\",\"values\":{\"source\":\"{\"news\":{\"title\":\"Big Update\"}}\",\"json_path\":\"$.news.title\"}}\nworld placeholders without world: {\"placeholder\":\"current_player_health\"}, {\"placeholder\":\"current_player_level\"}, [{\"placeholder\":\"player_gamemode\"}], {\"placeholder\":\"slot_item\",\"values\":{\"slot\":\"0\"}}\nsaves count / names: {\"placeholder\":\"level_save_count\"} / [{\"placeholder\":\"level_save_names\"}]\nlast world: [{\"placeholder\":\"last_world_server\",\"values\":{\"type\":\"both\",\"full_world_path\":\"false\"}}]\nos / java / jvm: {\"placeholder\":\"osname\"} / {\"placeholder\":\"javaver\"} / {\"placeholder\":\"jvmname\"}\ngpu / gl: {\"placeholder\":\"gpuinfo\"} / {\"placeholder\":\"glver\"}\ncpu / usage jvm os: {\"placeholder\":\"cpuinfo\"} / {\"placeholder\":\"jvmcpu\"} {\"placeholder\":\"oscpu\"}\nram used / max / %: {\"placeholder\":\"usedram\"} / {\"placeholder\":\"maxram\"} / {\"placeholder\":\"percentram\"}\nuptime / unix: {\"placeholder\":\"uptime_duration\"} / {\"placeholder\":\"unix_time\"}\nrealtime: {\"placeholder\":\"realtimeday\"}.{\"placeholder\":\"realtimemonth\"}.{\"placeholder\":\"realtimeyear\"} {\"placeholder\":\"realtimehour\"}:{\"placeholder\":\"realtimeminute\"}:{\"placeholder\":\"realtimesecond\"} 12h {\"placeholder\":\"realtimehour\",\"values\":{\"twelve_hour_format\":\"true\"}} UTC {\"placeholder\":\"realtimehour\",\"values\":{\"timezone\":\"UTC\"}}\ngetvariable missing / list size missing: {\"placeholder\":\"getvariable\",\"values\":{\"name\":\"no_such_variable\"}} / {\"placeholder\":\"list_size\",\"values\":{\"name\":\"no_such_list\"}}\nunknown placeholder: {\"placeholder\":\"no_such_placeholder\"}"
+    }
+   ]
+  }
+ ]
+}

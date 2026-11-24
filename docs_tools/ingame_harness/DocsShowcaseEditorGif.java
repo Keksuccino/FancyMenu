@@ -301,6 +301,7 @@ public final class DocsShowcaseEditorGif {
             case "listeners_still" -> this.buildListenersStillScript(minecraft);
             case "press_keys" -> this.buildPressKeysScript(minecraft);
             case "add_element" -> this.buildAddElementScript(minecraft);
+            case "add_placeholder" -> this.buildAddPlaceholderScript(minecraft);
             default -> throw new IllegalArgumentException("Unknown script " + script);
         }
     }
@@ -999,22 +1000,7 @@ public final class DocsShowcaseEditorGif {
      * Right-click the element, open its text, bold a word, center the headline, type a patch notes list and click Done.
      */
     private void buildTextEditorScript(@NotNull Minecraft minecraft) {
-        this.waitTicks(16);
-        this.moveTo(() -> new float[] {ELEMENT_X + 120, ELEMENT_Y + 34}, 18);
-        this.waitTicks(4);
-        this.click(minecraft, InputConstants.MOUSE_BUTTON_RIGHT);
-        this.waitUntil("context menu", () -> (ContextMenuHandler.INSTANCE.getCurrent() != null) && ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 60);
-        this.waitTicks(10);
-        // The entry sits below the visible part of the long menu, so scroll the menu like a player would
-        this.moveTo(() -> new float[] {contextMenuEntry("set_text_content")[0] + 20, Math.min(this.pointerY + 70, MENU_SCROLL_TARGET_Y)}, 12);
-        this.waitTicks(4);
-        this.scrollMenuUntilVisible(minecraft, "set_text_content");
-        this.waitTicks(6);
-        this.moveTo(() -> contextMenuEntry("set_text_content"), 10);
-        this.waitTicks(5);
-        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
-        this.waitUntil("text editor", () -> findEditor() != null, 60);
-        this.waitTicks(14);
+        this.openTextContentEditor(minecraft);
         // Select a word with the mouse and make it bold
         String word = this.config.get("bold_word").getAsString();
         this.moveTo(() -> wordEdge(word, false), 16);
@@ -1065,6 +1051,74 @@ public final class DocsShowcaseEditorGif {
         this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
         this.waitTicks(60);
     }
+
+    /**
+     * Right-click the element, open its text, click behind the last line, open the placeholder menu of the text editor, open a category,
+     * rest on a placeholder so its description shows, add it, type a bit behind it and click Done.<br>
+     * Config: {@code initial_text}, {@code category} (the label of the category entry, like {@code Player}), {@code placeholder} (the label of
+     * the placeholder entry, like {@code Player Name}) and {@code typed_after} (typed behind the placeholder, optional).
+     */
+    private void buildAddPlaceholderScript(@NotNull Minecraft minecraft) {
+        // All text editors share the open state of the placeholder menu, so a recording before this one could have left it open
+        writeStaticField(TextEditorWindowBody.class, "extendedPlaceholderMenu", false);
+        this.openTextContentEditor(minecraft);
+        this.moveTo(() -> lineEnd(-1), 14);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(10);
+        this.moveTo(() -> windowWidgetCenter(requireEditor(), "placeholderButton"), 16);
+        this.waitTicks(5);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(16);
+        String category = this.config.get("category").getAsString();
+        this.moveTo(() -> placeholderMenuEntry(category), 14);
+        this.waitTicks(5);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(14);
+        String placeholder = this.config.get("placeholder").getAsString();
+        this.moveTo(() -> placeholderMenuEntry(placeholder), 12);
+        // Rest on the entry, so its description shows as tooltip
+        this.waitTicks(36);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(18);
+        if (this.config.has("typed_after")) {
+            this.type(minecraft, this.config.get("typed_after").getAsString());
+            this.waitTicks(16);
+        }
+        this.moveTo(DocsShowcaseEditorGif::doneButton, 18);
+        this.waitTicks(5);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("text editor closed", () -> findEditor() == null, 60);
+        this.waitTicks(6);
+        // Click the empty background, so the element shows without its selection frame
+        this.moveTo(() -> new float[] {ELEMENT_X + ELEMENT_W + 60, ELEMENT_Y + ELEMENT_H + 70}, 16);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(70);
+    }
+
+    /**
+     * Right-click the element of the showcase and click Text Content in its right-click menu, which opens the text editor.
+     */
+    private void openTextContentEditor(@NotNull Minecraft minecraft) {
+        this.waitTicks(16);
+        this.moveTo(() -> new float[] {ELEMENT_X + 120, ELEMENT_Y + 34}, 18);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_RIGHT);
+        this.waitUntil("context menu", () -> (ContextMenuHandler.INSTANCE.getCurrent() != null) && ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 60);
+        this.waitTicks(10);
+        // The entry sits below the visible part of the long menu, so scroll the menu like a player would
+        this.moveTo(() -> new float[] {contextMenuEntry("set_text_content")[0] + 20, Math.min(this.pointerY + 70, MENU_SCROLL_TARGET_Y)}, 12);
+        this.waitTicks(4);
+        this.scrollMenuUntilVisible(minecraft, "set_text_content");
+        this.waitTicks(6);
+        this.moveTo(() -> contextMenuEntry("set_text_content"), 10);
+        this.waitTicks(5);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("text editor", () -> findEditor() != null, 60);
+        this.waitTicks(14);
+    }
+
 
     // ---- Steps ----
 
@@ -1652,6 +1706,33 @@ public final class DocsShowcaseEditorGif {
         PiPWindow window = requireEditor();
         AbstractWidget button = (AbstractWidget) readField(window.getScreen(), "doneButton");
         return bodyToGui(window, button.getX() + button.getWidth() / 2.0F, button.getY() + button.getHeight() / 2.0F);
+    }
+
+    /**
+     * The GUI position of an entry of the placeholder menu of the open text editor, a bit right of the start of its label: a category
+     * (like {@code Player}), a placeholder (like {@code Player Name}) or BACK.
+     */
+    @NotNull
+    private static float[] placeholderMenuEntry(@NotNull String label) {
+        PiPWindow window = requireEditor();
+        @SuppressWarnings("unchecked")
+        List<TextEditorWindowBody.PlaceholderMenuEntry> entries = (List<TextEditorWindowBody.PlaceholderMenuEntry>) readField(window.getScreen(), "placeholderMenuEntries");
+        for (TextEditorWindowBody.PlaceholderMenuEntry entry : entries) {
+            if (entry.label.getString().equals(label)) {
+                return bodyToGui(window, entry.x + Math.min(40.0F, entry.getWidth() / 2.0F), entry.y + entry.getHeight() / 2.0F);
+            }
+        }
+        throw new IllegalStateException("The placeholder menu lists no " + label);
+    }
+
+    private static void writeStaticField(@NotNull Class<?> type, @NotNull String name, @Nullable Object value) {
+        try {
+            Field field = type.getDeclaredField(name);
+            field.setAccessible(true);
+            field.set(null, value);
+        } catch (Exception ex) {
+            throw new IllegalStateException("Can't write " + type.getSimpleName() + "." + name, ex);
+        }
     }
 
     @NotNull
