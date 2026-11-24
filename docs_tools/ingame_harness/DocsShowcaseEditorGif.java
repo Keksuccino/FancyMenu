@@ -64,7 +64,9 @@ import de.keksuccino.fancymenu.util.rendering.ui.widget.editbox.ExtendedEditBox;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.events.ContainerEventHandler;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import de.keksuccino.fancymenu.util.AbstractOptions;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.input.InputQuirks;
@@ -85,6 +87,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -151,6 +154,10 @@ public final class DocsShowcaseEditorGif {
      */
     @Nullable
     private List<SchedulerInstance> savedSchedulers;
+    /**
+     * Put the FancyMenu options of the config's {@code fancymenu_options} back to what they were before the showcase.
+     */
+    private final List<Runnable> optionRestorers = new ArrayList<>();
 
     DocsShowcaseEditorGif(@NotNull Path framesDirectory, @NotNull JsonObject config) {
         this.framesDirectory = framesDirectory;
@@ -261,6 +268,7 @@ public final class DocsShowcaseEditorGif {
             if (gui == null) throw new IllegalStateException("The showcase GUI is missing");
             screen = CustomGuiHandler.constructInstance(gui, null, null);
         }
+        if (this.config.has("fancymenu_options")) this.setUpFancyMenuOptions(this.config.getAsJsonObject("fancymenu_options"));
         if (this.config.has("variables")) setUpVariables(this.config.getAsJsonObject("variables"));
         if (this.config.has("shuffle_seed")) seedListShuffle(this.config.get("shuffle_seed").getAsLong());
         if (this.config.has("listeners")) this.setUpListeners(this.config.getAsJsonArray("listeners"));
@@ -288,7 +296,9 @@ public final class DocsShowcaseEditorGif {
             boolean menuBar = this.config.has("menu_bar") && this.config.get("menu_bar").getAsBoolean();
             if (!menuBar) this.menuBarControllerId = CustomizationOverlay.registerOverlayVisibilityController(s -> false);
             this.startScreen = screen;
-            LayoutHandler.setPreviewLayout(layout);
+            // no_layout: the screen as it is without layouts, like for Global Customizations, which work without one
+            boolean noLayout = this.config.has("no_layout") && this.config.get("no_layout").getAsBoolean();
+            if (!noLayout) LayoutHandler.setPreviewLayout(layout);
             ScreenUtils.setScreen(screen);
         } else {
             LayoutHandler.openLayoutEditor(layout, screen);
@@ -318,7 +328,45 @@ public final class DocsShowcaseEditorGif {
             case "hover_elements" -> this.buildHoverElementsScript(minecraft);
             case "editor_basics" -> this.buildEditorBasicsScript(minecraft);
             case "context_entry_still" -> this.buildContextEntryStillScript(minecraft);
+            case "screen_tour" -> this.buildScreenTourScript(minecraft);
             default -> throw new IllegalArgumentException("Unknown script " + script);
+        }
+    }
+
+    /**
+     * Sets the FancyMenu options of the config's {@code fancymenu_options} until the showcase ends, by their key in FancyMenu's
+     * {@code options.txt}, like {@code "global_button_label_hover_color": "#FFD35C"} or {@code "global_button_background_nine_slice": true}.
+     * The Global Customizations are such options.
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private void setUpFancyMenuOptions(@NotNull JsonObject options) {
+        Map<String, AbstractOptions.Option> byKey = new HashMap<>();
+        try {
+            for (Field field : FancyMenu.getOptions().getClass().getFields()) {
+                if (AbstractOptions.Option.class.isAssignableFrom(field.getType())) {
+                    AbstractOptions.Option option = (AbstractOptions.Option) field.get(FancyMenu.getOptions());
+                    byKey.put(option.getKey(), option);
+                }
+            }
+        } catch (IllegalAccessException ex) {
+            throw new IllegalStateException("Can't read FancyMenu's options", ex);
+        }
+        for (Map.Entry<String, JsonElement> entry : options.entrySet()) {
+            AbstractOptions.Option option = byKey.get(entry.getKey());
+            if (option == null) throw new IllegalStateException("No FancyMenu option " + entry.getKey());
+            Object old = option.getValue();
+            Object defaultValue = option.getDefaultValue();
+            JsonElement value = entry.getValue();
+            Object parsed;
+            if (defaultValue instanceof Boolean) parsed = value.getAsBoolean();
+            else if (defaultValue instanceof Integer) parsed = value.getAsInt();
+            else if (defaultValue instanceof Float) parsed = value.getAsFloat();
+            else if (defaultValue instanceof Double) parsed = value.getAsDouble();
+            else if (defaultValue instanceof Long) parsed = value.getAsLong();
+            else parsed = value.getAsString();
+            option.setValue(parsed);
+            this.optionRestorers.add(() -> option.setValue(old));
+            this.pass("option " + entry.getKey(), String.valueOf(parsed));
         }
     }
 
@@ -1247,6 +1295,115 @@ public final class DocsShowcaseEditorGif {
      * {@code hold_ticks} (how long the result stays, default 100), {@code clicks} (default 1), {@code click_gap_ticks} (between clicks, default 40)
      * and {@code start_wait_ticks} (before the pointer moves, default 16, longer for things that show up after the screen opened).
      */
+    /**
+     * Outside the editor: walks through vanilla screens like a player, by the labels of their buttons and sliders, for showcases of what
+     * changes every screen, like Global Customizations (config {@code start: "screen"}, usually {@code no_layout: true}).<br>
+     * Config {@code tour}: steps, each one of {@code hover} (a label key, like {@code menu.singleplayer}), {@code click} (a label key, waits for
+     * the next screen when {@code opens: true}), {@code drag} (a slider by its label key, from {@code from} to {@code to}, as parts of its width),
+     * {@code point} ([x, y]) and {@code wait}. All but {@code wait} take {@code ticks} (how long the pointer rests after them, default 30).
+     * Labels match from their start, so {@code options.fov} finds the slider {@code FOV: 70}. Optional {@code pointer} ([x, y], the start)
+     * and {@code hold_ticks} (after the last step, default 60).
+     */
+    private void buildScreenTourScript(@NotNull Minecraft minecraft) {
+        if (this.config.has("pointer")) {
+            float x = this.config.getAsJsonArray("pointer").get(0).getAsFloat();
+            float y = this.config.getAsJsonArray("pointer").get(1).getAsFloat();
+            this.steps.addLast(() -> {
+                this.movePointer(minecraft, x, y);
+                return true;
+            });
+        }
+        this.waitTicks(16);
+        for (JsonElement entry : this.config.getAsJsonArray("tour")) {
+            JsonObject step = entry.getAsJsonObject();
+            int rest = step.has("ticks") ? step.get("ticks").getAsInt() : 30;
+            int moveTicks = step.has("move_ticks") ? step.get("move_ticks").getAsInt() : 18;
+            if (step.has("hover")) {
+                String label = step.get("hover").getAsString();
+                this.moveTo(() -> center(vanillaWidgetBox(label)), moveTicks);
+                this.waitTicks(rest);
+            } else if (step.has("click")) {
+                String label = step.get("click").getAsString();
+                boolean opens = step.has("opens") && step.get("opens").getAsBoolean();
+                this.moveTo(() -> center(vanillaWidgetBox(label)), moveTicks);
+                this.waitTicks(8);
+                Screen[] before = new Screen[1];
+                this.steps.addLast(() -> {
+                    before[0] = ScreenUtils.getScreen();
+                    return true;
+                });
+                this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+                if (opens) this.waitUntil("the screen of " + label, () -> (ScreenUtils.getScreen() != null) && (ScreenUtils.getScreen() != before[0]), 100);
+                this.waitTicks(rest);
+            } else if (step.has("drag")) {
+                String label = step.get("drag").getAsString();
+                float from = step.has("from") ? step.get("from").getAsFloat() : 0.3F;
+                float to = step.has("to") ? step.get("to").getAsFloat() : 0.7F;
+                int dragTicks = step.has("drag_ticks") ? step.get("drag_ticks").getAsInt() : 26;
+                this.moveTo(() -> pointInWidget(vanillaWidgetBox(label), from), moveTicks);
+                this.waitTicks(8);
+                this.press(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+                this.waitTicks(4);
+                // The label changes with the value, so the target is the box the slider had when the drag started
+                float[][] box = new float[1][];
+                this.steps.addLast(() -> {
+                    box[0] = vanillaWidgetBox(label);
+                    return true;
+                });
+                this.moveTo(() -> pointInWidget(box[0], to), dragTicks);
+                this.waitTicks(4);
+                this.release(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+                this.waitTicks(rest);
+            } else if (step.has("point")) {
+                float x = step.getAsJsonArray("point").get(0).getAsFloat();
+                float y = step.getAsJsonArray("point").get(1).getAsFloat();
+                this.moveTo(() -> new float[] {x, y}, moveTicks);
+                this.waitTicks(rest);
+            } else if (step.has("wait")) {
+                this.waitTicks(step.get("wait").getAsInt());
+            } else {
+                throw new IllegalArgumentException("Unknown tour step " + step);
+            }
+        }
+        this.waitTicks(this.config.has("hold_ticks") ? this.config.get("hold_ticks").getAsInt() : 60);
+    }
+
+    @NotNull
+    private static float[] pointInWidget(@NotNull float[] box, float part) {
+        return new float[] {box[0] + box[2] * part, box[1] + box[3] / 2.0F};
+    }
+
+    /**
+     * X, Y, width and height of the visible widget of the open screen whose label is the text of the label key, or starts with it (like a
+     * slider's {@code FOV: 70} for {@code options.fov}). Finds widgets in lists too, like the sliders of Music & Sounds.
+     */
+    @NotNull
+    private static float[] vanillaWidgetBox(@NotNull String labelKey) {
+        Screen screen = ScreenUtils.getScreen();
+        if (screen == null) throw new IllegalStateException("No screen is open");
+        String label = Component.translatable(labelKey).getString();
+        List<AbstractWidget> widgets = new ArrayList<>();
+        collectWidgets(screen, widgets);
+        AbstractWidget match = null;
+        for (AbstractWidget widget : widgets) {
+            String message = widget.getMessage().getString();
+            if (message.equals(label)) {
+                match = widget;
+                break;
+            }
+            if ((match == null) && message.startsWith(label)) match = widget;
+        }
+        if (match == null) throw new IllegalStateException("No widget labeled " + label + " on " + screen.getClass().getSimpleName());
+        return new float[] {match.getX(), match.getY(), match.getWidth(), match.getHeight()};
+    }
+
+    private static void collectWidgets(@NotNull ContainerEventHandler container, @NotNull List<AbstractWidget> widgets) {
+        for (GuiEventListener child : container.children()) {
+            if ((child instanceof AbstractWidget widget) && widget.visible) widgets.add(widget);
+            if (child instanceof ContainerEventHandler nested) collectWidgets(nested, widgets);
+        }
+    }
+
     private void buildClickElementScript(@NotNull Minecraft minecraft) {
         String target = this.config.get("target").getAsString();
         int hold = this.config.has("hold_ticks") ? this.config.get("hold_ticks").getAsInt() : 100;
@@ -2411,6 +2568,8 @@ public final class DocsShowcaseEditorGif {
             SchedulerHandler.stopAllSchedulers();
             SchedulerHandler.applyChanges(this.savedSchedulers);
         }
+        // Options of the showcase would stay in the docs instance and show up in later recordings, like global button textures
+        for (int i = this.optionRestorers.size() - 1; i >= 0; i--) this.optionRestorers.get(i).run();
         this.writers.shutdown();
         EventHandler.INSTANCE.unregisterListenersOf(this);
         LOGGER.info("[CHECK] docs gif finished: {} frames={}", (this.failures.get() == 0) ? "PASS" : ("FAIL " + this.failures.get()), this.frameIndex);
