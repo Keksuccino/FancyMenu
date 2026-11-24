@@ -1,4 +1,4 @@
-"""Checks a docs page: bold UI labels against en_us.json, links and anchors into other pages, and image files.
+"""Checks a docs page: bold UI labels against en_us.json, the link format, links and anchors into other pages, and image files.
 
 Usage: python3 check_page.py <docs repo> <workspace> <page name> [more page names]
 Example: python3 check_page.py ../../docs_fancymenu ../../fancymenu-26.3.0 scrollable-areas text-in-menus
@@ -48,13 +48,18 @@ for page in pages:
         if missing:
             problems += 1
             print(f"MISS label  {label}  (not in en_us.json: {missing})")
-    for target, anchor in sorted(set(re.findall(r"\]\(\./([^)#\s]+)(?:#([^)\s]+))?\)", text))):
+    # The docs site (Vicky) only keeps links that start with http(s):, mailto:, # or /. It renders everything else, like ./page, as "#".
+    for href in sorted(set(re.findall(r"\]\(([^)\s]+)[^)]*\)", text))):
+        if not re.match(r"^(https?:|mailto:|#|/(?!/))", href, re.I):
+            problems += 1
+            print(f"BROKEN link {href}  (the site renders it as #, write /page or /page#anchor)")
+    for target, anchor in sorted(set(re.findall(r"\]\(/(?!/)([^)#\s]+)(?:#([^)\s]+))?\)", text))):
         if not os.path.exists(os.path.join(docs, "docs", target + ".md")):
             problems += 1
-            print(f"MISS page   ./{target}")
+            print(f"MISS page   /{target}")
         elif anchor and anchor not in anchors(target):
             problems += 1
-            print(f"MISS anchor ./{target}#{anchor}")
+            print(f"MISS anchor /{target}#{anchor}")
     for anchor in sorted(set(re.findall(r"\]\(#([^)\s]+)\)", text))):
         if anchor not in anchors(page):
             problems += 1
