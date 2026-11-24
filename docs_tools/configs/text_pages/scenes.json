@@ -1,0 +1,93 @@
+{
+ "gui_width": 960,
+ "gui_height": 540,
+ "gui_scale": 2,
+ "scenes": [
+  {
+   "name": "looks",
+   "wait": 4,
+   "elements": [
+    {
+     "x": 12,
+     "y": 12,
+     "w": 200,
+     "h": 142,
+     "look": "pixel",
+     "content": "# Pixel\nOur modpack got a **big update**!\n\n+ Added _shiny_ new menus\n- Removed the old logo\n~ Changed the `button` colors\n\n> [!TIP]\n> Press ++F11++ for fullscreen."
+    },
+    {
+     "x": 222,
+     "y": 12,
+     "w": 200,
+     "h": 142,
+     "look": "classic",
+     "content": "# Classic\nOur modpack got a **big update**!\n\n+ Added _shiny_ new menus\n- Removed the old logo\n~ Changed the `button` colors\n\n> [!TIP]\n> Press ++F11++ for fullscreen."
+    },
+    {
+     "x": 432,
+     "y": 12,
+     "w": 200,
+     "h": 142,
+     "look": "neutral",
+     "content": "# Neutral\nOur modpack got a **big update**!\n\n+ Added _shiny_ new menus\n- Removed the old logo\n~ Changed the `button` colors\n\n> [!TIP]\n> Press ++F11++ for fullscreen."
+    }
+   ]
+  },
+  {
+   "name": "showcase",
+   "wait": 3,
+   "elements": [
+    {
+     "x": 12,
+     "y": 12,
+     "w": 400,
+     "h": 176,
+     "look": "pixel",
+     "content": "# Welcome to Skyblock!\nThanks for playing! Here are the **most important** things to know.\n\n## What's New\n+ Added a _brand new_ quest book\n- Removed the old ++spawn island++\n~ Changed the ~~iron~~ diamond prices\n* Fixed the crash on login\n\n> [!WARNING]\n> Always back up your worlds before updating!\n\nJoin us on [Discord](https://discord.gg) and type `/help` in-game."
+    }
+   ]
+  },
+  {
+   "name": "lists",
+   "wait": 3,
+   "elements": [
+    {
+     "x": 12,
+     "y": 12,
+     "w": 210,
+     "h": 196,
+     "look": "pixel",
+     "content": "### Bullet List\n- Diamonds\n- Emeralds\n  - Rare ones\n    - Even rarer\n\n### Numbered List\n1. Open the menu bar\n2. Click on Customization\n3. Have fun!\n\n### Patch Notes\n+ Added a new main menu\n- Removed the old logo\n~ Changed the button colors\n* Fixed a crash on startup"
+    }
+   ]
+  },
+  {
+   "name": "callouts",
+   "wait": 3,
+   "elements": [
+    {
+     "x": 12,
+     "y": 12,
+     "w": 300,
+     "h": 186,
+     "look": "pixel",
+     "content": "> [!NOTE]\n> Good to know, even when skimming.\n\n> [!TIP]\n> Hold Shift to scroll sideways.\n\n> [!IMPORTANT]\n> Save your layout before closing the editor.\n\n> [!WARNING]\n> This button resets all your settings!\n\n> [!CAUTION]\n> Only import profiles from people you trust."
+    }
+   ]
+  },
+  {
+   "name": "table_code",
+   "wait": 3,
+   "elements": [
+    {
+     "x": 12,
+     "y": 12,
+     "w": 300,
+     "h": 150,
+     "look": "pixel",
+     "content": "### Shop Prices\n| Item | Price | Stock |\n|:---|:---:|---:|\n| Diamond Sword | 10 | 3 |\n| Golden Apple | 5 | 12 |\n| Ender Pearl | 2 | 64 |\n\n### Code\nType `/spawn` to get back home.\n```\n/give @p minecraft:diamond 64\n```"
+    }
+   ]
+  }
+ ]
+}
