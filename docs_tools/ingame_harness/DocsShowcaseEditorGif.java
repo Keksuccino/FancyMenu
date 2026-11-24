@@ -84,6 +84,7 @@ import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.List;
 import java.util.Locale;
@@ -299,6 +300,7 @@ public final class DocsShowcaseEditorGif {
             case "manage_listeners" -> this.buildManageListenersScript(minecraft);
             case "listeners_still" -> this.buildListenersStillScript(minecraft);
             case "press_keys" -> this.buildPressKeysScript(minecraft);
+            case "add_element" -> this.buildAddElementScript(minecraft);
             default -> throw new IllegalArgumentException("Unknown script " + script);
         }
     }
@@ -625,6 +627,135 @@ public final class DocsShowcaseEditorGif {
         this.waitTicks(4);
         this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
         this.waitUntil("text dialog closed", () -> findWindow(TextInputWindowBody.class) == null, 60);
+    }
+
+    /**
+     * Right-click a free spot of the editor, open New Element and pick an element type, drag the new element to its place, widen it at its
+     * right edge and give it a label through its right-click menu. Config: {@code right_click} ([x, y] of the free spot), {@code element_type}
+     * (its identifier, like {@code custom_button}), {@code drag_to} ([x, y] of the element's center after the drag), {@code widen_by} (GUI
+     * pixels the right edge moves), {@code label_entry} (the right-click menu entry of the label, like {@code edit_label}), {@code label}
+     * (the typed label) and {@code free_spot} ([x, y] of the background click at the end, which unselects the element).
+     */
+    private void buildAddElementScript(@NotNull Minecraft minecraft) {
+        float clickX = this.config.getAsJsonArray("right_click").get(0).getAsFloat();
+        float clickY = this.config.getAsJsonArray("right_click").get(1).getAsFloat();
+        float dragX = this.config.getAsJsonArray("drag_to").get(0).getAsFloat();
+        float dragY = this.config.getAsJsonArray("drag_to").get(1).getAsFloat();
+        float freeX = this.config.getAsJsonArray("free_spot").get(0).getAsFloat();
+        float freeY = this.config.getAsJsonArray("free_spot").get(1).getAsFloat();
+        float widenBy = this.config.get("widen_by").getAsFloat();
+        String labelEntry = this.config.get("label_entry").getAsString();
+        String entry = newElementEntry(this.config.get("element_type").getAsString());
+        int[] elementsBefore = {0};
+        this.waitTicks(16);
+        this.moveTo(() -> new float[] {clickX, clickY}, 18);
+        this.waitTicks(6);
+        this.steps.addLast(() -> {
+            elementsBefore[0] = requireLayoutEditor().normalEditorElements.size();
+            return true;
+        });
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_RIGHT);
+        this.waitUntil("context menu", () -> (ContextMenuHandler.INSTANCE.getCurrent() != null) && ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 60);
+        this.waitTicks(10);
+        this.moveTo(() -> new float[] {contextMenuEntry("add_element")[0] + 20, Math.min(this.pointerY + 40, MENU_SCROLL_TARGET_Y)}, 12);
+        this.waitTicks(4);
+        // New Element is the last entry of the long menu, which ends below MENU_SCROLL_TARGET_Y at big UI scales
+        this.scrollMenuUntilVisible(minecraft, "add_element", 345);
+        this.waitTicks(6);
+        this.clickMenuEntry(minecraft, "add_element");
+        this.waitUntil("New Element menu", () -> subMenu("add_element").isOpen(), 40);
+        this.waitTicks(10);
+        // Go into the sub-menu sideways first, so the pointer doesn't pass over other entries of the right-click menu
+        this.moveTo(() -> new float[] {menuEntry("add_element", entry)[0], this.pointerY}, 10);
+        this.waitTicks(4);
+        this.clickMenuEntry(minecraft, "add_element", entry);
+        this.waitUntil("new element", () -> requireLayoutEditor().normalEditorElements.size() > elementsBefore[0], 40);
+        this.waitTicks(16);
+        // Drag it to its place
+        this.moveTo(() -> center(newestElementBox()), 12);
+        this.waitTicks(4);
+        this.press(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.moveTo(() -> new float[] {dragX, dragY}, 22);
+        this.waitTicks(4);
+        this.release(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(12);
+        // Widen it at its right edge
+        this.moveTo(() -> {
+            float[] box = newestElementBox();
+            return new float[] {box[0] + box[2], box[1] + box[3] / 2.0F};
+        }, 12);
+        this.waitTicks(8);
+        this.press(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.moveTo(() -> new float[] {this.pointerX + widenBy, this.pointerY}, 16);
+        this.waitTicks(4);
+        this.release(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(12);
+        // Give it a label through its right-click menu
+        this.moveTo(() -> center(newestElementBox()), 12);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_RIGHT);
+        this.waitUntil("element menu", () -> (ContextMenuHandler.INSTANCE.getCurrent() != null) && ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 60);
+        this.waitTicks(10);
+        this.moveTo(() -> new float[] {contextMenuEntry(labelEntry)[0] + 20, Math.min(this.pointerY + 70, MENU_SCROLL_TARGET_Y)}, 12);
+        this.waitTicks(4);
+        this.scrollMenuUntilVisible(minecraft, labelEntry);
+        this.waitTicks(6);
+        this.clickMenuEntry(minecraft, labelEntry);
+        this.waitUntil("text editor", () -> findEditor() != null, 60);
+        this.waitTicks(12);
+        this.key(minecraft, "shortcut+a", "Ctrl + A");
+        this.waitTicks(6);
+        this.type(minecraft, this.config.get("label").getAsString());
+        this.waitTicks(10);
+        this.moveTo(DocsShowcaseEditorGif::doneButton, 16);
+        this.waitTicks(5);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("text editor closed", () -> findEditor() == null, 60);
+        this.waitTicks(8);
+        // Click the empty background, so the element shows without its selection frame
+        this.moveTo(() -> new float[] {freeX, freeY}, 16);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(70);
+    }
+
+    /**
+     * The identifier of the entry of an element type in the New Element menu of the layout editor. The menu lists the types that aren't
+     * deprecated by name, as {@code element_<index>} (see LayoutEditorUI#buildElementContextMenu).
+     */
+    @NotNull
+    private static String newElementEntry(@NotNull String elementType) {
+        LayoutEditorScreen editor = requireLayoutEditor();
+        List<ElementBuilder<?, ?>> builders = new ArrayList<>();
+        for (ElementBuilder<?, ?> builder : ElementRegistry.getBuilders()) {
+            if (builder.shouldShowUpInEditorElementMenu(editor) && !builder.isDeprecated()) builders.add(builder);
+        }
+        builders.sort(Comparator
+                .comparing((ElementBuilder<?, ?> builder) -> builder.getDisplayName(null).getString(), String.CASE_INSENSITIVE_ORDER)
+                .thenComparing(builder -> builder.getDisplayName(null).getString())
+                .thenComparing(ElementBuilder::getIdentifier));
+        for (int i = 0; i < builders.size(); i++) {
+            if (builders.get(i).getIdentifier().equals(elementType)) return "element_" + i;
+        }
+        throw new IllegalStateException("No New Element entry for " + elementType);
+    }
+
+    @NotNull
+    private static LayoutEditorScreen requireLayoutEditor() {
+        LayoutEditorScreen editor = LayoutEditorScreen.getCurrentInstance();
+        if (editor == null) throw new IllegalStateException("The layout editor is not open");
+        return editor;
+    }
+
+    /**
+     * X, Y, width and height of the element that got added last in the layout editor, in GUI pixels.
+     */
+    @NotNull
+    private static float[] newestElementBox() {
+        List<AbstractEditorElement<?, ?>> elements = requireLayoutEditor().normalEditorElements;
+        if (elements.isEmpty()) throw new IllegalStateException("The layout has no elements");
+        AbstractEditorElement<?, ?> element = elements.get(elements.size() - 1);
+        return new float[] {element.getX(), element.getY(), element.getWidth(), element.getHeight()};
     }
 
     /**

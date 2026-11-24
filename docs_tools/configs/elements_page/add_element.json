@@ -1,0 +1,32 @@
+{
+ "script": "add_element",
+ "background_image": "/config/fancymenu/assets/docs_bg.png",
+ "elements": [
+  {
+   "x": 120,
+   "y": 48,
+   "w": 400,
+   "h": 44,
+   "look": "pixel",
+   "background": false,
+   "content": "^^^\n## Skyblock Odyssey\n^^^",
+   "scale": 2
+  }
+ ],
+ "right_click": [
+  190,
+  190
+ ],
+ "element_type": "custom_button",
+ "drag_to": [
+  295,
+  150
+ ],
+ "widen_by": 50,
+ "label_entry": "edit_label",
+ "label": "Join Server",
+ "free_spot": [
+  560,
+  300
+ ]
+}

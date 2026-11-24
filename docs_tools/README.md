@@ -17,6 +17,7 @@ Tools for screenshots, showcase GIFs and checks of the FancyMenu docs. Images ge
 | `configs/scroll_area_page/` | Configs of the Scrollable Areas images: elements of any type, elements in areas, editor stills. |
 | `configs/decoration_overlays_page/` | Configs of the Decoration Overlays images: overlays on the title screen, vanilla elements moved and hidden. |
 | `configs/action_scripts_page/` | Configs of the Action Scripts GIFs: making a button's action script in the editor, and clicking the button on the title screen. |
+| `configs/elements_page/` | Configs of the Elements images: one screenshot per visible element type, and the GIF of adding a Button through New Element. |
 | `configs/variables_page/` | Configs of the Variables GIFs: making variables in Manage Variables, a list action on a button, and the button in use. |
 | `configs/listeners_page/` | Configs of the Listeners images: making a listener in Manage Listeners, the listener running on the title screen, and stills of Manage Listeners and the listener chooser. |
 | `configs/export_for_ai_page/` | The chat GIF of the Export for AI page, a mockup of a support chat with Alice drawn with Pillow. The only image that isn't an in-game render, because it shows something outside of the game. Its avatar and emotes come from the user's Alice emotes folder. |
@@ -83,6 +84,7 @@ When done, `git restore` `FancyMenu.java` and remove the copied files. If the ha
      - `seed`: makes overlays build the same random setup every run.
      - `pointer`: `[x, y]` in GUI pixels. `[-40, -40]` keeps it off the screen.
      - `shots`: seconds for several screenshots of a scene that changes over time, named `<name>_<seconds>s.png`.
+     - `variables`: text variables to set before the scene opens, like `{"show_tips": "true"}` for a checkbox in Variable Mode or a linked text input field.
 
 2. Render (from the workspace root, about a minute):
 
@@ -117,6 +119,7 @@ oxipng -o 4 --strip safe <cropped dir>/*.png
    - `manage_variables`: opens **Customization -> Manage Variables** from the menu bar, adds a text variable and sets its value, then adds a list and types its entries in the list editor (`configs/variables_page/gen_configs.py`, needs `start: screen` and `menu_bar: true`).
    - `manage_listeners`: opens **Customization -> Manage Listeners** from the menu bar, clicks **Add Listener**, searches and picks a listener (`listener`, `listener_search`), gives it an action like `action_script`, selects it, clicks **Done** and presses `keys` (`configs/listeners_page/gen_configs.py`, needs `start: screen`, `menu_bar: true` and `listeners: []`).
    - `listeners_still`: opens Manage Listeners, selects a listener (`select`) and scrolls its description down (`description_wheel_turns`), then picks a type in the listener chooser. The frames of both stills have a `mark` event (`manage`, `choose`) in frames.jsonl: `configs/listeners_page/make_stills.py` picks and optimizes them.
+   - `add_element`: right-clicks a free spot (`right_click`), opens **New Element** and picks `element_type`, drags the element to `drag_to`, widens it by `widen_by` at its right edge, sets its label through `label_entry` (like `edit_label`) to `label`, and clicks `free_spot` (`configs/elements_page/gen_configs.py`).
    - `press_keys`: presses `keys` (each with `key` and `badge`) with `key_gap_ticks` between them, like a player trying a listener. `pointer: [-40, -40]` keeps the cursor out of the picture.
    - Fields of `action_script` value windows: `{"label", "text"}` types into a text field, `{"cycle", "clicks"}` clicks a cycle button (by the localization key of its label, like `fancymenu.actions.variables.arrange_list.edit.arrangement`).
    - The config's `elements`, `vanilla` and `background_image`/`background_color` (same keys as in scene configs) are the layout the editor opens with. `screen: title` opens it for the title screen instead of an empty Custom GUI.
@@ -124,7 +127,7 @@ oxipng -o 4 --strip safe <cropped dir>/*.png
    - `variables` sets up FancyMenu's variables first: all others get deleted, a text value makes a text variable, an array a list. `shuffle_seed` makes the Shuffle of Arrange List the same every run.
    - `listeners` replaces the listeners of the instance until the recording ends: each with `type`, optional `name`, and a `script` of actions (`action`, `value`) and IF statements (`if`: requirements with `requirement` and `value`, `actions`: the script inside). `[]` leaves none. The old listeners come back at the end, so a crashed recording can leave its listeners in `run_client_docs/config/fancymenu/listener_instances.txt`.
    - Steps: `waitTicks`, `waitUntil`, `moveTo`, `click`, `press` (optionally with modifiers), `release`, `key` (with badge label), `badge`, `type`, `typeQuickly` (for long texts), `wheel`, `clickMenuEntry` (also in sub-menus), `scrollMenuUntilVisible` (optionally to a given Y), `dragSelectWord`.
-   - Resolve targets from the real widgets, never from fixed positions: `menuEntry`, `editorBox`, `screenBox` (outside the editor), `wordEdge`, `lineEnd`, `doneButton`, and for windows `findWindow`/`requireWindow` (by body class), `windowWidgetCenter` (a widget field like `doneButton`), `windowButtonCenter` (a button by its label key), `chooserEntry` (an action in the action chooser), `cellInputAfterLabel` (a text field of a value window by its label key), `cellWidgetWithLabel` (a button of a value window by its label key), `menuBarEntry` (an entry of the menu bar outside the editor, like `screen` for Customization), `variableRow`, `variablesListFreeSpot` and `addEntryRow` (Manage Variables and its list editor), `listenerCell`, `listenerListFreeSpot`, `listenerChooserEntry` and `listenerChooserFreeSpot` (Manage Listeners and its listener chooser).
+   - Resolve targets from the real widgets, never from fixed positions: `menuEntry`, `editorBox`, `screenBox` (outside the editor), `wordEdge`, `lineEnd`, `doneButton`, and for windows `findWindow`/`requireWindow` (by body class), `windowWidgetCenter` (a widget field like `doneButton`), `windowButtonCenter` (a button by its label key), `chooserEntry` (an action in the action chooser), `cellInputAfterLabel` (a text field of a value window by its label key), `cellWidgetWithLabel` (a button of a value window by its label key), `menuBarEntry` (an entry of the menu bar outside the editor, like `screen` for Customization), `variableRow`, `variablesListFreeSpot` and `addEntryRow` (Manage Variables and its list editor), `listenerCell`, `listenerListFreeSpot`, `listenerChooserEntry` and `listenerChooserFreeSpot` (Manage Listeners and its listener chooser), `newElementEntry` (an element type in the New Element menu) and `newestElementBox` (the element that got added last).
 2. Record:
 
 ```bash
@@ -162,6 +165,8 @@ sh postprocess/encode.sh run_client_docs/gif_composed <path>/showcase.gif
 - Anchor overlays while dragging and long menu scrolls change big parts of the frame. The Scrollable Areas GIF is 1.4 MB for 25 seconds, the Action Scripts making GIF too (a button's right-click menu needs 21 wheel turns to reach **Edit Action Script**).
 - Value windows of actions focus their first text field with its text selected. Click a field and press `Ctrl + A` before typing, so the GIF shows what gets replaced.
 - Manage Listeners is a cell window like the value windows of actions. It hides while its action script editor is open, so value windows get found as the visible cell window (`findValueWindow`).
+- Player Entity elements need the Fancy Entity Renderer mod, which the test client doesn't have. They render an error box instead.
+- The default checkmark of Checkbox elements is a white square.
 - The recorder class has to be public, or its listener never runs and the game never stops.
 - A stuck test client never stops on its own. Stop its Java process (`ps`, look for the run folder).
 

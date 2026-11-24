@@ -1,6 +1,7 @@
 package de.keksuccino.fancymenu.util.window.preview;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.blaze3d.pipeline.RenderTarget;
@@ -11,6 +12,7 @@ import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
 import de.keksuccino.fancymenu.customization.layout.Layout;
 import de.keksuccino.fancymenu.customization.layout.LayoutHandler;
 import de.keksuccino.fancymenu.customization.overlay.CustomizationOverlay;
+import de.keksuccino.fancymenu.customization.variables.VariableHandler;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
@@ -27,6 +29,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -176,6 +179,12 @@ public final class DocsShowcase {
             CustomGui gui = CustomGuiHandler.getGui(CUSTOM_GUI_IDENTIFIER);
             if (gui == null) throw new IllegalStateException("The showcase GUI is missing");
             screen = CustomGuiHandler.constructInstance(gui, null, null);
+        }
+        // Text variables the elements of the scene read, like a checkbox in Variable Mode or a linked text input field
+        if (scene.has("variables")) {
+            for (Map.Entry<String, JsonElement> variable : scene.getAsJsonObject("variables").entrySet()) {
+                VariableHandler.setVariable(variable.getKey(), variable.getValue().getAsString());
+            }
         }
         Layout layout = Layout.buildForScreen(screen);
         layout.forcedScale = this.guiScale();
