@@ -71,10 +71,12 @@ SCENES += [
     ("hero_winter", NIGHT, GROWING, [{"type": "snowfall", "props": {}}, {"type": "string_lights", "props": WINTER_LIGHTS}]),
     ("snowfall_night", NIGHT, GROWING, [{"type": "snowfall", "props": {}}]),
     ("rainfall_night", NIGHT, NORMAL, [{"type": "rainfall", "props": {}}]),
-    # Dark bats don't show on the night background, and default fireflies are tiny
+    # Dark bats don't show on the night background, and default fireflies and birds are tiny
     ("bats_day", DAY, NORMAL, [{"type": "bats", "props": {}}]),
     ("bats_day_2x", DAY, NORMAL, [{"type": "bats", "props": {"size": "2"}}]),
-    ("fireflies_detailed", NIGHT, NORMAL, [{"type": "fireflies", "props": {"look": "detailed", "firefly_scale": "2.0"}}]),
+    ("fireflies_2x", NIGHT, [5, 10, 15, 20, 25, 30], [{"type": "fireflies", "props": {"look": "simple", "firefly_scale": "2.0"}}]),
+    ("birds_2x", DAY, [5, 10, 15, 20, 25, 30], [{"type": "birds", "props": {"size": "2", "amount": "50"}}]),
+    ("sky_lanterns_2x", NIGHT, [5, 10, 15, 20, 25, 30], [{"type": "sky_lanterns", "props": {"size": "2", "amount": "25"}}]),
 ]
 
 scenes = []

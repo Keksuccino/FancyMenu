@@ -2885,7 +2885,7 @@
    ]
   },
   {
-   "name": "fireflies_detailed",
+   "name": "fireflies_2x",
    "screen": "title",
    "background_image": "/config/fancymenu/assets/docs_bg_night.png",
    "seed": 7,
@@ -2895,7 +2895,10 @@
    ],
    "shots": [
     5,
+    10,
     15,
+    20,
+    25,
     30
    ],
    "elements": [],
@@ -2983,8 +2986,224 @@
     {
      "type": "fireflies",
      "props": {
-      "look": "detailed",
+      "look": "simple",
       "firefly_scale": "2.0"
+     }
+    }
+   ]
+  },
+  {
+   "name": "birds_2x",
+   "screen": "title",
+   "background_image": "/config/fancymenu/assets/docs_bg.png",
+   "seed": 7,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "shots": [
+    5,
+    10,
+    15,
+    20,
+    25,
+    30
+   ],
+   "elements": [],
+   "vanilla": [
+    {
+     "id": "mc_titlescreen_singleplayer_button",
+     "x": 140,
+     "y": 110,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_multiplayer_button",
+     "x": 140,
+     "y": 144,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_options_button",
+     "x": 140,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_quit_button",
+     "x": 247,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_realms_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_language_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_accessibility_button",
+     "hidden": true
+    },
+    {
+     "id": "titlescreen_mods_button",
+     "hidden": true
+    },
+    {
+     "id": "454370",
+     "hidden": true
+    },
+    {
+     "id": "minecraft_logo_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_splash_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_branding_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "title_screen_copyright_button",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_realms_notification_icons_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "birds",
+     "props": {
+      "size": "2",
+      "amount": "50"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sky_lanterns_2x",
+   "screen": "title",
+   "background_image": "/config/fancymenu/assets/docs_bg_night.png",
+   "seed": 7,
+   "pointer": [
+    -40,
+    -40
+   ],
+   "shots": [
+    5,
+    10,
+    15,
+    20,
+    25,
+    30
+   ],
+   "elements": [],
+   "vanilla": [
+    {
+     "id": "mc_titlescreen_singleplayer_button",
+     "x": 140,
+     "y": 110,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_multiplayer_button",
+     "x": 140,
+     "y": 144,
+     "w": 200,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_options_button",
+     "x": 140,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_quit_button",
+     "x": 247,
+     "y": 178,
+     "w": 93,
+     "h": 20
+    },
+    {
+     "id": "mc_titlescreen_realms_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_language_button",
+     "hidden": true
+    },
+    {
+     "id": "mc_titlescreen_accessibility_button",
+     "hidden": true
+    },
+    {
+     "id": "titlescreen_mods_button",
+     "hidden": true
+    },
+    {
+     "id": "454370",
+     "hidden": true
+    },
+    {
+     "id": "minecraft_logo_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_splash_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_branding_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "title_screen_copyright_button",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    },
+    {
+     "id": "minecraft_realms_notification_icons_widget",
+     "props": {
+      "should_be_affected_by_decoration_overlays": "false"
+     }
+    }
+   ],
+   "overlays": [
+    {
+     "type": "sky_lanterns",
+     "props": {
+      "size": "2",
+      "amount": "25"
      }
     }
    ]
