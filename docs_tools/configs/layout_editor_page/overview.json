@@ -1,0 +1,46 @@
+{
+ "script": "select_and_scroll",
+ "background_image": "/config/fancymenu/assets/docs_bg.png",
+ "elements": [
+  {
+   "id": "pack_title",
+   "x": 50,
+   "y": 50,
+   "w": 320,
+   "h": 44,
+   "look": "pixel",
+   "background": false,
+   "scale": 2,
+   "content": "^^^\n**Skyblock Adventures**\n^^^"
+  },
+  {
+   "type": "custom_button",
+   "id": "play_button",
+   "x": 135,
+   "y": 134,
+   "w": 150,
+   "h": 20,
+   "props": {
+    "label": "Play"
+   }
+  },
+  {
+   "type": "custom_button",
+   "id": "servers_button",
+   "x": 135,
+   "y": 186,
+   "w": 150,
+   "h": 20,
+   "props": {
+    "label": "Join Server"
+   }
+  }
+ ],
+ "show_widgets": true,
+ "target": "servers_button",
+ "click": [
+  20,
+  10
+ ],
+ "wheel_turns": 0
+}

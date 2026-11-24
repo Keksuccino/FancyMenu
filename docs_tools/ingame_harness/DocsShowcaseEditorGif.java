@@ -213,8 +213,10 @@ public final class DocsShowcaseEditorGif {
                         if (this.phaseTicks > 200) throw new IllegalStateException("The layout editor never opened");
                         return;
                     }
-                    // The Layers widget grows over the element at big UI scales and isn't part of what the showcase is about
-                    ((LayoutEditorScreen) ScreenUtils.getScreen()).layoutEditorWidgets.forEach(widget -> widget.setVisible(false));
+                    // The Layers widget grows over the element at big UI scales and isn't part of what the showcase is about,
+                    // unless the config wants it (show_widgets), like for an overview of the editor
+                    boolean showWidgets = this.config.has("show_widgets") && this.config.get("show_widgets").getAsBoolean();
+                    if (!showWidgets) ((LayoutEditorScreen) ScreenUtils.getScreen()).layoutEditorWidgets.forEach(widget -> widget.setVisible(false));
                 }
                 this.movePointer(minecraft, this.pointerX, this.pointerY);
                 this.buildScript(minecraft);
@@ -314,6 +316,7 @@ public final class DocsShowcaseEditorGif {
             case "add_placeholder" -> this.buildAddPlaceholderScript(minecraft);
             case "manage_requirements" -> this.buildManageRequirementsScript(minecraft);
             case "hover_elements" -> this.buildHoverElementsScript(minecraft);
+            case "editor_basics" -> this.buildEditorBasicsScript(minecraft);
             default -> throw new IllegalArgumentException("Unknown script " + script);
         }
     }
@@ -1223,6 +1226,91 @@ public final class DocsShowcaseEditorGif {
             this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
         }
         this.waitTicks(hold);
+    }
+
+    /**
+     * The basics of the layout editor: select and drag an element, widen it at its right edge, nudge it with the arrow keys, select
+     * buttons with a selection rectangle, copy and paste them, drag the copies away with Ctrl, undo twice and click the background.<br>
+     * Config: {@code target} (the element to move and widen), {@code move} ([x, y] it gets dragged by), {@code widen_by},
+     * {@code nudge} (how often Arrow Right gets pressed), {@code buttons} (the ids of the first and last button, in screen order),
+     * {@code copies_move} ([x, y] the copies get dragged by) and {@code free_spot} ([x, y], clicked at the end).
+     */
+    private void buildEditorBasicsScript(@NotNull Minecraft minecraft) {
+        String target = this.config.get("target").getAsString();
+        float moveX = this.config.getAsJsonArray("move").get(0).getAsFloat();
+        float moveY = this.config.getAsJsonArray("move").get(1).getAsFloat();
+        float widenBy = this.config.get("widen_by").getAsFloat();
+        int nudge = this.config.get("nudge").getAsInt();
+        String firstButton = this.config.getAsJsonArray("buttons").get(0).getAsString();
+        String lastButton = this.config.getAsJsonArray("buttons").get(1).getAsString();
+        float copiesX = this.config.getAsJsonArray("copies_move").get(0).getAsFloat();
+        float copiesY = this.config.getAsJsonArray("copies_move").get(1).getAsFloat();
+        float freeX = this.config.getAsJsonArray("free_spot").get(0).getAsFloat();
+        float freeY = this.config.getAsJsonArray("free_spot").get(1).getAsFloat();
+        this.waitTicks(20);
+        // Clicking the element selects it, dragging moves it. The targets get resolved when a move starts, before the element moves.
+        this.moveTo(() -> center(editorBox(target)), 16);
+        this.waitTicks(4);
+        this.press(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.moveTo(() -> new float[] {this.pointerX + moveX, this.pointerY + moveY}, 22);
+        this.waitTicks(6);
+        this.release(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(12);
+        // Widen it at the middle of its right edge
+        this.moveTo(() -> {
+            float[] box = editorBox(target);
+            return new float[] {box[0] + box[2], box[1] + box[3] / 2.0F};
+        }, 14);
+        this.waitTicks(6);
+        this.press(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.moveTo(() -> new float[] {this.pointerX + widenBy, this.pointerY}, 18);
+        this.waitTicks(6);
+        this.release(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(12);
+        // Nudge it pixel by pixel
+        for (int i = 0; i < nudge; i++) {
+            this.key(minecraft, "right", "Arrow Right");
+            this.waitTicks(6);
+        }
+        this.waitTicks(10);
+        // Select the buttons with a selection rectangle, from a free spot above the first one to below the last one
+        this.moveTo(() -> {
+            float[] box = editorBox(firstButton);
+            return new float[] {box[0] - 14, box[1] - 10};
+        }, 16);
+        this.waitTicks(4);
+        this.press(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.moveTo(() -> {
+            float[] box = editorBox(lastButton);
+            return new float[] {box[0] + box[2] + 14, box[1] + box[3] + 10};
+        }, 18);
+        this.waitTicks(4);
+        this.release(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(12);
+        // Copy and paste them. The copies land on top of the buttons and get selected.
+        this.key(minecraft, "shortcut+c", "Ctrl + C");
+        this.waitTicks(14);
+        this.key(minecraft, "shortcut+v", "Ctrl + V");
+        this.waitTicks(14);
+        // Drag the copies away. Ctrl keeps both of them selected.
+        this.moveTo(() -> center(editorBox(firstButton)), 12);
+        this.waitTicks(4);
+        this.badge("Ctrl + Drag");
+        this.press(minecraft, InputConstants.MOUSE_BUTTON_LEFT, InputQuirks.EDIT_SHORTCUT_KEY_MODIFIER);
+        this.moveTo(() -> new float[] {this.pointerX + copiesX, this.pointerY + copiesY}, 22);
+        this.waitTicks(6);
+        this.release(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(20);
+        // Undo the move, then the paste
+        this.key(minecraft, "shortcut+z", "Ctrl + Z");
+        this.waitTicks(20);
+        this.key(minecraft, "shortcut+z", "Ctrl + Z");
+        this.waitTicks(16);
+        // Click the empty background, so nothing shows a selection frame
+        this.moveTo(() -> new float[] {freeX, freeY}, 16);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(50);
     }
 
     /**
