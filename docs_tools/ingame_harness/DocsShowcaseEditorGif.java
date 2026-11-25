@@ -1040,8 +1040,10 @@ public final class DocsShowcaseEditorGif {
         float dragY = this.config.getAsJsonArray("drag_to").get(1).getAsFloat();
         float freeX = this.config.getAsJsonArray("free_spot").get(0).getAsFloat();
         float freeY = this.config.getAsJsonArray("free_spot").get(1).getAsFloat();
-        float widenBy = this.config.get("widen_by").getAsFloat();
-        String labelEntry = this.config.get("label_entry").getAsString();
+        float widenBy = this.config.has("widen_by") ? this.config.get("widen_by").getAsFloat() : 0.0F;
+        float heightenBy = this.config.has("heighten_by") ? this.config.get("heighten_by").getAsFloat() : 0.0F;
+        boolean resizeFirst = this.config.has("resize_first") && this.config.get("resize_first").getAsBoolean();
+        String labelEntry = this.config.has("label_entry") ? this.config.get("label_entry").getAsString() : null;
         String entry = newElementEntry(this.config.get("element_type").getAsString());
         int[] elementsBefore = {0};
         this.waitTicks(16);
@@ -1067,26 +1069,189 @@ public final class DocsShowcaseEditorGif {
         this.waitTicks(4);
         this.clickMenuEntry(minecraft, "add_element", entry);
         this.waitUntil("new element", () -> requireLayoutEditor().normalEditorElements.size() > elementsBefore[0], 40);
+        // Its id, since it doesn't stay the last element when it moves to other layers
+        String[] addedId = {null};
+        this.steps.addLast(() -> {
+            addedId[0] = requireLayoutEditor().normalEditorElements.get(requireLayoutEditor().normalEditorElements.size() - 1).element.getInstanceIdentifier();
+            return true;
+        });
         this.waitTicks(16);
         // Drag it to its place
-        this.moveTo(() -> center(newestElementBox()), 12);
+        Runnable dragToPlace = () -> {
+            this.moveTo(() -> center(newestElementBox()), 12);
+            this.waitTicks(4);
+            this.press(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+            if (this.config.has("exact_drag") && this.config.get("exact_drag").getAsBoolean()) {
+                this.dragPastCrumpleZone(minecraft, () -> new float[] {dragX, dragY}, 22);
+            } else {
+                this.moveTo(() -> new float[] {dragX, dragY}, 22);
+            }
+            this.waitTicks(4);
+            this.release(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+            this.waitTicks(12);
+        };
+        // Widen it at its right edge, and make it taller or lower at its bottom edge
+        boolean resizeCorner = this.config.has("resize_corner") && this.config.get("resize_corner").getAsBoolean();
+        Runnable resize = () -> {
+            if (resizeCorner) {
+                // Both at once, at the bottom-right corner
+                this.moveTo(() -> {
+                    float[] box = newestElementBox();
+                    return new float[] {box[0] + box[2], box[1] + box[3]};
+                }, 12);
+                this.waitTicks(8);
+                this.press(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+                this.moveTo(() -> new float[] {this.pointerX + widenBy, this.pointerY + heightenBy}, 18);
+                this.waitTicks(4);
+                this.release(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+                this.waitTicks(12);
+                return;
+            }
+            if (widenBy != 0.0F) {
+                this.moveTo(() -> {
+                    float[] box = newestElementBox();
+                    return new float[] {box[0] + box[2], box[1] + box[3] / 2.0F};
+                }, 12);
+                this.waitTicks(8);
+                this.press(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+                this.moveTo(() -> new float[] {this.pointerX + widenBy, this.pointerY}, 16);
+                this.waitTicks(4);
+                this.release(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+                this.waitTicks(12);
+            }
+            if (heightenBy != 0.0F) {
+                this.moveTo(() -> {
+                    float[] box = newestElementBox();
+                    return new float[] {box[0] + box[2] / 2.0F, box[1] + box[3]};
+                }, 12);
+                this.waitTicks(8);
+                this.press(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+                this.moveTo(() -> new float[] {this.pointerX, this.pointerY + heightenBy}, 16);
+                this.waitTicks(4);
+                this.release(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+                this.waitTicks(12);
+            }
+        };
+        if (resizeFirst) {
+            resize.run();
+            dragToPlace.run();
+        } else {
+            dragToPlace.run();
+            resize.run();
+        }
+        if (this.config.has("layer_down")) this.moveNewestElementLayerDown(minecraft, this.config.get("layer_down").getAsInt(), freeX, freeY);
+        if (this.config.has("anchor")) this.anchorByHovering(minecraft, this.config.getAsJsonObject("anchor"), addedId);
+        if (labelEntry != null) this.giveNewestElementLabel(minecraft, labelEntry);
+        // Click the empty background, so the element shows without its selection frame
+        this.moveTo(() -> new float[] {freeX, freeY}, 16);
         this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(this.config.has("hold_ticks") ? this.config.get("hold_ticks").getAsInt() : 70);
+    }
+
+    /**
+     * Anchors another element to the element that got added last, the way users do it: drag the element ({@code target}) at {@code grab}
+     * ([x, y]) straight up or down until the pointer is over the new element, hold it there until the anchor charge bar is full
+     * ({@code hover_ticks}), and drag it back to where it was. Fails if the element isn't anchored to the new one after that.
+     */
+    private void anchorByHovering(@NotNull Minecraft minecraft, @NotNull JsonObject anchor, @NotNull String[] addedId) {
+        String target = anchor.get("target").getAsString();
+        float grabX = anchor.getAsJsonArray("grab").get(0).getAsFloat();
+        float grabY = anchor.getAsJsonArray("grab").get(1).getAsFloat();
+        int hoverTicks = anchor.has("hover_ticks") ? anchor.get("hover_ticks").getAsInt() : 56;
+        this.moveTo(() -> new float[] {grabX, grabY}, 16);
+        this.waitTicks(6);
         this.press(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
-        this.moveTo(() -> new float[] {dragX, dragY}, 22);
         this.waitTicks(4);
+        if (anchor.has("out")) {
+            // The new element is under the pointer from the start, which the editor ignores until the pointer left it once:
+            // drag the element out of it by "out" and back, then hold
+            float outX = anchor.getAsJsonArray("out").get(0).getAsFloat();
+            float outY = anchor.getAsJsonArray("out").get(1).getAsFloat();
+            float[] shift = this.crumpleShift(outX, outY);
+            this.moveTo(() -> new float[] {grabX + shift[0], grabY + shift[1]}, 1);
+            this.moveTo(() -> new float[] {grabX + outX, grabY + outY}, 14);
+            this.waitTicks(6);
+            // Back to the same pointer position as right after the crumple zone, so the element ends where it was
+            this.moveTo(() -> new float[] {grabX + shift[0], grabY + shift[1]}, 14);
+            this.waitTicks(hoverTicks);
+        } else {
+            this.moveTo(() -> {
+                float[] box = editorBox(addedId[0]);
+                return new float[] {grabX, box[1] + box[3] / 2.0F};
+            }, 18);
+            this.waitTicks(hoverTicks);
+            this.moveTo(() -> new float[] {grabX, grabY}, 18);
+            this.waitTicks(4);
+        }
         this.release(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
         this.waitTicks(12);
-        // Widen it at its right edge
+        this.steps.addLast(() -> {
+            LayoutEditorScreen editor = requireLayoutEditor();
+            AbstractEditorElement<?, ?> element = editor.getElementByInstanceIdentifier(target);
+            if (element == null) throw new IllegalStateException("No element " + target + " in the editor");
+            if (!addedId[0].equals(element.element.getAnchorPointElementIdentifier())) {
+                throw new IllegalStateException(target + " didn't get anchored to " + addedId[0] + ", it is anchored to " + element.element.getAnchorPointElementIdentifier());
+            }
+            return true;
+        });
+    }
+
+    /**
+     * Drags a pressed element to the target, so that it moves by exactly the distance from the press to the target. The editor only starts
+     * moving elements once the pointer left a crumple zone around the press, and counts from where it left it, so the pointer jumps out of
+     * the zone in one tick first (a few pixels towards the target) and the target gets shifted by the same few pixels.
+     */
+    private void dragPastCrumpleZone(@NotNull Minecraft minecraft, @NotNull Supplier<float[]> target, int ticks) {
+        float[] shift = new float[2];
         this.moveTo(() -> {
-            float[] box = newestElementBox();
-            return new float[] {box[0] + box[2], box[1] + box[3] / 2.0F};
-        }, 12);
-        this.waitTicks(8);
-        this.press(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
-        this.moveTo(() -> new float[] {this.pointerX + widenBy, this.pointerY}, 16);
+            float[] to = target.get();
+            float[] s = this.crumpleShift(to[0] - this.pointerX, to[1] - this.pointerY);
+            shift[0] = s[0];
+            shift[1] = s[1];
+            return new float[] {this.pointerX + s[0], this.pointerY + s[1]};
+        }, 1);
+        this.moveTo(() -> {
+            float[] to = target.get();
+            return new float[] {to[0] + shift[0], to[1] + shift[1]};
+        }, ticks);
+    }
+
+    /** A step of 6 GUI pixels along the main axis of the direction, just past the editor's crumple zone of 5 pixels. */
+    @NotNull
+    private float[] crumpleShift(float dx, float dy) {
+        return (Math.abs(dx) >= Math.abs(dy)) ? new float[] {Math.signum(dx) * 6, 0} : new float[] {0, Math.signum(dy) * 6};
+    }
+
+    /**
+     * Right-clicks the element that got added last and clicks Move One Layer Down {@code times} times in its right-click menu, which stays
+     * open. Then clicks the free spot twice: once to close the menu, once to unselect the element, since selected elements show on top.
+     */
+    private void moveNewestElementLayerDown(@NotNull Minecraft minecraft, int times, float freeX, float freeY) {
+        this.moveTo(() -> center(newestElementBox()), 14);
         this.waitTicks(4);
-        this.release(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
-        this.waitTicks(12);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_RIGHT);
+        this.waitUntil("element menu", () -> (ContextMenuHandler.INSTANCE.getCurrent() != null) && ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 60);
+        this.waitTicks(8);
+        this.moveTo(() -> new float[] {contextMenuEntry("move_down_element")[0] + 20, Math.min(this.pointerY + 40, MENU_SCROLL_TARGET_Y)}, 12);
+        this.waitTicks(4);
+        this.scrollMenuUntilVisible(minecraft, "move_down_element");
+        this.waitTicks(4);
+        for (int i = 0; i < times; i++) {
+            if (i > 0) this.waitTicks(10);
+            this.clickMenuEntry(minecraft, "move_down_element");
+        }
+        this.waitTicks(8);
+        for (int i = 0; i < 2; i++) {
+            if (i == 0) this.moveTo(() -> new float[] {freeX, freeY}, 14);
+            this.waitTicks(4);
+            this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+            this.waitTicks(6);
+        }
+        this.waitTicks(6);
+    }
+
+    private void giveNewestElementLabel(@NotNull Minecraft minecraft, @NotNull String labelEntry) {
         // Give it a label through its right-click menu
         this.moveTo(() -> center(newestElementBox()), 12);
         this.waitTicks(4);
@@ -1109,11 +1274,6 @@ public final class DocsShowcaseEditorGif {
         this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
         this.waitUntil("text editor closed", () -> findEditor() == null, 60);
         this.waitTicks(8);
-        // Click the empty background, so the element shows without its selection frame
-        this.moveTo(() -> new float[] {freeX, freeY}, 16);
-        this.waitTicks(4);
-        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
-        this.waitTicks(70);
     }
 
     /**
@@ -1554,6 +1714,25 @@ public final class DocsShowcaseEditorGif {
                     return true;
                 });
                 this.moveTo(() -> pointInWidget(box[0], to), dragTicks);
+                this.waitTicks(4);
+                this.release(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+                this.waitTicks(rest);
+            } else if (step.has("grab")) {
+                // Drags a custom element of the screen, like a Dragger, at a point of its box ("at": parts of its width and height) by "by"
+                String target = step.get("grab").getAsString();
+                float atX = step.has("at") ? step.getAsJsonArray("at").get(0).getAsFloat() : 0.5F;
+                float atY = step.has("at") ? step.getAsJsonArray("at").get(1).getAsFloat() : 0.5F;
+                float byX = step.getAsJsonArray("by").get(0).getAsFloat();
+                float byY = step.getAsJsonArray("by").get(1).getAsFloat();
+                int dragTicks = step.has("drag_ticks") ? step.get("drag_ticks").getAsInt() : 40;
+                this.moveTo(() -> {
+                    float[] box = screenBox(target);
+                    return new float[] {box[0] + box[2] * atX, box[1] + box[3] * atY};
+                }, moveTicks);
+                this.waitTicks(8);
+                this.press(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+                this.waitTicks(4);
+                this.moveTo(() -> new float[] {this.pointerX + byX, this.pointerY + byY}, dragTicks);
                 this.waitTicks(4);
                 this.release(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
                 this.waitTicks(rest);
