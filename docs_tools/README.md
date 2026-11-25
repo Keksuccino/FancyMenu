@@ -9,6 +9,7 @@ Tools for screenshots, showcase GIFs and checks of the FancyMenu docs. Images ge
 | `ingame_harness/DocsShowcase.java` | Renders the elements of a scene config and takes one screenshot per scene. |
 | `ingame_harness/DocsShowcaseEditorGif.java` | Records a scripted layout editor workflow as GIF frames. |
 | `ingame_harness/DocsShowcaseElements.java` | Builds the elements of both from JSON. |
+| `world_harness/DocsWorldPanorama.java` | Makes a fresh flat world, builds a scene in it with commands and takes a panorama of it (six images). Separate from `ingame_harness/`, so it never gets copied with it. |
 | `postprocess/crop.py` | Crops scene screenshots to their elements. |
 | `postprocess/sprites.py` | Cursor sprites (arrow, I-beam) for `compose.py`. |
 | `postprocess/compose.py` | Draws cursor, click ripples and key badges onto GIF frames. |
@@ -31,6 +32,7 @@ Tools for screenshots, showcase GIFs and checks of the FancyMenu docs. Images ge
 | `configs/export_for_ai_page/` | The chat GIF of the Export for AI page, a mockup of a support chat with Alice drawn with Pillow. The only image that isn't an in-game render, because it shows something outside of the game. Its avatar and emotes come from the user's Alice emotes folder. |
 | `configs/global_customizations_page/` | Configs of the Global Customizations GIF: a tour through the Title screen, Options and Music & Sounds without layouts, with global wood button and brass slider textures (`make_textures.py` draws them) and a night menu background. |
 | `configs/getting_started_page/` | Configs and pixel art of the Getting Started GIFs, which build the Wildwood title screen step by step: `make_assets.py` draws its scene (also as three parallax layers), logo and wooden buttons (`wildwood/`), `gen_configs.py` writes the configs of the finished menu, making a first layout from the menu bar, setting the background, adding the logo and saving, `make_stills.py` crops the menu bar still. |
+| `configs/panoramas_page/` | The forest homestead panorama and the configs of the Panoramas images: `build_homestead.py` writes the commands that build a log cabin with a woodshed, garden, coop, sheep pen, fire pit, pond and well in a forest clearing, `preview_panorama.py` renders views of six panorama images like FancyMenu shows them, `package_panorama.py` makes the FancyMenu panorama `forest_homestead` from them (with `properties.txt` and a vignette `overlay.png`), `gen_configs.py` writes the configs of the Title screen with the panorama and of setting it as menu background in the editor, `make_stills.py` picks the still. |
 | `configs/parallax_page/` | Configs and pixel art of the Parallax Effect images: `make_layers.py` draws a landscape at dusk as a sky background and three layers, `gen_configs.py` writes the configs of the title screen with the pointer moving around, of turning on the effect of the foreground layer, and of the still of the background's parallax settings, which `make_stills.py` crops. Nearly every pixel of the scene GIF changes, so `half_size.py` halves its frames before `compose.py` (640x360, about 1.3 MB). |
 | `configs/menu_backgrounds_page/` | Pixel art and configs of the Menu Backgrounds images: `make_art.py` draws Frostvale, a snowy valley at night with an aurora and a cabin, also as `land.png` with a transparent sky. `gen_configs.py` writes the scenes (the hero, stacking over a Color background, the dark overlay and blur), the GIF of setting it as Image background and the still of the open Menu Backgrounds menu. `make_stills.py` crops, splits and optimizes the stills. |
 | `checks/check_page.py` | Checks a page's UI labels, link format, links, anchors and images. |
@@ -146,6 +148,7 @@ oxipng -o 4 --strip safe <cropped dir>/*.png
    - `screen_tour`: outside the editor, walks through vanilla screens like a player, by the labels of their buttons and sliders (`tour` steps: `hover`, `click` with `opens: true` for buttons that open a screen, `drag` of a slider `from`/`to` parts of its width, `point`, `wait`). Labels are lang keys and match from their start, so `options.fov` finds `FOV: 70`. Widgets in lists count too (`configs/global_customizations_page/gen_configs.py`, needs `start: screen`).
    - `first_layout`: outside the editor with the menu bar (`start: screen`, `menu_bar: true`, `no_layout: true`, `customization: false`), opens **Customization**, turns on **Current Screen Customization** and clicks **Layouts -> New -> For Current Screen**, then holds in the editor. Its frame with the open Customization menu has a `mark` event (`menu`) for a still (`configs/getting_started_page/gen_configs.py`).
    - `menu_background`: right-clicks `right_click`, opens **Menu Backgrounds -> Image**, turns on **Show Background**, clicks **Choose Image** and picks `file` (in the assets sub-folder `folder`) through the resource chooser: **Source Type** to Local, **Choose Local Resource File**, a double-click on the folder, a click on the file and **OK**. Then it clicks `free_spot`.
+   - `panorama_background`: right-clicks `right_click`, opens **Menu Backgrounds -> Cubic Panorama**, turns on **Show Background**, clicks **Panorama Name**, picks `panorama` in **Choose Panorama**, rests on its preview for `preview_ticks` and clicks **Done**. Then it clicks `free_spot` (`configs/panoramas_page/gen_configs.py`).
    - `add_image`: deletes the vanilla elements of `remove` (click and `Delete`), adds an Image element through **Element -> New** of the editor's menu bar, picks its `file` through **Image Source** (like `menu_background`), clicks **Restore Aspect Ratio**, drags its center to `drag_to` and clicks `free_spot`. It scrolls the right-click menu of the image until the entry is inside its visible part, two wheel steps per frame.
    - `save_layout`: presses `Ctrl + S`, clicks **Save** in the Save File window (keeping its file name), closes the editor with the X of its menu bar and rests on the screen (`hovers`: `label` of a vanilla widget or `point`). It saves a real layout file: move it to the trash after recording.
    - `element_settings`: right-clicks the element at `right_click` and goes through `settings`: `toggle` (an entry identifier, like `enable_parallax`) clicks it, `number` (the entry of a number setting, like `menu_entry_parallax_intensity_x`) opens its number picker, types `value` after `Ctrl + A` and clicks **Done**. The number picker closes the menu, so the next setting right-clicks again. Optional `rest_point` and `hold_ticks` (`configs/parallax_page/gen_configs.py`).
@@ -218,6 +221,38 @@ sh postprocess/encode.sh run_client_docs/gif_composed <path>/showcase.gif
 - Scripts get built before they run, so a step can't look at what's open at that time. Say it in the config instead, like `from_open_menu`.
 - The recorder class has to be public, or its listener never runs and the game never stops.
 - A stuck test client never stops on its own. Stop its Java process (`ps`, look for the run folder).
+
+# World Panoramas
+
+`world_harness/DocsWorldPanorama.java` takes in-game panoramas of scenes built with commands, like the forest homestead of the Panoramas page. It doesn't need FancyMenu's features, so it can run in an older workspace while the newest one records other images (all off-screen clients still take turns through one lock).
+
+1. Install it like the harness: copy it to `common/src/main/java/de/keksuccino/fancymenu/util/window/preview/` and add this after `WindowPreview.startIfRequested();` in `FancyMenu.java`:
+   `de.keksuccino.fancymenu.util.window.preview.DocsWorldPanorama.startIfRequested();`
+2. Write the commands (one per line, without the slash) and a config:
+
+```json
+{"commands_file": "/abs/homestead.txt", "eye": [-2.0, -53.0, 3.0], "yaw": 180, "render_distance": 16, "settle_ticks": 400,
+ "capture_size": 2048, "downscale": 2, "shots": [{"name": "sunset", "time": "12100"}]}
+```
+
+   - `eye`: where the camera is, `yaw`: where the front image (`panorama_0.png`) looks. Shots can have their own `eye` and `yaw`.
+   - Each shot sets the `time` (and runs its optional `commands`), waits `shot_settle_ticks` and takes the six images into `<out>/<name>/screenshots/`.
+   - The window gets square (`capture_size`) and the camera uses Minecraft's panoramic mode (90 degrees). `downscale` makes the images smaller and smoother.
+3. Run it (about 3 minutes) and check `[CHECK]` lines. `command failed` lines name the commands that changed nothing, like features that found no room.
+
+```bash
+FANCYMENU_TEST_RUN_DIR=run_client_docs FANCYMENU_DOCS_WORLD=<config.json> FANCYMENU_DOCS_WORLD_OUT=<out dir> sh offscreen_client.sh fabric
+```
+
+4. Look at the images with `configs/panoramas_page/preview_panorama.py`. Every run makes a new world in `run_client_docs/saves/`: move old ones to the trash.
+5. Restore `FancyMenu.java` and remove the copied file when you're done.
+
+Gotchas:
+
+- Minecraft's own `grabPanoramixScreenshot` renders outside of the frame and fails in 26.2, so the harness turns the camera and takes one normal frame per image.
+- Turn the camera only on the client between the images. A teleport from the server resets the rotation a few ticks later.
+- `/setblock` keeps the block states you give it and fills in the rest from the neighbors, so fences and stairs connect on their own. Give roof stairs `shape=straight` where neighbors would bend them into corners.
+- `/fillbiome` and `/fill` refuse areas over 32768 blocks: split them.
 
 # Checking Pages
 

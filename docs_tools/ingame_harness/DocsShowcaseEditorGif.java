@@ -374,6 +374,7 @@ public final class DocsShowcaseEditorGif {
             case "screen_tour" -> this.buildScreenTourScript(minecraft);
             case "first_layout" -> this.buildFirstLayoutScript(minecraft);
             case "menu_background" -> this.buildMenuBackgroundScript(minecraft);
+            case "panorama_background" -> this.buildPanoramaBackgroundScript(minecraft);
             case "add_image" -> this.buildAddImageScript(minecraft);
             case "save_layout" -> this.buildSaveLayoutScript(minecraft);
             case "element_settings" -> this.buildElementSettingsScript(minecraft);
@@ -2409,6 +2410,62 @@ public final class DocsShowcaseEditorGif {
             }
         }
         throw new IllegalStateException(chooser.getSimpleName() + " lists no " + name);
+    }
+
+    /**
+     * In the editor: right-clicks {@code right_click}, opens Menu Backgrounds -> Cubic Panorama, turns on Show Background, clicks
+     * Panorama Name, picks the panorama {@code panorama} in Choose Panorama, rests on its preview for {@code preview_ticks} (default 50)
+     * and clicks Done. Then it clicks {@code free_spot} and holds for {@code hold_ticks} (default 70).
+     */
+    private void buildPanoramaBackgroundScript(@NotNull Minecraft minecraft) {
+        float clickX = this.config.getAsJsonArray("right_click").get(0).getAsFloat();
+        float clickY = this.config.getAsJsonArray("right_click").get(1).getAsFloat();
+        String panorama = this.config.get("panorama").getAsString();
+        Class<?> chooser = de.keksuccino.fancymenu.customization.layout.editor.ChoosePanoramaScreen.class;
+        this.waitTicks(16);
+        this.moveTo(() -> new float[] {clickX, clickY}, 18);
+        this.waitTicks(6);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_RIGHT);
+        this.waitUntil("context menu", () -> (ContextMenuHandler.INSTANCE.getCurrent() != null) && ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 60);
+        this.waitTicks(10);
+        this.clickMenuEntry(minecraft, "menu_backgrounds");
+        this.waitUntil("Menu Backgrounds menu", () -> subMenu("menu_backgrounds").isOpen(), 40);
+        this.waitTicks(8);
+        this.moveTo(() -> new float[] {menuEntry("menu_backgrounds", "menu_background_panorama")[0], this.pointerY}, 10);
+        this.clickMenuEntry(minecraft, "menu_backgrounds", "menu_background_panorama");
+        this.waitUntil("Cubic Panorama menu", () -> subMenu("menu_backgrounds", "menu_background_panorama").isOpen(), 40);
+        this.waitTicks(8);
+        this.moveTo(() -> new float[] {menuEntry("menu_backgrounds", "menu_background_panorama", "menu_entry_show_background")[0], this.pointerY}, 10);
+        this.clickMenuEntry(minecraft, "menu_backgrounds", "menu_background_panorama", "menu_entry_show_background");
+        this.waitTicks(16);
+        this.clickMenuEntry(minecraft, "menu_backgrounds", "menu_background_panorama", "panorama_name");
+        this.waitUntil("Choose Panorama", () -> findWindow(chooser) != null, 60);
+        this.waitTicks(16);
+        this.moveTo(() -> panoramaChooserEntry(panorama), 14);
+        this.waitTicks(5);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(this.config.has("preview_ticks") ? this.config.get("preview_ticks").getAsInt() : 50);
+        this.moveTo(() -> windowWidgetCenter(requireWindow(chooser), "doneButton"), 16);
+        this.waitTicks(5);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("Choose Panorama closed", () -> findWindow(chooser) == null, 60);
+        this.waitTicks(16);
+        this.clickFreeSpotAndHold(minecraft, 70);
+    }
+
+    /**
+     * The GUI position of a panorama in the list of the open Choose Panorama window, a bit right of the start of its name.
+     */
+    @NotNull
+    private static float[] panoramaChooserEntry(@NotNull String name) {
+        PiPWindow window = requireWindow(de.keksuccino.fancymenu.customization.layout.editor.ChoosePanoramaScreen.class);
+        ScrollArea list = (ScrollArea) readField(window.getScreen(), "panoramaListScrollArea");
+        for (ScrollAreaEntry entry : list.getEntries()) {
+            if ((entry instanceof de.keksuccino.fancymenu.customization.layout.editor.ChoosePanoramaScreen.PanoramaScrollEntry panoramaEntry) && panoramaEntry.panorama.equals(name)) {
+                return bodyToGui(window, entry.getX() + Math.min(60.0F, entry.getWidth() / 2.0F), entry.getY() + entry.getHeight() / 2.0F);
+            }
+        }
+        throw new IllegalStateException("Choose Panorama lists no " + name);
     }
 
     /**
