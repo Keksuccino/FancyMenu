@@ -31,6 +31,7 @@ Tools for screenshots, showcase GIFs and checks of the FancyMenu docs. Images ge
 | `configs/global_customizations_page/` | Configs of the Global Customizations GIF: a tour through the Title screen, Options and Music & Sounds without layouts, with global wood button and brass slider textures (`make_textures.py` draws them) and a night menu background. |
 | `configs/getting_started_page/` | Configs and pixel art of the Getting Started GIFs, which build the Wildwood title screen step by step: `make_assets.py` draws its scene (also as three parallax layers), logo and wooden buttons (`wildwood/`), `gen_configs.py` writes the configs of the finished menu, making a first layout from the menu bar, setting the background, adding the logo and saving, `make_stills.py` crops the menu bar still. |
 | `configs/parallax_page/` | Configs and pixel art of the Parallax Effect images: `make_layers.py` draws a landscape at dusk as a sky background and three layers, `gen_configs.py` writes the configs of the title screen with the pointer moving around, of turning on the effect of the foreground layer, and of the still of the background's parallax settings, which `make_stills.py` crops. Nearly every pixel of the scene GIF changes, so `half_size.py` halves its frames before `compose.py` (640x360, about 1.3 MB). |
+| `configs/menu_backgrounds_page/` | Pixel art and configs of the Menu Backgrounds images: `make_art.py` draws Frostvale, a snowy valley at night with an aurora and a cabin, also as `land.png` with a transparent sky. `gen_configs.py` writes the scenes (the hero, stacking over a Color background, the dark overlay and blur), the GIF of setting it as Image background and the still of the open Menu Backgrounds menu. `make_stills.py` crops, splits and optimizes the stills. |
 | `checks/check_page.py` | Checks a page's UI labels, link format, links, anchors and images. |
 | `assets/` | Cursor sprites, `docs_bg.png` (a blurred panorama background) and `docs_bg_night.png` (the same at night). |
 
@@ -89,7 +90,7 @@ When done, `git restore` `FancyMenu.java` and remove the copied files. If the ha
    - More scene keys (template: `configs/decoration_overlays_page/gen_scenes.py`):
      - `screen`: `title` for the title screen, instead of an empty screen.
      - `vanilla`: changes vanilla elements, by widget identifier (`id`): `hidden`, `x`/`y`/`w`/`h` (moves it, anchored top-left) and `props`.
-     - `background_image` (like `/config/fancymenu/assets/docs_bg.png`) or `background_color` (`#RRGGBB`): the menu background.
+     - `background_image` (like `/config/fancymenu/assets/docs_bg.png`) and/or `background_color` (`#RRGGBB`): the menu backgrounds. With both, the color is below the image, like in saved layouts. `background_overlay`, `background_blur` and `background_aspect` (`true`) turn on the layout's **Show Dark Overlay On Custom Background**, **Apply Vanilla Background Blur** and **Preserve Background Aspect Ratio** (`configs/menu_backgrounds_page/gen_configs.py`).
      - `overlays`: decoration overlays, each with `type` (like `snowfall`), optional `layers` and `props`.
      - `seed`: makes overlays build the same random setup every run.
      - `pointer`: `[x, y]` in GUI pixels. `[-40, -40]` keeps it off the screen.

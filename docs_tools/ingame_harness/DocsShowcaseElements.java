@@ -88,10 +88,23 @@ final class DocsShowcaseElements {
     }
 
     /**
-     * Adds the menu background of a scene or config: {@code background_image} (a resource source, like
-     * {@code /config/fancymenu/assets/docs_bg.png}, optionally with {@code background_parallax}) or {@code background_color} ({@code #RRGGBB}).
+     * Adds the menu backgrounds of a scene or config: {@code background_image} (a resource source, like
+     * {@code /config/fancymenu/assets/docs_bg.png}, optionally with {@code background_parallax}) and/or {@code background_color}
+     * ({@code #RRGGBB}). With both, the color is below the image, like in saved layouts. {@code background_overlay},
+     * {@code background_blur} and {@code background_aspect} turn on the layout's Show Dark Overlay On Custom Background,
+     * Apply Vanilla Background Blur and Preserve Background Aspect Ratio.
      */
     static void addBackgroundTo(@NotNull Layout layout, @NotNull JsonObject data) {
+        // Saved layouts keep their backgrounds in the order of the registry, which starts with Color, so it renders first
+        if (data.has("background_color")) {
+            ColorMenuBackground background = MenuBackgrounds.COLOR.buildDefaultInstance();
+            background.color.set(data.get("background_color").getAsString());
+            background.showBackground.set(true);
+            layout.menuBackgrounds.add(background);
+        }
+        if (data.has("background_overlay")) layout.showScreenBackgroundOverlayOnCustomBackground = data.get("background_overlay").getAsBoolean();
+        if (data.has("background_blur")) layout.applyVanillaBackgroundBlur = data.get("background_blur").getAsBoolean();
+        if (data.has("background_aspect")) layout.preserveBackgroundAspectRatio = data.get("background_aspect").getAsBoolean();
         if (data.has("background_image")) {
             ImageMenuBackground background = MenuBackgrounds.IMAGE.buildDefaultInstance();
             background.textureSupplier.set(ResourceSupplier.image(data.get("background_image").getAsString()));
@@ -102,11 +115,6 @@ final class DocsShowcaseElements {
                 background.parallaxIntensityXString.set(data.getAsJsonArray("background_parallax").get(0).getAsFloat());
                 background.parallaxIntensityYString.set(data.getAsJsonArray("background_parallax").get(1).getAsFloat());
             }
-            layout.menuBackgrounds.add(background);
-        } else if (data.has("background_color")) {
-            ColorMenuBackground background = MenuBackgrounds.COLOR.buildDefaultInstance();
-            background.color.set(data.get("background_color").getAsString());
-            background.showBackground.set(true);
             layout.menuBackgrounds.add(background);
         }
     }
