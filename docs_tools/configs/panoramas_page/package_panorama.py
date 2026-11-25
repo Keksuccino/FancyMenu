@@ -1,11 +1,15 @@
-"""Turns the six screenshots of the world harness into the FancyMenu panorama forest_homestead: the images, its properties.txt and
-a soft vignette as overlay.png.
+"""Turns the six screenshots of the world harness into the FancyMenu panorama forest_homestead: the images (losslessly optimized),
+its properties.txt, a soft vignette as overlay.png and a README.txt. Also zips it as forest_homestead.zip, the free download of the
+Panoramas page (assets/forest_homestead.zip of the docs repo).
 
-Usage: python3 package_panorama.py <folder with panorama_0.png to panorama_5.png> <out dir>   # writes <out dir>/forest_homestead/
+Usage: python3 package_panorama.py <folder with panorama_0.png to panorama_5.png> <out dir>
+       # writes <out dir>/forest_homestead/ and <out dir>/forest_homestead.zip
 """
 import os
 import shutil
+import subprocess
 import sys
+import zipfile
 
 import numpy as np
 from PIL import Image
@@ -19,6 +23,15 @@ panorama-meta {
   angle = 25.0
   start_rotation = 0
 }
+"""
+
+
+README = """Forest Homestead, a panorama for FancyMenu: a log cabin in a forest clearing at sunset, built and captured in Minecraft.
+
+Free to use, for testing and in your own modpacks and other projects.
+
+To use it, put this forest_homestead folder into config/fancymenu/panoramas/ of your game directory and reload FancyMenu
+(Ctrl + Alt + R, or Cmd + Alt + R on macOS) or restart the game. The Panoramas page of the FancyMenu docs shows how to use it.
 """
 
 
@@ -43,7 +56,18 @@ def main():
     with open(os.path.join(folder, 'properties.txt'), 'w') as f:
         f.write(PROPERTIES)
     vignette().save(os.path.join(folder, 'overlay.png'))
+    with open(os.path.join(folder, 'README.txt'), 'w') as f:
+        f.write(README)
+    pngs = [os.path.join(folder, 'overlay.png')] + [os.path.join(folder, 'panorama', 'panorama_%d.png' % i) for i in range(6)]
+    subprocess.run(['oxipng', '-o', '4', '--strip', 'safe'] + pngs, check=True, capture_output=True)
+    # The zip holds the folder, so it unzips right into config/fancymenu/panoramas/. Nothing else goes next to the folder:
+    # FancyMenu reports every file in panoramas/ that isn't a panorama folder as an invalid panorama.
+    zip_path = os.path.join(out, 'forest_homestead.zip')
+    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as z:
+        for name in ['README.txt', 'properties.txt', 'overlay.png'] + ['panorama/panorama_%d.png' % i for i in range(6)]:
+            z.write(os.path.join(folder, name), 'forest_homestead/' + name)
     print(folder)
+    print(zip_path, os.path.getsize(zip_path), 'bytes')
 
 
 if __name__ == '__main__':

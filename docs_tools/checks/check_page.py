@@ -69,7 +69,7 @@ for page in pages:
         if anchor not in anchors(page):
             problems += 1
             print(f"MISS anchor #{anchor}")
-    for asset in sorted(set(re.findall(r"refs/heads/wiki-2026/(assets/[^?\"\s]+)", text))):
+    for asset in sorted(set(re.findall(r"refs/heads/wiki-2026/(assets/[^?\"\s)]+)", text))):
         if not os.path.exists(os.path.join(docs, asset)):
             problems += 1
             print(f"MISS image  {asset}")
