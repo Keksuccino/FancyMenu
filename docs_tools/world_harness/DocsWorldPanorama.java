@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.mojang.datafixers.util.Pair;
 import de.keksuccino.fancymenu.events.ticking.ClientTickEvent;
 import de.keksuccino.fancymenu.util.ScreenUtils;
 import de.keksuccino.fancymenu.util.event.acara.EventHandler;
@@ -16,11 +17,18 @@ import net.minecraft.client.Screenshot;
 import net.minecraft.server.level.ParticleStatus;
 import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.LevelSettings;
 import net.minecraft.world.level.WorldDataConfiguration;
+import net.minecraft.world.level.biome.Biome;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.level.levelgen.WorldOptions;
 import net.minecraft.world.level.levelgen.presets.WorldPresets;
 import org.apache.logging.log4j.LogManager;
@@ -34,6 +42,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Dev-only docs tool: makes a fresh flat world, builds a scene in it with commands and takes Minecraft's own panorama screenshot of it.
@@ -43,7 +52,12 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Config: {@code commands_file} (one command per line, without the slash, {@code #} for comments), {@code eye} ({@code [x, y, z]} of the
  * camera), {@code yaw} (where the front image looks), {@code shots} (each with {@code name} and the {@code time} of day: one panorama
  * each, in {@code <out>/<name>/screenshots/}), {@code render_distance}, {@code settle_ticks} (wait after building, for chunks, light and
- * smoke) and {@code shot_settle_ticks} (wait after changing the time).
+ * smoke) and {@code shot_settle_ticks} (wait after changing the time).<br>
+ * {@code preset: "normal"} generates a normal world (from {@code seed}) instead of a flat one. {@code mode: "screenshot"} takes one normal
+ * screenshot per shot instead of a panorama, at {@code screenshot_size} ({@code [w, h]}, default 1280x720) with the field of view
+ * {@code fov}. Screenshot shots look at {@code yaw} and {@code pitch}, from their {@code eye} or from {@code above_ground} blocks above the
+ * ground of the closest {@code biome} (like {@code minecraft:cherry_grove}) to {@code near} ({@code [x, z]}), moved by {@code offset}
+ * ({@code [dx, dz]}). They land in {@code <out>/screenshots/<name>.png}.
  */
 public final class DocsWorldPanorama {
 
@@ -61,6 +75,9 @@ public final class DocsWorldPanorama {
     private int nextCommand = 0;
     private int shotIndex = 0;
     private CompletableFuture<Void> lastBatch = CompletableFuture.completedFuture(null);
+    /** The eye position of the current screenshot shot, once the server found it. */
+    private final AtomicReference<double[]> shotEye = new AtomicReference<>();
+    private int shotPlacedAt = -1;
 
     private DocsWorldPanorama(@NotNull Path out, @NotNull JsonObject config) throws Exception {
         this.out = out;
@@ -115,7 +132,7 @@ public final class DocsWorldPanorama {
                         new LevelSettings.DifficultySettings(Difficulty.PEACEFUL, false, false), true, WorldDataConfiguration.DEFAULT);
                 WorldOptions options = new WorldOptions(this.config.has("seed") ? this.config.get("seed").getAsLong() : 1L, false, false);
                 minecraft.createWorldOpenFlows().createFreshLevel(levelId, settings, options,
-                        registries -> registries.lookupOrThrow(Registries.WORLD_PRESET).getOrThrow(WorldPresets.FLAT).value().createWorldDimensions(),
+                        registries -> registries.lookupOrThrow(Registries.WORLD_PRESET).getOrThrow(this.isNormalWorld() ? WorldPresets.NORMAL : WorldPresets.FLAT).value().createWorldDimensions(),
                         ScreenUtils.getScreen());
                 LOGGER.info("[CHECK] world created: PASS " + levelId);
                 this.setPhase(Phase.WAIT_FOR_WORLD);
@@ -134,7 +151,7 @@ public final class DocsWorldPanorama {
                 if (this.nextCommand >= this.commands.size()) {
                     LOGGER.info("[CHECK] built the scene: " + ((this.commandFailures.get() == 0) ? "PASS " : "FAIL ") + this.commands.size() + " commands, "
                             + this.commandFailures.get() + " failed");
-                    this.placeCamera(minecraft);
+                    if (this.config.has("eye")) this.placeCamera(minecraft);
                     this.setPhase(Phase.SETTLE);
                     return;
                 }
@@ -147,8 +164,15 @@ public final class DocsWorldPanorama {
                 });
             }
             case SETTLE -> {
-                if (this.phaseTicks == 20) this.placeCamera(minecraft);
-                if (this.phaseTicks == 40) {
+                if ((this.phaseTicks == 20) && this.config.has("eye")) this.placeCamera(minecraft);
+                if ((this.phaseTicks == 40) && this.isScreenshotMode()) {
+                    int width = this.config.has("screenshot_size") ? this.config.getAsJsonArray("screenshot_size").get(0).getAsInt() : 1280;
+                    int height = this.config.has("screenshot_size") ? this.config.getAsJsonArray("screenshot_size").get(1).getAsInt() : 720;
+                    int factor = this.intConfig("downscale", 2);
+                    float density = Math.max(1.0F, (float) minecraft.getWindow().getWidth() / Math.max(1, minecraft.getWindow().getScreenWidth()));
+                    minecraft.getWindow().setWindowed(Math.round(width * factor / density), Math.round(height * factor / density));
+                    minecraft.options.fov().set(this.intConfig("fov", 70));
+                } else if (this.phaseTicks == 40) {
                     // A square window, so every side of the cube is a square with a 90 degree field of view
                     int size = this.intConfig("capture_size", 2048);
                     // Framebuffer pixels per window unit (2 on Retina screens)
@@ -168,6 +192,10 @@ public final class DocsWorldPanorama {
                     return;
                 }
                 JsonObject shot = shots.get(this.shotIndex).getAsJsonObject();
+                if (this.isScreenshotMode()) {
+                    this.takeScreenshotShot(minecraft, shot);
+                    return;
+                }
                 if (this.phaseTicks == 1) {
                     IntegratedServer server = minecraft.getSingleplayerServer();
                     String time = shot.get("time").getAsString();
@@ -218,6 +246,109 @@ public final class DocsWorldPanorama {
         }
     }
 
+    private boolean isNormalWorld() {
+        return this.config.has("preset") && "normal".equals(this.config.get("preset").getAsString());
+    }
+
+    private boolean isScreenshotMode() {
+        return this.config.has("mode") && "screenshot".equals(this.config.get("mode").getAsString());
+    }
+
+    /**
+     * One screenshot shot: sets the time, runs its commands, finds its eye (on the server, from {@code biome} or {@code eye}), puts the
+     * camera there, waits its {@code settle_ticks} (or {@code shot_settle_ticks}, default 240) for the chunks around it and takes the
+     * screenshot.
+     */
+    private void takeScreenshotShot(@NotNull Minecraft minecraft, @NotNull JsonObject shot) {
+        IntegratedServer server = minecraft.getSingleplayerServer();
+        String name = shot.get("name").getAsString();
+        if (this.phaseTicks == 1) {
+            this.shotEye.set(null);
+            this.shotPlacedAt = -1;
+            String time = shot.get("time").getAsString();
+            server.execute(() -> this.runCommand(server, "time set " + time));
+            if (shot.has("commands")) {
+                for (JsonElement command : shot.getAsJsonArray("commands")) {
+                    String c = command.getAsString();
+                    server.execute(() -> this.runCommand(server, c));
+                }
+            }
+            if (shot.has("biome")) {
+                server.execute(() -> this.locateShotEye(server, shot));
+            } else {
+                JsonArray eye = shot.has("eye") ? shot.getAsJsonArray("eye") : this.config.getAsJsonArray("eye");
+                this.shotEye.set(new double[] {eye.get(0).getAsDouble(), eye.get(1).getAsDouble(), eye.get(2).getAsDouble()});
+            }
+            return;
+        }
+        float yaw = shot.has("yaw") ? shot.get("yaw").getAsFloat() : 0.0F;
+        float pitch = shot.has("pitch") ? shot.get("pitch").getAsFloat() : 0.0F;
+        double[] eye = this.shotEye.get();
+        if (eye == null) {
+            if (this.phaseTicks > 2400) throw new IllegalStateException("The eye of shot " + name + " never got found");
+            return;
+        }
+        if (this.shotPlacedAt < 0) {
+            this.placeCameraAt(minecraft, eye[0], eye[1], eye[2], yaw, pitch);
+            this.shotPlacedAt = this.phaseTicks;
+            return;
+        }
+        int waited = this.phaseTicks - this.shotPlacedAt;
+        int settle = shot.has("settle_ticks") ? shot.get("settle_ticks").getAsInt() : this.intConfig("shot_settle_ticks", 240);
+        if (waited == 20) this.placeCameraAt(minecraft, eye[0], eye[1], eye[2], yaw, pitch);
+        if (waited == settle) {
+            // Only turn on the client: a teleport from the server would reset the rotation a few ticks later
+            if (minecraft.player != null) {
+                minecraft.player.setYRot(yaw);
+                minecraft.player.setXRot(pitch);
+                minecraft.player.yRotO = yaw;
+                minecraft.player.xRotO = pitch;
+            }
+        }
+        if (waited == settle + 3) {
+            int factor = this.intConfig("downscale", 2);
+            Screenshot.grab(this.out.toFile(), name + ".png", minecraft.gameRenderer.mainRenderTarget(), factor, message -> {
+                if (!message.getString().contains(name)) {
+                    this.failures.incrementAndGet();
+                    LOGGER.error("[CHECK] screenshot failed: " + message.getString());
+                }
+            });
+        }
+        if (waited >= settle + 10) {
+            LOGGER.info("[CHECK] screenshot " + name + ": PASS");
+            this.shotIndex++;
+            this.phaseTicks = 0;
+        }
+    }
+
+    /**
+     * On the server: finds the closest {@code biome} to {@code near}, moves by {@code offset} and puts the eye {@code above_ground}
+     * blocks above the highest block there (leaves and water count).
+     */
+    private void locateShotEye(@NotNull IntegratedServer server, @NotNull JsonObject shot) {
+        String name = shot.get("name").getAsString();
+        String biome = shot.get("biome").getAsString();
+        int nearX = shot.has("near") ? shot.getAsJsonArray("near").get(0).getAsInt() : 0;
+        int nearZ = shot.has("near") ? shot.getAsJsonArray("near").get(1).getAsInt() : 0;
+        ServerLevel level = server.overworld();
+        ResourceKey<Biome> key = ResourceKey.create(Registries.BIOME, Identifier.parse(biome));
+        Pair<BlockPos, Holder<Biome>> found = level.findClosestBiome3d(holder -> holder.is(key), new BlockPos(nearX, 64, nearZ), 6400, 32, 64);
+        if (found == null) {
+            this.failures.incrementAndGet();
+            LOGGER.error("[CHECK] shot " + name + ": FAIL no " + biome + " found");
+            this.shotEye.set(new double[] {nearX + 0.5, 200, nearZ + 0.5});
+            return;
+        }
+        int x = found.getFirst().getX() + (shot.has("offset") ? shot.getAsJsonArray("offset").get(0).getAsInt() : 0);
+        int z = found.getFirst().getZ() + (shot.has("offset") ? shot.getAsJsonArray("offset").get(1).getAsInt() : 0);
+        // Generates the chunk first: getHeight() of a chunk that isn't loaded yet gives the bottom of the world
+        level.getChunk(x >> 4, z >> 4);
+        int ground = level.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z);
+        double eyeY = ground + (shot.has("above_ground") ? shot.get("above_ground").getAsDouble() : 2.0);
+        LOGGER.info("[CHECK] shot " + name + ": " + biome + " at " + x + " " + z + ", ground " + ground + ", eye [" + (x + 0.5) + ", " + eyeY + ", " + (z + 0.5) + "]");
+        this.shotEye.set(new double[] {x + 0.5, eyeY, z + 0.5});
+    }
+
     private void setUpOptions(@NotNull Minecraft minecraft) {
         minecraft.options.renderDistance().set(this.intConfig("render_distance", 16));
         minecraft.options.simulationDistance().set(Math.min(12, this.intConfig("render_distance", 16)));
@@ -247,6 +378,18 @@ public final class DocsWorldPanorama {
         server.execute(() -> this.runCommand(server, String.format(java.util.Locale.ROOT, "tp @a %.3f %.3f %.3f %.2f 0", x, y, z, yaw)));
         if (minecraft.player != null) {
             minecraft.player.snapTo(x, y, z, yaw, 0.0F);
+        }
+    }
+
+    /**
+     * Puts the camera at an eye position with the given rotation, on the server and on the client.
+     */
+    private void placeCameraAt(@NotNull Minecraft minecraft, double x, double eyeY, double z, float yaw, float pitch) {
+        double y = eyeY - SPECTATOR_EYE_HEIGHT;
+        IntegratedServer server = minecraft.getSingleplayerServer();
+        server.execute(() -> this.runCommand(server, String.format(java.util.Locale.ROOT, "tp @a %.3f %.3f %.3f %.2f %.2f", x, y, z, yaw, pitch)));
+        if (minecraft.player != null) {
+            minecraft.player.snapTo(x, y, z, yaw, pitch);
         }
     }
 

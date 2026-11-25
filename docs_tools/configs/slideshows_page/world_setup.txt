@@ -1,0 +1,7 @@
+# Setup of the Slideshows page world: no time, weather, mobs or random ticks, so every screenshot is calm and repeatable
+gamerule advance_time false
+gamerule advance_weather false
+gamerule random_tick_speed 0
+gamerule spawn_mobs false
+weather clear
+gamemode spectator @a
