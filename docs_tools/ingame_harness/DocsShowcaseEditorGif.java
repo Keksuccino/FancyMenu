@@ -38,6 +38,8 @@ import de.keksuccino.fancymenu.customization.element.ElementRegistry;
 import de.keksuccino.fancymenu.customization.element.anchor.ElementAnchorPoints;
 import de.keksuccino.fancymenu.customization.element.editor.AbstractEditorElement;
 import de.keksuccino.fancymenu.customization.element.elements.text.v2.TextElement;
+import de.keksuccino.fancymenu.customization.gameintro.GameIntroHandler;
+import de.keksuccino.fancymenu.customization.gameintro.GameIntroOverlay;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayer;
 import de.keksuccino.fancymenu.customization.layer.ScreenCustomizationLayerHandler;
 import de.keksuccino.fancymenu.customization.layout.Layout;
@@ -380,6 +382,7 @@ public final class DocsShowcaseEditorGif {
             case "element_settings" -> this.buildElementSettingsScript(minecraft);
             case "menu_path_still" -> this.buildMenuPathStillScript(minecraft);
             case "button_textures" -> this.buildButtonTexturesScript(minecraft);
+            case "game_intro" -> this.buildGameIntroScript(minecraft);
             default -> throw new IllegalArgumentException("Unknown script " + script);
         }
     }
@@ -2215,6 +2218,105 @@ public final class DocsShowcaseEditorGif {
         this.waitTicks(4);
     }
 
+    // ---- Game Intro page ----
+
+    /**
+     * Outside the editor, on a screen (config {@code start: "screen"}, {@code screen: "title"}, like with the intro's last scene as {@code background_image}).<br>
+     * {@code part: "setup"} (default, needs {@code menu_bar: true}): opens Customization -> Global Customizations -> Game Intro and rests on its
+     * settings for {@code menu_ticks} (default 40, with a {@code mark} event {@code menu} for a still), clicks Set Game Intro and picks
+     * {@code file} (in the assets sub-folder {@code folder}, optional) through the resource chooser, then clicks Re-Trigger Game Intro. With
+     * {@code skip_key} ({@code key} and {@code badge}), it presses that key {@code skip_after_ticks} (default 50) after the intro started.<br>
+     * {@code part: "play"}: plays the intro of the config's {@code fancymenu_options} ({@code game_intro_animation_name}) the way Re-Trigger
+     * Game Intro does, with the pointer out of the picture.<br>
+     * Both mark the first frame of the intro ({@code intro}), wait until it closed and hold for {@code hold_ticks} (default 60).
+     */
+    private void buildGameIntroScript(@NotNull Minecraft minecraft) {
+        String part = this.config.has("part") ? this.config.get("part").getAsString() : "setup";
+        if (part.equals("play")) {
+            this.steps.addLast(() -> {
+                this.movePointer(minecraft, -40, -40);
+                return true;
+            });
+            this.waitTicks(4);
+            this.steps.addLast(() -> {
+                if (GameIntroHandler.getIntro() == null) throw new IllegalStateException("No Game Intro, set game_intro_animation_name in fancymenu_options");
+                // The same as Re-Trigger Game Intro
+                GameIntroHandler.introPlayed = true;
+                minecraft.gui.setOverlay(new GameIntroOverlay(ScreenUtils.getScreen(), GameIntroHandler.getIntro()));
+                return true;
+            });
+            this.mark("intro");
+        } else {
+            this.waitTicks(20);
+            this.moveTo(() -> menuBarEntry("screen"), 18);
+            this.waitTicks(6);
+            this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+            this.waitUntil("Customization menu", () -> (ContextMenuHandler.INSTANCE.getCurrent() != null) && ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 40);
+            this.waitTicks(10);
+            this.clickMenuEntryPastIcon(minecraft, "global_customizations");
+            this.waitUntil("Global Customizations menu", () -> subMenu("global_customizations").isOpen(), 40);
+            this.waitTicks(8);
+            // Into each sub-menu sideways, so the pointer doesn't pass over other entries
+            this.moveTo(() -> new float[] {menuEntryPastIcon("global_customizations", "game_intro")[0], this.pointerY}, 10);
+            this.clickMenuEntryPastIcon(minecraft, "global_customizations", "game_intro");
+            this.waitUntil("Game Intro menu", () -> subMenu("global_customizations", "game_intro").isOpen(), 40);
+            this.waitTicks(8);
+            this.moveTo(() -> new float[] {menuEntryPastIcon("global_customizations", "game_intro", "set_game_intro")[0], this.pointerY}, 10);
+            this.moveTo(() -> menuEntryPastIcon("global_customizations", "game_intro", "set_game_intro"), 8);
+            this.waitTicks(8);
+            this.mark("menu");
+            this.waitTicks(this.config.has("menu_ticks") ? this.config.get("menu_ticks").getAsInt() : 40);
+            // Set Game Intro opens the resource chooser right away when clicked
+            this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+            // Its chooser starts on Local already
+            this.chooseLocalFile(minecraft, this.config.has("folder") ? this.config.get("folder").getAsString() : null, this.config.get("file").getAsString(), false);
+            // Picking the file opens the menus again, down to Set Game Intro. The pointer is still where OK was, on Global Customizations,
+            // which closes the Game Intro menu after a moment, so it goes back to Game Intro like a player would
+            this.waitUntil("Set Game Intro menu again", () -> {
+                try {
+                    return subMenu("global_customizations", "game_intro", "set_game_intro").isOpen();
+                } catch (IllegalStateException ex) {
+                    return false;
+                }
+            }, 60);
+            this.waitTicks(6);
+            this.moveTo(() -> menuEntryPastIcon("global_customizations", "game_intro"), 12);
+            this.waitUntil("Game Intro menu again", () -> subMenu("global_customizations", "game_intro").isOpen(), 40);
+            this.waitTicks(14);
+            this.moveTo(() -> new float[] {menuEntryPastIcon("global_customizations", "game_intro", "game_intro_retrigger")[0], this.pointerY}, 8);
+            this.clickMenuEntryPastIcon(minecraft, "global_customizations", "game_intro", "game_intro_retrigger");
+            this.waitUntil("intro playing", () -> minecraft.gui.overlay() instanceof GameIntroOverlay, 40);
+            this.mark("intro");
+            if (this.config.has("skip_key")) {
+                JsonObject skip = this.config.getAsJsonObject("skip_key");
+                this.waitTicks(this.config.has("skip_after_ticks") ? this.config.get("skip_after_ticks").getAsInt() : 50);
+                this.key(minecraft, skip.get("key").getAsString(), skip.get("badge").getAsString());
+            }
+        }
+        this.waitUntil("intro closed", () -> !(minecraft.gui.overlay() instanceof GameIntroOverlay), 400);
+        this.waitTicks(this.config.has("hold_ticks") ? this.config.get("hold_ticks").getAsInt() : 60);
+    }
+
+    /**
+     * Like {@link #menuEntry}, but at 70% of the entry's width. At the colossal UI scale, 30% of a short entry can be its (i) tooltip icon,
+     * and a hovered tooltip icon keeps the entry's sub-menu closed.
+     */
+    @NotNull
+    private static float[] menuEntryPastIcon(@NotNull String... path) {
+        ContextMenu menu = (path.length > 1) ? subMenu(Arrays.copyOf(path, path.length - 1)) : ContextMenuHandler.INSTANCE.getCurrent();
+        if (menu == null) throw new IllegalStateException("No open context menu");
+        ContextMenu.ContextMenuEntry<?> entry = menu.getEntry(path[path.length - 1]);
+        if (entry == null) throw new IllegalStateException("No context menu entry " + String.join(" -> ", path));
+        float scale = UIBase.calculateFixedRenderScale(menu.getScale());
+        return new float[] {(readFloat(entry, "x") + readFloat(entry, "width") * 0.7F) * scale, (readFloat(entry, "y") + entry.getHeight() / 2.0F) * scale};
+    }
+
+    private void clickMenuEntryPastIcon(@NotNull Minecraft minecraft, @NotNull String... path) {
+        this.moveTo(() -> menuEntryPastIcon(path), 12);
+        this.waitTicks(5);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+    }
+
     // ---- Steps ----
 
     // ---- Getting Started page ----
@@ -2700,12 +2802,22 @@ public final class DocsShowcaseEditorGif {
      * double-click in the file chooser, clicks the file (its preview shows) and clicks OK, which closes both windows and sets the resource.
      */
     private void chooseLocalFile(@NotNull Minecraft minecraft, @Nullable String folder, @NotNull String fileName) {
+        this.chooseLocalFile(minecraft, folder, fileName, true);
+    }
+
+    /**
+     * Like {@link #chooseLocalFile(Minecraft, String, String)}. Without {@code switchToLocal}, it doesn't click Source Type first, for
+     * choosers that start on Local already, like the one of Set Game Intro.
+     */
+    private void chooseLocalFile(@NotNull Minecraft minecraft, @Nullable String folder, @NotNull String fileName, boolean switchToLocal) {
         this.waitUntil("resource chooser", () -> findWindow(ResourceChooserWindowBody.class) != null, 60);
         this.waitTicks(12);
-        this.moveTo(() -> cellWidgetWithLabel("fancymenu.resources.source_type"), 11);
-        this.waitTicks(5);
-        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
-        this.waitTicks(10);
+        if (switchToLocal) {
+            this.moveTo(() -> cellWidgetWithLabel("fancymenu.resources.source_type"), 11);
+            this.waitTicks(5);
+            this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+            this.waitTicks(10);
+        }
         this.moveTo(() -> cellWidgetWithLabel("fancymenu.resources.chooser_screen.choose_local"), 11);
         this.waitTicks(5);
         this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
