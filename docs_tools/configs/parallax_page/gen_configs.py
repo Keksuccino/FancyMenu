@@ -2,8 +2,8 @@
 
 All of them show the title screen with the layers of make_layers.py behind the vanilla elements:
 - scene.json: the GIF of the title screen with the pointer moving around (hover_elements).
-- settings.json: the GIF of turning on the Parallax Effect of the foreground layer and setting its X intensity, then saving, closing the
-  editor and moving the pointer over the title screen, where only that layer moves (element_settings). It saves
+- settings.json: the GIF of selecting the title screen buttons, turning on their Parallax Effect and setting their X intensity, then
+  saving, closing the editor and moving the pointer over the title screen, where only the buttons move (element_settings). It saves
   run_client_docs/config/fancymenu/customization/title_screen_layout.txt: move it to the trash after recording.
 - background_still.json: the still of Menu Backgrounds -> Image with the parallax settings (menu_path_still).
 
@@ -68,16 +68,26 @@ def main():
         'hold_ticks': 20,
     })
 
-    # Only the foreground layer gets the effect, so it's the one thing that moves when the pointer sweeps over the title screen
+    # The buttons of the title screen in a column on the left, like modpack menus have them, get the effect, and nothing else moves
+    # when the pointer goes over the title screen. Vanilla buttons only follow the Parallax Effect once they got moved (their anchor
+    # isn't Vanilla (Original) anymore), so they get positions here. The small icon buttons next to them get hidden.
+    buttons = [('singleplayer', 36, 150, 170), ('multiplayer', 36, 174, 170), ('realms', 36, 198, 170), ('options', 36, 222, 83),
+               ('quit', 123, 222, 83)]
+    button_ids = [f'mc_titlescreen_{name}_button' for name, _, _, _ in buttons]
     settings = base(foreground_parallax=False)
     del settings['background_parallax']
     for element in settings['elements']:
         element['props']['enable_parallax'] = 'false'
+    settings['vanilla'] = [{'id': f'mc_titlescreen_{name}_button', 'x': x, 'y': y, 'w': w, 'h': 20} for name, x, y, w in buttons]
+    settings['vanilla'] += [{'id': widget, 'hidden': True} for widget in ['mc_titlescreen_language_button', 'mc_titlescreen_accessibility_button',
+                                                                           'titlescreen_mods_button', '454370',
+                                                                           'minecraft_realms_notification_icons_widget']]
     settings.update({
         'script': 'element_settings',
         'customization': True,
         'pointer': [520, 300],
-        'right_click': [92, 300],
+        'select': button_ids,
+        'target': 'mc_titlescreen_multiplayer_button',
         'settings': [
             {'toggle': 'enable_parallax'},
             {'number': 'menu_entry_parallax_intensity_x', 'value': '1.0'},
