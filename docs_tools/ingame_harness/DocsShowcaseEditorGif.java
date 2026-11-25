@@ -184,6 +184,11 @@ public final class DocsShowcaseEditorGif {
      * Put the FancyMenu options of the config's {@code fancymenu_options} back to what they were before the showcase.
      */
     private final List<Runnable> optionRestorers = new ArrayList<>();
+    /**
+     * The layout the showcase got built with, for scripts that save it, like {@code write_profile}.
+     */
+    @Nullable
+    private Layout builtLayout;
 
     DocsShowcaseEditorGif(@NotNull Path framesDirectory, @NotNull JsonObject config) {
         this.framesDirectory = framesDirectory;
@@ -215,8 +220,9 @@ public final class DocsShowcaseEditorGif {
                 Window window = minecraft.getWindow();
                 // Config window_height: a taller window for stills of windows whose parts are too small at 720, like the description of
                 // Manage Schedulers. Only for stills: compose.py and encode.sh expect 1280x720 frames.
-                window.setWindowed(1280, this.config.has("window_height") ? this.config.get("window_height").getAsInt() : 720);
-                minecraft.options.guiScale().set(Math.round(2 * window.getPixelDensity()));
+                // window_width/window_height/gui_scale: other window sizes, for stills that check how a layout fits them. GIFs need 1280x720.
+                window.setWindowed(this.config.has("window_width") ? this.config.get("window_width").getAsInt() : 1280, this.config.has("window_height") ? this.config.get("window_height").getAsInt() : 720);
+                minecraft.options.guiScale().set(Math.round((this.config.has("gui_scale") ? this.config.get("gui_scale").getAsInt() : 2) * window.getPixelDensity()));
                 minecraft.resizeGui();
                 // The dense editor grid would cover the whole showcase (only the separate docs instance keeps this option)
                 FancyMenu.getOptions().showLayoutEditorGrid.setValue(false);
@@ -302,6 +308,7 @@ public final class DocsShowcaseEditorGif {
         if (this.config.has("schedulers")) this.setUpSchedulers(this.config.getAsJsonArray("schedulers"));
         if (this.config.has("custom_guis")) this.setUpCustomGuis(this.config.getAsJsonArray("custom_guis"));
         Layout layout = Layout.buildForScreen(screen);
+        this.builtLayout = layout;
         if (this.config.has("elements")) {
             DocsShowcaseElements.addTo(layout, this.config.getAsJsonArray("elements"));
         } else {
@@ -383,6 +390,7 @@ public final class DocsShowcaseEditorGif {
             case "element_settings" -> this.buildElementSettingsScript(minecraft);
             case "menu_path_still" -> this.buildMenuPathStillScript(minecraft);
             case "button_textures" -> this.buildButtonTexturesScript(minecraft);
+            case "write_profile" -> this.buildWriteProfileScript(minecraft);
             case "game_intro" -> this.buildGameIntroScript(minecraft);
             default -> throw new IllegalArgumentException("Unknown script " + script);
         }
@@ -2859,6 +2867,37 @@ public final class DocsShowcaseEditorGif {
             this.moveTo(() -> center(editorBox(restOn)), 16);
         }
         this.waitTicks(this.config.has("hold_ticks") ? this.config.get("hold_ticks").getAsInt() : 60);
+    }
+
+    /**
+     * Saves the layout the config built (its {@code elements}, {@code vanilla}, background, {@code overlays} and so on) into the
+     * {@code customization} folder of the profile directory {@code profile_dir} as {@code layout_name}.txt, then packs the profile
+     * directory into the {@code .fmp} archive {@code archive} with FancyMenu's own profile archive writer and reads its metadata back,
+     * like an import would. For downloadable example profiles, like the Wildwood title screen of the Getting Started page. Use
+     * {@code start: "screen"} and {@code no_layout: true}, so nothing of the showcase layout touches the instance.
+     */
+    private void buildWriteProfileScript(@NotNull Minecraft minecraft) {
+        Path profileDirectory = Path.of(this.config.get("profile_dir").getAsString());
+        Path archive = Path.of(this.config.get("archive").getAsString());
+        String layoutName = this.config.get("layout_name").getAsString();
+        this.waitTicks(10);
+        this.steps.addLast(() -> {
+            Layout layout = this.builtLayout;
+            if (layout == null) throw new IllegalStateException("No layout got built");
+            try {
+                Path layoutFile = profileDirectory.resolve("customization").resolve(layoutName + ".txt");
+                Files.createDirectories(layoutFile.getParent());
+                if (!LayoutHandler.saveLayoutToFile(layout, layoutFile.toAbsolutePath().toString())) throw new IllegalStateException("Saving the layout failed");
+                this.pass("layout saved", layoutFile.toString());
+                de.keksuccino.fancymenu.customization.profile.ProfileArchive.write(profileDirectory, path -> !de.keksuccino.fancymenu.customization.profile.ProfileStorage.isJunkFile(path), archive, new de.keksuccino.fancymenu.customization.profile.ProfileTaskProgress());
+                var metadata = de.keksuccino.fancymenu.customization.profile.ProfileArchive.readMetadata(archive, "fallback");
+                this.pass("profile archive", archive + " (" + Files.size(archive) + " bytes) id=" + metadata.getId() + " title=" + metadata.getTitle());
+            } catch (java.io.IOException ex) {
+                throw new IllegalStateException("Writing the profile failed", ex);
+            }
+            return true;
+        });
+        this.waitTicks(4);
     }
 
     /**
