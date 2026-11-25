@@ -5,6 +5,9 @@
   Its frame with the open Customization menu (mark "menu") is the menu bar still (make_stills.py).
 - background.json: Menu Backgrounds -> Image, Show Background and picking background.png.
 - logo.json: deleting the Minecraft logo and splash, adding an Image element with logo.png and Restore Aspect Ratio.
+  Its frames get split into two GIFs: adding the image, and Restore Aspect Ratio with placing it.
+- buttons.json: selecting all buttons with a selection rectangle and giving them wooden textures, a hover texture and nine-slicing
+  at once, through the right-click menu of one of them.
 - save.json: saving with Ctrl + S, closing the editor and looking at the menu. It saves a real layout file into the docs
   instance: move run_client_docs/config/fancymenu/customization/title_screen_layout.txt to the trash after recording.
 
@@ -20,12 +23,11 @@ TITLE_BUTTONS = ['mc_titlescreen_singleplayer_button', 'mc_titlescreen_multiplay
                  # The row of icon buttons: skin, language, accessibility and mods
                  '454370', 'mc_titlescreen_language_button', 'mc_titlescreen_accessibility_button', 'titlescreen_mods_button']
 HIDDEN_VANILLA = [{'id': 'minecraft_logo_widget', 'hidden': True}, {'id': 'minecraft_splash_widget', 'hidden': True}]
+# Like buttons.json makes them: both textures and nine-slicing with the default borders
 WOODEN_BUTTONS = [{'id': button, 'props': {
     'backgroundnormal': ASSETS + 'button.png',
     'backgroundhovered': ASSETS + 'button_hover.png',
     'nine_slice_custom_background': 'true',
-    'nine_slice_border_x': '6',
-    'nine_slice_border_y': '6',
 }} for button in TITLE_BUTTONS]
 # The logo at its default height of 100 after Restore Aspect Ratio, centered above the buttons
 LOGO = {'type': 'image', 'id': 'wildwood_logo', 'x': 190, 'y': 14, 'w': 260, 'h': 100, 'props': {'source': ASSETS + 'logo.png'}}
@@ -74,9 +76,16 @@ CONFIGS = {
         'folder': 'wildwood', 'file': 'logo.png', 'drag_to': [320, 64],
         'free_spot': [560, 300], 'hold_ticks': 50,
     },
+    'buttons': {
+        'script': 'button_textures', 'screen': 'title', 'elements': [LOGO], 'background_image': ASSETS + 'background.png',
+        'vanilla': HIDDEN_VANILLA,
+        'buttons': ['mc_titlescreen_singleplayer_button', 'mc_titlescreen_quit_button'], 'target': 'mc_titlescreen_singleplayer_button',
+        'folder': 'wildwood', 'normal': 'button.png', 'hover': 'button_hover.png',
+        'free_spot': [560, 300], 'rest_on': 'mc_titlescreen_multiplayer_button', 'hold_ticks': 50,
+    },
     'save': {
         'script': 'save_layout', 'screen': 'title', 'customization': True,
-        'elements': [LOGO], 'background_image': ASSETS + 'background.png', 'vanilla': HIDDEN_VANILLA,
+        'elements': [LOGO], 'background_image': ASSETS + 'background.png', 'vanilla': HIDDEN_VANILLA + WOODEN_BUTTONS,
         'hovers': [{'label': 'menu.singleplayer', 'move_ticks': 24, 'ticks': 30}, {'point': [520, 300], 'move_ticks': 24, 'ticks': 10}],
         'hold_ticks': 40,
     },

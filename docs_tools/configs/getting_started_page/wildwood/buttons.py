@@ -1,4 +1,4 @@
-"""Wooden plank button textures (normal and hover), 40x10 art pixels, saved at 2x for nine-slicing with 6 px borders."""
+"""Wooden plank button textures (normal and hover), 40x10 art pixels, saved at 2x for nine-slicing with the default 5 px borders."""
 import numpy as np
 from scene import hexc
 
@@ -41,8 +41,8 @@ def make_button(hover=False):
                 if y == 6 and not (9 <= x <= 10) and not (BW - 6 <= x <= BW - 5):
                     c = face_dark
             img[y, x] = c
-    # Nails near both ends, inside the 6 pixel (3 art pixel) nine-slice borders, so they never get stretched
-    for nx in (2, BW - 3):
+    # Nails at both ends, inside the default nine-slice borders of buttons (5 texture pixels), so they never get stretched
+    for nx in (1, BW - 2):
         img[4, nx] = nail
         img[5, nx] = nail_shadow
     if hover:

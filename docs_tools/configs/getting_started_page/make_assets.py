@@ -7,7 +7,7 @@ Usage: python3 make_assets.py <out dir>, usually run_client_docs/config/fancymen
   are 12 art pixels wider on both sides (see wildwood/scene.py MARGIN), so they can move without showing their edges.
 - logo.png: the WILDWOOD logo, 130x50 art pixels at 4x. At its default height of 100 GUI pixels, Restore Aspect Ratio makes
   an Image element 260x100, so one art pixel is 2 GUI pixels, like in the scene.
-- button.png, button_hover.png: wooden button backgrounds, 40x10 art pixels at 2x, for nine-slicing with 6 pixel borders.
+- button.png, button_hover.png: wooden button backgrounds, 40x10 art pixels at 2x, for nine-slicing with the default borders of 5 pixels.
 """
 import os
 import sys

@@ -373,6 +373,7 @@ public final class DocsShowcaseEditorGif {
             case "menu_background" -> this.buildMenuBackgroundScript(minecraft);
             case "add_image" -> this.buildAddImageScript(minecraft);
             case "save_layout" -> this.buildSaveLayoutScript(minecraft);
+            case "button_textures" -> this.buildButtonTexturesScript(minecraft);
             default -> throw new IllegalArgumentException("Unknown script " + script);
         }
     }
@@ -2167,6 +2168,73 @@ public final class DocsShowcaseEditorGif {
     }
 
     /**
+     * In the editor: right-clicks {@code right_click}, opens Menu Backgrounds -> Slideshow, turns on Show Background, clicks
+     * Slideshow Name, picks the slideshow {@code slideshow} in Choose Slideshow, rests on its preview for {@code preview_ticks}
+     * (default 50) and clicks Done. Then it clicks {@code free_spot} and holds for {@code hold_ticks} (default 70).
+     */
+    private void buildSlideshowBackgroundScript(@NotNull Minecraft minecraft) {
+        String slideshow = this.config.get("slideshow").getAsString();
+        Class<?> chooser = de.keksuccino.fancymenu.customization.layout.editor.ChooseSlideshowScreen.class;
+        this.buildChooserBackgroundScript(minecraft, "menu_background_slideshow", "slideshow_name", chooser, () -> chooserListEntry(chooser, "slideshowListScrollArea", entry -> (entry instanceof de.keksuccino.fancymenu.customization.layout.editor.ChooseSlideshowScreen.SlideshowScrollEntry slideshowEntry) && slideshowEntry.slideshow.equals(slideshow), slideshow));
+    }
+
+    /**
+     * In the editor: right-clicks {@code right_click}, opens the sub-menu {@code background} of Menu Backgrounds, turns on Show
+     * Background, clicks its {@code nameEntry}, picks the entry at {@code pickEntry} in the {@code chooser} window, rests on its
+     * preview for {@code preview_ticks} (default 50) and clicks Done. Then it clicks {@code free_spot} and holds for
+     * {@code hold_ticks} (default 70).
+     */
+    private void buildChooserBackgroundScript(@NotNull Minecraft minecraft, @NotNull String background, @NotNull String nameEntry, @NotNull Class<?> chooser, @NotNull Supplier<float[]> pickEntry) {
+        float clickX = this.config.getAsJsonArray("right_click").get(0).getAsFloat();
+        float clickY = this.config.getAsJsonArray("right_click").get(1).getAsFloat();
+        this.waitTicks(16);
+        this.moveTo(() -> new float[] {clickX, clickY}, 18);
+        this.waitTicks(6);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_RIGHT);
+        this.waitUntil("context menu", () -> (ContextMenuHandler.INSTANCE.getCurrent() != null) && ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 60);
+        this.waitTicks(10);
+        this.clickMenuEntry(minecraft, "menu_backgrounds");
+        this.waitUntil("Menu Backgrounds menu", () -> subMenu("menu_backgrounds").isOpen(), 40);
+        this.waitTicks(8);
+        this.moveTo(() -> new float[] {menuEntry("menu_backgrounds", background)[0], this.pointerY}, 10);
+        this.clickMenuEntry(minecraft, "menu_backgrounds", background);
+        this.waitUntil(background + " menu", () -> subMenu("menu_backgrounds", background).isOpen(), 40);
+        this.waitTicks(8);
+        this.moveTo(() -> new float[] {menuEntry("menu_backgrounds", background, "menu_entry_show_background")[0], this.pointerY}, 10);
+        this.clickMenuEntry(minecraft, "menu_backgrounds", background, "menu_entry_show_background");
+        this.waitTicks(16);
+        this.clickMenuEntry(minecraft, "menu_backgrounds", background, nameEntry);
+        this.waitUntil(chooser.getSimpleName(), () -> findWindow(chooser) != null, 60);
+        this.waitTicks(16);
+        this.moveTo(pickEntry, 14);
+        this.waitTicks(5);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(this.config.has("preview_ticks") ? this.config.get("preview_ticks").getAsInt() : 50);
+        this.moveTo(() -> windowWidgetCenter(requireWindow(chooser), "doneButton"), 16);
+        this.waitTicks(5);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil(chooser.getSimpleName() + " closed", () -> findWindow(chooser) == null, 60);
+        this.waitTicks(16);
+        this.clickFreeSpotAndHold(minecraft, 70);
+    }
+
+    /**
+     * The GUI position of the first entry that {@code matches} in the list (field {@code listField}) of the open {@code chooser}
+     * window, a bit right of the start of its name. {@code name} only goes into the error when no entry matches.
+     */
+    @NotNull
+    private static float[] chooserListEntry(@NotNull Class<?> chooser, @NotNull String listField, @NotNull java.util.function.Predicate<ScrollAreaEntry> matches, @NotNull String name) {
+        PiPWindow window = requireWindow(chooser);
+        ScrollArea list = (ScrollArea) readField(window.getScreen(), listField);
+        for (ScrollAreaEntry entry : list.getEntries()) {
+            if (matches.test(entry)) {
+                return bodyToGui(window, entry.getX() + Math.min(60.0F, entry.getWidth() / 2.0F), entry.getY() + entry.getHeight() / 2.0F);
+            }
+        }
+        throw new IllegalStateException(chooser.getSimpleName() + " lists no " + name);
+    }
+
+    /**
      * In the editor: removes vanilla elements (config {@code remove}: their ids, each clicked and deleted with the Delete key), adds an
      * Image element through Element -> New of the editor's menu bar, picks its image through Image Source (see {@link #chooseLocalFile}),
      * clicks Restore Aspect Ratio and drags it so its center is at {@code drag_to}. Config also: {@code folder}, {@code file},
@@ -2264,6 +2332,95 @@ public final class DocsShowcaseEditorGif {
             }
         }
         this.waitTicks(this.config.has("hold_ticks") ? this.config.get("hold_ticks").getAsInt() : 60);
+    }
+
+    /**
+     * In the editor: selects the buttons {@code buttons} (the ids of the first and last one in screen order) with a selection rectangle,
+     * so the right-click menu of the {@code target} button changes all of them at once. Then Button Textures -> Set -> Normal Background
+     * ({@code normal}) and Hover Background ({@code hover}), both picked like {@link #chooseLocalFile} from the assets sub-folder
+     * {@code folder}, and Button Textures -> Nine-Slice Custom Background, whose menu stays open, so Esc closes it. Config also
+     * {@code free_spot} ([x, y], clicked at the end to unselect the buttons), {@code rest_on} (a vanilla element id the pointer rests on
+     * at the end, optional) and {@code hold_ticks} (default 60).
+     */
+    private void buildButtonTexturesScript(@NotNull Minecraft minecraft) {
+        String first = this.config.getAsJsonArray("buttons").get(0).getAsString();
+        String last = this.config.getAsJsonArray("buttons").get(1).getAsString();
+        String target = this.config.get("target").getAsString();
+        String folder = this.config.has("folder") ? this.config.get("folder").getAsString() : null;
+        this.waitTicks(16);
+        // Select the buttons with a selection rectangle, from a free spot above the first one to below the last one
+        this.moveTo(() -> {
+            float[] box = editorBox(first);
+            return new float[] {box[0] - 14, box[1] - 10};
+        }, 16);
+        this.waitTicks(4);
+        this.press(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.moveTo(() -> {
+            float[] box = editorBox(last);
+            return new float[] {box[0] + box[2] + 14, box[1] + box[3] + 10};
+        }, 22);
+        this.waitTicks(4);
+        this.release(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(16);
+        // Normal and hover textures for all of them
+        this.openButtonTexturesMenu(minecraft, target);
+        this.clickSubMenuEntrySideways(minecraft, "button_background", "set_background");
+        this.waitUntil("Set menu", () -> subMenu("button_background", "set_background").isOpen(), 40);
+        this.waitTicks(6);
+        this.clickSubMenuEntrySideways(minecraft, "button_background", "set_background", "normal_background_texture");
+        this.chooseLocalFile(minecraft, folder, this.config.get("normal").getAsString());
+        this.waitTicks(20);
+        this.openButtonTexturesMenu(minecraft, target);
+        this.clickSubMenuEntrySideways(minecraft, "button_background", "set_background");
+        this.waitUntil("Set menu", () -> subMenu("button_background", "set_background").isOpen(), 40);
+        this.waitTicks(6);
+        this.clickSubMenuEntrySideways(minecraft, "button_background", "set_background", "hover_background_texture");
+        this.chooseLocalFile(minecraft, folder, this.config.get("hover").getAsString());
+        this.waitTicks(20);
+        // Nine-slicing keeps the corners of the textures sharp on every button width. Its menu stays open, so Esc closes it.
+        this.openButtonTexturesMenu(minecraft, target);
+        this.clickSubMenuEntrySideways(minecraft, "button_background", "nine_slice_background");
+        this.waitTicks(18);
+        this.key(minecraft, "escape", "Esc");
+        this.waitTicks(12);
+        if (this.config.has("free_spot")) {
+            float freeX = this.config.getAsJsonArray("free_spot").get(0).getAsFloat();
+            float freeY = this.config.getAsJsonArray("free_spot").get(1).getAsFloat();
+            this.moveTo(() -> new float[] {freeX, freeY}, 16);
+            this.waitTicks(4);
+            this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+            this.waitTicks(10);
+        }
+        if (this.config.has("rest_on")) {
+            String restOn = this.config.get("rest_on").getAsString();
+            this.moveTo(() -> center(editorBox(restOn)), 16);
+        }
+        this.waitTicks(this.config.has("hold_ticks") ? this.config.get("hold_ticks").getAsInt() : 60);
+    }
+
+    /**
+     * Right-clicks the (selected) element and opens Button Textures of its right-click menu, scrolling the menu first if needed.
+     */
+    private void openButtonTexturesMenu(@NotNull Minecraft minecraft, @NotNull String target) {
+        this.moveTo(() -> center(editorBox(target)), 14);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_RIGHT);
+        this.waitUntil("button menu", () -> (ContextMenuHandler.INSTANCE.getCurrent() != null) && ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 60);
+        this.waitTicks(8);
+        this.scrollMenuUntilInside(minecraft, "button_background");
+        this.waitTicks(4);
+        this.clickMenuEntry(minecraft, "button_background");
+        this.waitUntil("Button Textures menu", () -> subMenu("button_background").isOpen(), 40);
+        this.waitTicks(6);
+    }
+
+    /**
+     * Moves sideways into the sub-menu of the path first, so the pointer doesn't pass over other entries, then clicks the entry.
+     */
+    private void clickSubMenuEntrySideways(@NotNull Minecraft minecraft, @NotNull String... path) {
+        this.moveTo(() -> new float[] {menuEntry(path)[0], this.pointerY}, 10);
+        this.waitTicks(3);
+        this.clickMenuEntry(minecraft, path);
     }
 
     /**
