@@ -96,7 +96,11 @@ for f in frames:
         if 0 <= k < BADGE_FRAMES:
             fade = min(1.0, (BADGE_FRAMES - k) / BADGE_FADE)
             b = badge(text, int(255 * fade))
-            img.alpha_composite(b, ((img.width - b.width) // 2, img.height - b.height - 26))
+            # Frames smaller than 1280x720 (like halved ones) get smaller badges, but less small than the frame, so they stay readable
+            scale = min(1.0, (img.width / 1280) ** 0.5)
+            if scale < 1.0:
+                b = b.resize((round(b.width * scale), round(b.height * scale)), Image.LANCZOS)
+            img.alpha_composite(b, ((img.width - b.width) // 2, img.height - b.height - round(26 * scale)))
     sprite, hot = IBEAM if f["cursor"] == "text" else ARROW
     img.alpha_composite(sprite, (int(round(f["x"])) - hot[0], int(round(f["y"])) - hot[1]))
     img.convert("RGB").save(os.path.join(OUT, "c_%05d.png" % n))

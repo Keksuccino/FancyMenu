@@ -1,9 +1,9 @@
-"""Scales recorded GIF frames to half their size, for the GIF of the title screen with the moving layers. Run it before compose.py,
+"""Scales recorded GIF frames to half their size, for the GIFs of the title screen with moving layers. Run it before compose.py,
 so the cursor keeps its usual size.
 
-Almost every pixel of that GIF changes while the layers move, which makes it about 2.5 MB at 1280x720. At GUI scale 2, every GUI
+Almost every pixel of these GIFs changes while the layers move, which makes them about 2.5 MB at 1280x720. At GUI scale 2, every GUI
 pixel is 2x2 frame pixels, so keeping one pixel of each 2x2 block shows the screen like GUI scale 1, without blur, at a quarter
-of the pixels (about 1.2 MB). The pointer positions in frames.jsonl get halved too.
+of the pixels (about 1 MB). The pointer positions in frames.jsonl get halved too.
 
 Usage: python3 half_size.py <recorded frames dir> <out dir>
 """

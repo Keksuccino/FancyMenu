@@ -2122,7 +2122,10 @@ public final class DocsShowcaseEditorGif {
      * menu and goes through {@code settings}, each either {@code toggle} (an entry identifier, like {@code enable_parallax}, clicked once) or
      * {@code number} (the entry of a number setting, like {@code menu_entry_parallax_intensity_x}) with {@code value}, typed into the number
      * picker the entry opens. The number picker closes the menu, so the setting after it right-clicks the element again. Config also
-     * {@code rest_point} ([x, y], optional, where the pointer rests at the end) and {@code hold_ticks} (default 60).
+     * {@code rest_point} ([x, y], optional, where the pointer rests at the end) and {@code hold_ticks} (default 60).<br>
+     * {@code save_and_view: true} saves the layout and closes the editor after the settings (see {@link #saveLayoutAndCloseEditor}), and the
+     * pointer goes through the config's {@code hovers} on the screen, where settings like the Parallax Effect work. It needs
+     * {@code customization: true}, and the saved layout stays in the instance: remove it after recording.
      */
     private void buildElementSettingsScript(@NotNull Minecraft minecraft) {
         float clickX = this.config.getAsJsonArray("right_click").get(0).getAsFloat();
@@ -2163,6 +2166,11 @@ public final class DocsShowcaseEditorGif {
             this.waitUntil("number picker closed", () -> findWindow(NumberPickerWindowBody.class) == null, 60);
             this.waitTicks(10);
             menuOpen = false;
+        }
+        if (this.config.has("save_and_view") && this.config.get("save_and_view").getAsBoolean()) {
+            this.waitTicks(10);
+            this.saveLayoutAndCloseEditor(minecraft);
+            this.restOnHovers(minecraft);
         }
         if (this.config.has("rest_point")) {
             float x = this.config.getAsJsonArray("rest_point").get(0).getAsFloat();

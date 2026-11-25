@@ -2,7 +2,9 @@
 
 All of them show the title screen with the layers of make_layers.py behind the vanilla elements:
 - scene.json: the GIF of the title screen with the pointer moving around (hover_elements).
-- settings.json: the GIF of turning on the Parallax Effect of the foreground layer and setting its X intensity (element_settings).
+- settings.json: the GIF of turning on the Parallax Effect of the foreground layer and setting its X intensity, then saving, closing the
+  editor and moving the pointer over the title screen, where only that layer moves (element_settings). It saves
+  run_client_docs/config/fancymenu/customization/title_screen_layout.txt: move it to the trash after recording.
 - background_still.json: the still of Menu Backgrounds -> Image with the parallax settings (menu_path_still).
 
 Copy the layers to run_client_docs/config/fancymenu/assets/parallax/ first.
@@ -66,18 +68,28 @@ def main():
         'hold_ticks': 20,
     })
 
+    # Only the foreground layer gets the effect, so it's the one thing that moves when the pointer sweeps over the title screen
     settings = base(foreground_parallax=False)
+    del settings['background_parallax']
+    for element in settings['elements']:
+        element['props']['enable_parallax'] = 'false'
     settings.update({
         'script': 'element_settings',
+        'customization': True,
         'pointer': [520, 300],
         'right_click': [92, 300],
         'settings': [
             {'toggle': 'enable_parallax'},
-            # Y too would right-click and scroll again, which makes the GIF about 1.9 MB
             {'number': 'menu_entry_parallax_intensity_x', 'value': '1.0'},
         ],
-        'rest_point': [520, 300],
-        'hold_ticks': 50,
+        'save_and_view': True,
+        'hovers': [
+            {'point': [40, 300], 'move_ticks': 36, 'ticks': 8},
+            {'point': [600, 300], 'move_ticks': 46, 'ticks': 8},
+            {'point': [40, 300], 'move_ticks': 46, 'ticks': 8},
+            {'point': [320, 300], 'move_ticks': 30, 'ticks': 10},
+        ],
+        'hold_ticks': 24,
     })
 
     # A taller window, so the whole menu of the Image background fits. The layers start lower, so the right-click above them
