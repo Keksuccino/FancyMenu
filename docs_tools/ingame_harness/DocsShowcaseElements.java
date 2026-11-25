@@ -117,6 +117,13 @@ final class DocsShowcaseElements {
             }
             layout.menuBackgrounds.add(background);
         }
+        // background_slideshow: the name of a slideshow in config/fancymenu/slideshows/ of the instance
+        if (data.has("background_slideshow")) {
+            de.keksuccino.fancymenu.customization.background.backgrounds.slideshow.SlideshowMenuBackground background = MenuBackgrounds.SLIDESHOW.buildDefaultInstance();
+            background.slideshowName.set(data.get("background_slideshow").getAsString());
+            background.showBackground.set(true);
+            layout.menuBackgrounds.add(background);
+        }
     }
 
     /**
