@@ -387,10 +387,10 @@ public final class DocsShowcaseEditorGif {
             case "slideshow_background" -> this.buildSlideshowBackgroundScript(minecraft);
             case "add_image" -> this.buildAddImageScript(minecraft);
             case "save_layout" -> this.buildSaveLayoutScript(minecraft);
-            case "element_settings" -> this.buildElementSettingsScript(minecraft);
-            case "menu_path_still" -> this.buildMenuPathStillScript(minecraft);
             case "button_textures" -> this.buildButtonTexturesScript(minecraft);
             case "write_profile" -> this.buildWriteProfileScript(minecraft);
+            case "element_settings" -> this.buildElementSettingsScript(minecraft);
+            case "menu_path_still" -> this.buildMenuPathStillScript(minecraft);
             case "game_intro" -> this.buildGameIntroScript(minecraft);
             default -> throw new IllegalArgumentException("Unknown script " + script);
         }
