@@ -4,8 +4,8 @@ forest_homestead/ to run_client_docs/config/fancymenu/panoramas/ (see build_home
 - hero.json: the title screen without a layout, with forest_homestead as Custom Menu Background Panorama (Global Customizations).
   One of its last frames is the still of the page (make_stills.py).
 - background.json: Menu Backgrounds -> Cubic Panorama in the editor, Show Background, and picking forest_homestead in Choose Panorama.
-  Record it with speed = 0.0 in the instance's copy of the panorama: a turning panorama changes every pixel of every frame,
-  which makes the GIF about 20 MB instead of 1 MB.
+  A turning panorama changes every pixel of every frame, so encode this GIF with encode_small.sh (800 px, the size the docs
+  show it at, and a stronger lossy setting) instead of postprocess/encode.sh.
 
 The title screen without a layout shows the FER Test button of the Fancy Entity Renderer mod in its top-right corner, so park
 FER's jar outside of mods while recording hero.json, and put it back after.
@@ -24,7 +24,7 @@ CONFIGS = {
     },
     'background': {
         'script': 'panorama_background', 'screen': 'title', 'elements': [],
-        'right_click': [96, 292], 'panorama': 'forest_homestead', 'preview_ticks': 50, 'free_spot': [560, 300], 'hold_ticks': 60,
+        'right_click': [96, 292], 'panorama': 'forest_homestead', 'preview_ticks': 100, 'free_spot': [560, 300], 'hold_ticks': 34,
     },
 }
 

@@ -14,7 +14,7 @@ PROPERTIES = """type = panorama
 
 panorama-meta {
   name = forest_homestead
-  speed = 1.0
+  speed = 2.0
   fov = 85.0
   angle = 25.0
   start_rotation = 0
