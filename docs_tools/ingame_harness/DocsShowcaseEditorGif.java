@@ -67,6 +67,7 @@ import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindow;
 import de.keksuccino.fancymenu.util.rendering.ui.pipwindow.PiPWindowHandler;
 import de.keksuccino.fancymenu.util.rendering.ui.menubar.v2.MenuBar;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.CellScreen;
+import de.keksuccino.fancymenu.util.rendering.ui.screen.NumberPickerWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.TextInputWindowBody;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorLine;
 import de.keksuccino.fancymenu.util.rendering.ui.screen.texteditor.TextEditorWindowBody;
@@ -373,6 +374,8 @@ public final class DocsShowcaseEditorGif {
             case "menu_background" -> this.buildMenuBackgroundScript(minecraft);
             case "add_image" -> this.buildAddImageScript(minecraft);
             case "save_layout" -> this.buildSaveLayoutScript(minecraft);
+            case "element_settings" -> this.buildElementSettingsScript(minecraft);
+            case "menu_path_still" -> this.buildMenuPathStillScript(minecraft);
             case "button_textures" -> this.buildButtonTexturesScript(minecraft);
             default -> throw new IllegalArgumentException("Unknown script " + script);
         }
@@ -2028,6 +2031,98 @@ public final class DocsShowcaseEditorGif {
         this.waitTicks(14);
     }
 
+
+    // ---- Parallax page ----
+
+    /**
+     * In the editor: right-clicks the element at {@code right_click} ([x, y], a spot where it is the topmost element), scrolls its right-click
+     * menu and goes through {@code settings}, each either {@code toggle} (an entry identifier, like {@code enable_parallax}, clicked once) or
+     * {@code number} (the entry of a number setting, like {@code menu_entry_parallax_intensity_x}) with {@code value}, typed into the number
+     * picker the entry opens. The number picker closes the menu, so the setting after it right-clicks the element again. Config also
+     * {@code rest_point} ([x, y], optional, where the pointer rests at the end) and {@code hold_ticks} (default 60).
+     */
+    private void buildElementSettingsScript(@NotNull Minecraft minecraft) {
+        float clickX = this.config.getAsJsonArray("right_click").get(0).getAsFloat();
+        float clickY = this.config.getAsJsonArray("right_click").get(1).getAsFloat();
+        this.waitTicks(16);
+        // Scripts get built before they run, so this tracks whether the menu will be open at this point of the script
+        boolean menuOpen = false;
+        for (JsonElement entry : this.config.getAsJsonArray("settings")) {
+            JsonObject setting = entry.getAsJsonObject();
+            boolean toggle = setting.has("toggle");
+            String identifier = toggle ? setting.get("toggle").getAsString() : setting.get("number").getAsString();
+            if (!menuOpen) {
+                this.moveTo(() -> new float[] {clickX, clickY}, 16);
+                this.waitTicks(6);
+                this.click(minecraft, InputConstants.MOUSE_BUTTON_RIGHT);
+                this.waitUntil("right-click menu", () -> (ContextMenuHandler.INSTANCE.getCurrent() != null) && ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 60);
+                this.waitTicks(10);
+                menuOpen = true;
+            }
+            this.moveTo(() -> new float[] {contextMenuEntry(identifier)[0] + 20, Math.min(this.pointerY + 50, MENU_SCROLL_TARGET_Y)}, 10);
+            this.waitTicks(4);
+            this.scrollMenuUntilVisible(minecraft, identifier);
+            this.waitTicks(6);
+            this.clickMenuEntry(minecraft, identifier);
+            if (toggle) {
+                this.waitTicks(22);
+                continue;
+            }
+            this.waitUntil("number picker", () -> findWindow(NumberPickerWindowBody.class) != null, 60);
+            this.waitTicks(16);
+            this.key(minecraft, "shortcut+a", "Ctrl + A");
+            this.waitTicks(6);
+            this.type(minecraft, setting.get("value").getAsString());
+            this.waitTicks(14);
+            this.moveTo(() -> windowButtonCenter(requireWindow(NumberPickerWindowBody.class), "fancymenu.common_components.done"), 14);
+            this.waitTicks(5);
+            this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+            this.waitUntil("number picker closed", () -> findWindow(NumberPickerWindowBody.class) == null, 60);
+            this.waitTicks(10);
+            menuOpen = false;
+        }
+        if (this.config.has("rest_point")) {
+            float x = this.config.getAsJsonArray("rest_point").get(0).getAsFloat();
+            float y = this.config.getAsJsonArray("rest_point").get(1).getAsFloat();
+            this.moveTo(() -> new float[] {x, y}, 14);
+        }
+        this.waitTicks(this.config.has("hold_ticks") ? this.config.get("hold_ticks").getAsInt() : 60);
+    }
+
+    /**
+     * In the editor: right-clicks a free spot ({@code right_click}, [x, y]) and opens the sub-menus of {@code path} (entry identifiers, like
+     * {@code menu_backgrounds} and {@code menu_background_image}), moving sideways into each one. The pointer rests on the entry
+     * {@code rest_on} of the last sub-menu (optional), and the frame of the still gets a {@code mark} event ({@code still}).
+     */
+    private void buildMenuPathStillScript(@NotNull Minecraft minecraft) {
+        float clickX = this.config.getAsJsonArray("right_click").get(0).getAsFloat();
+        float clickY = this.config.getAsJsonArray("right_click").get(1).getAsFloat();
+        List<String> path = new ArrayList<>();
+        this.config.getAsJsonArray("path").forEach(element -> path.add(element.getAsString()));
+        this.waitTicks(16);
+        this.moveTo(() -> new float[] {clickX, clickY}, 16);
+        this.waitTicks(6);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_RIGHT);
+        this.waitUntil("right-click menu", () -> (ContextMenuHandler.INSTANCE.getCurrent() != null) && ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 60);
+        this.waitTicks(10);
+        for (int i = 0; i < path.size(); i++) {
+            String[] entryPath = path.subList(0, i + 1).toArray(new String[0]);
+            if (i > 0) this.moveTo(() -> new float[] {menuEntry(entryPath)[0], this.pointerY}, 10);
+            this.clickMenuEntry(minecraft, entryPath);
+            this.waitUntil("sub-menu " + entryPath[i], () -> subMenu(entryPath).isOpen(), 40);
+            this.waitTicks(8);
+        }
+        if (this.config.has("rest_on")) {
+            List<String> restPath = new ArrayList<>(path);
+            restPath.add(this.config.get("rest_on").getAsString());
+            String[] entryPath = restPath.toArray(new String[0]);
+            this.moveTo(() -> new float[] {menuEntry(entryPath)[0], this.pointerY}, 10);
+            this.moveTo(() -> menuEntry(entryPath), 10);
+        }
+        this.waitTicks(20);
+        this.mark("still");
+        this.waitTicks(4);
+    }
 
     // ---- Steps ----
 
