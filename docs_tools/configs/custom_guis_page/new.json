@@ -1,0 +1,18 @@
+{
+ "script": "manage_custom_guis",
+ "start": "screen",
+ "screen": "title",
+ "background_image": "/config/fancymenu/assets/docs_bg.png",
+ "menu_bar": true,
+ "elements": [],
+ "custom_guis": [],
+ "identifier": "modpack_info",
+ "cycles": [
+  "fancymenu.custom_guis.build.popup_mode"
+ ],
+ "rest_point": [
+  520,
+  320
+ ],
+ "hold_ticks": 70
+}

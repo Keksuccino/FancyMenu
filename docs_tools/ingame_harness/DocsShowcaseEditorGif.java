@@ -28,7 +28,10 @@ import de.keksuccino.fancymenu.customization.requirement.ui.BuildRequirementWind
 import de.keksuccino.fancymenu.customization.requirement.ui.ManageRequirementsWindowBody;
 import de.keksuccino.fancymenu.customization.action.ui.ChooseActionWindowBody;
 import de.keksuccino.fancymenu.customization.customgui.CustomGui;
+import de.keksuccino.fancymenu.customization.customgui.CustomGuiBaseScreen;
 import de.keksuccino.fancymenu.customization.customgui.CustomGuiHandler;
+import de.keksuccino.fancymenu.customization.customgui.BuildCustomGuiScreen;
+import de.keksuccino.fancymenu.customization.customgui.ManageCustomGuisScreen;
 import de.keksuccino.fancymenu.customization.element.AbstractElement;
 import de.keksuccino.fancymenu.customization.element.ElementBuilder;
 import de.keksuccino.fancymenu.customization.element.ElementRegistry;
@@ -165,6 +168,15 @@ public final class DocsShowcaseEditorGif {
     @Nullable
     private List<SchedulerInstance> savedSchedulers;
     /**
+     * The Custom GUIs of the instance before the config's {@code custom_guis} replaced them. They come back when the showcase ends.
+     */
+    @Nullable
+    private List<CustomGui> savedCustomGuis;
+    /**
+     * The layouts of the config's {@code custom_guis}. They only live in memory and get removed when the showcase ends.
+     */
+    private final List<Layout> customGuiLayouts = new ArrayList<>();
+    /**
      * Put the FancyMenu options of the config's {@code fancymenu_options} back to what they were before the showcase.
      */
     private final List<Runnable> optionRestorers = new ArrayList<>();
@@ -284,6 +296,7 @@ public final class DocsShowcaseEditorGif {
         if (this.config.has("listeners")) this.setUpListeners(this.config.getAsJsonArray("listeners"));
         // After the variables and the shuffle seed, because running schedulers can change variables right away
         if (this.config.has("schedulers")) this.setUpSchedulers(this.config.getAsJsonArray("schedulers"));
+        if (this.config.has("custom_guis")) this.setUpCustomGuis(this.config.getAsJsonArray("custom_guis"));
         Layout layout = Layout.buildForScreen(screen);
         if (this.config.has("elements")) {
             DocsShowcaseElements.addTo(layout, this.config.getAsJsonArray("elements"));
@@ -345,6 +358,8 @@ public final class DocsShowcaseEditorGif {
             case "listeners_still" -> this.buildListenersStillScript(minecraft);
             case "manage_schedulers" -> this.buildManageSchedulersScript(minecraft);
             case "schedulers_still" -> this.buildSchedulersStillScript(minecraft);
+            case "click_through" -> this.buildClickThroughScript(minecraft);
+            case "manage_custom_guis" -> this.buildManageCustomGuisScript(minecraft);
             case "press_keys" -> this.buildPressKeysScript(minecraft);
             case "add_element" -> this.buildAddElementScript(minecraft);
             case "add_placeholder" -> this.buildAddPlaceholderScript(minecraft);
@@ -683,6 +698,154 @@ public final class DocsShowcaseEditorGif {
         this.waitTicks(24);
         this.mark("manage");
         this.waitTicks(4);
+    }
+
+    /**
+     * Replaces the Custom GUIs of the instance until the showcase ends (config {@code custom_guis}), like {@code listeners}. Each entry:
+     * {@code identifier}, optional {@code title}, {@code allow_esc}, {@code pause_game}, {@code world_background},
+     * {@code world_background_overlay}, {@code popup_mode} and {@code popup_mode_background_overlay}, and a layout with the same keys as the
+     * config's own ({@code elements}, {@code vanilla}, {@code background_image}/{@code background_color}). These layouts only live in memory.
+     * Only with {@code screen: "title"}, because the default start screen is the showcase's own Custom GUI.
+     */
+    private void setUpCustomGuis(@NotNull Iterable<JsonElement> guis) {
+        if (this.savedCustomGuis == null) this.savedCustomGuis = CustomGuiHandler.getGuis();
+        for (String identifier : CustomGuiHandler.getGuiIdentifiers()) CustomGuiHandler.removeGui(identifier);
+        for (JsonElement entry : guis) {
+            JsonObject data = entry.getAsJsonObject();
+            CustomGui gui = new CustomGui();
+            gui.identifier = data.get("identifier").getAsString();
+            if (data.has("title")) gui.title = data.get("title").getAsString();
+            if (data.has("allow_esc")) gui.allowEsc = data.get("allow_esc").getAsBoolean();
+            if (data.has("pause_game")) gui.pauseGame = data.get("pause_game").getAsBoolean();
+            if (data.has("world_background")) gui.worldBackground = data.get("world_background").getAsBoolean();
+            if (data.has("world_background_overlay")) gui.worldBackgroundOverlay = data.get("world_background_overlay").getAsBoolean();
+            if (data.has("popup_mode")) gui.popupMode = data.get("popup_mode").getAsBoolean();
+            if (data.has("popup_mode_background_overlay")) gui.popupModeBackgroundOverlay = data.get("popup_mode_background_overlay").getAsBoolean();
+            CustomGuiHandler.addGui(gui);
+            if (data.has("elements") || data.has("vanilla") || data.has("background_image") || data.has("background_color")) {
+                // After addGui, so the layout gets the identifier of the Custom GUI and no fixed screen identifier
+                Layout layout = Layout.buildForScreen(gui.identifier);
+                if (data.has("elements")) DocsShowcaseElements.addTo(layout, data.getAsJsonArray("elements"));
+                if (data.has("vanilla")) DocsShowcaseElements.addVanillaTo(layout, data.getAsJsonArray("vanilla"));
+                DocsShowcaseElements.addBackgroundTo(layout, data);
+                LayoutHandler.addLayout(layout, false);
+                this.customGuiLayouts.add(layout);
+            }
+        }
+    }
+
+    /**
+     * Outside the editor: clicks elements one after another, like a player who opens a Custom GUI with a button and leaves it with
+     * another (config {@code start: "screen"}). Config {@code clicks}: each with {@code target} (an element id, found on the screen that is
+     * open when the pointer starts moving) and {@code wait_ticks} after the click (default 40). Then the pointer rests at the optional
+     * {@code rest_point} ([x, y]) for {@code hold_ticks} (default 60). {@code start_wait_ticks} waits before the first move (default 20).
+     */
+    private void buildClickThroughScript(@NotNull Minecraft minecraft) {
+        this.waitTicks(this.config.has("start_wait_ticks") ? this.config.get("start_wait_ticks").getAsInt() : 20);
+        for (JsonElement entry : this.config.getAsJsonArray("clicks")) {
+            JsonObject data = entry.getAsJsonObject();
+            String target = data.get("target").getAsString();
+            this.moveTo(() -> center(screenBox(target)), 20);
+            this.waitTicks(10);
+            this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+            this.waitTicks(data.has("wait_ticks") ? data.get("wait_ticks").getAsInt() : 40);
+        }
+        if (this.config.has("rest_point")) {
+            float x = this.config.getAsJsonArray("rest_point").get(0).getAsFloat();
+            float y = this.config.getAsJsonArray("rest_point").get(1).getAsFloat();
+            this.moveTo(() -> new float[] {x, y}, 16);
+        }
+        this.waitTicks(this.config.has("hold_ticks") ? this.config.get("hold_ticks").getAsInt() : 60);
+    }
+
+    /**
+     * Outside the editor (config {@code start: "screen"}, {@code screen: "title"}, {@code menu_bar: true}, {@code custom_guis: []}): opens
+     * Customization -> Custom GUIs -> Manage Custom GUIs from the menu bar, clicks New GUI, types the {@code identifier} (and the optional
+     * {@code title}), clicks the cycle buttons of {@code cycles} (their label keys, like {@code fancymenu.custom_guis.build.popup_mode}) once
+     * each and clicks Done. Then it selects the new Custom GUI, clicks Open GUI and Done, and rests the pointer at {@code rest_point}
+     * ([x, y]) for {@code hold_ticks} (default 80).
+     */
+    private void buildManageCustomGuisScript(@NotNull Minecraft minecraft) {
+        String identifier = this.config.get("identifier").getAsString();
+        this.waitTicks(12);
+        // Customization -> Custom GUIs -> Manage Custom GUIs
+        this.moveTo(() -> menuBarEntry("screen"), 14);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("Customization menu", () -> (ContextMenuHandler.INSTANCE.getCurrent() != null) && ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 40);
+        this.waitTicks(10);
+        this.moveTo(() -> new float[] {contextMenuEntry("custom_guis")[0] + 20, 200}, 12);
+        this.waitTicks(4);
+        this.scrollMenuUntilVisible(minecraft, "custom_guis", 230);
+        this.waitTicks(6);
+        // Clicking Custom GUIs opens its sub-menu. Click its right part: hovering the info icon after its name shows a tooltip, which keeps the
+        // sub-menu closed
+        this.moveTo(() -> menuEntryRightPart("custom_guis"), 12);
+        this.waitTicks(5);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("Custom GUIs menu", () -> subMenu("custom_guis").isOpen(), 40);
+        this.waitTicks(8);
+        // Go into the sub-menu sideways first, so the pointer doesn't pass over other entries of the Customization menu
+        this.moveTo(() -> new float[] {menuEntry("custom_guis", "manage_custom_guis")[0], this.pointerY}, 10);
+        this.clickMenuEntry(minecraft, "custom_guis", "manage_custom_guis");
+        this.waitUntil("Manage Custom GUIs", () -> findWindow(ManageCustomGuisScreen.class) != null, 60);
+        this.waitTicks(14);
+        // New GUI opens the settings window of the new Custom GUI
+        this.moveTo(() -> windowButtonCenter(requireWindow(ManageCustomGuisScreen.class), "fancymenu.custom_guis.manage.add"), 14);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("Build or Edit Custom GUI", () -> findWindow(BuildCustomGuiScreen.class) != null, 60);
+        this.waitTicks(16);
+        this.moveTo(() -> cellInputAfterLabel("fancymenu.custom_guis.build.identifier"), 14);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(6);
+        this.type(minecraft, identifier);
+        this.waitTicks(12);
+        if (this.config.has("title")) {
+            this.moveTo(() -> cellInputAfterLabel("fancymenu.custom_guis.build.title"), 14);
+            this.waitTicks(4);
+            this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+            this.waitTicks(6);
+            this.type(minecraft, this.config.get("title").getAsString());
+            this.waitTicks(12);
+        }
+        if (this.config.has("cycles")) {
+            for (JsonElement cycle : this.config.getAsJsonArray("cycles")) {
+                String labelKey = cycle.getAsString();
+                this.moveTo(() -> cellWidgetWithLabel(labelKey), 14);
+                this.waitTicks(6);
+                this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+                this.waitTicks(16);
+            }
+        }
+        this.moveTo(() -> windowWidgetCenter(requireWindow(BuildCustomGuiScreen.class), "doneButton"), 16);
+        this.waitTicks(5);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("Build or Edit Custom GUI closed", () -> findWindow(BuildCustomGuiScreen.class) == null, 60);
+        this.waitUntil("Manage Custom GUIs shown again", () -> requireWindow(ManageCustomGuisScreen.class).isVisible(), 60);
+        this.waitTicks(12);
+        this.moveTo(() -> customGuiCell(identifier), 12);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(10);
+        // Open GUI saves the Custom GUIs and opens the selected one behind the window
+        this.moveTo(() -> windowButtonCenter(requireWindow(ManageCustomGuisScreen.class), "fancymenu.custom_guis.manage.open"), 14);
+        this.waitTicks(5);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("Custom GUI opened", () -> ScreenUtils.getScreen() instanceof CustomGuiBaseScreen, 60);
+        this.waitTicks(20);
+        this.moveTo(() -> windowWidgetCenter(requireWindow(ManageCustomGuisScreen.class), "doneButton"), 16);
+        this.waitTicks(5);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("Manage Custom GUIs closed", () -> findWindow(ManageCustomGuisScreen.class) == null, 60);
+        this.waitTicks(4);
+        if (this.config.has("rest_point")) {
+            float x = this.config.getAsJsonArray("rest_point").get(0).getAsFloat();
+            float y = this.config.getAsJsonArray("rest_point").get(1).getAsFloat();
+            this.moveTo(() -> new float[] {x, y}, 16);
+        }
+        this.waitTicks(this.config.has("hold_ticks") ? this.config.get("hold_ticks").getAsInt() : 80);
     }
 
     /**
@@ -2882,6 +3045,35 @@ public final class DocsShowcaseEditorGif {
     }
 
     /**
+     * The GUI position of the right part of an entry of the open context menu, away from the info icon after its name.
+     */
+    @NotNull
+    private static float[] menuEntryRightPart(@NotNull String identifier) {
+        ContextMenu menu = ContextMenuHandler.INSTANCE.getCurrent();
+        if (menu == null) throw new IllegalStateException("No open context menu");
+        ContextMenu.ContextMenuEntry<?> entry = menu.getEntry(identifier);
+        if (entry == null) throw new IllegalStateException("No context menu entry " + identifier);
+        float scale = UIBase.calculateFixedRenderScale(menu.getScale());
+        return new float[] {(readFloat(entry, "x") + readFloat(entry, "width") * 0.75F) * scale, (readFloat(entry, "y") + entry.getHeight() / 2.0F) * scale};
+    }
+
+    /**
+     * The GUI position of the identifier of a Custom GUI in the Manage Custom GUIs window.
+     */
+    @NotNull
+    private static float[] customGuiCell(@NotNull String identifier) {
+        PiPWindow window = requireWindow(ManageCustomGuisScreen.class);
+        @SuppressWarnings("unchecked")
+        List<Object> cells = (List<Object>) readField(window.getScreen(), "allCells");
+        for (Object cell : cells) {
+            if ((cell instanceof ManageCustomGuisScreen.CustomGuiCell guiCell) && ((CustomGui) readField(guiCell, "gui")).identifier.equals(identifier)) {
+                return bodyToGui(window, guiCell.getX() + Math.min(40.0F, guiCell.getWidth() / 2.0F), guiCell.getY() + guiCell.getHeight() / 2.0F);
+            }
+        }
+        throw new IllegalStateException("Manage Custom GUIs lists no " + identifier);
+    }
+
+    /**
      * The GUI position of an empty spot of the list of the Manage Schedulers window, below its rows.
      */
     @NotNull
@@ -3166,6 +3358,12 @@ public final class DocsShowcaseEditorGif {
         }
         // Options of the showcase would stay in the docs instance and show up in later recordings, like global button textures
         for (int i = this.optionRestorers.size() - 1; i >= 0; i--) this.optionRestorers.get(i).run();
+        // Custom GUIs of the showcase would stay in the docs instance, and their layouts in memory until the game closes
+        this.customGuiLayouts.forEach(layout -> LayoutHandler.deleteLayout(layout, false));
+        if (this.savedCustomGuis != null) {
+            for (String identifier : CustomGuiHandler.getGuiIdentifiers()) CustomGuiHandler.removeGui(identifier);
+            this.savedCustomGuis.forEach(CustomGuiHandler::addGui);
+        }
         this.writers.shutdown();
         EventHandler.INSTANCE.unregisterListenersOf(this);
         LOGGER.info("[CHECK] docs gif finished: {} frames={}", (this.failures.get() == 0) ? "PASS" : ("FAIL " + this.failures.get()), this.frameIndex);

@@ -1,0 +1,105 @@
+{
+ "script": "click_through",
+ "start": "screen",
+ "screen": "title",
+ "background_image": "/config/fancymenu/assets/docs_bg.png",
+ "elements": [
+  {
+   "type": "custom_button",
+   "id": "modpack_info_button",
+   "x": 220,
+   "y": 254,
+   "w": 200,
+   "h": 20,
+   "props": {
+    "label": "Modpack Info"
+   },
+   "actions": [
+    {
+     "action": "opengui",
+     "value": "modpack_info"
+    }
+   ]
+  }
+ ],
+ "custom_guis": [
+  {
+   "identifier": "modpack_info",
+   "popup_mode": true,
+   "elements": [
+    {
+     "id": "info_panel",
+     "x": 165,
+     "y": 92,
+     "w": 310,
+     "h": 172,
+     "look": "pixel",
+     "background": true,
+     "content": " "
+    },
+    {
+     "type": "image",
+     "id": "frostfall_emblem",
+     "x": 178,
+     "y": 102,
+     "w": 64,
+     "h": 64,
+     "props": {
+      "source": "/config/fancymenu/assets/frostfall_emblem.png"
+     }
+    },
+    {
+     "id": "info_header",
+     "x": 250,
+     "y": 112,
+     "w": 215,
+     "h": 48,
+     "look": "pixel",
+     "background": false,
+     "content": "# Frostfall\nVersion 2.4 for Minecraft 26.3"
+    },
+    {
+     "id": "info_text",
+     "x": 178,
+     "y": 174,
+     "w": 290,
+     "h": 96,
+     "look": "pixel",
+     "background": false,
+     "content": "### Getting Started\n- Press **K** to open your quest book\n- Light a campfire before your first night\n- Ask on our Discord if you get stuck"
+    },
+    {
+     "type": "custom_button",
+     "id": "back_button",
+     "x": 371,
+     "y": 236,
+     "w": 92,
+     "h": 20,
+     "props": {
+      "label": "Back"
+     },
+     "actions": [
+      {
+       "action": "back_to_last_screen"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "clicks": [
+  {
+   "target": "modpack_info_button",
+   "wait_ticks": 120
+  },
+  {
+   "target": "back_button",
+   "wait_ticks": 20
+  }
+ ],
+ "rest_point": [
+  520,
+  320
+ ],
+ "hold_ticks": 50
+}
