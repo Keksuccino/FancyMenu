@@ -71,8 +71,8 @@ CONFIGS = {
     'logo': {
         'script': 'add_image', 'screen': 'title', 'elements': [], 'background_image': ASSETS + 'background.png',
         'remove': ['minecraft_logo_widget', 'minecraft_splash_widget'],
-        'right_click': [300, 36], 'menu_target_y': 275, 'folder': 'wildwood', 'file': 'logo.png', 'drag_to': [320, 64],
-        'free_spot': [560, 300], 'hold_ticks': 60,
+        'folder': 'wildwood', 'file': 'logo.png', 'drag_to': [320, 64],
+        'free_spot': [560, 300], 'hold_ticks': 50,
     },
     'save': {
         'script': 'save_layout', 'screen': 'title', 'customization': True,

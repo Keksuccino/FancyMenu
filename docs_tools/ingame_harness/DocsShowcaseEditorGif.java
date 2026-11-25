@@ -1948,15 +1948,68 @@ public final class DocsShowcaseEditorGif {
     }
 
     /**
-     * In the editor: removes vanilla elements (config {@code remove}: their ids, each clicked and deleted with the Delete key), adds an
-     * Image element through New Element at {@code right_click}, picks its image through Image Source (see {@link #chooseLocalFile}),
-     * clicks Restore Aspect Ratio and drags it so its center is at {@code drag_to}. Config also: {@code folder}, {@code file},
-     * {@code free_spot}, {@code hold_ticks} (default 70) and {@code menu_target_y} (default 345, the GUI Y New Element gets scrolled
-     * above, smaller for right-clicks near the top of the screen, whose menu ends higher up).
+     * In the editor: right-clicks {@code right_click}, opens Menu Backgrounds -> Cubic Panorama, turns on Show Background, clicks
+     * Panorama Name, picks the panorama {@code panorama} in Choose Panorama, rests on its preview for {@code preview_ticks} (default 50)
+     * and clicks Done. Then it clicks {@code free_spot} and holds for {@code hold_ticks} (default 70).
      */
-    private void buildAddImageScript(@NotNull Minecraft minecraft) {
+    private void buildPanoramaBackgroundScript(@NotNull Minecraft minecraft) {
         float clickX = this.config.getAsJsonArray("right_click").get(0).getAsFloat();
         float clickY = this.config.getAsJsonArray("right_click").get(1).getAsFloat();
+        String panorama = this.config.get("panorama").getAsString();
+        Class<?> chooser = de.keksuccino.fancymenu.customization.layout.editor.ChoosePanoramaScreen.class;
+        this.waitTicks(16);
+        this.moveTo(() -> new float[] {clickX, clickY}, 18);
+        this.waitTicks(6);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_RIGHT);
+        this.waitUntil("context menu", () -> (ContextMenuHandler.INSTANCE.getCurrent() != null) && ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 60);
+        this.waitTicks(10);
+        this.clickMenuEntry(minecraft, "menu_backgrounds");
+        this.waitUntil("Menu Backgrounds menu", () -> subMenu("menu_backgrounds").isOpen(), 40);
+        this.waitTicks(8);
+        this.moveTo(() -> new float[] {menuEntry("menu_backgrounds", "menu_background_panorama")[0], this.pointerY}, 10);
+        this.clickMenuEntry(minecraft, "menu_backgrounds", "menu_background_panorama");
+        this.waitUntil("Cubic Panorama menu", () -> subMenu("menu_backgrounds", "menu_background_panorama").isOpen(), 40);
+        this.waitTicks(8);
+        this.moveTo(() -> new float[] {menuEntry("menu_backgrounds", "menu_background_panorama", "menu_entry_show_background")[0], this.pointerY}, 10);
+        this.clickMenuEntry(minecraft, "menu_backgrounds", "menu_background_panorama", "menu_entry_show_background");
+        this.waitTicks(16);
+        this.clickMenuEntry(minecraft, "menu_backgrounds", "menu_background_panorama", "panorama_name");
+        this.waitUntil("Choose Panorama", () -> findWindow(chooser) != null, 60);
+        this.waitTicks(16);
+        this.moveTo(() -> panoramaChooserEntry(panorama), 14);
+        this.waitTicks(5);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(this.config.has("preview_ticks") ? this.config.get("preview_ticks").getAsInt() : 50);
+        this.moveTo(() -> windowWidgetCenter(requireWindow(chooser), "doneButton"), 16);
+        this.waitTicks(5);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("Choose Panorama closed", () -> findWindow(chooser) == null, 60);
+        this.waitTicks(16);
+        this.clickFreeSpotAndHold(minecraft, 70);
+    }
+
+    /**
+     * The GUI position of a panorama in the list of the open Choose Panorama window, a bit right of the start of its name.
+     */
+    @NotNull
+    private static float[] panoramaChooserEntry(@NotNull String name) {
+        PiPWindow window = requireWindow(de.keksuccino.fancymenu.customization.layout.editor.ChoosePanoramaScreen.class);
+        ScrollArea list = (ScrollArea) readField(window.getScreen(), "panoramaListScrollArea");
+        for (ScrollAreaEntry entry : list.getEntries()) {
+            if ((entry instanceof de.keksuccino.fancymenu.customization.layout.editor.ChoosePanoramaScreen.PanoramaScrollEntry panoramaEntry) && panoramaEntry.panorama.equals(name)) {
+                return bodyToGui(window, entry.getX() + Math.min(60.0F, entry.getWidth() / 2.0F), entry.getY() + entry.getHeight() / 2.0F);
+            }
+        }
+        throw new IllegalStateException("Choose Panorama lists no " + name);
+    }
+
+    /**
+     * In the editor: removes vanilla elements (config {@code remove}: their ids, each clicked and deleted with the Delete key), adds an
+     * Image element through Element -> New of the editor's menu bar, picks its image through Image Source (see {@link #chooseLocalFile}),
+     * clicks Restore Aspect Ratio and drags it so its center is at {@code drag_to}. Config also: {@code folder}, {@code file},
+     * {@code free_spot} and {@code hold_ticks} (default 70).
+     */
+    private void buildAddImageScript(@NotNull Minecraft minecraft) {
         float dragX = this.config.getAsJsonArray("drag_to").get(0).getAsFloat();
         float dragY = this.config.getAsJsonArray("drag_to").get(1).getAsFloat();
         String entry = newElementEntry("image");
@@ -1973,35 +2026,33 @@ public final class DocsShowcaseEditorGif {
             }
         }
         int[] elementsBefore = {0};
-        this.moveTo(() -> new float[] {clickX, clickY}, 16);
-        this.waitTicks(6);
         this.steps.addLast(() -> {
             elementsBefore[0] = requireLayoutEditor().normalEditorElements.size();
             return true;
         });
-        this.click(minecraft, InputConstants.MOUSE_BUTTON_RIGHT);
-        this.waitUntil("context menu", () -> (ContextMenuHandler.INSTANCE.getCurrent() != null) && ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 60);
-        this.waitTicks(10);
-        this.moveTo(() -> new float[] {contextMenuEntry("add_element")[0] + 20, Math.min(this.pointerY + 40, MENU_SCROLL_TARGET_Y)}, 12);
-        this.waitTicks(4);
-        // A menu opened near the top of the screen ends higher up, so its last entries need a smaller scroll target (menu_target_y)
-        this.scrollMenuUntilVisible(minecraft, "add_element", this.config.has("menu_target_y") ? this.config.get("menu_target_y").getAsFloat() : 345);
-        this.waitTicks(6);
-        this.clickMenuEntry(minecraft, "add_element");
-        this.waitUntil("New Element menu", () -> subMenu("add_element").isOpen(), 40);
-        this.waitTicks(10);
-        this.moveTo(() -> new float[] {menuEntry("add_element", entry)[0], this.pointerY}, 10);
-        this.waitTicks(4);
-        this.clickMenuEntry(minecraft, "add_element", entry);
+        // Element -> New -> Image in the editor's menu bar
+        this.moveTo(() -> editorMenuBarEntry("element_tab"), 16);
+        this.waitTicks(5);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitUntil("Element menu", () -> (ContextMenuHandler.INSTANCE.getCurrent() != null) && ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 40);
+        this.waitTicks(8);
+        this.clickMenuEntry(minecraft, "new_element");
+        this.waitUntil("New menu", () -> subMenu("new_element").isOpen(), 40);
+        this.waitTicks(8);
+        this.moveTo(() -> new float[] {menuEntry("new_element", entry)[0], this.pointerY}, 10);
+        this.waitTicks(3);
+        this.clickMenuEntry(minecraft, "new_element", entry);
         this.waitUntil("new element", () -> requireLayoutEditor().normalEditorElements.size() > elementsBefore[0], 40);
         this.waitTicks(14);
         // Image Source
         this.rightClickNewestAndPick(minecraft, "menu_entry_source");
         this.chooseLocalFile(minecraft, this.config.has("folder") ? this.config.get("folder").getAsString() : null, this.config.get("file").getAsString());
         this.waitTicks(20);
-        // Restore Aspect Ratio
+        // Restore Aspect Ratio. Its menu stays open, so close it with Esc before dragging, or the drag would click its entries.
         this.rightClickNewestAndPick(minecraft, "restore_aspect_ratio");
-        this.waitTicks(20);
+        this.waitTicks(14);
+        this.key(minecraft, "escape", "Esc");
+        this.waitTicks(10);
         // Drag it to its place
         this.moveTo(() -> center(newestElementBox()), 14);
         this.waitTicks(4);
@@ -2032,7 +2083,8 @@ public final class DocsShowcaseEditorGif {
         this.waitTicks(6);
         this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
         this.waitUntil("editor closed", () -> !(ScreenUtils.getScreen() instanceof LayoutEditorScreen), 60);
-        this.waitTicks(16);
+        // The X of the editor's menu bar is where the screen's menu bar has its door icon, so leave before its tooltip shows
+        this.waitTicks(3);
         if (this.config.has("hovers")) {
             for (JsonElement entry : this.config.getAsJsonArray("hovers")) {
                 JsonObject hover = entry.getAsJsonObject();
@@ -2062,9 +2114,48 @@ public final class DocsShowcaseEditorGif {
         this.waitTicks(10);
         this.moveTo(() -> new float[] {contextMenuEntry(entry)[0] + 20, Math.min(this.pointerY + 70, MENU_SCROLL_TARGET_Y)}, 12);
         this.waitTicks(4);
-        this.scrollMenuUntilVisible(minecraft, entry);
+        this.scrollMenuUntilInside(minecraft, entry);
         this.waitTicks(6);
         this.clickMenuEntry(minecraft, entry);
+    }
+
+    /**
+     * Turns the mouse wheel over the open context menu every second tick until the entry is fully inside the visible part of the menu.
+     * Unlike {@link #scrollMenuUntilVisible(Minecraft, String, float)}, this works for menus of any height, like a menu opened near the
+     * top of the screen, which ends higher up.
+     */
+    private void scrollMenuUntilInside(@NotNull Minecraft minecraft, @NotNull String identifier) {
+        int[] cooldown = {0};
+        int[] turns = {0};
+        this.steps.addLast(() -> {
+            if (cooldown[0]-- > 0) return false;
+            ContextMenu menu = ContextMenuHandler.INSTANCE.getCurrent();
+            if (menu == null) throw new IllegalStateException("No open context menu");
+            ContextMenu.ContextMenuEntry<?> entry = menu.getEntry(identifier);
+            if (entry == null) throw new IllegalStateException("No context menu entry " + identifier);
+            if (!((boolean) readField(menu, "needsScrolling")) || isFullyInsideMenu(menu, entry)) {
+                this.pass("scroll menu to " + identifier, turns[0] + " wheel turns");
+                return true;
+            }
+            if (++turns[0] > 40) throw new IllegalStateException("Scrolling never reached " + identifier);
+            // Two wheel steps per frame, because these menus are long
+            minecraft.mouseHandler.onScroll(minecraft.getWindow().handle(), 0.0, -2.0);
+            cooldown[0] = 1;
+            return false;
+        });
+    }
+
+    /**
+     * If the entry is fully inside the visible part of the scrolling menu, between its scroll arrows (see ContextMenu#isEntryVisible).
+     */
+    private static boolean isFullyInsideMenu(@NotNull ContextMenu menu, @NotNull ContextMenu.ContextMenuEntry<?> entry) {
+        float scale = UIBase.calculateFixedRenderScale(menu.getScale());
+        float top = ((Number) invoke(menu, "getActualY")).floatValue() / scale + menu.getBorderThickness();
+        float arrows = ((Number) readField(menu, "SCROLL_INDICATOR_HEIGHT")).floatValue();
+        float visibleTop = top + arrows;
+        float visibleBottom = top + readFloat(menu, "displayHeight") - arrows;
+        float entryY = readFloat(entry, "y");
+        return (entryY >= visibleTop) && ((entryY + entry.getHeight()) <= visibleBottom);
     }
 
     /**
@@ -2073,32 +2164,32 @@ public final class DocsShowcaseEditorGif {
      */
     private void chooseLocalFile(@NotNull Minecraft minecraft, @Nullable String folder, @NotNull String fileName) {
         this.waitUntil("resource chooser", () -> findWindow(ResourceChooserWindowBody.class) != null, 60);
-        this.waitTicks(16);
-        this.moveTo(() -> cellWidgetWithLabel("fancymenu.resources.source_type"), 14);
+        this.waitTicks(12);
+        this.moveTo(() -> cellWidgetWithLabel("fancymenu.resources.source_type"), 11);
         this.waitTicks(5);
         this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
-        this.waitTicks(14);
-        this.moveTo(() -> cellWidgetWithLabel("fancymenu.resources.chooser_screen.choose_local"), 14);
+        this.waitTicks(10);
+        this.moveTo(() -> cellWidgetWithLabel("fancymenu.resources.chooser_screen.choose_local"), 11);
         this.waitTicks(5);
         this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
         this.waitUntil("file chooser", () -> findWindow(ChooseFileWindowBody.class) != null, 60);
-        // The X of the editor's menu bar is where the screen's menu bar has its door icon, so leave before its tooltip shows
-        this.waitTicks(3);
+        this.waitTicks(12);
         if (folder != null) {
-            this.moveTo(() -> fileEntry(folder), 14);
+            this.moveTo(() -> fileEntry(folder), 11);
             this.waitTicks(5);
             this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
             this.waitTicks(2);
             this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
             this.waitUntil("folder " + folder, () -> folder.equals(((File) readField(requireWindow(ChooseFileWindowBody.class).getScreen(), "currentDir")).getName()), 40);
-            this.waitTicks(12);
+            this.waitTicks(8);
         }
-        this.moveTo(() -> fileEntry(fileName), 14);
+        this.scrollFileListTo(minecraft, fileName);
+        this.moveTo(() -> fileEntry(fileName), 11);
         this.waitTicks(5);
         this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
         // The preview of the image loads
-        this.waitTicks(26);
-        this.moveTo(() -> windowWidgetCenter(requireWindow(ChooseFileWindowBody.class), "confirmButton"), 16);
+        this.waitTicks(16);
+        this.moveTo(() -> windowWidgetCenter(requireWindow(ChooseFileWindowBody.class), "confirmButton"), 12);
         this.waitTicks(5);
         this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
         this.waitUntil("choosers closed", () -> (findWindow(ResourceChooserWindowBody.class) == null) && (findWindow(ChooseFileWindowBody.class) == null), 60);
@@ -2113,6 +2204,43 @@ public final class DocsShowcaseEditorGif {
             this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
         }
         this.waitTicks(this.config.has("hold_ticks") ? this.config.get("hold_ticks").getAsInt() : defaultHold);
+    }
+
+    /**
+     * Moves the pointer over the file list of the open file chooser and turns the mouse wheel every second tick until the file or folder
+     * is fully inside the visible part of the list, like for files below the first few entries.
+     */
+    private void scrollFileListTo(@NotNull Minecraft minecraft, @NotNull String name) {
+        this.moveTo(() -> {
+            PiPWindow window = requireWindow(ChooseFileWindowBody.class);
+            ScrollArea list = (ScrollArea) readField(window.getScreen(), "fileListScrollArea");
+            return bodyToGui(window, list.getInnerX() + list.getInnerWidth() * 0.6F, list.getInnerY() + list.getInnerHeight() * 0.6F);
+        }, 12);
+        this.waitTicks(4);
+        int[] cooldown = {0};
+        int[] turns = {0};
+        this.steps.addLast(() -> {
+            if (cooldown[0]-- > 0) return false;
+            ScrollArea list = (ScrollArea) readField(requireWindow(ChooseFileWindowBody.class).getScreen(), "fileListScrollArea");
+            ScrollAreaEntry entry = findFileEntry(list, name);
+            if ((entry.getY() >= list.getInnerY()) && ((entry.getY() + entry.getHeight()) <= (list.getInnerY() + list.getInnerHeight()))) {
+                this.pass("scroll file list to " + name, turns[0] + " wheel turns");
+                return true;
+            }
+            if (++turns[0] > 30) throw new IllegalStateException("Scrolling never reached " + name);
+            minecraft.mouseHandler.onScroll(minecraft.getWindow().handle(), 0.0, -1.0);
+            cooldown[0] = 1;
+            return false;
+        });
+        this.waitTicks(6);
+    }
+
+    @NotNull
+    private static ScrollAreaEntry findFileEntry(@NotNull ScrollArea list, @NotNull String name) {
+        for (ScrollAreaEntry entry : list.getEntries()) {
+            if ((entry instanceof AbstractFileBrowserWindowBody.AbstractFileScrollAreaEntry fileEntry) && fileEntry.file.getName().equals(name)) return entry;
+        }
+        throw new IllegalStateException("The file chooser lists no " + name);
     }
 
     /**
