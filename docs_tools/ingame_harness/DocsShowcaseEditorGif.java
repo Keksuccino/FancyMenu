@@ -2413,62 +2413,6 @@ public final class DocsShowcaseEditorGif {
     }
 
     /**
-     * In the editor: right-clicks {@code right_click}, opens Menu Backgrounds -> Cubic Panorama, turns on Show Background, clicks
-     * Panorama Name, picks the panorama {@code panorama} in Choose Panorama, rests on its preview for {@code preview_ticks} (default 50)
-     * and clicks Done. Then it clicks {@code free_spot} and holds for {@code hold_ticks} (default 70).
-     */
-    private void buildPanoramaBackgroundScript(@NotNull Minecraft minecraft) {
-        float clickX = this.config.getAsJsonArray("right_click").get(0).getAsFloat();
-        float clickY = this.config.getAsJsonArray("right_click").get(1).getAsFloat();
-        String panorama = this.config.get("panorama").getAsString();
-        Class<?> chooser = de.keksuccino.fancymenu.customization.layout.editor.ChoosePanoramaScreen.class;
-        this.waitTicks(16);
-        this.moveTo(() -> new float[] {clickX, clickY}, 18);
-        this.waitTicks(6);
-        this.click(minecraft, InputConstants.MOUSE_BUTTON_RIGHT);
-        this.waitUntil("context menu", () -> (ContextMenuHandler.INSTANCE.getCurrent() != null) && ContextMenuHandler.INSTANCE.getCurrent().isOpen(), 60);
-        this.waitTicks(10);
-        this.clickMenuEntry(minecraft, "menu_backgrounds");
-        this.waitUntil("Menu Backgrounds menu", () -> subMenu("menu_backgrounds").isOpen(), 40);
-        this.waitTicks(8);
-        this.moveTo(() -> new float[] {menuEntry("menu_backgrounds", "menu_background_panorama")[0], this.pointerY}, 10);
-        this.clickMenuEntry(minecraft, "menu_backgrounds", "menu_background_panorama");
-        this.waitUntil("Cubic Panorama menu", () -> subMenu("menu_backgrounds", "menu_background_panorama").isOpen(), 40);
-        this.waitTicks(8);
-        this.moveTo(() -> new float[] {menuEntry("menu_backgrounds", "menu_background_panorama", "menu_entry_show_background")[0], this.pointerY}, 10);
-        this.clickMenuEntry(minecraft, "menu_backgrounds", "menu_background_panorama", "menu_entry_show_background");
-        this.waitTicks(16);
-        this.clickMenuEntry(minecraft, "menu_backgrounds", "menu_background_panorama", "panorama_name");
-        this.waitUntil("Choose Panorama", () -> findWindow(chooser) != null, 60);
-        this.waitTicks(16);
-        this.moveTo(() -> panoramaChooserEntry(panorama), 14);
-        this.waitTicks(5);
-        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
-        this.waitTicks(this.config.has("preview_ticks") ? this.config.get("preview_ticks").getAsInt() : 50);
-        this.moveTo(() -> windowWidgetCenter(requireWindow(chooser), "doneButton"), 16);
-        this.waitTicks(5);
-        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
-        this.waitUntil("Choose Panorama closed", () -> findWindow(chooser) == null, 60);
-        this.waitTicks(16);
-        this.clickFreeSpotAndHold(minecraft, 70);
-    }
-
-    /**
-     * The GUI position of a panorama in the list of the open Choose Panorama window, a bit right of the start of its name.
-     */
-    @NotNull
-    private static float[] panoramaChooserEntry(@NotNull String name) {
-        PiPWindow window = requireWindow(de.keksuccino.fancymenu.customization.layout.editor.ChoosePanoramaScreen.class);
-        ScrollArea list = (ScrollArea) readField(window.getScreen(), "panoramaListScrollArea");
-        for (ScrollAreaEntry entry : list.getEntries()) {
-            if ((entry instanceof de.keksuccino.fancymenu.customization.layout.editor.ChoosePanoramaScreen.PanoramaScrollEntry panoramaEntry) && panoramaEntry.panorama.equals(name)) {
-                return bodyToGui(window, entry.getX() + Math.min(60.0F, entry.getWidth() / 2.0F), entry.getY() + entry.getHeight() / 2.0F);
-            }
-        }
-        throw new IllegalStateException("Choose Panorama lists no " + name);
-    }
-
-    /**
      * In the editor: removes vanilla elements (config {@code remove}: their ids, each clicked and deleted with the Delete key), adds an
      * Image element through Element -> New of the editor's menu bar, picks its image through Image Source (see {@link #chooseLocalFile}),
      * clicks Restore Aspect Ratio and drags it so its center is at {@code drag_to}. Config also: {@code folder}, {@code file},
@@ -2536,6 +2480,16 @@ public final class DocsShowcaseEditorGif {
      */
     private void buildSaveLayoutScript(@NotNull Minecraft minecraft) {
         this.waitTicks(20);
+        this.saveLayoutAndCloseEditor(minecraft);
+        this.restOnHovers(minecraft);
+        this.waitTicks(this.config.has("hold_ticks") ? this.config.get("hold_ticks").getAsInt() : 60);
+    }
+
+    /**
+     * In the editor: saves the layout with Ctrl + S (the Save File window opens the first time, its file name stays) and closes the editor
+     * with the X of the menu bar. The saved layout stays in the instance: remove it after recording.
+     */
+    private void saveLayoutAndCloseEditor(@NotNull Minecraft minecraft) {
         this.key(minecraft, "shortcut+s", "Ctrl + S");
         this.waitUntil("Save File", () -> findWindow(SaveFileWindowBody.class) != null, 60);
         this.waitTicks(24);
@@ -2550,6 +2504,13 @@ public final class DocsShowcaseEditorGif {
         this.waitUntil("editor closed", () -> !(ScreenUtils.getScreen() instanceof LayoutEditorScreen), 60);
         // The X of the editor's menu bar is where the screen's menu bar has its door icon, so leave before its tooltip shows
         this.waitTicks(3);
+    }
+
+    /**
+     * Outside the editor: rests the pointer on the config's {@code hovers}, if it has them: each a {@code label} (of a vanilla widget) or a
+     * {@code point} ([x, y]), with {@code move_ticks} (default 18) and {@code ticks} (how long the pointer rests, default 30).
+     */
+    private void restOnHovers(@NotNull Minecraft minecraft) {
         if (this.config.has("hovers")) {
             for (JsonElement entry : this.config.getAsJsonArray("hovers")) {
                 JsonObject hover = entry.getAsJsonObject();
@@ -2565,37 +2526,39 @@ public final class DocsShowcaseEditorGif {
                 this.waitTicks(hover.has("ticks") ? hover.get("ticks").getAsInt() : 30);
             }
         }
-        this.waitTicks(this.config.has("hold_ticks") ? this.config.get("hold_ticks").getAsInt() : 60);
     }
 
     /**
-     * In the editor: selects the buttons {@code buttons} (the ids of the first and last one in screen order) with a selection rectangle,
-     * so the right-click menu of the {@code target} button changes all of them at once. Then Button Textures -> Set -> Normal Background
+     * In the editor: selects the buttons of {@code select} (their ids: a click on the first one, Ctrl + click on the others), so the
+     * right-click menu of the {@code target} button changes all of them at once. Only buttons: the menu of several elements only has the
+     * entries all of them have, and some vanilla widgets aren't buttons, like the icons next to the Realms button. Then Button Textures -> Set -> Normal Background
      * ({@code normal}) and Hover Background ({@code hover}), both picked like {@link #chooseLocalFile} from the assets sub-folder
      * {@code folder}, and Button Textures -> Nine-Slice Custom Background, whose menu stays open, so Esc closes it. Config also
      * {@code free_spot} ([x, y], clicked at the end to unselect the buttons), {@code rest_on} (a vanilla element id the pointer rests on
      * at the end, optional) and {@code hold_ticks} (default 60).
      */
     private void buildButtonTexturesScript(@NotNull Minecraft minecraft) {
-        String first = this.config.getAsJsonArray("buttons").get(0).getAsString();
-        String last = this.config.getAsJsonArray("buttons").get(1).getAsString();
+        List<String> select = new ArrayList<>();
+        for (JsonElement id : this.config.getAsJsonArray("select")) select.add(id.getAsString());
         String target = this.config.get("target").getAsString();
         String folder = this.config.has("folder") ? this.config.get("folder").getAsString() : null;
         this.waitTicks(16);
-        // Select the buttons with a selection rectangle, from a free spot above the first one to below the last one
-        this.moveTo(() -> {
-            float[] box = editorBox(first);
-            return new float[] {box[0] - 14, box[1] - 10};
-        }, 16);
-        this.waitTicks(4);
-        this.press(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
-        this.moveTo(() -> {
-            float[] box = editorBox(last);
-            return new float[] {box[0] + box[2] + 14, box[1] + box[3] + 10};
-        }, 22);
-        this.waitTicks(4);
-        this.release(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
-        this.waitTicks(16);
+        // Select the buttons: click the first one, then Ctrl + click the others, which adds them to the selection
+        for (int i = 0; i < select.size(); i++) {
+            String id = select.get(i);
+            this.moveTo(() -> center(editorBox(id)), (i == 0) ? 16 : 10);
+            this.waitTicks(4);
+            if (i == 0) {
+                this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+            } else {
+                this.badge("Ctrl + Click");
+                this.press(minecraft, InputConstants.MOUSE_BUTTON_LEFT, InputQuirks.EDIT_SHORTCUT_KEY_MODIFIER);
+                this.waitTicks(1);
+                this.release(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+            }
+            this.waitTicks(6);
+        }
+        this.waitTicks(10);
         // Normal and hover textures for all of them
         this.openButtonTexturesMenu(minecraft, target);
         this.clickSubMenuEntrySideways(minecraft, "button_background", "set_background");
@@ -2713,6 +2676,18 @@ public final class DocsShowcaseEditorGif {
     }
 
     /**
+     * Adds the steps the builder adds, but each of them only runs if {@code skip[0]} is false when it's its turn, which a step before
+     * them decides at runtime, like for a folder that is already open.
+     */
+    private void unlessSkipped(@NotNull boolean[] skip, @NotNull Runnable builder) {
+        int before = this.steps.size();
+        builder.run();
+        List<Step> added = new ArrayList<>();
+        while (this.steps.size() > before) added.add(0, this.steps.pollLast());
+        for (Step step : added) this.steps.addLast(() -> skip[0] || step.run());
+    }
+
+    /**
      * In the resource chooser that is opening: switches Source Type to Local, clicks Choose Local Resource File, opens the folder with a
      * double-click in the file chooser, clicks the file (its preview shows) and clicks OK, which closes both windows and sets the resource.
      */
@@ -2729,13 +2704,23 @@ public final class DocsShowcaseEditorGif {
         this.waitUntil("file chooser", () -> findWindow(ChooseFileWindowBody.class) != null, 60);
         this.waitTicks(12);
         if (folder != null) {
-            this.moveTo(() -> fileEntry(folder), 11);
-            this.waitTicks(5);
-            this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
-            this.waitTicks(2);
-            this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
-            this.waitUntil("folder " + folder, () -> folder.equals(((File) readField(requireWindow(ChooseFileWindowBody.class).getScreen(), "currentDir")).getName()), 40);
-            this.waitTicks(8);
+            // The file chooser remembers the last folder of the game session, so a second chooser can already be in the folder
+            BooleanSupplier inFolder = () -> folder.equals(((File) readField(requireWindow(ChooseFileWindowBody.class).getScreen(), "currentDir")).getName());
+            boolean[] skip = {false};
+            this.steps.addLast(() -> {
+                skip[0] = inFolder.getAsBoolean();
+                if (skip[0]) this.pass("file chooser already in " + folder, "no double-click");
+                return true;
+            });
+            this.unlessSkipped(skip, () -> {
+                this.moveTo(() -> fileEntry(folder), 11);
+                this.waitTicks(5);
+                this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+                this.waitTicks(2);
+                this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+                this.waitUntil("folder " + folder, inFolder, 40);
+                this.waitTicks(8);
+            });
         }
         this.scrollFileListTo(minecraft, fileName);
         this.moveTo(() -> fileEntry(fileName), 11);
