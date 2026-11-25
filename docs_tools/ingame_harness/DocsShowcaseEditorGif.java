@@ -109,6 +109,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -368,6 +369,7 @@ public final class DocsShowcaseEditorGif {
             case "hover_elements" -> this.buildHoverElementsScript(minecraft);
             case "editor_basics" -> this.buildEditorBasicsScript(minecraft);
             case "layers_widget" -> this.buildLayersWidgetScript(minecraft);
+            case "rotate_and_tilt" -> this.buildRotateAndTiltScript(minecraft);
             case "context_entry_still" -> this.buildContextEntryStillScript(minecraft);
             case "screen_tour" -> this.buildScreenTourScript(minecraft);
             case "first_layout" -> this.buildFirstLayoutScript(minecraft);
@@ -1698,6 +1700,86 @@ public final class DocsShowcaseEditorGif {
         this.waitTicks(4);
         this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
         this.waitTicks(50);
+    }
+
+    /**
+     * Rotates and tilts elements with their controls in the editor. Config {@code steps}: each with {@code target} (an element id) and one of
+     * {@code rotate_to}, {@code vertical_tilt} or {@code horizontal_tilt} (degrees), plus optional {@code ticks} (how long the drag takes,
+     * default 30) and {@code rest_ticks} (after it, default 16). A step first selects its target, unless the step before had the same one.
+     * Rotation steps start where the element is, which is {@code rotate_from} (default 0), because steps get built before they run.
+     * Then it clicks {@code free_spot} and holds for {@code hold_ticks} (default 60).
+     */
+    private void buildRotateAndTiltScript(@NotNull Minecraft minecraft) {
+        float freeX = this.config.getAsJsonArray("free_spot").get(0).getAsFloat();
+        float freeY = this.config.getAsJsonArray("free_spot").get(1).getAsFloat();
+        this.waitTicks(20);
+        String selected = null;
+        for (JsonElement entry : this.config.getAsJsonArray("steps")) {
+            JsonObject step = entry.getAsJsonObject();
+            String target = step.get("target").getAsString();
+            int ticks = step.has("ticks") ? step.get("ticks").getAsInt() : 30;
+            if (!target.equals(selected)) {
+                this.moveTo(() -> center(editorBox(target)), 16);
+                this.waitTicks(4);
+                this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+                this.waitTicks(14);
+                selected = target;
+            }
+            // The grabber positions follow the formulas of the controls in AbstractEditorElement. Rotation drags follow the circle,
+            // which rotates the element by the angle the pointer travels. Tilt drags set the tilt by where on its line the pointer is.
+            Function<Float, float[]> grabber;
+            float from;
+            float to;
+            if (step.has("rotate_to")) {
+                from = step.has("rotate_from") ? step.get("rotate_from").getAsFloat() : 0.0F;
+                to = step.get("rotate_to").getAsFloat();
+                grabber = degrees -> rotationGrabberPoint(target, degrees);
+            } else if (step.has("vertical_tilt")) {
+                from = 0.0F;
+                to = step.get("vertical_tilt").getAsFloat();
+                grabber = degrees -> {
+                    float[] box = editorBox(target);
+                    return new float[] {box[0] + box[2] + 10, (box[1] - 20) + (box[3] + 40) * ((degrees + 60.0F) / 120.0F)};
+                };
+            } else {
+                from = 0.0F;
+                to = step.get("horizontal_tilt").getAsFloat();
+                grabber = degrees -> {
+                    float[] box = editorBox(target);
+                    return new float[] {(box[0] - 20) + (box[2] + 40) * ((degrees + 60.0F) / 120.0F), box[1] + box[3] + 10};
+                };
+            }
+            this.moveTo(() -> grabber.apply(from), 14);
+            this.waitTicks(6);
+            this.press(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+            int[] tick = {0};
+            this.steps.addLast(() -> {
+                tick[0]++;
+                float p = Math.min(1.0F, tick[0] / (float) ticks);
+                float eased = (p < 0.5F) ? (4 * p * p * p) : (1 - (float)Math.pow(-2 * p + 2, 3) / 2);
+                float[] point = grabber.apply(from + (to - from) * eased);
+                this.movePointer(minecraft, point[0], point[1]);
+                return p >= 1.0F;
+            });
+            this.waitTicks(6);
+            this.release(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+            this.waitTicks(step.has("rest_ticks") ? step.get("rest_ticks").getAsInt() : 16);
+        }
+        this.moveTo(() -> new float[] {freeX, freeY}, 16);
+        this.waitTicks(4);
+        this.click(minecraft, InputConstants.MOUSE_BUTTON_LEFT);
+        this.waitTicks(this.config.has("hold_ticks") ? this.config.get("hold_ticks").getAsInt() : 60);
+    }
+
+    /** The GUI position of the rotation grabber of an element at the given rotation: on a circle a bit bigger than its diagonal, at the top for 0 degrees. */
+    @NotNull
+    private static float[] rotationGrabberPoint(@NotNull String instanceIdentifier, float degrees) {
+        float[] box = editorBox(instanceIdentifier);
+        float halfWidth = box[2] / 2.0F;
+        float halfHeight = box[3] / 2.0F;
+        float radius = (float) Math.sqrt(halfWidth * halfWidth + halfHeight * halfHeight) + 8;
+        double angle = Math.toRadians(degrees - 90.0F);
+        return new float[] {(float) (box[0] + halfWidth + radius * Math.cos(angle)), (float) (box[1] + halfHeight + radius * Math.sin(angle))};
     }
 
     /**

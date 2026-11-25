@@ -1,0 +1,83 @@
+{
+ "script": "rotate_and_tilt",
+ "background_image": "/config/fancymenu/assets/docs_bg.png",
+ "elements": [
+  {
+   "id": "pack_title",
+   "x": 30,
+   "y": 40,
+   "w": 320,
+   "h": 44,
+   "look": "pixel",
+   "background": false,
+   "scale": 2,
+   "content": "^^^\n**Skyblock Adventures**\n^^^"
+  },
+  {
+   "type": "custom_button",
+   "id": "play_button",
+   "x": 115,
+   "y": 150,
+   "w": 150,
+   "h": 20,
+   "props": {
+    "label": "Play"
+   }
+  },
+  {
+   "type": "custom_button",
+   "id": "servers_button",
+   "x": 115,
+   "y": 176,
+   "w": 150,
+   "h": 20,
+   "props": {
+    "label": "Join Server"
+   }
+  },
+  {
+   "id": "news_panel",
+   "x": 380,
+   "y": 116,
+   "w": 210,
+   "h": 104,
+   "look": "pixel",
+   "background": true,
+   "content": "### Patch Notes\n- Bigger starter islands\n- 12 quests to discover\n- Faster minions"
+  },
+  {
+   "id": "season_sticker",
+   "x": 476,
+   "y": 96,
+   "w": 130,
+   "h": 24,
+   "look": "pixel",
+   "background": true,
+   "content": "^^^\n**Season 3 is live!**\n^^^"
+  }
+ ],
+ "steps": [
+  {
+   "target": "season_sticker",
+   "rotate_to": 12,
+   "ticks": 32,
+   "rest_ticks": 22
+  },
+  {
+   "target": "news_panel",
+   "vertical_tilt": 25,
+   "ticks": 32
+  },
+  {
+   "target": "news_panel",
+   "horizontal_tilt": -30,
+   "ticks": 32,
+   "rest_ticks": 24
+  }
+ ],
+ "free_spot": [
+  300,
+  320
+ ],
+ "hold_ticks": 70
+}

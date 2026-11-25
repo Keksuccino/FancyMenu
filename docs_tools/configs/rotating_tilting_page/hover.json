@@ -1,0 +1,55 @@
+{
+ "script": "hover_elements",
+ "start": "screen",
+ "background_image": "/config/fancymenu/assets/docs_bg.png",
+ "elements": [
+  {
+   "type": "custom_button",
+   "id": "rotated_button",
+   "x": 220,
+   "y": 130,
+   "w": 200,
+   "h": 20,
+   "props": {
+    "label": "Join Server",
+    "rotation_degrees": "15.0"
+   }
+  }
+ ],
+ "pointer": [
+  470,
+  90
+ ],
+ "hovers": [
+  {
+   "point": [
+    416,
+    133
+   ],
+   "ticks": 44
+  },
+  {
+   "point": [
+    402,
+    161
+   ],
+   "ticks": 44
+  },
+  {
+   "point": [
+    225,
+    147
+   ],
+   "move_ticks": 24,
+   "ticks": 44
+  },
+  {
+   "point": [
+    238,
+    118
+   ],
+   "ticks": 44
+  }
+ ],
+ "hold_ticks": 10
+}

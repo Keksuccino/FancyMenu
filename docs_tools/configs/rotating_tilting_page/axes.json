@@ -1,0 +1,144 @@
+{
+ "gui_width": 960,
+ "gui_height": 540,
+ "gui_scale": 2,
+ "scenes": [
+  {
+   "name": "axes",
+   "wait": 3,
+   "background_image": "/config/fancymenu/assets/docs_bg.png",
+   "pointer": [
+    -40,
+    -40
+   ],
+   "elements": [
+    {
+     "type": "shape",
+     "id": "rotation_ghost",
+     "x": 300,
+     "y": 150,
+     "w": 150,
+     "h": 84,
+     "props": {
+      "color": "#FFFFFF38"
+     }
+    },
+    {
+     "type": "shape",
+     "id": "vertical_ghost",
+     "x": 490,
+     "y": 150,
+     "w": 150,
+     "h": 84,
+     "props": {
+      "color": "#FFFFFF38"
+     }
+    },
+    {
+     "type": "shape",
+     "id": "horizontal_ghost",
+     "x": 300,
+     "y": 268,
+     "w": 150,
+     "h": 84,
+     "props": {
+      "color": "#FFFFFF38"
+     }
+    },
+    {
+     "type": "shape",
+     "id": "both_ghost",
+     "x": 490,
+     "y": 268,
+     "w": 150,
+     "h": 84,
+     "props": {
+      "color": "#FFFFFF38"
+     }
+    },
+    {
+     "id": "rotation",
+     "x": 300,
+     "y": 150,
+     "w": 150,
+     "h": 84,
+     "look": "pixel",
+     "background": true,
+     "content": "^^^\n### Rotation\n15 degrees\n^^^",
+     "props": {
+      "rotation_degrees": "15.0"
+     }
+    },
+    {
+     "id": "vertical",
+     "x": 490,
+     "y": 150,
+     "w": 150,
+     "h": 84,
+     "look": "pixel",
+     "background": true,
+     "content": "^^^\n### Vertical Tilt\n45 degrees\n^^^",
+     "props": {
+      "vertical_tilt_degrees": "45.0"
+     }
+    },
+    {
+     "id": "horizontal",
+     "x": 300,
+     "y": 268,
+     "w": 150,
+     "h": 84,
+     "look": "pixel",
+     "background": true,
+     "content": "^^^\n### Horizontal Tilt\n45 degrees\n^^^",
+     "props": {
+      "horizontal_tilt_degrees": "45.0"
+     }
+    },
+    {
+     "id": "both",
+     "x": 490,
+     "y": 268,
+     "w": 150,
+     "h": 84,
+     "look": "pixel",
+     "background": true,
+     "content": "^^^\n### Both Tilts\n35 degrees each\n^^^",
+     "props": {
+      "vertical_tilt_degrees": "35.0",
+      "horizontal_tilt_degrees": "35.0"
+     }
+    }
+   ]
+  },
+  {
+   "name": "spin_check",
+   "wait": 2,
+   "shots": [
+    1.0,
+    1.9
+   ],
+   "background_image": "/config/fancymenu/assets/docs_bg.png",
+   "pointer": [
+    -40,
+    -40
+   ],
+   "elements": [
+    {
+     "id": "spin_check",
+     "x": 405,
+     "y": 230,
+     "w": 150,
+     "h": 84,
+     "look": "pixel",
+     "background": true,
+     "content": "^^^\n### Spinning\n^^^",
+     "props": {
+      "advanced_rotation_mode": "true",
+      "advanced_rotation_degrees": "{\"placeholder\":\"calc\",\"values\":{\"expression\":\"{\"placeholder\":\"unix_time\"} / 10 % 360\"}}"
+     }
+    }
+   ]
+  }
+ ]
+}
