@@ -12,6 +12,8 @@
 /neoforge/runs/
 /.gradle/
 /build/
+/out/
+/*/out/
 /.idea/
 /.idea/runConfigurations/
 /.idea/modules/
