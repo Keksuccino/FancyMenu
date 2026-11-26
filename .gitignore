@@ -3,7 +3,6 @@
 /run_client/
 /common/.gradle/
 /common/build/
-/common/out/
 /fabric/.gradle/
 /fabric/build/
 /fabric/run_client/
@@ -13,6 +12,8 @@
 /neoforge/runs/
 /.gradle/
 /build/
+/out/
+/*/out/
 /.idea/runConfigurations/
 /.idea/modules/
 /.idea/workspace.xml
